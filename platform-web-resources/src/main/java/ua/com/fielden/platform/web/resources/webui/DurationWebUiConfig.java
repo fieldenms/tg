@@ -19,8 +19,8 @@ import static ua.com.fielden.platform.web.view.master.api.actions.MasterActions.
 
 import com.google.inject.Injector;
 
-import ua.com.fielden.platform.entity.Duration;
-import ua.com.fielden.platform.entity.DurationUnit;
+import ua.com.fielden.platform.dashboard.Duration;
+import ua.com.fielden.platform.dashboard.DurationUnit;
 import ua.com.fielden.platform.ui.menu.sample.MiDuration;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -87,8 +87,7 @@ public class DurationWebUiConfig {
                 .addPrimaryAction(standardEditAction)
                 .build();
 
-        final EntityCentre<Duration> entityCentre = new EntityCentre<>(MiDuration.class, "MiDuration", ecc, injector, null);
-        return entityCentre;
+        return new EntityCentre<>(MiDuration.class, MiDuration.class.getSimpleName(), ecc, injector, null);
     }
 
     /**

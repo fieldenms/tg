@@ -4,7 +4,7 @@ import static java.lang.String.format;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.security.tokens.Template.MASTER_OPEN;
 
-import ua.com.fielden.platform.entity.Duration;
+import ua.com.fielden.platform.dashboard.Duration;
 import ua.com.fielden.platform.security.ISecurityToken;
 
 /**

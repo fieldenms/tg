@@ -1,10 +1,9 @@
 package ua.com.fielden.platform.security.tokens.persistent;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.security.tokens.Template.READ;
 
-import ua.com.fielden.platform.entity.DurationUnit;
+import ua.com.fielden.platform.dashboard.DurationUnit;
 import ua.com.fielden.platform.security.ISecurityToken;
 
 /**
@@ -13,7 +12,6 @@ import ua.com.fielden.platform.security.ISecurityToken;
  * @author TG Team
  */
 public class DurationUnit_CanRead_Token implements ISecurityToken {
-    private final static String ENTITY_TITLE = getEntityTitleAndDesc(DurationUnit.class).getKey();
-    public final static String TITLE = format(READ.forTitle(), ENTITY_TITLE);
-    public final static String DESC = format(READ.forDesc(), ENTITY_TITLE);
+    public final static String TITLE = format(READ.forTitle(), DurationUnit.ENTITY_TITLE);
+    public final static String DESC = format(READ.forDesc(), DurationUnit.ENTITY_TITLE);
 }

@@ -2,7 +2,7 @@ package ua.com.fielden.platform.ui.config;
 
 import java.util.Date;
 
-import ua.com.fielden.platform.entity.Duration;
+import ua.com.fielden.platform.dashboard.Duration;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;

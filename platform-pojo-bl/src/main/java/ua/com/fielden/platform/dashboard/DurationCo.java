@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity;
+package ua.com.fielden.platform.dashboard;
 
 import static ua.com.fielden.platform.utils.EntityUtils.fetch;
 

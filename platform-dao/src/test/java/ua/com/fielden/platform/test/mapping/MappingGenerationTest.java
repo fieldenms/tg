@@ -14,6 +14,7 @@ import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 
 public class MappingGenerationTest {
+
     @Test
     public void dump_mapping_for_type_wity_byte_array_property() {
         final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<>();
@@ -28,7 +29,7 @@ public class MappingGenerationTest {
                 + "		<column name=\"_VERSION\" default=\"0\" />\n" + "	</version>\n"
                 + "	<property name=\"configBody\" column=\"BODY\" type=\"org.hibernate.type.BinaryType\" length=\"1073741824\"/>\n"
                 + "	<property name=\"configUuid\" column=\"CONFIGUUID_\" type=\"org.hibernate.type.StringType\"/>\n"
-                + "	<many-to-one name=\"dashboardRefreshFrequency\" class=\"ua.com.fielden.platform.entity.Duration\" column=\"DASHBOARDREFRESHFREQUENCY_\"/>\n"
+                + "	<many-to-one name=\"dashboardRefreshFrequency\" class=\"ua.com.fielden.platform.dashboard.Duration\" column=\"DASHBOARDREFRESHFREQUENCY_\"/>\n"
                 + "	<property name=\"dashboardable\" column=\"DASHBOARDABLE_\" type=\"org.hibernate.type.YesNoType\"/>\n"
                 + "	<property name=\"dashboardableDate\" column=\"DASHBOARDABLEDATE_\" type=\"org.hibernate.type.TimestampType\"/>\n"
                 + "	<property name=\"desc\" column=\"DESC_\" type=\"org.hibernate.type.StringType\"/>\n"
@@ -40,4 +41,5 @@ public class MappingGenerationTest {
                 + "	<property name=\"title\" column=\"TITLE\" type=\"org.hibernate.type.StringType\"/>\n" + "</class>\n\n" + "</hibernate-mapping>";
         assertEquals("Incorrect mapping.", expectedMapping, tgModelMapping);
     }
+
 }

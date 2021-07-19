@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.web.centre;
 
-import ua.com.fielden.platform.entity.Duration;
+import ua.com.fielden.platform.dashboard.Duration;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;

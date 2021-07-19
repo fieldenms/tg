@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity;
+package ua.com.fielden.platform.dashboard;
 
 import java.util.Collection;
 

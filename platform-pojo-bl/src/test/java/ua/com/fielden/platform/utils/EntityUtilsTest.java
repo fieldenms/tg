@@ -46,12 +46,12 @@ import org.junit.Test;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.attachment.Attachment;
+import ua.com.fielden.platform.dashboard.Duration;
+import ua.com.fielden.platform.dashboard.DurationUnit;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.domain.metadata.DomainExplorer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ChildEntity;
-import ua.com.fielden.platform.entity.Duration;
-import ua.com.fielden.platform.entity.DurationUnit;
 import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.EntityExt;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
