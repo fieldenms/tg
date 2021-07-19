@@ -16,7 +16,6 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Readonly;
-import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.annotation.mutator.StrParam;
@@ -41,21 +40,18 @@ public class Duration extends AbstractEntity<DynamicEntityKey> {
     
     @IsProperty
     @MapTo
-    @Title("Count")
     @CompositeKeyMember(1)
     @BeforeChange(@Handler(value = GreaterValidator.class, str = { @StrParam(name = "limit", value = "0") }))
     private Integer count; // no more than 2,147,483,647 which is sufficient even for 'milliseconds' durationUnit (~24.86 days)
     
     @IsProperty
     @MapTo
-    @Title("Duration Unit")
     @CompositeKeyMember(2)
     private DurationUnit durationUnit;
     
     @IsProperty
     @Readonly
     @Calculated
-    @Title("Millis")
     private Long millis;
     protected static final ExpressionModel millis_ = expr().prop("count").mult().prop("durationUnit.millis").model();
     
