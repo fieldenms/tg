@@ -14,14 +14,15 @@ import org.restlet.Response;
 import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
-import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.security.session.Authenticator;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 /**
  * A web resource handling explicit user logins.
@@ -29,7 +30,7 @@ import ua.com.fielden.platform.web.app.IWebResourceLoader;
  * @author TG Team
  *
  */
-public class LogoutResource extends ServerResource {
+public class LogoutResource extends AbstractWebResource {
 
     public static final String BINDING_PATH = "/logout";
     
@@ -52,10 +53,12 @@ public class LogoutResource extends ServerResource {
             final IUserSession coUserSession,
             final String domainName,
             final String path,
+            final IDeviceProvider deviceProvider,
+            final IDates dates,
             final Context context,
             final Request request,
             final Response response) {
-        init(context, request, response);
+        super(context, request, response, deviceProvider, dates);
         this.webResourceLoader = webResourceLoader;
         this.userProvider = userProvider;
         this.coUser = coUser;

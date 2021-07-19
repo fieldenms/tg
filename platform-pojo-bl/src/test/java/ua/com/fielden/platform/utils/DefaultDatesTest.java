@@ -33,6 +33,23 @@ public class DefaultDatesTest {
     }
     
     @Test
+    public void request_time_zone_gets_properly_set_in_current_thread_and_can_be_redefined() {
+        final DefaultDates dates = new DefaultDates(true);
+        
+        final String testingTimeZoneId = "Pacific/Kiritimati";
+        dates.setRequestTimeZone(testingTimeZoneId); 
+        
+        assertTrue(dates.requestTimeZone().isPresent());
+        assertEquals(forID(testingTimeZoneId), dates.requestTimeZone().get());
+        
+        final String anotherTestingTimeZoneId = "Pacific/Pago_Pago";
+        dates.setRequestTimeZone(anotherTestingTimeZoneId);
+        
+        assertTrue(dates.requestTimeZone().isPresent());
+        assertEquals(forID(anotherTestingTimeZoneId), dates.requestTimeZone().get());
+    }
+    
+    @Test
     public void request_time_zone_gets_properly_set_in_current_and_another_thread_and_they_differ() throws InterruptedException, ExecutionException {
         final DefaultDates dates = new DefaultDates(true);
 
@@ -60,7 +77,20 @@ public class DefaultDatesTest {
     public void null_request_time_zone_setting_leaves_it_empty() {
         final DefaultDates dates = new DefaultDates(true);
         
-        dates.setRequestTimeZone(null);
+        dates.setRequestTimeZone((String) null);
+        
+        assertFalse(dates.requestTimeZone().isPresent());
+    }
+    
+    @Test
+    public void null_request_time_zone_setting_redefines_previous_by_making_it_empty() {
+        final DefaultDates dates = new DefaultDates(true);
+        
+        final String testingTimeZoneId = "Pacific/Kiritimati";
+        dates.setRequestTimeZone(testingTimeZoneId); 
+        
+        final String anotherTestingTimeZoneId = null;
+        dates.setRequestTimeZone(anotherTestingTimeZoneId);
         
         assertFalse(dates.requestTimeZone().isPresent());
     }
@@ -70,6 +100,19 @@ public class DefaultDatesTest {
         final DefaultDates dates = new DefaultDates(true);
         
         dates.setRequestTimeZone("");
+        
+        assertFalse(dates.requestTimeZone().isPresent());
+    }
+    
+    @Test
+    public void empty_request_time_zone_setting_redefines_previous_by_making_it_empty() {
+        final DefaultDates dates = new DefaultDates(true);
+        
+        final String testingTimeZoneId = "Pacific/Kiritimati";
+        dates.setRequestTimeZone(testingTimeZoneId); 
+        
+        final String anotherTestingTimeZoneId = "";
+        dates.setRequestTimeZone(anotherTestingTimeZoneId);
         
         assertFalse(dates.requestTimeZone().isPresent());
     }
@@ -99,6 +142,19 @@ public class DefaultDatesTest {
         final DefaultDates dates = new DefaultDates(true);
         
         dates.setRequestTimeZone("Pacific/BlaBlaBla");
+        
+        assertFalse(dates.requestTimeZone().isPresent());
+    }
+    
+    @Test
+    public void unknown_request_time_zone_setting_redefines_previous_by_making_it_empty() {
+        final DefaultDates dates = new DefaultDates(true);
+        
+        final String testingTimeZoneId = "Pacific/Kiritimati";
+        dates.setRequestTimeZone(testingTimeZoneId); 
+        
+        final String anotherTestingTimeZoneId = "Pacific/BlaBlaBla";
+        dates.setRequestTimeZone(anotherTestingTimeZoneId);
         
         assertFalse(dates.requestTimeZone().isPresent());
     }
