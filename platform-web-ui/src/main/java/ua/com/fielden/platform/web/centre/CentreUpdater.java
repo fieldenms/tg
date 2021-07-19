@@ -123,18 +123,18 @@ import ua.com.fielden.snappy.MnemonicEnum;
  */
 public class CentreUpdater {
     private static final Logger logger = Logger.getLogger(CentreUpdater.class);
-
+    
     /**
      * Message that marks own save-as configuration when it was inherited from base / shared but was disconnected; this occurs if upstream config is deleted, base upstream config is renamed or shared upstream config is made unshared.
      */
     private static final String UPSTREAM_CONFIG_DISCONNECTED_MESSAGE = "<i>was shared, removed by user</i>";
-
+    
     private static final String DIFFERENCES_SUFFIX = "__________DIFFERENCES";
-
+    
     public static final String FRESH_CENTRE_NAME = "__________FRESH";
     public static final String PREVIOUSLY_RUN_CENTRE_NAME = "__________PREVIOUSLY_RUN";
     public static final String SAVED_CENTRE_NAME = "__________SAVED";
-
+    
     /**
      * A type of meta values.
      *
@@ -144,7 +144,7 @@ public class CentreUpdater {
     enum MetaValueType {
         VALUE, VALUE2, EXCLUSIVE, EXCLUSIVE2, OR_NULL, NOT, OR_GROUP, DATE_PREFIX, DATE_MNEMONIC, AND_BEFORE, WIDTH, GROW_FACTOR
     }
-
+    
     /**
      * Granular property-based key of diff values those include values pertaining to both selection-criteria (value and value2, exclusive, date mnemonics etc.) and result-set (column widths, grow-factors etc.). This key always exists.
      */
@@ -165,17 +165,16 @@ public class CentreUpdater {
      * Key of diff pertaining to result-set visible rows count.
      */
     private static final String VISIBLE_ROWS_COUNT = "VISIBLE_ROWS_COUNT";
-
     /**
      * Key of diff pertaining to result-set number of header lines.
      */
     private static final String NUMBER_OF_HEADER_LINES = "NUMBER_OF_HEADER_LINES";
-
+    
     /**
      * Key of diff pertaining to entity centre's preferred view.
      */
     private static final String PREFERRED_VIEW = "PREFERRED_VIEW";
-
+    
     /* Following functions are used for conversion of criteria values to / from strings. Some implementations could have been used directly but left here for clarity and consistency. */
     static final String ID_PREFIX = "__________ID__________";
     private static final Function<DateRangePrefixEnum, String> DATE_PREFIX_TO_STRING = DateRangePrefixEnum::name;
@@ -193,8 +192,8 @@ public class CentreUpdater {
         money.getTaxPercent() != null
             ? mapOf(t2("amount", TO_STRING.apply(money.getAmount())), t2("taxPercent", TO_STRING.apply(money.getTaxPercent())), t2("currency", TO_STRING.apply(money.getCurrency())))
             : mapOf(t2("amount", TO_STRING.apply(money.getAmount())), t2("currency", TO_STRING.apply(money.getCurrency())));
-    private static final Function<Map<String, Object>, Money> MAP_TO_MONEY = map ->
-        map.containsKey("taxPercent")
+    private static final Function<Map<String, Object>, Money> MAP_TO_MONEY = map -> 
+        map.containsKey("taxPercent") 
             ? new Money(STRING_TO_BIG_DECIMAL.apply((String) map.get("amount")), STRING_TO_INTEGER.apply((String) map.get("taxPercent")), STRING_TO_CURRENCY.apply((String) map.get("currency")))
             : new Money(STRING_TO_BIG_DECIMAL.apply((String) map.get("amount")), STRING_TO_CURRENCY.apply((String) map.get("currency")));
     private static final Function<AbstractEntity<?>, String> ENTITY_TO_STRING = entity -> entityWithMocksToString((ent) -> {
@@ -226,11 +225,11 @@ public class CentreUpdater {
      * Function to get title of surrogate configuration from surrogate name, save-as name and device.
      */
     public static final Function<String, Function<Optional<String>, Function<DeviceProfile, String>>> NAME_OF = surrogateName -> saveAs -> device -> deviceSpecific(saveAsSpecific(surrogateName, saveAs), device) + DIFFERENCES_SUFFIX;
-
+    
     /** Protected default constructor to prevent instantiation. */
     protected CentreUpdater() {
     }
-
+    
     /**
      * Returns device-specific surrogate name for the centre based on original <code>surrogateName</code>.
      * <p>
@@ -240,7 +239,7 @@ public class CentreUpdater {
      * <p>
      * This need has arisen mainly from embedded [into actions] centres, because copying of miTypes and those actions (and their full hierarchy with invocation points)
      * seems heavily impractical.
-     *
+     * 
      * @param surrogateName
      * @param device
      * @return
@@ -249,7 +248,7 @@ public class CentreUpdater {
         if (DESKTOP.equals(device)) {
             return surrogateName;
         } else if (MOBILE.equals(device)) {
-            // Please note that in case where the need arise to 'use the same configuration for both MOBILE and DESKTOP apps'
+            // Please note that in case where the need arise to 'use the same configuration for both MOBILE and DESKTOP apps' 
             // then it is quite trivial to support such functionality.
             // In that case we can provide annotation for menu item types like @TheSameForMobileAndDesktop and check here whether this annotation is present.
             // If yes then 'surrogateName' should be returned just like for DESKTOP device.
@@ -258,11 +257,11 @@ public class CentreUpdater {
             throw new CentreUpdaterException(format("Device [%s] is unknown.", device));
         }
     }
-
+    
     private static String saveAsSpecific(final String name, final Optional<String> saveAsName) {
         return saveAsName.map(san -> format("%s[%s]", name, san)).orElse(name);
     }
-
+    
     /**
      * Returns the current version of centre (initialises it in case if it is not created yet, updates it in case where it is stale).
      * <p>
@@ -294,7 +293,7 @@ public class CentreUpdater {
         final Map<String, Object> updatedDiff = updateDifferences(miType, user, deviceSpecificName, name, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
         return loadCentreFromDefaultAndDiff(user, miType, saveAsName, updatedDiff, webUiConfig, domainTreeEnhancerCache, companionFinder);
     }
-
+    
     /**
      * Updates (retrieves) current version of centre description.
      *
@@ -309,7 +308,7 @@ public class CentreUpdater {
         final EntityCentreConfig eccWithDesc = findConfig(miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, eccCompanion);
         return eccWithDesc == null ? null : eccWithDesc.getDesc();
     }
-
+    
     /**
      * Updates (retrieves) current version of centre uuid.
      *
@@ -326,10 +325,10 @@ public class CentreUpdater {
             return eccWithDesc == null ? null : eccWithDesc.getConfigUuid();
         });
     }
-
+    
     /**
      * Changes configuration title to <code>newTitle</code> and description to <code>newDesc</code> and saves these changes to persistent storage.
-     *
+     * 
      * @param user
      * @param miType
      * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
@@ -356,7 +355,7 @@ public class CentreUpdater {
         if (freshConfig == null || savedConfig == null) {
             throw failuref("Fresh or saved configuration for configuration [%s] does not exist.", saveAsName);
         }
-
+        
         // newTitle
         final Function<String, String> newNameOf = nameOf.apply(of(newTitle));
         freshConfig.setTitle(newNameOf.apply(FRESH_CENTRE_NAME));
@@ -367,12 +366,12 @@ public class CentreUpdater {
         }
         // newDesc
         freshConfig.setDesc(newDesc);
-
+        
         // clear all centres with the same name in the case where title has been changed -- new title potentially can be in conflict with another configuration and that another configuration should be deleted
         if (!equalsEx(saveAsName, of(newTitle))) {
             CentreUpdaterUtils.removeCentres(user, miType, eccCompanion, freshConfig.getTitle(), savedConfig.getTitle(), previouslyRunNewTitle);
         }
-
+        
         // save
         eccCompanion.saveWithConflicts(freshConfig); // editCentreTitleAndDesc is used inside other transaction scopes (e.g. CentreConfigEditActionDao.performSave and AbstractCentreConfigCommitActionDao.save) -- saveWithConflicts must be used
         eccCompanion.saveWithConflicts(savedConfig);
@@ -380,7 +379,7 @@ public class CentreUpdater {
             eccCompanion.saveWithConflicts(previouslyRunConfig);
         }
     }
-
+    
     /**
      * Removes centres from persistent storage (diffs) by their <code>names</code>.
      * <p>
@@ -397,7 +396,7 @@ public class CentreUpdater {
         final String[] deviceSpecificDiffNames = stream(names).map(name -> deviceSpecific(saveAsSpecific(name, saveAsName), device) + DIFFERENCES_SUFFIX).toArray(String[]::new);
         CentreUpdaterUtils.removeCentres(user, miType, eccCompanion, deviceSpecificDiffNames);
     }
-
+    
     /**
      * Initialises and commits centre from the passed <code>centreToBeInitialisedAndCommitted</code> instance for surrogate centre with concrete <code>name</code>.
      * <p>
@@ -425,14 +424,14 @@ public class CentreUpdater {
             final IUser userCompanion) {
         return commitCentre(false, user, miType, name, saveAsName, device, centre, newDesc, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
     }
-
+    
     /**
      * Initialises and commits centre from the passed <code>centreToBeInitialisedAndCommitted</code> instance for surrogate centre with concrete <code>name</code>.
      * <p>
      * Please note that this operation is immutable in regard to the surrogate centre instance being copied.
      * <p>
      * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
-     *
+     * 
      * @param user
      * @param miType
      * @param name -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
@@ -455,7 +454,7 @@ public class CentreUpdater {
             final IUser userCompanion) {
         return commitCentre(true, user, miType, name, saveAsName, device, centre, newDesc, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
     }
-
+    
     /**
      * Initialises and commits centre from the passed <code>centreToBeInitialisedAndCommitted</code> instance for surrogate centre with concrete <code>name</code>.
      * <p>
@@ -489,7 +488,7 @@ public class CentreUpdater {
         saveEntityCentreManager(withoutConflicts, createDifferences(centre, defaultCentre, getEntityType(miType)), miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, newDesc, eccCompanion, mmiCompanion);
         return centre;
     }
-
+    
     /**
      * Finds loadable configurations for current user and specified <code>miType; device</code>.
      * {@link LoadableCentreConfig} instances are sorted by title.
@@ -497,7 +496,7 @@ public class CentreUpdater {
      * Inherited from shared configurations receive appropriate {@link LoadableCentreConfig#getSharedBy()} user.
      * <p>
      * Please note that inheritance from base is purely defined by 'saveAsName' -- if both configuration for user and its base user have the same 'saveAsName' then they are in inheritance relationship.
-     *
+     * 
      * @param user
      * @param miType
      * @param device -- device profile (mobile or desktop) for which loadable centres
@@ -512,10 +511,10 @@ public class CentreUpdater {
             final ICentreConfigSharingModel sharingModel) {
         return saveAsNameOpt -> {
             final List<LoadableCentreConfig> loadableConfigurations = new ArrayList<>();
-
+            
             final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
             final ILoadableCentreConfig lccCompanion = companionFinder.find(LoadableCentreConfig.class);
-
+            
             final String surrogateNamePrefix = deviceSpecific(FRESH_CENTRE_NAME, device);
             final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = findConfigsFunction(user, miType, device, eccCompanion).apply(saveAsNameOpt);
             final fetch<EntityCentreConfig> fetch = FETCH_CONFIG.with("configUuid");
@@ -548,7 +547,7 @@ public class CentreUpdater {
                         .filter(lcc -> !lcc.isInherited())
                         .map(lcc -> lcc.getConfig().getConfigUuid())
                         .collect(toSet());
-
+                    
                     // find config creators not being equal to current user...
                     if (!notInheritedFromBaseUuids.isEmpty()) {
                         eccCompanion.getAllEntities(
@@ -571,18 +570,18 @@ public class CentreUpdater {
                             }
                         });
                     }
-
+                    
                     // Mark own save-as configurations as orphaned for those being disconnected from base / shared (not created by current 'user'):
-
+                    
                     // function for getting own save-as LoadableCentreConfigs
                     final Supplier<Stream<LoadableCentreConfig>> ownLoadableConfigurationsSupplier = () -> loadableConfigurations.stream()
                         .filter(lcc -> !lcc.isInherited()); // all non-inherited configurations, that were left after shared / base processing, are considered own save-as
-
+                    
                     // collect uuids for own save-as configurations
                     final Set<String> ownSaveAsUuids = ownLoadableConfigurationsSupplier.get()
                         .map(lcc -> lcc.getConfig().getConfigUuid()) // all loadable configs always have configUuids present
                         .collect(toSet());
-
+                    
                     if (!ownSaveAsUuids.isEmpty()) {
                         // find config creators for that uuids
                         final List<EntityCentreConfig> savedConfigsWithCreators = eccCompanion.getAllEntities(
@@ -592,7 +591,7 @@ public class CentreUpdater {
                             .with(FETCH_CONFIG.with("configUuid").with("owner", fetch(User.class).with("key")))
                             .lightweight().model()
                         );
-
+                        
                         // iterate through own loadable configurations and ...
                         ownLoadableConfigurationsSupplier.get().forEach(lcc -> {
                             final Optional<EntityCentreConfig> creatorConfigOpt = savedConfigsWithCreators.stream()
@@ -608,7 +607,7 @@ public class CentreUpdater {
                             }
                         });
                     }
-
+                    
                 }
             }
             Collections.sort(loadableConfigurations);
@@ -626,13 +625,13 @@ public class CentreUpdater {
                 .orElseGet(() -> eccCompanion.withDbVersion(centreConfigQueryFor(user, miType, device, FRESH_CENTRE_NAME)).model());
         };
     }
-
+    
     /**
-     * Returns {@link Stream} of preferred {@link EntityCentreConfig} configurations for specified <code>user</code>, <code>device</code> and concrete
+     * Returns {@link Stream} of preferred {@link EntityCentreConfig} configurations for specified <code>user</code>, <code>device</code> and concrete 
      * <code>miType</code>'ed menu item.
      * <p>
      * Please note that by design this stream should return single or none instance.
-     *
+     * 
      * @param user
      * @param miType
      * @param device
@@ -645,11 +644,11 @@ public class CentreUpdater {
         final fetch<EntityCentreConfig> fetch = fetchWithKeyAndDesc(EntityCentreConfig.class).with("preferred").fetchModel();
         return eccCompanion.stream(from(queryForCurrentUser).with(fetch).model());
     }
-
+    
     /**
-     * Determines the preferred configuration <code>saveAsName</code> for the current user (defined by <code>gdtm.getUserProvider().getUser()</code>), the specified <code>device</code> and concrete
+     * Determines the preferred configuration <code>saveAsName</code> for the current user (defined by <code>gdtm.getUserProvider().getUser()</code>), the specified <code>device</code> and concrete 
      * <code>miType</code>'ed menu item.
-     *
+     * 
      * @param user
      * @param miType
      * @param device
@@ -661,11 +660,11 @@ public class CentreUpdater {
             return stream.findAny().map(ecc -> obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix));
         }
     }
-
+    
     /**
-     * Makes <code>saveAsName</code> configuration preferred for the current user (defined by <code>gdtm.getUserProvider().getUser()</code>), the specified <code>device</code> and concrete
+     * Makes <code>saveAsName</code> configuration preferred for the current user (defined by <code>gdtm.getUserProvider().getUser()</code>), the specified <code>device</code> and concrete 
      * <code>miType</code>'ed menu item.
-     *
+     * 
      * @param user
      * @param miType
      * @param saveAsName
@@ -684,10 +683,10 @@ public class CentreUpdater {
             );
         }
     }
-
+    
     /**
      * Creates {@link LoadableCentreConfig} instance from <code>ecc</code>'s title and description.
-     *
+     * 
      * @param ecc -- centre config entity with 'title', 'desc' and 'configUuid' fetched
      * @param inherited -- indicates whether {@link LoadableCentreConfig} instance being created needs to be 'inherited'
      * @param surrogateNamePrefix
@@ -699,20 +698,20 @@ public class CentreUpdater {
         lcc.setInherited(inherited).setConfig(ecc).setKey(obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix)).setDesc(ecc.getDesc());
         return lcc;
     }
-
+    
     /**
      * Returns opposite device for the specified <code>device</code>.
-     *
+     * 
      * @param device
      * @return
      */
     private static DeviceProfile opposite(final DeviceProfile device) {
         return DESKTOP.equals(device) ? MOBILE : DESKTOP;
     }
-
+    
     /**
      * Receives actual title from surrogate name persisted inside {@link EntityCentreConfig#getTitle()}.
-     *
+     * 
      * @param title
      * @param surrogateName
      * @param device
@@ -721,10 +720,10 @@ public class CentreUpdater {
     public static String obtainTitleFrom(final String title, final String surrogateName, final DeviceProfile device) {
         return obtainTitleFrom(title, deviceSpecific(surrogateName, device));
     }
-
+    
     /**
      * Receives actual title from surrogate name persisted inside {@link EntityCentreConfig#getTitle()}.
-     *
+     * 
      * @param title
      * @param surrogateNamePrefix
      * @return
@@ -733,12 +732,12 @@ public class CentreUpdater {
         final String surrogateWithSuffix = title.replaceFirst(surrogateNamePrefix, "");
         return surrogateWithSuffix.substring(1, surrogateWithSuffix.lastIndexOf("]"));
     }
-
+    
     /**
      * Creates a function that returns a query to find centre configurations persisted.
      * <p>
      * Looks only for named / link configurations, default configurations are avoided.
-     *
+     * 
      * @param miType
      * @param device -- the device for which centre configurations are looked for
      * @param surrogateName -- surrogate name of the centre (fresh, previouslyRun etc.)
@@ -753,12 +752,12 @@ public class CentreUpdater {
                 .and().prop("menuItem.key").eq().val(miType.getName());
         };
     }
-
+    
     /**
      * Creates a function that returns a query to find centre configurations persisted for <code>user</code>.
      * <p>
      * Looks only for named / link configurations, default configurations are avoided.
-     *
+     * 
      * @param user
      * @param miType
      * @param device -- the device for which centre configurations are looked for
@@ -769,7 +768,7 @@ public class CentreUpdater {
         return dbVersion -> centreConfigQueryFor(miType, device, surrogateName).apply(dbVersion)
             .and().prop("owner").eq().val(user);
     }
-
+    
     /**
      * Loads centre through the following chain: 'default centre' + 'differences' := 'centre'.
      *
@@ -818,7 +817,7 @@ public class CentreUpdater {
         }// otherwise, no need to add @SaveAsName annotation (or use cached type with that annotation)
         return loadedCentre;
     }
-
+    
     /**
      * Creates user-specific (!) default centre manager from Centre DSL configuration.
      * <p>
@@ -835,7 +834,7 @@ public class CentreUpdater {
     public static ICentreDomainTreeManagerAndEnhancer getDefaultCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final IWebUiConfig webUiConfig) {
         return applyWebUIDefaultValues(createDefaultCentre(miType, webUiConfig), getEntityType(miType));
     }
-
+    
     /**
      * Initialises 'differences centre' from the persistent storage, if it exists.
      * <p>
@@ -869,10 +868,10 @@ public class CentreUpdater {
             final ICompanionObjectFinder companionFinder) {
         // the name consists of 'deviceSpecificName' and 'DIFFERENCES_SUFFIX'
         final String deviceSpecificDiffName = deviceSpecificName + DIFFERENCES_SUFFIX;
-
+        
         final Map<String, Object> resultantDiff;
         // WILL BE UPDATED IN EVERY CALL OF updateDifferencesCentre!
-
+        
         // init (or update) diff centre from persistent storage if exists
         final Optional<Map<String, Object>> retrievedDiff = retrieveDiff(miType, user, deviceSpecificDiffName, eccCompanion);
         if (retrievedDiff.isPresent()) {
@@ -902,10 +901,10 @@ public class CentreUpdater {
         }
         return resultantDiff;
     }
-
+    
     /**
      * Converts serialisable <code>value</code> representation to actual value, mostly from {@link String}. Two exceptions are {@link boolean} (from {@link boolean}) and {@link Money} (from {@link Map}).
-     *
+     *  
      * @param value
      * @param root
      * @param managedTypeSupplier
@@ -946,10 +945,10 @@ public class CentreUpdater {
             return value; // boolean and String values here
         }
     }
-
+    
     /**
      * Converts <code>value</code> to serialisable representation, mostly into {@link String} format. Two exceptions are {@link boolean} (to {@link boolean}) and {@link Money} (to {@link Map}).
-     *
+     * 
      * @param value
      * @param managedTypeSupplier
      * @param property
@@ -975,10 +974,10 @@ public class CentreUpdater {
             return value; // boolean and String values here
         }
     }
-
+    
     /**
      * If <code>value</code> is <code>null</code> then returns <code>null</code>, otherwise treats the value as being of type <code>T</code> and converts using <code>conversionFunc</code> to value of type <code>M</code>.
-     *
+     * 
      * @param value
      * @param conversionFunc
      * @return
@@ -994,22 +993,22 @@ public class CentreUpdater {
             return null;
         }
     }
-
+    
     /**
      * Creates 'diff' from 'centre' and 'defaultCentre' with meta-values (only those that are different) and other information.
      *
      * @param centre
      * @param defaultCentre
      * @param root
-     *
+     * 
      * @return
      */
     static Map<String, Object> createDifferences(final ICentreDomainTreeManagerAndEnhancer centre, final ICentreDomainTreeManagerAndEnhancer defaultCentre, final Class<AbstractEntity<?>> root) {
         final Supplier<Class<?>> managedTypeSupplier = () -> centre.getEnhancer().getManagedType(root);
-
+        
         final Map<String, Object> diff = createEmptyDifferences();
         final Map<String, Map<String, Object>> propertiesDiff = (Map<String, Map<String, Object>>) diff.get(PROPERTIES);
-
+        
         final Class<?> managedType = managedTypeSupplier.get();
         for (final String property : centre.getFirstTick().checkedProperties(root)) { // lets go through centre's checked properties for the first tick (criteria) -- these will be fully synced to originalCentre's checked properties (due to the way centre is created: centre := defaultCentre + diff)
             if (!isPlaceholder(property)) { // placeholders were used in Swing UI to indicate empty places on selection criteria; need to be filtered out
@@ -1039,7 +1038,7 @@ public class CentreUpdater {
                         diff(property, propertiesDiff).put(AND_BEFORE.name(), andBeforeVal);
                     }
                 }
-
+                
                 final Boolean orNullVal = centre.getFirstTick().getOrNull(root, property);
                 if (!equalsEx(orNullVal, defaultCentre.getFirstTick().getOrNull(root, property))) {
                     diff(property, propertiesDiff).put(OR_NULL.name(), orNullVal);
@@ -1052,7 +1051,7 @@ public class CentreUpdater {
                 if (!equalsEx(orGroupVal, defaultCentre.getFirstTick().getOrGroup(root, property))) {
                     diff(property, propertiesDiff).put(OR_GROUP.name(), orGroupVal);
                 }
-
+                
                 final Object valueVal = centre.getFirstTick().getValue(root, property);
                 if (!equalsEx(valueVal, defaultCentre.getFirstTick().getValue(root, property))) {
                     diff(property, propertiesDiff).put(VALUE.name(), convertTo(valueVal, managedTypeSupplier, property));
@@ -1065,7 +1064,7 @@ public class CentreUpdater {
                 }
             }
         }
-
+        
         // extract widths that are changed and add them to the diff
         for (final String property : centre.getSecondTick().checkedProperties(root)) {
             final int widthVal = centre.getSecondTick().getWidth(root, property);
@@ -1077,49 +1076,49 @@ public class CentreUpdater {
                 diff(property, propertiesDiff).put(GROW_FACTOR.name(), growFactorVal);
             }
         }
-
+        
         // determine whether usedProperties have been changed (as a whole) and add them to the diff if true
         final List<String> visibilityAndOrderPropertiesVal = centre.getSecondTick().usedProperties(root);
         if (!equalsEx(visibilityAndOrderPropertiesVal, defaultCentre.getSecondTick().usedProperties(root))) {
             diff.put(VISIBILITY_AND_ORDER, visibilityAndOrderPropertiesVal);
         }
-
+        
         // determine whether orderedProperties have been changed (as a whole) and add them to the diff if true
         final List<Pair<String, Ordering>> sortingPropertiesVal = centre.getSecondTick().orderedProperties(root);
         if (!equalsEx(sortingPropertiesVal, defaultCentre.getSecondTick().orderedProperties(root))) {
             diff.put(SORTING, createSerialisableSortingProperties(sortingPropertiesVal));
         }
-
+        
         // determine whether pageCapacity has been changed and add it to the diff if true
         final int pageCapacityVal = centre.getSecondTick().getPageCapacity();
         if (!equalsEx(pageCapacityVal, defaultCentre.getSecondTick().getPageCapacity())) {
             diff.put(PAGE_CAPACITY, pageCapacityVal);
         }
-
+        
         // determine whether visibleRowsCount has been changed and add it to the diff if true
         final int visibleRowsCountVal = centre.getSecondTick().getVisibleRowsCount();
         if (!equalsEx(visibleRowsCountVal, defaultCentre.getSecondTick().getVisibleRowsCount())) {
             diff.put(VISIBLE_ROWS_COUNT, visibleRowsCountVal);
         }
-
+        
         // determine whether numberOfHeaderLines has been changed and add it to the diff if true
         final int numberOfHeaderLinesVal = centre.getSecondTick().getNumberOfHeaderLines();
         if (!equalsEx(numberOfHeaderLinesVal, defaultCentre.getSecondTick().getNumberOfHeaderLines())) {
             diff.put(NUMBER_OF_HEADER_LINES, numberOfHeaderLinesVal);
         }
-
+        
         // determine whether preferred view has been changed and add it to the diff if true
         final Integer preferredView = centre.getPreferredView();
         if (!equalsEx(preferredView, defaultCentre.getPreferredView())) {
             diff.put(PREFERRED_VIEW, preferredView);
         }
-
+        
         return diff;
     }
-
+    
     /**
      * Provides a kind warning about <code>property</code> disappearance from <code>from</code> and <code>valueKind</code> that was affected.
-     *
+     * 
      * @param from
      * @param valueKind
      * @param property
@@ -1127,10 +1126,10 @@ public class CentreUpdater {
     private static void warnSubValueRemovalFrom(final String from, final String valueKind, final String property) {
         logger.warn(format("[%s] diff sub-value ignored. Property [%s] does not exist in %s (removed from Centre DSL config or even from domain type).", valueKind, property, from));
     }
-
+    
     /**
      * Provides a kind warning about <code>property</code> disappearance from <code>from</code> and <code>valueKind</code> that was affected.
-     *
+     * 
      * @param from
      * @param valueKind
      * @param diff
@@ -1139,11 +1138,11 @@ public class CentreUpdater {
     private static void warnPropRemovalFrom(final String from, final String valueKind, final Map<String, Object> diff, final String property) {
         logger.warn(format("Property [%s] diff value [%s] ignored. Property [%s] does not exist in %s (removed from Centre DSL config or even from domain type).", valueKind, diff.get(valueKind), property, from));
     }
-
+    
     /**
      * Processes property value of <code>valueKind</code> taking it from <code>diff</code> and applying <code>valueApplier</code>.
-     * If property was removed (<code>propertyPresent = false</code>) then warns about it.
-     *
+     * If property was removed (<code>propertyPresent = false</code>) then warns about it. 
+     * 
      * @param diff
      * @param valueKind
      * @param propertyPresent
@@ -1160,7 +1159,7 @@ public class CentreUpdater {
             }
         }
     }
-
+    
     /**
      * Applies the differences from 'differences centre' on top of 'target centre'.
      *
@@ -1173,13 +1172,13 @@ public class CentreUpdater {
     static ICentreDomainTreeManagerAndEnhancer applyDifferences(final ICentreDomainTreeManagerAndEnhancer targetCentre, final Map<String, Object> differences, final Class<AbstractEntity<?>> root, final ICompanionObjectFinder companionFinder) {
         final Supplier<Class<?>> managedTypeSupplier = () -> targetCentre.getEnhancer().getManagedType(root);
         final Map<String, Map<String, Object>> propertiesDiff = (Map<String, Map<String, Object>>) differences.get(PROPERTIES);
-
+        
         for (final Entry<String, Map<String, Object>> propertyDiff: propertiesDiff.entrySet()) {
             final String property = propertyDiff.getKey();
             final Map<String, Object> diff = propertyDiff.getValue();
-
+            
             final boolean selectionCriteriaContains = targetCentre.getFirstTick().checkedProperties(root).contains(property);
-
+            
             processValue(diff, EXCLUSIVE.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setExclusive(root, property, (Boolean) value), property);
             processValue(diff, EXCLUSIVE2.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setExclusive2(root, property, (Boolean) value), property);
             processValue(diff, DATE_PREFIX.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setDatePrefix(root, property, (DateRangePrefixEnum) nullOrConvert(value, STRING_TO_DATE_PREFIX)), property);
@@ -1190,13 +1189,13 @@ public class CentreUpdater {
             processValue(diff, OR_GROUP.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setOrGroup(root, property, (Integer) value), property);
             processValue(diff, VALUE.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setValue(root, property, convertFrom(value, root, managedTypeSupplier, property, companionFinder)), property);
             processValue(diff, VALUE2.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setValue2(root, property, convertFrom(value, root, managedTypeSupplier, property, companionFinder)), property);
-
+            
             final boolean resultSetContains = targetCentre.getSecondTick().checkedProperties(root).contains(property);
-
+            
             processValue(diff, WIDTH.name(), resultSetContains, "result-set", (value) -> targetCentre.getSecondTick().setWidth(root, property, (int) value), property);
             processValue(diff, GROW_FACTOR.name(), resultSetContains, "result-set", (value) -> targetCentre.getSecondTick().setGrowFactor(root, property, (int) value), property);
         }
-
+        
         // process EGI column visibility / order
         final List<String> visibilityAndOrder = (List<String>) differences.get(VISIBILITY_AND_ORDER);
         if (visibilityAndOrder != null) { // if it exists then it was explicitly changed by user; whole snapshot will be applied against target centre
@@ -1213,7 +1212,7 @@ public class CentreUpdater {
                 }
             }
         }
-
+        
         // process EGI data sorting
         final ArrayList<LinkedHashMap<String, String>> sorting = (ArrayList<LinkedHashMap<String, String>>) differences.get(SORTING);
         if (sorting != null) { // if it exists then it was explicitly changed by user; whole snapshot will be applied against target centre
@@ -1240,7 +1239,7 @@ public class CentreUpdater {
                 }
             }
         }
-
+        
         // process EGI pageCapacity, visibleRowsCount and numberOfHeaderLines
         final Integer pageCapacity = (Integer) differences.get(PAGE_CAPACITY);
         if (pageCapacity != null) { // if it exists then it was explicitly changed by user; will be applied against target centre
@@ -1260,10 +1259,10 @@ public class CentreUpdater {
         }
         return targetCentre;
     }
-
+    
     /**
-     * Takes property differences from <code>diff</code>. Creates empty property differences inside <code>diff</code> if they are empty.
-     *
+     * Takes property differences from <code>diff</code>. Creates empty property differences inside <code>diff</code> if they are empty. 
+     * 
      * @param property
      * @param diff
      * @return
@@ -1272,10 +1271,10 @@ public class CentreUpdater {
         final Map<String, Map<String, Object>> propertiesDiff = (Map<String, Map<String, Object>>) diff.get(PROPERTIES);
         return diff(property, propertiesDiff);
     }
-
+    
     /**
      * Takes property differences from <code>propertiesDiff</code> part of overall diff. Creates empty property differences inside <code>propertiesDiff</code> if they are empty.
-     *
+     * 
      * @param property
      * @param propertiesDiff
      * @return
@@ -1289,10 +1288,10 @@ public class CentreUpdater {
         }
         return propertyDiff;
     }
-
+    
     /**
      * Creates empty diff.
-     *
+     * 
      * @return
      */
     public static Map<String, Object> createEmptyDifferences() {
@@ -1301,24 +1300,24 @@ public class CentreUpdater {
         diff.put(PROPERTIES, propertiesDiff);
         return diff;
     }
-
+    
     /**
      * Creates serialisable representation of sorting properties to be used in diff object.
      * This representation should be exactly the same as the representation returning after diff deserialisation.
      * This is because further restoring logic ({@link #applyDifferences(ICentreDomainTreeManagerAndEnhancer, Map, Class, ICompanionObjectFinder)} method)
-     * requires <code>ArrayList<LinkedHashMap<String, String>></code> and when base configuration is loaded the diff object is created on-the-fly
+     * requires <code>ArrayList<LinkedHashMap<String, String>></code> and when base configuration is loaded the diff object is created on-the-fly 
      * by {@link #createDifferences(ICentreDomainTreeManagerAndEnhancer, ICentreDomainTreeManagerAndEnhancer, Class)} method and not directly deserialised.
-     *
+     * 
      * @param sortingPropertiesVal
      * @return
      */
     private static List<LinkedHashMap<String, String>> createSerialisableSortingProperties(final List<Pair<String, Ordering>> sortingPropertiesVal) {
         return sortingPropertiesVal.stream().map(CentreUpdater::pairToMap).collect(toCollection(ArrayList::new));
     }
-
+    
     /**
      * Creates raw serialisable map from pair of property name and its {@link Ordering}.
-     *
+     * 
      * @param pair
      * @return
      */
@@ -1332,7 +1331,7 @@ public class CentreUpdater {
         }
         return map;
     }
-
+    
     /**
      * Applies correct default values to be in sync with Web UI ones on top of 'centre'.
      * <p>
@@ -1369,5 +1368,5 @@ public class CentreUpdater {
     protected static Class<?> managedType(final Class<AbstractEntity<?>> root, final ICentreDomainTreeManagerAndEnhancer centre) {
         return centre.getEnhancer().getManagedType(root);
     }
-
+    
 }

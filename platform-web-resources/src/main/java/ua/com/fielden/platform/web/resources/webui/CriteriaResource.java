@@ -261,7 +261,7 @@ public class CriteriaResource extends AbstractWebResource {
             return createCriteriaRetrievalEnvelope(updatedFreshCentre, miType, actualSaveAsName, user, restUtil, companionFinder, critGenerator, device(), customDesc, resolvedConfigUuid, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
         }, restUtil);
     }
-
+    
     /**
      * Validates {@code configUuid} on the subject of configuration existence and general ability to share it with current {@code user}.
      */
@@ -728,7 +728,7 @@ public class CriteriaResource extends AbstractWebResource {
 
     /**
      * Calculates indices of active secondary actions for {@code entities}.
-     *
+     * 
      * @param entities
      * @return
      */
@@ -744,7 +744,7 @@ public class CriteriaResource extends AbstractWebResource {
 
     /**
      * Calculates indices of active primary action for {@code entities}.
-     *
+     * 
      * @param entities
      * @return
      */
@@ -756,7 +756,7 @@ public class CriteriaResource extends AbstractWebResource {
 
     /**
      * Calculates rendering hints for {@code entities}.
-     *
+     * 
      * @param entities
      * @return
      */

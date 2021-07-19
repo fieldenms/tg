@@ -81,7 +81,7 @@ public interface IBasicWebApplicationServerModule {
         bindType(ICentreConfigLoadAction.class).to(CentreConfigLoadActionDao.class);
         bindType(ICentreConfigEditAction.class).to(CentreConfigEditActionDao.class);
         bindType(ICentreConfigSaveAction.class).to(CentreConfigSaveActionDao.class);
-
+        
         bindType(SingleActionSelector.class).toInstance(INSTANCE); // singleton
     }
 
@@ -110,7 +110,7 @@ public interface IBasicWebApplicationServerModule {
      * <p>
      * This implementation creates default configurations for all registered centres to perform early
      * caching of DomainTreeEnhancers (to avoid heavy computations later).
-     *
+     * 
      * @param injector
      */
     default void initWebApp(final Injector injector) {

@@ -297,7 +297,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         // warnings acknowledgement binding
         bind(IAcknowledgeWarnings.class).to(AcknowledgeWarningsDao.class);
         bind(IPropertyWarning.class).to(PropertyWarningDao.class);
-
+        
         if (webApiPresent) { // in case where Web API has been turned-on in application.properties ...
             // ... bind Web API to platform-dao GraphQL-based implementation
             bind(IWebApi.class).to(GraphQLService.class).in(Singleton.class);

@@ -66,7 +66,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private CentreContextHolder centreContextHolder;
     private DeviceProfile device;
     private Class<? extends MiWithConfigurationSupport<?>> miType;
-
+    
     /**
      * Constructs {@link EnhancedCentreEntityQueryCriteria} with specified {@link IValueMatcherFactory}. Needed mostly for instantiating through injector.
      *
@@ -130,19 +130,19 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     public ICentreDomainTreeManagerAndEnhancer previouslyRunCentre() {
         return previouslyRunCentreSupplier.get();
     }
-
+    
     /**
      * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
-     *
+     * 
      * @param freshCentreApplier
      */
     public void setFreshCentreApplier(final Function<Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> freshCentreApplier) {
         this.freshCentreApplier = freshCentreApplier;
     }
-
+    
     /**
      * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
-     *
+     * 
      * @param modifHolder
      * @return
      */
@@ -189,10 +189,10 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     public void updateInheritedFromBaseCentre(final String saveAsNameToLoad) {
         inheritedFromBaseCentreUpdater.accept(saveAsNameToLoad);
     }
-
+    
     /**
      * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
-     *
+     * 
      * @param configDuplicateAction
      */
     public void setConfigDuplicateAction(final Runnable configDuplicateAction) {
@@ -207,13 +207,13 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
 
     /**
      * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
-     *
+     * 
      * @param freshCentreSaver
      */
     public void setFreshCentreSaver(final Runnable freshCentreSaver) {
         this.freshCentreSaver = freshCentreSaver;
     }
-
+    
     /**
      * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
      */

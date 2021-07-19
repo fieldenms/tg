@@ -21,12 +21,12 @@ import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntit
  *
  */
 public class CentreConfigDuplicateActionProducer extends DefaultEntityProducerWithContext<CentreConfigDuplicateAction> {
-
+    
     @Inject
     public CentreConfigDuplicateActionProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
         super(factory, CentreConfigDuplicateAction.class, companionFinder);
     }
-
+    
     /**
      * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
      */
@@ -46,5 +46,5 @@ public class CentreConfigDuplicateActionProducer extends DefaultEntityProducerWi
         }
         return entity;
     }
-
+    
 }

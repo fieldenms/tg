@@ -420,13 +420,13 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             }
             return this;
         }
-
+        
         @Override
         public Integer getOrGroup(final Class<?> root, final String property) {
             illegalUncheckedProperties(this, root, property, format("Could not get an 'or group' for 'unchecked' property [%s] in type [%s].", property, root.getSimpleName()));
             return (propertiesOrGroups.containsKey(key(root, property))) ? propertiesOrGroups.get(key(root, property)) : null;
         }
-
+        
         @Override
         public IAddToCriteriaTickManager setOrGroup(final Class<?> root, final String property, final Integer orGroup) {
             illegalUncheckedProperties(this, root, property, format("Could not set an 'or group' for 'unchecked' property [%s] in type [%s].", property, root.getSimpleName()));
@@ -437,7 +437,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             }
             return this;
         }
-
+        
         /////////////////// Checked properties with placeholders ///////////////////
         @Override
         public IAddToCriteriaTickManager swap(final Class<?> root, final String property1, final String property2) {
@@ -628,14 +628,14 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         }
 
     }
-
+    
     /**
      * Compares <code>propertiesValues1</code> with <code>propertiesValues2</code>.
      * If they are equal using standard logic then we need to compare their values one by one with the check on 'not found mock' entities.
      * <p>
      * This logic is condensed to only {@link AddToCriteriaTickManager#propertiesValues1} due to the fact that this is the only place where 'not found mocks' can reside.
      * We don't need to override 'hashCode' because we do not place {@link AddToCriteriaTickManager} and its wrappers into hash-sets or maps as a keys.
-     *
+     * 
      * @param propertiesValues1
      * @param propertiesValues2
      * @return
@@ -647,7 +647,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         }
         return different;
     }
-
+    
     /**
      * A second tick manager for entity centres specific. <br>
      * <br>
