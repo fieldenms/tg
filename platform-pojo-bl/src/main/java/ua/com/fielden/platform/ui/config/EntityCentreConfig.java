@@ -2,7 +2,7 @@ package ua.com.fielden.platform.ui.config;
 
 import java.util.Date;
 
-import ua.com.fielden.platform.dashboard.Duration;
+import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
@@ -98,7 +98,7 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
     @IsProperty
     @MapTo
     @Title(value = "Dashboard Refresh Frequency", desc = "Defines how frequently this configuration should be refreshed as part of the dashboard refresh lifecycle.")
-    private Duration dashboardRefreshFrequency;
+    private DashboardRefreshFrequency dashboardRefreshFrequency;
 
     @IsProperty
     @MapTo
@@ -116,12 +116,12 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
     }
 
     @Observable
-    public EntityCentreConfig setDashboardRefreshFrequency(final Duration dashboardRefreshFrequency) {
+    public EntityCentreConfig setDashboardRefreshFrequency(final DashboardRefreshFrequency dashboardRefreshFrequency) {
         this.dashboardRefreshFrequency = dashboardRefreshFrequency;
         return this;
     }
 
-    public Duration getDashboardRefreshFrequency() {
+    public DashboardRefreshFrequency getDashboardRefreshFrequency() {
         return dashboardRefreshFrequency;
     }
 

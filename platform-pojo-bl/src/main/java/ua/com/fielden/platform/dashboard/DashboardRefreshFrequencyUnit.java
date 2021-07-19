@@ -26,15 +26,15 @@ import ua.com.fielden.platform.utils.Pair;
  * Day is defined as standard 24 hours (86400 seconds) and does not change when transitioning through a daylight saving boundary.
  *
  * @author TG Team
- * @see ua.com.fielden.platform.dashboard.Duration
+ * @see ua.com.fielden.platform.dashboard.DashboardRefreshFrequency
  */
 @EntityTitle("Duration Unit")
 @KeyType(DynamicEntityKey.class)
 @KeyTitle("Duration Unit")
-@CompanionObject(DurationUnitCo.class)
+@CompanionObject(DashboardRefreshFrequencyUnitCo.class)
 @MapEntityTo
-public class DurationUnit extends AbstractEntity<DynamicEntityKey> {
-    private static final Pair<String, String> entityTitleAndDesc = getEntityTitleAndDesc(DurationUnit.class);
+public class DashboardRefreshFrequencyUnit extends AbstractEntity<DynamicEntityKey> {
+    private static final Pair<String, String> entityTitleAndDesc = getEntityTitleAndDesc(DashboardRefreshFrequencyUnit.class);
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
     public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
     
@@ -49,7 +49,7 @@ public class DurationUnit extends AbstractEntity<DynamicEntityKey> {
     private Integer millis; // no more than 2,147,483,647 which is sufficient even for 'days' durationUnit (= 86400000 milliseconds)
     
     @Observable
-    protected DurationUnit setMillis(final Integer millis) {
+    protected DashboardRefreshFrequencyUnit setMillis(final Integer millis) {
         this.millis = millis;
         return this;
     }
@@ -59,7 +59,7 @@ public class DurationUnit extends AbstractEntity<DynamicEntityKey> {
     }
 
     @Observable
-    public DurationUnit setUnit(final String unit) {
+    public DashboardRefreshFrequencyUnit setUnit(final String unit) {
         this.unit = unit;
         return this;
     }

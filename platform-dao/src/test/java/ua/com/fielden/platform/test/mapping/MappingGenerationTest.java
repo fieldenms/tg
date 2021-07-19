@@ -29,7 +29,7 @@ public class MappingGenerationTest {
                 + "		<column name=\"_VERSION\" default=\"0\" />\n" + "	</version>\n"
                 + "	<property name=\"configBody\" column=\"BODY\" type=\"org.hibernate.type.BinaryType\" length=\"1073741824\"/>\n"
                 + "	<property name=\"configUuid\" column=\"CONFIGUUID_\" type=\"org.hibernate.type.StringType\"/>\n"
-                + "	<many-to-one name=\"dashboardRefreshFrequency\" class=\"ua.com.fielden.platform.dashboard.Duration\" column=\"DASHBOARDREFRESHFREQUENCY_\"/>\n"
+                + "	<many-to-one name=\"dashboardRefreshFrequency\" class=\"ua.com.fielden.platform.dashboard.DashboardRefreshFrequency\" column=\"DASHBOARDREFRESHFREQUENCY_\"/>\n"
                 + "	<property name=\"dashboardable\" column=\"DASHBOARDABLE_\" type=\"org.hibernate.type.YesNoType\"/>\n"
                 + "	<property name=\"dashboardableDate\" column=\"DASHBOARDABLEDATE_\" type=\"org.hibernate.type.TimestampType\"/>\n"
                 + "	<property name=\"desc\" column=\"DESC_\" type=\"org.hibernate.type.StringType\"/>\n"

@@ -90,7 +90,7 @@ import java.util.stream.Stream;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.dashboard.Duration;
+import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
@@ -369,7 +369,7 @@ public class CentreUpdater {
      * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
      * @return
      */
-    public static Duration updateCentreDashboardRefreshFrequency(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final IEntityCentreConfig eccCompanion) {
+    public static DashboardRefreshFrequency updateCentreDashboardRefreshFrequency(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final IEntityCentreConfig eccCompanion) {
         final String deviceSpecificName = deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device);
         final EntityCentreConfig config = findConfig(miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, eccCompanion);
         return config != null ? config.getDashboardRefreshFrequency() : null;
@@ -412,7 +412,7 @@ public class CentreUpdater {
             final String newTitle,
             final String newDesc,
             final boolean newDashboardable,
-            final Duration newDashboardRefreshFrequency,
+            final DashboardRefreshFrequency newDashboardRefreshFrequency,
             final IEntityCentreConfig eccCompanion) {
         final Function<Optional<String>, Function<String, String>> nameOf = (saveAs) -> (surrogateName) -> deviceSpecific(saveAsSpecific(surrogateName, saveAs), device) + DIFFERENCES_SUFFIX;
         final Function<String, String> currentNameOf = nameOf.apply(saveAsName);

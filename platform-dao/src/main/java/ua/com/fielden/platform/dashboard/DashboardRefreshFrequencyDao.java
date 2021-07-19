@@ -10,39 +10,39 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.security.Authorise;
-import ua.com.fielden.platform.security.tokens.persistent.Duration_CanDelete_Token;
-import ua.com.fielden.platform.security.tokens.persistent.Duration_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanDelete_Token;
+import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanSave_Token;
 
 /**
- * DAO implementation for companion object {@link DurationCo}.
+ * DAO implementation for companion object {@link DashboardRefreshFrequencyCo}.
  *
  * @author TG Team
  *
  */
-@EntityType(Duration.class)
-public class DurationDao extends CommonEntityDao<Duration> implements DurationCo {
+@EntityType(DashboardRefreshFrequency.class)
+public class DashboardRefreshFrequencyDao extends CommonEntityDao<DashboardRefreshFrequency> implements DashboardRefreshFrequencyCo {
     
     @Inject
-    public DurationDao(final IFilter filter) {
+    public DashboardRefreshFrequencyDao(final IFilter filter) {
         super(filter);
     }
     
     @Override
     @SessionRequired
-    @Authorise(Duration_CanSave_Token.class)
-    public Duration save(final Duration entity) {
+    @Authorise(DashboardRefreshFrequency_CanSave_Token.class)
+    public DashboardRefreshFrequency save(final DashboardRefreshFrequency entity) {
         return super.save(entity);
     }
 
     @Override
     @SessionRequired
-    @Authorise(Duration_CanDelete_Token.class)
+    @Authorise(DashboardRefreshFrequency_CanDelete_Token.class)
     public int batchDelete(final Collection<Long> entitiesIds) {
         return defaultBatchDelete(entitiesIds);
     }
     
     @Override
-    protected IFetchProvider<Duration> createFetchProvider() {
+    protected IFetchProvider<DashboardRefreshFrequency> createFetchProvider() {
          return FETCH_PROVIDER;
     }
     

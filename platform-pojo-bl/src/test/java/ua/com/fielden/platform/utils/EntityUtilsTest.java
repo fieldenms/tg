@@ -46,8 +46,8 @@ import org.junit.Test;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.attachment.Attachment;
-import ua.com.fielden.platform.dashboard.Duration;
-import ua.com.fielden.platform.dashboard.DurationUnit;
+import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
+import ua.com.fielden.platform.dashboard.DashboardRefreshFrequencyUnit;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.domain.metadata.DomainExplorer;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -603,7 +603,7 @@ public class EntityUtilsTest {
 
     @Test
     public void only_a_specific_subset_of_platform_level_entities_have_introspection_allowed() {
-        final LinkedHashSet<Class<? extends AbstractEntity<?>>> expected = linkedSetOf(Attachment.class, DomainExplorer.class, Duration.class, DurationUnit.class, KeyNumber.class, User.class, UserRole.class, UserAndRoleAssociation.class, SecurityRoleAssociation.class);
+        final LinkedHashSet<Class<? extends AbstractEntity<?>>> expected = linkedSetOf(Attachment.class, DomainExplorer.class, DashboardRefreshFrequency.class, DashboardRefreshFrequencyUnit.class, KeyNumber.class, User.class, UserRole.class, UserAndRoleAssociation.class, SecurityRoleAssociation.class);
         final LinkedHashSet<Class<? extends AbstractEntity<?>>> filtered = PlatformDomainTypes.types.stream().filter(EntityUtils::isIntrospectionAllowed).collect(toCollection(LinkedHashSet::new));
         assertEquals(expected, filtered);
     }

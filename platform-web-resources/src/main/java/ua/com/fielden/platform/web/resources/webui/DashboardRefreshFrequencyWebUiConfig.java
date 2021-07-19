@@ -18,9 +18,9 @@ import static ua.com.fielden.platform.web.view.master.api.actions.MasterActions.
 
 import com.google.inject.Injector;
 
-import ua.com.fielden.platform.dashboard.Duration;
-import ua.com.fielden.platform.dashboard.DurationUnit;
-import ua.com.fielden.platform.ui.menu.sample.MiDuration;
+import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
+import ua.com.fielden.platform.dashboard.DashboardRefreshFrequencyUnit;
+import ua.com.fielden.platform.ui.menu.sample.MiDashboardRefreshFrequency;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
@@ -31,21 +31,21 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
 /**
- * {@link Duration} Web UI configuration.
+ * {@link DashboardRefreshFrequency} Web UI configuration.
  *
  * @author TG Team
  *
  */
-public class DurationWebUiConfig {
+public class DashboardRefreshFrequencyWebUiConfig {
 
-    public final EntityCentre<Duration> centre;
-    public final EntityMaster<Duration> master;
+    public final EntityCentre<DashboardRefreshFrequency> centre;
+    public final EntityMaster<DashboardRefreshFrequency> master;
 
-    public static DurationWebUiConfig register(final Injector injector, final IWebUiBuilder builder) {
-        return new DurationWebUiConfig(injector, builder);
+    public static DashboardRefreshFrequencyWebUiConfig register(final Injector injector, final IWebUiBuilder builder) {
+        return new DashboardRefreshFrequencyWebUiConfig(injector, builder);
     }
 
-    private DurationWebUiConfig(final Injector injector, final IWebUiBuilder builder) {
+    private DashboardRefreshFrequencyWebUiConfig(final Injector injector, final IWebUiBuilder builder) {
         centre = createCentre(injector);
         builder.register(centre);
         master = createMaster(injector);
@@ -53,54 +53,54 @@ public class DurationWebUiConfig {
     }
 
     /**
-     * Creates entity centre for {@link Duration}.
+     * Creates entity centre for {@link DashboardRefreshFrequency}.
      *
      * @param injector
      * @return created entity centre
      */
-    private EntityCentre<Duration> createCentre(final Injector injector) {
+    private EntityCentre<DashboardRefreshFrequency> createCentre(final Injector injector) {
         final String layout = mkGridForCentre(2, 1);
 
-        final EntityActionConfig standardNewAction = NEW_ACTION.mkAction(Duration.class);
-        final EntityActionConfig standardDeleteAction = DELETE_ACTION.mkAction(Duration.class);
-        final EntityActionConfig standardExportAction = EXPORT_ACTION.mkAction(Duration.class);
-        final EntityActionConfig standardEditAction = EDIT_ACTION.mkAction(Duration.class);
+        final EntityActionConfig standardNewAction = NEW_ACTION.mkAction(DashboardRefreshFrequency.class);
+        final EntityActionConfig standardDeleteAction = DELETE_ACTION.mkAction(DashboardRefreshFrequency.class);
+        final EntityActionConfig standardExportAction = EXPORT_ACTION.mkAction(DashboardRefreshFrequency.class);
+        final EntityActionConfig standardEditAction = EDIT_ACTION.mkAction(DashboardRefreshFrequency.class);
         final EntityActionConfig standardSortAction = CUSTOMISE_COLUMNS_ACTION.mkAction();
 
-        final EntityCentreConfig<Duration> ecc = EntityCentreBuilder.centreFor(Duration.class).runAutomatically()
+        final EntityCentreConfig<DashboardRefreshFrequency> ecc = EntityCentreBuilder.centreFor(DashboardRefreshFrequency.class).runAutomatically()
                 .addFrontAction(standardNewAction)
                 .addTopAction(standardNewAction).also()
                 .addTopAction(standardDeleteAction).also()
                 .addTopAction(standardSortAction).also()
                 .addTopAction(standardExportAction)
-                .addCrit("count").asRange().integer().also()
-                .addCrit("durationUnit").asMulti().autocompleter(DurationUnit.class)
+                .addCrit("value").asRange().integer().also()
+                .addCrit("refreshFrequencyUnit").asMulti().autocompleter(DashboardRefreshFrequencyUnit.class)
                 .setLayoutFor(DESKTOP, empty(), layout)
                 .setLayoutFor(TABLET, empty(), layout)
                 .setLayoutFor(MOBILE, empty(), layout)
-                .addProp("count").width(100)
+                .addProp("value").width(100)
                     .withAction(standardEditAction).also()
-                .addProp("durationUnit").minWidth(100)
+                .addProp("refreshFrequencyUnit").minWidth(100)
                     .withAction(standardEditAction).also()
-                .addProp("millis").order(1).desc().width(0)
+                .addProp("millis").order(1).desc().width(100)
                 .addPrimaryAction(standardEditAction)
                 .build();
 
-        return new EntityCentre<>(MiDuration.class, MiDuration.class.getSimpleName(), ecc, injector, null);
+        return new EntityCentre<>(MiDashboardRefreshFrequency.class, MiDashboardRefreshFrequency.class.getSimpleName(), ecc, injector, null);
     }
 
     /**
-     * Creates entity master for {@link Duration}.
+     * Creates entity master for {@link DashboardRefreshFrequency}.
      *
      * @param injector
      * @return created entity master
      */
-    private EntityMaster<Duration> createMaster(final Injector injector) {
+    private EntityMaster<DashboardRefreshFrequency> createMaster(final Injector injector) {
         final String layout = mkGridForMasterFitWidth(2, 1);
 
-        final IMaster<Duration> masterConfig = new SimpleMasterBuilder<Duration>().forEntity(Duration.class)
-                .addProp("count").asSpinner().also()
-                .addProp("durationUnit").asAutocompleter().also()
+        final IMaster<DashboardRefreshFrequency> masterConfig = new SimpleMasterBuilder<DashboardRefreshFrequency>().forEntity(DashboardRefreshFrequency.class)
+                .addProp("value").asSpinner().also()
+                .addProp("refreshFrequencyUnit").asAutocompleter().also()
                 .addAction(REFRESH).shortDesc("Cancel").longDesc("Cancel changes")
                 .addAction(SAVE).shortDesc("Save").longDesc("Save changes.")
                 .setActionBarLayoutFor(DESKTOP, empty(), mkActionLayoutForMaster())
@@ -110,6 +110,6 @@ public class DurationWebUiConfig {
                 .withDimensions(mkDim(320, 240))
                 .done();
 
-        return new EntityMaster<>(Duration.class, masterConfig, injector);
+        return new EntityMaster<>(DashboardRefreshFrequency.class, masterConfig, injector);
     }
 }

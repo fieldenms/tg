@@ -26,10 +26,10 @@ import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.dao.IUserRole;
-import ua.com.fielden.platform.dashboard.DurationCo;
-import ua.com.fielden.platform.dashboard.DurationDao;
-import ua.com.fielden.platform.dashboard.DurationUnitCo;
-import ua.com.fielden.platform.dashboard.DurationUnitDao;
+import ua.com.fielden.platform.dashboard.DashboardRefreshFrequencyCo;
+import ua.com.fielden.platform.dashboard.DashboardRefreshFrequencyDao;
+import ua.com.fielden.platform.dashboard.DashboardRefreshFrequencyUnitCo;
+import ua.com.fielden.platform.dashboard.DashboardRefreshFrequencyUnitDao;
 import ua.com.fielden.platform.domain.metadata.DomainExplorerCo;
 import ua.com.fielden.platform.domain.metadata.DomainExplorerDao;
 import ua.com.fielden.platform.domain.metadata.DomainExplorerInsertionPointCo;
@@ -313,8 +313,8 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(DomainExplorerCo.class).to(DomainExplorerDao.class);
         bind(DomainExplorerInsertionPointCo.class).to(DomainExplorerInsertionPointDao.class);
 
-        bind(DurationUnitCo.class).to(DurationUnitDao.class);
-        bind(DurationCo.class).to(DurationDao.class);
+        bind(DashboardRefreshFrequencyUnitCo.class).to(DashboardRefreshFrequencyUnitDao.class);
+        bind(DashboardRefreshFrequencyCo.class).to(DashboardRefreshFrequencyDao.class);
     }
 
     public Properties getProps() {

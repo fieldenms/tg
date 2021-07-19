@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.web.centre;
 
-import ua.com.fielden.platform.dashboard.Duration;
+import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
@@ -49,15 +49,15 @@ public abstract class AbstractCentreConfigCommitAction extends AbstractCentreCon
     @IsProperty
     @Title(value = "Dashboard refresh frequency", desc = "Defines how frequently centre configuration should be refreshed as part of the dashboard refresh lifecycle.")
     @Readonly // TODO remove when dashboardable functionality will be available
-    private Duration dashboardRefreshFrequency;
+    private DashboardRefreshFrequency dashboardRefreshFrequency;
     
     @Observable
-    public AbstractCentreConfigCommitAction setDashboardRefreshFrequency(final Duration dashboardRefreshFrequency) {
+    public AbstractCentreConfigCommitAction setDashboardRefreshFrequency(final DashboardRefreshFrequency dashboardRefreshFrequency) {
         this.dashboardRefreshFrequency = dashboardRefreshFrequency;
         return this;
     }
     
-    public Duration getDashboardRefreshFrequency() {
+    public DashboardRefreshFrequency getDashboardRefreshFrequency() {
         return dashboardRefreshFrequency;
     }
     

@@ -12,7 +12,7 @@ import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
-import ua.com.fielden.platform.dashboard.Duration;
+import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -39,8 +39,8 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Supplier<ICentreDomainTreeManagerAndEnhancer> previouslyRunCentreSupplier;
     /** IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE. */
     private Function<Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> freshCentreApplier;
-    private Function<String, Function<String, Function<Boolean, Function<Duration, Map<String, Object>>>>> centreEditor;
-    private Function<String, Function<String, Function<Boolean, Function<Duration, Map<String, Object>>>>> centreSaver;
+    private Function<String, Function<String, Function<Boolean, Function<DashboardRefreshFrequency, Map<String, Object>>>>> centreEditor;
+    private Function<String, Function<String, Function<Boolean, Function<DashboardRefreshFrequency, Map<String, Object>>>>> centreSaver;
     private Function<Boolean, Map<String, Object>> centreConfigurator;
     private Runnable centreDeleter;
     /** IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE. */
@@ -55,7 +55,7 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Consumer<Optional<String>> preferredConfigMaker;
     private Function<Optional<String>, Optional<T2<String, String>>> centreTitleAndDescGetter;
     private Function<Optional<String>, Boolean> centreDashboardableGetter;
-    private Function<Optional<String>, Duration> centreDashboardRefreshFrequencyGetter;
+    private Function<Optional<String>, DashboardRefreshFrequency> centreDashboardRefreshFrequencyGetter;
     private Function<Optional<String>, Boolean> centreRunAutomaticallyGetter;
     private Supplier<Boolean> defaultRunAutomaticallySupplier;
     private Function<Optional<String>, Optional<String>> centreConfigUuidGetter;
@@ -173,11 +173,11 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return freshCentreApplier.apply(modifHolder);
     }
 
-    public void setCentreEditor(final Function<String, Function<String, Function<Boolean, Function<Duration, Map<String, Object>>>>> centreEditor) {
+    public void setCentreEditor(final Function<String, Function<String, Function<Boolean, Function<DashboardRefreshFrequency, Map<String, Object>>>>> centreEditor) {
         this.centreEditor = centreEditor;
     }
 
-    public Map<String, Object> editCentre(final String title, final String desc, final boolean dashboardable, final Duration dashboardRefreshFrequency) {
+    public Map<String, Object> editCentre(final String title, final String desc, final boolean dashboardable, final DashboardRefreshFrequency dashboardRefreshFrequency) {
         return centreEditor.apply(title).apply(desc).apply(dashboardable).apply(dashboardRefreshFrequency);
     }
 
@@ -189,11 +189,11 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return centreConfigurator.apply(runAutomatically);
     }
 
-    public void setCentreSaver(final Function<String, Function<String, Function<Boolean, Function<Duration, Map<String, Object>>>>> centreSaver) {
+    public void setCentreSaver(final Function<String, Function<String, Function<Boolean, Function<DashboardRefreshFrequency, Map<String, Object>>>>> centreSaver) {
         this.centreSaver = centreSaver;
     }
 
-    public Map<String, Object> saveCentre(final String title, final String desc, final boolean dashboardable, final Duration dashboardRefreshFrequency) {
+    public Map<String, Object> saveCentre(final String title, final String desc, final boolean dashboardable, final DashboardRefreshFrequency dashboardRefreshFrequency) {
         return centreSaver.apply(title).apply(desc).apply(dashboardable).apply(dashboardRefreshFrequency);
     }
 
@@ -316,11 +316,11 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return centreRunAutomaticallyGetter.apply(saveAsName);
     }
 
-    public void setCentreDashboardRefreshFrequencyGetter(final Function<Optional<String>, Duration> centreDashboardRefreshFrequencyGetter) {
+    public void setCentreDashboardRefreshFrequencyGetter(final Function<Optional<String>, DashboardRefreshFrequency> centreDashboardRefreshFrequencyGetter) {
         this.centreDashboardRefreshFrequencyGetter = centreDashboardRefreshFrequencyGetter;
     }
 
-    public Duration centreDashboardRefreshFrequency(final Optional<String> saveAsName) {
+    public DashboardRefreshFrequency centreDashboardRefreshFrequency(final Optional<String> saveAsName) {
         return centreDashboardRefreshFrequencyGetter.apply(saveAsName);
     }
 

@@ -16,6 +16,7 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Readonly;
+import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.annotation.mutator.StrParam;
@@ -24,17 +25,17 @@ import ua.com.fielden.platform.entity.validation.GreaterValidator;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
- * Entity representing simple duration defined by integer number of {@link DurationUnit}s.
+ * Entity representing simple duration defined by integer number of {@link DashboardRefreshFrequencyUnit}s.
  *
  * @author TG Team
  */
-@EntityTitle("Duration")
-@KeyType(DynamicEntityKey.class)
-@KeyTitle("Duration")
-@CompanionObject(DurationCo.class)
+@EntityTitle("Dashboard Refresh Frequency")
+@KeyType(value = DynamicEntityKey.class, keyMemberSeparator = " ")
+@KeyTitle("Dashboard Refresh Frequency")
+@CompanionObject(DashboardRefreshFrequencyCo.class)
 @MapEntityTo
-public class Duration extends AbstractEntity<DynamicEntityKey> {
-    private static final Pair<String, String> entityTitleAndDesc = getEntityTitleAndDesc(Duration.class);
+public class DashboardRefreshFrequency extends AbstractEntity<DynamicEntityKey> {
+    private static final Pair<String, String> entityTitleAndDesc = getEntityTitleAndDesc(DashboardRefreshFrequency.class);
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
     public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
     
@@ -42,21 +43,22 @@ public class Duration extends AbstractEntity<DynamicEntityKey> {
     @MapTo
     @CompositeKeyMember(1)
     @BeforeChange(@Handler(value = GreaterValidator.class, str = { @StrParam(name = "limit", value = "0") }))
-    private Integer count; // no more than 2,147,483,647 which is sufficient even for 'milliseconds' durationUnit (~24.86 days)
+    private Integer value; // no more than 2,147,483,647 which is sufficient even for 'milliseconds' durationUnit (~24.86 days)
     
     @IsProperty
     @MapTo
     @CompositeKeyMember(2)
-    private DurationUnit durationUnit;
+    private DashboardRefreshFrequencyUnit refreshFrequencyUnit;
     
     @IsProperty
     @Readonly
     @Calculated
+    @Title("Refresh Frequency (millis)")
     private Long millis;
-    protected static final ExpressionModel millis_ = expr().prop("count").mult().prop("durationUnit.millis").model();
+    protected static final ExpressionModel millis_ = expr().prop("value").mult().prop("refreshFrequencyUnit.millis").model();
     
     @Observable
-    protected Duration setMillis(final Long millis) {
+    protected DashboardRefreshFrequency setMillis(final Long millis) {
         this.millis = millis;
         return this;
     }
@@ -66,23 +68,23 @@ public class Duration extends AbstractEntity<DynamicEntityKey> {
     }
     
     @Observable
-    public Duration setDurationUnit(final DurationUnit durationUnit) {
-        this.durationUnit = durationUnit;
+    public DashboardRefreshFrequency setRefreshFrequencyUnit(final DashboardRefreshFrequencyUnit durationUnit) {
+        this.refreshFrequencyUnit = durationUnit;
         return this;
     }
     
-    public DurationUnit getDurationUnit() {
-        return durationUnit;
+    public DashboardRefreshFrequencyUnit getRefreshFrequencyUnit() {
+        return refreshFrequencyUnit;
     }
     
     @Observable
-    public Duration setCount(final Integer count) {
-        this.count = count;
+    public DashboardRefreshFrequency setValue(final Integer count) {
+        this.value = count;
         return this;
     }
     
-    public Integer getCount() {
-        return count;
+    public Integer getValue() {
+        return value;
     }
     
 }
