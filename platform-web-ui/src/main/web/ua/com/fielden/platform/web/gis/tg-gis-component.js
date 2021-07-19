@@ -221,6 +221,9 @@ GisComponent.prototype.createOverlays = function () {
     return {};
 };
 
+/**
+ * Creates component that defines base map layers. Override this method to define custom base layers. BaseLayers component (tg-base-layers) can be used as a basis.
+ */
 GisComponent.prototype.createBaseLayers = function () {
     return new BaseLayers();
 };
@@ -487,16 +490,16 @@ GisComponent.prototype.createPopupContent = function (feature) {
     template.innerHTML = popupText + '</table>';
     const element = template.content.firstChild;
     
-    if (entity && entity.get('key') && feature.properties) {
-        const rows = element.children[0].querySelectorAll('.popup-row');
+    if (entity && entity.get('key') && feature.properties) { // for the 'entity' that is present on the map ... 
+        const rows = element.children[0].querySelectorAll('.popup-row'); // ... find all popup 'rows' ... ('element' is a <table> and its first child is a <tbody> that contains all <tr>s)
         const columnPropertiesMapped = self.columnPropertiesMapper(entity);
         rows.forEach(row => {
             const foundEntry = columnPropertiesMapped.find(entry => entry.column.columnTitle === row.title);
             if (foundEntry && foundEntry.column && foundEntry.column.parentNode /* EGI */ && foundEntry.column.parentNode.hasAction(entity, foundEntry.column)) {
-                const valueElement = row.children[1].children[0];
+                const valueElement = row.children[1].children[0]; // ... 'row' is a <tr> element; second child of it represents <td> with a value; make the child of this <td> (<div> element) clickable ...
                 valueElement.className = 'popup-button';
                 valueElement.addEventListener('click', function () {
-                    foundEntry.column.parentNode._tapColumn(entity, foundEntry.column);
+                    foundEntry.column.parentNode._tapColumn(entity, foundEntry.column); // ... with a function exactly as in EGI
                 });
             }
         });
@@ -519,14 +522,6 @@ GisComponent.prototype.createPopupContent = function (feature) {
     return element;
 }
 
-GisComponent.prototype.titleFor = function (feature, dotNotation) {
-    const rootType = feature.constructor.prototype.type.call(feature);
-    if (dotNotation === '') { // empty property name means 'entity itself'
-        return rootType.prop('key').title();
-    }
-    return rootType.prop(dotNotation).title();
-}
-
 GisComponent.prototype.findEntityBy = function (feature) {
     if (feature.properties && feature.properties.GlobalID) { // this is ArcGIS feature
         const globalId = feature.properties.GlobalID;
@@ -540,6 +535,17 @@ GisComponent.prototype.findEntityBy = function (feature) {
     } else { // simple feature-entity, does not have ArcGIS nature
         return feature;
     }
+}
+
+/**
+ * Returns title for entity property. For empty property returns title of the key.
+ */
+GisComponent.prototype.titleFor = function (feature, dotNotation) {
+    const rootType = feature.constructor.prototype.type.call(feature);
+    if (dotNotation === '') { // empty property name means 'entity itself'
+        return rootType.prop('key').title();
+    }
+    return rootType.prop(dotNotation).title();
 }
 
 GisComponent.prototype.valueToString = function (value) {
