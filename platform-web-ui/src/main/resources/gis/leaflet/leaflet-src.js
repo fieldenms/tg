@@ -205,7 +205,7 @@
   // Data URI string containing a base64-encoded empty GIF image.
   // Used as a hack to free memory from unused images on WebKit-powered
   // mobile devices (by setting image `src` to this string).
-  var emptyImageUrl = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
+  var emptyImageUrl = 'resources/gis/leaflet/images/empty-image.gif'; // TG change: replace base64 image with locally downloaded version; this eliminates the need to change Content Security Policy for customers with no 'img-src https: data:;'
 
   // inspired by http://paulirish.com/2011/requestanimationframe-for-smart-animating/
 
