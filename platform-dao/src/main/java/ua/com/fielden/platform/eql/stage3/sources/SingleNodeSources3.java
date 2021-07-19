@@ -2,7 +2,6 @@ package ua.com.fielden.platform.eql.stage3.sources;
 
 import java.util.Objects;
 
-import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import ua.com.fielden.platform.entity.query.DbVersion;
 
 public class SingleNodeSources3 implements ISources3 {
@@ -13,9 +12,8 @@ public class SingleNodeSources3 implements ISources3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion, final boolean atFromStmt) {
-        final String sql = source.sql(dbVersion);
-        return (atFromStmt && isNotEmpty(sql) ? "\nFROM\n" : "") + sql;
+    public String sql(final DbVersion dbVersion) {
+        return source.sql(dbVersion);
     }
     
     @Override
@@ -36,5 +34,10 @@ public class SingleNodeSources3 implements ISources3 {
         final SingleNodeSources3 other = (SingleNodeSources3) obj;
         
         return Objects.equals(source, other.source);
+    }
+
+    @Override
+    public boolean needsParentheses() {
+        return false;
     }
 }

@@ -33,7 +33,7 @@ public abstract class AbstractQuery3 {
     public String sql(final DbVersion dbVersion) {
         final StringBuffer sb = new StringBuffer();
         sb.append(yields.sql(dbVersion));
-        sb.append(sources != null ? sources.sql(dbVersion, true) : (dbVersion == ORACLE ? " FROM DUAL " : ""));
+        sb.append(sources != null ? "\nFROM\n" + sources.sql(dbVersion) : (dbVersion == ORACLE ? " FROM DUAL " : ""));
         sb.append(conditions.sql(dbVersion, true));
         sb.append(groups.sql(dbVersion));
         sb.append(orderings.sql(dbVersion));

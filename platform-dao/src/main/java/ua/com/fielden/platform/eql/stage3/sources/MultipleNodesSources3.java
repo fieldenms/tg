@@ -22,10 +22,14 @@ public class MultipleNodesSources3 implements ISources3 {
     }
 
     @Override
-    public String sql(final DbVersion dbVersion, final boolean atFromStmt) {
+    public String sql(final DbVersion dbVersion) {
         final String joinConditionsSql = joinConditions.sql(dbVersion);
-        return (atFromStmt ? "\nFROM\n" : "(") + leftSource.sql(dbVersion, false) + "\n  " + joinType + "\n" + rightSource.sql(dbVersion, false) + (isNotEmpty(joinConditionsSql) ? "  ON " : "") + joinConditionsSql + (atFromStmt ? "" : ")");
+        return sourcesSql(dbVersion, leftSource) + "\n  " + joinType + "\n" + sourcesSql(dbVersion, rightSource) + (isNotEmpty(joinConditionsSql) ? "  ON " : "") + joinConditionsSql;
     }
+    
+    private String sourcesSql(final DbVersion dbVersion, ISources3 sources) {
+        return sources.needsParentheses() ? "(" + sources.sql(dbVersion) + ")" : sources.sql(dbVersion); 
+     }
     
     @Override
     public int hashCode() {
@@ -54,5 +58,10 @@ public class MultipleNodesSources3 implements ISources3 {
                 Objects.equals(rightSource, other.rightSource) &&
                 Objects.equals(joinType, other.joinType) &&
                 Objects.equals(joinConditions, other.joinConditions);
+    }
+
+    @Override
+    public boolean needsParentheses() {
+        return true;
     }
 }

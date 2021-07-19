@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.eql.stage3.sources;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.eql.stage3.IGenerateSql;
 
-public interface ISources3 {
-    String sql(final DbVersion dbVersion, final boolean atFromStmt);
+public interface ISources3 extends IGenerateSql {
+    boolean needsParentheses();
 }
