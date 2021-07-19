@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.conditions;
 
+import static java.util.Collections.emptyList;
 import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.AND;
 
 import java.util.ArrayList;
@@ -12,6 +13,8 @@ import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
 
 public class Conditions1 implements ICondition1<Conditions2> {
+    public static final Conditions1 emptyConditions = new Conditions1(false, null, emptyList());
+
     public final boolean negated;
     public final ICondition1<? extends ICondition2<?>> firstCondition;
     private final List<CompoundCondition1> otherConditions = new ArrayList<>();
@@ -20,11 +23,6 @@ public class Conditions1 implements ICondition1<Conditions2> {
         this.firstCondition = firstCondition;
         this.otherConditions.addAll(otherConditions);
         this.negated = negated;
-    }
-
-    public Conditions1() {
-        negated = false;
-        firstCondition = null;
     }
 
     public boolean isEmpty() {
@@ -61,6 +59,10 @@ public class Conditions1 implements ICondition1<Conditions2> {
 
     @Override
     public Conditions2 transform(final TransformationContext context) {
+        if (isEmpty()) {
+            return Conditions2.emptyConditions;
+        }
+        
         final List<List<? extends ICondition2<?>>> transformed = formDnf().stream()
                 .map(andGroup -> 
                                   andGroup.stream().map(andGroupCondition -> andGroupCondition.transform(context))

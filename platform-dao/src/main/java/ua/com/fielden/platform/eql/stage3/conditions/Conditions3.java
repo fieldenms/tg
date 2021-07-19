@@ -19,19 +19,10 @@ public class Conditions3 implements ICondition3 {
 
     @Override
     public String sql(final DbVersion dbVersion) {
-        return sql(dbVersion, false);
-    }
-    
-    public String sql(final DbVersion dbVersion, final boolean atWhere) {
-        if (!allConditionsAsDnf.isEmpty()) {
-            final String sqlBody = allConditionsAsDnf.stream().map(dl -> dl.stream().map(cond -> cond.sql(dbVersion)).collect(joining(" AND "))).collect(joining(" OR "));
-            final boolean parenthesesNeeded = allConditionsAsDnf.size() > 1 || negated;
-            final String sqlStart = atWhere ? "\nWHERE " : "";
-            final String negation = negated ? " NOT " : "";
-            return sqlStart + negation + (parenthesesNeeded ? "(" : "") + sqlBody + (parenthesesNeeded ? ")" : ""); 
-        } else {
-            return "";
-        }
+        final String sqlBody = allConditionsAsDnf.stream().map(dl -> dl.stream().map(cond -> cond.sql(dbVersion)).collect(joining(" AND "))).collect(joining(" OR "));
+        final boolean parenthesesNeeded = allConditionsAsDnf.size() > 1 || negated;
+        final String negation = negated ? " NOT " : "";
+        return negation + (parenthesesNeeded ? "(" : "") + sqlBody + (parenthesesNeeded ? ")" : ""); 
     }
     
     @Override

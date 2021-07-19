@@ -237,7 +237,7 @@ public class ConditionBuilder extends AbstractTokensBuilder {
     private Conditions1 getGroup(final List<ICondition1<? extends ICondition2<?>>> conditions, final LogicalOperator logicalOperator) {
         final Iterator<ICondition1<? extends ICondition2<?>>> iterator = conditions.iterator();
         if (!iterator.hasNext()) {
-            return new Conditions1();
+            return Conditions1.emptyConditions;
         } else {
             final ICondition1<? extends ICondition2<?>> firstCondition = iterator.next();
             final List<CompoundCondition1> otherConditions = new ArrayList<>();

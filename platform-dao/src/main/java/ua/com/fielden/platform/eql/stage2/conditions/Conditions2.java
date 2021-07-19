@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.conditions;
 
+import static java.util.Collections.emptyList;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -13,6 +15,8 @@ import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
 
 public class Conditions2 extends AbstractCondition2<Conditions3> {
+    public static final Conditions2 emptyConditions = new Conditions2(false, emptyList());
+
     private final List<List<? extends ICondition2<?>>> allConditionsAsDnf = new ArrayList<>();
     private final boolean negated;
 
@@ -28,6 +32,10 @@ public class Conditions2 extends AbstractCondition2<Conditions3> {
 
     @Override
     public TransformationResult<Conditions3> transform(final TransformationContext context) {
+        if (ignore()) {
+            return new TransformationResult<>(null, context);
+        }
+        
         final List<List<? extends ICondition3>> result = new ArrayList<>();
         TransformationContext currentContext = context;
         

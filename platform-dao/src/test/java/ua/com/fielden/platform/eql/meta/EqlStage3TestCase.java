@@ -270,7 +270,7 @@ public class EqlStage3TestCase extends EqlTestCase {
     //    }
 
     protected static SubQuery3 subqry(final ISources3 sources, final Yields3 yields, final Class<?> resultType, final Type hibType) {
-        return new SubQuery3(new QueryBlocks3(sources, new Conditions3(false, emptyList()), yields, groups(), orders()), resultType, hibType);
+        return new SubQuery3(new QueryBlocks3(sources, null, yields, groups(), orders()), resultType, hibType);
     }
 
     protected static SubQuery3 subqry(final ISources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType, final Type hibType) {
@@ -278,7 +278,7 @@ public class EqlStage3TestCase extends EqlTestCase {
     }
 
     private static ResultQuery3 resultQry(final ISources3 sources, final Yields3 yields, final Class<?> resultType) {
-        return new ResultQuery3(new QueryBlocks3(sources, new Conditions3(false, emptyList()), yields, groups(), orders()), resultType);
+        return new ResultQuery3(new QueryBlocks3(sources, null, yields, groups(), orders()), resultType);
     }
 
     private static ResultQuery3 resultQry(final ISources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
@@ -306,7 +306,7 @@ public class EqlStage3TestCase extends EqlTestCase {
     }
 
     protected static ResultQuery3 qryCountAll(final ISources3 sources) {
-        return resultQry(sources, new Conditions3(false, emptyList()), yields(yieldCountAll("KOUNT")), EntityAggregates.class);
+        return resultQry(sources, null, yields(yieldCountAll("KOUNT")), EntityAggregates.class);
     }
 
     protected static ResultQuery3 qry(final ISources3 sources, final Yields3 yields, final Class<?> resultType) {

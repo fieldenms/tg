@@ -6,6 +6,7 @@ import static java.util.Collections.emptyMap;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
+import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.emptyConditions;
 import static ua.com.fielden.platform.eql.stage2.etc.Yields2.nullYields;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
@@ -58,7 +59,6 @@ import ua.com.fielden.platform.types.tuples.T2;
 
 public class EqlStage2TestCase extends EqlTestCase {
 
-    protected static final Conditions2 emptyConditions2 = new Conditions2(false, emptyList());
     protected static final GroupBys2 emptyGroupBys2 = new GroupBys2(emptyList());
     protected static final OrderBys2 emptyOrderBys2 = new OrderBys2(emptyList());
 
@@ -271,23 +271,23 @@ public class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static SourceQuery2 srcqry(final ISources2<? extends ISources3> sources, final Yields2 yields) {
-        return new SourceQuery2(qb2(sources, emptyConditions2, yields), EntityAggregates.class);
+        return new SourceQuery2(qb2(sources, emptyConditions, yields), EntityAggregates.class);
     }
 
     protected static ResultQuery2 qry(final ISources2<? extends ISources3> sources, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType) {
-        return new ResultQuery2(qb2(sources, emptyConditions2, yields), resultType);
+        return new ResultQuery2(qb2(sources, emptyConditions, yields), resultType);
     }
 
     protected static ResultQuery2 qry(final ISources2<? extends ISources3> sources, final Yields2 yields, final OrderBys2 orderBys, final Class<? extends AbstractEntity<?>> resultType) {
-        return new ResultQuery2(qb2(sources, emptyConditions2, yields, orderBys), resultType);
+        return new ResultQuery2(qb2(sources, emptyConditions, yields, orderBys), resultType);
     }
 
     protected static ResultQuery2 qry(final ISources2<? extends ISources3> sources, final Yields2 yields) {
-        return new ResultQuery2(qb2(sources, emptyConditions2, yields), EntityAggregates.class);
+        return new ResultQuery2(qb2(sources, emptyConditions, yields), EntityAggregates.class);
     }
 
     protected static ResultQuery2 qryCountAll(final ISources2<? extends ISources3> sources) {
-        return new ResultQuery2(qb2(sources, emptyConditions2, yields(yieldCountAll("KOUNT"))), EntityAggregates.class);
+        return new ResultQuery2(qb2(sources, emptyConditions, yields(yieldCountAll("KOUNT"))), EntityAggregates.class);
     }
 
     protected static SubQuery2 subqry(final ISources2<? extends ISources3> sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType, final Object hibType) {
@@ -299,6 +299,6 @@ public class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static SubQuery2 subqry(final ISources2<? extends ISources3> sources, final Yields2 yields, final Class<?> resultType, final Object hibType) {
-        return new SubQuery2(qb2(sources, emptyConditions2, yields), resultType, hibType);
+        return new SubQuery2(qb2(sources, emptyConditions, yields), resultType, hibType);
     }
 }
