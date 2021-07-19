@@ -5,7 +5,6 @@ import java.util.Properties;
 
 import com.google.inject.Singleton;
 import com.google.inject.Stage;
-import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
 import ua.com.fielden.platform.attachment.AttachmentDao;
@@ -31,19 +30,17 @@ import ua.com.fielden.platform.domain.metadata.DomainExplorerCo;
 import ua.com.fielden.platform.domain.metadata.DomainExplorerDao;
 import ua.com.fielden.platform.domain.metadata.DomainExplorerInsertionPointCo;
 import ua.com.fielden.platform.domain.metadata.DomainExplorerInsertionPointDao;
+import ua.com.fielden.platform.domain.metadata.DomainPropertyCo;
 import ua.com.fielden.platform.domain.metadata.DomainPropertyDao;
 import ua.com.fielden.platform.domain.metadata.DomainPropertyHolderCo;
 import ua.com.fielden.platform.domain.metadata.DomainPropertyHolderDao;
-import ua.com.fielden.platform.domain.metadata.DomainTypeDao;
-import ua.com.fielden.platform.domain.metadata.DomainPropertyCo;
 import ua.com.fielden.platform.domain.metadata.DomainTypeCo;
+import ua.com.fielden.platform.domain.metadata.DomainTypeDao;
 import ua.com.fielden.platform.entity.EntityDeleteActionDao;
 import ua.com.fielden.platform.entity.EntityEditActionDao;
-import ua.com.fielden.platform.entity.EntityNavigationActionDao;
 import ua.com.fielden.platform.entity.EntityNewActionDao;
 import ua.com.fielden.platform.entity.IEntityDeleteAction;
 import ua.com.fielden.platform.entity.IEntityEditAction;
-import ua.com.fielden.platform.entity.IEntityNavigationAction;
 import ua.com.fielden.platform.entity.IEntityNewAction;
 import ua.com.fielden.platform.entity.ISecurityMatrixInsertionPoint;
 import ua.com.fielden.platform.entity.ISecurityMatrixSaveAction;
@@ -254,7 +251,6 @@ public class BasicWebServerModule extends CommonFactoryModule {
         // bind entity manipulation controller
         bind(IEntityNewAction.class).to(EntityNewActionDao.class);
         bind(IEntityEditAction.class).to(EntityEditActionDao.class);
-        bind(IEntityNavigationAction.class).to(EntityNavigationActionDao.class);
         bind(IEntityDeleteAction.class).to(EntityDeleteActionDao.class);
 
         //Reference Hierarchy

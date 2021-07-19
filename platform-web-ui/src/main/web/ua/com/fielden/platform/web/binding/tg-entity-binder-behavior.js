@@ -1,5 +1,6 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import {processResponseError, toastMsgForError} from '/resources/reflection/tg-ajax-utils.js';
+import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 export const TgEntityBinderBehavior = {
 
@@ -306,6 +307,16 @@ export const TgEntityBinderBehavior = {
         },
 
         /**
+         * Promise that starts on validate() call and fullfils iff this validation attempt gets successfully resolved.
+         * 
+         * If this attempt gets superseded by other attempt then the promise instance will never be resolved.
+         * However, 'lastValidationAttemptPromise' property gets replaced in this case.
+         */
+        lastValidationAttemptPromise: {
+            type: Object
+        },
+
+        /**
          * Current number of initiated requests as per validate() method.
          * 
          * This property counts only validation requests, not saving / running (other requests that apply values).
@@ -418,6 +429,10 @@ export const TgEntityBinderBehavior = {
                 const xhr = new XMLHttpRequest();
                 xhr.open("GET", url, true);
                 xhr.responseType = 'blob';
+                const tzHeader = _timeZoneHeader();
+                for (const headerName in tzHeader) {
+                    xhr.setRequestHeader(headerName, tzHeader[headerName]);
+                }
                 xhr.onload = function (e) {
                     if (xhr.status === 200) {
                         console.log('File received', xhr.getResponseHeader('Content-Disposition'));
@@ -553,28 +568,31 @@ export const TgEntityBinderBehavior = {
 
         // calbacks, that will be bound by editor child elements:
         self.validate = (function () {
-            const slf = this;
-            slf._validationCounter += 1;
-            console.log('validate initiated (', slf._validationCounter, ')');
-            // it is extremely important to create 'holder' outside of the debouncing construction to create immutable data
-            //   and pass it to debouncing function. The main reason for that is the following:
-            //     'slf._currBindingEntity' instance inside the debounced function can be altered by the results
-            //     of previous validations!
-            const holder = slf._extractModifiedPropertiesHolder(slf._currBindingEntity, slf._originalBindingEntity);
-            holder['@validationCounter'] = slf._validationCounter;
-            // After the first 'validate' invocation arrives -- debouncer will wait 50 milliseconds
-            //   for the next 'validate' invocation, and if it arrives -- the recent one will become as active ( and
-            //   again will start waiting for 50 millis and so on).
-            this.debounce('invoke-validation', function () {
-                console.log('validate (', holder['@validationCounter'], ')');
-                // cancel the 'invoke-validation' debouncer if there is any active one:
-                this.cancelDebouncer('invoke-validation');
-                // cancel previous validation before starting new one! The results of previous validation are irrelevant!
-                slf._validator().abortValidationIfAny();
-                // IMPORTANT: no need to check whether the _hasModified(holder) === true -- because the error recovery should happen!
-                // (if the entity was not modified -- _validate(holder) will start the error recovery process)
-                slf._validationPromise = slf._validateForDescendants(slf._reset(holder));
-            }, 50);
+            this.lastValidationAttemptPromise =  new Promise((resolve, reject) => {
+                const slf = this;
+                slf._validationCounter += 1;
+                console.log('validate initiated (', slf._validationCounter, ')');
+                // it is extremely important to create 'holder' outside of the debouncing construction to create immutable data
+                //   and pass it to debouncing function. The main reason for that is the following:
+                //     'slf._currBindingEntity' instance inside the debounced function can be altered by the results
+                //     of previous validations!
+                const holder = slf._extractModifiedPropertiesHolder(slf._currBindingEntity, slf._originalBindingEntity);
+                holder['@validationCounter'] = slf._validationCounter;
+                // After the first 'validate' invocation arrives -- debouncer will wait 50 milliseconds
+                //   for the next 'validate' invocation, and if it arrives -- the recent one will become as active ( and
+                //   again will start waiting for 50 millis and so on).
+                this.debounce('invoke-validation', function () {
+                    console.log('validate (', holder['@validationCounter'], ')');
+                    // cancel the 'invoke-validation' debouncer if there is any active one:
+                    this.cancelDebouncer('invoke-validation');
+                    // cancel previous validation before starting new one! The results of previous validation are irrelevant!
+                    slf._validator().abortValidationIfAny();
+                    // IMPORTANT: no need to check whether the _hasModified(holder) === true -- because the error recovery should happen!
+                    // (if the entity was not modified -- _validate(holder) will start the error recovery process)
+                    slf._validationPromise = slf._validateForDescendants(slf._reset(holder));
+                    slf._validationPromise.then(res => resolve(res)).catch(e => {}); // _validationPromise can be aborted (see abortValidationIfAny) and this is okay; catch handler is used to prevent 'Uncaught (in promise)' errors
+                }, 50);
+            });
         }).bind(self);
 
         self.doNotValidate = (function () {
@@ -695,6 +713,7 @@ export const TgEntityBinderBehavior = {
             if (this.postValidated) {
                 this.postValidated(validatedEntity, newBindingEntity, customObject);
             }
+            self.fire('binding-entity-validated', self._currBindingEntity); // this event can be used to react on validation events (see 'binding-entity-appeared' for refresh / cancel / save + continuous creation)
         }).bind(self);
 
         self._postValidatedDefaultError = (function (errorResult) {

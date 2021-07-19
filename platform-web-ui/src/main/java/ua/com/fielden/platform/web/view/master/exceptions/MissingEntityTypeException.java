@@ -1,9 +1,9 @@
-package ua.com.fielden.platform.web.resources.webui.exceptions;
+package ua.com.fielden.platform.web.view.master.exceptions;
 
-import ua.com.fielden.platform.web.resources.webui.MasterInfoProviderResource;
+import ua.com.fielden.platform.web.view.master.MasterInfoProvider;
 
 /**
- * The {@link RuntimeException} that is thrown when {@link MasterInfoProviderResource} can't find the type of entity for which master info was requested
+ * The {@link RuntimeException} that is thrown when {@link MasterInfoProvider} can't find the type of entity for which master info was requested
  *
  * @author TG Team
  *

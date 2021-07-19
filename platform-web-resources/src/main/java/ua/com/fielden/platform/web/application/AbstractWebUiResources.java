@@ -33,7 +33,6 @@ import ua.com.fielden.platform.web.factories.webui.FileResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.GraphiQLResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MainWebUiComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MasterComponentResourceFactory;
-import ua.com.fielden.platform.web.factories.webui.MasterInfoProviderResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.MasterTestsComponentResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.SerialisationTestResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.ServiceWorkerResourceFactory;
@@ -138,9 +137,6 @@ public abstract class AbstractWebUiResources extends Application {
         guardedRouter.attach("/test/serialisation", new SerialisationTestResourceFactory(injector));
         // For egi example TODO remove later.
         guardedRouter.attach("/test/egi", new EgiExampleResourceFactory(injector));
-
-        //Attache master retrieve resource
-        guardedRouter.attach("/master/{entityType}", new MasterInfoProviderResourceFactory(webApp, deviceProvider, dates, restUtil));
 
         //Attache client side error logger resource
         guardedRouter.attach("/error", new WebClientErrorLoggerResourceFactory(injector));

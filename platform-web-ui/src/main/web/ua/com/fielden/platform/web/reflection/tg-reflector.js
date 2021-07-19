@@ -564,6 +564,20 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
     }
 
     /**
+     * Returns preferred property for the entity (non-empty string property name) or 'null' if preferred property is not defined.
+     */
+    Entity.prototype.preferredProperty = function () {
+        return (typeof this['@_pp'] === 'undefined') ? null : this['@_pp'];
+    }
+
+    /**
+     * Sets preferred property for the entity (non-empty string property name) or 'null' if preferred property should not be defined for the entity.
+     */
+    Entity.prototype._setPreferredProperty = function (preferredProperty) {
+        return this['@_pp'] = preferredProperty;
+    }
+
+    /**
      * Determines whether the top-level result, that wraps this entity was invalid, which means that some exception on server has been occured (e.g. saving exception).
      *
      */
@@ -907,6 +921,14 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
         return str.replace(/([A-Z])/g, function (match, group) {
             return " " + group;
         }).trim();
+    }
+
+    /**
+     * Returns associated entity master informational object for this entity type.
+     * Returns 'null' if there is no entity master for this type.
+     */
+    EntityType.prototype.entityMaster = function () {
+        return this._entityMaster;
     }
 
     return EntityType;

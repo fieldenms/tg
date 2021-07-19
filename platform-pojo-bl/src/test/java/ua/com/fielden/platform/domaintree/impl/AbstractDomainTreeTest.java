@@ -366,7 +366,7 @@ public abstract class AbstractDomainTreeTest {
      * @author TG Team
      *
      */
-    protected interface IAction {
+    public interface IAction {
         void action(final String name);
     }
 

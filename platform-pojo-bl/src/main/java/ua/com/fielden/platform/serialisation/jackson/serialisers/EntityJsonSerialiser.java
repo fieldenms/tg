@@ -152,6 +152,11 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                 }
             }
             
+            if (entity.getPreferredProperty() != null) {
+                generator.writeFieldName("@_pp");
+                generator.writeObject(entity.getPreferredProperty());
+            }
+            
             // serialise all the properties relying on the fact that property sequence is consistent with order of fields in the class declaration
             for (final CachedProperty prop : properties) {
                 // non-composite keys should be persisted by identifying their actual type

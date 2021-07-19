@@ -1334,7 +1334,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * @param preferredProperty
      */
     public void setPreferredProperty(final String preferredProperty) {
-        if (!EntityUtils.isProperty(getType(), preferredProperty)) {
+        if (preferredProperty != null && !EntityUtils.isProperty(getType(), preferredProperty)) { // null 'preferredProperty' can be used to reset existing preferred property that was set previously
             throw new EntityException(format("The specified property name [%s] does not represent a valid property for type [%s].", preferredProperty, getType().getName()));
         }
         this.preferredProperty = preferredProperty;

@@ -9,6 +9,8 @@ import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static org.apache.commons.lang.StringUtils.lastIndexOf;
+import static org.apache.commons.lang.StringUtils.length;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
@@ -21,12 +23,11 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotatio
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.PROPERTY_SPLITTER;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
-import static ua.com.fielden.platform.utils.EntityUtils.isIntrospectionDenied;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
-import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.StreamUtils.takeWhile;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 
 import java.io.Serializable;
 import java.lang.reflect.Constructor;
@@ -46,16 +47,15 @@ import java.util.EnumSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 
@@ -63,7 +63,6 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
 import ua.com.fielden.platform.companion.IEntityReader;
-import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
@@ -683,7 +682,7 @@ public class EntityUtils {
                 return persistentTypes.get(type, () ->
                         isEntityType(type)
                         && !isUnionEntityType(type)
-                        && !isSyntheticEntityType((Class<? extends AbstractEntity<?>>) type)
+                        && !isSyntheticEntityType(type)
                         && AnnotationReflector.getAnnotation(type, MapEntityTo.class) != null);
             } catch (final Exception ex) {
                 final String msg = format("Could not determine persistent nature of entity type [%s].", type.getSimpleName());
@@ -1301,7 +1300,8 @@ public class EntityUtils {
 
     /**
      * Traverses a property path starting from the end of the path to generate a stream of tuples {@code (property, value)}. The last property in the path is excluded if it is not entity-typed.
-     * If the path only contains one non-entity-typed property then an empty stream is returned.
+     * If the path only contains one non-entity-typed property or it is empty then a stream with only empty property and root entity pair is returned.
+     *
      * <p>
      * If the path is invalid then the resultant stream would be empty.
      * If the path is valid, but there {@code null} values on some of the intermediate properties then corresponding sub-path values would be represented as empty {@link Optional}.
@@ -1313,18 +1313,22 @@ public class EntityUtils {
      * @return
      */
     public static Stream<T2<String, Optional<? extends AbstractEntity<?>>>> traversePropPath(final AbstractEntity<?> root, final String propertyPath) {
+        if (root == null) {
+            return empty();
+        } else if (propertyPath == null) {
+            return Stream.of(t2("", Optional.of(root)));
+        }
         final Stream<String> paths = Stream.iterate(propertyPath, path -> {
-            final int indexOfLastDot = path.lastIndexOf(PROPERTY_SPLITTER);
-            return indexOfLastDot > 0 ? path.substring(0, indexOfLastDot) : "";
+            final int indexOfLastDot = lastIndexOf(path, PROPERTY_SPLITTER);
+            return indexOfLastDot > 0 ? path.substring(0, indexOfLastDot) :
+                                        length(path) > 0 ? "" : null;
         });
 
         // skip the first element (i.e. last property in the path) if it does not terminate with an entity-typed property
         // if this check fails then the path itself is in error...
-        final Either<Exception, Stream<String>> either = TryWrapper.Try(() -> AbstractEntity.class.isAssignableFrom(PropertyTypeDeterminator.determinePropertyType(root.getType(), propertyPath)) ? paths : paths.skip(1));
-        return takeWhile(either.getOrElse(Stream::empty), StringUtils::isNotEmpty).map(path -> {
-            final int indexOfLastDot = path.lastIndexOf(PROPERTY_SPLITTER);
-            final String propName = indexOfLastDot > 0 ? path.substring(indexOfLastDot + 1) : path;
-            return t2(propName, ofNullable(root.get(path)));
+        final Either<Exception, Stream<String>> either = TryWrapper.Try(() -> AbstractEntity.class.isAssignableFrom(determinePropertyType(root.getType(), dslName(propertyPath))) ? paths : paths.skip(1));
+        return takeWhile(either.getOrElse(Stream::empty), Objects::nonNull).map(path -> {
+            return t2(path, ofNullable(isEmpty(path) ? root : root.get(path)));
         });
     }
 

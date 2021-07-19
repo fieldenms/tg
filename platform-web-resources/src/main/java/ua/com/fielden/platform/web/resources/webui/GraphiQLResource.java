@@ -16,12 +16,13 @@ import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
-import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.tokens.web_api.GraphiQL_CanExecute_Token;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.ioc.exceptions.MissingWebResourceException;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web_api.IWebApi;
@@ -32,7 +33,7 @@ import ua.com.fielden.platform.web_api.IWebApi;
  * @author TG Team
  *
  */
-public class GraphiQLResource extends ServerResource {
+public class GraphiQLResource extends AbstractWebResource {
     private final Logger logger = LogManager.getLogger(GraphiQLResource.class);
     private final IAuthorisationModel authModel;
     private final IWebApi webApi;
@@ -45,10 +46,12 @@ public class GraphiQLResource extends ServerResource {
             final IWebApi webApi,
             final IAuthorisationModel authModel,
             final RestServerUtil restUtil,
+            final IDeviceProvider deviceProvider,
+            final IDates dates,
             final Context context,
             final Request request,
             final Response response) {
-        init(context, request, response);
+        super(context, request, response, deviceProvider, dates);
         this.authModel = authModel;
         this.webApi = webApi;
         this.restUtil = restUtil;
