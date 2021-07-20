@@ -139,7 +139,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  */
 public class CriteriaResource extends AbstractWebResource {
     private static final Logger logger = Logger.getLogger(CriteriaResource.class);
-    private static final String CONFIG_COULD_NOT_BE_SHARED_WITH_BASE_USER = "No configuration can be shared with base users, e.g. with %s.";
+    private static final String CONFIG_COULD_NOT_BE_SHARED_WITH_BASE_USER = "No configuration can be shared with base users (%s).";
     private static final String LINK_CONFIG_COULD_NOT_BE_SHARED = "Link configurations cannot be shared.";
     private static final String CONFLICTING_TITLE_SUFFIX = " (shared%s)";
     private static final String COULD_NOT_LOAD_CONFLICTING_SHARED_CONFIGURATION = "Cannot load a shared configuration with conflicting title [%s].";

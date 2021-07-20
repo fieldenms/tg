@@ -24,7 +24,7 @@ import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntit
  *
  */
 public class CentreConfigConfigureActionProducer extends DefaultEntityProducerWithContext<CentreConfigConfigureAction> {
-    private static final String ERR_CANNOT_BE_CONFIGURED = "Only saved / default configurations can be configured.";
+    private static final String ERR_CANNOT_BE_CONFIGURED = "Only saved and default configurations can be configured.";
     
     @Inject
     public CentreConfigConfigureActionProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {

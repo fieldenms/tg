@@ -32,7 +32,7 @@ import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
  *
  */
 public class CentreConfigLoadActionChosenIdsValidator implements IBeforeChangeEventHandler<LinkedHashSet<String>> {
-    private static final String WRN_DEFAULT_CONFIG_CHANGES_WILL_BE_LOST = "There are some changes in %s. They will be lost after switching to other configuration.";
+    private static final String WRN_DEFAULT_CONFIG_CHANGES_WILL_BE_LOST = "Changes in the %s for the default configuration will be lost upon loading another.";
     private final ICriteriaEntityRestorer criteriaEntityRestorer;
     
     @Inject
