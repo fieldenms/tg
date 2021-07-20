@@ -270,19 +270,19 @@ public class EqlStage3TestCase extends EqlTestCase {
     //    }
 
     protected static SubQuery3 subqry(final ISources3 sources, final Yields3 yields, final Class<?> resultType, final Type hibType) {
-        return new SubQuery3(new QueryBlocks3(sources, null, yields, groups(), orders()), resultType, hibType);
+        return new SubQuery3(new QueryBlocks3(sources, null, yields, null, orders()), resultType, hibType);
     }
 
     protected static SubQuery3 subqry(final ISources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType, final Type hibType) {
-        return new SubQuery3(new QueryBlocks3(sources, conditions, yields, groups(), orders()), resultType, hibType);
+        return new SubQuery3(new QueryBlocks3(sources, conditions, yields, null, orders()), resultType, hibType);
     }
 
     private static ResultQuery3 resultQry(final ISources3 sources, final Yields3 yields, final Class<?> resultType) {
-        return new ResultQuery3(new QueryBlocks3(sources, null, yields, groups(), orders()), resultType);
+        return new ResultQuery3(new QueryBlocks3(sources, null, yields, null, orders()), resultType);
     }
 
     private static ResultQuery3 resultQry(final ISources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
-        return new ResultQuery3(new QueryBlocks3(sources, conditions, yields, groups(), orders()), resultType);
+        return new ResultQuery3(new QueryBlocks3(sources, conditions, yields, null, orders()), resultType);
     }
 
     //    private static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final QueryCategory queryCategory, final Class<?> resultType) {
@@ -290,7 +290,7 @@ public class EqlStage3TestCase extends EqlTestCase {
     //    }
 
     private static SourceQuery3 sourceQry(final ISources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
-        return new SourceQuery3(new QueryBlocks3(sources, conditions, yields, groups(), orders()), resultType);
+        return new SourceQuery3(new QueryBlocks3(sources, conditions, yields, null, orders()), resultType);
     }
 
     //    protected static EntQuery3 qry(final IQrySources3 sources, final Class<?> resultType) {

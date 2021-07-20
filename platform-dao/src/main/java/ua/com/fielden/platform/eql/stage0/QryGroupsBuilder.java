@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage0;
 
+import static ua.com.fielden.platform.eql.stage1.etc.GroupBys1.emptyGroupBys;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,6 +25,11 @@ public class QryGroupsBuilder extends AbstractTokensBuilder {
         if (getChild() != null && getTokens().isEmpty()) {
             throw new RuntimeException("Unable to produce result - unfinished model state!");
         }
+        
+        if (getTokens().isEmpty()) {
+            return emptyGroupBys;
+        }
+        
         final List<GroupBy1> groups = new ArrayList<>();
         for (final Pair<TokenCategory, Object> pair : getTokens()) {
             groups.add((GroupBy1) pair.getValue());

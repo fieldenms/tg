@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperat
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.AND;
 import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.OR;
+import static ua.com.fielden.platform.eql.stage1.etc.GroupBys1.emptyGroupBys;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
@@ -54,11 +55,11 @@ public class EqlStage1TestCase extends EqlTestCase {
     }
     
     protected static QueryBlocks1 qb1(final ISources1<? extends ISources2<?>> sources, final Conditions1 conditions) {
-        return new QueryBlocks1(sources, conditions, new Yields1(emptyList()), new GroupBys1(emptyList()), new OrderBys1(emptyList()), false);
+        return new QueryBlocks1(sources, conditions, new Yields1(emptyList()), emptyGroupBys, new OrderBys1(emptyList()), false);
     }
 
     protected static QueryBlocks1 qb1(final ISources1<? extends ISources2<?>> sources, final Conditions1 conditions, final Yields1 yields) {
-        return new QueryBlocks1(sources, conditions, yields, new GroupBys1(emptyList()), new OrderBys1(emptyList()), false);
+        return new QueryBlocks1(sources, conditions, yields, emptyGroupBys, new OrderBys1(emptyList()), false);
     }
 
     protected static Yields1 yields(final Yield1 ... yields) {

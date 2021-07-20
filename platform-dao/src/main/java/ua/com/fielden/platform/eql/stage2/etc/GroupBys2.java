@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage2.etc;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableList;
 
 import java.util.ArrayList;
@@ -15,6 +16,8 @@ import ua.com.fielden.platform.eql.stage3.etc.GroupBy3;
 import ua.com.fielden.platform.eql.stage3.etc.GroupBys3;
 
 public class GroupBys2 {
+    public static final GroupBys2 emptyGroupBys = new GroupBys2(emptyList());
+    
     private final List<GroupBy2> groups;
 
     public GroupBys2(final List<GroupBy2> groups) {
@@ -22,6 +25,10 @@ public class GroupBys2 {
     }
 
     public TransformationResult<GroupBys3> transform(final TransformationContext context) {
+        if (groups.isEmpty()) {
+            return new TransformationResult<>(null, context);
+        }
+        
         final List<GroupBy3> transformed = new ArrayList<>();
         TransformationContext currentContext = context;
         for (final GroupBy2 groupBy : groups) {

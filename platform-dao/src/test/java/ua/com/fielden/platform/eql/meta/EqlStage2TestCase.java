@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperat
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
 import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.emptyConditions;
+import static ua.com.fielden.platform.eql.stage2.etc.GroupBys2.emptyGroupBys;
 import static ua.com.fielden.platform.eql.stage2.etc.Yields2.nullYields;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
@@ -33,7 +34,6 @@ import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.conditions.ExistenceTest2;
 import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
 import ua.com.fielden.platform.eql.stage2.conditions.NullTest2;
-import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.etc.OrderBy2;
 import ua.com.fielden.platform.eql.stage2.etc.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.etc.Yield2;
@@ -59,7 +59,6 @@ import ua.com.fielden.platform.types.tuples.T2;
 
 public class EqlStage2TestCase extends EqlTestCase {
 
-    protected static final GroupBys2 emptyGroupBys2 = new GroupBys2(emptyList());
     protected static final OrderBys2 emptyOrderBys2 = new OrderBys2(emptyList());
 
     protected static AbstractPropInfo<?> pi(final Class<?> type, final String propName) {
@@ -118,11 +117,11 @@ public class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static QueryBlocks2 qb2(final ISources2<? extends ISources3> sources, final Conditions2 conditions, final Yields2 yields) {
-        return new QueryBlocks2(sources, conditions, yields, emptyGroupBys2, emptyOrderBys2);
+        return new QueryBlocks2(sources, conditions, yields, emptyGroupBys, emptyOrderBys2);
     }
 
     protected static QueryBlocks2 qb2(final ISources2<? extends ISources3> sources, final Conditions2 conditions, final Yields2 yields, final OrderBys2 orderBys) {
-        return new QueryBlocks2(sources, conditions, yields, emptyGroupBys2, orderBys);
+        return new QueryBlocks2(sources, conditions, yields, emptyGroupBys, orderBys);
     }
 
     protected static Yields2 yields(final Yield2... yields) {
@@ -295,7 +294,7 @@ public class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static TypelessSubQuery2 typelessSubqry(final ISources2<? extends ISources3> sources, final Conditions2 conditions) {
-        return new TypelessSubQuery2(new QueryBlocks2(sources, conditions, nullYields, emptyGroupBys2, emptyOrderBys2));
+        return new TypelessSubQuery2(new QueryBlocks2(sources, conditions, nullYields, emptyGroupBys, emptyOrderBys2));
     }
 
     protected static SubQuery2 subqry(final ISources2<? extends ISources3> sources, final Yields2 yields, final Class<?> resultType, final Object hibType) {

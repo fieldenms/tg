@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.etc;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 import java.util.List;
@@ -9,6 +10,8 @@ import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
 
 public class GroupBys1 {
+    public static final GroupBys1 emptyGroupBys = new GroupBys1(emptyList());
+    
     private final List<GroupBy1> groups;
 
     public GroupBys1(final List<GroupBy1> groups) {
@@ -16,7 +19,11 @@ public class GroupBys1 {
     }
 
     public GroupBys2 transform(final TransformationContext context) {
-        return new GroupBys2(groups.stream().map(el -> el.transform(context)).collect(toList()));
+        if (groups.isEmpty()) {
+            return GroupBys2.emptyGroupBys;
+        } else {
+            return new GroupBys2(groups.stream().map(el -> el.transform(context)).collect(toList()));    
+        }
     }
 
     @Override
