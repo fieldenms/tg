@@ -610,14 +610,16 @@ Polymer({
     /**
      * Provides custom 'state' object for history entries. Updates 'currentHistoryState' property.
      */
-    _replaceStateWithNumber: function () {
-        // the URI for history state rewrite
-        const fullNewUrl = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
-        // currentHistoryState should be updated first. If it is not yet defined then make it 0 otherwise increment it;
-        const newCurrentHistoryIndex = typeof this.currentHistoryState !== "undefined"? this.currentHistoryState.currIndex + 1 : 0;
-        this.currentHistoryState = {currIndex: newCurrentHistoryIndex}
-        // rewrite history state by providing concrete number of last history state
-        window.history.replaceState(this.currentHistoryState, '', fullNewUrl);
+    _replaceStateWithNumber: function (event) {
+        if (!(event && event.detail && event.detail.avoidStateAdjusting)) {
+            // the URI for history state rewrite
+            const fullNewUrl = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
+            // currentHistoryState should be updated first. If it is not yet defined then make it 0 otherwise increment it;
+            const newCurrentHistoryIndex = typeof this.currentHistoryState !== "undefined"? this.currentHistoryState.currIndex + 1 : 0;
+            this.currentHistoryState = {currIndex: newCurrentHistoryIndex}
+            // rewrite history state by providing concrete number of last history state
+            window.history.replaceState(this.currentHistoryState, '', fullNewUrl);
+        }
     },
     
     _getUrl: function() {

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.centre;
+package ua.com.fielden.platform.web.centre.validators;
 
 import static java.lang.String.format;
 import static java.util.Optional.empty;
@@ -25,6 +25,9 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.web.centre.AbstractCentreConfigCommitAction;
+import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
+import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 /**

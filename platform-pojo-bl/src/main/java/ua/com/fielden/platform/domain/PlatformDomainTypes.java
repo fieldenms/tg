@@ -7,6 +7,8 @@ import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.AttachmentPreviewEntityAction;
 import ua.com.fielden.platform.attachment.AttachmentUploader;
 import ua.com.fielden.platform.attachment.AttachmentsUploadAction;
+import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
+import ua.com.fielden.platform.dashboard.DashboardRefreshFrequencyUnit;
 import ua.com.fielden.platform.domain.metadata.DomainExplorer;
 import ua.com.fielden.platform.domain.metadata.DomainExplorerInsertionPoint;
 import ua.com.fielden.platform.domain.metadata.DomainProperty;
@@ -60,6 +62,7 @@ import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.EntityMasterConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
+import ua.com.fielden.platform.web.centre.CentreConfigConfigureAction;
 import ua.com.fielden.platform.web.centre.CentreConfigDeleteAction;
 import ua.com.fielden.platform.web.centre.CentreConfigDuplicateAction;
 import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
@@ -97,6 +100,7 @@ public class PlatformDomainTypes {
         types.add(CentreConfigSaveAction.class);
         types.add(LoadableCentreConfig.class);
         types.add(OverrideCentreConfig.class);
+        types.add(CentreConfigConfigureAction.class);
 
         types.add(UserAndRoleAssociation.class);
         types.add(SecurityRoleAssociation.class);
@@ -145,5 +149,7 @@ public class PlatformDomainTypes {
         types.add(DomainExplorerInsertionPoint.class);
         types.add(DomainTreeEntity.class);
         types.add(DomainPropertyTreeEntity.class);
+        types.add(DashboardRefreshFrequencyUnit.class);
+        types.add(DashboardRefreshFrequency.class);
     }
 }

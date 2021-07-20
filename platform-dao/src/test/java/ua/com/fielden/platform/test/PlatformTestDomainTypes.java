@@ -73,6 +73,7 @@ import ua.com.fielden.platform.test.entities.ComplexKeyEntity;
 import ua.com.fielden.platform.test.entities.CompositeEntity;
 import ua.com.fielden.platform.test.entities.CompositeEntityKey;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
+import ua.com.fielden.platform.web.centre.CentreConfigConfigureAction;
 import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
 import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
 import ua.com.fielden.platform.web.centre.CentreConfigSaveAction;
@@ -101,6 +102,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         entityTypes.remove(CentreConfigLoadAction.class);
         entityTypes.remove(CentreConfigEditAction.class);
         entityTypes.remove(CentreConfigSaveAction.class);
+        entityTypes.remove(CentreConfigConfigureAction.class);
         // and test domain entities
         add(TgPerson.class);
         add(TgPersonName.class);

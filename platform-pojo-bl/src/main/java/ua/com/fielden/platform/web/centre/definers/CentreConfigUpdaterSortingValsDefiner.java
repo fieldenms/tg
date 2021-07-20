@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.web.centre;
+package ua.com.fielden.platform.web.centre.definers;
 
 import java.util.HashSet;
 import java.util.List;
@@ -7,6 +7,8 @@ import java.util.Map;
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.streaming.ValueCollectors;
+import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
+import ua.com.fielden.platform.web.centre.CustomisableColumn;
 
 /**
  * During validation cycles for centre configuration dialog there is a need to migrate sorting information from 'sortingVals' (serialisable form of information

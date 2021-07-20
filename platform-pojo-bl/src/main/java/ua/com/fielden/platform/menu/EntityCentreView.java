@@ -21,10 +21,6 @@ public class EntityCentreView extends AbstractView {
     private String uuid;
 
     @IsProperty
-    @Title(value = "Autorun", desc = "Should run automaticaly")
-    private boolean autoRun;
-
-    @IsProperty
     @Title(value = "Enforce post save refresh", desc = "Should run centre after save")
     private boolean enforcePostSaveRefresh;
 
@@ -52,16 +48,6 @@ public class EntityCentreView extends AbstractView {
     }
 
     @Observable
-    public EntityCentreView setAutoRun(final boolean autoRun) {
-        this.autoRun = autoRun;
-        return this;
-    }
-
-    public boolean getAutoRun() {
-        return autoRun;
-    }
-
-    @Observable
     public EntityCentreView setUuid(final String uuid) {
         this.uuid = uuid;
         return this;
@@ -70,7 +56,5 @@ public class EntityCentreView extends AbstractView {
     public String getUuid() {
         return uuid;
     }
-
-
 
 }

@@ -43,6 +43,7 @@ import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity1;
 import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity2;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
+import ua.com.fielden.platform.web.centre.CentreConfigConfigureAction;
 import ua.com.fielden.platform.web.centre.CentreConfigDeleteAction;
 import ua.com.fielden.platform.web.centre.CentreConfigDuplicateAction;
 import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
@@ -89,6 +90,7 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
         types.add(CentreConfigSaveAction.class);
         types.add(LoadableCentreConfig.class);
         types.add(OverrideCentreConfig.class);
+        types.add(CentreConfigConfigureAction.class);
         
         types.add(PropertyDescriptor.class);
         types.add(AcknowledgeWarnings.class);

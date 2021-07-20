@@ -52,7 +52,7 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
+import ua.com.fielden.platform.ui.config.api.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
@@ -167,7 +167,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
         final Representation result = handleUndesiredExceptions(getResponse(), () -> {
             final SavingInfoHolder savingInfoHolder = restoreSavingInfoHolder(envelope, restUtil);
             final User user = userProvider.getUser();
-            final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
+            final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
             final IMainMenuItem mmiCompanion = companionFinder.find(MainMenuItem.class);
             final IUser userCompanion = companionFinder.find(User.class);
             
@@ -186,7 +186,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
         return handleUndesiredExceptions(getResponse(), () -> {
             LOGGER.debug("ENTITY_RESOURCE: retrieve started.");
             final User user = userProvider.getUser();
-            final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
+            final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
             final IMainMenuItem mmiCompanion = companionFinder.find(MainMenuItem.class);
             final IUser userCompanion = companionFinder.find(User.class);
             // originallyProducedEntity is always empty during retrieval to kick in creation through producer
@@ -285,7 +285,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             final IEntityDao<T> companion,
             final DeviceProfile device,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
-            final IEntityCentreConfig eccCompanion,
+            final EntityCentreConfigCo eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
@@ -330,7 +330,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             final int tabCount,
             final DeviceProfile device,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
-            final IEntityCentreConfig eccCompanion,
+            final EntityCentreConfigCo eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
@@ -364,7 +364,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             final int tabCount,
             final DeviceProfile device,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
-            final IEntityCentreConfig eccCompanion,
+            final EntityCentreConfigCo eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
@@ -411,7 +411,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             final int tabCount,
             final DeviceProfile device,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
-            final IEntityCentreConfig eccCompanion,
+            final EntityCentreConfigCo eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {

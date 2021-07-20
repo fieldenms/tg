@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.view.master;
 
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 import static ua.com.fielden.platform.web.centre.EntityCentre.createFetchModelForAutocompleterFrom;
 
@@ -32,8 +34,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKin
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
-import ua.com.fielden.platform.web.view.master.api.helpers.impl.WidgetSelector;
-import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityAutocompletionWidget;
+import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentre;
 
 /**
  * Represents entity master.
@@ -278,6 +279,16 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
      */
     public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
         return masterConfig.actionConfig(actionKind, actionNumber);
+    }
+    
+    /**
+     * Returns embedded {@link EntityCentre} for this entity master, if any.
+     */
+    public Optional<EntityCentre<?>> getEmbeddedCentre() {
+        if (masterConfig instanceof MasterWithCentre) {
+            return of(((MasterWithCentre<?>) masterConfig).embeddedCentre);
+        }
+        return empty();
     }
     
 }

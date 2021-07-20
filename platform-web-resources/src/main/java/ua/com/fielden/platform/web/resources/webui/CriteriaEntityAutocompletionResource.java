@@ -35,7 +35,7 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
+import ua.com.fielden.platform.ui.config.api.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
@@ -118,7 +118,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             //            throw new IllegalStateException("Illegal state during criteria entity searching.");
             final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
             final User user = userProvider.getUser();
-            final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
+            final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
             final IMainMenuItem mmiCompanion = companionFinder.find(MainMenuItem.class);
             final IUser userCompanion = companionFinder.find(User.class);
             
