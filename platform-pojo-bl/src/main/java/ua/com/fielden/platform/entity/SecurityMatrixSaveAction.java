@@ -19,7 +19,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  *
  */
 @KeyType(NoKey.class)
-@CompanionObject(ISecurityMatrixSaveAction.class)
+@CompanionObject(SecurityMatrixSaveActionCo.class)
 public class SecurityMatrixSaveAction  extends AbstractFunctionalEntityWithCentreContext<NoKey> {
 
     @IsProperty(Object.class)

@@ -43,12 +43,12 @@ import ua.com.fielden.platform.domain.metadata.DomainTypeDao;
 import ua.com.fielden.platform.entity.EntityDeleteActionDao;
 import ua.com.fielden.platform.entity.EntityEditActionDao;
 import ua.com.fielden.platform.entity.EntityNewActionDao;
-import ua.com.fielden.platform.entity.IEntityDeleteAction;
-import ua.com.fielden.platform.entity.IEntityEditAction;
+import ua.com.fielden.platform.entity.EntityDeleteActionCo;
+import ua.com.fielden.platform.entity.EntityEditActionCo;
 import ua.com.fielden.platform.entity.IEntityNewAction;
-import ua.com.fielden.platform.entity.ISecurityMatrixInsertionPoint;
-import ua.com.fielden.platform.entity.ISecurityMatrixSaveAction;
-import ua.com.fielden.platform.entity.ISecurityTokenTreeNodeEntity;
+import ua.com.fielden.platform.entity.SecurityMatrixInsertionPointCo;
+import ua.com.fielden.platform.entity.SecurityMatrixSaveActionCo;
+import ua.com.fielden.platform.entity.SecurityTokenTreeNodeEntityCo;
 import ua.com.fielden.platform.entity.SecurityMatrixInsertionPointDao;
 import ua.com.fielden.platform.entity.SecurityMatrixSaveActionDao;
 import ua.com.fielden.platform.entity.SecurityTokenTreeNodeEntityDao;
@@ -254,8 +254,8 @@ public class BasicWebServerModule extends CommonFactoryModule {
 
         // bind entity manipulation controller
         bind(IEntityNewAction.class).to(EntityNewActionDao.class);
-        bind(IEntityEditAction.class).to(EntityEditActionDao.class);
-        bind(IEntityDeleteAction.class).to(EntityDeleteActionDao.class);
+        bind(EntityEditActionCo.class).to(EntityEditActionDao.class);
+        bind(EntityDeleteActionCo.class).to(EntityDeleteActionDao.class);
 
         //Reference Hierarchy
         bind(IReferenceHierarchy.class).to(ReferenceHierarchyDao.class);
@@ -270,9 +270,9 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IUserRole.class).to(UserRoleDao.class);
         bind(IUserRoleTokensUpdater.class).to(UserRoleTokensUpdaterDao.class);
         bind(ISecurityTokenInfo.class).to(SecurityTokenInfoDao.class);
-        bind(ISecurityMatrixInsertionPoint.class).to(SecurityMatrixInsertionPointDao.class);
-        bind(ISecurityTokenTreeNodeEntity.class).to(SecurityTokenTreeNodeEntityDao.class);
-        bind(ISecurityMatrixSaveAction.class).to(SecurityMatrixSaveActionDao.class);
+        bind(SecurityMatrixInsertionPointCo.class).to(SecurityMatrixInsertionPointDao.class);
+        bind(SecurityTokenTreeNodeEntityCo.class).to(SecurityTokenTreeNodeEntityDao.class);
+        bind(SecurityMatrixSaveActionCo.class).to(SecurityMatrixSaveActionDao.class);
 
         bind(ICustomisableColumn.class).to(CustomisableColumnDao.class);
         bind(CentreConfigShareActionCo.class).to(CentreConfigShareActionDao.class);

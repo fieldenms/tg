@@ -14,7 +14,7 @@ import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.entity.EntityExportActionDao;
-import ua.com.fielden.platform.entity.IEntityExportAction;
+import ua.com.fielden.platform.entity.EntityExportActionCo;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarningsDao;
 import ua.com.fielden.platform.entity.functional.master.IAcknowledgeWarnings;
 import ua.com.fielden.platform.entity.functional.master.IPropertyWarning;
@@ -162,7 +162,7 @@ public class WebHibernateModule extends CommonFactoryModule {
         // bind ICriteriaEntityRestorer to its implementation as singleton -- it is dependent on IWebUiConfig, IServerGlobalDomainTreeManager, IUserProvider and other Web UI infrastructure
         bind(ICriteriaEntityRestorer.class).to(CriteriaEntityRestorer.class).in(Scopes.SINGLETON);
         // bind companion object implementations that are dependent on ICriteriaEntityRestorer
-        bind(IEntityExportAction.class).to(EntityExportActionDao.class);
+        bind(EntityExportActionCo.class).to(EntityExportActionDao.class);
         bind(ICentreConfigUpdater.class).to(CentreConfigUpdaterDao.class);
         bind(ICentreColumnWidthConfigUpdater.class).to(CentreColumnWidthConfigUpdaterDao.class);
         

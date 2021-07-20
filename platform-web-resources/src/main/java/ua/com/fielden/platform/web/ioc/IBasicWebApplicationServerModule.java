@@ -8,7 +8,7 @@ import com.google.inject.Scopes;
 import com.google.inject.binder.AnnotatedBindingBuilder;
 
 import ua.com.fielden.platform.entity.EntityExportActionDao;
-import ua.com.fielden.platform.entity.IEntityExportAction;
+import ua.com.fielden.platform.entity.EntityExportActionCo;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.menu.IMenuRetriever;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
@@ -73,7 +73,7 @@ public interface IBasicWebApplicationServerModule {
         // bind ICriteriaEntityRestorer to its implementation as singleton -- it is dependent on IWebUiConfig, IServerGlobalDomainTreeManager, IUserProvider and other Web UI infrastructure
         bindType(ICriteriaEntityRestorer.class).to(CriteriaEntityRestorer.class).in(Scopes.SINGLETON);
         // bind companion object implementations that are dependent on ICriteriaEntityRestorer
-        bindType(IEntityExportAction.class).to(EntityExportActionDao.class);
+        bindType(EntityExportActionCo.class).to(EntityExportActionDao.class);
         bindType(ICentreConfigUpdater.class).to(CentreConfigUpdaterDao.class);
         bindType(ICentreColumnWidthConfigUpdater.class).to(CentreColumnWidthConfigUpdaterDao.class);
 
