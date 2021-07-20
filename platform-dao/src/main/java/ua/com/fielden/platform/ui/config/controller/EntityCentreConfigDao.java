@@ -5,7 +5,6 @@ import static ua.com.fielden.platform.utils.EntityUtils.isConflicting;
 
 import java.util.Map;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import javax.persistence.OptimisticLockException;
 
