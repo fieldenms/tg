@@ -8,6 +8,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * @author TG Team
  *
  */
-public interface ISecurityMatrixSaveAction extends IEntityDao<SecurityMatrixSaveAction> {
+public interface SecurityMatrixSaveActionCo extends IEntityDao<SecurityMatrixSaveAction> {
 
 }

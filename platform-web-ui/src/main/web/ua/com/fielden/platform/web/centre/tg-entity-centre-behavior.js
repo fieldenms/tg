@@ -327,7 +327,7 @@ const TgEntityCentreBehaviorImpl = {
         },
 
         /**
-         * Indcates whether the centre should load data immediately after it was loaded.
+         * Indicates whether current centre configuration should load data immediately upon loading.
          */
         autoRun: {
             type: Boolean,
@@ -501,7 +501,9 @@ const TgEntityCentreBehaviorImpl = {
         currentState: {
             type: String,
             value: 'EDIT'
-        }
+        },
+        
+        initiateAutoRun: Function
     },
 
     listeners: {
@@ -600,7 +602,19 @@ const TgEntityCentreBehaviorImpl = {
             this.preferredView = this.preferredView === undefined ? 
                     (this.$.egi.isHidden() && egiInsertionPoints.length === 0 ? 2/*first alternative result view*/ : 1 /*Egi view*/) : this.preferredView;
         }
-
+        
+        this.initiateAutoRun = () => {
+            const centre = this;
+            if (centre.autoRun) {
+                if (centre._selectedView === 0) {
+                    centre.async(() => {
+                        centre._selectedView = 1;
+                    }, 100);
+                }
+                centre.run(true); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)
+            }
+        };
+        
         self._postRun = (function (criteriaEntity, newBindingEntity, result) {
             if (criteriaEntity === null || criteriaEntity.isValidWithoutException()) {
                 if (typeof result.summary !== 'undefined') {
@@ -915,8 +929,8 @@ const TgEntityCentreBehaviorImpl = {
             }
         }));
 
-        //Select the result view if autoRun is true
-        if (self.autoRun || self.queryPart) {
+        // select result view if link centre gets attached
+        if (self.queryPart) {
             self._selectedView = self.preferredView;
         }
     },

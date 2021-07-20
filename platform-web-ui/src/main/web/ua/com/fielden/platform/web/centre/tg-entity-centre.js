@@ -141,7 +141,7 @@ const template = html`
     <iron-pages id="views" selected="[[_selectedView]]">
         <div class="fit layout vertical">
             <div class="paper-material selection-material layout vertical" elevation="1">
-                <tg-selection-view id="selectionView" _show-dialog="[[_showDialog]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _create-action-object="[[_createActionObject]]" _button-disabled="[[_buttonDisabled]]">
+                <tg-selection-view id="selectionView" initiate-auto-run="[[initiateAutoRun]]" _show-dialog="[[_showDialog]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _create-action-object="[[_createActionObject]]" _button-disabled="[[_buttonDisabled]]" embedded="[[embedded]]">
                     <slot name="custom-front-action" slot="custom-front-action"></slot>
                     <slot name="custom-share-action" slot="custom-share-action"></slot>
                     <slot id="customCriteria" name="custom-selection-criteria" slot="custom-selection-criteria"></slot>
@@ -235,6 +235,7 @@ Polymer({
         },
         _centreDirtyOrEdited: Boolean,
         _viewerDisabled: Boolean,
+        embedded: Boolean,
         discard: Function,
         run: Function,
         _showDialog: Function,
@@ -250,6 +251,7 @@ Polymer({
             observer: '_staleCriteriaMessageChanged'
         },
         _confirm: Function,
+        initiateAutoRun: Function,
         
         /**
          * Additional headers for every 'iron-ajax' client-side requests. These only contain 
@@ -306,7 +308,7 @@ Polymer({
 
     attached: function () {
         const self = this;
-        self._createActionObject = function (entityType, createPreActionPromise) {
+        self._createActionObject = function (entityType, createPreActionPromise, customPostActionSuccess) {
             return {
                 preAction: function (action) {
                     if (!action.oldIsActionInProgressChanged) {
@@ -326,6 +328,9 @@ Polymer({
                 postActionSuccess: function (functionalEntity, action) {
                     // bind custom object (if it is not empty) after every save
                     self._bindCentreInfo(functionalEntity.get('customObject'));
+                    if (customPostActionSuccess) {
+                        customPostActionSuccess();
+                    }
                 },
                 attrs: {
                     entityType: entityType, currentState: 'EDIT', centreUuid: self.uuid

@@ -18,7 +18,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
  *
  */
 public class CentreConfigDeleteActionProducer extends DefaultEntityProducerWithContext<CentreConfigDeleteAction> {
-    private static final String ERR_CANNOT_BE_DELETED = "Only saved or shared configurations can be deleted.";
+    private static final String ERR_CANNOT_BE_DELETED = "Only saved and shared configurations can be deleted.";
     
     @Inject
     public CentreConfigDeleteActionProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {

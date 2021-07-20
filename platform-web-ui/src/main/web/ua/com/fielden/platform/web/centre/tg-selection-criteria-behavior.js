@@ -86,6 +86,14 @@ const TgSelectionCriteriaBehaviorImpl = {
         },
 
         /**
+         * Indicates whether current centre configuration should load data immediately upon loading.
+         */
+        autoRun: {
+            type: Boolean,
+            notify: true
+        },
+
+        /**
          * Centre URI parameters taken from tg-entity-centre-behavior.
          */
         queryPart: {
@@ -402,21 +410,26 @@ const TgSelectionCriteriaBehaviorImpl = {
         if (typeof customObject.saveAsName !== 'undefined') {
             this.saveAsName = customObject.saveAsName;
         }
+        if (typeof customObject.autoRun !== 'undefined') {
+            this.autoRun = customObject.autoRun;
+        }
         if (typeof customObject.configUuid !== 'undefined') {
             const newConfigUuid = customObject.configUuid;
             const configUuid = this.configUuid;
+            this.loadCentreFreezed = true;
             this.fire('tg-config-uuid-before-change', { newConfigUuid: newConfigUuid, configUuid: configUuid });
+            delete this.loadCentreFreezed;
             this.configUuid = customObject.configUuid;
-        }
-        if (typeof customObject.wasRun !== 'undefined') {
-            this._wasRun = customObject.wasRun;
         }
         if (typeof customObject.preferredView !== 'undefined') {
             this.preferredView = customObject.preferredView;
         }
     },
 
-    _configUuidChanged: function (newConfigUuid) {
+    _configUuidChanged: function (newConfigUuid, oldConfigUuid) {
+        if (typeof oldConfigUuid === 'string' && this._wasRun === 'yes') {
+            this._wasRun = null; // reset _wasRun if configuration has been changed
+        }
         this.fire('tg-config-uuid-changed', newConfigUuid);
     },
 

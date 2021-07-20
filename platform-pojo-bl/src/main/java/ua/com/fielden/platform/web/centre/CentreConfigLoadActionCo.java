@@ -8,6 +8,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * @author TG Team
  *
  */
-public interface ICentreConfigLoadAction extends IEntityDao<CentreConfigLoadAction> {
+public interface CentreConfigLoadActionCo extends IEntityDao<CentreConfigLoadAction> {
     
 }

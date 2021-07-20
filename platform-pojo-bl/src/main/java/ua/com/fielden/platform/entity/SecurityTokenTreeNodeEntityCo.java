@@ -8,6 +8,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * @author TG Team
  *
  */
-public interface ISecurityTokenTreeNodeEntity extends IEntityDao<SecurityTokenTreeNodeEntity> {
+public interface SecurityTokenTreeNodeEntityCo extends IEntityDao<SecurityTokenTreeNodeEntity> {
 
 }

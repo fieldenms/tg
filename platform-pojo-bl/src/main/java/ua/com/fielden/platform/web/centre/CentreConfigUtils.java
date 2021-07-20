@@ -23,6 +23,12 @@ import ua.com.fielden.platform.error.Result;
  */
 public class CentreConfigUtils {
     private static final String CONFIGURATION_HAS_BEEN_DELETED = "Configuration has been deleted.";
+    /**
+     * The key for customObject's value containing indicator that configuration should be autoRun.
+     * <p>
+     * Please note that configuration can be {@code runAutomatically} but should not be autoRun in some cases. This happens on almost all actions except Load.
+     */
+    public static final String AUTO_RUN = "autoRun";
 
     /**
      * Applies modifHolder from <code>selectionCrit</code> against fresh centre.
@@ -73,9 +79,31 @@ public class CentreConfigUtils {
      */
     public static Map<String, Object> prepareDefaultCentre(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
         selectionCrit.clearDefaultCentre(); // clear it first
-        selectionCrit.makePreferredConfig(empty()); // then make it preferred
+        selectionCrit.makePreferredConfig(empty()); // then make it preferred; 'default' kind -- can be preferred; only 'link / inherited from shared' can not be preferred
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> newSelectionCrit = selectionCrit.createCriteriaValidationPrototype(empty());
         return getCustomObject(selectionCrit, newSelectionCrit, empty(), of(empty()) /* update with empty uuid indicating default config */, of(newSelectionCrit.getCentreDomainTreeMangerAndEnhancer().getPreferredView())); // return corresponding custom object
+    }
+    
+    /**
+     * Returns {@code true} in case where {@code saveAsName}d configuration represents default configuration,
+     * otherwise {@code false}.
+     * 
+     * @param saveAsName
+     * @return
+     */
+    public static boolean isDefault(final Optional<String> saveAsName) {
+        return !saveAsName.isPresent();
+    }
+    
+    /**
+     * Returns {@code true} in case where {@code saveAsName}d configuration represents link configuration,
+     * otherwise {@code false}.
+     * 
+     * @param saveAsName
+     * @return
+     */
+    public static boolean isLink(final Optional<String> saveAsName) {
+        return !isDefault(saveAsName) && LINK_CONFIG_TITLE.equals(saveAsName.get());
     }
     
     /**
@@ -86,7 +114,19 @@ public class CentreConfigUtils {
      * @return
      */
     public static boolean isDefaultOrLink(final Optional<String> saveAsName) {
-        return !saveAsName.isPresent() || LINK_CONFIG_TITLE.equals(saveAsName.get());
+        return isDefault(saveAsName) || LINK_CONFIG_TITLE.equals(saveAsName.get());
+    }
+    
+    /**
+     * Returns {@code true} in case where {@code saveAsName}d configuration represents link configuration or inherited from base user configuration or inherited from shared configuration,
+     * otherwise {@code false}.
+     * 
+     * @param saveAsName
+     * @param selectionCrit
+     * @return
+     */
+    public static boolean isLinkOrInherited(final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
+        return isLink(saveAsName) || isInherited(saveAsName, selectionCrit);
     }
     
     /**
