@@ -523,7 +523,7 @@ const TgEntityCentreBehaviorImpl = {
         this.$.selection_criteria.configUuid = '';
         if (this._selectedView === 0) {
             this.async(() => {
-                this._selectedView = 1;
+                this._selectedView = this.preferredView;
             }, 100);
         }
         this.run(true); // embedded centre always autoruns on getMasterEntity assignment (activating of compound menu item with embedded centre or opening of details master with embedded centre)
@@ -608,7 +608,7 @@ const TgEntityCentreBehaviorImpl = {
             if (centre.autoRun) {
                 if (centre._selectedView === 0) {
                     centre.async(() => {
-                        centre._selectedView = 1;
+                        centre._selectedView = this.preferredView;
                     }, 100);
                 }
                 centre.run(true); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)

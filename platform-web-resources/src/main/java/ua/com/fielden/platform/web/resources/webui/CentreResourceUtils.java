@@ -736,7 +736,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             return validationPrototype.centreCustomObject(
                 createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, saveAsName, user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel),
                 saveAsName,
-                empty() // no need to update already existing client-side configUuid
+                empty(), // no need to update already existing client-side configUuid
+                empty() // no need to update already loaded preferredView
             );
         });
         // performs copying of current configuration with the specified title / desc; makes it preferred; returns custom object containing centre information

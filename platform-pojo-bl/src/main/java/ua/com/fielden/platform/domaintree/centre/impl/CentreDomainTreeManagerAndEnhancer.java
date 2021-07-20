@@ -1001,6 +1001,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
         }
     }
 
+    @Override
     public Integer getPreferredView() {
         return base().getPreferredView();
     }
@@ -1010,7 +1011,6 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
         return base().setPreferredView(preferredView);
     }
 
-    @Override
     protected Map<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses() {
         return persistentAnalyses;
     }
