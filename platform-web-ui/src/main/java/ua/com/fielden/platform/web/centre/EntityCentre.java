@@ -214,7 +214,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static final String READY_CUSTOM_CODE = "//@centre-is-ready-custom-code";
     private static final String ATTACHED_CUSTOM_CODE = "//@centre-has-been-attached-custom-code";
 
-
     private final Logger logger = Logger.getLogger(getClass());
     private final String name;
     private final EntityCentreConfig<T> dslDefaultConfig;
@@ -232,6 +231,17 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private final IMainMenuItem mmiCompanion;
     private final IUser userCompanion;
 
+    /**
+     * Constructs an entity centre based on the specified configuration.
+     *
+     * @param miType – a menu item type representing an entry point for the entity centre being constructed.
+     * @param dslDefaultConfig – an entity centre configuration.
+     * @param injector – needed for dynamic instantiation of the companion finder and other infrastructural types.
+     */
+    public EntityCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final EntityCentreConfig<T> dslDefaultConfig, final Injector injector) {
+        this(miType, miType.getSimpleName(), dslDefaultConfig, injector, null);
+    }
+    
     /**
      * Creates new {@link EntityCentre} instance for the menu item type and with specified name.
      *
