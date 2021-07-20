@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.etc;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 
 import java.util.List;
@@ -9,6 +10,8 @@ import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.etc.OrderBys2;
 
 public class OrderBys1 {
+    public static final OrderBys1 emptyOrderBys = new OrderBys1(emptyList());
+    
     private final List<OrderBy1> models;
 
     public OrderBys1(final List<OrderBy1> models) {
@@ -16,7 +19,11 @@ public class OrderBys1 {
     }
 
     public OrderBys2 transform(final TransformationContext context) {
-        return new OrderBys2(models.stream().map(el -> el.transform(context)).collect(toList()));
+        if (models.isEmpty()) {
+            return OrderBys2.emptyOrderBys;
+        } else {
+            return new OrderBys2(models.stream().map(el -> el.transform(context)).collect(toList()));
+        }
     }
 
     @Override

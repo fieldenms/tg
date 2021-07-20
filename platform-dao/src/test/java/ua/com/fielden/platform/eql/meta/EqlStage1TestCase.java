@@ -7,6 +7,8 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperat
 import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.AND;
 import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.OR;
 import static ua.com.fielden.platform.eql.stage1.etc.GroupBys1.emptyGroupBys;
+import static ua.com.fielden.platform.eql.stage1.etc.OrderBys1.emptyOrderBys;
+import static ua.com.fielden.platform.eql.stage1.etc.Yields1.emptyYields;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
@@ -17,8 +19,6 @@ import ua.com.fielden.platform.eql.stage1.conditions.CompoundCondition1;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.conditions.ICondition1;
 import ua.com.fielden.platform.eql.stage1.conditions.NullTest1;
-import ua.com.fielden.platform.eql.stage1.etc.GroupBys1;
-import ua.com.fielden.platform.eql.stage1.etc.OrderBys1;
 import ua.com.fielden.platform.eql.stage1.etc.Yield1;
 import ua.com.fielden.platform.eql.stage1.etc.Yields1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
@@ -55,15 +55,19 @@ public class EqlStage1TestCase extends EqlTestCase {
     }
     
     protected static QueryBlocks1 qb1(final ISources1<? extends ISources2<?>> sources, final Conditions1 conditions) {
-        return new QueryBlocks1(sources, conditions, new Yields1(emptyList()), emptyGroupBys, new OrderBys1(emptyList()), false);
+        return new QueryBlocks1(sources, conditions, emptyYields, emptyGroupBys, emptyOrderBys, false);
     }
 
     protected static QueryBlocks1 qb1(final ISources1<? extends ISources2<?>> sources, final Conditions1 conditions, final Yields1 yields) {
-        return new QueryBlocks1(sources, conditions, yields, emptyGroupBys, new OrderBys1(emptyList()), false);
+        return new QueryBlocks1(sources, conditions, yields, emptyGroupBys, emptyOrderBys, false);
     }
 
     protected static Yields1 yields(final Yield1 ... yields) {
-        return new Yields1(asList(yields));
+        if (yields.length > 0) {
+            return new Yields1(asList(yields)); 
+        } else {
+            return emptyYields;
+        }
     }
     
     protected static Yield1 yieldCountAll(final String alias) {

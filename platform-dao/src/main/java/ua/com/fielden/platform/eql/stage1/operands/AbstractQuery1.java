@@ -5,6 +5,8 @@ import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.eql.stage1.operands.Prop1.enhancePath;
 import static ua.com.fielden.platform.eql.stage2.KeyPropertyExtractor.extract;
 import static ua.com.fielden.platform.eql.stage2.KeyPropertyExtractor.needsExtraction;
+import static ua.com.fielden.platform.eql.stage2.etc.GroupBys2.emptyGroupBys;
+import static ua.com.fielden.platform.eql.stage2.etc.OrderBys2.emptyOrderBys;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 import java.util.ArrayList;
@@ -65,11 +67,19 @@ public abstract class AbstractQuery1 {
     }
     
     protected static GroupBys2 enhance(final GroupBys2 groupBys) {
+        if (groupBys.equals(emptyGroupBys)) {
+            return emptyGroupBys;
+        }
+        
         final List<GroupBy2> enhanced = groupBys.getGroups().stream().map(group -> enhance(group)).flatMap(List::stream).collect(Collectors.toList());
         return new GroupBys2(enhanced);
     }
     
     protected static OrderBys2 enhance(final OrderBys2 orderBys, final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
+        if (orderBys.equals(emptyOrderBys)) {
+            return emptyOrderBys;
+        }
+        
         final List<OrderBy2> enhanced = new ArrayList<>();
         
         for (final OrderBy2 original : orderBys.getModels()) {

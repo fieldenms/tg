@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage0;
 
+import static ua.com.fielden.platform.eql.stage1.etc.Yields1.emptyYields;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -25,6 +27,10 @@ public class QryYieldsBuilder extends AbstractTokensBuilder {
         if (getChild() != null && getTokens().isEmpty()) {
             finaliseChild();
             //throw new RuntimeException("Unable to produce result - unfinished model state!");
+        }
+        
+        if (getTokens().isEmpty()) {
+            return emptyYields;
         }
 
         final List<Yield1> yields= new ArrayList<>();

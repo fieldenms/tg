@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage2.etc;
 
+import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableCollection;
 import static java.util.Collections.unmodifiableSortedMap;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
@@ -20,6 +21,8 @@ import ua.com.fielden.platform.eql.stage3.etc.Yield3;
 import ua.com.fielden.platform.eql.stage3.etc.Yields3;
 
 public class Yields2 {
+    public static final Yields2 emptyYields = new Yields2(emptyList());
+    
     private final SortedMap<String, Yield2> yieldsMap = new TreeMap<String, Yield2>();
     public final boolean allGenerated;
     

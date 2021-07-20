@@ -1,13 +1,14 @@
 package ua.com.fielden.platform.eql.meta;
 
 import static java.util.Arrays.asList;
-import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
 import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.emptyConditions;
 import static ua.com.fielden.platform.eql.stage2.etc.GroupBys2.emptyGroupBys;
+import static ua.com.fielden.platform.eql.stage2.etc.OrderBys2.emptyOrderBys;
+import static ua.com.fielden.platform.eql.stage2.etc.Yields2.emptyYields;
 import static ua.com.fielden.platform.eql.stage2.etc.Yields2.nullYields;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
@@ -58,8 +59,6 @@ import ua.com.fielden.platform.eql.stage3.sources.ISources3;
 import ua.com.fielden.platform.types.tuples.T2;
 
 public class EqlStage2TestCase extends EqlTestCase {
-
-    protected static final OrderBys2 emptyOrderBys2 = new OrderBys2(emptyList());
 
     protected static AbstractPropInfo<?> pi(final Class<?> type, final String propName) {
         return DOMAIN_METADATA.eqlDomainMetadata.getEntityInfo((Class<? extends AbstractEntity<?>>) type).getProps().get(propName);
@@ -117,7 +116,7 @@ public class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static QueryBlocks2 qb2(final ISources2<? extends ISources3> sources, final Conditions2 conditions, final Yields2 yields) {
-        return new QueryBlocks2(sources, conditions, yields, emptyGroupBys, emptyOrderBys2);
+        return new QueryBlocks2(sources, conditions, yields, emptyGroupBys, emptyOrderBys);
     }
 
     protected static QueryBlocks2 qb2(final ISources2<? extends ISources3> sources, final Conditions2 conditions, final Yields2 yields, final OrderBys2 orderBys) {
@@ -125,7 +124,11 @@ public class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static Yields2 yields(final Yield2... yields) {
-        return new Yields2(asList(yields));
+        if (yields.length > 0) {
+            return new Yields2(asList(yields)); 
+        } else {
+            return emptyYields;
+        }
     }
 
     protected static OrderBy2 orderDesc(final Prop2 prop) {
@@ -141,7 +144,11 @@ public class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static OrderBys2 orderBys(final OrderBy2... orderBys) {
-        return new OrderBys2(asList(orderBys));
+        if (orderBys.length > 0) {
+            return new OrderBys2(asList(orderBys));    
+        } else {
+            return emptyOrderBys;
+        }
     }
 
     protected static Yield2 yieldCountAll(final String alias) {
@@ -294,7 +301,7 @@ public class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static TypelessSubQuery2 typelessSubqry(final ISources2<? extends ISources3> sources, final Conditions2 conditions) {
-        return new TypelessSubQuery2(new QueryBlocks2(sources, conditions, nullYields, emptyGroupBys, emptyOrderBys2));
+        return new TypelessSubQuery2(new QueryBlocks2(sources, conditions, nullYields, emptyGroupBys, emptyOrderBys));
     }
 
     protected static SubQuery2 subqry(final ISources2<? extends ISources3> sources, final Yields2 yields, final Class<?> resultType, final Object hibType) {

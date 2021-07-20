@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage0;
 
+import static ua.com.fielden.platform.eql.stage1.etc.OrderBys1.emptyOrderBys;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -40,6 +42,11 @@ public class QryOrderingsBuilder extends AbstractTokensBuilder {
             finaliseChild();
             //throw new RuntimeException("Unable to produce result - unfinished model state!");
         }
+        
+        if (getTokens().isEmpty()) {
+            return emptyOrderBys;
+        }
+        
         final List<OrderBy1> models = new ArrayList<>();
         for (final Pair<TokenCategory, Object> pair : getTokens()) {
             models.add((OrderBy1) pair.getValue());

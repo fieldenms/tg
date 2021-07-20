@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.etc;
 
 import static java.lang.String.format;
+import static java.util.Collections.emptyList;
 import static java.util.Collections.unmodifiableCollection;
 import static java.util.Collections.unmodifiableSortedMap;
 import static java.util.stream.Collectors.toList;
@@ -15,6 +16,8 @@ import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 
 public class Yields1 {
+    public static final Yields1 emptyYields = new Yields1(emptyList());
+    
     private final SortedMap<String, Yield1> yieldsMap = new TreeMap<String, Yield1>();
 
     public Yields1(final List<Yield1> yields) {
@@ -24,7 +27,11 @@ public class Yields1 {
     }
     
     public Yields2 transform(final TransformationContext context) {
-        return new Yields2(yieldsMap.values().stream().map(el -> el.transform(context)).collect(toList()));
+        if (yieldsMap.isEmpty()) {
+            return Yields2.emptyYields;
+        } else {
+            return new Yields2(yieldsMap.values().stream().map(el -> el.transform(context)).collect(toList()));    
+        }
     }
 
     public void addYield(final Yield1 yield) {
