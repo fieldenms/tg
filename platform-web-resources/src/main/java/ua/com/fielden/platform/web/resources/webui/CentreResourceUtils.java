@@ -80,7 +80,7 @@ import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
+import ua.com.fielden.platform.ui.config.api.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 import ua.com.fielden.platform.ui.menu.MiType;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
@@ -541,7 +541,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final DeviceProfile device,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
-            final IEntityCentreConfig eccCompanion,
+            final EntityCentreConfigCo eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
@@ -897,7 +897,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final String chosenProperty,
             final DeviceProfile device,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
-            final IEntityCentreConfig eccCompanion,
+            final EntityCentreConfigCo eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
@@ -972,7 +972,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final EntityFactory entityFactory,
         final DeviceProfile device,
         final IDomainTreeEnhancerCache domainTreeEnhancerCache,
-        final IEntityCentreConfig eccCompanion,
+        final EntityCentreConfigCo eccCompanion,
         final IMainMenuItem mmiCompanion,
         final IUser userCompanion,
         final ICentreConfigSharingModel sharingModel) {
@@ -1022,7 +1022,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final Map<String, Object> adhocParams,
         final DeviceProfile device,
         final IDomainTreeEnhancerCache domainTreeEnhancerCache,
-        final IEntityCentreConfig eccCompanion,
+        final EntityCentreConfigCo eccCompanion,
         final IMainMenuItem mmiCompanion,
         final IUser userCompanion,
         final ICentreConfigSharingModel sharingModel) {
@@ -1119,7 +1119,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final DeviceProfile device,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
-            final IEntityCentreConfig eccCompanion,
+            final EntityCentreConfigCo eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
@@ -1142,7 +1142,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final DeviceProfile device,
         final IDomainTreeEnhancerCache domainTreeEnhancerCache,
         final IWebUiConfig webUiConfig,
-        final IEntityCentreConfig eccCompanion,
+        final EntityCentreConfigCo eccCompanion,
         final IMainMenuItem mmiCompanion,
         final IUser userCompanion,
         final ICentreConfigSharingModel sharingModel) {
@@ -1166,7 +1166,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final DeviceProfile device,
         final IDomainTreeEnhancerCache domainTreeEnhancerCache,
         final IWebUiConfig webUiConfig,
-        final IEntityCentreConfig eccCompanion,
+        final EntityCentreConfigCo eccCompanion,
         final IMainMenuItem mmiCompanion,
         final IUser userCompanion,
         final ICentreConfigSharingModel sharingModel) {
@@ -1190,7 +1190,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final DeviceProfile device,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
-            final IEntityCentreConfig eccCompanion,
+            final EntityCentreConfigCo eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
@@ -1266,7 +1266,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final DeviceProfile device,
         final Optional<String> saveAsName,
         final User user,
-        final IEntityCentreConfig eccCompanion,
+        final EntityCentreConfigCo eccCompanion,
         final Optional<Supplier<Boolean>> checkChanges
     ) {
         return findConfigOptByUuid(configUuid, miType, device, SAVED_CENTRE_NAME, eccCompanion)
@@ -1287,7 +1287,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * 
      * @param checkChanges -- optional function to check whether there are local changes; if they are -- not update FRESH from upstream; if no such check is needed i.e. empty function is passed (e.g. when discarding) -- force FRESH centre updating
      */
-    public static EntityCentreConfig updateInheritedFromShared(final EntityCentreConfig upstreamConfig, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final Optional<String> saveAsName, final User user, final IEntityCentreConfig eccCompanion, final Optional<Supplier<Boolean>> checkChanges) {
+    public static EntityCentreConfig updateInheritedFromShared(final EntityCentreConfig upstreamConfig, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final Optional<String> saveAsName, final User user, final EntityCentreConfigCo eccCompanion, final Optional<Supplier<Boolean>> checkChanges) {
         final String upstreamTitle = obtainTitleFrom(upstreamConfig.getTitle(), SAVED_CENTRE_NAME, device);
         final Optional<String> changedTitle = !equalsEx(upstreamTitle, saveAsName.get()) ? of(upstreamTitle) : empty();
         final Function<String, Function<Supplier<Optional<Boolean>>, Consumer<Supplier<String>>>> overrideConfigBodyFor = name -> calcRunAutomaticallyOpt -> calcDesc ->

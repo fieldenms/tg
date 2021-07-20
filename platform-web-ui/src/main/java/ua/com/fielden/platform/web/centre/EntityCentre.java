@@ -90,7 +90,7 @@ import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
+import ua.com.fielden.platform.ui.config.api.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -227,7 +227,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
     private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
-    private final IEntityCentreConfig eccCompanion;
+    private final EntityCentreConfigCo eccCompanion;
     private final IMainMenuItem mmiCompanion;
     private final IUser userCompanion;
 

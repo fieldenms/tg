@@ -14,7 +14,7 @@ import ua.com.fielden.platform.ui.config.EntityCentreConfig;
  * @author TG Team
  * 
  */
-public interface IEntityCentreConfig extends IEntityDao<EntityCentreConfig> {
+public interface EntityCentreConfigCo extends IEntityDao<EntityCentreConfig> {
     
     /**
      * Saves the entity (quickly) in repeating manner until the process is successfully concluded.<br>

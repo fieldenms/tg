@@ -113,7 +113,7 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfigDao;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
+import ua.com.fielden.platform.ui.config.api.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
@@ -247,7 +247,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IMainMenuItem.class).to(MainMenuItemDao.class);
         bind(IEntityMasterConfig.class).to(EntityMasterConfigDao.class);
         bind(IEntityLocatorConfig.class).to(EntityLocatorConfigDao.class);
-        bind(IEntityCentreConfig.class).to(EntityCentreConfigDao.class);
+        bind(EntityCentreConfigCo.class).to(EntityCentreConfigDao.class);
         bind(IEntityCentreAnalysisConfig.class).to(EntityCentreAnalysisConfigDao.class);
         bind(ICriteriaGenerator.class).to(CriteriaGenerator.class).in(Singleton.class);
         bind(IGeneratedEntityController.class).to(GeneratedEntityDao.class);

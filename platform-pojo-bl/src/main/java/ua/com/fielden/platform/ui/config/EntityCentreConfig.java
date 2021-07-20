@@ -17,7 +17,7 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
+import ua.com.fielden.platform.ui.config.api.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.definers.EntityCentreConfigDashboardableDefiner;
 
 /**
@@ -45,7 +45,7 @@ import ua.com.fielden.platform.ui.config.definers.EntityCentreConfigDashboardabl
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle("Configuration key")
-@CompanionObject(IEntityCentreConfig.class)
+@CompanionObject(EntityCentreConfigCo.class)
 @MapEntityTo("ENTITY_CENTRE_CONFIG")
 @DescTitle("Description")
 @DenyIntrospection
