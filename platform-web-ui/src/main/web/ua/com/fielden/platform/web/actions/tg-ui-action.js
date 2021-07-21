@@ -560,6 +560,7 @@ Polymer({
                     data: {
                         shouldRefreshParentCentreAfterSave: this.shouldRefreshParentCentreAfterSave,
                         entity: potentiallySavedOrNewEntity,
+                        entityPath: [potentiallySavedOrNewEntity], //path of entities from masters those are on a chain of refresh cycle
                         // send selectedEntitiesInContext further to be able to update only them on EGI
                         selectedEntitiesInContext: selectedEntitiesSupplier()
                     }

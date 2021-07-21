@@ -552,6 +552,7 @@ export class TgEntityEditor extends TgEditor {
                         if (!this._disabled && value !== null && value.get("id") !== null) {
                             this.assignConcreteValue(value, this.reflector().tg_convert.bind(this.reflector()));
                             this.commit();
+                            this.validationCallback();
                         }
                     }
                     this.openMasterAction._runDynamicAction(() => entity, null);
