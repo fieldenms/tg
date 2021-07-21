@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?><templates><template autoinsert="true" context="java" deleted="false" description="Generates a stub for a calculated property" enabled="true" name="tgprop-calculated">@IsProperty
 @Readonly
 @Calculated
-@Title(value = "${Title}", desc = "${Desc}")
+//@Title(value = "${Title}", desc = "${Desc}")
 private ${type} ${name};
 protected static final ExpressionModel ${name}_ = expr().val(${cursor}null).model();
 
@@ -27,7 +27,7 @@ ${imp:import(ua.com.fielden.platform.entity.annotation.IsProperty,
 </template>
 <template autoinsert="true" context="java" deleted="false" description="Generates a stub for collectional one-to-many association" enabled="true" name="tgprop-collectional">@IsProperty(${type}.class)
 @Title(value = "${Title}", desc = "${Desc}")
-private Set&lt;${type}&gt; ${name} = new HashSet&lt;${type}&gt;();${cursor}
+private Set&lt;${type}&gt; ${name} = new LinkedHashSet&lt;${type}&gt;();${cursor}
 
 @Observable
 protected ${enclosing_type} set${Name}(final Set&lt;${type}&gt; ${name}) {
@@ -43,11 +43,11 @@ public Set&lt;${type}&gt; get${Name}() {
 ${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
           ua.com.fielden.platform.entity.annotation.Title,
           ua.com.fielden.platform.entity.annotation.Observable,
-          java.util.HashSet, java.util.Set, java.util.Collections)}
+          java.util.LinkedHashSet, java.util.Set, java.util.Collections)}
 </template>
-<template autoinsert="true" context="java" deleted="false" description="Generates a stub for a composite key member of an entity type" enabled="true" name="tgprop-composite-key-member">@IsProperty
+<template autoinsert="true" context="java" deleted="false" description="Generates a stub for a composite key member of most types, except String" enabled="true" name="tgprop-composite-key-member">@IsProperty
 @MapTo
-@Title(value = "${Title}", desc = "${Desc}")
+//@Title(value = "${Title}", desc = "${Desc}")
 @CompositeKeyMember(${index})
 private ${type} ${name};${cursor}
 
@@ -67,9 +67,38 @@ ${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
           ua.com.fielden.platform.entity.annotation.MapTo,
   	  ua.com.fielden.platform.entity.annotation.CompositeKeyMember)}
 </template>
-<template autoinsert="true" context="java" deleted="false" description="Generates a stub for a property of an entity type" enabled="true" name="tgprop">@IsProperty
+
+<template autoinsert="true" context="java" deleted="false" description="Generates a stub for a String composite key member" enabled="true" name="tgprop-composite-key-member-string">@IsProperty(length = 255)
 @MapTo
-@Title(value = "${Title}", desc = "${Desc}")
+//@Title(value = "${Title}", desc = "${Desc}")
+@CompositeKeyMember(${index})
+@BeforeChange(@Handler(MaxLengthValidator.class))
+private String ${name};${cursor}
+
+@Observable
+public ${enclosing_type} set${Name}(final String ${name}) {
+    this.${name} = ${name};
+    return this;
+}
+
+public String get${Name}() {
+    return ${name};
+}
+
+${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
+          ua.com.fielden.platform.entity.annotation.Title,
+          ua.com.fielden.platform.entity.annotation.Observable,
+          ua.com.fielden.platform.entity.annotation.MapTo,
+  	  ua.com.fielden.platform.entity.annotation.CompositeKeyMember,
+          ua.com.fielden.platform.entity.validation.MaxLengthValidator,
+          ua.com.fielden.platform.entity.annotation.mutator.BeforeChange,
+          ua.com.fielden.platform.entity.annotation.mutator.Handler)}
+</template>
+
+
+<template autoinsert="true" context="java" deleted="false" description="Generates a stub for a property of most types, except String" enabled="true" name="tgprop">@IsProperty
+@MapTo
+//@Title(value = "${Title}", desc = "${Desc}")
 private ${type} ${name};${cursor}
 
 @Observable
@@ -87,7 +116,31 @@ ${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
           ua.com.fielden.platform.entity.annotation.Observable,
           ua.com.fielden.platform.entity.annotation.MapTo)}
 </template>
-<template autoinsert="true" context="java" deleted="false" description="Generates a stub for a pairt of comparable and dependent properties such as fromDate and toDate" enabled="true" name="tgprop-from-and-to">@IsProperty
+<template autoinsert="true" context="java" deleted="false" description="Generates a stub for a String property" enabled="true" name="tgprop-string">@IsProperty(length = 255)
+@MapTo
+//@Title(value = "${Title}", desc = "${Desc}")
+@BeforeChange(@Handler(MaxLengthValidator.class))
+private String ${name};${cursor}
+
+@Observable
+public ${enclosing_type} set${Name}(final String ${name}) {
+    this.${name} = ${name};
+    return this;
+}
+
+public String get${Name}() {
+    return ${name};
+}
+
+${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
+          ua.com.fielden.platform.entity.annotation.Title,
+          ua.com.fielden.platform.entity.annotation.Observable,
+          ua.com.fielden.platform.entity.annotation.MapTo,
+          ua.com.fielden.platform.entity.validation.MaxLengthValidator,
+          ua.com.fielden.platform.entity.annotation.mutator.BeforeChange,
+          ua.com.fielden.platform.entity.annotation.mutator.Handler)}
+</template>
+<template autoinsert="true" context="java" deleted="false" description="Generates a stub for a pair of comparable and dependent properties such as fromDate and toDate" enabled="true" name="tgprop-from-and-to">@IsProperty
 @MapTo
 @Dependent("${name2}")
 @Title(value = "${Title1}", desc = "${Desc1}")
@@ -129,9 +182,9 @@ ${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
           ua.com.fielden.platform.entity.validation.annotation.GeProperty,
           ua.com.fielden.platform.entity.validation.annotation.LeProperty)}
 </template>
-<template autoinsert="true" context="java" deleted="false" description="Generates a stub for the critOnly entity property." enabled="true" name="tgprop-critOnly">@IsProperty
+<template autoinsert="true" context="java" deleted="false" description="Generates a stub for the critOnly property." enabled="true" name="tgprop-critOnly">@IsProperty
 @CritOnly(Type.MULTI)
-@Title(value = "${Title}", desc = "${Desc}")
+//@Title(value = "${Title}", desc = "${Desc}")
 private ${type} ${name};${cursor}
 
 @Observable
