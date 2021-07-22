@@ -35,7 +35,7 @@ import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
+import ua.com.fielden.platform.ui.config.api.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 import ua.com.fielden.platform.ui.menu.MiType;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
@@ -53,7 +53,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
     private final IUserProvider userProvider;
     private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
-    private final IEntityCentreConfig eccCompanion;
+    private final EntityCentreConfigCo eccCompanion;
     private final IMainMenuItem mmiCompanion;
     private final IUser userCompanion;
     private final ICompanionObjectFinder companionFinder;
@@ -65,7 +65,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
             final IUserProvider userProvider,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
-            final IEntityCentreConfig eccCompanion,
+            final EntityCentreConfigCo eccCompanion,
             final IMainMenuItem mmiCompanion,
             final IUser userCompanion,
             final ICompanionObjectFinder companionFinder) {

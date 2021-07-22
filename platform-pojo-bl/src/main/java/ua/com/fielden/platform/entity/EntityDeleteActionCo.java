@@ -8,6 +8,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * @author Developers
  *
  */
-public interface IEntityDeleteAction extends IEntityDao<EntityDeleteAction> {
+public interface EntityDeleteActionCo extends IEntityDao<EntityDeleteAction> {
 
 }

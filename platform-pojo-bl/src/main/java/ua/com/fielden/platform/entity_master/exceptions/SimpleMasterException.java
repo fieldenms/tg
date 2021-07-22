@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity;
+package ua.com.fielden.platform.entity_master.exceptions;
 
 /**
  * Runtime exception that should be thrown when illegal situations occur during simple master lifecycle.

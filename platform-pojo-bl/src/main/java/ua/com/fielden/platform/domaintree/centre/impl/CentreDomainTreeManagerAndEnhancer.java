@@ -1002,17 +1002,6 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
         }
     }
 
-    @Override
-    public boolean isRunAutomatically() {
-        return base().isRunAutomatically();
-    }
-
-    @Override
-    public ICentreDomainTreeManager setRunAutomatically(final boolean runAutomatically) {
-        base().setRunAutomatically(runAutomatically);
-        return this;
-    }
-
     protected Map<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses() {
         return persistentAnalyses;
     }

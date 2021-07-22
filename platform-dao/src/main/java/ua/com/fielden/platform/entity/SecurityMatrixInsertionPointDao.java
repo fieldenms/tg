@@ -29,7 +29,7 @@ import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 
 @EntityType(SecurityMatrixInsertionPoint.class)
-public class SecurityMatrixInsertionPointDao extends CommonEntityDao<SecurityMatrixInsertionPoint> implements ISecurityMatrixInsertionPoint {
+public class SecurityMatrixInsertionPointDao extends CommonEntityDao<SecurityMatrixInsertionPoint> implements SecurityMatrixInsertionPointCo {
 
     private final ISecurityTokenProvider tokenProvider;
     private final ISecurityTokenNodeTransformation tokenTransformation;

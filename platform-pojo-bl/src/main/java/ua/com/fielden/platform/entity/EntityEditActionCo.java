@@ -5,9 +5,9 @@ import ua.com.fielden.platform.dao.IEntityDao;
 /** 
  * Companion object for entity {@link EntityEditAction}.
  * 
- * @author Developers
+ * @author TG Team
  *
  */
-public interface IEntityEditAction extends IEntityDao<EntityEditAction> {
+public interface EntityEditActionCo extends IEntityDao<EntityEditAction> {
 
 }
