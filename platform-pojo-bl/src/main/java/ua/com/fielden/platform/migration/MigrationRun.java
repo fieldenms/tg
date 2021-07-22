@@ -16,7 +16,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyType(String.class)
 @KeyTitle(value = "Migration run", desc = "Migration run")
 @MapEntityTo("MIGRATION_RUN")
-@CompanionObject(IMigrationRun.class)
+@CompanionObject(MigrationRunCo.class)
 @DenyIntrospection
 public class MigrationRun extends AbstractEntity<String> {
 

@@ -22,7 +22,7 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigDao;
-import ua.com.fielden.platform.ui.config.IMainMenuItem;
+import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.MainMenuItemDao;
 
@@ -34,7 +34,7 @@ import ua.com.fielden.platform.ui.config.MainMenuItemDao;
  */
 public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
     private final EntityCentreConfigCo dao = getInstance(EntityCentreConfigDao.class);
-    private final IMainMenuItem menuDao = getInstance(MainMenuItemDao.class);
+    private final MainMenuItemCo menuDao = getInstance(MainMenuItemDao.class);
     private final IUser userDao = getInstance(UserDao.class);
     
     @Test

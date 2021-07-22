@@ -8,6 +8,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * @author TG Team
  *
  */
-public interface ISecurityTokenInfo extends IEntityDao<SecurityTokenInfo> {
+public interface SecurityTokenInfoCo extends IEntityDao<SecurityTokenInfo> {
 
 }

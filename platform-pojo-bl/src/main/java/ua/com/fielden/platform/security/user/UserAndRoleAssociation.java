@@ -19,7 +19,7 @@ import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
  */
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo("USER_ROLE_ASSOCIATION")
-@CompanionObject(IUserAndRoleAssociation.class)
+@CompanionObject(UserAndRoleAssociationCo.class)
 public class UserAndRoleAssociation extends AbstractPersistentEntity<DynamicEntityKey> {
 
     @IsProperty

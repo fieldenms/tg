@@ -10,7 +10,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * @author TG Team
  * 
  */
-public interface IUserAndRoleAssociation extends IEntityDao<UserAndRoleAssociation> {
+public interface UserAndRoleAssociationCo extends IEntityDao<UserAndRoleAssociation> {
 
     /**
      * Removes the list of {@link UserAndRoleAssociation}s from data base

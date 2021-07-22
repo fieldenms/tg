@@ -16,7 +16,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyType(DynamicEntityKey.class)
 @KeyTitle("Migration Error")
 @MapEntityTo("MIGRATION_ERROR")
-@CompanionObject(IMigrationError.class)
+@CompanionObject(MigrationErrorCo.class)
 @DenyIntrospection
 public class MigrationError extends AbstractEntity<DynamicEntityKey> {
 

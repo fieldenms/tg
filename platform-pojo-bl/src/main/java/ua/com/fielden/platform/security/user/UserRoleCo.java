@@ -10,7 +10,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * @author TG Team
  * 
  */
-public interface IUserRole extends IEntityDao<UserRole> {
+public interface UserRoleCo extends IEntityDao<UserRole> {
 
     /** Returns all available {@link UserRole}s. */
     List<UserRole> findAll();

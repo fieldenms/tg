@@ -21,7 +21,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.SecurityRoleAssociationBatchAction;
-import ua.com.fielden.platform.security.user.ISecurityRoleAssociation;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 
@@ -56,7 +56,7 @@ public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixS
 
     private List<SecurityRoleAssociation> createSecurityRoleAssociations(final String securityToken, final List<Integer> roleIds, final Map<Long, UserRole> idRoleMap) {
         final Class<? extends ISecurityToken> token = loadToken(securityToken);
-        final ISecurityRoleAssociation associationCo = co$(SecurityRoleAssociation.class);
+        final SecurityRoleAssociationCo associationCo = co$(SecurityRoleAssociation.class);
         return roleIds.stream().map(id -> associationCo.new_().setRole(idRoleMap.get(Long.valueOf(id.longValue()))).setSecurityToken(token)).collect(Collectors.toList());
     }
 

@@ -26,7 +26,7 @@ import ua.com.fielden.platform.security.user.User;
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle("Entity master configuration")
-@CompanionObject(IEntityMasterConfig.class)
+@CompanionObject(EntityMasterConfigCo.class)
 @MapEntityTo("ENTITY_MASTER_CONFIG")
 @DenyIntrospection
 public class EntityMasterConfig extends AbstractConfiguration<DynamicEntityKey> {

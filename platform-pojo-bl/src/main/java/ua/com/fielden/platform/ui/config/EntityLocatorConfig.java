@@ -28,7 +28,7 @@ import ua.com.fielden.platform.security.user.User;
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle("Entity locator configuration")
-@CompanionObject(IEntityLocatorConfig.class)
+@CompanionObject(EntityLocatorConfigCo.class)
 @MapEntityTo("ENTITY_LOCATOR_CONFIG")
 @DenyIntrospection
 public class EntityLocatorConfig extends AbstractConfiguration<DynamicEntityKey> {

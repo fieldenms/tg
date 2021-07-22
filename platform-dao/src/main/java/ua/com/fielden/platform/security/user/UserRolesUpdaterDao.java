@@ -16,7 +16,7 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.tokens.user.User_CanSave_Token;
-import ua.com.fielden.platform.security.user.IUserRolesUpdater;
+import ua.com.fielden.platform.security.user.UserRolesUpdaterCo;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -25,13 +25,13 @@ import ua.com.fielden.platform.security.user.UserRolesUpdaterController;
 import ua.com.fielden.platform.types.tuples.T2;
 
 /** 
- * DAO implementation for companion object {@link IUserRolesUpdater}.
+ * DAO implementation for companion object {@link UserRolesUpdaterCo}.
  * 
  * @author Developers
  *
  */
 @EntityType(UserRolesUpdater.class)
-public class UserRolesUpdaterDao extends CommonEntityDao<UserRolesUpdater> implements IUserRolesUpdater {
+public class UserRolesUpdaterDao extends CommonEntityDao<UserRolesUpdater> implements UserRolesUpdaterCo {
     
     @Inject
     public UserRolesUpdaterDao(final IFilter filter) {
@@ -42,7 +42,7 @@ public class UserRolesUpdaterDao extends CommonEntityDao<UserRolesUpdater> imple
     @SessionRequired
     @Authorise(User_CanSave_Token.class)
     public UserRolesUpdater save(final UserRolesUpdater action) {
-        final T2<UserRolesUpdater, User> actionAndUserBeingUpdated = validateAction(action, this, Long.class, new UserRolesUpdaterController(co(User.class), co$(UserRolesUpdater.class), this.<IUserRole, UserRole>co(UserRole.class)));
+        final T2<UserRolesUpdater, User> actionAndUserBeingUpdated = validateAction(action, this, Long.class, new UserRolesUpdaterController(co(User.class), co$(UserRolesUpdater.class), this.<UserRoleCo, UserRole>co(UserRole.class)));
         final UserRolesUpdater actionToSave = actionAndUserBeingUpdated._1;
         final Map<Object, UserRole> availableRoles = toMapById(actionToSave.getRoles());
         

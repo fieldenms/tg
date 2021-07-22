@@ -13,8 +13,8 @@ import com.google.inject.Inject;
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.tokens.AlwaysAccessibleToken;
-import ua.com.fielden.platform.security.user.ISecurityRoleAssociation;
-import ua.com.fielden.platform.security.user.IUserRole;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
+import ua.com.fielden.platform.security.user.UserRoleCo;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -27,9 +27,9 @@ import ua.com.fielden.platform.security.user.UserRole;
  */
 public class SecurityTokenController implements ISecurityTokenController, ISessionEnabled {
 
-    private final ISecurityRoleAssociation securityAssociationDao;
+    private final SecurityRoleAssociationCo securityAssociationDao;
 
-    private final IUserRole roleDao;
+    private final UserRoleCo roleDao;
 
     private Session session;
     private String transactionGuid;
@@ -44,7 +44,7 @@ public class SecurityTokenController implements ISecurityTokenController, ISessi
      * Creates new instance of SecurityTokenController with twelve user roles and security tokens
      */
     @Inject
-    public SecurityTokenController(final ISecurityRoleAssociation securityAssociationDao, final IUserRole roleDao) {
+    public SecurityTokenController(final SecurityRoleAssociationCo securityAssociationDao, final UserRoleCo roleDao) {
         this.securityAssociationDao = securityAssociationDao;
         this.roleDao = roleDao;
     }
@@ -63,11 +63,11 @@ public class SecurityTokenController implements ISecurityTokenController, ISessi
         return roles;
     }
 
-    public IUserRole getRoleDao() {
+    public UserRoleCo getRoleDao() {
         return roleDao;
     }
 
-    public ISecurityRoleAssociation getSecurityAssociationDao() {
+    public SecurityRoleAssociationCo getSecurityAssociationDao() {
         return securityAssociationDao;
     }
 

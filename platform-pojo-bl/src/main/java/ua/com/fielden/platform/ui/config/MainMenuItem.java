@@ -34,7 +34,7 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 @KeyType(String.class)
 @KeyTitle("Menu item type")
 @DescTitle("Description")
-@CompanionObject(IMainMenuItem.class)
+@CompanionObject(MainMenuItemCo.class)
 @MapEntityTo("MAIN_MENU")
 @DenyIntrospection
 public class MainMenuItem extends AbstractEntity<String> implements ITreeNode<MainMenuItem> {

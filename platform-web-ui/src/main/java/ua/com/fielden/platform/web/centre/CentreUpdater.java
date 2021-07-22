@@ -109,7 +109,7 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
-import ua.com.fielden.platform.ui.config.IMainMenuItem;
+import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.ui.menu.SaveAsNameAnnotation;
 import ua.com.fielden.platform.utils.Pair;
@@ -121,7 +121,7 @@ import ua.com.fielden.snappy.MnemonicEnum;
 /**
  * Represents a set of utility methods for updating / committing of surrogate centres, for e.g. 'fresh', 'previouslyRun' etc.
  * <p>
- * Every surrogate centre has its own diff centre that, saves into the database during {@link #commitCentre(User, IUserProvider, Class, String, Optional, DeviceProfile, ICentreDomainTreeManagerAndEnhancer, IWebUiConfig, ISerialiser, EntityCentreConfigCo, IMainMenuItem, IUser)} process.
+ * Every surrogate centre has its own diff centre that, saves into the database during {@link #commitCentre(User, IUserProvider, Class, String, Optional, DeviceProfile, ICentreDomainTreeManagerAndEnhancer, IWebUiConfig, ISerialiser, EntityCentreConfigCo, MainMenuItemCo, IUser)} process.
  *
  * @author TG Team
  *
@@ -291,7 +291,7 @@ public class CentreUpdater {
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final EntityCentreConfigCo eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICompanionObjectFinder companionFinder) {
         final String deviceSpecificName = deviceSpecific(saveAsSpecific(name, saveAsName), device);
@@ -521,7 +521,7 @@ public class CentreUpdater {
             final String newDesc,
             final IWebUiConfig webUiConfig,
             final EntityCentreConfigCo eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion) {
         return commitCentre(false, user, miType, name, saveAsName, device, centre, newDesc, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
     }
@@ -551,7 +551,7 @@ public class CentreUpdater {
             final String newDesc,
             final IWebUiConfig webUiConfig,
             final EntityCentreConfigCo eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion) {
         return commitCentre(true, user, miType, name, saveAsName, device, centre, newDesc, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
     }
@@ -581,7 +581,7 @@ public class CentreUpdater {
             final String newDesc,
             final IWebUiConfig webUiConfig,
             final EntityCentreConfigCo eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion) {
         final String deviceSpecificName = deviceSpecific(saveAsSpecific(name, saveAsName), device);
         final ICentreDomainTreeManagerAndEnhancer defaultCentre = getDefaultCentre(miType, webUiConfig);
@@ -987,7 +987,7 @@ public class CentreUpdater {
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final EntityCentreConfigCo eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICompanionObjectFinder companionFinder) {
         // the name consists of 'deviceSpecificName' and 'DIFFERENCES_SUFFIX'

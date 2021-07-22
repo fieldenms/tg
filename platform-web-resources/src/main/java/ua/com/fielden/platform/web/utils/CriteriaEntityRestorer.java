@@ -15,7 +15,7 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
-import ua.com.fielden.platform.ui.config.IMainMenuItem;
+import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
@@ -61,7 +61,7 @@ public class CriteriaEntityRestorer implements ICriteriaEntityRestorer {
     public EnhancedCentreEntityQueryCriteria<?, ?> restoreCriteriaEntity(final CentreContextHolder centreContextHolder) {
         final User user = userProvider.getUser();
         final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
-        final IMainMenuItem mmiCompanion = companionFinder.find(MainMenuItem.class);
+        final MainMenuItemCo mmiCompanion = companionFinder.find(MainMenuItem.class);
         final IUser userCompanion = companionFinder.find(User.class);
         
         return createCriteriaEntityForContext(centreContextHolder, companionFinder, user, critGenerator, webUiConfig, entityFactory, deviceProvider.getDeviceProfile(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel);

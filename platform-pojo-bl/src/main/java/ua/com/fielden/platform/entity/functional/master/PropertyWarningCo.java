@@ -8,6 +8,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * @author Developers
  *
  */
-public interface IPropertyWarning extends IEntityDao<PropertyWarning> {
+public interface PropertyWarningCo extends IEntityDao<PropertyWarning> {
 
 }

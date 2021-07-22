@@ -25,7 +25,7 @@ public class UserRolesUpdaterProducer extends AbstractFunctionalEntityForCollect
     @Inject
     public UserRolesUpdaterProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
         super(factory, UserRolesUpdater.class, companionFinder);
-        this.controller = new UserRolesUpdaterController(co(User.class), co$(UserRolesUpdater.class), this.<IUserRole, UserRole>co(UserRole.class));
+        this.controller = new UserRolesUpdaterController(co(User.class), co$(UserRolesUpdater.class), this.<UserRoleCo, UserRole>co(UserRole.class));
     }
     
     @Override

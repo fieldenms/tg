@@ -32,7 +32,7 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
-import ua.com.fielden.platform.ui.config.IMainMenuItem;
+import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -149,7 +149,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
         final String newName,
         final String newDesc,
         final EntityCentreConfigCo eccCompanion,
-        final IMainMenuItem mmiCompanion
+        final MainMenuItemCo mmiCompanion
     ) {
         return saveNewEntityCentreManager(false, differences, menuItemType, user, newName, newDesc, eccCompanion, mmiCompanion);
     }
@@ -167,7 +167,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
         final String newName,
         final String newDesc,
         final EntityCentreConfigCo eccCompanion,
-        final IMainMenuItem mmiCompanion
+        final MainMenuItemCo mmiCompanion
     ) {
         saveNewEntityCentreManager(withoutConflicts, CENTRE_DIFF_SERIALISER.serialise(differences), menuItemType, user, newName, newDesc, eccCompanion, mmiCompanion, identity());
         return differences;
@@ -188,7 +188,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
         final String newName,
         final String newDesc,
         final EntityCentreConfigCo eccCompanion,
-        final IMainMenuItem mmiCompanion,
+        final MainMenuItemCo mmiCompanion,
         final Function<EntityCentreConfig, EntityCentreConfig> adjustConfig
     ) {
         final MainMenuItem menuItem = mmiCompanion.findByKeyOptional(menuItemType.getName()).orElseGet(() -> {
@@ -218,7 +218,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
         final String name,
         final String newDesc,
         final EntityCentreConfigCo eccCompanion,
-        final IMainMenuItem mmiCompanion
+        final MainMenuItemCo mmiCompanion
     ) {
         final EntityCentreConfig config = eccCompanion.getEntity(from(modelFor(user, menuItemType.getName(), name)).model());
         if (config == null) {

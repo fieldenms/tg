@@ -14,7 +14,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
  */
 @KeyType(String.class)
 @KeyTitle(value = "Property", desc = "Property name with which this warning is associated.")
-@CompanionObject(IPropertyWarning.class)
+@CompanionObject(PropertyWarningCo.class)
 @DescTitle(value = "Warning", desc = "Warning")
 public class PropertyWarning extends AbstractEntity<String> {
 

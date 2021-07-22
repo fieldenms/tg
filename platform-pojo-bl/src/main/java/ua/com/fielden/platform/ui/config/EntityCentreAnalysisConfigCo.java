@@ -11,6 +11,6 @@ import ua.com.fielden.platform.dao.IMasterDetailsDao;
  * @author Developers
  * 
  */
-public interface IEntityCentreAnalysisConfig extends IEntityDao<EntityCentreAnalysisConfig>, IMasterDetailsDao<EntityCentreConfig, EntityCentreAnalysisConfig> {
+public interface EntityCentreAnalysisConfigCo extends IEntityDao<EntityCentreAnalysisConfig>, IMasterDetailsDao<EntityCentreConfig, EntityCentreAnalysisConfig> {
 
 }

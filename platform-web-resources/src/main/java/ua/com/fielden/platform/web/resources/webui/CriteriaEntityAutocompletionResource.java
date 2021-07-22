@@ -35,7 +35,7 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
-import ua.com.fielden.platform.ui.config.IMainMenuItem;
+import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
@@ -119,7 +119,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
             final User user = userProvider.getUser();
             final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
-            final IMainMenuItem mmiCompanion = companionFinder.find(MainMenuItem.class);
+            final MainMenuItemCo mmiCompanion = companionFinder.find(MainMenuItem.class);
             final IUser userCompanion = companionFinder.find(User.class);
             
             final M criteriaEntity;

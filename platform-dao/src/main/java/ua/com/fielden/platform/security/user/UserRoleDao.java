@@ -22,17 +22,17 @@ import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.tokens.user.UserRole_CanDelete_Token;
 import ua.com.fielden.platform.security.tokens.user.UserRole_CanSave_Token;
-import ua.com.fielden.platform.security.user.IUserRole;
+import ua.com.fielden.platform.security.user.UserRoleCo;
 import ua.com.fielden.platform.security.user.UserRole;
 
 /**
- * Db driven implementation of the {@link IUserRole}.
+ * Db driven implementation of the {@link UserRoleCo}.
  * 
  * @author TG Team
  * 
  */
 @EntityType(UserRole.class)
-public class UserRoleDao extends CommonEntityDao<UserRole> implements IUserRole {
+public class UserRoleDao extends CommonEntityDao<UserRole> implements UserRoleCo {
 
     @Inject
     protected UserRoleDao(final IFilter filter) {

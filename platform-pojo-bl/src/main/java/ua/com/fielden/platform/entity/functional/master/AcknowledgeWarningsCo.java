@@ -8,6 +8,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * @author Developers
  *
  */
-public interface IAcknowledgeWarnings extends IEntityDao<AcknowledgeWarnings> {
+public interface AcknowledgeWarningsCo extends IEntityDao<AcknowledgeWarnings> {
 
 }

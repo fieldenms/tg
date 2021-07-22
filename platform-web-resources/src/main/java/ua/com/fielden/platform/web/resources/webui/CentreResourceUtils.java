@@ -81,7 +81,7 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
-import ua.com.fielden.platform.ui.config.IMainMenuItem;
+import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.menu.MiType;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
@@ -551,7 +551,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final EntityCentreConfigCo eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
         // generates validation prototype
@@ -911,7 +911,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final DeviceProfile device,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final EntityCentreConfigCo eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
         if (contextConfig.isPresent()) {
@@ -989,7 +989,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final DeviceProfile device,
         final IDomainTreeEnhancerCache domainTreeEnhancerCache,
         final EntityCentreConfigCo eccCompanion,
-        final IMainMenuItem mmiCompanion,
+        final MainMenuItemCo mmiCompanion,
         final IUser userCompanion,
         final ICentreConfigSharingModel sharingModel) {
 
@@ -1039,7 +1039,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final DeviceProfile device,
         final IDomainTreeEnhancerCache domainTreeEnhancerCache,
         final EntityCentreConfigCo eccCompanion,
-        final IMainMenuItem mmiCompanion,
+        final MainMenuItemCo mmiCompanion,
         final IUser userCompanion,
         final ICentreConfigSharingModel sharingModel) {
 
@@ -1136,7 +1136,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final EntityCentreConfigCo eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
         final ICentreDomainTreeManagerAndEnhancer updatedPreviouslyRunCentre = updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
@@ -1159,7 +1159,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final IDomainTreeEnhancerCache domainTreeEnhancerCache,
         final IWebUiConfig webUiConfig,
         final EntityCentreConfigCo eccCompanion,
-        final IMainMenuItem mmiCompanion,
+        final MainMenuItemCo mmiCompanion,
         final IUser userCompanion,
         final ICentreConfigSharingModel sharingModel) {
         return createCriteriaEntity(false, modifiedPropertiesHolder, companionFinder, critGenerator, miType, saveAsName, user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
@@ -1183,7 +1183,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final IDomainTreeEnhancerCache domainTreeEnhancerCache,
         final IWebUiConfig webUiConfig,
         final EntityCentreConfigCo eccCompanion,
-        final IMainMenuItem mmiCompanion,
+        final MainMenuItemCo mmiCompanion,
         final IUser userCompanion,
         final ICentreConfigSharingModel sharingModel) {
         return createCriteriaEntity(true, modifiedPropertiesHolder, companionFinder, critGenerator, miType, saveAsName, user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
@@ -1207,7 +1207,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final EntityCentreConfigCo eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
         if (isEmpty(modifiedPropertiesHolder)) {

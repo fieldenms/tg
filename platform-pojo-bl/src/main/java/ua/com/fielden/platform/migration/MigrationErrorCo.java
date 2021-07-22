@@ -8,6 +8,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * @author TG Team
  * 
  */
-public interface IMigrationError extends IEntityDao<MigrationError> {
+public interface MigrationErrorCo extends IEntityDao<MigrationError> {
 
 }

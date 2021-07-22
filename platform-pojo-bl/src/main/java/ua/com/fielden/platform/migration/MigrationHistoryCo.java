@@ -3,11 +3,11 @@ package ua.com.fielden.platform.migration;
 import ua.com.fielden.platform.dao.IEntityDao;
 
 /**
- * DAO contract for {@link MigrationRun}.
+ * DAO contract for {@link MigrationHistory}.
  * 
  * @author TG Team
  * 
  */
-public interface IMigrationRun extends IEntityDao<MigrationRun> {
+public interface MigrationHistoryCo extends IEntityDao<MigrationHistory> {
 
 }

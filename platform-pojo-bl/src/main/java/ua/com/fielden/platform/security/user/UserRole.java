@@ -29,7 +29,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @DescTitle("Description")
 @DescRequired
 @MapEntityTo("USER_ROLE")
-@CompanionObject(IUserRole.class)
+@CompanionObject(UserRoleCo.class)
 public class UserRole extends ActivatableAbstractEntity<String> {
 
     @IsProperty(value = SecurityRoleAssociation.class, linkProperty = "role")

@@ -11,17 +11,17 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.security.user.IUserAndRoleAssociation;
+import ua.com.fielden.platform.security.user.UserAndRoleAssociationCo;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 
 /**
- * DbDriven implementation of the {@link IUserAndRoleAssociation}
+ * DbDriven implementation of the {@link UserAndRoleAssociationCo}
  * 
  * @author TG Team
  * 
  */
 @EntityType(UserAndRoleAssociation.class)
-public class UserAndRoleAssociationDao extends CommonEntityDao<UserAndRoleAssociation> implements IUserAndRoleAssociation {
+public class UserAndRoleAssociationDao extends CommonEntityDao<UserAndRoleAssociation> implements UserAndRoleAssociationCo {
 
     @Inject
     protected UserAndRoleAssociationDao(final IFilter filter) {

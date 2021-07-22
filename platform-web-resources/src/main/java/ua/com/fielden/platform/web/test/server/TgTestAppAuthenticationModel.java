@@ -13,7 +13,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.IAuthenticationModel;
-import ua.com.fielden.platform.security.user.IUserSecret;
+import ua.com.fielden.platform.security.user.UserSecretCo;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserSecret;
 
@@ -26,10 +26,10 @@ import ua.com.fielden.platform.security.user.UserSecret;
  */
 public class TgTestAppAuthenticationModel implements IAuthenticationModel {
 
-    private final IUserSecret coUserSecret;
+    private final UserSecretCo coUserSecret;
 
     @Inject
-    public TgTestAppAuthenticationModel(final IUserSecret coUserSecret) {
+    public TgTestAppAuthenticationModel(final UserSecretCo coUserSecret) {
         this.coUserSecret = coUserSecret;
     }
 

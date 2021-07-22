@@ -19,9 +19,9 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 public class UserRolesUpdaterController implements ICollectionModificationController<User, UserRolesUpdater, Long, UserRole> {
     private final IEntityDao<User> coUser;
     private final IEntityDao<UserRolesUpdater> co$UserRolesUpdater;
-    private final IUserRole coUserRole;
+    private final UserRoleCo coUserRole;
     
-    public UserRolesUpdaterController(final IEntityDao<User> coUser, final IEntityDao<UserRolesUpdater> co$UserRolesUpdater, final IUserRole coUserRole) {
+    public UserRolesUpdaterController(final IEntityDao<User> coUser, final IEntityDao<UserRolesUpdater> co$UserRolesUpdater, final UserRoleCo coUserRole) {
         this.coUser = coUser;
         this.co$UserRolesUpdater = co$UserRolesUpdater;
         this.coUserRole = coUserRole;
@@ -57,7 +57,7 @@ public class UserRolesUpdaterController implements ICollectionModificationContro
         return persistedActionVersionFor(masterEntityId, co$UserRolesUpdater);
     }
     
-    private static Set<UserRole> loadAvailableRoles(final IUserRole coUserRole) {
+    private static Set<UserRole> loadAvailableRoles(final UserRoleCo coUserRole) {
         return new LinkedHashSet<>(coUserRole.findAll());
     }
     

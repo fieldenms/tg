@@ -8,6 +8,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * @author TG Team
  * 
  */
-public interface IEntityLocatorConfig extends IEntityDao<EntityLocatorConfig> {
+public interface EntityLocatorConfigCo extends IEntityDao<EntityLocatorConfig> {
 
 }

@@ -8,5 +8,5 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * @author TG Team
  * 
  */
-public interface IMainMenuItem extends IEntityDao<MainMenuItem> {
+public interface MainMenuItemCo extends IEntityDao<MainMenuItem> {
 }

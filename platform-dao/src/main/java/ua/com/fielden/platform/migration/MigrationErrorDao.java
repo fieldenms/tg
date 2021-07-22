@@ -3,7 +3,7 @@ package ua.com.fielden.platform.migration;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.migration.IMigrationError;
+import ua.com.fielden.platform.migration.MigrationErrorCo;
 import ua.com.fielden.platform.migration.MigrationError;
 
 import com.google.inject.Inject;
@@ -15,7 +15,7 @@ import com.google.inject.Inject;
  * 
  */
 @EntityType(MigrationError.class)
-public class MigrationErrorDao extends CommonEntityDao<MigrationError> implements IMigrationError {
+public class MigrationErrorDao extends CommonEntityDao<MigrationError> implements MigrationErrorCo {
 
     @Inject
     protected MigrationErrorDao(final IFilter filter) {

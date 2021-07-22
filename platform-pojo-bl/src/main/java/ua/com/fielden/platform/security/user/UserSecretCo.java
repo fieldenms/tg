@@ -4,7 +4,7 @@ import java.util.Optional;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 
-public interface IUserSecret extends IEntityDao<UserSecret> {
+public interface UserSecretCo extends IEntityDao<UserSecret> {
 
     /**
      * A convenient method to find user's secret by their name.

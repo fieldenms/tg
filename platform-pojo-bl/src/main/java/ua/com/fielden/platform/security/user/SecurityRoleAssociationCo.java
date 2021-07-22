@@ -13,7 +13,7 @@ import ua.com.fielden.platform.security.ISecurityToken;
  * @author TG Team
  * 
  */
-public interface ISecurityRoleAssociation extends IEntityDao<SecurityRoleAssociation> {
+public interface SecurityRoleAssociationCo extends IEntityDao<SecurityRoleAssociation> {
 
     /**
      * Returns the list of {@link SecurityRoleAssociation} those are associated with given security token

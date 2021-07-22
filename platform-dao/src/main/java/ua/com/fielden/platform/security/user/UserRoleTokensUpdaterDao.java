@@ -21,7 +21,7 @@ import ua.com.fielden.platform.security.SecurityRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.provider.ISecurityTokenNodeTransformation;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.tokens.user.UserRole_CanSave_Token;
-import ua.com.fielden.platform.security.user.IUserRoleTokensUpdater;
+import ua.com.fielden.platform.security.user.UserRoleTokensUpdaterCo;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.SecurityTokenInfo;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -30,13 +30,13 @@ import ua.com.fielden.platform.security.user.UserRoleTokensUpdaterController;
 import ua.com.fielden.platform.types.tuples.T2;
 
 /** 
- * DAO implementation for companion object {@link IUserRoleTokensUpdater}.
+ * DAO implementation for companion object {@link UserRoleTokensUpdaterCo}.
  * 
  * @author Developers
  *
  */
 @EntityType(UserRoleTokensUpdater.class)
-public class UserRoleTokensUpdaterDao extends CommonEntityDao<UserRoleTokensUpdater> implements IUserRoleTokensUpdater {
+public class UserRoleTokensUpdaterDao extends CommonEntityDao<UserRoleTokensUpdater> implements UserRoleTokensUpdaterCo {
     private final EntityFactory factory;
     private final ISecurityTokenNodeTransformation tokenTransformation;
     private final ISecurityTokenProvider securityTokenProvider;

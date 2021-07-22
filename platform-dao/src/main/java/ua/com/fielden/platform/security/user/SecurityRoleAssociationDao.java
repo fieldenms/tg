@@ -21,7 +21,7 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.security.ISecurityToken;
-import ua.com.fielden.platform.security.user.ISecurityRoleAssociation;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -29,13 +29,13 @@ import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 
 /**
- * DbDriven implementation of the {@link ISecurityRoleAssociation}
+ * DbDriven implementation of the {@link SecurityRoleAssociationCo}
  * 
  * @author TG Team
  * 
  */
 @EntityType(SecurityRoleAssociation.class)
-public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAssociation> implements ISecurityRoleAssociation {
+public class SecurityRoleAssociationDao extends CommonEntityDao<SecurityRoleAssociation> implements SecurityRoleAssociationCo {
 
     /**
      * Instantiates the {@link SecurityRoleAssociationDao}

@@ -8,16 +8,16 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
-import ua.com.fielden.platform.ui.config.IEntityLocatorConfig;
+import ua.com.fielden.platform.ui.config.EntityLocatorConfigCo;
 
 /**
- * DAO implementation of {@link IEntityLocatorConfig}.
+ * DAO implementation of {@link EntityLocatorConfigCo}.
  * 
  * @author TG Team
  * 
  */
 @EntityType(EntityLocatorConfig.class)
-public class EntityLocatorConfigDao extends CommonEntityDao<EntityLocatorConfig> implements IEntityLocatorConfig {
+public class EntityLocatorConfigDao extends CommonEntityDao<EntityLocatorConfig> implements EntityLocatorConfigCo {
 
     @Inject
     protected EntityLocatorConfigDao(final IFilter filter) {

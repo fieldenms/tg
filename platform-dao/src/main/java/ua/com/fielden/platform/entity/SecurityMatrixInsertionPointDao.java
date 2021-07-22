@@ -24,7 +24,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenNodeTransformation;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
-import ua.com.fielden.platform.security.user.ISecurityRoleAssociation;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 
@@ -52,7 +52,7 @@ public class SecurityMatrixInsertionPointDao extends CommonEntityDao<SecurityMat
             entity.setUserRoles(stream.collect(toList()));
         }
         entity.setTokens(tokenEntities);
-        final ISecurityRoleAssociation coTokenRoleAssociation = co(SecurityRoleAssociation.class);
+        final SecurityRoleAssociationCo coTokenRoleAssociation = co(SecurityRoleAssociation.class);
         final Map<String, List<Long>> tokenRoleMap = coTokenRoleAssociation.findAllAssociations().entrySet().stream().collect(toMap(entry -> entry.getKey().getName(), entry -> entry.getValue().stream().map(UserRole::getId).collect(toList())));
         entity.setTokenRoleMap(tokenRoleMap)
               .setCalculated(true)

@@ -18,7 +18,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyType(DynamicEntityKey.class)
 @KeyTitle("Migration History")
 @MapEntityTo("MIGRATION_HISTORY")
-@CompanionObject(IMigrationHistory.class)
+@CompanionObject(MigrationHistoryCo.class)
 @DenyIntrospection
 public class MigrationHistory extends AbstractEntity<DynamicEntityKey> {
 

@@ -8,6 +8,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * @author TG Team
  * 
  */
-public interface IEntityMasterConfig extends IEntityDao<EntityMasterConfig> {
+public interface EntityMasterConfigCo extends IEntityDao<EntityMasterConfig> {
 
 }

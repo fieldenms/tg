@@ -8,6 +8,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * @author Developers
  *
  */
-public interface IUserRoleTokensUpdater extends IEntityDao<UserRoleTokensUpdater> {
+public interface UserRoleTokensUpdaterCo extends IEntityDao<UserRoleTokensUpdater> {
 
 }
