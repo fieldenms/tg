@@ -13,8 +13,6 @@ import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.dao.IUserRole;
-import ua.com.fielden.platform.entity.EntityExportActionDao;
-import ua.com.fielden.platform.entity.EntityExportActionCo;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarningsDao;
 import ua.com.fielden.platform.entity.functional.master.IAcknowledgeWarnings;
 import ua.com.fielden.platform.entity.functional.master.IPropertyWarning;
@@ -66,34 +64,6 @@ import ua.com.fielden.platform.ui.config.controller.EntityLocatorConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigDao;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
-import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterDao;
-import ua.com.fielden.platform.web.centre.CentreConfigConfigureActionDao;
-import ua.com.fielden.platform.web.centre.CentreConfigDeleteActionDao;
-import ua.com.fielden.platform.web.centre.CentreConfigDuplicateActionDao;
-import ua.com.fielden.platform.web.centre.CentreConfigEditActionDao;
-import ua.com.fielden.platform.web.centre.CentreConfigLoadActionDao;
-import ua.com.fielden.platform.web.centre.CentreConfigNewActionDao;
-import ua.com.fielden.platform.web.centre.CentreConfigSaveActionDao;
-import ua.com.fielden.platform.web.centre.CentreConfigShareActionDao;
-import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
-import ua.com.fielden.platform.web.centre.CustomisableColumnDao;
-import ua.com.fielden.platform.web.centre.ICentreColumnWidthConfigUpdater;
-import ua.com.fielden.platform.web.centre.CentreConfigConfigureActionCo;
-import ua.com.fielden.platform.web.centre.CentreConfigDeleteActionCo;
-import ua.com.fielden.platform.web.centre.CentreConfigDuplicateActionCo;
-import ua.com.fielden.platform.web.centre.CentreConfigEditActionCo;
-import ua.com.fielden.platform.web.centre.CentreConfigLoadActionCo;
-import ua.com.fielden.platform.web.centre.CentreConfigNewActionCo;
-import ua.com.fielden.platform.web.centre.CentreConfigSaveActionCo;
-import ua.com.fielden.platform.web.centre.CentreConfigShareActionCo;
-import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
-import ua.com.fielden.platform.web.centre.ICustomisableColumn;
-import ua.com.fielden.platform.web.centre.LoadableCentreConfigCo;
-import ua.com.fielden.platform.web.centre.OverrideCentreConfigCo;
-import ua.com.fielden.platform.web.centre.LoadableCentreConfigDao;
-import ua.com.fielden.platform.web.centre.OverrideCentreConfigDao;
-import ua.com.fielden.platform.web.utils.CriteriaEntityRestorer;
-import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 /**
  * Guice injector module for Hibernate related injections, which are specific to testing.
@@ -102,14 +72,14 @@ import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
  *
  */
 public class WebHibernateModule extends CommonFactoryModule {
-
     private final ISerialisationClassProvider serialisationClassProvider;
 
-    public WebHibernateModule(//
-    final SessionFactory sessionFactory,//
-            final DomainMetadata domainMetadata,//
-            final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache, 
-            final ISerialisationClassProvider serialisationClassProvider) {
+    public WebHibernateModule(
+        final SessionFactory sessionFactory,
+        final DomainMetadata domainMetadata,
+        final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache,
+        final ISerialisationClassProvider serialisationClassProvider
+    ) {
         super(sessionFactory, domainMetadata, idOnlyProxiedEntityTypeCache);
         this.serialisationClassProvider = serialisationClassProvider;
     }
@@ -121,19 +91,10 @@ public class WebHibernateModule extends CommonFactoryModule {
         bind(INewUserNotifier.class).toInstance(s -> {});
         bind(ISerialisationClassProvider.class).toInstance(serialisationClassProvider);
         bind(ISerialiser.class).to(Serialiser.class);
-        // bind DAO
+
         bind(IUserRole.class).to(UserRoleDao.class);
         bind(IUserRoleTokensUpdater.class).to(UserRoleTokensUpdaterDao.class);
         bind(ISecurityTokenInfo.class).to(SecurityTokenInfoDao.class);
-        bind(ICustomisableColumn.class).to(CustomisableColumnDao.class);
-        
-        bind(CentreConfigShareActionCo.class).to(CentreConfigShareActionDao.class);
-        bind(CentreConfigNewActionCo.class).to(CentreConfigNewActionDao.class);
-        bind(CentreConfigDuplicateActionCo.class).to(CentreConfigDuplicateActionDao.class);
-        bind(CentreConfigDeleteActionCo.class).to(CentreConfigDeleteActionDao.class);
-        bind(LoadableCentreConfigCo.class).to(LoadableCentreConfigDao.class);
-        bind(OverrideCentreConfigCo.class).to(OverrideCentreConfigDao.class);
-        
         bind(IUserAndRoleAssociation.class).to(UserAndRoleAssociationDao.class);
         bind(ISecurityRoleAssociation.class).to(SecurityRoleAssociationDao.class);
         bind(IUser.class).to(UserDao.class);
@@ -158,17 +119,6 @@ public class WebHibernateModule extends CommonFactoryModule {
         bind(IDates.class).to(DatesForTesting.class).in(Scopes.SINGLETON);
         bind(IUniversalConstants.class).to(UniversalConstantsForTesting.class).in(Scopes.SINGLETON);
         bind(new TypeLiteral<Cache<String, UserSession>>(){}).annotatedWith(SessionCache.class).toProvider(TestSessionCacheBuilder.class).in(Scopes.SINGLETON);
-        
-        // bind ICriteriaEntityRestorer to its implementation as singleton -- it is dependent on IWebUiConfig, IServerGlobalDomainTreeManager, IUserProvider and other Web UI infrastructure
-        bind(ICriteriaEntityRestorer.class).to(CriteriaEntityRestorer.class).in(Scopes.SINGLETON);
-        // bind companion object implementations that are dependent on ICriteriaEntityRestorer
-        bind(EntityExportActionCo.class).to(EntityExportActionDao.class);
-        bind(ICentreConfigUpdater.class).to(CentreConfigUpdaterDao.class);
-        bind(ICentreColumnWidthConfigUpdater.class).to(CentreColumnWidthConfigUpdaterDao.class);
-        
-        bind(CentreConfigLoadActionCo.class).to(CentreConfigLoadActionDao.class);
-        bind(CentreConfigEditActionCo.class).to(CentreConfigEditActionDao.class);
-        bind(CentreConfigSaveActionCo.class).to(CentreConfigSaveActionDao.class);
-        bind(CentreConfigConfigureActionCo.class).to(CentreConfigConfigureActionDao.class);
     }
+
 }
