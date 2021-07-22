@@ -21,8 +21,8 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 
 /**
- * The web resource for entity serves as a back-end mechanism of entity retrieval by key representation. It retrieves entities with id only.
- * It provides a base implementation for handling the following methods:
+ * The web resource for entity, serves as a back-end mechanism of entity retrieval by key representation. It retrieves entities with key and desc only.
+ * It provides an implementation for handling the following methods:
  * <ul>
  * <li>retrieves entity by key representation -- POST request with an envelope containing an key as string;
  * </ul>

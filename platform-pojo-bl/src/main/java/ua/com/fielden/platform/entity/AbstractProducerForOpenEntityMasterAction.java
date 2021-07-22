@@ -34,7 +34,7 @@ public abstract class AbstractProducerForOpenEntityMasterAction<T extends Abstra
     protected A provideDefaultValues(final A openAction) {
         if (currentEntityNotEmpty()) {
             openAction.setKey(refetch(chosenEntityId(entityType).orElseThrow(NOTHING_TO_OPEN_EXCEPTION_SUPPLIER), entityType, KEY));
-        } else if (/*masterEntityEmpty() &&*/ selectedEntitiesEmpty()) {
+        } else if (masterEntityEmpty() && selectedEntitiesEmpty()) {
             // '+' action on entity T centre
             openAction.setKey(co(entityType).new_());
         } else {

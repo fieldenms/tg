@@ -134,7 +134,6 @@ public class MasterInfoProvider {
                 info.setShortDesc(title);
                 info.setLongDesc("Add new " + title);
                 info.setShouldRefreshParentCentreAfterSave(false);
-                info.setRequireMasterEntity("true");
                 info.setEntityType(entityActionConfig.functionalEntity.get().getName());
                 info.setEntityTypeTitle(title);
                 info.setRootEntityType(type);

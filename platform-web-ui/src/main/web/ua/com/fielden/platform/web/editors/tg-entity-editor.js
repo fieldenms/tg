@@ -1159,9 +1159,7 @@ export class TgEntityEditor extends TgEditor {
 
     _actionIcon (actionAvailable, entity) {
         if (actionAvailable) {
-            const fullEntity = this.reflector().tg_getFullEntity(entity);
-            if (!this.reflector().isError(fullEntity.prop(this.propertyName).validationResult()) && 
-                    this.reflector().isEntity(this.reflector().tg_getFullValue(entity, this.propertyName))) {
+            if (this._isValueAvailableAndWithoutError()) {
                 return "editor:mode-edit"
             }
             return "add-circle-outline";
