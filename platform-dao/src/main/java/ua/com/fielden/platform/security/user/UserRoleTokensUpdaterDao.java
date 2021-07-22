@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.security.provider;
+package ua.com.fielden.platform.security.user;
 
 import static ua.com.fielden.platform.entity.CollectionModificationUtils.toMapByKey;
 import static ua.com.fielden.platform.entity.CollectionModificationUtils.validateAction;
@@ -18,6 +18,8 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.SecurityRoleAssociationBatchAction;
+import ua.com.fielden.platform.security.provider.ISecurityTokenNodeTransformation;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.tokens.user.UserRole_CanSave_Token;
 import ua.com.fielden.platform.security.user.IUserRoleTokensUpdater;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;

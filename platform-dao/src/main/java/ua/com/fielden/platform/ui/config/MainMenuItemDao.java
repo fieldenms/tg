@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.ui.config.controller;
+package ua.com.fielden.platform.ui.config;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -17,8 +17,8 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.ui.config.IMainMenuItem;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 
 /**
  * DAO implementation of {@link IMainMenuItem}.

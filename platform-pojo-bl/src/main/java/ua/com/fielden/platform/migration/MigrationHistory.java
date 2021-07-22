@@ -14,7 +14,6 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.migration.controller.IMigrationHistory;
 
 @KeyType(DynamicEntityKey.class)
 @KeyTitle("Migration History")

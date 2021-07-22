@@ -1,7 +1,6 @@
-package ua.com.fielden.platform.ui.config.api;
+package ua.com.fielden.platform.ui.config;
 
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.ui.config.MainMenuItem;
 
 /**
  * A controller contract for constructing the hierarchical structure of the main application menu and managing its persistence.

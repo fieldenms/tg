@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.security.dao;
+package ua.com.fielden.platform.security.user;
 
 import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKeyFor;
 
@@ -7,11 +7,11 @@ import java.util.Set;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.security.user.IUserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 
 /**

@@ -20,12 +20,12 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfigDao;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
+import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
+import ua.com.fielden.platform.ui.config.EntityCentreConfigDao;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
+import ua.com.fielden.platform.ui.config.IMainMenuItem;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.EntityCentreConfigCo;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
-import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigDao;
-import ua.com.fielden.platform.ui.config.controller.MainMenuItemDao;
+import ua.com.fielden.platform.ui.config.MainMenuItemDao;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**

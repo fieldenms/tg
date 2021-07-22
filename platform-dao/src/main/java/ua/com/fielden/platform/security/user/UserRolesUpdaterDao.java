@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.security.provider;
+package ua.com.fielden.platform.security.user;
 
 import static ua.com.fielden.platform.entity.CollectionModificationUtils.toMapById;
 import static ua.com.fielden.platform.entity.CollectionModificationUtils.validateAction;
@@ -10,7 +10,6 @@ import java.util.Set;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;

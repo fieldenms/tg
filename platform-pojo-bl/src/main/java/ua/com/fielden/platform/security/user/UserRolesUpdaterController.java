@@ -7,7 +7,6 @@ import java.util.LinkedHashSet;
 import java.util.Set;
 
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.entity.ICollectionModificationController;
 import ua.com.fielden.platform.web.centre.CentreContext;
 

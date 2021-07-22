@@ -1,10 +1,10 @@
-package ua.com.fielden.platform.migration.dao;
+package ua.com.fielden.platform.migration;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.migration.IMigrationError;
 import ua.com.fielden.platform.migration.MigrationError;
-import ua.com.fielden.platform.migration.controller.IMigrationError;
 
 import com.google.inject.Inject;
 

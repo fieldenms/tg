@@ -1,7 +1,6 @@
-package ua.com.fielden.platform.migration.controller;
+package ua.com.fielden.platform.migration;
 
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.migration.MigrationRun;
 
 /**
  * DAO contract for {@link MigrationRun}.

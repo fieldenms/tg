@@ -1,10 +1,9 @@
-package ua.com.fielden.platform.ui.config.api;
+package ua.com.fielden.platform.ui.config;
 
 import java.util.function.Function;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 
 /**
  * Companion object for entity {@link EntityCentreConfig}.

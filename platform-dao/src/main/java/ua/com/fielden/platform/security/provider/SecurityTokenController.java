@@ -10,11 +10,11 @@ import org.hibernate.Session;
 
 import com.google.inject.Inject;
 
-import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.dao.ISessionEnabled;
-import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.tokens.AlwaysAccessibleToken;
+import ua.com.fielden.platform.security.user.ISecurityRoleAssociation;
+import ua.com.fielden.platform.security.user.IUserRole;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserRole;

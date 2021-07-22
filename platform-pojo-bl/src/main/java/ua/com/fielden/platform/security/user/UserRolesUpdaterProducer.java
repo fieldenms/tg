@@ -6,7 +6,6 @@ import java.util.LinkedHashSet;
 
 import com.google.inject.Inject;
 
-import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModificationProducer;
 import ua.com.fielden.platform.entity.ICollectionModificationController;
 import ua.com.fielden.platform.entity.factory.EntityFactory;

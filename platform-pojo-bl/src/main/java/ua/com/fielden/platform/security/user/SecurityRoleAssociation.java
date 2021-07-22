@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.security.user;
 
-import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;

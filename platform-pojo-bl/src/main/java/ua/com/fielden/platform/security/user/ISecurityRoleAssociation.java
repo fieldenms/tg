@@ -1,13 +1,11 @@
-package ua.com.fielden.platform.dao;
+package ua.com.fielden.platform.security.user;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.security.ISecurityToken;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
-import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.security.user.UserRole;
 
 /**
  * Interface that defines the API for retrieving saving and removing the {@link SecurityRoleAssociation} instances.

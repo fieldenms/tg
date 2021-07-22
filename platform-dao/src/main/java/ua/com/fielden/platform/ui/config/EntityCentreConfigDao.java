@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.ui.config.controller;
+package ua.com.fielden.platform.ui.config;
 
 import static ua.com.fielden.platform.companion.PersistentEntitySaver.ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES;
 import static ua.com.fielden.platform.utils.EntityUtils.isConflicting;
@@ -19,7 +19,7 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
-import ua.com.fielden.platform.ui.config.api.EntityCentreConfigCo;
+import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 
 /**
  * DAO implementation of {@link EntityCentreConfigCo}.

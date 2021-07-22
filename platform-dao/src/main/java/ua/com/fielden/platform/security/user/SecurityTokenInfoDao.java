@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.security.provider;
+package ua.com.fielden.platform.security.user;
 
 import com.google.inject.Inject;
 

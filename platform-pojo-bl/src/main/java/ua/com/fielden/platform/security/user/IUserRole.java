@@ -1,8 +1,8 @@
-package ua.com.fielden.platform.dao;
+package ua.com.fielden.platform.security.user;
 
 import java.util.List;
 
-import ua.com.fielden.platform.security.user.UserRole;
+import ua.com.fielden.platform.dao.IEntityDao;
 
 /**
  * Interface that defines the API for retrieving and saving {@link UserRole} instances

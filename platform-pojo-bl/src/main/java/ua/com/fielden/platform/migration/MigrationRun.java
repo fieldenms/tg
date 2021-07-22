@@ -12,7 +12,6 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.migration.controller.IMigrationRun;
 
 @KeyType(String.class)
 @KeyTitle(value = "Migration run", desc = "Migration run")

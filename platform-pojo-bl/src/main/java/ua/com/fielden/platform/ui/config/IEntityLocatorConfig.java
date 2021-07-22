@@ -1,7 +1,6 @@
-package ua.com.fielden.platform.ui.config.api;
+package ua.com.fielden.platform.ui.config;
 
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
 
 /**
  * A DAO/RAO controller contract for {@link EntityLocatorConfig}.

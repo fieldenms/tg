@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.ui.config.controller;
+package ua.com.fielden.platform.ui.config;
 
 import com.google.inject.Inject;
 
@@ -8,7 +8,7 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
-import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
+import ua.com.fielden.platform.ui.config.IEntityLocatorConfig;
 
 /**
  * DAO implementation of {@link IEntityLocatorConfig}.
