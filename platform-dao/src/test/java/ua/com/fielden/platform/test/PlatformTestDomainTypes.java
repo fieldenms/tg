@@ -6,7 +6,6 @@ import java.util.List;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.persistence.composite.EntityWithDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.composite.EntityWithSingleMemberDynamicCompositeKey;
 import ua.com.fielden.platform.persistence.types.EntityBasedOnAbstractPersistentEntity;
@@ -72,11 +71,6 @@ import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityDetail;
 import ua.com.fielden.platform.test.entities.ComplexKeyEntity;
 import ua.com.fielden.platform.test.entities.CompositeEntity;
 import ua.com.fielden.platform.test.entities.CompositeEntityKey;
-import ua.com.fielden.platform.web.centre.CentreConfigConfigureAction;
-import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
-import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
-import ua.com.fielden.platform.web.centre.CentreConfigSaveAction;
-import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
 
 /**
  * A class to enlist platform test domain entities. Should be replaced with runtime generation via reflection.
@@ -92,15 +86,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
     }
 
     static {
-        // platform entities
-        entityTypes.addAll(PlatformDomainTypes.types);
-        // without those which depend on Web UI infrastructure
-        entityTypes.remove(EntityExportAction.class);
-        entityTypes.remove(CentreConfigUpdater.class);
-        entityTypes.remove(CentreConfigLoadAction.class);
-        entityTypes.remove(CentreConfigEditAction.class);
-        entityTypes.remove(CentreConfigSaveAction.class);
-        entityTypes.remove(CentreConfigConfigureAction.class);
+        entityTypes.addAll(PlatformDomainTypes.typesNotDependentOnWebUI);
         // and test domain entities
         add(TgPerson.class);
         add(TgPersonName.class);

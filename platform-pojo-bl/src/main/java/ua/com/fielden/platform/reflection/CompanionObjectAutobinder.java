@@ -3,9 +3,11 @@ package ua.com.fielden.platform.reflection;
 import static java.lang.String.format;
 
 import java.util.Objects;
+import java.util.function.BiFunction;
 import java.util.stream.Stream;
 
 import com.google.inject.Binder;
+import com.google.inject.binder.ScopedBindingBuilder;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -51,6 +53,16 @@ public class CompanionObjectAutobinder {
      * @param binder
      */
     public static <T extends IEntityDao<E>, E extends AbstractEntity<?>> void bindCo(final Class<E> entityType, final Binder binder) {
+        bindCo(entityType, (co, type) -> binder.bind(co).to(type));
+    }
+
+    /**
+     * Uses the provided {@code bindFunction} to bind a companion object implementation to entity's companion object contract.
+     * 
+     * @param entityType
+     * @param bindFunction
+     */
+    public static <T extends IEntityDao<E>, E extends AbstractEntity<?>> void bindCo(final Class<E> entityType, final BiFunction<Class<T>, Class<T>, ScopedBindingBuilder> bindFunction) {
         final Class<T> co = companionObjectType(entityType);
 
         if (co == null) { // check if the companion is declared
@@ -63,7 +75,7 @@ public class CompanionObjectAutobinder {
                     format("%s.Co%s", entityType.getPackage().getName(), entityType.getSimpleName())) // the new Co naming strategy
             .map(name -> (Class<T>) fromString(name))
             .filter(Objects::nonNull).findFirst()
-            .map(type -> binder.bind(co).to(type)).orElseThrow(() -> new EntityDefinitionException(format("Could not find a implementation for companion object of type [%s]", co.getSimpleName()))); 
+            .map(type -> bindFunction.apply(co, type)).orElseThrow(() -> new EntityDefinitionException(format("Could not find a implementation for companion object of type [%s]", co.getSimpleName()))); 
         }
     }
     
