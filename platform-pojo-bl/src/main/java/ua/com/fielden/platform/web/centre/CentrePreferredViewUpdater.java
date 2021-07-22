@@ -9,10 +9,9 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 
 /**
- * Entity to update centre's preferred view
+ * Entity to update centre's preferred view.
  *
  * @author TG Team
  *
@@ -24,10 +23,6 @@ public class CentrePreferredViewUpdater extends AbstractFunctionalEntityWithCent
     @IsProperty
     @Title(value = "Preferred View", desc = "Preferred View Index")
     private Integer preferredView;
-
-    @IsProperty
-    @Title("Criteria Entity Holder")
-    private CentreContextHolder criteriaEntityHolder;
 
     @IsProperty
     @Title(value = "Centre Dirty", desc = "Indicates whether successful saving of this entity actually changed centre configuration or it is New (aka default, link or inherited).")
@@ -48,16 +43,6 @@ public class CentrePreferredViewUpdater extends AbstractFunctionalEntityWithCent
     }
 
     @Observable
-    public CentrePreferredViewUpdater setCriteriaEntityHolder(final CentreContextHolder criteriaEntityHolder) {
-        this.criteriaEntityHolder = criteriaEntityHolder;
-        return this;
-    }
-
-    public CentreContextHolder getCriteriaEntityHolder() {
-        return criteriaEntityHolder;
-    }
-
-    @Observable
     public CentrePreferredViewUpdater setCentreDirty(final boolean centreDirty) {
         this.centreDirty = centreDirty;
         return this;
@@ -66,4 +51,5 @@ public class CentrePreferredViewUpdater extends AbstractFunctionalEntityWithCent
     public boolean isCentreDirty() {
         return centreDirty;
     }
+
 }

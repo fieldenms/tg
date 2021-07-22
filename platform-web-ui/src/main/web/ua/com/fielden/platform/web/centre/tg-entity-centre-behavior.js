@@ -79,12 +79,10 @@ const createColumnAction = function (entityCentre) {
     actionModel.showDialog = entityCentre._showCentreConfigDialog;
     actionModel.toaster = entityCentre.toaster;
     actionModel.createContextHolder = entityCentre._createContextHolder;
-    actionModel.preAction = function (action) {
-        action.modifyFunctionalEntity = (function (bindingEntity, master) {
-            action.modifyValue4Property('columnParameters', bindingEntity, actionModel.columnParameters);
-        });
-        return true;
-    };
+    const contextCreator = actionModel._createContextHolderForAction.bind(actionModel);
+    actionModel._createContextHolderForAction = function () {
+        return this._reflector.setCustomProperty(contextCreator(), 'columnParameters', actionModel.columnParameters);
+    }.bind(actionModel);
     actionModel.postActionSuccess = function (functionalEntity) {
         // update disablement of save button after changing column widths
         entityCentre.$.selection_criteria._centreDirty = functionalEntity.get('centreDirty');
@@ -109,12 +107,10 @@ const createPreferredViewUpdaterAction = function (entityCentre) {
     actionModel.showDialog = entityCentre._showCentreConfigDialog;
     actionModel.toaster = entityCentre.toaster;
     actionModel.createContextHolder = entityCentre._createContextHolder;
-    actionModel.preAction = function (action) {
-        action.modifyFunctionalEntity = (function (bindingEntity, master) {
-            action.modifyValue4Property('preferredView', bindingEntity, entityCentre.preferredView);
-        });
-        return true;
-    };
+    const contextCreator = actionModel._createContextHolderForAction.bind(actionModel);
+    actionModel._createContextHolderForAction = function () {
+        return this._reflector.setCustomProperty(contextCreator(), 'preferredView', entityCentre.preferredView);
+    }.bind(actionModel);
     actionModel.postActionSuccess = function (functionalEntity) {
         // update disablement of save button after changing column widths
         entityCentre.$.selection_criteria._centreDirty = functionalEntity.get('centreDirty');

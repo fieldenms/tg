@@ -1942,6 +1942,7 @@ export const TgReflector = Polymer({
      */
     setCustomProperty: function (centreContextHolder, name, value) {
         centreContextHolder["customObject"][name] = value;
+        return centreContextHolder;
     },
 
     /**

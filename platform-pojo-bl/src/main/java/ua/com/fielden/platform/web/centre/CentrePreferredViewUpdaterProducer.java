@@ -5,7 +5,14 @@ import com.google.inject.Inject;
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 
+/**
+ * A producer for new instances of entity {@link CentrePreferredViewUpdater}.
+ *
+ * @author TG Team
+ *
+ */
 public class CentrePreferredViewUpdaterProducer extends DefaultEntityProducerWithContext<CentrePreferredViewUpdater> {
 
     @Inject
@@ -14,10 +21,19 @@ public class CentrePreferredViewUpdaterProducer extends DefaultEntityProducerWit
     }
 
     @Override
-    protected CentrePreferredViewUpdater provideDefaultValues(final CentrePreferredViewUpdater entity) {
+    protected CentrePreferredViewUpdater provideDefaultValues(final CentrePreferredViewUpdater action) {
         if (selectionCritNotEmpty()) {
-            entity.setCriteriaEntityHolder(selectionCrit().centreContextHolder());
+            // retrieve criteria entity
+            final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntityBeingUpdated = selectionCrit();
+            // use adjust centre to update preferred view
+            criteriaEntityBeingUpdated.adjustCentre(centreManager -> {
+                final int preferredView = (Integer) getContext().getCustomObject().get("preferredView");
+                action.setPreferredView(preferredView);
+                centreManager.setPreferredView(preferredView);
+            });
+            action.setCentreDirty(criteriaEntityBeingUpdated.isCentreDirty());
         }
-        return entity;
+        return action;
     }
+
 }
