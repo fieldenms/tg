@@ -153,9 +153,9 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         .addMaster(genericMenuSaveMaster)
         .addMaster(new MenuWebUiConfig(injector(), desktopMainMenuConfig, mobileMainMenuConfig).master)
         // centre configuration management
-        .addMaster(centreConfigurationWebUiConfig.centreConfigUpdater)
-        .addMaster(centreConfigurationWebUiConfig.centreColumnWidthConfigUpdater)
-        .addMaster(centreConfigurationWebUiConfig.centrePreferredViewUpdater)
+        .addMaster(centreConfigurationWebUiConfig.centreConfigUpdaterMaster)
+        .addMaster(centreConfigurationWebUiConfig.centreColumnWidthConfigUpdaterMaster)
+        .addMaster(centreConfigurationWebUiConfig.centrePreferredViewUpdaterMaster)
         // centre config actions
         .addMaster(centreConfigurationWebUiConfig.centreConfigShareActionMaster)
         .addMaster(centreConfigurationWebUiConfig.centreConfigNewActionMaster)
