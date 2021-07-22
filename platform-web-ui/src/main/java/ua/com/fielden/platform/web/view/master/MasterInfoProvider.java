@@ -19,6 +19,7 @@ import java.util.function.Supplier;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityToOpenCompoundMaster;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.master.MasterInfo;
@@ -121,7 +122,9 @@ public class MasterInfoProvider {
 
     private MasterInfo buildConfiguredNewEntityMasterActionInfo(final Class<? extends AbstractEntity<?>> type, final String relativePropertyName) {
         try {
-            return webUiConfig.configApp().getOpenMasterAction(type).get().map(entityActionConfig -> {
+            return webUiConfig.configApp().getOpenMasterAction(type).get()
+                    .filter(entityActionConfig -> AbstractFunctionalEntityToOpenCompoundMaster.class.isAssignableFrom(entityActionConfig.functionalEntity.get()))
+                    .map(entityActionConfig -> {
                 final FunctionalActionElement funcElem = new FunctionalActionElement(entityActionConfig, 0, FunctionalActionKind.TOP_LEVEL);
                 final String title = TitlesDescsGetter.getEntityTitleAndDesc(type).getKey();
                 final DomElement actionElement = funcElem.render();
@@ -132,7 +135,6 @@ public class MasterInfoProvider {
                 info.setLongDesc("Add new " + title);
                 info.setShouldRefreshParentCentreAfterSave(false);
                 info.setRequireMasterEntity("true");
-                //info.setRequireSelectedEntities("ONE");
                 info.setEntityType(entityActionConfig.functionalEntity.get().getName());
                 info.setEntityTypeTitle(title);
                 info.setRootEntityType(type);

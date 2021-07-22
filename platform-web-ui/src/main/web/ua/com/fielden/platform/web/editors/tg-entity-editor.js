@@ -203,7 +203,7 @@ export class TgEntityEditor extends TgEditor {
             */
            actionAvailable: {
                type: Boolean,
-               computed: '_computeActionAvailability(entityMaster, newEntityMaster, entity, currentState)'
+               computed: '_computeActionAvailability(entityMaster, newEntityMaster, entity, _disabled, currentState)'
            },
 
            /**
@@ -517,6 +517,12 @@ export class TgEntityEditor extends TgEditor {
         }
     }
 
+    _isValueAvailableAndWithoutError() {
+        const entityValue = this.reflector().tg_getFullValue(this.entity, this.propertyName);
+        return this.reflector().isEntity(entityValue) && 
+            !this.reflector().isError(this.reflector().tg_getFullEntity(this.entity).prop(this.propertyName).validationResult());
+    }
+
     /**
      * Opens entity master for an entity-typed value contained in this autocompleter.
      */
@@ -525,8 +531,7 @@ export class TgEntityEditor extends TgEditor {
             delete this.openMasterAction.modifyFunctionalEntity;
             delete this.openMasterAction.postActionSuccess; 
             const entityValue = this.reflector().tg_getFullValue(this.entity, this.propertyName);
-            if (this.reflector().isEntity(entityValue) && 
-                    !this.reflector().isError(this.reflector().tg_getFullEntity(this.entity).prop(this.propertyName).validationResult())) {
+            if (this._isValueAvailableAndWithoutError()) {
                 this.openMasterAction._runDynamicAction(() => entityValue, null);
             } else {
                 const serialisedSearchQuery = {key: this._editingValue};
@@ -552,7 +557,6 @@ export class TgEntityEditor extends TgEditor {
                         if (!this._disabled && value !== null && value.get("id") !== null) {
                             this.assignConcreteValue(value, this.reflector().tg_convert.bind(this.reflector()));
                             this.commit();
-                            this.validationCallback();
                         }
                     }
                     this.openMasterAction._runDynamicAction(() => entity, null);
@@ -1145,11 +1149,12 @@ export class TgEntityEditor extends TgEditor {
     /**
      * Computes whether title action is available for tapping and visible.
      */
-    _computeActionAvailability (entityMaster, newEntityMaster, entity, currentState) {
-        if (!entityMaster || !newEntityMaster || !entity || !currentState) {
+    _computeActionAvailability (entityMaster, newEntityMaster, entity, _disabled, currentState) {
+        if (!entityMaster || !newEntityMaster || !entity || !currentState || typeof _disabled === 'undefined') {
             return false;
         }
-        return currentState === 'EDIT'; // currentState is not 'EDIT' e.g. where refresh / saving process is in progress
+        return currentState === 'EDIT' // currentState is not 'EDIT' e.g. where refresh / saving process is in progress
+            && (this._isValueAvailableAndWithoutError() || (!this._isValueAvailableAndWithoutError() && !_disabled));
     }
 
     _actionIcon (actionAvailable, entity) {
