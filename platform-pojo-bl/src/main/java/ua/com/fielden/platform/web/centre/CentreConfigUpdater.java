@@ -22,6 +22,7 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.validation.GreaterOrEqualValidator;
 import ua.com.fielden.platform.entity.validation.GreaterValidator;
 import ua.com.fielden.platform.entity.validation.MaxValueValidator;
+import ua.com.fielden.platform.web.centre.definers.CentreConfigUpdaterSortingValsDefiner;
 
 /**
  * Functional entity for updating centre configuration: centre's column visibility / order and centre's sorting.

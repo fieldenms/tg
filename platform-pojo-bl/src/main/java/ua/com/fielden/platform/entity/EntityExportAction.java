@@ -27,7 +27,7 @@ import ua.com.fielden.platform.web.action.AbstractFunEntityForDataExport;
  */
 @KeyType(NoKey.class)
 @KeyTitle(value = "Export", desc = "Export data into file")
-@CompanionObject(IEntityExportAction.class)
+@CompanionObject(EntityExportActionCo.class)
 public class EntityExportAction extends AbstractFunEntityForDataExport<NoKey> {
     public static final String PROP_EXPORT_ALL = "exportAll";
     public static final String PROP_EXPORT_TOP = "exportTop";

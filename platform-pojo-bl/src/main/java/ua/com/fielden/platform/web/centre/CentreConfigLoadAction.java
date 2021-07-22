@@ -13,7 +13,10 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
+import ua.com.fielden.platform.web.centre.validators.CentreConfigLoadActionChosenIdsValidator;
 
 /** 
  * Functional entity for loading centre configuration.
@@ -23,7 +26,7 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
  * @author TG Team
  *
  */
-@CompanionObject(ICentreConfigLoadAction.class)
+@CompanionObject(CentreConfigLoadActionCo.class)
 public class CentreConfigLoadAction extends AbstractFunctionalEntityForCollectionModification<String> {
     
     @IsProperty(LoadableCentreConfig.class)
@@ -37,6 +40,39 @@ public class CentreConfigLoadAction extends AbstractFunctionalEntityForCollectio
     @IsProperty(Object.class)
     @Title("Custom object")
     private final Map<String, Object> customObject = new HashMap<>();
+    
+    // Re-introduce inherited property in order to add validator
+    @IsProperty(Long.class) 
+    @Title(value = "Chosen ids", desc = "IDs of chosen entities (added and / or remained chosen)")
+    @BeforeChange(@Handler(CentreConfigLoadActionChosenIdsValidator.class))
+    private LinkedHashSet<String> chosenIds = new LinkedHashSet<>();
+    
+    @IsProperty
+    @Title(value = "Skip UI", desc = "Controls the requirement to show or to skip displaying of the associated entity master.")
+    private boolean skipUi = false;
+    
+    @Observable
+    public CentreConfigLoadAction setSkipUi(final boolean skipUi) {
+        this.skipUi = skipUi;
+        return this;
+    }
+    
+    public boolean isSkipUi() {
+        return skipUi;
+    }
+    
+    @Override
+    @Observable
+    public CentreConfigLoadAction setChosenIds(final LinkedHashSet<String> chosenIds) {
+        this.chosenIds.clear();
+        this.chosenIds.addAll(chosenIds);
+        return this;
+    }
+    
+    @Override
+    public Set<String> getChosenIds() {
+        return unmodifiableSet(chosenIds);
+    }
     
     @Observable
     protected CentreConfigLoadAction setCustomObject(final Map<String, Object> customObject) {

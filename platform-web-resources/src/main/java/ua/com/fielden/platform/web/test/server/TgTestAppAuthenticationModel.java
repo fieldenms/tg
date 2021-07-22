@@ -42,7 +42,7 @@ public class TgTestAppAuthenticationModel implements IAuthenticationModel {
                 return result;
             }
 
-            final EntityResultQueryModel<UserSecret> query = select(UserSecret.class).where().prop("key.key").eq().val(username).and().prop("key.active").eq().val(true).model();
+            final EntityResultQueryModel<UserSecret> query = select(UserSecret.class).where().lowerCase().prop("key.key").eq().lowerCase().val(username).and().prop("key.active").eq().val(true).model();
             final fetch<UserSecret> fetch = coUserSecret.getFetchProvider().fetchModel();
             final QueryExecutionModel<UserSecret, EntityResultQueryModel<UserSecret>> qem = from(query).with(fetch).model();
             

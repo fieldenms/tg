@@ -26,7 +26,7 @@ import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 
 @EntityType(SecurityMatrixSaveAction.class)
-public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixSaveAction> implements ISecurityMatrixSaveAction{
+public class SecurityMatrixSaveActionDao extends CommonEntityDao<SecurityMatrixSaveAction> implements SecurityMatrixSaveActionCo{
 
     @Inject
     protected SecurityMatrixSaveActionDao(final IFilter filter) {

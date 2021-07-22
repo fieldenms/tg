@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.security.AuthorisationInterceptor;
 import ua.com.fielden.platform.security.Authorise;
+import ua.com.fielden.platform.web_api.TgScalars;
 
 /**
  * This Guice module ensures that properties for all {@link AbstractEntity} descendants are provided with an intercepter handling validation and observation.
@@ -54,6 +55,11 @@ public abstract class EntityModule extends AbstractModule implements IModuleWith
                 ai); // the intercepter
         
         bind(IDomainTreeEnhancerCache.class).toInstance(DomainTreeEnhancerCache.CACHE);
+        
+        // request static IDates injection into TgScalars;
+        // static injection occurs at the time when an injector is created
+        // this guarantees that different implementations of IDates will be injected based on IDates binding in IoC modules that define the binding configuration;
+        requestStaticInjection(TgScalars.class);
     }
 
     @Override

@@ -4,9 +4,11 @@ import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.security.tokens.Template.EXECUTE;
 import static ua.com.fielden.platform.security.tokens.Template.MASTER_OPEN;
 
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.IAuthorisationModel;
@@ -30,11 +32,14 @@ public class TokenUtils {
      * @return
      */
     public static Result authoriseOpening(final String entityTypeSimpleName, final IAuthorisationModel authorisation, final ISecurityTokenProvider securityTokenProvider) {
-        return findToken(entityTypeSimpleName + "Master", MASTER_OPEN, securityTokenProvider)
-            .map(Optional::of)
-            .orElseGet(() -> findToken("Open" + entityTypeSimpleName + "MasterAction", MASTER_OPEN, securityTokenProvider))
-            .map(token -> authorisation.authorise(token))
-            .orElseGet(() -> failure(format("%s token has not been found for %s.", MASTER_OPEN, entityTypeSimpleName)));
+        final Optional<Class<ISecurityToken>> maybeToken = Stream
+                .of(findToken(entityTypeSimpleName + "Master", MASTER_OPEN, securityTokenProvider),
+                    findToken("Open" + entityTypeSimpleName + "MasterAction", MASTER_OPEN, securityTokenProvider),
+                    findToken(entityTypeSimpleName, EXECUTE, securityTokenProvider))
+                .filter(Optional::isPresent).map(op -> op.get()).findFirst();
+
+        return maybeToken.map(token -> authorisation.authorise(token))
+               .orElseGet(() -> failure(format("%s token has not been found for %s.", MASTER_OPEN, entityTypeSimpleName)));
     }
 
     /**

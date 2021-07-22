@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.entity_master.exceptions.CompoundMasterException;
 
 /**
  * A base class that should be applicable in most cases for implementing open entity master action producers.

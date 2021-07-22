@@ -22,7 +22,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  */
 @KeyType(String.class)
 @KeyTitle("Security token")
-@CompanionObject(ISecurityTokenTreeNodeEntity.class)
+@CompanionObject(SecurityTokenTreeNodeEntityCo.class)
 @DescTitle("Security token description")
 public class SecurityTokenTreeNodeEntity extends AbstractEntity<String> {
 

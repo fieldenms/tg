@@ -5,7 +5,6 @@ import static ua.com.fielden.platform.utils.EntityUtils.isConflicting;
 
 import java.util.Map;
 import java.util.function.Function;
-import java.util.function.Supplier;
 
 import javax.persistence.OptimisticLockException;
 
@@ -20,10 +19,10 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
+import ua.com.fielden.platform.ui.config.api.EntityCentreConfigCo;
 
 /**
- * DAO implementation of {@link IEntityCentreConfig}.
+ * DAO implementation of {@link EntityCentreConfigCo}.
  * <p>
  * Method {@link #save(EntityCentreConfig)} is intentionally not overridden due to the need to use {@link #quickSave(EntityCentreConfig)}.
  * However, please always use {@link #saveWithConflicts(EntityCentreConfig)} or {@link #saveWithoutConflicts(EntityCentreConfig)} and decide
@@ -33,7 +32,7 @@ import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
  * 
  */
 @EntityType(EntityCentreConfig.class)
-public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> implements IEntityCentreConfig {
+public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> implements EntityCentreConfigCo {
     
     @Inject
     protected EntityCentreConfigDao(final IFilter filter) {
