@@ -88,11 +88,11 @@ public class PlatformDomainTypes {
         types.add(UserRole.class);
         types.add(UserRoleTokensUpdater.class);
         types.add(SecurityTokenInfo.class);
+
         types.add(CentreConfigUpdater.class);
         types.add(CustomisableColumn.class);
         types.add(CentreColumnWidthConfigUpdater.class);
         types.add(CentrePreferredViewUpdater.class);
-
         types.add(CentreConfigShareAction.class);
         types.add(CentreConfigNewAction.class);
         types.add(CentreConfigDuplicateAction.class);
