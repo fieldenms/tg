@@ -15,6 +15,7 @@ import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentre
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreSavingInfoHolder;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -211,7 +212,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                                     new ArrayList<AbstractEntity<?>>(),
                                     null,
                                     Optional.empty(),
-                                    null 
+                                    null,
+                                    new HashMap<>()
                             ),
                             companion, 
                             producer
@@ -232,7 +234,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                                     !centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? centreContextHolder.getSelectedEntities() : new ArrayList<>(),
                                     createCriteriaEntityForContext(centreContextHolder, companionFinder, user, critGenerator, webUiConfig, factory, device(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel),
                                     actionConfig,
-                                    !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null
+                                    !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null,
+                                    !centreContextHolder.proxiedPropertyNames().contains("customObject") ? centreContextHolder.getCustomObject() : new HashMap<>()
                             ),
                             companion, 
                             producer
@@ -437,7 +440,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                     !centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? centreContextHolder.getSelectedEntities() : new ArrayList<>(),
                     criteriaEntity,
                     actionConfig,
-                    !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null
+                    !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null,
+                    !centreContextHolder.proxiedPropertyNames().contains("customObject") ? centreContextHolder.getCustomObject() : new HashMap<>()
                     );
             //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder+centreContextHolder started. centreContext.");
             

@@ -930,6 +930,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 context.setComputation(config.computation.get());
             }
             context.setChosenProperty(chosenProperty);
+            context.setCustomObject(centreContextHolder != null && !centreContextHolder.proxiedPropertyNames().contains("customObject") ? centreContextHolder.getCustomObject() : new HashMap<>());
             return Optional.of(context);
         } else {
             return Optional.empty();
@@ -955,7 +956,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final List<AbstractEntity<?>> selectedEntities,
             final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity,
             final Optional<EntityActionConfig> config,
-            final String chosenProperty
+            final String chosenProperty,
+            final Map<String, Object> customObject
     ) {
         final CentreContext<T, AbstractEntity<?>> context = new CentreContext<>();
         context.setSelectionCrit(criteriaEntity);
@@ -965,6 +967,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             context.setComputation(config.get().context.get().computation.get());
         }
         context.setChosenProperty(chosenProperty);
+        context.setCustomObject(customObject);
         return context;
     }
 
