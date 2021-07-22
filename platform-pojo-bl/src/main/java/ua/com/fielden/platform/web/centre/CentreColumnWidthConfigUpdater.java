@@ -17,7 +17,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  *
  */
 @KeyType(NoKey.class)
-@CompanionObject(ICentreColumnWidthConfigUpdater.class)
+@CompanionObject(CentreColumnWidthConfigUpdaterCo.class)
 public class CentreColumnWidthConfigUpdater extends AbstractFunctionalEntityWithCentreContext<NoKey> {
     
     @IsProperty

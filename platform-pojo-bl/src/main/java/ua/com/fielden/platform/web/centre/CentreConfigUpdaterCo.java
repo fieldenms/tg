@@ -8,6 +8,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * @author Developers
  *
  */
-public interface ICentreConfigUpdater extends IEntityDao<CentreConfigUpdater> {
+public interface CentreConfigUpdaterCo extends IEntityDao<CentreConfigUpdater> {
 
 }

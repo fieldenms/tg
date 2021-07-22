@@ -8,6 +8,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * @author Developers
  *
  */
-public interface ICustomisableColumn extends IEntityDao<CustomisableColumn> {
+public interface CustomisableColumnCo extends IEntityDao<CustomisableColumn> {
 
 }

@@ -26,7 +26,7 @@ import ua.com.fielden.platform.web.centre.CentreConfigLoadActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigSaveActionCo;
 import ua.com.fielden.platform.web.centre.CentreConfigSaveActionDao;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
-import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
+import ua.com.fielden.platform.web.centre.CentreConfigUpdaterCo;
 import ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
@@ -73,7 +73,7 @@ public interface IBasicWebApplicationServerModule {
 
         // bind companion object implementations that are dependent on ICriteriaEntityRestorer
         bindType(EntityExportActionCo.class).to(EntityExportActionDao.class);
-        bindType(ICentreConfigUpdater.class).to(CentreConfigUpdaterDao.class);
+        bindType(CentreConfigUpdaterCo.class).to(CentreConfigUpdaterDao.class);
         bindType(CentreConfigLoadActionCo.class).to(CentreConfigLoadActionDao.class);
         bindType(CentreConfigEditActionCo.class).to(CentreConfigEditActionDao.class);
         bindType(CentreConfigSaveActionCo.class).to(CentreConfigSaveActionDao.class);

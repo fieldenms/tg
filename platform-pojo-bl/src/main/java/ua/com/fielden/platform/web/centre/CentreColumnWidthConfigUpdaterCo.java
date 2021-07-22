@@ -5,9 +5,9 @@ import ua.com.fielden.platform.dao.IEntityDao;
 /** 
  * Companion object for entity {@link CentreColumnWidthConfigUpdater}.
  * 
- * @author Developers
+ * @author TG Team
  *
  */
-public interface ICentreColumnWidthConfigUpdater extends IEntityDao<CentreColumnWidthConfigUpdater> {
+public interface CentreColumnWidthConfigUpdaterCo extends IEntityDao<CentreColumnWidthConfigUpdater> {
 
 }

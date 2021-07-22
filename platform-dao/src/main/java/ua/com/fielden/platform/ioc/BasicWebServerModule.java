@@ -121,7 +121,7 @@ import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityLocatorConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigDao;
 import ua.com.fielden.platform.ui.config.controller.MainMenuItemDao;
-import ua.com.fielden.platform.web.centre.ICentreColumnWidthConfigUpdater;
+import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterCo;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterDao;
 import ua.com.fielden.platform.web.centre.CentreConfigDeleteActionCo;
 import ua.com.fielden.platform.web.centre.CentreConfigDeleteActionDao;
@@ -134,7 +134,7 @@ import ua.com.fielden.platform.web.centre.CentreConfigShareActionDao;
 import ua.com.fielden.platform.web.centre.CentrePreferredViewUpdaterCo;
 import ua.com.fielden.platform.web.centre.CentrePreferredViewUpdaterDao;
 import ua.com.fielden.platform.web.centre.CustomisableColumnDao;
-import ua.com.fielden.platform.web.centre.ICustomisableColumn;
+import ua.com.fielden.platform.web.centre.CustomisableColumnCo;
 import ua.com.fielden.platform.web.centre.LoadableCentreConfigCo;
 import ua.com.fielden.platform.web.centre.LoadableCentreConfigDao;
 import ua.com.fielden.platform.web.centre.OverrideCentreConfigCo;
@@ -278,14 +278,14 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(SecurityTokenTreeNodeEntityCo.class).to(SecurityTokenTreeNodeEntityDao.class);
         bind(SecurityMatrixSaveActionCo.class).to(SecurityMatrixSaveActionDao.class);
 
-        bind(ICustomisableColumn.class).to(CustomisableColumnDao.class);
+        bind(CustomisableColumnCo.class).to(CustomisableColumnDao.class);
         bind(CentreConfigShareActionCo.class).to(CentreConfigShareActionDao.class);
         bind(CentreConfigNewActionCo.class).to(CentreConfigNewActionDao.class);
         bind(CentreConfigDuplicateActionCo.class).to(CentreConfigDuplicateActionDao.class);
         bind(CentreConfigDeleteActionCo.class).to(CentreConfigDeleteActionDao.class);
         bind(LoadableCentreConfigCo.class).to(LoadableCentreConfigDao.class);
         bind(OverrideCentreConfigCo.class).to(OverrideCentreConfigDao.class);
-        bind(ICentreColumnWidthConfigUpdater.class).to(CentreColumnWidthConfigUpdaterDao.class);
+        bind(CentreColumnWidthConfigUpdaterCo.class).to(CentreColumnWidthConfigUpdaterDao.class);
         bind(CentrePreferredViewUpdaterCo.class).to(CentrePreferredViewUpdaterDao.class);
 
         bind(IUserAndRoleAssociation.class).to(UserAndRoleAssociationDao.class);
