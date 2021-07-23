@@ -255,12 +255,12 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
     Integer getPreferredView();
 
     /**
-     * Set the index of preferred resultant view for this entity centre.
+     * Sets the index of preferred resultant view for this entity centre.
      *
      * @param prefViewIndex
      * @return
      */
-    ICentreDomainTreeManager setPreferredView(Integer preferredView);
+    ICentreDomainTreeManager setPreferredView(final Integer preferredView);
 
     /**
      * This interface defines <b>entity centre</b> domain tree can be managed for <b>criteria</b> (property represents as a criteria editor). <br>

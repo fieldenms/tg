@@ -202,8 +202,8 @@ Polymer({
             type: Number
         },
 
-         /**
-         * container of all viewes (selection criteria, egi, alternative views) to switch between them. 
+        /**
+         * Container of all views (selection criteria, egi, alternative views) to switch between them.
          */
         _resultViews: {
             type: Array,

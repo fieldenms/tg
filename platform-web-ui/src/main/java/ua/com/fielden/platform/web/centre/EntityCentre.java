@@ -37,6 +37,7 @@ import static ua.com.fielden.platform.web.centre.EgiConfigurations.TOOLBAR_VISIB
 import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
 import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp.derivePropName;
+import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints.ALTERNATIVE_VIEW;
 import static ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl.CentreToolbar.selectView;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalPropertyName;
@@ -95,8 +96,8 @@ import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
-import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
+import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -172,7 +173,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static final String EGI_LAYOUT_CONFIG = "//gridLayoutConfig";
     private static final String EGI_SHORTCUTS = "@customShortcuts";
     private static final String EGI_VIEW_ICON = "@egiViewIcon";
-    private static final String EGI_VIEW_ICON_STYLE = "@egiViewIStyle";
+    private static final String EGI_VIEW_ICON_STYLE = "@egiViewStyle";
     private static final String EGI_TOOLBAR_VISIBLE = "@toolbarVisible";
     private static final String EGI_HIDDEN = "@hidden";
     private static final String EGI_DRAGGABLE = "@canDragFrom";
@@ -298,14 +299,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     /**
-     * Validates entity centre's viewes and their availability.
+     * Validates entity centre's views and their availability.
      *
      * @param dslDefaultConfig
      */
     private static <T extends AbstractEntity<?>> void validateViewConfiguration(final Class<? extends MiWithConfigurationSupport<?>> miType, final EntityCentreConfig<T> dslDefaultConfig) {
-        final long altViewCount= dslDefaultConfig.getInsertionPointConfigs().orElse(new ArrayList<>())
-                                    .stream()
-                                    .filter(ip -> ip.getInsertionPointAction().whereToInsertView.map(whereToInsert -> whereToInsert == InsertionPoints.ALTERNATIVE_VIEW).orElse(FALSE)).count();
+        final long altViewCount = dslDefaultConfig.getInsertionPointConfigs().orElse(new ArrayList<>())
+            .stream()
+            .filter(ip -> ip.getInsertionPointAction().whereToInsertView.map(whereToInsert -> whereToInsert == ALTERNATIVE_VIEW).orElse(FALSE)).count();
         final long insPointCount = dslDefaultConfig.getInsertionPointConfigs().orElse(new ArrayList<>()).size() - altViewCount;
 
         if (dslDefaultConfig.isEgiHidden() && insPointCount == 0 && altViewCount == 0) {
@@ -462,14 +463,20 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return postCentreCreated == null ? cdtmae : postCentreCreated.apply(cdtmae);
     }
 
+    /**
+     * Calculates preferred view index. It can be 1 (EGI) or other alternative view index (2, 3...).
+     * 
+     * @param dslDefaultConfig
+     * @return
+     */
     private static <T extends AbstractEntity<?>> Integer calculatePreferredViewIndex(final EntityCentreConfig<T> dslDefaultConfig) {
-        final List<InsertionPointConfig> altViewes = dslDefaultConfig.getInsertionPointConfigs().orElse(new ArrayList<>())
-                .stream()
-                .filter(ip -> ip.getInsertionPointAction().whereToInsertView.map(whereToInsert -> whereToInsert == InsertionPoints.ALTERNATIVE_VIEW).orElse(Boolean.FALSE))
-                .collect(toList());
+        final List<InsertionPointConfig> altViews = dslDefaultConfig.getInsertionPointConfigs().orElse(new ArrayList<>())
+            .stream()
+            .filter(ip -> ip.getInsertionPointAction().whereToInsertView.map(whereToInsert -> whereToInsert == ALTERNATIVE_VIEW).orElse(FALSE))
+            .collect(toList());
         final AtomicInteger preferredViewIndex = new AtomicInteger(1);
-        for (int idx = 0; idx < altViewes.size(); idx++) {
-            if (altViewes.get(idx).isPreferred()) {
+        for (int idx = 0; idx < altViews.size(); idx++) {
+            if (altViews.get(idx).isPreferred()) {
                 preferredViewIndex.set(2 + idx); // should be shifted by 2 to take into account EGI and selection criteria view indices
             }
         }
@@ -1147,7 +1154,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final DomContainer leftInsertionPointsDom = new DomContainer();
         final DomContainer rightInsertionPointsDom = new DomContainer();
         final DomContainer bottomInsertionPointsDom = new DomContainer();
-        final List<String>alternativeViewsDom = new ArrayList<>();
+        final List<String> alternativeViewsDom = new ArrayList<>();
         for (final InsertionPointBuilder el : insertionPointActionsElements) {
             final DomElement insertionPoint = el.render();
             el.toolbar().ifPresent(toolbar -> {
@@ -1273,7 +1280,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     private Optional<DomElement> switchViewButtons(final List<InsertionPointBuilder> insertionPointActionsElements, final Optional<InsertionPointBuilder> insertionPoint) {
-        final List<InsertionPointBuilder> altViews = insertionPointActionsElements.stream().filter(insPoint -> insPoint.whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW).collect(Collectors.toList());
+        final List<InsertionPointBuilder> altViews = insertionPointActionsElements.stream().filter(insPoint -> insPoint.whereToInsert() == ALTERNATIVE_VIEW).collect(toList());
         final long otherViewCount = insertionPointActionsElements.size() - altViews.size();
         final long allViewCount = altViews.size() + (!dslDefaultConfig.isEgiHidden() || otherViewCount > 0 ? 1 : 0);
         if (allViewCount > 1) {
