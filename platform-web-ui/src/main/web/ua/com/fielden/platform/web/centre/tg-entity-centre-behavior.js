@@ -114,7 +114,7 @@ const createPreferredViewUpdaterAction = function (entityCentre) {
     actionModel.postActionSuccess = function (functionalEntity) {
         // update disablement of save button after changing column widths
         entityCentre.$.selection_criteria._centreDirty = functionalEntity.get('centreDirty');
-        if (functionalEntity.preferredView !== entityCentre.preferredView) {
+        if (functionalEntity.get('preferredView') !== entityCentre.preferredView) {
             entityCentre.async(actionModel._run, 100);
         }
     };
@@ -266,7 +266,7 @@ const TgEntityCentreBehaviorImpl = {
         preferredView: Number,
 
         /**
-         * The preferred view loaded from server
+         * The preferred view loaded from server.
          */
         loadedPreferredView: {
             type: Number,
@@ -584,19 +584,19 @@ const TgEntityCentreBehaviorImpl = {
         self.saveAsName = self._reflector.UNDEFINED_CONFIG_TITLE; // this default value means that preferred configuration is not yet known and will be loaded during first 'retrieve' request
         self._selectedView = 0;
         self._showProgress = false;
-        //Configures the egi's margin.
+        // Configures the egi's margin.
         const egiInsertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point:not([separate-view])');
         this.$.egi.showMarginAround = egiInsertionPoints.length > 0;
-        //Configure all views to be able to switch between them
+        // Configure all views to be able to switch between them
         const altViews = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point[separate-view]');
         this.allViews = [this.$.selection_criteria, this.$.egi, ...altViews];
-        //Create result views to create centre view switch button
+        // Create result views to create centre view switch button
         this.resultViews = [{index: 1, icon: this.$.egi.icon, iconStyle: this.$.egi.iconStyle, title: "Grid"}, ...createViewsFromInsPoints([...altViews])];
         if (this.allViews.length === 2 && this.$.egi.isHidden() && egiInsertionPoints.length === 0) {
             throw new Error(NOT_ENOUGH_RESULT_VIEWS);
         } else {
             this.preferredView = this.preferredView === undefined ? 
-                    (this.$.egi.isHidden() && egiInsertionPoints.length === 0 ? 2/*first alternative result view*/ : 1 /*Egi view*/) : this.preferredView;
+                    (this.$.egi.isHidden() && egiInsertionPoints.length === 0 ? 2 /* first alternative result view */ : 1 /* EGI view */) : this.preferredView;
         }
         
         this.initiateAutoRun = () => {
