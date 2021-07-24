@@ -145,7 +145,7 @@ const template = html`
                     <slot name="custom-front-action" slot="custom-front-action"></slot>
                     <slot name="custom-share-action" slot="custom-share-action"></slot>
                     <slot id="customCriteria" name="custom-selection-criteria" slot="custom-selection-criteria"></slot>
-                    <tg-ui-action slot="left-selection-criteria-button" id="saveAction" shortcut="ctrl+s" ui-role='BUTTON' short-desc='Save' long-desc='Save configuration, Ctrl&nbsp+&nbsps'
+                    <tg-ui-action slot="left-selection-criteria-button" id="saveAction" shortcut="ctrl+s meta+s" ui-role='BUTTON' short-desc='Save' long-desc='Save configuration, Ctrl&nbsp+&nbsps'
                                     component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigSaveAction' element-name='tg-CentreConfigSaveAction-master' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]'
                                     attrs='[[bottomActions.0.attrs]]' pre-action='[[bottomActions.0.preAction]]' post-action-success='[[bottomActions.0.postActionSuccess]]' post-action-error='[[bottomActions.0.postActionError]]'
                                     require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'
