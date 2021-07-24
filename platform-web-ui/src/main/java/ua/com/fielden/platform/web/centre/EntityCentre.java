@@ -252,7 +252,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     public EntityCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final EntityCentreConfig<T> dslDefaultConfig, final Injector injector) {
         this(miType, miType.getSimpleName(), dslDefaultConfig, injector, null);
     }
-    
+
     /**
      * Creates new {@link EntityCentre} instance for the menu item type and with specified name.
      *
@@ -465,7 +465,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
     /**
      * Calculates preferred view index. It can be 1 (EGI) or other alternative view index (2, 3...).
-     * 
+     *
      * @param dslDefaultConfig
      * @return
      */
@@ -474,7 +474,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             .stream()
             .filter(ip -> ip.getInsertionPointAction().whereToInsertView.map(whereToInsert -> whereToInsert == ALTERNATIVE_VIEW).orElse(FALSE))
             .collect(toList());
-        final AtomicInteger preferredViewIndex = new AtomicInteger(1);
+        final long insPointCount = dslDefaultConfig.getInsertionPointConfigs().orElse(new ArrayList<>()).size() - altViews.size();
+        final AtomicInteger preferredViewIndex = new AtomicInteger(!dslDefaultConfig.isEgiHidden() || insPointCount > 0 ? 1 : 2);
         for (int idx = 0; idx < altViews.size(); idx++) {
             if (altViews.get(idx).isPreferred()) {
                 preferredViewIndex.set(2 + idx); // should be shifted by 2 to take into account EGI and selection criteria view indices
