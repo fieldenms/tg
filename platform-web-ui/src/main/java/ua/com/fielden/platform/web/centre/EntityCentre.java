@@ -1280,18 +1280,27 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return representation;
     }
 
+    /**
+     * Creates dropdown button with selected insertionPoint, that allows to switch between other alternative views including EGI.
+     * It might return empty optional if this centre doesn't have enough alternative views to switch between
+     * (i.e. there is only EGI or only one alternative view with hidden EGI and without other insertion points)
+     *
+     * @param insertionPointActionsElements
+     * @param insertionPoint
+     * @return
+     */
     private Optional<DomElement> switchViewButtons(final List<InsertionPointBuilder> insertionPointActionsElements, final Optional<InsertionPointBuilder> insertionPoint) {
         final List<InsertionPointBuilder> altViews = insertionPointActionsElements.stream().filter(insPoint -> insPoint.whereToInsert() == ALTERNATIVE_VIEW).collect(toList());
-        final long otherViewCount = insertionPointActionsElements.size() - altViews.size();
-        final long allViewCount = altViews.size() + (!dslDefaultConfig.isEgiHidden() || otherViewCount > 0 ? 1 : 0);
-        if (allViewCount > 1) {
-            if (!insertionPoint.isPresent()) {
+        final long otherViewCount = insertionPointActionsElements.size() - altViews.size();//Calculate the number of insertion points those are not an alternative view.
+        final long allViewCount = altViews.size() + (!dslDefaultConfig.isEgiHidden() || otherViewCount > 0 ? 1 : 0);//Calculate the number of views to switch between.
+        if (allViewCount > 1) {//If there are more than one available views (EGI and alternative views) then create switch view button
+            if (!insertionPoint.isPresent()) {//Create switch view button for EGI view.
                 return of(selectView(1, dslDefaultConfig.getToolbarConfig().getSwitchViewButtonWidth()));
-            } else {
+            } else {//Create switch view button for alternative view.
                 return of(selectView(altViews.indexOf(insertionPoint.get()) + 2, insertionPoint.get().toolbar().map(toolbar -> toolbar.getSwitchViewButtonWidth()).orElse(0)));
             }
         }
-        return empty();
+        return empty(); //Otherwise return empty switch view button indicating that there are no enough available views to switch between
     }
 
     private DomElement createActionGroupDom(final int groupIndex) {
