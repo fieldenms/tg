@@ -843,7 +843,7 @@ const TgEntityCentreBehaviorImpl = {
         }).bind(self);
 
         /**
-         * Adds event listener that will update egi when some entity was changed
+         * Adds event listener updates centre's view on dropdown switch custom event.
          */
          self.addEventListener("tg-centre-view-change", function (e) {
             this._activateView(e.detail);

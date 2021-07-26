@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.insertion_points;
 
+import static java.util.Optional.empty;
+
 import java.util.Optional;
 
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
@@ -16,7 +18,7 @@ public class InsertionPointConfig {
 
     private final EntityActionConfig insertionPointAction;
     private boolean preferred = false;
-    private Optional<IToolbarConfig> toolbar = Optional.empty();
+    private Optional<IToolbarConfig> toolbar = empty();
 
     /**
      * Initiates the insertion point configuration object with action configuration and pagination indicator

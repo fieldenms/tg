@@ -11,12 +11,12 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  */
 public interface IResultSetBuilder1aEgiIconStyle<T extends AbstractEntity<?>> extends IResultSetBuilder1bCheckbox<T> {
 
-
     /**
-     * Specifies style for grid view icon
+     * Specifies style for grid view icon.
      *
      * @param icon
      * @return
      */
-    IResultSetBuilder1bCheckbox<T> style(String iconStyle);
+    IResultSetBuilder1bCheckbox<T> style(final String iconStyle);
+
 }

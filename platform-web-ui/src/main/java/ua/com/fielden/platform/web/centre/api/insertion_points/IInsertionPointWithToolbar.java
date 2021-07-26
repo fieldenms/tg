@@ -18,5 +18,6 @@ public interface IInsertionPointWithToolbar<T extends AbstractEntity<?>> extends
      * @param toolbar
      * @return
      */
-    IInsertionPoints<T> setToolbar(IToolbarConfig toolbar);
+    IInsertionPoints<T> setToolbar(final IToolbarConfig toolbar);
+
 }

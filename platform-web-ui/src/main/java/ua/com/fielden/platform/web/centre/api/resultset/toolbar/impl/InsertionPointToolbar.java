@@ -1,9 +1,10 @@
 package ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl;
 
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Stream.of;
+
 import java.util.Collection;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
@@ -23,6 +24,6 @@ public class InsertionPointToolbar extends CentreToolbar {
 
     @Override
     public List<String> getAvailableShortcuts() {
-        return Stream.of(paginationShortcut(), refreshShortcut()).flatMap(Collection::stream).collect(Collectors.toList());
+        return of(paginationShortcut(), refreshShortcut()).flatMap(Collection::stream).collect(toList());
     }
 }

@@ -265,10 +265,6 @@ Polymer({
             type: Object,
             value: null
         },
-        /**
-         * The dialog for detachedView insertion point.
-         */
-        _dialog: Object,
 
         _ownKeyBindings: {
             type: Object
