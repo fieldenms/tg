@@ -263,14 +263,9 @@ const TgEntityCentreBehaviorImpl = {
         /**
          * The preferred result view index to show after run.
          */
-        preferredView: Number,
-
-        /**
-         * The preferred view loaded from server.
-         */
-        loadedPreferredView: {
+        preferredView: {
             type: Number,
-            observer: "_loadedPreferredViewChanged"
+            observer: "_preferredViewChanged"
         },
 
         /**
@@ -1293,10 +1288,8 @@ const TgEntityCentreBehaviorImpl = {
         return _buttonDisabled ? 'cursor:initial' : '';
     },
 
-    _loadedPreferredViewChanged: function (newLoadedPreferredView) {
-        if (newLoadedPreferredView >= 0 && newLoadedPreferredView < this.allViews.length) {
-            this.preferredView = newLoadedPreferredView;
-        } else {
+    _preferredViewChanged: function (newPreferredView) {
+        if (newPreferredView < 0 || newPreferredView >= this.allViews.length) {
             this.preferredView = this.allViews.length - 1;
             this.async(this._preferredViewUpdaterAction._run, 100);
         }
