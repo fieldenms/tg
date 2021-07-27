@@ -310,7 +310,7 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
                 const colourA = parseInt(a.color.substring(1), 16);
                 const colourB = parseInt(b.color.substring(1), 16)
                 const byColour = colourB - colourA;
-                return byColour !== 0 ? byColour : a.key.localeCompare(a.key);
+                return byColour !== 0 ? byColour : a.key.localeCompare(b.key);
             });
     }
 
