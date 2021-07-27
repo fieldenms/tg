@@ -9,8 +9,6 @@ import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuild
 import java.util.LinkedHashSet;
 import java.util.Optional;
 
-import org.apache.commons.lang3.StringUtils;
-
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.dom.InnerTextElement;
@@ -36,34 +34,25 @@ public class CalendarEntityMaster<T extends AbstractEntity<?>> implements IMaste
 
     public CalendarEntityMaster(
             final Class<T> entityType,
-            final String eventKeyProp,
-            final String eventDescProp,
+            final String calendarComponentUri,
             final String eventFromProp,
             final String eventToProp,
-            final String colorProp,
-            final String colorTitleProp,
-            final String colorDescProp,
             final EntityActionConfig editAction) {
 
         this.editAction = editAction;
 
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
-        importPaths.add("components/fullcalendar/tg-fullcalendar");
+        importPaths.add(calendarComponentUri);
 
-        final DomElement calendar = new DomElement("tg-fullcalendar")
+        final DomElement calendar = new DomElement(calendarComponentUri.substring(calendarComponentUri.lastIndexOf("/") + 1))
                 .attr("id", "calendar")
                 .attr("custom-event-target", "[[customEventTarget]]")
                 .attr("context-retriever", "[[contextRetriever]]")
                 .attr("entities", "[[retrievedEntities]]")
                 .attr("centre-state", "[[centreState]]")
                 .attr("data-change-reason", "[[dataChangeReason]]")
-                .attr("event-key-property", eventKeyProp)
-                .attr("event-desc-property", StringUtils.isEmpty(eventDescProp) ? "" : eventDescProp)
                 .attr("event-from-property", eventFromProp)
-                .attr("event-to-property", eventToProp)
-                .attr("color-property", colorProp)
-                .attr("color-title-property", colorTitleProp)
-                .attr("color-desc-property", colorDescProp);
+                .attr("event-to-property", eventToProp);
 
         final FunctionalActionElement el = FunctionalActionElement.newEntityActionForMaster(editAction, 0);
         importPaths.add(el.importPath());
