@@ -9,13 +9,13 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 /** 
- * DAO implementation for companion object {@link ICentreConfigEditAction}.
+ * DAO implementation for companion object {@link CentreConfigEditActionCo}.
  * 
  * @author TG Team
  *
  */
 @EntityType(CentreConfigEditAction.class)
-public class CentreConfigEditActionDao extends AbstractCentreConfigCommitActionDao<CentreConfigEditAction> implements ICentreConfigEditAction {
+public class CentreConfigEditActionDao extends AbstractCentreConfigCommitActionDao<CentreConfigEditAction> implements CentreConfigEditActionCo {
     
     @Inject
     public CentreConfigEditActionDao(final IFilter filter, final ICriteriaEntityRestorer criteriaEntityRestorer) {
@@ -26,7 +26,7 @@ public class CentreConfigEditActionDao extends AbstractCentreConfigCommitActionD
     protected Map<String, Object> performSave(final CentreConfigEditAction entity) {
         return criteriaEntityRestorer
             .restoreCriteriaEntity(entity.getCentreContextHolder())
-            .editCentre(entity.getTitle(), entity.getDesc());
+            .editCentre(entity.getTitle(), entity.getDesc(), entity.isDashboardable(), entity.getDashboardRefreshFrequency());
     }
     
 }

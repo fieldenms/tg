@@ -79,12 +79,10 @@ const createColumnAction = function (entityCentre) {
     actionModel.showDialog = entityCentre._showCentreConfigDialog;
     actionModel.toaster = entityCentre.toaster;
     actionModel.createContextHolder = entityCentre._createContextHolder;
-    actionModel.preAction = function (action) {
-        action.modifyFunctionalEntity = (function (bindingEntity, master) {
-            action.modifyValue4Property('columnParameters', bindingEntity, actionModel.columnParameters);
-        });
-        return true;
-    };
+    const contextCreator = actionModel._createContextHolderForAction.bind(actionModel);
+    actionModel._createContextHolderForAction = function () {
+        return this._reflector.setCustomProperty(contextCreator(), 'columnParameters', actionModel.columnParameters);
+    }.bind(actionModel);
     actionModel.postActionSuccess = function (functionalEntity) {
         // update disablement of save button after changing column widths
         entityCentre.$.selection_criteria._centreDirty = functionalEntity.get('centreDirty');
@@ -109,16 +107,14 @@ const createPreferredViewUpdaterAction = function (entityCentre) {
     actionModel.showDialog = entityCentre._showCentreConfigDialog;
     actionModel.toaster = entityCentre.toaster;
     actionModel.createContextHolder = entityCentre._createContextHolder;
-    actionModel.preAction = function (action) {
-        action.modifyFunctionalEntity = (function (bindingEntity, master) {
-            action.modifyValue4Property('preferredView', bindingEntity, entityCentre.preferredView);
-        });
-        return true;
-    };
+    const contextCreator = actionModel._createContextHolderForAction.bind(actionModel);
+    actionModel._createContextHolderForAction = function () {
+        return this._reflector.setCustomProperty(contextCreator(), 'preferredView', entityCentre.preferredView);
+    }.bind(actionModel);
     actionModel.postActionSuccess = function (functionalEntity) {
         // update disablement of save button after changing column widths
         entityCentre.$.selection_criteria._centreDirty = functionalEntity.get('centreDirty');
-        if (functionalEntity.preferredView !== entityCentre.preferredView) {
+        if (functionalEntity.get('preferredView') !== entityCentre.preferredView) {
             entityCentre.async(actionModel._run, 100);
         }
     };
@@ -257,7 +253,7 @@ const TgEntityCentreBehaviorImpl = {
         },
 
         /**
-         * container of all viewes (selection criteria, egi, alternative views) to switch between them. 
+         * Container of all views (selection criteria, egi, alternative views) to switch between them. 
          */
         allViews: {
             type: Array,
@@ -267,14 +263,9 @@ const TgEntityCentreBehaviorImpl = {
         /**
          * The preferred result view index to show after run.
          */
-        preferredView: Number,
-
-        /**
-         * The preferred view loaded from server
-         */
-        loadedPreferredView: {
+        preferredView: {
             type: Number,
-            observer: "_loadedPreferredViewChanged"
+            observer: "_preferredViewChanged"
         },
 
         /**
@@ -327,7 +318,7 @@ const TgEntityCentreBehaviorImpl = {
         },
 
         /**
-         * Indcates whether the centre should load data immediately after it was loaded.
+         * Indicates whether current centre configuration should load data immediately upon loading.
          */
         autoRun: {
             type: Boolean,
@@ -501,7 +492,9 @@ const TgEntityCentreBehaviorImpl = {
         currentState: {
             type: String,
             value: 'EDIT'
-        }
+        },
+        
+        initiateAutoRun: Function
     },
 
     listeners: {
@@ -521,7 +514,7 @@ const TgEntityCentreBehaviorImpl = {
         this.$.selection_criteria.configUuid = '';
         if (this._selectedView === 0) {
             this.async(() => {
-                this._selectedView = 1;
+                this._selectedView = this.preferredView;
             }, 100);
         }
         this.run(true); // embedded centre always autoruns on getMasterEntity assignment (activating of compound menu item with embedded centre or opening of details master with embedded centre)
@@ -586,21 +579,33 @@ const TgEntityCentreBehaviorImpl = {
         self.saveAsName = self._reflector.UNDEFINED_CONFIG_TITLE; // this default value means that preferred configuration is not yet known and will be loaded during first 'retrieve' request
         self._selectedView = 0;
         self._showProgress = false;
-        //Configures the egi's margin.
-        const egiInsertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point:not([separate-view])');
+        // Configures the egi's margin.
+        const egiInsertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point:not([alternative-view])');
         this.$.egi.showMarginAround = egiInsertionPoints.length > 0;
-        //Configure all views to be able to switch between them
-        const altViews = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point[separate-view]');
+        // Configure all views to be able to switch between them
+        const altViews = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point[alternative-view]');
         this.allViews = [this.$.selection_criteria, this.$.egi, ...altViews];
-        //Create result views to create centre view switch button
+        // Create result views to create centre view switch button
         this.resultViews = [{index: 1, icon: this.$.egi.icon, iconStyle: this.$.egi.iconStyle, title: "Grid"}, ...createViewsFromInsPoints([...altViews])];
         if (this.allViews.length === 2 && this.$.egi.isHidden() && egiInsertionPoints.length === 0) {
             throw new Error(NOT_ENOUGH_RESULT_VIEWS);
         } else {
             this.preferredView = this.preferredView === undefined ? 
-                    (this.$.egi.isHidden() && egiInsertionPoints.length === 0 ? 2/*first alternative result view*/ : 1 /*Egi view*/) : this.preferredView;
+                    (this.$.egi.isHidden() && egiInsertionPoints.length === 0 ? 2 /* first alternative result view */ : 1 /* EGI view */) : this.preferredView;
         }
-
+        
+        this.initiateAutoRun = () => {
+            const centre = this;
+            if (centre.autoRun) {
+                if (centre._selectedView === 0) {
+                    centre.async(() => {
+                        centre._selectedView = this.preferredView;
+                    }, 100);
+                }
+                centre.run(true); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)
+            }
+        };
+        
         self._postRun = (function (criteriaEntity, newBindingEntity, result) {
             if (criteriaEntity === null || criteriaEntity.isValidWithoutException()) {
                 if (typeof result.summary !== 'undefined') {
@@ -838,7 +843,7 @@ const TgEntityCentreBehaviorImpl = {
         }).bind(self);
 
         /**
-         * Adds event listener that will update egi when some entity was changed
+         * Adds event listener updates centre's view on dropdown switch custom event.
          */
          self.addEventListener("tg-centre-view-change", function (e) {
             this._activateView(e.detail);
@@ -915,8 +920,8 @@ const TgEntityCentreBehaviorImpl = {
             }
         }));
 
-        //Select the result view if autoRun is true
-        if (self.autoRun || self.queryPart) {
+        // select result view if link centre gets attached
+        if (self.queryPart) {
             self._selectedView = self.preferredView;
         }
     },
@@ -1031,6 +1036,9 @@ const TgEntityCentreBehaviorImpl = {
         });
     },
 
+    /**
+     * Activates view (selection crit, grid or alternative) by 'index'. Saves preferred view by initiating 'CentrePreferredViewUpdater' action.
+     */
     _activateView: function (index) {
         this.async(() => {
             if (index < 0 || index >= this.allViews.length) {
@@ -1051,6 +1059,7 @@ const TgEntityCentreBehaviorImpl = {
             }   
         }, 100);
     },
+
     /**
      * Activate the view with selection criteria.
      */
@@ -1283,10 +1292,12 @@ const TgEntityCentreBehaviorImpl = {
         return _buttonDisabled ? 'cursor:initial' : '';
     },
 
-    _loadedPreferredViewChanged: function (newLoadedPreferredView) {
-        if (newLoadedPreferredView >= 0 && newLoadedPreferredView < this.allViews.length) {
-            this.preferredView = newLoadedPreferredView;
-        } else {
+    /**
+     * In case if 'newPreferredView' is not in available view boundaries, activates last available view and initiates save. It is possible in case
+     * where some previously available view was deleted from Centre DSL configuration during application evolution.
+     */
+    _preferredViewChanged: function (newPreferredView) {
+        if (newPreferredView < 0 || newPreferredView >= this.allViews.length) {
             this.preferredView = this.allViews.length - 1;
             this.async(this._preferredViewUpdaterAction._run, 100);
         }

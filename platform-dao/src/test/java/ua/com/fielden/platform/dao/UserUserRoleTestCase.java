@@ -14,24 +14,27 @@ import java.util.Set;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
 import ua.com.fielden.platform.security.user.IUser;
+import ua.com.fielden.platform.security.user.UserAndRoleAssociationCo;
+import ua.com.fielden.platform.security.user.UserRoleCo;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociationDao;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 /**
- * Test case for the {@link IUserRole}, {@link IUserAndRoleAssociation}, and {@link SecurityRoleAssociationDao} classes
+ * Test case for the {@link UserRoleCo}, {@link UserAndRoleAssociationCo}, and {@link SecurityRoleAssociationDao} classes
  * 
  * @author TG Team
  * 
  */
 public class UserUserRoleTestCase extends AbstractDaoTestCase {
-    private final IUserRole coUserRole = getInstance(IUserRole.class);
-    private final IUserAndRoleAssociation coUserAndRoleAssociation = getInstance(IUserAndRoleAssociation.class);
-    private final ISecurityRoleAssociation coSecurityRoleAssociation = getInstance(ISecurityRoleAssociation.class);
+    private final UserRoleCo coUserRole = getInstance(UserRoleCo.class);
+    private final UserAndRoleAssociationCo coUserAndRoleAssociation = getInstance(UserAndRoleAssociationCo.class);
+    private final SecurityRoleAssociationCo coSecurityRoleAssociation = getInstance(SecurityRoleAssociationCo.class);
     private final IUser coUser = getInstance(IUser.class);
 
     @Test
@@ -147,7 +150,7 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
     public void security_associations_can_be_retrieved() {
         final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).model();
         final List<SecurityRoleAssociation> associations = coSecurityRoleAssociation.firstPage(from(model).with(fetch(SecurityRoleAssociation.class).with("role")).model(), Integer.MAX_VALUE).data();
-        assertEquals("incorrect number of security token - role associations", 63, associations.size());
+        assertEquals("incorrect number of security token - role associations", 70, associations.size());
         final List<SecurityRoleAssociation> roles = coSecurityRoleAssociation.findAssociationsFor(FirstLevelSecurityToken1.class);
         assertEquals("Incorrect number of user roles for the " + FirstLevelSecurityToken1.class.getName() + " security token", 2, roles.size());
         UserRole role = new_(UserRole.class, "role1");

@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.mkInsertionPoint;
 import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig.configInsertionPoint;
+import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints.ALTERNATIVE_VIEW;
 
 import java.util.Optional;
 
@@ -16,10 +18,15 @@ import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.insertion_points.exception.InsertionPointConfigException;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 
+/**
+ * Implementation for insertion point APIs.
+ * 
+ * @author TG Team
+ *
+ * @param <T>
+ */
 public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements IInsertionPoints<T>, IInsertionPointPreferred<T> {
-
     private final ResultSetBuilder<T> resultSetBuilder;
-
     private final EntityActionConfig insertionPointAction;
     private final InsertionPoints whereToInsertView;
     private boolean preferred = false;
@@ -39,7 +46,7 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
 
     @Override
     public IInsertionPoints<T> setToolbar(final IToolbarConfig toolbar) {
-        this.toolbarConfig = Optional.ofNullable(toolbar);
+        this.toolbarConfig = ofNullable(toolbar);
         return this;
     }
 
@@ -51,7 +58,7 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
 
     @Override
     public IInsertionPointWithToolbar<T> makePreferred() {
-        if  (whereToInsertView != InsertionPoints.ALTERNATIVE_VIEW) {
+        if  (whereToInsertView != ALTERNATIVE_VIEW) {
             throw new InsertionPointConfigException(
                     format("Insertion point for %s action can not be preferred as it is not an alternative view.",
                             insertionPointAction.functionalEntity.map(type -> type.getSimpleName()).orElse("Default")));

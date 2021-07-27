@@ -163,6 +163,7 @@ import ua.com.fielden.platform.web.layout.api.impl.LayoutComposer;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
+import ua.com.fielden.platform.web.resources.webui.DashboardRefreshFrequencyWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.SecurityMatrixWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserRoleWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserWebUiConfig;
@@ -440,6 +441,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final UserWebUiConfig userWebUiConfig = new UserWebUiConfig(injector());
         final UserRoleWebUiConfig userRoleWebUiConfig = new UserRoleWebUiConfig(injector());
         final SecurityMatrixWebUiConfig securityConfig = SecurityMatrixWebUiConfig.register(injector(), configApp());
+        final DashboardRefreshFrequencyWebUiConfig dashboardRefreshFrequencyConfig = DashboardRefreshFrequencyWebUiConfig.register(injector(), configApp());
 
         configApp().addCentre(entityCentre);
         configApp().addCentre(entityCentreNotGenerated);
@@ -1060,6 +1062,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*      */.addMenuItem("Users").description("User centre").centre(userWebUiConfig.centre).done()
                 /*      */.addMenuItem("User Roles").description("User role centre").centre(userRoleWebUiConfig.centre).done()
                 /*      */.addMenuItem("Security Matrix").description("Security matrix").master(securityConfig.master).done()
+                /*      */.addMenuItem("Duration").description("Duration").centre(dashboardRefreshFrequencyConfig.centre).done()
                 /*  */.done()
                 /*  */.done()
                 .addModule("Online reports")

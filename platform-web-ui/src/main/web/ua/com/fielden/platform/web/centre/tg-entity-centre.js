@@ -141,11 +141,11 @@ const template = html`
     <iron-pages id="views" selected="[[_selectedView]]">
         <div class="fit layout vertical">
             <div class="paper-material selection-material layout vertical" elevation="1">
-                <tg-selection-view id="selectionView" _show-dialog="[[_showDialog]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _create-action-object="[[_createActionObject]]" _button-disabled="[[_buttonDisabled]]">
+                <tg-selection-view id="selectionView" initiate-auto-run="[[initiateAutoRun]]" _show-dialog="[[_showDialog]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _create-action-object="[[_createActionObject]]" _button-disabled="[[_buttonDisabled]]" embedded="[[embedded]]">
                     <slot name="custom-front-action" slot="custom-front-action"></slot>
                     <slot name="custom-share-action" slot="custom-share-action"></slot>
                     <slot id="customCriteria" name="custom-selection-criteria" slot="custom-selection-criteria"></slot>
-                    <tg-ui-action slot="left-selection-criteria-button" id="saveAction" shortcut="ctrl+s" ui-role='BUTTON' short-desc='Save' long-desc='Save configuration, Ctrl&nbsp+&nbsps'
+                    <tg-ui-action slot="left-selection-criteria-button" id="saveAction" shortcut="ctrl+s meta+s" ui-role='BUTTON' short-desc='Save' long-desc='Save configuration, Ctrl&nbsp+&nbsps'
                                     component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigSaveAction' element-name='tg-CentreConfigSaveAction-master' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]'
                                     attrs='[[bottomActions.0.attrs]]' pre-action='[[bottomActions.0.preAction]]' post-action-success='[[bottomActions.0.postActionSuccess]]' post-action-error='[[bottomActions.0.postActionError]]'
                                     require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'
@@ -202,10 +202,10 @@ Polymer({
             type: Number
         },
 
-         /**
-         * container of all viewes (selection criteria, egi, alternative views) to switch between them. 
+        /**
+         * Container of all views (selection criteria, egi, alternative views) to switch between them.
          */
-        _resultViews: {
+        _allViews: {
             type: Array,
             value: () => []
         },
@@ -235,6 +235,7 @@ Polymer({
         },
         _centreDirtyOrEdited: Boolean,
         _viewerDisabled: Boolean,
+        embedded: Boolean,
         discard: Function,
         run: Function,
         _showDialog: Function,
@@ -250,6 +251,7 @@ Polymer({
             observer: '_staleCriteriaMessageChanged'
         },
         _confirm: Function,
+        initiateAutoRun: Function,
         
         /**
          * Additional headers for every 'iron-ajax' client-side requests. These only contain 
@@ -280,23 +282,29 @@ Polymer({
         this._rightSplitterUpdater = this._rightSplitterUpdater.bind(this);
         this._leftInsertionPointContainerUpdater = this._leftInsertionPointContainerUpdater.bind(this);
         this._rightInsertionPointContainerUpdater = this._rightInsertionPointContainerUpdater.bind(this);
-        this._resultViews = [this.$.selectionView, 
+        this._allViews = [this.$.selectionView, 
             this.$.customEgiSlot.assignedNodes({ flatten: true })[0], 
             ...this.$.alternativeViewSlot.assignedNodes({ flatten: true })];
         this._confirm = this.confirm.bind(this);
 
+        // to properly focus first element (_pageSelectionChanged method), we wait for criteria entity to be loaded ...
         this.$.customCriteria.assignedNodes({ flatten: true })[0].addEventListener("_criteria-loaded-changed", (e) => {
             if(e.detail.value) {
-                this.$.views.addEventListener("iron-select", this._pageSelectionChanged.bind(this))
+                this.$.views.addEventListener("iron-select", this._pageSelectionChanged.bind(this));
+                //.. after selection criteria is loaded create promise that gets resolved when buttons become enabled.
                 new Promise((resolve, reject) => {
                     this._afterCriteriaLoadedPromise = resolve;
                 }).then((res) => {
-                    this.async(() => this._pageSelectionChanged({target: this.$.views}), 1);    
+                    // After buttons become enabled call _pageSelectionChanged to configure view bindings and to focus first focusable element.
+                    this.async(() => this._pageSelectionChanged({target: this.$.views}), 1);
                 });
             }
         });
     },
 
+    /**
+     * Listens when buttons become enabled and if there is promise that waits for that action then resolve that promise to focus first focusable element on current view.
+     */
     _buttonDisabledChanged: function (newValue) {
         if (!newValue && this._afterCriteriaLoadedPromise) {
             this._afterCriteriaLoadedPromise(newValue);
@@ -306,7 +314,7 @@ Polymer({
 
     attached: function () {
         const self = this;
-        self._createActionObject = function (entityType, createPreActionPromise) {
+        self._createActionObject = function (entityType, createPreActionPromise, customPostActionSuccess) {
             return {
                 preAction: function (action) {
                     if (!action.oldIsActionInProgressChanged) {
@@ -326,6 +334,9 @@ Polymer({
                 postActionSuccess: function (functionalEntity, action) {
                     // bind custom object (if it is not empty) after every save
                     self._bindCentreInfo(functionalEntity.get('customObject'));
+                    if (customPostActionSuccess) {
+                        customPostActionSuccess();
+                    }
                 },
                 attrs: {
                     entityType: entityType, currentState: 'EDIT', centreUuid: self.uuid
@@ -497,15 +508,18 @@ Polymer({
         return this.$.confirmationDialog;
     },
 
+    /**
+     * Configures current view binding; removes view binding for previous view; focuses first focusable element in current view.
+     */
     _pageSelectionChanged: function (event) {
         const target = event.target || event.srcElement;
         if (target === this.$.views) {
-            const prevView = this._resultViews[this._previousView];
-            const currentView = this._resultViews[this._selectedView];
+            const prevView = this._allViews[this._previousView];
+            const currentView = this._allViews[this._selectedView];
             this._configViewBindings(prevView, currentView);
             this.focusSelectedView();
             tearDownEvent(event);
-            (this._selectedView === 1 ? this.$.centreResultContainer : this._resultViews[this._selectedView]).fire("tg-centre-page-was-selected");
+            (this._selectedView === 1 ? this.$.centreResultContainer : this._allViews[this._selectedView]).fire("tg-centre-page-was-selected");
         }
     },
 
@@ -525,13 +539,13 @@ Polymer({
 
     focusSelectedView: function () {
         if (!isMobileApp()) {
-            const elementToFocus = this._getVisibleFocusableElementIn(this._resultViews[this._selectedView]);
-            if (this._selectedView !== 1 || !this._resultViews[1].isEditing()) {
+            const elementToFocus = this._getVisibleFocusableElementIn(this._allViews[this._selectedView]);
+            if (this._selectedView !== 1 || !this._allViews[1].isEditing()) {
                 if (elementToFocus) {
                     elementToFocus.focus();
                     this.$.views.scrollTop = this._selectedView === 1 ? 0 : this.$.views.scrollTop;
                 } else {
-                    this._resultViews[this._selectedView].keyEventTarget.focus();
+                    this._allViews[this._selectedView].keyEventTarget.focus();
                 }
             }
             if (this._selectedView === 0) {
@@ -546,13 +560,13 @@ Polymer({
     },
 
     addOwnKeyBindings: function () {
-        const view = this._resultViews[this._selectedView];
-        const previousView = this._resultViews[this._previousView];
+        const view = this._allViews[this._selectedView];
+        const previousView = this._allViews[this._previousView];
         this._configViewBindings(previousView, view);
     },
 
     removeOwnKeyBindings: function () {
-        const view = this._resultViews[this._selectedView];
+        const view = this._allViews[this._selectedView];
         view.removeOwnKeyBindings();
     },
 

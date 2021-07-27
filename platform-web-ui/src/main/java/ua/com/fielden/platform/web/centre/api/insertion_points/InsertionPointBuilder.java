@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.centre.api.insertion_points;
 
 import static org.apache.commons.lang3.StringUtils.join;
+import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints.ALTERNATIVE_VIEW;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.INSERTION_POINT;
 
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
@@ -9,7 +11,6 @@ import java.util.Set;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
-import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
@@ -28,7 +29,7 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
 
     public InsertionPointBuilder(final InsertionPointConfig insertionPointConfig, final int numberOfAction) {
         this.insertionPointConfig = insertionPointConfig;
-        this.insertionPointActionElement = new FunctionalActionElement(insertionPointConfig.getInsertionPointAction(), numberOfAction, FunctionalActionKind.INSERTION_POINT);
+        this.insertionPointActionElement = new FunctionalActionElement(insertionPointConfig.getInsertionPointAction(), numberOfAction, INSERTION_POINT);
     }
 
     /**
@@ -52,8 +53,8 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
                 .attr("context-retriever", "[[insertionPointContextRetriever]]")
                 .attr("custom-shortcuts", join(insertionPointConfig.getToolbar().map(toolbar -> toolbar.getAvailableShortcuts()).orElse(new ArrayList<>()), " "));
         insertionPointConfig.getToolbar().ifPresent(toolbar -> insertionPointDom.add(toolbar.render()));
-        if (whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW) {
-            insertionPointDom.attr("separate-view", true);
+        if (whereToInsert() == ALTERNATIVE_VIEW) {
+            insertionPointDom.attr("alternative-view", true);
             insertionPointDom.attr("hide-margins", true);
             insertionPointDom.attr("slot", "alternative-view-insertion-point");
         }

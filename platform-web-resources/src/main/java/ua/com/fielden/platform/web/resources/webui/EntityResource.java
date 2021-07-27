@@ -15,6 +15,7 @@ import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentre
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreSavingInfoHolder;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,9 +52,9 @@ import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
+import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
+import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
@@ -167,8 +168,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
         final Representation result = handleUndesiredExceptions(getResponse(), () -> {
             final SavingInfoHolder savingInfoHolder = restoreSavingInfoHolder(envelope, restUtil);
             final User user = userProvider.getUser();
-            final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
-            final IMainMenuItem mmiCompanion = companionFinder.find(MainMenuItem.class);
+            final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
+            final MainMenuItemCo mmiCompanion = companionFinder.find(MainMenuItem.class);
             final IUser userCompanion = companionFinder.find(User.class);
             
             final Pair<T, Optional<Exception>> potentiallySavedWithException = tryToSave(savingInfoHolder, entityType, factory, companionFinder, critGenerator, webUiConfig, user, companion, device(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel);
@@ -186,8 +187,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
         return handleUndesiredExceptions(getResponse(), () -> {
             LOGGER.debug("ENTITY_RESOURCE: retrieve started.");
             final User user = userProvider.getUser();
-            final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
-            final IMainMenuItem mmiCompanion = companionFinder.find(MainMenuItem.class);
+            final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
+            final MainMenuItemCo mmiCompanion = companionFinder.find(MainMenuItem.class);
             final IUser userCompanion = companionFinder.find(User.class);
             // originallyProducedEntity is always empty during retrieval to kick in creation through producer
             final T emptyOriginallyProducedEntity = null;
@@ -211,7 +212,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                                     new ArrayList<AbstractEntity<?>>(),
                                     null,
                                     Optional.empty(),
-                                    null 
+                                    null,
+                                    new HashMap<>()
                             ),
                             companion, 
                             producer
@@ -232,7 +234,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                                     !centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? centreContextHolder.getSelectedEntities() : new ArrayList<>(),
                                     createCriteriaEntityForContext(centreContextHolder, companionFinder, user, critGenerator, webUiConfig, factory, device(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel),
                                     actionConfig,
-                                    !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null
+                                    !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null,
+                                    !centreContextHolder.proxiedPropertyNames().contains("customObject") ? centreContextHolder.getCustomObject() : new HashMap<>()
                             ),
                             companion, 
                             producer
@@ -285,8 +288,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             final IEntityDao<T> companion,
             final DeviceProfile device,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
-            final IEntityCentreConfig eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final EntityCentreConfigCo eccCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
         final List<IContinuationData> conts = !savingInfoHolder.proxiedPropertyNames().contains("continuations") ? savingInfoHolder.getContinuations() : new ArrayList<>();
@@ -330,8 +333,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             final int tabCount,
             final DeviceProfile device,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
-            final IEntityCentreConfig eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final EntityCentreConfigCo eccCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
         final DateTime start = new DateTime();
@@ -364,8 +367,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             final int tabCount,
             final DeviceProfile device,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
-            final IEntityCentreConfig eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final EntityCentreConfigCo eccCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
         LOGGER.debug(tabs(tabCount) + "restoreMasterFunctionalEntity: started.");
@@ -411,8 +414,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             final int tabCount,
             final DeviceProfile device,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
-            final IEntityCentreConfig eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final EntityCentreConfigCo eccCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
         //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): started.");
@@ -437,7 +440,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                     !centreContextHolder.proxiedPropertyNames().contains("selectedEntities") ? centreContextHolder.getSelectedEntities() : new ArrayList<>(),
                     criteriaEntity,
                     actionConfig,
-                    !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null
+                    !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null,
+                    !centreContextHolder.proxiedPropertyNames().contains("customObject") ? centreContextHolder.getCustomObject() : new HashMap<>()
                     );
             //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder+centreContextHolder started. centreContext.");
             

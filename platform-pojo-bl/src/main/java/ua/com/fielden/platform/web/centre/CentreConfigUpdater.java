@@ -22,6 +22,7 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.validation.GreaterOrEqualValidator;
 import ua.com.fielden.platform.entity.validation.GreaterValidator;
 import ua.com.fielden.platform.entity.validation.MaxValueValidator;
+import ua.com.fielden.platform.web.centre.definers.CentreConfigUpdaterSortingValsDefiner;
 
 /**
  * Functional entity for updating centre configuration: centre's column visibility / order and centre's sorting.
@@ -29,7 +30,7 @@ import ua.com.fielden.platform.entity.validation.MaxValueValidator;
  * @author TG Team
  *
  */
-@CompanionObject(ICentreConfigUpdater.class)
+@CompanionObject(CentreConfigUpdaterCo.class)
 // !@MapEntityTo -- here the entity is not persistent intentionally
 public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionModification<String> {
 

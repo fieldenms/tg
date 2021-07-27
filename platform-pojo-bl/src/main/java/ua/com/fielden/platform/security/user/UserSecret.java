@@ -27,7 +27,7 @@ import ua.com.fielden.platform.entity.annotation.Unique;
 @KeyTitle("User")
 @KeyType(User.class)
 @MapEntityTo
-@CompanionObject(IUserSecret.class)
+@CompanionObject(UserSecretCo.class)
 @DenyIntrospection
 public class UserSecret extends AbstractPersistentEntity<User> {
 

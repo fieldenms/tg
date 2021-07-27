@@ -14,7 +14,6 @@ import java.util.function.Function;
 import org.apache.log4j.Logger;
 import org.junit.Test;
 
-import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.ISecurityToken;
@@ -30,6 +29,7 @@ import ua.com.fielden.platform.security.tokens.compound_master_menu.TgCompoundEn
 import ua.com.fielden.platform.security.tokens.compound_master_menu.TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem_CanAccess_Token;
 import ua.com.fielden.platform.security.tokens.open_compound_master.OpenTgCompoundEntityMasterAction_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.AttachmentMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.DashboardRefreshFrequencyMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.TgCloseLeaveExampleDetailMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.TgCloseLeaveExampleDetailUnpersistedMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.TgCloseLeaveExampleMaster_CanOpen_Token;
@@ -46,6 +46,12 @@ import ua.com.fielden.platform.security.tokens.open_simple_master.TgPersistentCo
 import ua.com.fielden.platform.security.tokens.open_simple_master.TgPersistentEntityWithPropertiesMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.UserMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.UserRoleMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequencyUnit_CanReadModel_Token;
+import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequencyUnit_CanRead_Token;
+import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanDelete_Token;
+import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanReadModel_Token;
+import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanRead_Token;
+import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanSave_Token;
 import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntityChild_CanDelete_Token;
@@ -70,6 +76,7 @@ import ua.com.fielden.platform.security.tokens.user.User_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.user.User_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.user.User_CanSave_Token;
 import ua.com.fielden.platform.security.tokens.web_api.GraphiQL_CanExecute_Token;
+import ua.com.fielden.platform.security.user.UserAndRoleAssociationCo;
 import ua.com.fielden.platform.security.user.SecurityTokenInfo;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
@@ -201,7 +208,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         updater.setRemovedIds(removedIds);
         
         // removal of available entity
-        this.<IUserAndRoleAssociation, UserAndRoleAssociation>co$(UserAndRoleAssociation.class).removeAssociation(setOf(userToRole2));
+        this.<UserAndRoleAssociationCo, UserAndRoleAssociation>co$(UserAndRoleAssociation.class).removeAssociation(setOf(userToRole2));
         co$(UserRole.class).batchDelete(listOf(role2.getId()));
         
         try {
@@ -366,6 +373,13 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
             userRoleAssociation_CanRead, userRoleAssociation_CanReadModel,
             userRolesUpdater_CanExecute, userRoleTokensUpdater_CanExecute,
             attachment_CanSave, attachment_CanRead, attachment_CanReadModel, attachment_CanDelete, createTokenInfo.apply(AttachmentMaster_CanOpen_Token.class), attachmentDownload_CanExecute,
+            createTokenInfo.apply(DashboardRefreshFrequencyUnit_CanRead_Token.class),
+            createTokenInfo.apply(DashboardRefreshFrequencyUnit_CanReadModel_Token.class),
+            createTokenInfo.apply(DashboardRefreshFrequency_CanSave_Token.class),
+            createTokenInfo.apply(DashboardRefreshFrequency_CanRead_Token.class),
+            createTokenInfo.apply(DashboardRefreshFrequency_CanReadModel_Token.class),
+            createTokenInfo.apply(DashboardRefreshFrequency_CanDelete_Token.class),
+            createTokenInfo.apply(DashboardRefreshFrequencyMaster_CanOpen_Token.class),
             canRead, canReadModel,
             
             createTokenInfo.apply(TgCloseLeaveExampleDetailMaster_CanOpen_Token.class),

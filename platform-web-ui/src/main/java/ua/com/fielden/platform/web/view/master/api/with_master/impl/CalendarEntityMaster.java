@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.view.master.api.with_master.impl;
 
+import static java.util.Optional.empty;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.PRIMARY_RESULT_SET;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.ENTITY_TYPE;
@@ -8,8 +9,6 @@ import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuild
 
 import java.util.LinkedHashSet;
 import java.util.Optional;
-
-import org.apache.commons.lang3.StringUtils;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomElement;
@@ -34,10 +33,25 @@ public class CalendarEntityMaster<T extends AbstractEntity<?>> implements IMaste
     private final IRenderable renderable;
     private final  EntityActionConfig editAction;
 
+    /**
+     * Creates {@link CalendarEntityMaster} for concrete entity type with from / to date properties.
+     * 
+     * @param entityType
+     * @param calendarComponentUri -- 'tg-fullcalendar' component URI or URI of the component that extends 'tg-fullcalendar'
+     * @param eventKeyProp -- property name to be displayed as titles in calendar events and tooltips
+     * @param eventDescProp -- property name to be displayed as descriptions in calendar events and tooltips
+     * @param eventFromProp -- property name to be used as start date of calendar event
+     * @param eventToProp -- property name to be used as finish date of calendar event
+     * @param colorProp -- property name to be used as background colour of calendar event
+     * @param colorTitleProp -- property name to be used as title of calendar event's colour
+     * @param colorDescProp -- property name to be used as description of calendar event's colour
+     * @param editAction -- action to edit calendar events
+     */
     public CalendarEntityMaster(
             final Class<T> entityType,
+            final String calendarComponentUri,
             final String eventKeyProp,
-            final String eventDescProp,
+            final Optional<String> eventDescProp,
             final String eventFromProp,
             final String eventToProp,
             final String colorProp,
@@ -48,9 +62,9 @@ public class CalendarEntityMaster<T extends AbstractEntity<?>> implements IMaste
         this.editAction = editAction;
 
         final LinkedHashSet<String> importPaths = new LinkedHashSet<>();
-        importPaths.add("components/fullcalendar/tg-fullcalendar");
+        importPaths.add(calendarComponentUri);
 
-        final DomElement calendar = new DomElement("tg-fullcalendar")
+        final DomElement calendar = new DomElement(calendarComponentUri.substring(calendarComponentUri.lastIndexOf("/") + 1))
                 .attr("id", "calendar")
                 .attr("custom-event-target", "[[customEventTarget]]")
                 .attr("context-retriever", "[[contextRetriever]]")
@@ -58,7 +72,7 @@ public class CalendarEntityMaster<T extends AbstractEntity<?>> implements IMaste
                 .attr("centre-state", "[[centreState]]")
                 .attr("data-change-reason", "[[dataChangeReason]]")
                 .attr("event-key-property", eventKeyProp)
-                .attr("event-desc-property", StringUtils.isEmpty(eventDescProp) ? "" : eventDescProp)
+                .attr("event-desc-property", eventDescProp.orElse(""))
                 .attr("event-from-property", eventFromProp)
                 .attr("event-to-property", eventToProp)
                 .attr("color-property", colorProp)
@@ -114,7 +128,7 @@ public class CalendarEntityMaster<T extends AbstractEntity<?>> implements IMaste
 
     @Override
     public Optional<Class<? extends IValueMatcherWithContext<T, ?>>> matcherTypeFor(final String propName) {
-        return Optional.empty();
+        return empty();
     }
 
 }

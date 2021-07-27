@@ -21,13 +21,13 @@ import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 /**
- * DAO implementation for companion object {@link IEntityExportAction}.
+ * DAO implementation for companion object {@link EntityExportActionCo}.
  *
  * @author TG Team
  *
  */
 @EntityType(EntityExportAction.class)
-public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> implements IEntityExportAction {
+public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> implements EntityExportActionCo {
     private final ICriteriaEntityRestorer criteriaEntityRestorer;
 
     @Inject

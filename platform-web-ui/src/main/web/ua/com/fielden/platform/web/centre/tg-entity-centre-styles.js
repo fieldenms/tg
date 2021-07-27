@@ -15,7 +15,7 @@ styleElement.innerHTML = `
             paper-icon-button.revers {
                 transform: scale(-1, 1);
             }
-            .pagintaion-text {
+            .pagination-text {
                 @apply --layout-horizontal;
                 @apply --layout-center;
             }

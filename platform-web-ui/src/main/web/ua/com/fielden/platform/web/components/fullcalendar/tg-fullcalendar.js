@@ -79,7 +79,7 @@ const template = html`
             text-overflow: ellipsis;
         }
     </style>
-    <slot id="editAction" name="calendar-action"></slot>
+    <slot id="editActionSlot" name="calendar-action"></slot>
     <tg-flex-layout class="toolbar" when-desktop="[[_desktopToolbarLayout]]" when-mobile="[[_mobileToolbarLayout]]">
         <div class="left-toolbar">
             <paper-icon-button icon="event" on-tap="_today"></paper-icon-button>
@@ -105,7 +105,7 @@ const template = html`
         </div>
     </iron-dropdown>`;
     
-class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElement) {
+export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElement) {
 
     static get template() { 
         return template;
@@ -113,16 +113,40 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
 
     static get properties() {
         return {
+            /**
+             * Entities to be bound to calendar component as events with from / to dates.
+             */
             entities: {
                 type: Array,
                 value: () => []
             },
+            /**
+             * The property to be used as title for the event and in its tooltip.
+             */
             eventKeyProperty: String,
+            /**
+             * The property to be used as description for the event and in its tooltip.
+             */
             eventDescProperty: String,
+            /**
+             * The property to be used as start date of the event.
+             */
             eventFromProperty: String,
+            /**
+             * The property to be used as finish date of the event.
+             */
             eventToProperty: String,
+            /**
+             * The property to be used as background colour of the event.
+             */
             colorProperty: String,
+            /**
+             * The property to be used as title of the event's colour.
+             */
             colorTitleProperty: String,
+            /**
+             * The property to be used as description of the event's colour.
+             */
             colorDescProperty: String,
             currentView: {
                 type: String,
@@ -162,6 +186,7 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
         this._desktopToolbarLayout = ['horizontal', 'justified', 'center', [], [], []];
         this._mobileToolbarLayout = [['justified', 'center', [], []], ['select:pos=center']];
 
+        // configures calendar
         this._calendar = new FullCalendar.Calendar(this.$.calendarContainer, {
             initialView: 'dayGridMonth',
             headerToolbar: false,
@@ -176,32 +201,7 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
             },
             eventDidMount: (eventInfo) => {
                 if (eventInfo.event.extendedProps.entity && eventInfo.el) {
-                    const titleValues = [];
-                    const entity = eventInfo.event.extendedProps.entity;
-                    titleValues.push({
-                        title: this._reflector.getEntityTypeProp(entity, "key").title(),
-                        value: "<b>" + entity.get("key") + "</b><br><i>" + entity.get("desc") + "</i>"
-                    });
-                    titleValues.push({
-                        title: this._reflector.getEntityTypeProp(entity, "waType").title(),
-                        value: "<b>" + entity.get("waType.key") + "</b><br><i>" + entity.get("waType.desc") + "</i>"
-                    });
-                    entity.get(this.eventFromProperty) && titleValues.push({
-                        title: this._reflector.getEntityTypeProp(entity, this.eventFromProperty).title(),
-                        value: "<b>" + this._reflector.tg_toString(entity.get(this.eventFromProperty), entity.type(), this.eventFromProperty, { display: true, locale: this._appConfig.locale }) + "</b>"
-                    });
-                    entity.get(this.eventToProperty) && titleValues.push({
-                        title: this._reflector.getEntityTypeProp(entity, this.eventToProperty).title(),
-                        value: "<b>" + this._reflector.tg_toString(entity.get(this.eventToProperty), entity.type(), this.eventToProperty, { display: true, locale: this._appConfig.locale }) + "</b>"
-                    });
-                    titleValues.push({
-                        title: "With action",
-                        value: "<b>Work Activity</b><br><i>Edit Work Activity</i>"
-                    });
-                    const tooltip = "<table>" +
-                        titleValues.map(entry => "<tr><td valign='top'>" + entry.title + ": </td><td valign='top'>" + entry.value + "</td></tr>").join("\n") +
-                    "</table>";
-                    eventInfo.el.setAttribute("tooltip-text", tooltip);
+                    eventInfo.el.setAttribute("tooltip-text", this.getTooltip(eventInfo.event.extendedProps.entity));
                 }
             },
             eventTimeFormat: {
@@ -214,9 +214,46 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
           this._calendar.render();
           this.currentView = 'dayGridMonth';
           //Initialising edit action
-          this._editAction = this.$.editAction.assignedNodes()[0]
+          this._editAction = this.$.editActionSlot.assignedNodes()[0];
           //initialise legend dropdown
           this.$.dropdown.positionTarget= this.$.calendarTrigger;
+    }
+
+    getTooltip(entity) {
+        const tooltipValues = [];
+        tooltipValues.push(this.getTooltipForProp(entity, this.eventKeyProperty, this.eventKeyProperty, this.eventDescProperty));
+        tooltipValues.push(this.getTooltipForProp(entity, this.colorTitleProperty, this.colorTitleProperty, this.colorDescProperty));
+        entity.get(this.eventFromProperty) && tooltipValues.push(this.getTooltipForDateProp(entity, this.eventFromProperty));
+        entity.get(this.eventToProperty) && tooltipValues.push(this.getTooltipForDateProp(entity, this.eventToProperty));
+        tooltipValues.push(this.getTooltipForAction(this._editAction));
+        return this.makeTableForTooltip(tooltipValues);
+    }
+
+    getTooltipForProp(entity, titleProp, keyProp, descProp) {
+        return {
+            title: this._reflector.getEntityTypeProp(entity, titleProp).title(),
+            value: "<b>" + entity.get(keyProp) + "</b>" + (descProp && entity.get(descProp) ? "<br><i>" + entity.get(descProp) + "</i>": "")
+        }
+    }
+
+    getTooltipForDateProp(entity, dateProp) {
+        return {
+            title: this._reflector.getEntityTypeProp(entity, dateProp).title(),
+            value: "<b>" + this._reflector.tg_toString(entity.get(dateProp), entity.type(), dateProp, { display: true, locale: this._appConfig.locale }) + "</b>"
+        };
+    }
+
+    getTooltipForAction(action) {
+        return {
+            title: "With action",
+            value: `<b>${action.shortDesc}</b><br><i>${action.longDesc}</i>`
+        };
+    }
+
+    makeTableForTooltip(tooltipValues) {
+        return "<table>" +
+            tooltipValues.map(entry => `<tr><td valign='top'>${entry.title}: </td><td valign='top'>${entry.value}</td></tr>`).join("\n") +
+            "</table>"
     }
 
     _prev() {
@@ -248,6 +285,9 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
         this.$.dropdown.open();
     }
 
+    /**
+     * Updates calendar data; moves it to the date of the chronologically first event (if any); re-renders calendar.
+     */
     _updateEventSource(entities, eventKeyProperty, eventDescProperty, eventFromProperty, eventToProperty, _calendar) {
         if (allDefined(entities, eventKeyProperty, eventDescProperty, eventFromProperty, eventToProperty) && _calendar) {
             _calendar.getEvents().forEach(event => event.remove());
@@ -261,7 +301,7 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
                     extendedProps: {
                         entity: entity
                     },
-                    title: entity.get(eventKeyProperty) + (eventDescProperty ? " - "+ entity.get(eventDescProperty) : ""),
+                    title: entity.get(eventKeyProperty) + (eventDescProperty && entity.get(eventDescProperty) ? " - "+ entity.get(eventDescProperty) : ""),
                     start: entity.get(eventFromProperty),
                     end: entity.get(eventToProperty),
                     backgroundColor: eventColor ? '#' + eventColor["hashlessUppercasedColourValue"]  : "#3788d8",
@@ -284,6 +324,9 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
         }
     }
 
+    /**
+     * Updates legend data; re-renders legend.
+     */
     _calcLegendItems(entities, colorProperty, colorTitleProperty, colorDescProperty) {
         if (!entities || !colorProperty || !colorTitleProperty || !colorDescProperty) {
             return {};           
@@ -310,7 +353,7 @@ class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], PolymerElem
                 const colourA = parseInt(a.color.substring(1), 16);
                 const colourB = parseInt(b.color.substring(1), 16)
                 const byColour = colourB - colourA;
-                return byColour !== 0 ? byColour : a.key.localeCompare(a.key);
+                return byColour !== 0 ? byColour : a.key.localeCompare(b.key);
             });
     }
 

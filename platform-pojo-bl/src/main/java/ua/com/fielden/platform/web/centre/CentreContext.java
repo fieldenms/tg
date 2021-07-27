@@ -1,11 +1,14 @@
 package ua.com.fielden.platform.web.centre;
 
 import static java.lang.String.format;
+import static java.util.Collections.unmodifiableMap;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
 import java.util.stream.Collectors;
@@ -65,6 +68,11 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
 
     private String chosenProperty;
     
+    /**
+     * Bag of custom properties in the context. Usually contains some technical properties for context restoration and may contain custom properties provided by client-side application.
+     */
+    private final Map<String, Object> customObject = new LinkedHashMap<>();
+    
     public T getCurrEntity() {
         if (selectedEntities.size() == 1) {
             return selectedEntities.get(0);
@@ -121,13 +129,14 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
         return format("Centre Context: [\n"
             + "    selectionCrit = %s,\n"
             + "    selectedEntities = %s,\n"
-            + "    masterEntity=%s,\n"
-            + "    computation=%s,\n"
-            + "    chosenProperty=%s\n"
-            + "]", selectionCrit, selectedEntities, masterEntity, computation, chosenProperty);
+            + "    masterEntity = %s,\n"
+            + "    computation = %s,\n"
+            + "    chosenProperty = %s,\n"
+            + "    customObject = %s\n"
+            + "]", selectionCrit, selectedEntities, masterEntity, computation, chosenProperty, customObject);
     }
 
-    public CentreContext<T,M> setComputation(final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation) {
+    public CentreContext<T, M> setComputation(final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation) {
         this.computation = Optional.of(computation);
         return this;
     }
@@ -140,7 +149,22 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
         return chosenProperty;
     }
     
-    public void setChosenProperty(final String chosenProperty) {
+    public CentreContext<T, M> setChosenProperty(final String chosenProperty) {
         this.chosenProperty = chosenProperty;
+        return this;
     }
+    
+    public CentreContext<T, M> setCustomObject(final Map<String, Object> customObject) {
+        this.customObject.clear();
+        this.customObject.putAll(customObject);
+        return this;
+    }
+    
+    /**
+     * Bag of custom properties in the context. Usually contains some technical properties for context restoration and may contain custom properties provided by client-side application.
+     */
+    public Map<String, Object> getCustomObject() {
+        return unmodifiableMap(customObject);
+    }
+    
 }

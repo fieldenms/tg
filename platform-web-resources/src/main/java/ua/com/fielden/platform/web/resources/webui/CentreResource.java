@@ -39,9 +39,9 @@ import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
+import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
+import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -64,7 +64,6 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
     private final RestServerUtil restUtil;
     
     private final Class<? extends MiWithConfigurationSupport<?>> miType;
-    private final EntityCentre<AbstractEntity<?>> centre;
     private final Optional<String> saveAsName;
     
     private final IUserProvider userProvider;
@@ -98,7 +97,6 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
         this.restUtil = restUtil;
         
         miType = centre.getMenuItemType();
-        this.centre = centre;
         this.saveAsName = saveAsName;
         this.userProvider = userProvider;
         this.companionFinder = companionFinder;
@@ -117,8 +115,8 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
     public Representation discard(final Representation envelope) {
         return handleUndesiredExceptions(getResponse(), () -> {
             final User user = userProvider.getUser();
-            final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
-            final IMainMenuItem mmiCompanion = companionFinder.find(MainMenuItem.class);
+            final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
+            final MainMenuItemCo mmiCompanion = companionFinder.find(MainMenuItem.class);
             final IUser userCompanion = companionFinder.find(User.class);
             
             final Map<String, Object> wasRunHolder = restoreModifiedPropertiesHolderFrom(envelope, restUtil);
@@ -136,10 +134,8 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
                     // it is necessary to use "fresh" instance of cdtme (after the discarding process)
                     newFreshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                     updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
-                    // must leave current configuration preferred after deletion (only for named configs -- always true for inherited ones, and for non autoRun centres)
-                    if (!centre.isRunAutomatically()) {
-                        makePreferred(user, miType, saveAsName, device(), companionFinder);
-                    }
+                    // must leave current configuration preferred after deletion (only for named configs -- always true for inherited ones)
+                    makePreferred(user, miType, saveAsName, device(), companionFinder, webUiConfig);
                     actualSaveAsName = saveAsName;
                 } else { // inherited from shared
                     final Optional<EntityCentreConfig> upstreamConfig = updateInheritedFromShared(loadableConfig.get().getConfig().getConfigUuid(), miType, device(), saveAsName, user, eccCompanion, empty());
@@ -164,7 +160,7 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
     /**
      * Discards configuration that represents own save-as configuration (possibly converted from inherited), default or link.
      */
-    private ICentreDomainTreeManagerAndEnhancer discardOwnSaveAsConfig(final User user, final IEntityCentreConfig eccCompanion, final IMainMenuItem mmiCompanion, final IUser userCompanion, final Optional<String> actualSaveAsName) {
+    private ICentreDomainTreeManagerAndEnhancer discardOwnSaveAsConfig(final User user, final EntityCentreConfigCo eccCompanion, final MainMenuItemCo mmiCompanion, final IUser userCompanion, final Optional<String> actualSaveAsName) {
         final ICentreDomainTreeManagerAndEnhancer updatedSavedCentre = updateCentre(user, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
         // discards fresh centre's changes (fresh centre could have no changes)
         return commitCentreWithoutConflicts(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), updatedSavedCentre, null /* newDesc */, webUiConfig, eccCompanion, mmiCompanion, userCompanion);

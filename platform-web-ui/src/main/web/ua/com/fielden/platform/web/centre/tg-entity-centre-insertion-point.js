@@ -111,12 +111,12 @@ const template = html`
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning tg-entity-centre-styles paper-material-styles"></style>
     <div id="pm" class="layout vertical flex" detached$="[[detachedView]]">
-        <div id="insertionPointContent" tabindex$="[[_getTabIndex(separateView)]]" class="layout vertical flex relative">
-            <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, separateView)]]">
+        <div id="insertionPointContent" tabindex$="[[_getTabIndex(alternativeView)]]" class="layout vertical flex relative">
+            <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]">
                 <span class="title-text truncate" style="margin-left:16px;" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
                 <paper-icon-button class="title-bar-button expand-colapse-button" style="margin-left:10px;margin-right:2px;" icon="icons:open-in-new" on-tap="_expandColapseTap"></paper-icon-button>
             </div>
-            <tg-responsive-toolbar id="viewToolbar" hidden$="[[!_isToolbarVisible(detachedView, separateView, isAttached)]]">
+            <tg-responsive-toolbar id="viewToolbar" hidden$="[[!_isToolbarVisible(detachedView, alternativeView, isAttached)]]">
                 <slot id="entitySpecificActions" slot="entity-specific-action" name="entity-specific-action"></slot>
                 <slot id="standartActions" slot="standart-action" name="standart-action"></slot>
             </tg-responsive-toolbar>
@@ -144,9 +144,9 @@ Polymer({
 
     properties: {
         /**
-         * Indicates whether this view is represented as separete view or side-by-side with main EGI
+         * Indicates whether this view is represented as alternative view or side-by-side with main EGI
          */
-        separateView: {
+        alternativeView: {
             type: Boolean,
             value: false,
             reflectToAttribute: true
@@ -225,6 +225,9 @@ Polymer({
             type: Object,
             observer: '_centreSelectionChanged'
         },
+        /**
+         * The state of parent entity centre. This enables locking of alternative view when parent centre is in VIEW state.
+         */
         centreState: {
             type: String,
             observer: "_centreStateChanged"
@@ -265,17 +268,13 @@ Polymer({
             type: Object,
             value: null
         },
-        /**
-         * The dialog for detachedView insertion point.
-         */
-        _dialog: Object,
 
         _ownKeyBindings: {
             type: Object
         }
     },
 
-    observers: ['_adjustView(detachedView, separateView)'],
+    observers: ['_adjustView(detachedView, alternativeView)'],
 
     ready: function () {
         this.triggerElement = this.$.insertionPointContent;
@@ -422,13 +421,13 @@ Polymer({
                     if (promise) {
                         return promise
                             .then(function () {
-                                self._adjustView(self.detachedView, self.separateView);
+                                self._adjustView(self.detachedView, self.alternativeView);
                                 customAction.restoreActiveElement();
                             });
                     } else {
                         return Promise.resolve()
                             .then(function () {
-                                self._adjustView(self.detachedView, self.separateView);
+                                self._adjustView(self.detachedView, self.alternativeView);
                                 customAction.restoreActiveElement();
                             });
                     }
@@ -461,7 +460,10 @@ Polymer({
      */
     leave: function () {},
 
-    _adjustView: function (detachedView, separateView) {
+    /**
+     * Assigns sizes for insertion point depending on several states in which it can be: attached / detached (non-alternative view) and alternative view.
+     */
+    _adjustView: function (detachedView, alternativeView) {
         this.$.loadableContent.style.removeProperty("width");
         this.$.loadableContent.style.removeProperty("height");
         this.$.loadableContent.style.removeProperty("min-width");
@@ -474,7 +476,7 @@ Polymer({
                 this.$.loadableContent.style.minWidth = prefDim.width() + prefDim.widthUnit;
                 this.$.loadableContent.style.minHeight = prefDim.height() + prefDim.heightUnit;
             } 
-            if (separateView) {
+            if (alternativeView) {
                 this.style.width = "100%";
                 this.style.height = "100%";
             }
@@ -495,16 +497,23 @@ Polymer({
         tearDownEvent(event);
     },
 
-    _hasTitleBar: function (shortDesc, separateView) {
-        return !separateView && !!shortDesc;
+    /**
+     * Shows title bar only for non-alternative views with short description defined.
+     */
+    _hasTitleBar: function (shortDesc, alternativeView) {
+        return !alternativeView && !!shortDesc;
     },
 
-    _isToolbarVisible: function (detachedView, separateView, isAttached) {
-        return (detachedView || separateView) && (isAttached && (this.$.entitySpecificActions.assignedNodes().length > 0 || this.$.standartActions.assignedNodes().length > 0));
+    _isToolbarVisible: function (detachedView, alternativeView, isAttached) {
+        return (detachedView || alternativeView) && (isAttached && (this.$.entitySpecificActions.assignedNodes().length > 0 || this.$.standartActions.assignedNodes().length > 0));
     },
 
-    _getTabIndex: function (separateView) {
-        return separateView ? '-1' : '0';
+    /**
+     * As for selection crit / grid views, the tab index for alternative view should be -1 to enable targeting of keyboard events to 'tg-menu-item-view'.
+     * For simple insertion points, target of keyboard events should be this 'tg-entity-centre-insertion-point'.
+     */
+    _getTabIndex: function (alternativeView) {
+        return alternativeView ? '-1' : '0';
     },
 
     _shortcutPressed: function (e) {

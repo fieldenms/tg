@@ -64,9 +64,6 @@ public class WebView implements IExecutable {
             } else if (entityCentre != null) {
             	attrs.append("{");
             	attrs.append(format("uuid: \"%s\",", entityCentre.getName()));
-                if (entityCentre.isRunAutomatically()) {
-                    attrs.append("autoRun: true,");
-                }
                 if (entityCentre.shouldEnforcePostSaveRefresh()) {
                     attrs.append("enforcePostSaveRefresh: true,");
                 }
@@ -114,9 +111,6 @@ public class WebView implements IExecutable {
             } else if (entityCentre != null) {
                 final EntityCentreView entityCentreView = new EntityCentreView();
                 entityCentreView.setUuid(entityCentre.getName());
-                if (entityCentre.isRunAutomatically()) {
-                    entityCentreView.setAutoRun(true);
-                }
                 if (entityCentre.shouldEnforcePostSaveRefresh()) {
                     entityCentreView.setEnforcePostSaveRefresh(true);
                 }
