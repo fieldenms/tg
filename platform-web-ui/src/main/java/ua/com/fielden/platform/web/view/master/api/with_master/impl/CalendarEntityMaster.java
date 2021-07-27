@@ -35,8 +35,13 @@ public class CalendarEntityMaster<T extends AbstractEntity<?>> implements IMaste
     public CalendarEntityMaster(
             final Class<T> entityType,
             final String calendarComponentUri,
+            final String eventKeyProp,
+            final Optional<String> eventDescProp,
             final String eventFromProp,
             final String eventToProp,
+            final String colorProp,
+            final String colorTitleProp,
+            final String colorDescProp,
             final EntityActionConfig editAction) {
 
         this.editAction = editAction;
@@ -51,8 +56,13 @@ public class CalendarEntityMaster<T extends AbstractEntity<?>> implements IMaste
                 .attr("entities", "[[retrievedEntities]]")
                 .attr("centre-state", "[[centreState]]")
                 .attr("data-change-reason", "[[dataChangeReason]]")
+                .attr("event-key-property", eventKeyProp)
+                .attr("event-desc-property", eventDescProp.orElse(""))
                 .attr("event-from-property", eventFromProp)
-                .attr("event-to-property", eventToProp);
+                .attr("event-to-property", eventToProp)
+                .attr("color-property", colorProp)
+                .attr("color-title-property", colorTitleProp)
+                .attr("color-desc-property", colorDescProp);
 
         final FunctionalActionElement el = FunctionalActionElement.newEntityActionForMaster(editAction, 0);
         importPaths.add(el.importPath());
