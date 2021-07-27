@@ -186,6 +186,7 @@ export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], Poly
         this._desktopToolbarLayout = ['horizontal', 'justified', 'center', [], [], []];
         this._mobileToolbarLayout = [['justified', 'center', [], []], ['select:pos=center']];
 
+        // configures calendar
         this._calendar = new FullCalendar.Calendar(this.$.calendarContainer, {
             initialView: 'dayGridMonth',
             headerToolbar: false,
@@ -284,6 +285,9 @@ export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], Poly
         this.$.dropdown.open();
     }
 
+    /**
+     * Updates calendar data; moves it to the date of the chronologically first event (if any); re-renders calendar.
+     */
     _updateEventSource(entities, eventKeyProperty, eventDescProperty, eventFromProperty, eventToProperty, _calendar) {
         if (allDefined(entities, eventKeyProperty, eventDescProperty, eventFromProperty, eventToProperty) && _calendar) {
             _calendar.getEvents().forEach(event => event.remove());
@@ -320,6 +324,9 @@ export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], Poly
         }
     }
 
+    /**
+     * Updates legend data; re-renders legend.
+     */
     _calcLegendItems(entities, colorProperty, colorTitleProperty, colorDescProperty) {
         if (!entities || !colorProperty || !colorTitleProperty || !colorDescProperty) {
             return {};           

@@ -8,6 +8,12 @@ import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.minijs.JsCode;
 
+/**
+ * Configuration for toolbars available for entity centres, insertion points and alternative views.
+ * 
+ * @author TG Team
+ *
+ */
 public interface IToolbarConfig extends IRenderable, IImportable {
 
     public static final InnerTextElement topLevelPlacement = new InnerTextElement("<!-- GENERATED FUNCTIONAL ACTIONS: -->\n<!--@functional_actions-->");

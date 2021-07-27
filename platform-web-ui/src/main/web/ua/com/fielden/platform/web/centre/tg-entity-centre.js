@@ -205,7 +205,7 @@ Polymer({
         /**
          * Container of all views (selection criteria, egi, alternative views) to switch between them.
          */
-        _resultViews: {
+        _allViews: {
             type: Array,
             value: () => []
         },
@@ -282,23 +282,29 @@ Polymer({
         this._rightSplitterUpdater = this._rightSplitterUpdater.bind(this);
         this._leftInsertionPointContainerUpdater = this._leftInsertionPointContainerUpdater.bind(this);
         this._rightInsertionPointContainerUpdater = this._rightInsertionPointContainerUpdater.bind(this);
-        this._resultViews = [this.$.selectionView, 
+        this._allViews = [this.$.selectionView, 
             this.$.customEgiSlot.assignedNodes({ flatten: true })[0], 
             ...this.$.alternativeViewSlot.assignedNodes({ flatten: true })];
         this._confirm = this.confirm.bind(this);
 
+        // to properly focus first element (_pageSelectionChanged method), we wait for criteria entity to be loaded ...
         this.$.customCriteria.assignedNodes({ flatten: true })[0].addEventListener("_criteria-loaded-changed", (e) => {
             if(e.detail.value) {
-                this.$.views.addEventListener("iron-select", this._pageSelectionChanged.bind(this))
+                this.$.views.addEventListener("iron-select", this._pageSelectionChanged.bind(this));
+                //.. after selection criteria is loaded create promise that gets resolved when buttons become enabled.
                 new Promise((resolve, reject) => {
                     this._afterCriteriaLoadedPromise = resolve;
                 }).then((res) => {
-                    this.async(() => this._pageSelectionChanged({target: this.$.views}), 1);    
+                    // After buttons become enabled call _pageSelectionChanged to configure view bindings and to focus first focusable element.
+                    this.async(() => this._pageSelectionChanged({target: this.$.views}), 1);
                 });
             }
         });
     },
 
+    /**
+     * Listens when buttons become enabled and if there is promise that waits for that action then resolve that promise to focus first focusable element on current view.
+     */
     _buttonDisabledChanged: function (newValue) {
         if (!newValue && this._afterCriteriaLoadedPromise) {
             this._afterCriteriaLoadedPromise(newValue);
@@ -502,15 +508,18 @@ Polymer({
         return this.$.confirmationDialog;
     },
 
+    /**
+     * Configures current view binding; removes view binding for previous view; focuses first focusable element in current view.
+     */
     _pageSelectionChanged: function (event) {
         const target = event.target || event.srcElement;
         if (target === this.$.views) {
-            const prevView = this._resultViews[this._previousView];
-            const currentView = this._resultViews[this._selectedView];
+            const prevView = this._allViews[this._previousView];
+            const currentView = this._allViews[this._selectedView];
             this._configViewBindings(prevView, currentView);
             this.focusSelectedView();
             tearDownEvent(event);
-            (this._selectedView === 1 ? this.$.centreResultContainer : this._resultViews[this._selectedView]).fire("tg-centre-page-was-selected");
+            (this._selectedView === 1 ? this.$.centreResultContainer : this._allViews[this._selectedView]).fire("tg-centre-page-was-selected");
         }
     },
 
@@ -530,13 +539,13 @@ Polymer({
 
     focusSelectedView: function () {
         if (!isMobileApp()) {
-            const elementToFocus = this._getVisibleFocusableElementIn(this._resultViews[this._selectedView]);
-            if (this._selectedView !== 1 || !this._resultViews[1].isEditing()) {
+            const elementToFocus = this._getVisibleFocusableElementIn(this._allViews[this._selectedView]);
+            if (this._selectedView !== 1 || !this._allViews[1].isEditing()) {
                 if (elementToFocus) {
                     elementToFocus.focus();
                     this.$.views.scrollTop = this._selectedView === 1 ? 0 : this.$.views.scrollTop;
                 } else {
-                    this._resultViews[this._selectedView].keyEventTarget.focus();
+                    this._allViews[this._selectedView].keyEventTarget.focus();
                 }
             }
             if (this._selectedView === 0) {
@@ -551,13 +560,13 @@ Polymer({
     },
 
     addOwnKeyBindings: function () {
-        const view = this._resultViews[this._selectedView];
-        const previousView = this._resultViews[this._previousView];
+        const view = this._allViews[this._selectedView];
+        const previousView = this._allViews[this._previousView];
         this._configViewBindings(previousView, view);
     },
 
     removeOwnKeyBindings: function () {
-        const view = this._resultViews[this._selectedView];
+        const view = this._allViews[this._selectedView];
         view.removeOwnKeyBindings();
     },
 

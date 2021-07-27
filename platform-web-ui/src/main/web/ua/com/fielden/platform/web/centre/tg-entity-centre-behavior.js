@@ -580,10 +580,10 @@ const TgEntityCentreBehaviorImpl = {
         self._selectedView = 0;
         self._showProgress = false;
         // Configures the egi's margin.
-        const egiInsertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point:not([separate-view])');
+        const egiInsertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point:not([alternative-view])');
         this.$.egi.showMarginAround = egiInsertionPoints.length > 0;
         // Configure all views to be able to switch between them
-        const altViews = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point[separate-view]');
+        const altViews = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point[alternative-view]');
         this.allViews = [this.$.selection_criteria, this.$.egi, ...altViews];
         // Create result views to create centre view switch button
         this.resultViews = [{index: 1, icon: this.$.egi.icon, iconStyle: this.$.egi.iconStyle, title: "Grid"}, ...createViewsFromInsPoints([...altViews])];
@@ -1036,6 +1036,9 @@ const TgEntityCentreBehaviorImpl = {
         });
     },
 
+    /**
+     * Activates view (selection crit, grid or alternative) by 'index'. Saves preferred view by initiating 'CentrePreferredViewUpdater' action.
+     */
     _activateView: function (index) {
         this.async(() => {
             if (index < 0 || index >= this.allViews.length) {
@@ -1056,6 +1059,7 @@ const TgEntityCentreBehaviorImpl = {
             }   
         }, 100);
     },
+
     /**
      * Activate the view with selection criteria.
      */
@@ -1288,6 +1292,10 @@ const TgEntityCentreBehaviorImpl = {
         return _buttonDisabled ? 'cursor:initial' : '';
     },
 
+    /**
+     * In case if 'newPreferredView' is not in available view boundaries, activates last available view and initiates save. It is possible in case
+     * where some previously available view was deleted from Centre DSL configuration during application evolution.
+     */
     _preferredViewChanged: function (newPreferredView) {
         if (newPreferredView < 0 || newPreferredView >= this.allViews.length) {
             this.preferredView = this.allViews.length - 1;

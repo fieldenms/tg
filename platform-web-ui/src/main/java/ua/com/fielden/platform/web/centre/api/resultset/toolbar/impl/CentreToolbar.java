@@ -14,18 +14,40 @@ import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.minijs.JsCode;
 
+/**
+ * Configuration for default toolbars available for entity centres and alternative views.
+ * This implementation can be overridden to provide adjustments for button placement and contents.
+ * 
+ * @author TG Team
+ *
+ */
 public class CentreToolbar implements IToolbarConfig {
 
     private final int switchViewButtonWidth;
 
+    /**
+     * Creates standard {@link CentreToolbar}. Standard switch view button width will be 60 (if present).
+     * 
+     * @param switchViewButtonWidth
+     */
     public CentreToolbar() {
         this(60); //Default width of switch view button
     }
 
+    /**
+     * Creates standard {@link CentreToolbar} with custom switch view button width (if present).
+     * 
+     * @param switchViewButtonWidth
+     */
     public CentreToolbar(final int switchViewButtonWidth) {
         this.switchViewButtonWidth = switchViewButtonWidth;
     }
 
+    /**
+     * Creates standard {@link CentreToolbar} with custom switch view button width (if present).
+     * 
+     * @param switchViewButtonWidth
+     */
     public static CentreToolbar withSwitchViewButtonWidth(final int switchViewButtonWidth) {
         return new CentreToolbar(switchViewButtonWidth);
     }
@@ -103,7 +125,7 @@ public class CentreToolbar implements IToolbarConfig {
                         .attr("disabled$", "[[canNotPrev(pageNumber, isRunning)]]")
                         .attr("tooltip-text", "Previous page, Ctrl&nbsp+&nbsp<span style=\"font-size:18px;font-weight:bold\">&#8592</span>"))
                 .add(new DomElement("span")
-                        .clazz("standart-action pagintaion-text")
+                        .clazz("standart-action pagination-text")
                         .style("white-space:nowrap")
                         .attr("slot", slot)
                         .add(new InnerTextElement("[[currPageFeedback(pageNumberUpdated, pageCountUpdated)]]")))
