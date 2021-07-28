@@ -12,6 +12,7 @@ import { Controls, leafletDrawStylesName, leafletControlloadingStylesName, leafl
 import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgAppConfig } from '/app/tg-app-config.js';
+import { RunActions } from '/resources/centre/tg-selection-criteria-behavior.js';
 
 const tgGisComponentStyles = `
     .bool-true-icon {
@@ -46,6 +47,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     );
 
     tgMap.retrivedEntitiesHandler = function (newRetrievedEntities) {
+        self._markerCluster.setShouldFitToBounds(tgMap.dataChangeReason === RunActions.run); // only fitToBounds on Run action, not on Navigate / Refresh
         self.initReload();
         self.clearAll();
 
@@ -58,11 +60,6 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
 
         self._markerCluster.getGisMarkerClusterGroup().addLayer(self._geoJsonOverlay);
         self.finishReload();
-
-        // In standard cases ShouldFitToBounds is always true. However, sse (event sourcing) dataHandlers could change ShouldFitToBounds to false.
-        // In such cases, the map will not be fitted to bounds (after newRetrievedEntities appear), but ShouldFitToBounds after that should become true again.
-        // Please note that, centre running, refreshing, navigating between pages provides automatic fittingToBounds.
-        self._markerCluster.setShouldFitToBounds(true);
     };
     self.tgMap = tgMap;
 

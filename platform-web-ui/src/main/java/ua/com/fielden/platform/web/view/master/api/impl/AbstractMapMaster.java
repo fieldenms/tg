@@ -38,6 +38,7 @@ public abstract class AbstractMapMaster<T extends AbstractFunctionalEntityWithCe
                 .attr("column-properties-mapper", "{{columnPropertiesMapper}}")
                 .attr("centre-selection", "[[centreSelection]]")
                 .attr("custom-event-target", "[[customEventTarget]]")
+                .attr("data-change-reason", "[[dataChangeReason]]")
                 .attr("retrieved-entities", "{{retrievedEntities}}")
                 .attr("retrieved-totals", "{{retrievedTotals}}");
 
