@@ -12,14 +12,15 @@ export const Select = function (_map, _getLayerById, _markerFactory, tgMap, find
     self._featureToLeafletIds = {};
     self._prevId = null;
     self._tgMap = tgMap;
+    self.getLayerIdByEntity = entity => 
+        entity.properties && entity.properties.layerId 
+            ? entity.properties.layerId
+            : (typeof entity.arcGisId !== 'undefined' ? getLayerByGlobalId(entity.get('arcGisId'))._leaflet_id : null);
 
     self._centreSelectionHandler = function (newSelection) {
         if (newSelection.entities.length == 1) {
             const selectionEntity = newSelection.entities[0];
-            const layerId = 
-                selectionEntity.entity.properties && selectionEntity.entity.properties.layerId 
-                    ? selectionEntity.entity.properties.layerId
-                    : (typeof selectionEntity.entity.arcGisId !== 'undefined' ? getLayerByGlobalId(selectionEntity.entity.get('arcGisId'))._leaflet_id : null);
+            const layerId = self.getLayerIdByEntity(selectionEntity.entity);
             if (selectionEntity.select) {
                 self._silentlySelectById(layerId);
             } else {

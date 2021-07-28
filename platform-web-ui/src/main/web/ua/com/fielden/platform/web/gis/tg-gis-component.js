@@ -10,7 +10,7 @@ import { MarkerCluster, leafletMarkerClusterStylesName, tgMarkerClusterStylesNam
 import { Select } from '/resources/gis/tg-select.js';
 import { Controls, leafletDrawStylesName, leafletControlloadingStylesName, leafletEasybuttonStylesName } from '/resources/gis/tg-controls.js';
 import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
-import { TgReflector } from '/app/tg-reflector.js';
+import { TgReflector, _isEntity } from '/app/tg-reflector.js';
 import { TgAppConfig } from '/app/tg-app-config.js';
 import { RunActions } from '/resources/centre/tg-selection-criteria-behavior.js';
 
@@ -47,8 +47,21 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     );
 
     tgMap.retrivedEntitiesHandler = function (newRetrievedEntities) {
-        self._markerCluster.setShouldFitToBounds(tgMap.dataChangeReason === RunActions.run); // only fitToBounds on Run action, not on Navigate / Refresh
+        const isRunAction = tgMap.dataChangeReason === RunActions.run;
+        self._markerCluster.setShouldFitToBounds(isRunAction); // only fitToBounds on Run action, not on Navigate / Refresh
         self.initReload();
+        const _select = self._select; // tg-select component (can be not initialised yet)
+        const prevId = _select ? _select._prevId : null; // leaflet id of previously selected layer
+        let prevEntity = null;
+        let wasPopupOpen = false;
+        if (!isRunAction && prevId !== null) { // if there was some selected layer; (note for navigation: potentially selected entity can be moved to e.g. the next page when going forward and it would be nice to preserve selection and popup for this entity too)
+            _select._prevId = null; // clear that selected layer information
+            const prevLayer = _select._getLayerById(prevId); // capture selected layer (that will be removed from map soon)
+            if (prevLayer) {
+                wasPopupOpen = prevLayer.isPopupOpen(); // capture indicator whether the popup was opened on it
+                prevEntity = _select.findEntityBy(prevLayer.feature); // get the entity (that will be removed from map soon) from which that layer was formed
+            }
+        }
         self.clearAll();
 
         // Shallow copy of this array is needed to be done: not to alter original array, that is bound to EGI.
@@ -60,6 +73,23 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
 
         self._markerCluster.getGisMarkerClusterGroup().addLayer(self._geoJsonOverlay);
         self.finishReload();
+        if (_isEntity(prevEntity)) { // if there was previously selected layer (with or without popup) and corresponding entity was found
+            const foundEntity = self._entities.find(entity => self._reflector.equalsEx(entity, prevEntity)); // find new entity that is equal to previous entity (if present)
+            if (foundEntity) {
+                const foundLayerId = _select.getLayerIdByEntity(foundEntity); // find leaflet layer id of the new corresponding layer (if present)
+                if (foundLayerId) {
+                    _select._silentlySelectById(foundLayerId); // perform selection of new leaflet layer to preserve selected state of the same entity on map after refreshing
+                    const foundLayer = _select._getLayerById(foundLayerId);
+                    if (foundLayer && wasPopupOpen) { // if popup was open previously
+                        if (!foundEntity.properties.popupContentInitialised) { // initialise popupContent on new entity
+                            foundLayer.bindPopup(self.createPopupContent(foundEntity)); // and bind updated popup
+                            foundEntity.properties.popupContentInitialised = true;
+                        }
+                        foundLayer.openPopup(); // and then open updated popup to preserve it on the same entity on map after refreshing
+                    }
+                }
+            }
+        }
     };
     self.tgMap = tgMap;
 
@@ -278,9 +308,6 @@ GisComponent.prototype.finishReload = function () {
 GisComponent.prototype.clearAll = function () {
     this._geoJsonOverlay.clearLayers();
     this._markerCluster.getGisMarkerClusterGroup().clearLayers();
-    if (this._select) {
-        this._select._prevId = null;
-    }
 };
 
 GisComponent.prototype.promoteEntities = function (newEntities) {
