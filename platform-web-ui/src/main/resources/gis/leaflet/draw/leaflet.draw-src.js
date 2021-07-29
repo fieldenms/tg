@@ -1393,7 +1393,7 @@ L.Draw.Rectangle = L.Draw.SimpleShape.extend({
 		const x = e.clientX;
 		const y = e.clientY;
 		let elementFromPoint = document.elementFromPoint(x, y);
-		while (elementFromPoint.shadowRoot) {
+		while (elementFromPoint && elementFromPoint.shadowRoot) {
 			elementFromPoint = elementFromPoint.shadowRoot.elementFromPoint(x, y);
 		} // -- finds top-most element under mouse pointer (desktop) or finger (touch devices)
 		
