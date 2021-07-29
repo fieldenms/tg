@@ -86,6 +86,8 @@ public class EqlTestCase {
 
     public static final Map<Class, Class> hibTypeDefaults = new HashMap<>();
     private static Injector injector = Guice.createInjector(new HibernateUserTypesModule(), new HelperIocModule());
+    protected static final IDates dates = injector.getInstance(IDates.class);
+    protected static final IFilter filter = new SimpleUserFilter();
     
     protected static final DomainMetadata DOMAIN_METADATA;
     protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER;
@@ -114,15 +116,15 @@ public class EqlTestCase {
     }
     
     protected static final EntQueryGenerator qb() {
-        return qb(null, null, injector.getInstance(IDates.class), emptyMap());
+        return qb(new SimpleUserFilter(), null, injector.getInstance(IDates.class), emptyMap());
     }
 
     protected static final EntQueryGenerator qb(final Map<String, Object> paramValues) {
-        return qb(null, null, injector.getInstance(IDates.class), paramValues);
+        return qb(new SimpleUserFilter(), null, injector.getInstance(IDates.class), paramValues);
     }
     
     protected static final EntQueryGenerator qb(final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues) {
-        return new EntQueryGenerator(H2, filter, username, dates, paramValues, DOMAIN_METADATA.eqlDomainMetadata);
+        return new EntQueryGenerator(filter, username, dates, paramValues);
     }
     
     protected static final EqlDomainMetadata metadata() {

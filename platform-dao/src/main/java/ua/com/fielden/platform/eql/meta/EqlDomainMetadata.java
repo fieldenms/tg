@@ -22,9 +22,9 @@ import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSI
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PURE;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.UNION;
+import static ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo.getEntityTypeInfo;
 import static ua.com.fielden.platform.eql.meta.DomainMetadataUtils.extractExpressionModelFromCalculatedProperty;
 import static ua.com.fielden.platform.eql.meta.DomainMetadataUtils.generateUnionEntityPropertyContextualExpression;
-import static ua.com.fielden.platform.eql.meta.DomainMetadataUtils.getOriginalEntityTypeFullName;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
@@ -114,7 +114,7 @@ public class EqlDomainMetadata {
      */
     private final ConcurrentMap<Class<?>, Object> hibTypesDefaults;
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EqlEntityMetadata> entityPropsMetadata;
-    private final ConcurrentMap<String, EntityTypeInfo<?>> entityTypesInfos = new ConcurrentHashMap<>();
+    
     private final ConcurrentMap<String, Table> tables = new ConcurrentHashMap<>();
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo;
     private final EntQueryGenerator gen;
@@ -154,13 +154,12 @@ public class EqlDomainMetadata {
         this.hibTypesDefaults.put(boolean.class, H_BOOLEAN);
 
         this.hibTypesInjector = hibTypesInjector;
-        this.gen = new EntQueryGenerator(dbVersion, null, null, null, emptyMap(), this);
+        this.gen = new EntQueryGenerator(null, null, null, emptyMap());
 
         entityTypes.parallelStream().forEach(entityType -> {
             try {
-                final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = new EntityTypeInfo<>(entityType);
+                final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = getEntityTypeInfo(entityType);
                 if (parentInfo.category != PURE) {
-                    entityTypesInfos.put(entityType.getName(), parentInfo);
                     final List<EqlPropertyMetadata> propsMetadatas = generatePropertyMetadatasForEntity(parentInfo);
                     entityPropsMetadata.put(entityType, new EqlEntityMetadata(parentInfo, propsMetadatas));
                     if (parentInfo.category == PERSISTED) {
@@ -596,9 +595,5 @@ public class EqlDomainMetadata {
         } else {
             return getEntityInfo(type);
         }
-    }
-
-    public <T extends AbstractEntity<?>> EntityTypeInfo<T> getEntityTypeInfo(final Class<T> type) {
-        return (EntityTypeInfo<T>) entityTypesInfos.get(getOriginalEntityTypeFullName(type.getName()));
     }
 }

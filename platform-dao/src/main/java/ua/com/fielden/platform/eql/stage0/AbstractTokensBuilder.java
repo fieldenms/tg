@@ -32,7 +32,6 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.stage0.functions.AbsOfBuilder;
 import ua.com.fielden.platform.eql.stage0.functions.AddDateIntervalBuilder;
 import ua.com.fielden.platform.eql.stage0.functions.AverageOfBuilder;
@@ -55,13 +54,13 @@ import ua.com.fielden.platform.eql.stage0.functions.SecondOfBuilder;
 import ua.com.fielden.platform.eql.stage0.functions.SumOfBuilder;
 import ua.com.fielden.platform.eql.stage0.functions.UpperCaseOfBuilder;
 import ua.com.fielden.platform.eql.stage0.functions.YearOfBuilder;
-import ua.com.fielden.platform.eql.stage1.operands.Prop1;
-import ua.com.fielden.platform.eql.stage1.operands.Value1;
-import ua.com.fielden.platform.eql.stage1.operands.functions.CountAll1;
 import ua.com.fielden.platform.eql.stage1.operands.ISetOperand1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage1.operands.OperandsBasedSet1;
+import ua.com.fielden.platform.eql.stage1.operands.Prop1;
 import ua.com.fielden.platform.eql.stage1.operands.QueryBasedSet1;
+import ua.com.fielden.platform.eql.stage1.operands.Value1;
+import ua.com.fielden.platform.eql.stage1.operands.functions.CountAll1;
 import ua.com.fielden.platform.eql.stage2.operands.ISetOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -376,8 +375,9 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
     }
 
     protected Object getParamValue(final String paramName) {
-        if (queryBuilder.getParamValues().containsKey(paramName)) {
-            return preprocessValue(queryBuilder.getParamValues().get(paramName));
+        final Object paramValue = queryBuilder.getParamValue(paramName);
+        if (paramValue != null) {
+            return preprocessValue(paramValue);
         } else {
             return null; //TODO think through
             //throw new RuntimeException("No value has been provided for parameter with name [" + paramName + "]");

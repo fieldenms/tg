@@ -131,7 +131,7 @@ public class EntityContainerFetcher {
             final String sql = entQuery.sql();
             result = new QueryModelResult<>((Class<E>) entQuery.type(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams(), qem.fetchModel);
         } else {
-            final TransformationResult<ResultQuery3> tr = transform(executionContext, qem, domainMetadataAnalyser.getDbVersion(), filter, username);
+            final TransformationResult<ResultQuery3> tr = transform(qem, filter, username, executionContext.dates(), executionContext.getDomainMetadata().eqlDomainMetadata);
             final ResultQuery3 entQuery3 = tr.item;
             final String sql = entQuery3.sql(domainMetadataAnalyser.getDbVersion());
             result = new QueryModelResult<>((Class<E>) entQuery3.resultType, sql, getResultPropsInfos(entQuery3.yields), tr.updatedContext.getParamValues(), qem.fetchModel);
@@ -140,7 +140,7 @@ public class EntityContainerFetcher {
         return result;
     }
 
-    private SortedSet<ResultQueryYieldDetails> getResultPropsInfos(final Yields model) {
+    private static SortedSet<ResultQueryYieldDetails> getResultPropsInfos(final Yields model) {
         final SortedSet<ResultQueryYieldDetails> result = new TreeSet<>();
         for (final Yield yield : model.getYields()) {
             result.add(new ResultQueryYieldDetails(yield.getInfo().getName(), yield.getInfo().getJavaType(), yield.getInfo().getHibType(), yield.getInfo().getColumn(), yield.getInfo().getYieldDetailsType()));
@@ -148,7 +148,7 @@ public class EntityContainerFetcher {
         return result;
     }
 
-    private SortedSet<ResultQueryYieldDetails> getResultPropsInfos(final Yields3 model) {
+    public static SortedSet<ResultQueryYieldDetails> getResultPropsInfos(final Yields3 model) {
         final SortedSet<ResultQueryYieldDetails> result = new TreeSet<>();
         for (final Yield3 yield : model.getYields()) {
             final Class<?> yieldType = yield.type != null ? yield.type : yield.operand.type();

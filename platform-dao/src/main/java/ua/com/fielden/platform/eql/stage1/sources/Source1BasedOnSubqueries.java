@@ -71,7 +71,7 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
     @Override
     public Source2BasedOnSubqueries transform(final TransformationContext context) {
         final List<SourceQuery2> transformedQueries = models.stream().map(m -> m.transform(context)).collect(toList());
-        return new Source2BasedOnSubqueries(transformedQueries, alias, transformId(context), produceEntityInfo(context.getDomainInfo(), transformedQueries, sourceType(), isSyntheticEntity));
+        return new Source2BasedOnSubqueries(transformedQueries, alias, transformId(context), produceEntityInfo(context.domainInfo, transformedQueries, sourceType(), isSyntheticEntity));
     }
     
     @Override

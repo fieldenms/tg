@@ -13,7 +13,7 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
 public class TransformationContext {
     private final List<List<ISource2<? extends ISource3>>> sources;
-    private final EqlDomainMetadata domainInfo;
+    public final EqlDomainMetadata domainInfo;
     public final String sourceIdPrefix; //used for ensuring query sources ids uniqueness within calc-prop expression queries
 
     public TransformationContext(final EqlDomainMetadata domainInfo, final List<List<ISource2<? extends ISource3>>> sources, final String sourceIdPrefix) {
@@ -53,9 +53,5 @@ public class TransformationContext {
 
     public List<List<ISource2<? extends ISource3>>> getSources() {
         return unmodifiableList(sources);
-    }
-
-    public EqlDomainMetadata getDomainInfo() {
-        return domainInfo;
     }
 }

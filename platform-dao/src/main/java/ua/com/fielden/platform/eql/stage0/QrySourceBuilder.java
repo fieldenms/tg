@@ -5,6 +5,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QR
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_SOURCE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QRY_SOURCE_ALIAS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.VALUES_AS_QRY_SOURCE;
+import static ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo.getEntityTypeInfo;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
@@ -75,7 +76,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
     }
     
     private <T extends AbstractEntity<?>> SingleNodeSources1 buildQrySourceBasedOnSyntheticEntityType(final Class<T> resultType, final String alias) {
-        final EntityTypeInfo<T> parentInfo = getQueryBuilder().domainMetadata.getEntityTypeInfo(resultType);
+        final EntityTypeInfo<T> parentInfo = getEntityTypeInfo(resultType);
         final List<EntityResultQueryModel<T>> models = new ArrayList<>();
         models.addAll(parentInfo.entityModels);
         models.addAll(parentInfo.unionEntityModels);
