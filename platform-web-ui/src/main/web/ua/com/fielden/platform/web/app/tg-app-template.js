@@ -39,33 +39,7 @@ const template = html`
     <tg-message-panel></tg-message-panel>
     <div class="relative flex">
         <neon-animated-pages id="pages" class="fit" attr-for-selected="name" on-neon-animation-finish="_animationFinished" animate-initial-selection>
-            <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]" app-title="[[appTitle]]">
-                <template is="dom-repeat" items="[[menuConfig.actions]]" as="action">
-                    <tg-ui-action slot$="[[action.moduleName]]" 
-                        show-dialog="[[_showDialog]]"
-                        toaster="[[toaster]]"
-                        short-desc="[[action.desc]]" 
-                        long-desc="[[action.longDesc]]"
-                        icon="[[action.icon]]"
-                        component-uri="[[action.componentUri]]"
-                        element-name="[[action.key]]"
-                        action-kind="[[action.actionKind]]" 
-                        number-of-action="[[action.numberOfAction]]"
-                        dynamic-action="[[action.dynamicAction]]"
-                        attrs="[[action.attrs]]"
-                        create-context-holder="[[_createContextHolder]]" 
-                        require-selection-criteria="[[action.requireSelectionCriteria]]" 
-                        require-selected-entities="[[action.requireSelectedEntities]]" 
-                        require-master-entity="[[action.requireMasterEntity]]"
-                        pre-action="[[action.preAction]]"
-                        post-action-success="[[action.postActionSuccess]]" 
-                        post-action-error="[[action.postActionError]]" 
-                        should-refresh-parent-centre-after-save="[[action.refreshParentCentreAfterSave]]"
-                        ui-role="[[action.uiRole]]"
-                        icon-style="[[action.iconStyle]]">
-                    </tg-ui-action>
-                </template>
-            </tg-app-menu>
+            <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]" app-title="[[appTitle]]"></tg-app-menu>
             <template is="dom-repeat" items="[[menuConfig.menu]]" on-dom-change="_modulesRendered">
                 <tg-app-view class="fit hero-animatable" name$="[[item.key]]" menu="[[menuConfig.menu]]" menu-item="[[item]]" can-edit="[[menuConfig.canEdit]]" menu-save-callback="[[_saveMenuVisibilityChanges]]" selected-module="[[_selectedModule]]" selected-submodule="{{_selectedSubmodule}}"></tg-app-view>
             </template>
@@ -269,8 +243,7 @@ Polymer({
                     delete this.$.openMasterAction.modifyFunctionalEntity;
                 };
             }
-            this.$.openMasterAction.currentEntity = () => entity;
-            this.$.openMasterAction._run();
+            this.$.openMasterAction._runDynamicAction(() => entity, null);
         }
     },
     
@@ -287,9 +260,15 @@ Polymer({
                 //This logic might be invoked in case when someone changes hash by typing it in to address bar.
                 this._replaceStateWithNumber();
             }
-            const currentOverlay = this._findFirstClosableDialog();
-            const historySteps = this.currentHistoryState.currIndex - window.history.state.currIndex; //Determine history steps (i.e whether user pressed back or forward or multiple back or forward or changed history in some other way. One should take into account that if history steps are greater than 0 then user went backward. If the history steps are less than 0 then user went forward. If history steps are equal to 0 then user chnaged history by clicking menu item it search menu or module menu etc.)
-            if (historySteps !== 0 && currentOverlay) { // if user went backward or forward and there is overlay open and 'root' page (for e.g. https://tgdev.com:8091) is not opening
+
+            // Determine history steps (i.e whether user pressed back or forward or multiple back or forward or changed history in some other way.
+            // One should take into account that if history steps are greater than 0 then user went backward. If the history steps are less than 0 then user went forward.
+            // If history steps are equal to 0 then user changed history by clicking menu item it search menu or module menu etc.)
+            const historySteps = this.currentHistoryState.currIndex - window.history.state.currIndex;
+            // Computes to false/null or the first closable dialog
+            // This is relevant if user went backward or forward (mobile device only) and there is overlay open and 'root' page (for e.g. https://tgdev.com:8091) is not opening
+            const currentOverlay = (historySteps !== 0 && isMobileApp() && this._findFirstClosableDialog());
+            if (currentOverlay) {
                 // disableNextHistoryChange flag is needed to avoid history movements cycling
                 if (!this.disableNextHistoryChange) {
                     if (historySteps > 0) { // moving back
@@ -552,17 +531,22 @@ Polymer({
         this.entityType = "ua.com.fielden.platform.menu.Menu";
         //Init master related functions.
         this.postRetrieved = function (entity, bindingEntity, customObject) {
-            entity.actions.forEach(action => {
-                action.preAction = new Function("const self = this;  return " + action.preAction).bind(this)();
-                action.postActionSuccess = new Function("const self = this;  return " + action.postActionSuccess).bind(this)();
-                action.postActionError = new Function("const self = this;  return " + action.postActionError).bind(this)();
-                action.attrs = JSON.parse(action.attrs, (key, value) => {
-                    if (key === 'width' || key === "height") {
-                        return new Function("return " + value)();
-                    } else if (key === "centreUuid") {
-                        return this.uuid;
-                    }
-                    return value;
+            entity.menu.forEach(menuItem => {
+                menuItem.actions.forEach(action => {
+                    action._showDialog = this._showDialog;
+                    action.toaster = this.toaster;
+                    action._createContextHolder = this._createContextHolder;
+                    action.preAction = new Function("const self = this;  return " + action.preAction).bind(this)();
+                    action.postActionSuccess = new Function("const self = this;  return " + action.postActionSuccess).bind(this)();
+                    action.postActionError = new Function("const self = this;  return " + action.postActionError).bind(this)();
+                    action.attrs = JSON.parse(action.attrs, (key, value) => {
+                        if (key === 'width' || key === "height") {
+                            return new Function("return " + value)();
+                        } else if (key === "centreUuid") {
+                            return this.uuid;
+                        }
+                        return value;
+                    });
                 });
             });
             this.menuConfig = entity;
@@ -626,14 +610,16 @@ Polymer({
     /**
      * Provides custom 'state' object for history entries. Updates 'currentHistoryState' property.
      */
-    _replaceStateWithNumber: function () {
-        // the URI for history state rewrite
-        const fullNewUrl = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
-        // currentHistoryState should be updated first. If it is not yet defined then make it 0 otherwise increment it;
-        const newCurrentHistoryIndex = typeof this.currentHistoryState !== "undefined"? this.currentHistoryState.currIndex + 1 : 0;
-        this.currentHistoryState = {currIndex: newCurrentHistoryIndex}
-        // rewrite history state by providing concrete number of last history state
-        window.history.replaceState(this.currentHistoryState, '', fullNewUrl);
+    _replaceStateWithNumber: function (event) {
+        if (!(event && event.detail && event.detail.avoidStateAdjusting)) {
+            // the URI for history state rewrite
+            const fullNewUrl = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
+            // currentHistoryState should be updated first. If it is not yet defined then make it 0 otherwise increment it;
+            const newCurrentHistoryIndex = typeof this.currentHistoryState !== "undefined"? this.currentHistoryState.currIndex + 1 : 0;
+            this.currentHistoryState = {currIndex: newCurrentHistoryIndex}
+            // rewrite history state by providing concrete number of last history state
+            window.history.replaceState(this.currentHistoryState, '', fullNewUrl);
+        }
     },
     
     _getUrl: function() {
@@ -648,10 +634,10 @@ Polymer({
         const activeElement = deepestActiveElement();
         if (activeElement && (activeElement.nodeName.toLowerCase() === 'input'|| activeElement.nodeName.toLowerCase() === 'textarea')) {
             let node = activeElement;
-            while (node !== null && node.nodeName.toLowerCase() !== 'paper-input-container') {
+            while (node && node.nodeName.toLowerCase() !== 'paper-input-container') {
                 node = node.parentNode || node.getRootNode().host;
             }
-            if (node !== null && !this._isElementInViewport(node)) {
+            if (node && !this._isElementInViewport(node)) {
                 node.scrollIntoView({block: "end", inline: "end", behavior: "smooth"}); // Safari (WebKit) does not support options object (smooth scrolling). We are aiming Chrome for iOS devices at this stage.
             }
         } 

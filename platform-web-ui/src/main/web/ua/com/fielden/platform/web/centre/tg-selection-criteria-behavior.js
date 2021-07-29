@@ -83,6 +83,14 @@ const TgSelectionCriteriaBehaviorImpl = {
         },
 
         /**
+         * Indicates whether current centre configuration should load data immediately upon loading.
+         */
+        autoRun: {
+            type: Boolean,
+            notify: true
+        },
+
+        /**
          * Centre URI parameters taken from tg-entity-centre-behavior.
          */
         queryPart: {
@@ -382,24 +390,23 @@ const TgSelectionCriteriaBehaviorImpl = {
         if (typeof customObject.saveAsName !== 'undefined') {
             this.saveAsName = customObject.saveAsName;
         }
+        if (typeof customObject.autoRun !== 'undefined') {
+            this.autoRun = customObject.autoRun;
+        }
         if (typeof customObject.configUuid !== 'undefined') {
             const newConfigUuid = customObject.configUuid;
-            const hrefNoParams = window.location.href.split('?')[0];
-            const hrefNoParamsNoSlash = hrefNoParams.endsWith('/') ? hrefNoParams.substring(0, hrefNoParams.length - 1) : hrefNoParams;
-            const hrefNoParamsNoSlashNoUuid = this.configUuid === '' ? hrefNoParamsNoSlash : hrefNoParamsNoSlash.substring(0, hrefNoParamsNoSlash.lastIndexOf(this.configUuid) - 1 /* slash also needs removal */);
-            const hrefReplacedUuid = hrefNoParamsNoSlashNoUuid + (newConfigUuid === '' ? '' : '/' + newConfigUuid);
-            if (hrefReplacedUuid !== window.location.href) { // when configuration is loaded through some action then potentially new URI will be formed matching new loaded configuration;
-                window.history.pushState(window.history.state, '', hrefReplacedUuid); // in that case need to create new history entry for new URI;
-                window.dispatchEvent(new CustomEvent('location-changed')); // the 'window.history.state' number will be increased later in tg-app-template 'location-changed' listener
-            } // if the URI hasn't been changed then URI is already matching to new loaded configuration and history transition has been recorded earlier (e.g. when manually changing URI in address bar)
-            this.configUuid = newConfigUuid;
-        }
-        if (typeof customObject.wasRun !== 'undefined') {
-            this._wasRun = customObject.wasRun;
+            const configUuid = this.configUuid;
+            this.loadCentreFreezed = true;
+            this.fire('tg-config-uuid-before-change', { newConfigUuid: newConfigUuid, configUuid: configUuid });
+            delete this.loadCentreFreezed;
+            this.configUuid = customObject.configUuid;
         }
     },
 
-    _configUuidChanged: function (newConfigUuid) {
+    _configUuidChanged: function (newConfigUuid, oldConfigUuid) {
+        if (typeof oldConfigUuid === 'string' && this._wasRun === 'yes') {
+            this._wasRun = null; // reset _wasRun if configuration has been changed
+        }
         this.fire('tg-config-uuid-changed', newConfigUuid);
     },
 

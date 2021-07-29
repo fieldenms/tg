@@ -204,6 +204,14 @@ const TgEntityCentreBehaviorImpl = {
         },
 
         /**
+         * Indicates whether this entity centre is embedded into some entity master.
+         */
+        embedded: {
+            type: Boolean,
+            value: false
+        },
+
+        /**
          * Returns the context for insertion point
          */
         insertionPointContextRetriever: {
@@ -255,7 +263,7 @@ const TgEntityCentreBehaviorImpl = {
         },
 
         /**
-         * Indcates whether the centre should load data immediately after it was loaded.
+         * Indicates whether current centre configuration should load data immediately upon loading.
          */
         autoRun: {
             type: Boolean,
@@ -303,6 +311,11 @@ const TgEntityCentreBehaviorImpl = {
         _buttonDisabled: {
             type: Boolean,
             computed: '_computeDisabled(_criteriaLoaded, _actionInProgress)'
+        },
+
+        _shareButtonDisabled: {
+            type: Boolean,
+            computed: '_computeShareButtonDisabled(_buttonDisabled, embedded)'
         },
 
         _viewerDisabled: {
@@ -415,36 +428,46 @@ const TgEntityCentreBehaviorImpl = {
         currentState: {
             type: String,
             value: 'EDIT'
-        }
+        },
+        
+        initiateAutoRun: Function
     },
 
     listeners: {
         'tg-egi-column-change': '_saveColumnWidth'
     },
 
-    _abortPreviousAndInitiateNewRun: function () {
+    _abortPreviousAndInitiateNewRunForEmbeddedCentre: function () {
         // cancel previous running before starting new one; the results of previous running are irrelevant
         this._reflector.abortRequestsIfAny(this.$.selection_criteria._ajaxRunner(), 'running');
-
-        this._setQueryParams();
-        if (this.autoRun || this.queryPart) {
-            this.run(!this.queryPart); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)
-            delete this.queryPart;
+        if (this.queryPart) {
+            console.warn(`Embedded centre of type ${this.is} has queryPart=${this.queryPart} assigned and it will be ignored. URI query parameters are only applicable to standalone centres.`);
         }
+        // entity masters with their embedded centres can be cached and loaded save-as configurations will be used up until application will be refreshed;
+        // this will not affect other places with the same masters -- e.g. Work Activity standalone centre has its own master cache with [WA => Details] embedded centre cached and [WA => Details] on other standalone centres will not be affected;
+        // that's why resetting information about loaded configuration to default configuration is needed in these cached masters every time auto-running of embedded centre occurs
+        this.$.selection_criteria.saveAsName = '';
+        this.$.selection_criteria.configUuid = '';
+        if (this._selectedView === 0) {
+            this.async(() => {
+                this._selectedView = 1;
+            }, 100);
+        }
+        this.run(true); // embedded centre always autoruns on getMasterEntity assignment (activating of compound menu item with embedded centre or opening of details master with embedded centre)
     },
 
     _getMasterEntityAssigned: function (newValue, oldValue) {
         if (this._reflector.isEntity(this.$.selection_criteria._currBindingEntity)) {
-            this._abortPreviousAndInitiateNewRun();
+            this._abortPreviousAndInitiateNewRunForEmbeddedCentre();
         } else {
             // cancel previous retrieval requests except the last one -- if it exists then run process will be chained on top of that last retrieval process,
             // otherwise -- run process will simply start immediately
             const lastRetrievalPromise = this._reflector.abortRequestsExceptLastOne(this.$.selection_criteria._ajaxRetriever(), 'retrieval');
             if (lastRetrievalPromise !== null) {
                 console.warn('Running is chained to the last retrieval promise...');
-                lastRetrievalPromise.then(() => this._abortPreviousAndInitiateNewRun());
+                lastRetrievalPromise.then(() => this._abortPreviousAndInitiateNewRunForEmbeddedCentre());
             } else {
-                this.retrieve().then(() => this._abortPreviousAndInitiateNewRun());
+                this.retrieve().then(() => this._abortPreviousAndInitiateNewRunForEmbeddedCentre());
             }
         }
     },
@@ -457,6 +480,10 @@ const TgEntityCentreBehaviorImpl = {
 
     _computeDisabled: function (_criteriaLoaded, _actionInProgress) {
         return _actionInProgress === true || _criteriaLoaded === false;
+    },
+
+    _computeShareButtonDisabled: function (_buttonDisabled, embedded) {
+        return _buttonDisabled || embedded;
     },
 
     _computeViewerDisabled: function (_buttonDisabled, _wasRun) {
@@ -494,7 +521,19 @@ const TgEntityCentreBehaviorImpl = {
             insertionPoints[0].hideMargins = true;
         }
         this.$.egi.showMarginAround = insertionPoints.length > 0;
-
+        
+        this.initiateAutoRun = () => {
+            const centre = this;
+            if (centre.autoRun) {
+                if (centre._selectedView === 0) {
+                    centre.async(() => {
+                        centre._selectedView = 1;
+                    }, 100);
+                }
+                centre.run(true); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)
+            }
+        };
+        
         self._postRun = (function (criteriaEntity, newBindingEntity, result) {
             if (criteriaEntity === null || criteriaEntity.isValidWithoutException()) {
                 if (typeof result.summary !== 'undefined') {
@@ -814,8 +853,8 @@ const TgEntityCentreBehaviorImpl = {
             }
         }));
 
-        //Select the result view if autoRun is true
-        if (self.autoRun || self.queryPart) {
+        // select result view if link centre gets attached
+        if (self.queryPart) {
             self._selectedView = 1;
         }
     },

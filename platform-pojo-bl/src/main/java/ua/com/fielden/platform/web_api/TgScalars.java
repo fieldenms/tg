@@ -16,9 +16,10 @@ import java.math.BigInteger;
 import java.util.Date;
 import java.util.Map;
 
-import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.DateTimeFormatterBuilder;
+
+import com.google.inject.Inject;
 
 import graphql.language.FloatValue;
 import graphql.language.IntValue;
@@ -33,6 +34,7 @@ import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.either.Either;
+import ua.com.fielden.platform.utils.IDates;
 
 /**
  * TG-specific GraphQL Web API scalar type implementations.
@@ -42,6 +44,9 @@ import ua.com.fielden.platform.types.either.Either;
  */
 public class TgScalars {
     private static final String UNEXPECTED_TYPE_ERROR = "Expected [%] but was [%].";
+
+    @Inject
+    private static IDates dates;
     
     /**
      * Creates builder for scalar type and assigns name and description derived from the specified {@code title}.
@@ -67,7 +72,7 @@ public class TgScalars {
     /////////////////////////////////////////////////////////////// SCALAR TYPES WITHOUT ARGUMENTS ///////////////////////////////////////////////////////////////
     
     /**
-     * Private interface for ouput scalar {@link Coercing} to increase level of abstraction for implementing scalars.
+     * Private interface for output scalar {@link Coercing} to increase level of abstraction for implementing scalars.
      * 
      * @author TG Team
      *
@@ -269,7 +274,7 @@ public class TgScalars {
      */
     public static Map<String, Object> createDateRepr(final Date date) {
         return linkedMapOf(
-            t2("value", dateTimePrinter.print(new DateTime(date))),
+            t2("value", dateTimePrinter.print(dates.zoned(date))),
             t2("millis", date.getTime())
         );
     }
@@ -297,7 +302,7 @@ public class TgScalars {
         @Override
         public Either<String, Map<String, Object>> convertDataFetcherResult(final Object dataFetcherResult) {
             if (dataFetcherResult instanceof Date) {
-                return right(createDateRepr((Date) dataFetcherResult));
+                return right(createDateRepr((Date) dataFetcherResult)); // request time-zone is used here (or default for independent time-zone mode)
             } else {
                 return error(title(), dataFetcherResult);
             }
@@ -307,7 +312,7 @@ public class TgScalars {
         
         private Either<String, Date> parseFrom(final String input, final DateTimeFormatter formatter) {
             try {
-                return right(formatter.parseDateTime(input).toDate()); // server time-zone is used here
+                return right(formatter.withZone(dates.timeZone()).parseDateTime(input).toDate()); // request time-zone is used here (or default for independent time-zone mode)
             } catch (final IllegalArgumentException e) {
                 return left(format(UNEXPECTED_TYPE_ERROR, "number-like or string-based " + title(), input));
             }

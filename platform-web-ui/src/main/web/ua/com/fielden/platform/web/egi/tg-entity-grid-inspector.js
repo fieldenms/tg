@@ -30,7 +30,7 @@ import { TgElementSelectorBehavior } from '/resources/components/tg-element-sele
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import { getFirstEntityValue, tearDownEvent, getRelativePos, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
+import { getFirstEntityType, tearDownEvent, getRelativePos, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
@@ -1109,12 +1109,21 @@ Polymer({
             column.customAction
             || this.isHyperlinkProp(entity, column) === true
             || this.getAttachmentIfPossible(entity, column)
-            || this.isEntityProperty(entity, column)
+            || this.hasDefaultAction(entity, column)
         );
     },
 
-    isEntityProperty: function (entity, column) {
-        return entity && entity.type && entity.type() && this._reflector.tg_determinePropertyType(entity.type(), column.collectionalProperty || column.property) instanceof this._reflector._getEntityTypePrototype();
+    /**
+     * Indicates the presence of default action for 'entity' in the specified 'column'.
+     */
+    hasDefaultAction: function (entity, column) {
+        if (entity && entity.type && entity.type()) {
+            const propertyType = this._reflector.tg_determinePropertyType(entity.type(), column.collectionalProperty || column.property);
+            if (propertyType instanceof this._reflector._getEntityTypePrototype()) { // only entity-typed columns can have default actions ...
+                return propertyType.entityMaster(); // ... and only those, that have corresponding entity masters
+            }
+        }
+        return false;
     },
 
     isVisible: function (entity) {
@@ -1325,7 +1334,7 @@ Polymer({
      */
     _tapColumn: function (entity, column) {
         // 'this._currentEntity(entity)' returns closure with 'entity' tapped.
-        // This closure returns either 'entity' or the entity navigated to (EntityNavigationAction).
+        // This closure returns either 'entity' or the entity navigated to (EntityEditAction with EntityNavigationPreAction).
         // Each tapping overrides this function to provide proper context of execution.
         // This override should occur on every 'run' of the action so it is mandatory to use 'tg-property-column.runAction' public API.
         if (!column.runAction(this._currentEntity(entity))) {
@@ -1339,7 +1348,7 @@ Polymer({
                 const attachment = this.getAttachmentIfPossible(entity, column);
                 if (attachment && this.downloadAttachment) {
                     this.downloadAttachment(attachment);
-                } else if (this.isEntityProperty(entity, column)) {
+                } else if (this.hasDefaultAction(entity, column)) {
                     column.runDefaultAction(this._currentEntity(entity), this._defaultPropertyAction);
                 }
             } 
@@ -2105,13 +2114,8 @@ Polymer({
                 shortDesc: 'Download',
                 longDesc: 'Click to download attachment.'
             });
-        } else if (!this.isHyperlinkProp(entity, column) && this.isEntityProperty(entity, column)) {
-            const entityValue = getFirstEntityValue(this._reflector, entity, column.collectionalProperty || column.property);
-            const entityTitle = entityValue.type().entityTitle();
-            return this._generateActionTooltip({
-                shortDesc: `Edit ${entityTitle}`,
-                longDesc: `Edit ${entityTitle}`
-            });
+        } else if (!this.isHyperlinkProp(entity, column) && this.hasDefaultAction(entity, column)) {
+            return this._generateActionTooltip(this.hasDefaultAction(entity, column));
         }
         return "";
     },

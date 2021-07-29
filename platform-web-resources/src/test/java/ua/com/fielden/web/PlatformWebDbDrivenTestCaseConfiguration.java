@@ -21,11 +21,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
 import ua.com.fielden.platform.entity.functional.master.PropertyWarning;
-import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
-import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.persistence.HibernateUtil;
@@ -48,6 +46,7 @@ import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.test.IDbDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
+import ua.com.fielden.platform.web.centre.CentreConfigConfigureAction;
 import ua.com.fielden.platform.web.centre.CentreConfigDeleteAction;
 import ua.com.fielden.platform.web.centre.CentreConfigDuplicateAction;
 import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
@@ -111,6 +110,7 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
             domainTypes.add(CentreConfigSaveAction.class);
             domainTypes.add(LoadableCentreConfig.class);
             domainTypes.add(OverrideCentreConfig.class);
+            domainTypes.add(CentreConfigConfigureAction.class);
             
             domainTypes.add(UserAndRoleAssociation.class);
             domainTypes.add(UserAndRoleAssociationBatchAction.class);
@@ -164,17 +164,8 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
     }
 
     @Override
-    public DomainMetaPropertyConfig getDomainMetaPropertyConfig() {
-        return hibernateModule.getDomainMetaPropertyConfig();
-    }
-
-    @Override
-    public DomainValidationConfig getDomainValidationConfig() {
-        return hibernateModule.getDomainValidationConfig();
-    }
-
-    @Override
     public List<String> getDdl() {
         return null;
     }
+
 }

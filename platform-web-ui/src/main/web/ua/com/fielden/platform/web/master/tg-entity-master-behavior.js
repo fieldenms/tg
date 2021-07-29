@@ -10,10 +10,96 @@ import { TgRequiredPropertiesFocusTraversalBehavior } from '/resources/component
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
 import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
 
-export const selectEnabledEditor = function (editor) {
-    const selectedElement = editor.shadowRoot.querySelector('.custom-input:not([hidden]):not([disabled]):not([readonly])');
-    return (selectedElement && selectedElement.shadowRoot && selectedElement.shadowRoot.querySelector('textarea')) || selectedElement;
-}
+/**
+ * Returns enabled invalid input if there is one.
+ * Otherwise returns enabled preferred input if there is one.
+ * Otherwise returns first enabled input if there is one.
+ * Otherwise returns null.
+ * 
+ * If returned input is present, returns whether it is 'preferred'.
+ *
+ * @param preferredOnly -- consider only preferred inputs (independent from invalid)
+ */
+const findFirstInputToFocus = (preferredOnly, editors) => {
+    const selectEnabledEditor = editor => {
+        const selectedElement = editor.shadowRoot.querySelector('.custom-input:not([hidden]):not([disabled]):not([readonly])');
+        return (selectedElement && selectedElement.shadowRoot && selectedElement.shadowRoot.querySelector('textarea')) || selectedElement;
+    };
+    
+    let firstInput, firstPreferredInput, firstInvalidInput;
+    for (let editorIndex = 0; editorIndex < editors.length; editorIndex++) {
+        const currentEditor = editors[editorIndex];
+        if (currentEditor.offsetParent !== null) {
+            const selectedElement = selectEnabledEditor(currentEditor);
+            if (selectedElement) {
+                if (!firstInput) {
+                    firstInput = selectedElement;
+                }
+                if (!firstPreferredInput && currentEditor.propertyName && currentEditor.propertyName === currentEditor.entity['@@origin'].preferredProperty()) {
+                    firstPreferredInput = selectedElement;
+                }
+                if (!firstInvalidInput && currentEditor._error && !currentEditor.isInWarning()) {
+                    firstInvalidInput = selectedElement;
+                }
+            }
+        }
+    }
+    return preferredOnly ? (
+               firstPreferredInput ? { inputToFocus: firstPreferredInput, preferred: true } :
+               null
+           ) :
+           firstInvalidInput ? { inputToFocus: firstInvalidInput, preferred: firstInvalidInput === firstPreferredInput } :
+           firstPreferredInput ? { inputToFocus: firstPreferredInput, preferred: true } :
+           firstInput ? { inputToFocus: firstInput, preferred: false } :
+           null;
+};
+
+/**
+ * Check whether an element is visible in its 'tg-scrollable-component' viewport.
+ * If there is no 'tg-scrollable-component' ancestor then returns 'true' (no need to re-scroll).
+ * 
+ * @see https://stackoverflow.com/questions/123999/how-to-tell-if-a-dom-element-is-visible-in-the-current-viewport
+ */
+const _isElementInViewport = function (el) {
+    let parent = el;
+    while (parent && parent.tagName !== 'TG-SCROLLABLE-COMPONENT') {
+        // go through parent elements (including going out from shadow DOM)
+        parent = parent.assignedSlot || parent.parentElement || parent.getRootNode().host; // tg-flex-layout should be distributed into slot with tg-scrollable-component ancestor; fallback to standard lookup in case if not [yet] distributed
+    }
+    const root = parent ? parent.$.scrollablePanel : null;
+    if (!root) {
+        return true;
+    }
+    const rootRect = root.getBoundingClientRect();
+    const rect = el.getBoundingClientRect();
+    return rect.top >= rootRect.top // check whether 'rect' is fully inside in 'rootRect'
+        && rect.left >= rootRect.left
+        && rect.bottom <= rootRect.bottom
+        && rect.right <= rootRect.right;
+};
+
+/**
+ * Triggers focusing of invalid / preferred / first enabled input, if there is any (or preferred enabled input for 'preferredOnly' === true).
+ * 
+ * If preferred input is getting focus, the contents of the input gets selected.
+ * 
+ * @param preferredOnly -- consider only preferred inputs (independent from invalid)
+ * @param orElseFocus -- function for focusing in case if there is no enabled input to focus
+ */
+export const focusEnabledInputIfAny = function (preferredOnly, orElseFocus) {
+    const inputToFocus = findFirstInputToFocus(preferredOnly, this.getEditors());
+    if (inputToFocus) {
+        inputToFocus.inputToFocus.focus();
+        if (!_isElementInViewport(inputToFocus.inputToFocus)) { // .focus() scrolls to view; however, if the editor was already focused but scrolled out of view, .focus() will not tigger re-scrolling (already focused); hence we scroll it manually
+            inputToFocus.inputToFocus.scrollIntoView(); // behavior: 'auto' -- no animation; block: 'start' (vertical alignment); inline: 'nearest' (horisontal alignment);
+        }
+        if (inputToFocus.preferred && typeof inputToFocus.inputToFocus.select === 'function') {
+            inputToFocus.inputToFocus.select();
+        }
+    } else if (orElseFocus) {
+        orElseFocus();
+    }
+};
 
 const TgEntityMasterBehaviorImpl = {
     properties: {
@@ -477,7 +563,7 @@ const TgEntityMasterBehaviorImpl = {
                     actionModel.postActionSuccess = function (functionalEntity) {
                         action.success = true;
                         console.log('postActionSuccess: ' + actionDesc, functionalEntity);
-                        const saveButton = queryElements(self, "tg-action[role='save']");
+                        const saveButton = queryElements(self, "tg-action[role='save']")[0];
                         self.save(functionalEntity, continuationProperty)
                             .then(
                                 createEntityActionThenCallback(self.centreUuid, 'save', postal, null, saveButton ? saveButton.closeAfterExecution : true),
@@ -498,6 +584,7 @@ const TgEntityMasterBehaviorImpl = {
                         oldIsActionInProgressChanged(newValue, oldValue);
                         if (newValue === false && !action.success) { // only enable parent master if action has failed (perhaps during retrieval or on save), otherwise leave enabling logic to the parent master itself (saving of parent master should govern that)
                             _self.restoreAfterSave();
+                            _self.fire('continuaton-completed-without-success', action);
                         }
                     }).bind(action);
                 }
@@ -645,9 +732,9 @@ const TgEntityMasterBehaviorImpl = {
             postal.publish({ channel: self.centreUuid, topic: 'refresh.post.success', data: { canClose: true } });
         }).bind(self);
 
-        //Should focus master when it receives binding entity.
-        self.addEventListener('binding-entity-appeared', function (e) {
-            const target = e.target || e.srcElement;
+        // focus invalid / preferred / first enabled editor (if present) when binding entity appears (refresh / cancel / save + continuous creation)
+        self.addEventListener('binding-entity-appeared', function (event) {
+            const target = event.target || event.srcElement;
             if (target === this) {
                 this.focusView();
                 if (!this._hasEmbededView()) {
@@ -657,6 +744,15 @@ const TgEntityMasterBehaviorImpl = {
                 }
             }
         }.bind(self));
+        
+        // focus preferred property editor (if present) and select its contents (validate)
+        self.addEventListener('binding-entity-validated', (event) => {
+            const target = event.target || event.srcElement;
+            if (target === this) {
+                this.focusPreferredView();
+            }
+        });
+        
     }, // end of ready callback
 
     attached: function () {
@@ -766,38 +862,25 @@ const TgEntityMasterBehaviorImpl = {
     },
 
     /**
-     * Looks for the first input that is not hidden and not disabled to focus it.
+     * Triggers focusing of invalid / preferred / first enabled input, if there is any; triggers focusing of first focusable element otherwise.
+     * 
+     * In case of preferred input focusing, the contents of the input gets selected.
      */
     _focusFirstInput: function () {
-        const editors = this.getEditors();
-        let editorIndex, firstInput, selectedElement;
-        for (editorIndex = 0; editorIndex < editors.length; editorIndex++) {
-            if (editors[editorIndex].offsetParent !== null) {
-                selectedElement = selectEnabledEditor(editors[editorIndex]);
-                firstInput = firstInput || selectedElement;
-                if (editors[editorIndex]._error && !editors[editorIndex].isInWarning()) {
-                    if (selectedElement) {
-                        selectedElement.focus();
-                        return;
+        focusEnabledInputIfAny.bind(this)(false, () => {
+            if (this.offsetParent !== null) {
+                // Otherwise find first focusable element and focus it. If there are no focusable element then fire event that asks
+                //  it's ancestors to focus their first best element.
+                const focusedElements = this._getCurrentFocusableElements();
+                if (focusedElements.length > 0) {
+                    if (this.shadowRoot.activeElement === null) {
+                        focusedElements[0].focus();
                     }
+                } else {
+                    this.fire("tg-no-item-focused");
                 }
             }
-        }
-        // if the input has been identified then focus it.
-        if (firstInput) {
-            firstInput.focus();
-        } else if (this.offsetParent !== null) {
-            //Otherwise find first focusable element and focus it. If there are no focusable element then fire event that asks
-            //it's ancestors to focus their first best element.
-            const focusedElements = this._getCurrentFocusableElements();
-            if (focusedElements.length > 0) {
-                if (this.shadowRoot.activeElement === null) {
-                    focusedElements[0].focus();
-                }
-            } else {
-                this.fire("tg-no-item-focused");
-            }
-        }
+        });
     },
 
     getEditors: function () {
@@ -805,10 +888,23 @@ const TgEntityMasterBehaviorImpl = {
     },
 
     /**
-     * Focuses embeded view if it exists otherwise focuses first input.
+     * Triggers focusing of preferred enabled input, if there is any.
+     * Also selects contents of focused input.
+     */
+    _focusPreferredInput: function () {
+        focusEnabledInputIfAny.bind(this)(true);
+    },
+
+    /**
+     * Focuses embedded view if it exists; otherwise:
+     * 
+     * Desktop: triggers focusing of invalid / preferred / first enabled input, if there is any; triggers focusing of first focusable element otherwise.
+     * Mobile: triggers focusing of preferred enabled input, if there is any.
+     * 
+     * In case of preferred input focusing, the contents of the input gets selected.
      */
     focusView: function () {
-        this.async(function () {
+        this.async(() => {
             if (this._hasEmbededView()) {
                 this._focusEmbededView()
             } else {
@@ -817,9 +913,23 @@ const TgEntityMasterBehaviorImpl = {
                 // So, in mobile app the input will not be focused on dialog opening (and the keyboard will not appear suddenly until the user explicitly clicks on some editor).
                 if (!isMobileApp()) {
                     this._focusFirstInput();
+                } else {
+                    this._focusPreferredInput();
                 }
             }
-        }.bind(this), 100);
+        }, 100);
+    },
+
+    /**
+     * For simple masters (no embedded view) and both desktop / mobile profiles, triggers focusing of preferred enabled input, if there is any.
+     * Also selects contents of focused input.
+     */
+    focusPreferredView: function () {
+        this.async(() => {
+            if (!this._hasEmbededView()) {
+                this._focusPreferredInput();
+            }
+        }, 100);
     },
 
     /**
@@ -1071,6 +1181,12 @@ const TgEntityMasterBehaviorImpl = {
                         topic: 'detail.saved',
                         data: newData
                     });
+                    // Revalidate the current master if it is simple (i.e. doesn't have an embedded view) in order to update master editors;
+                    // do this, for example, if a postal 'detail.saved' event was published by child master;
+                    // these child masters include those opened with entity editor title (i.e. openMasterAction), or from property / entity / continuation actions
+                    if (!self._hasEmbededView()) {
+                        self.validate();
+                    }
                 }
             }
         }));

@@ -3,6 +3,7 @@ package ua.com.fielden.platform.utils;
 import static org.joda.time.DateTimeZone.getDefault;
 
 import java.util.Date;
+import java.util.Optional;
 
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -35,6 +36,13 @@ public interface IDates {
     default DateTimeZone timeZone() {
         return getDefault();
     }
+    
+    /**
+     * Returns a time-zone associated with an external request. An empty value is returned if no such information was provided.
+     *
+     * @return
+     */
+    Optional<DateTimeZone> requestTimeZone();
     
     /**
      * Creates zoned representation for <code>date</code> moment in user's time-zone.

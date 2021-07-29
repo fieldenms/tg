@@ -35,6 +35,40 @@ export class TgSinglelineTextEditor extends TgEditor {
         return createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate);
     }
     
+    static get properties () {
+        return {
+            /**
+             * Number of milliseconds after user input to trigger auto-committing of _editingValue.
+             * If zero or undefined then no auto-committing will be performed on user input and traditional tab-off / Enter / blur -driven committing is to be used.
+             */
+            autoCommitMillis: {
+                type: Number
+            },
+            
+            /**
+             * Provides auto-commit handling for the case where 'autoCommitMillis' property is defined.
+             * This auto-commit occurs if the value is edited by the user explicitly or pasted from some external source e.g. bar code scanner, date time picker etc.
+             * Auto-commit is triggered in 'autoCommitMillis' milliseconds after that action.
+             */
+            _onInput: {
+                type: Function,
+                value: function () {
+                    return event => {
+                        if (this.autoCommitMillis && this.autoCommitMillis >= 0) { // if autoCommitMillis is defined and value resembles proper milliseconds then
+                            if (typeof this._autoCommitTimeoutId === 'number') { // if there is in-progress timeout handling auto-commit
+                                clearTimeout(this._autoCommitTimeoutId); // then cancel this timeout immediately
+                            }
+                            this._autoCommitTimeoutId = setTimeout(() => { // create and start new timeout to be fulfilled in autoCommitMillis time
+                                this.commitIfChanged(); // commit the current _editingValue if it is changed; after that timeout has been fulfilled and served its purpose
+                                delete this._autoCommitTimeoutId; // remove timeout reference not to keep garbage; this is to avoid unnecessary clearTimeout calls for already completed timeouts
+                            }, this.autoCommitMillis);
+                        }
+                    };
+                }
+            }
+        };
+    }
+    
     /**
      * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component (String).
      */

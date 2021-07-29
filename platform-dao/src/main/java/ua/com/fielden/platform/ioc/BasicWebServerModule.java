@@ -5,7 +5,6 @@ import java.util.Properties;
 
 import com.google.inject.Singleton;
 import com.google.inject.Stage;
-import com.google.inject.name.Named;
 import com.google.inject.name.Names;
 
 import ua.com.fielden.platform.attachment.AttachmentDao;
@@ -27,27 +26,29 @@ import ua.com.fielden.platform.dao.IGeneratedEntityController;
 import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
 import ua.com.fielden.platform.dao.IUserRole;
+import ua.com.fielden.platform.dashboard.DashboardRefreshFrequencyCo;
+import ua.com.fielden.platform.dashboard.DashboardRefreshFrequencyDao;
+import ua.com.fielden.platform.dashboard.DashboardRefreshFrequencyUnitCo;
+import ua.com.fielden.platform.dashboard.DashboardRefreshFrequencyUnitDao;
 import ua.com.fielden.platform.domain.metadata.DomainExplorerCo;
 import ua.com.fielden.platform.domain.metadata.DomainExplorerDao;
 import ua.com.fielden.platform.domain.metadata.DomainExplorerInsertionPointCo;
 import ua.com.fielden.platform.domain.metadata.DomainExplorerInsertionPointDao;
+import ua.com.fielden.platform.domain.metadata.DomainPropertyCo;
 import ua.com.fielden.platform.domain.metadata.DomainPropertyDao;
 import ua.com.fielden.platform.domain.metadata.DomainPropertyHolderCo;
 import ua.com.fielden.platform.domain.metadata.DomainPropertyHolderDao;
-import ua.com.fielden.platform.domain.metadata.DomainTypeDao;
-import ua.com.fielden.platform.domain.metadata.DomainPropertyCo;
 import ua.com.fielden.platform.domain.metadata.DomainTypeCo;
+import ua.com.fielden.platform.domain.metadata.DomainTypeDao;
 import ua.com.fielden.platform.entity.EntityDeleteActionDao;
 import ua.com.fielden.platform.entity.EntityEditActionDao;
-import ua.com.fielden.platform.entity.EntityNavigationActionDao;
 import ua.com.fielden.platform.entity.EntityNewActionDao;
-import ua.com.fielden.platform.entity.IEntityDeleteAction;
-import ua.com.fielden.platform.entity.IEntityEditAction;
-import ua.com.fielden.platform.entity.IEntityNavigationAction;
+import ua.com.fielden.platform.entity.EntityDeleteActionCo;
+import ua.com.fielden.platform.entity.EntityEditActionCo;
 import ua.com.fielden.platform.entity.IEntityNewAction;
-import ua.com.fielden.platform.entity.ISecurityMatrixInsertionPoint;
-import ua.com.fielden.platform.entity.ISecurityMatrixSaveAction;
-import ua.com.fielden.platform.entity.ISecurityTokenTreeNodeEntity;
+import ua.com.fielden.platform.entity.SecurityMatrixInsertionPointCo;
+import ua.com.fielden.platform.entity.SecurityMatrixSaveActionCo;
+import ua.com.fielden.platform.entity.SecurityTokenTreeNodeEntityCo;
 import ua.com.fielden.platform.entity.SecurityMatrixInsertionPointDao;
 import ua.com.fielden.platform.entity.SecurityMatrixSaveActionDao;
 import ua.com.fielden.platform.entity.SecurityTokenTreeNodeEntityDao;
@@ -112,7 +113,7 @@ import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfigDao;
 import ua.com.fielden.platform.ui.config.IEntityCentreAnalysisConfig;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
+import ua.com.fielden.platform.ui.config.api.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.api.IEntityMasterConfig;
 import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
@@ -120,19 +121,19 @@ import ua.com.fielden.platform.ui.config.controller.EntityCentreConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityLocatorConfigDao;
 import ua.com.fielden.platform.ui.config.controller.EntityMasterConfigDao;
 import ua.com.fielden.platform.ui.config.controller.MainMenuItemDao;
+import ua.com.fielden.platform.web.centre.CentreConfigDeleteActionCo;
 import ua.com.fielden.platform.web.centre.CentreConfigDeleteActionDao;
+import ua.com.fielden.platform.web.centre.CentreConfigDuplicateActionCo;
 import ua.com.fielden.platform.web.centre.CentreConfigDuplicateActionDao;
+import ua.com.fielden.platform.web.centre.CentreConfigNewActionCo;
 import ua.com.fielden.platform.web.centre.CentreConfigNewActionDao;
+import ua.com.fielden.platform.web.centre.CentreConfigShareActionCo;
 import ua.com.fielden.platform.web.centre.CentreConfigShareActionDao;
 import ua.com.fielden.platform.web.centre.CustomisableColumnDao;
-import ua.com.fielden.platform.web.centre.ICentreConfigDeleteAction;
-import ua.com.fielden.platform.web.centre.ICentreConfigDuplicateAction;
-import ua.com.fielden.platform.web.centre.ICentreConfigNewAction;
-import ua.com.fielden.platform.web.centre.ICentreConfigShareAction;
 import ua.com.fielden.platform.web.centre.ICustomisableColumn;
-import ua.com.fielden.platform.web.centre.ILoadableCentreConfig;
-import ua.com.fielden.platform.web.centre.IOverrideCentreConfig;
+import ua.com.fielden.platform.web.centre.LoadableCentreConfigCo;
 import ua.com.fielden.platform.web.centre.LoadableCentreConfigDao;
+import ua.com.fielden.platform.web.centre.OverrideCentreConfigCo;
 import ua.com.fielden.platform.web.centre.OverrideCentreConfigDao;
 import ua.com.fielden.platform.web_api.GraphQLService;
 import ua.com.fielden.platform.web_api.IWebApi;
@@ -246,16 +247,15 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IMainMenuItem.class).to(MainMenuItemDao.class);
         bind(IEntityMasterConfig.class).to(EntityMasterConfigDao.class);
         bind(IEntityLocatorConfig.class).to(EntityLocatorConfigDao.class);
-        bind(IEntityCentreConfig.class).to(EntityCentreConfigDao.class);
+        bind(EntityCentreConfigCo.class).to(EntityCentreConfigDao.class);
         bind(IEntityCentreAnalysisConfig.class).to(EntityCentreAnalysisConfigDao.class);
         bind(ICriteriaGenerator.class).to(CriteriaGenerator.class).in(Singleton.class);
         bind(IGeneratedEntityController.class).to(GeneratedEntityDao.class);
 
         // bind entity manipulation controller
         bind(IEntityNewAction.class).to(EntityNewActionDao.class);
-        bind(IEntityEditAction.class).to(EntityEditActionDao.class);
-        bind(IEntityNavigationAction.class).to(EntityNavigationActionDao.class);
-        bind(IEntityDeleteAction.class).to(EntityDeleteActionDao.class);
+        bind(EntityEditActionCo.class).to(EntityEditActionDao.class);
+        bind(EntityDeleteActionCo.class).to(EntityDeleteActionDao.class);
 
         //Reference Hierarchy
         bind(IReferenceHierarchy.class).to(ReferenceHierarchyDao.class);
@@ -270,17 +270,17 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(IUserRole.class).to(UserRoleDao.class);
         bind(IUserRoleTokensUpdater.class).to(UserRoleTokensUpdaterDao.class);
         bind(ISecurityTokenInfo.class).to(SecurityTokenInfoDao.class);
-        bind(ISecurityMatrixInsertionPoint.class).to(SecurityMatrixInsertionPointDao.class);
-        bind(ISecurityTokenTreeNodeEntity.class).to(SecurityTokenTreeNodeEntityDao.class);
-        bind(ISecurityMatrixSaveAction.class).to(SecurityMatrixSaveActionDao.class);
+        bind(SecurityMatrixInsertionPointCo.class).to(SecurityMatrixInsertionPointDao.class);
+        bind(SecurityTokenTreeNodeEntityCo.class).to(SecurityTokenTreeNodeEntityDao.class);
+        bind(SecurityMatrixSaveActionCo.class).to(SecurityMatrixSaveActionDao.class);
 
         bind(ICustomisableColumn.class).to(CustomisableColumnDao.class);
-        bind(ICentreConfigShareAction.class).to(CentreConfigShareActionDao.class);
-        bind(ICentreConfigNewAction.class).to(CentreConfigNewActionDao.class);
-        bind(ICentreConfigDuplicateAction.class).to(CentreConfigDuplicateActionDao.class);
-        bind(ICentreConfigDeleteAction.class).to(CentreConfigDeleteActionDao.class);
-        bind(ILoadableCentreConfig.class).to(LoadableCentreConfigDao.class);
-        bind(IOverrideCentreConfig.class).to(OverrideCentreConfigDao.class);
+        bind(CentreConfigShareActionCo.class).to(CentreConfigShareActionDao.class);
+        bind(CentreConfigNewActionCo.class).to(CentreConfigNewActionDao.class);
+        bind(CentreConfigDuplicateActionCo.class).to(CentreConfigDuplicateActionDao.class);
+        bind(CentreConfigDeleteActionCo.class).to(CentreConfigDeleteActionDao.class);
+        bind(LoadableCentreConfigCo.class).to(LoadableCentreConfigDao.class);
+        bind(OverrideCentreConfigCo.class).to(OverrideCentreConfigDao.class);
 
         bind(IUserAndRoleAssociation.class).to(UserAndRoleAssociationDao.class);
         bind(ISecurityRoleAssociation.class).to(SecurityRoleAssociationDao.class);
@@ -312,6 +312,9 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(DomainPropertyHolderCo.class).to(DomainPropertyHolderDao.class);
         bind(DomainExplorerCo.class).to(DomainExplorerDao.class);
         bind(DomainExplorerInsertionPointCo.class).to(DomainExplorerInsertionPointDao.class);
+
+        bind(DashboardRefreshFrequencyUnitCo.class).to(DashboardRefreshFrequencyUnitDao.class);
+        bind(DashboardRefreshFrequencyCo.class).to(DashboardRefreshFrequencyDao.class);
     }
 
     public Properties getProps() {

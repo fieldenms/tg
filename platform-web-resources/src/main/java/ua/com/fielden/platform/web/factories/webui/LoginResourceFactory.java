@@ -14,8 +14,10 @@ import ua.com.fielden.platform.security.user.IAuthenticationModel;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.LoginResource;
 
@@ -58,6 +60,8 @@ public class LoginResourceFactory extends Restlet {
                     coUser,
                     injector.getInstance(IUserSession.class),
                     util,
+                    injector.getInstance(IDeviceProvider.class),
+                    injector.getInstance(IDates.class),
                     getContext(),
                     request,
                     response

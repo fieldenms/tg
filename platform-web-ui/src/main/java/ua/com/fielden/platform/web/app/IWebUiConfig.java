@@ -7,6 +7,7 @@ import java.util.Optional;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.menu.IMenuRetriever;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -112,6 +113,26 @@ public interface IWebUiConfig extends IMenuRetriever {
      * Implement this in order to provide custom configurations for entity centre, master and other views.
      */
     void initConfiguration();
+
+    /**
+     * Iterates through all registered {@link EntityCentre}s and creates default configurations for each one.
+     */
+    void createDefaultConfigurationsForAllCentres();
+
+    /**
+     * Returns the map of embedded entity centres (and masters containing them) for this web application.
+     */
+    Map<Class<? extends MiWithConfigurationSupport<?>>, T2<EntityCentre<?>, EntityMaster<? extends AbstractEntity<?>>>> getEmbeddedCentres();
+
+    /**
+     * Determines whether the centre, represented by {@code miType}, is embedded.
+     * 
+     * @param miType
+     * @return
+     */
+    default boolean isEmbeddedCentre(final Class<? extends MiWithConfigurationSupport<?>> miType) {
+        return getEmbeddedCentres().containsKey(miType);
+    }
 
     /**
      * Clears all centre, master and menu configurations that were initialised before.

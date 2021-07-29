@@ -235,13 +235,16 @@ Polymer({
     _buildEditAction: function(action) {
         action.shortDesc = "";
         this._actions[referenceHierarchyActions.EDIT] = (e) => {
-            action.currentEntity = () => e.model.entity.entity.entity;
-            action._run();
+            action._runDynamicAction(() => e.model.entity.entity.entity, null);
         };
         return (entity) => {
-            const typeTitle = this.$.reflector.getType(entity.entity.entity.type().notEnhancedFullClassName()).entityTitle();
-            action.longDesc = "Edit " + typeTitle;  
-            return this._generateIconForAction(action, referenceHierarchyActions.EDIT);
+            const entityType = this.$.reflector.tg_determinePropertyType(entity.entity.entity.type(), "");
+            if (entityType instanceof this.$.reflector._getEntityTypePrototype() && entityType.entityMaster()) { // only entity-typed tree items with master can have edit action
+                const typeTitle = this.$.reflector.getType(entityType.notEnhancedFullClassName()).entityTitle();
+                action.longDesc = "Edit " + typeTitle;  
+                return this._generateIconForAction(action, referenceHierarchyActions.EDIT);
+            }
+            return "";
         }
     },
 

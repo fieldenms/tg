@@ -21,6 +21,7 @@ import {IronFitBehavior} from '/resources/polymer/@polymer/iron-fit-behavior/iro
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import { dom } from "/resources/polymer/@polymer/polymer/lib/legacy/polymer.dom.js";
 
 import { TgReflector } from '/app/tg-reflector.js';
 import {TgFocusRestorationBehavior} from '/resources/actions/tg-focus-restoration-behavior.js'
@@ -93,8 +94,9 @@ const template = html`
             height: 1.5em;
             margin: 0 5px
         }
-        #menuToggler,#backButton {
+        #menuToggler, #backButton {
             color: white;
+            @apply --layout-flex-none; /* this is to avoid squashing of these buttons during dialog resizing */
         }
         .title-bar-button {
             color: var(--paper-grey-100);
@@ -160,11 +162,11 @@ const template = html`
         </div>
         <div class="relative layout horizontal justified center">
             <div id="navigationBar" hidden="[[!_isNavigationBarVisible(_lastAction, _minimised)]]" style$="[[_calcNavigationBarStyle(mobile)]]" class="layout horizontal center">
-                <paper-icon-button id="firstEntity" class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_firstEntry" disabled$="[[!_isNavigatonButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getFirstEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
-                <paper-icon-button id="prevEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_previousEntry" disabled$="[[!_isNavigatonButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getPreviousEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
+                <paper-icon-button id="firstEntity" class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_firstEntry" disabled$="[[!_isNavigatonButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getFirstEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
+                <paper-icon-button id="prevEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_previousEntry" disabled$="[[!_isNavigatonButtonEnable(_hasPrev, isNavigationActionInProgress)]]" tooltip-text$="[[_getPreviousEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
                 <span style="white-space: nowrap;">[[_sequentialEditText]]</span>
-                <paper-icon-button id="nextEntity" class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_nextEntry" disabled$="[[!_isNavigatonButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getNextEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
-                <paper-icon-button id="lastEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_lastEntry" disabled$="[[!_isNavigatonButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction.navigationType)]]"></paper-icon-button>
+                <paper-icon-button id="nextEntity" class="button-reverse title-bar-button navigation-button" icon="hardware:keyboard-backspace" on-tap="_nextEntry" disabled$="[[!_isNavigatonButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getNextEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
+                <paper-icon-button id="lastEntity" class="title-bar-button navigation-button" icon="hardware:keyboard-tab" on-tap="_lastEntry" disabled$="[[!_isNavigatonButtonEnable(_hasNext, isNavigationActionInProgress)]]" tooltip-text$="[[_getLastEntryActionTooltip(_lastAction.entityTypeTitle)]]"></paper-icon-button>
             </div>
             <div class="layout horizontal center">
                 <!-- Get A Link button -->
@@ -412,6 +414,14 @@ Polymer({
         },
 
         /**
+         * Other overlays, which are descendants of the current dialog.
+         * When dialog is bringing to front / closing, they also should be brought to the front / closed with parent.
+         */
+        _childOverlays: {
+            type: Array
+        },
+
+        /**
          * Needed to prevent user from dragging dialog out of the window rectangle. Caches window width and height.
          */
         _windowWidth: Number,
@@ -436,7 +446,7 @@ Polymer({
          * The type of entity being edited in this dialog.
          * 
          * For compound masters it represents the type of loaded compound master opener entity.
-         * For simple persistent masters (including those embedded by EntityNavigationAction / EntityEditAction / EntityNewAction) it represents the type of actual persistent entity.
+         * For simple persistent masters (including those embedded by EntityEditAction / EntityNewAction) it represents the type of actual persistent entity.
          * Otherwise (i.e. for functional masters) it is empty (null).
          */
         _mainEntityType: {
@@ -497,6 +507,7 @@ Polymer({
 
         this._parentDialog = null;
         this._childDialogs = [];
+        this._childOverlays = [];
         
         //Set the blocking pane counter equal to 0 so taht no one can't block it twice or event more time
         this._blockingPaneCounter = 0;
@@ -507,7 +518,7 @@ Polymer({
         this._onCaptureFocus = this._onCaptureFocus.bind(this);
         this._onCaptureKeyDown = this._onCaptureKeyDown.bind(this);
 
-        this._focusDialogWithInput = this._focusDialogWithInput.bind(this);
+        this._focusDialogView = this._focusDialogView.bind(this);
         this._finishErroneousOpening = this._finishErroneousOpening.bind(this);
         this._handleActionNavigationChange = this._handleActionNavigationChange.bind(this);
         this._handleActionNavigationInvoked = this._handleActionNavigationInvoked.bind(this);
@@ -609,7 +620,18 @@ Polymer({
         tearDownEvent(e);
     },
 
-    _onCaptureClick: function(event) {
+    _onCaptureClick: function (event) {
+        // (inspired by iron-overlay-manager._onCaptureClick): close all child overlays (without noCancelOnOutsideClick) when started tapping on this dialog
+        const path = dom(event).path;
+        const overlayOnPath = this._manager._overlayInPath(path);
+        if (overlayOnPath === this) {
+            this._childOverlays.slice().forEach(childOverlay => {
+                if (!childOverlay.noCancelOnOutsideClick) {
+                    childOverlay.close();
+                }
+            });
+        }
+        // bring current dialog to front if it is not in front already
         if (this._manager.currentOverlay() !== this) {
             this._bringToFront();
         }
@@ -636,9 +658,12 @@ Polymer({
     },
 
     _bringToFront: function() {
-        this._manager.addOverlay(this);
+        this._manager.addOverlay(this); // dialog itself should be brought to front first ...
+        this._childOverlays.forEach(childOverlay => {
+            this._manager.addOverlay(childOverlay); // ... then all child overlays (autocompleter, secondary action dropdowns etc.) ...
+        });
         this._childDialogs.forEach(function(childDialog) {
-            childDialog._bringToFront();
+            childDialog._bringToFront(); // ... and finally all child dialogs
         });
     },
 
@@ -862,7 +887,9 @@ Polymer({
                     dialog.center();
                 }
                 if (dialog._childDialogs.length === 0) {
-                    dialog._focusDialogWithInput();
+                    // focuses child dialog view in case if it wasn't closed and does not have its own child dialogs;
+                    //  (e.g. in master dialog view it focuses input in error, preferred input or first input -- see 'focusView' in 'tg-entity-master-behavior') 
+                    dialog._focusDialogView();
                 }
             }
         });
@@ -1185,7 +1212,9 @@ Polymer({
         this.style.removeProperty("transition-duration");
         //Removes the optimisation hook if master size or position was changed.
         this.$.elementLoader.style.removeProperty("display");
-        this._focusDialogWithInput();
+        // focuses dialog view after dialog resizing transition is completed;
+        //  (e.g. in master dialog view it focuses input in error, preferred input or first input -- see 'focusView' in 'tg-entity-master-behavior') 
+        this._focusDialogView();
         this._hideBlockingPane();
     },
     
@@ -1253,10 +1282,24 @@ Polymer({
                 //The following instruction will take place after the last _hideBlockingLayer invocation causes blocking layer to become invisible.
                 this._masterVisibilityChanges = undefined;
                 this._masterLayoutChanges = undefined;
-                this.notifyResize();
+                this.notifyResizeWithoutItselfAndAncestors(); // descendant notifications are needed to recalculate shadows in tg-scrollable-component._contentScrolled
             }
             
         }
+    },
+    
+    /**
+     * Notifies resize for this dialog's descendants and not dialog itself / ancestors.
+     *
+     * This is not to trigger 'iron-overlay-behavior._onIronResize' which triggers 'iron-fit-behavior.refit'.
+     * 'iron-fit-behavior.refit' has undesired side effect -- the contents is scrolled to the top.
+     * That side effect interferes with focusing / scrolling of / to, e.g., first input on masters.
+     */
+    notifyResizeWithoutItselfAndAncestors: function () {
+        const _fireResize = this._fireResize;
+        this._fireResize = () => {};
+        this.notifyResize();
+        this._fireResize = _fireResize;
     },
     
     _showMaster: function(action, element, closeEventChannel, closeEventTopics, actionWithContinuation) {
@@ -1393,10 +1436,10 @@ Polymer({
     },
 
     /**
-     * Listener that listens binding entity appeared event and focuses first input.
+     * Focuses dialog view if the inner element was already loaded and has 'focusView' function.
      */
-    _focusDialogWithInput: function(e) {
-        if (this._lastElement.focusView) {
+    _focusDialogView: function(e) {
+        if (this._lastElement && this._lastElement.focusView) {
             this._lastElement.focusView();
         }
     },
@@ -1411,20 +1454,33 @@ Polymer({
         }.bind(this), 50);
     },
 
-    _dialogOpened: function(e, detail, source) {
+    _dialogOpened: function (e) {
         // the following refit does not always result in proper dialog centering due to the fact that UI is still being constructed at the time of opening
         // a more appropriate place for refitting is post entity binding
         // however, entity binding might not occure due to, for example, user authorisation restriction
         // that is why there is a need to perfrom refitting here as well as on entity binding
-        this.async(function() {
-            this.refit();
-        }.bind(this), 100);
-        this._setIsRunning(false);
+        const target = e.composedPath()[0];
+        if (target === this) {
+            this.async(function() {
+                this.refit();
+                // focuses dialog view in case if it has recently been opened and re-fitting started (which will be followed by reflow process and scrolling to the top);
+                //  (e.g. in master dialog view it focuses input in error, preferred input or first input -- see 'focusView' in 'tg-entity-master-behavior') 
+                this._focusDialogView();
+            }.bind(this), 100);
+            this._setIsRunning(false);
+        } else { 
+            // some child overlay was opened and should be added to the list of child overlays in order to be brought to the front when this dialog will be brought to the front
+            this._childOverlays.push(target);
+        }
     },
 
-    _dialogClosed: function(e) {
-        var target = e.target || e.srcElement;
+    _dialogClosed: function (e) {
+        const target = e.composedPath()[0];
         if (target === this) {
+            // close all child overlays
+            this._childOverlays.slice().forEach(childOverlay => childOverlay.close());
+            // clear child overlays cache
+            this._childOverlays = [];
             // if there are current subscriptions they need to be unsubscribed
             // due to dialog being closed
             for (var index = 0; index < this._subscriptions.length; index++) {
@@ -1446,6 +1502,12 @@ Polymer({
 
             if (this._lastAction) {
                 this._lastAction.restoreActionState();
+            }
+        } else {
+            const idx = this._childOverlays.indexOf(target);
+            if (idx >= 0) {
+                // clear child overlay from cache if it has already been closed
+                this._childOverlays.splice(idx, 1);
             }
         }
     },

@@ -56,11 +56,11 @@ const template = html`
         <slot id="custom_action_selector" slot="entity-specific-action" name="custom-front-action"></slot>
         <slot slot="standart-action" name="custom-share-action"></slot>
         <tg-ui-action slot="standart-action" ui-role='ICON' short-desc='New configuration' long-desc='Create new configuration' icon='tg-document-related-icons:file-outline' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigNewAction' element-name='tg-CentreConfigNewAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigNewAction-master_0_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.0.attrs]]' pre-action='[[topLevelActions.0.preAction]]' post-action-success='[[topLevelActions.0.postActionSuccess]]' post-action-error='[[topLevelActions.0.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' disabled='[[_buttonDisabled]]' style='[[_computeButtonStyle(_buttonDisabled)]]'></tg-ui-action>
-        <tg-ui-action slot="standart-action" ui-role='ICON' short-desc='Load configuration' long-desc='Load configuration...' icon='icons:folder-open' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigLoadAction' element-name='tg-CentreConfigLoadAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigLoadAction-master_2_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.2.attrs]]' pre-action='[[topLevelActions.2.preAction]]' post-action-success='[[topLevelActions.2.postActionSuccess]]' post-action-error='[[topLevelActions.2.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' disabled='[[_buttonDisabled]]' style='[[_computeButtonStyle(_buttonDisabled)]]'></tg-ui-action>
+        <tg-ui-action id="loadAction" slot="standart-action" ui-role='ICON' short-desc='Load configuration' long-desc='Load configuration...' icon='icons:folder-open' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigLoadAction' element-name='tg-CentreConfigLoadAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigLoadAction-master_2_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.2.attrs]]' pre-action='[[topLevelActions.2.preAction]]' post-action-success='[[topLevelActions.2.postActionSuccess]]' post-action-error='[[topLevelActions.2.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' disabled='[[_buttonDisabled]]' style='[[_computeButtonStyle(_buttonDisabled)]]'></tg-ui-action>
         <tg-ui-action slot="standart-action" ui-role='ICON' short-desc='Duplicate configuration' long-desc='Duplicate current configuration' icon='icons:content-copy' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigDuplicateAction' element-name='tg-CentreConfigDuplicateAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigDuplicateAction-master_1_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.1.attrs]]' pre-action='[[topLevelActions.1.preAction]]' post-action-success='[[topLevelActions.1.postActionSuccess]]' post-action-error='[[topLevelActions.1.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' disabled='[[_buttonDisabled]]' style='[[_computeButtonStyle(_buttonDisabled)]]'></tg-ui-action>
-        <tg-ui-action slot="standart-action" ui-role='ICON' short-desc='Edit' long-desc='Edit title and description...' icon='tg-document-related-icons:square-edit-outline' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigEditAction' element-name='tg-CentreConfigEditAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigEditAction-master_3_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.3.attrs]]' pre-action='[[topLevelActions.3.preAction]]' post-action-success='[[topLevelActions.3.postActionSuccess]]' post-action-error='[[topLevelActions.3.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' disabled='[[_buttonDisabled]]' style='[[_computeButtonStyle(_buttonDisabled)]]'></tg-ui-action>
+        <tg-ui-action slot="standart-action" ui-role='ICON' short-desc='Edit' long-desc='Edit title, description and dashboard settings...' icon='tg-document-related-icons:square-edit-outline' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigEditAction' element-name='tg-CentreConfigEditAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigEditAction-master_3_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.3.attrs]]' pre-action='[[topLevelActions.3.preAction]]' post-action-success='[[topLevelActions.3.postActionSuccess]]' post-action-error='[[topLevelActions.3.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' disabled='[[_buttonDisabled]]' style='[[_computeButtonStyle(_buttonDisabled)]]'></tg-ui-action>
         <tg-ui-action slot="standart-action" ui-role='ICON' short-desc='Delete configuration' long-desc='Delete current configuration' icon='tg-document-related-icons:delete-outline' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigDeleteAction' element-name='tg-CentreConfigDeleteAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigDeleteAction-master_4_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.4.attrs]]' pre-action='[[topLevelActions.4.preAction]]' post-action-success='[[topLevelActions.4.postActionSuccess]]' post-action-error='[[topLevelActions.4.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' disabled='[[_buttonDisabled]]' style='[[_computeButtonStyle(_buttonDisabled)]]'></tg-ui-action>
-        <tg-ui-action slot="standart-action" ui-role='ICON' short-desc='Settings' long-desc='Customize selection criteria and resultset of the current configuration' icon='icons:settings' icon-style='' component-uri='/master_ui/fielden.work.ui_actions.OpenWorkActivityMasterAction' element-name='tg-OpenWorkActivityMasterAction-master' action-kind='TOP_LEVEL' element-alias='tg-OpenWorkActivityMasterAction-master_5_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.5.attrs]]' pre-action='[[topLevelActions.5.preAction]]' post-action-success='[[topLevelActions.5.postActionSuccess]]' post-action-error='[[topLevelActions.5.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' disabled style='cursor:initial'></tg-ui-action>
+        <tg-ui-action slot="standart-action" ui-role='ICON' short-desc='Configure' long-desc='Configure running automatically...' icon='icons:settings' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigConfigureAction' element-name='tg-CentreConfigConfigureAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigConfigureAction-master_5_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.5.attrs]]' pre-action='[[topLevelActions.5.preAction]]' post-action-success='[[topLevelActions.5.postActionSuccess]]' post-action-error='[[topLevelActions.5.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' hidden="[[embedded]]" disabled='[[_configureButtonDisabled]]' style='[[_computeButtonStyle(_configureButtonDisabled)]]'></tg-ui-action>
     </tg-responsive-toolbar>
     <tg-scrollable-component class="relative">
         <slot name="custom-selection-criteria"></slot>
@@ -104,7 +104,13 @@ Polymer({
         _createContextHolder: Function,
         uuid: String,
         _confirm: Function,
-        _buttonDisabled: Boolean
+        _buttonDisabled: Boolean,
+        _configureButtonDisabled: {
+            type: Boolean,
+            computed: '_computeConfigureButtonDisabled(_buttonDisabled, embedded)'
+        },
+        embedded: Boolean,
+        initiateAutoRun: Function
     },
 
     created: function () {
@@ -130,10 +136,10 @@ Polymer({
             self.topLevelActions = [
                 self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigNewAction'),
                 self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigDuplicateAction'),
-                self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigLoadAction'),
+                self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigLoadAction', null, self.initiateAutoRun),
                 self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigEditAction'),
                 self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigDeleteAction', () => self._confirm('Should this configuration be deleted?', [{ name: 'NO' }, { name: 'YES', confirm: true, autofocus: true }])),
-                self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigSettingsAction')
+                self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigConfigureAction')
             ];
         }, 1);
     },
@@ -148,6 +154,10 @@ Polymer({
 
     _shortcutPressed: function (e) {
         this.processShortcut(e, ['paper-button', 'tg-ui-action', 'paper-icon-button']);
+    },
+
+    _computeConfigureButtonDisabled: function (_buttonDisabled, embedded) {
+        return _buttonDisabled || embedded;
     },
 
     /**

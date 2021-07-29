@@ -362,7 +362,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         const suffix = this.decorator().$$(".suffix");
         suffix.style.alignSelf = "flex-start";
 
-        this.decorator().noLabelFloat = true;
+        this.noLabelFloat = true;
 
         const oldListRender = this.$.input._render.bind(this.$.input);
         this.$.input._render = function () {

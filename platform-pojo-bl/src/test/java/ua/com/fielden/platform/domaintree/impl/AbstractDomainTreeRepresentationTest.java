@@ -72,7 +72,7 @@ public class AbstractDomainTreeRepresentationTest extends AbstractDomainTreeTest
     protected static void performAfterDeserialisationProcess_for_AbstractDomainTreeRepresentationTest(final Object dtr) {
     }
 
-    protected static void assertInnerCrossReferences_for_AbstractDomainTreeRepresentationTest(final Object dtm) {
+    public static void assertInnerCrossReferences_for_AbstractDomainTreeRepresentationTest(final Object dtm) {
         assertInnerCrossReferences_for_AbstractDomainTreeTest(dtm);
 
         final AbstractDomainTreeRepresentation abstractDtr = (AbstractDomainTreeRepresentation) dtm;

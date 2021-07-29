@@ -12,7 +12,9 @@ import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.LogoutResource;
 
 /**
@@ -49,6 +51,8 @@ public class LogoutResourceFactory extends Restlet {
                     injector.getInstance(IUserSession.class),
                     domainName,
                     path,
+                    injector.getInstance(IDeviceProvider.class),
+                    injector.getInstance(IDates.class),
                     getContext(),
                     request,
                     response

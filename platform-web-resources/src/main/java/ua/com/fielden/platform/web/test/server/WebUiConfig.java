@@ -163,6 +163,7 @@ import ua.com.fielden.platform.web.layout.api.impl.LayoutComposer;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
+import ua.com.fielden.platform.web.resources.webui.DashboardRefreshFrequencyWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.SecurityMatrixWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserRoleWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserWebUiConfig;
@@ -440,6 +441,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final UserWebUiConfig userWebUiConfig = new UserWebUiConfig(injector());
         final UserRoleWebUiConfig userRoleWebUiConfig = new UserRoleWebUiConfig(injector());
         final SecurityMatrixWebUiConfig securityConfig = SecurityMatrixWebUiConfig.register(injector(), configApp());
+        final DashboardRefreshFrequencyWebUiConfig dashboardRefreshFrequencyConfig = DashboardRefreshFrequencyWebUiConfig.register(injector(), configApp());
 
         configApp().addCentre(entityCentre);
         configApp().addCentre(entityCentreNotGenerated);
@@ -899,7 +901,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         injector())).
                 addMaster(new EntityMaster<>(
                         TgPersistentCompositeEntity.class,
-                        null,
+                        masterConfigForTgPersistentCompositeEntity(),
                         injector())).
                 addMaster(EntityMaster.noUiFunctionalMaster(TgExportFunctionalEntity.class, TgExportFunctionalEntityProducer.class, injector())).
                 addMaster(EntityMaster.noUiFunctionalMaster(TgDummyAction.class, injector())).
@@ -1060,6 +1062,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*      */.addMenuItem("Users").description("User centre").centre(userWebUiConfig.centre).done()
                 /*      */.addMenuItem("User Roles").description("User role centre").centre(userRoleWebUiConfig.centre).done()
                 /*      */.addMenuItem("Security Matrix").description("Security matrix").master(securityConfig.master).done()
+                /*      */.addMenuItem("Duration").description("Duration").centre(dashboardRefreshFrequencyConfig.centre).done()
                 /*  */.done()
                 /*  */.done()
                 .addModule("Online reports")
@@ -1113,6 +1116,24 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 prefDimForView(prefDim).
                 withNoParentCentreRefresh().
                 build();
+    }
+
+    private static IMaster<TgPersistentCompositeEntity> masterConfigForTgPersistentCompositeEntity() {
+        final String layout = LayoutComposer.mkGridForMasterFitWidth(2, 1);
+        final String actionBarLayout = LayoutComposer.mkActionLayoutForMaster(1, 110);
+        final IMaster<TgPersistentCompositeEntity> config =
+                new SimpleMasterBuilder<TgPersistentCompositeEntity>().forEntity(TgPersistentCompositeEntity.class)
+                .addProp("key1").asAutocompleter()
+                .also()
+                .addProp("key2").asSpinner()
+                .also()
+                .addAction(MasterActions.REFRESH).shortDesc("CANCEL")
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), actionBarLayout)
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
+                .setLayoutFor(Device.TABLET, Optional.empty(), layout)
+                .setLayoutFor(Device.MOBILE, Optional.empty(), layout)
+                .done();
+        return config;
     }
 
     private static IMaster<TgCreatePersistentStatusAction> masterConfigForTgCreatePersistentStatusAction() {
@@ -1799,7 +1820,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addEditableProp("bigDecimalProp")
                     .minWidth(68);
-                    
+
         final Function<String, EntityActionConfig> createDummyAction = colour -> action(TgDummyAction.class)
             .withContext(context().withSelectedEntities().build())
             .icon("accessibility")
