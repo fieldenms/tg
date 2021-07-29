@@ -2,7 +2,6 @@ package ua.com.fielden.platform.eql.stage2.operands;
 
 import static java.util.Collections.emptySet;
 
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;

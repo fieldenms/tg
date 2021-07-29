@@ -2,7 +2,10 @@ package ua.com.fielden.platform.eql.meta;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptyMap;
+import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.query.EntityContainerFetcher.getResultPropsInfos;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
@@ -12,22 +15,23 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
-import java.util.Map;
 
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.QueryModelResult;
+import ua.com.fielden.platform.entity.query.QueryProcessingModel;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
-import ua.com.fielden.platform.eql.stage2.PathsToTreeTransformator;
-import ua.com.fielden.platform.eql.stage2.TablesAndSourceChildren;
-import ua.com.fielden.platform.eql.stage2.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.operands.ResultQuery2;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage3.EqlQueryTransformer;
 import ua.com.fielden.platform.eql.stage3.QueryBlocks3;
 import ua.com.fielden.platform.eql.stage3.conditions.ComparisonTest3;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
@@ -62,37 +66,66 @@ public class EqlStage3TestCase extends EqlTestCase {
         return sqlId;
     }
 
-    protected static <T extends AbstractEntity<?>> ResultQuery3 qryCountAll(final ICompoundCondition0<T> unfinishedQry) {
-        final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
+    private static final <E extends AbstractEntity<?>> ResultQuery3 transform(final QueryProcessingModel<E, ?> qem) {
+        return EqlQueryTransformer.transform(qem, filter, null, dates, metadata()).item;
+    }
+    private static final <E extends AbstractEntity<?>> QueryModelResult<E> transformToModelResult(final QueryProcessingModel<E, ?> qem) {
+        final TransformationResult<ResultQuery3> tr = EqlQueryTransformer.transform(qem, filter, null, dates, metadata());
+        final ResultQuery3 entQuery3 = tr.item;
+        final String sql = entQuery3.sql(DbVersion.H2);
+        return new QueryModelResult<>((Class<E>) entQuery3.resultType, sql, getResultPropsInfos(entQuery3.yields), tr.updatedContext.getParamValues(), qem.fetchModel);
+    }
 
-        final ua.com.fielden.platform.eql.stage1.TransformationContext context = new ua.com.fielden.platform.eql.stage1.TransformationContext(metadata());
-        final EntQueryGenerator qb = qb();
-        final ResultQuery2 rq2 = qb.generateAsResultQuery(countQry, null, null).transform(context);
-        final PathsToTreeTransformator pathsToTreeTransformator = new PathsToTreeTransformator(metadata(), qb);
-        final ua.com.fielden.platform.eql.stage2.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(new TablesAndSourceChildren(tables, pathsToTreeTransformator.groupChildren(rq2.collectProps()))));
-        return s2tr.item;
+    protected static <T extends AbstractEntity<?>> ResultQuery3 qryCountAll(final ICompoundCondition0<T> unfinishedQry) {
+        return qry(unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate());
+    }
+    
+    protected static <T extends AbstractEntity<?>> ResultQuery3 qryCountAll(final ICompleted<T> unfinishedQry) {
+        return qry(unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate());
+    }
+
+    protected static <T extends AbstractEntity<?>> ResultQuery3 qryCountAllWithUdf(final ICompoundCondition0<T> unfinishedQry) {
+        final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
+        countQry.setFilterable(true);
+        return qry(countQry);
+    }
+
+    protected static <T extends AbstractEntity<?>> ResultQuery3 qryCountAllWithUdf(final ICompleted<T> unfinishedQry) {
+        final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
+        countQry.setFilterable(true);
+        return qry(countQry);
     }
 
     protected static ResultQuery3 qry(final AggregatedResultQueryModel qry) {
-        final ua.com.fielden.platform.eql.stage1.TransformationContext context = new ua.com.fielden.platform.eql.stage1.TransformationContext(metadata());
-        final EntQueryGenerator qb = qb();
-        final ResultQuery2 rq2 = qb.generateAsResultQuery(qry, null, null).transform(context);
-        final PathsToTreeTransformator pathsToTreeTransformator = new PathsToTreeTransformator(metadata(), qb);
-        final ua.com.fielden.platform.eql.stage2.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(new TablesAndSourceChildren(tables, pathsToTreeTransformator.groupChildren(rq2.collectProps()))));
-        return s2tr.item;
+        return transform(new QueryProcessingModel<EntityAggregates, AggregatedResultQueryModel>(qry, null, null, emptyMap(), true));
     }
 
-    protected static <T extends AbstractEntity<?>> ResultQuery3 qryCountAll(final ICompoundCondition0<T> unfinishedQry, final Map<String, Object> paramValues) {
-        final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
-
-        final ua.com.fielden.platform.eql.stage1.TransformationContext context = new ua.com.fielden.platform.eql.stage1.TransformationContext(metadata());
-        final EntQueryGenerator qb = qb(paramValues);
-        final ResultQuery2 rq2 = qb.generateAsResultQuery(countQry, null, null).transform(context);
-        final PathsToTreeTransformator pathsToTreeTransformator = new PathsToTreeTransformator(metadata(), qb);
-        final ua.com.fielden.platform.eql.stage2.TransformationResult<ResultQuery3> s2tr = rq2.transform(new TransformationContext(new TablesAndSourceChildren(tables, pathsToTreeTransformator.groupChildren(rq2.collectProps()))));
-        return s2tr.item;
+    protected static ResultQuery3 qryFiltered(final AggregatedResultQueryModel qry) {
+        qry.setFilterable(true);
+        return qry(qry);
+    }
+    
+    protected static <T extends AbstractEntity<?>> ResultQuery3 qry(final EntityResultQueryModel<T> qry) {
+        return transform(new QueryProcessingModel<T, EntityResultQueryModel<T>>(qry, null, null, emptyMap(), true));
     }
 
+    protected static <T extends AbstractEntity<?>> void assertModelResultsEquals(final EntityResultQueryModel<T> exp, final EntityResultQueryModel<T> act) {
+        final QueryModelResult<T> expQmr = transformToModelResult(new QueryProcessingModel<T, EntityResultQueryModel<T>>(exp, null, null, emptyMap(), true));
+        final QueryModelResult<T> actQmr = transformToModelResult(new QueryProcessingModel<T, EntityResultQueryModel<T>>(act, null, null, emptyMap(), true));
+        
+        assertEquals("Qry model results (SQL) are different!", expQmr.getSql(), actQmr.getSql());
+        assertEquals("Qry model results (Result Type) are different!", expQmr.getResultType(), actQmr.getResultType());
+        assertEquals("Qry model results (Fetch Model) are different!", expQmr.getFetchModel(), actQmr.getFetchModel());
+        assertEquals("Qry model results (Param values) are different!", expQmr.getParamValues(), actQmr.getParamValues());
+        assertEquals("Qry model results (Yielded props infos) are different!", expQmr.getYieldedPropsInfo(), actQmr.getYieldedPropsInfo());
+    }
+    
+    protected static <T extends AbstractEntity<?>> ResultQuery3 qryFiltered(final EntityResultQueryModel<T> qry) {
+        qry.setFilterable(true);
+        return qry(qry);
+    }
+
+    
     protected static Source3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final String sourceForContextId) {
         return new Source3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId, nextSqlId());
     }

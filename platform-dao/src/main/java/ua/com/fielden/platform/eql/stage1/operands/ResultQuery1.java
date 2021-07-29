@@ -49,7 +49,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
         final TransformationResult<? extends ISources2<?>> sourcesTr = sources.transform(context);
         final TransformationContext enhancedContext = sourcesTr.updatedContext;
         final ISources2<? extends ISources3> sources2 = sourcesTr.item;
-        final Conditions2 conditions2 = conditions.transform(enhancedContext);
+        final Conditions2 conditions2 = enhanceWithUserDataFilterConditions(sources2.mainSource(), context, conditions.transform(enhancedContext));
         final Yields2 yields2 = yields.transform(enhancedContext);
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
         final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, sources2.mainSource());
@@ -58,7 +58,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
 
         return new ResultQuery2(entQueryBlocks, resultType);
     }
-
+    
     private Yields2 enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
         if (yields.getYields().isEmpty() || yieldAll) {
             final List<Yield2> enhancedYields = new ArrayList<>(yields.getYields());

@@ -3,11 +3,10 @@ package ua.com.fielden.platform.eql.stage2.operands;
 import static ua.com.fielden.platform.eql.stage2.sources.ISources2.transformNone;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.ITransformableToS3;
+import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.TransformationResult;
-import ua.com.fielden.platform.eql.stage2.sources.ISources2;
 import ua.com.fielden.platform.eql.stage3.QueryBlocks3;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.etc.GroupBys3;

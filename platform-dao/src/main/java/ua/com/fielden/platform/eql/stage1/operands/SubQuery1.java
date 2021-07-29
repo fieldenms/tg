@@ -40,7 +40,7 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
         final TransformationResult<? extends ISources2<?>> sourcesTr = sources.transform(localContext);
         final TransformationContext enhancedContext = sourcesTr.updatedContext;
         final ISources2<? extends ISources3> sources2 = sourcesTr.item;
-        final Conditions2 conditions2 = conditions.transform(enhancedContext);
+        final Conditions2 conditions2 = enhanceWithUserDataFilterConditions(sources2.mainSource(), context, conditions.transform(enhancedContext));
         final Yields2 yields2 = yields.transform(enhancedContext);
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
         final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, sources2.mainSource());

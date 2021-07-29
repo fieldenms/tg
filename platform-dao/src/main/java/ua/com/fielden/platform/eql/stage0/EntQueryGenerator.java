@@ -1,11 +1,9 @@
 package ua.com.fielden.platform.eql.stage0;
 
-import static java.util.Collections.unmodifiableMap;
-import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.AND;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.ORDER_TOKENS;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.QUERY_TOKEN;
 import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.SORT_ORDER;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.eql.stage1.conditions.Conditions1.emptyConditions;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,7 +14,6 @@ import java.util.Map;
 import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.IRetrievalModel;
 import ua.com.fielden.platform.entity.query.fluent.enums.QueryTokens;
@@ -26,7 +23,6 @@ import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
-import ua.com.fielden.platform.eql.stage1.conditions.CompoundCondition1;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.etc.OrderBys1;
 import ua.com.fielden.platform.eql.stage1.operands.ResultQuery1;
@@ -42,20 +38,16 @@ import ua.com.fielden.platform.utils.Pair;
 public class EntQueryGenerator {
     public static final String NOW = "UC#NOW";
 
-    public final DbVersion dbVersion;
     public final IDates dates;
     public final IFilter filter;
     public final String username;
     private final Map<String, Object> paramValues = new HashMap<>();
-    public final EqlDomainMetadata domainMetadata;
     
-    public EntQueryGenerator(final DbVersion dbVersion, final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues, final EqlDomainMetadata domainMetadata) {
-        this.dbVersion = dbVersion;
+    public EntQueryGenerator(final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues) {
         this.filter = filter;
         this.username = username;
         this.dates = dates;
         this.paramValues.putAll(paramValues);
-        this.domainMetadata = domainMetadata;
         if (dates != null) {
             final DateTime now = dates.now();
             if (now != null) {
@@ -132,22 +124,21 @@ public class EntQueryGenerator {
         }
 
         final ISources1<? extends ISources2<?>> fromModel = from.getModel();
-        final Conditions1 whereModel = addFilteringCondition(where.getModel(), qryModel.isFilterable(), filter, username, fromModel != null ? fromModel.mainSource() : null);
+        final Conditions1 udfModel = fromModel == null ? emptyConditions : generateUserDataFilteringCondition(qryModel.isFilterable(), filter, username, fromModel.mainSource());
 
-        return new QueryBlocks1(fromModel, whereModel, select.getModel(), groupBy.getModel(), produceOrderBys(orderModel), qryModel.isYieldAll());
+        return new QueryBlocks1(fromModel, where.getModel(), udfModel, select.getModel(), groupBy.getModel(), produceOrderBys(orderModel), qryModel.isYieldAll());
     }
     
-    private Conditions1 addFilteringCondition(final Conditions1 originalConditions, final boolean filterable, final IFilter filter, final String username, final ISource1<?> mainSource) {
+    private Conditions1 generateUserDataFilteringCondition(final boolean filterable, final IFilter filter, final String username, final ISource1<?> mainSource) {
         if (filterable && filter != null) {
             final ConditionModel filteringCondition = filter.enhance(mainSource.sourceType(), mainSource.getAlias(), username);
             if (filteringCondition != null) {
                 // LOGGER.debug("\nApplied user-driven-filter to query main source type [" + mainSource.sourceType().getSimpleName() + "]");
-                final Conditions1 userDateFilteringCondition = new StandAloneConditionBuilder(this, filteringCondition, false).getModel();
-                return new Conditions1(false, userDateFilteringCondition, listOf(new CompoundCondition1(AND, originalConditions)));
+                return new StandAloneConditionBuilder(this, filteringCondition, false).getModel();
             }
         }
 
-        return originalConditions;
+        return emptyConditions;
     }
 
     private List<Pair<TokenCategory, Object>> linearizeTokens(final List<Pair<TokenCategory, Object>> tokens) {
@@ -186,7 +177,7 @@ public class EntQueryGenerator {
         return orderBy.getModel();
     }
     
-    public Map<String, Object> getParamValues() {
-        return unmodifiableMap(paramValues);
+    public Object getParamValue(final String paramName) {
+        return paramValues.get(paramName);
     }
 }

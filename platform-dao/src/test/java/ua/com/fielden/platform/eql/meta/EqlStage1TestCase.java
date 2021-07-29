@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperat
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.AND;
 import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.OR;
+import static ua.com.fielden.platform.eql.stage1.conditions.Conditions1.emptyConditions;
 import static ua.com.fielden.platform.eql.stage1.etc.GroupBys1.emptyGroupBys;
 import static ua.com.fielden.platform.eql.stage1.etc.OrderBys1.emptyOrderBys;
 import static ua.com.fielden.platform.eql.stage1.etc.Yields1.emptyYields;
@@ -55,11 +56,11 @@ public class EqlStage1TestCase extends EqlTestCase {
     }
     
     protected static QueryBlocks1 qb1(final ISources1<? extends ISources2<?>> sources, final Conditions1 conditions) {
-        return new QueryBlocks1(sources, conditions, emptyYields, emptyGroupBys, emptyOrderBys, false);
+        return new QueryBlocks1(sources, conditions, emptyConditions, emptyYields, emptyGroupBys, emptyOrderBys, false);
     }
 
     protected static QueryBlocks1 qb1(final ISources1<? extends ISources2<?>> sources, final Conditions1 conditions, final Yields1 yields) {
-        return new QueryBlocks1(sources, conditions, yields, emptyGroupBys, emptyOrderBys, false);
+        return new QueryBlocks1(sources, conditions, emptyConditions, yields, emptyGroupBys, emptyOrderBys, false);
     }
 
     protected static Yields1 yields(final Yield1 ... yields) {

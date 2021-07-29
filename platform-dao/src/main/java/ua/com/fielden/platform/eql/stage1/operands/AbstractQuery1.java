@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.eql.stage1.operands.Prop1.enhancePath;
 import static ua.com.fielden.platform.eql.stage2.KeyPropertyExtractor.extract;
 import static ua.com.fielden.platform.eql.stage2.KeyPropertyExtractor.needsExtraction;
+import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.emptyConditions;
 import static ua.com.fielden.platform.eql.stage2.etc.GroupBys2.emptyGroupBys;
 import static ua.com.fielden.platform.eql.stage2.etc.OrderBys2.emptyOrderBys;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
@@ -30,6 +31,7 @@ import ua.com.fielden.platform.eql.stage1.etc.OrderBys1;
 import ua.com.fielden.platform.eql.stage1.etc.Yields1;
 import ua.com.fielden.platform.eql.stage1.sources.ISources1;
 import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
+import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.etc.GroupBy2;
 import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.etc.OrderBy2;
@@ -46,6 +48,7 @@ public abstract class AbstractQuery1 {
 
     public final ISources1<? extends ISources2<?>> sources;
     public final Conditions1 conditions;
+    public final Conditions1 udfConditions;
     public final Yields1 yields;
     public final GroupBys1 groups;
     public final OrderBys1 orderings;
@@ -55,6 +58,7 @@ public abstract class AbstractQuery1 {
     public AbstractQuery1(final QueryBlocks1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType) {
         this.sources = queryBlocks.sources;
         this.conditions = queryBlocks.conditions;
+        this.udfConditions = queryBlocks.udfConditions;
         this.yields = queryBlocks.yields;
         this.groups = queryBlocks.groups;
         this.orderings = queryBlocks.orderings;
@@ -64,6 +68,21 @@ public abstract class AbstractQuery1 {
 
     public QueryBlocks2 transformSourceless(final TransformationContext context) {
         return new QueryBlocks2(null, conditions.transform(context), yields.transform(context), groups.transform(context), orderings.transform(context));
+    }
+    
+    protected Conditions2 enhanceWithUserDataFilterConditions(final ISource2<? extends ISource3> mainSource, final TransformationContext context, final Conditions2 originalConditions) { 
+        if (udfConditions.isEmpty()) {
+            return originalConditions;
+        }
+        
+        final TransformationContext localContext = new TransformationContext(context.domainInfo, asList(asList(mainSource)), context.sourceIdPrefix); 
+        final Conditions2 udfConditions2 = udfConditions.transform(localContext);
+        
+        if (originalConditions.ignore()) {
+            return udfConditions2.ignore() ? emptyConditions : udfConditions2;  
+        } else {
+            return udfConditions2.ignore() ? originalConditions : new Conditions2(false, asList(asList(udfConditions2, originalConditions)));
+        }
     }
     
     protected static GroupBys2 enhance(final GroupBys2 groupBys) {
@@ -171,6 +190,7 @@ public abstract class AbstractQuery1 {
         final int prime = 31;
         int result = 1;
         result = prime * result + conditions.hashCode();
+        result = prime * result + udfConditions.hashCode();
         result = prime * result + groups.hashCode();
         result = prime * result + orderings.hashCode();
         result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
@@ -196,6 +216,7 @@ public abstract class AbstractQuery1 {
                 Objects.equals(sources, other.sources) &&
                 Objects.equals(yields, other.yields) &&
                 Objects.equals(conditions, other.conditions) &&
+                Objects.equals(udfConditions, other.udfConditions) &&
                 Objects.equals(groups, other.groups) &&
                 Objects.equals(orderings, other.orderings) &&
                 Objects.equals(yieldAll, other.yieldAll);
