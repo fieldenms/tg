@@ -158,7 +158,6 @@ public class MasterInfoProvider {
             info.setDesc("/master_ui/ua.com.fielden.platform.entity.EntityNewAction");
             info.setShortDesc(entityTitle);
             info.setLongDesc(format("Add new %s", entityTitle));
-            info.setRequireMasterEntity("true");
             info.setRequireSelectedEntities("ONE");
             info.setEntityType(EntityNewAction.class.getName());
             info.setEntityTypeTitle(entityTitle);
