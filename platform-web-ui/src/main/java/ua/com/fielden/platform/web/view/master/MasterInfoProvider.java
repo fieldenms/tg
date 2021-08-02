@@ -10,6 +10,8 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.PRIMARY_RESULT_SET;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.TOP_LEVEL;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -24,12 +26,10 @@ import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.master.MasterInfo;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
-import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.view.master.exceptions.MissingEntityTypeException;
 
 public class MasterInfoProvider {
@@ -66,14 +66,14 @@ public class MasterInfoProvider {
         try {
             return (Class<? extends AbstractEntity<?>>) Class.forName(entityType);
         } catch (final ClassNotFoundException e) {
-            throw new MissingEntityTypeException(String.format("The entity type class is missing for type: %s", entityType), e);
+            throw new MissingEntityTypeException(format("The entity type class is missing for type: %s", entityType), e);
         }
     }
 
     private MasterInfo buildConfiguredMasterActionInfo(final Class<? extends AbstractEntity<?>> type, final String relativePropertyName) {
         try {
             return webUiConfig.configApp().getOpenMasterAction(type).get().map(entityActionConfig -> {
-                final FunctionalActionElement funcElem = new FunctionalActionElement(entityActionConfig, 0, FunctionalActionKind.PRIMARY_RESULT_SET);
+                final FunctionalActionElement funcElem = new FunctionalActionElement(entityActionConfig, 0, PRIMARY_RESULT_SET);
                 final DomElement actionElement = funcElem.render();
                 final MasterInfo info = new MasterInfo();
                 info.setKey(actionElement.getAttr("element-name").value.toString());
@@ -109,9 +109,7 @@ public class MasterInfoProvider {
             info.setDesc("/master_ui/ua.com.fielden.platform.entity.EntityEditAction");
             info.setShortDesc(entityTitle);
             info.setLongDesc(format("Edit %s", entityTitle));
-            info.setRequireSelectionCriteria("false");
             info.setRequireSelectedEntities("ONE");
-            info.setRequireMasterEntity("false");
             info.setEntityType(EntityEditAction.class.getName());
             info.setRelativePropertyName(relativePropertyName);
             info.setEntityTypeTitle(entityTitle);
@@ -125,17 +123,17 @@ public class MasterInfoProvider {
             return webUiConfig.configApp().getOpenMasterAction(type).get()
                     .filter(entityActionConfig -> AbstractFunctionalEntityToOpenCompoundMaster.class.isAssignableFrom(entityActionConfig.functionalEntity.get()))
                     .map(entityActionConfig -> {
-                final FunctionalActionElement funcElem = new FunctionalActionElement(entityActionConfig, 0, FunctionalActionKind.TOP_LEVEL);
-                final String title = TitlesDescsGetter.getEntityTitleAndDesc(type).getKey();
+                final FunctionalActionElement funcElem = new FunctionalActionElement(entityActionConfig, 0, TOP_LEVEL);
+                final String entityTitle = getEntityTitleAndDesc(type).getKey();
                 final DomElement actionElement = funcElem.render();
                 final MasterInfo info = new MasterInfo();
                 info.setKey(actionElement.getAttr("element-name").value.toString());
                 info.setDesc(actionElement.getAttr("component-uri").value.toString());
-                info.setShortDesc(title);
-                info.setLongDesc("Add new " + title);
+                info.setShortDesc(entityTitle);
+                info.setLongDesc(format("Add new %s", entityTitle));
                 info.setShouldRefreshParentCentreAfterSave(false);
                 info.setEntityType(entityActionConfig.functionalEntity.get().getName());
-                info.setEntityTypeTitle(title);
+                info.setEntityTypeTitle(entityTitle);
                 info.setRootEntityType(type);
                 entityActionConfig.prefDimForView.ifPresent(prefDim -> {
                     info.setWidth(prefDim.width);
