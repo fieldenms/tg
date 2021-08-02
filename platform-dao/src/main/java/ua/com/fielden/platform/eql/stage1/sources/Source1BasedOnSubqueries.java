@@ -24,7 +24,6 @@ import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PrimTypePropInfo;
 import ua.com.fielden.platform.eql.stage1.TransformationContext;
-import ua.com.fielden.platform.eql.stage1.etc.Yield1;
 import ua.com.fielden.platform.eql.stage1.operands.SourceQuery1;
 import ua.com.fielden.platform.eql.stage2.etc.Yield2;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
@@ -40,37 +39,12 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
         super(alias, id);
         this.isSyntheticEntity = isSyntheticEntity;
         this.models.addAll(models);
-        validateYieldsMatrix(generateYieldMatrixFromQueryModels(this.models), this.models.size());
     }
     
-    private static Map<String, List<Yield1>> generateYieldMatrixFromQueryModels(final List<SourceQuery1> models) {
-        final Map<String, List<Yield1>> yieldsMatrix = new HashMap<>();        
-        for (final SourceQuery1 entQuery : models) {
-            for (final Yield1 yield : entQuery.yields.getYields()) {
-                final List<Yield1> foundYields = yieldsMatrix.get(yield.alias);
-                if (foundYields != null) {
-                    foundYields.add(yield);
-                } else {
-                    final List<Yield1> newList = new ArrayList<>();
-                    newList.add(yield);
-                    yieldsMatrix.put(yield.alias, newList);
-                }
-            }
-        }
-        return yieldsMatrix;
-    }
-
-    private static void validateYieldsMatrix(final Map<String, List<Yield1>> yieldsMatrix, final int modelsCount) {
-        for (final Map.Entry<String, List<Yield1>> entry : yieldsMatrix.entrySet()) {
-            if (entry.getValue().size() != modelsCount) {
-                throw new EqlStage1ProcessingException("Incorrect models used as query source - their result types are different!");
-            }
-        }
-    }
-   
     @Override
     public Source2BasedOnSubqueries transform(final TransformationContext context) {
         final List<SourceQuery2> transformedQueries = models.stream().map(m -> m.transform(context)).collect(toList());
+        validateYields(transformedQueries);
         return new Source2BasedOnSubqueries(transformedQueries, alias, transformId(context), produceEntityInfo(context.domainInfo, transformedQueries, sourceType(), isSyntheticEntity));
     }
     
@@ -164,4 +138,36 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
             return entityInfo;
         }
     }
+    
+    private static void validateYields(final List<SourceQuery2> models) {
+        if (models.size() > 1) {
+            validateYieldsMatrix(generateYieldMatrixFromQueryModels(models), models.size());    
+        }
+    }
+
+    private static Map<String, List<Yield2>> generateYieldMatrixFromQueryModels(final List<SourceQuery2> models) {
+        final Map<String, List<Yield2>> yieldsMatrix = new HashMap<>();        
+        for (final SourceQuery2 entQuery : models) {
+            for (final Yield2 yield : entQuery.yields.getYields()) {
+                final List<Yield2> foundYields = yieldsMatrix.get(yield.alias);
+                if (foundYields != null) {
+                    foundYields.add(yield);
+                } else {
+                    final List<Yield2> newList = new ArrayList<>();
+                    newList.add(yield);
+                    yieldsMatrix.put(yield.alias, newList);
+                }
+            }
+        }
+        return yieldsMatrix;
+    }
+
+    private static void validateYieldsMatrix(final Map<String, List<Yield2>> yieldsMatrix, final int modelsCount) {
+        for (final Map.Entry<String, List<Yield2>> entry : yieldsMatrix.entrySet()) {
+            if (entry.getValue().size() != modelsCount) {
+                throw new EqlStage1ProcessingException("Incorrect models used as query source - their result types are different! Alias [" + entry.getKey() + "] has been yielded only " + entry.getValue().size() + " but the models count is " + modelsCount);
+            }
+        }
+    }
+
 }

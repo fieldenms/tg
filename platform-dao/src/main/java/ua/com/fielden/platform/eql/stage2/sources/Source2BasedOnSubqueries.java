@@ -22,7 +22,7 @@ public class Source2BasedOnSubqueries extends AbstractSource2 implements ISource
         super(id, alias, entityInfo);
         this.models.addAll(models);
     }
-
+    
     @Override
     public Class<? extends AbstractEntity<?>> sourceType() {
         return (Class<? extends AbstractEntity<?>>) models.get(0).resultType;

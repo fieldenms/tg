@@ -5,6 +5,7 @@ import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.query.DbVersion.H2;
 import static ua.com.fielden.platform.entity.query.EntityContainerFetcher.getResultPropsInfos;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
@@ -21,7 +22,6 @@ import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.QueryModelResult;
 import ua.com.fielden.platform.entity.query.QueryProcessingModel;
@@ -72,7 +72,7 @@ public class EqlStage3TestCase extends EqlTestCase {
     private static final <E extends AbstractEntity<?>> QueryModelResult<E> transformToModelResult(final QueryProcessingModel<E, ?> qem) {
         final TransformationResult<ResultQuery3> tr = EqlQueryTransformer.transform(qem, filter, null, dates, metadata());
         final ResultQuery3 entQuery3 = tr.item;
-        final String sql = entQuery3.sql(DbVersion.H2);
+        final String sql = entQuery3.sql(H2);
         return new QueryModelResult<>((Class<E>) entQuery3.resultType, sql, getResultPropsInfos(entQuery3.yields), tr.updatedContext.getParamValues(), qem.fetchModel);
     }
 

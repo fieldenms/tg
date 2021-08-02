@@ -4,7 +4,6 @@ package ua.com.fielden.platform.eql.stage3;
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.query.DbVersion.H2;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.math.BigDecimal;
@@ -14,6 +13,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EqlStage3TestCase;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
@@ -283,14 +283,14 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
     
     @Test
     public void calc_prop_is_correctly_transformed_08_sql() {
-        final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("make.key").isNotNull());
+        final EntityResultQueryModel<TeWorkOrder> act = select(WORK_ORDER).where().prop("make.key").isNotNull().model();
         
-        final ResultQuery3 expQry = qryCountAll(select(WORK_ORDER).as("w").leftJoin(MAKE).as("mk").on().
+        final EntityResultQueryModel<TeWorkOrder> exp = select(WORK_ORDER).as("w").leftJoin(MAKE).as("mk").on().
                 model(
                 select(VEHICLE).as("v").join(MODEL).as("m").on().prop("v.model").eq().prop("m.id").where().prop("v.id").eq().prop("w.vehicle").yield().prop("m.make").modelAsEntity(MAKE)).eq().prop("mk.id").
-                where().prop("mk.key").isNotNull());
+                where().prop("mk.key").isNotNull().model();
         
-        assertEquals(expQry.sql(H2), actQry.sql(H2));
+        assertModelResultsEquals(exp, act);
     }
     
     @Test
@@ -323,13 +323,13 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
     
     @Test
     public void calc_prop_is_correctly_transformed_07_sql() {
-        final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("make").isNotNull());
+        final EntityResultQueryModel<TeWorkOrder> act = select(WORK_ORDER).where().prop("make").isNotNull().model();
         
-        final ResultQuery3 expQry = qryCountAll(select(WORK_ORDER).where().model(
+        final EntityResultQueryModel<TeWorkOrder> exp = select(WORK_ORDER).where().model(
                 select(VEHICLE).as("v").join(MODEL).as("m").on().prop("v.model").eq().prop("m.id").where().prop("v.id").eq().extProp("vehicle").yield().prop("m.make").modelAsEntity(MAKE)
-                ).isNotNull());
+                ).isNotNull().model();
         
-        assertEquals(expQry.sql(H2), actQry.sql(H2));
+        assertModelResultsEquals(exp, act);
     }
 
     @Test
