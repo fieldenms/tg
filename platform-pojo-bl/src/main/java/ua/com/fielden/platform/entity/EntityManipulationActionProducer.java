@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.entity;
 
+import static java.lang.Class.forName;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseOpening;
 
 import java.util.function.Supplier;
@@ -33,7 +35,15 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
     protected T provideDefaultValues(final T entity) {
         if (contextNotEmpty()) {
             final Supplier<? extends Class<AbstractEntity<?>>> determineTypeFrom = () -> chosenEntityType().orElseGet(() -> { // if it is empty
-                return selectionCrit() != null ? (Class<AbstractEntity<?>>) selectionCrit().getEntityClass() : null; // use selection criteria type as a fallback (or otherwise return 'null')
+                if (selectionCrit() != null) { // use selection criteria type as a fallback (or otherwise return 'null')
+                    return (Class<AbstractEntity<?>>) selectionCrit().getEntityClass();
+                }
+                final String rootEntityTypeName = (String) getContext().getCustomObject().get("@@rootEntityType");
+                try {
+                    return !isEmpty(rootEntityTypeName) ? (Class<AbstractEntity<?>>) forName(rootEntityTypeName) : null;
+                } catch (final ClassNotFoundException e) {
+                    return null;
+                }
             });
             ofNullable(
                 computation()

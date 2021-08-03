@@ -559,7 +559,7 @@ export class TgEntityEditor extends TgEditor {
                             this.commit();
                         }
                     }
-                    this.openMasterAction._runDynamicAction(() => entity, null);
+                    this.openMasterAction._runDynamicActionForNew(this.newEntityMaster.rootEntityType);
                 }
                 if (!serialisedSearchQuery.key) {
                     runWithNew();

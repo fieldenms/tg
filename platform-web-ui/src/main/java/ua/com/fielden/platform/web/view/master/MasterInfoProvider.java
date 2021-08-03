@@ -130,7 +130,6 @@ public class MasterInfoProvider {
                 info.setShortDesc(entityTitle);
                 info.setLongDesc(format("Add new %s", entityTitle));
                 info.setShouldRefreshParentCentreAfterSave(false);
-                info.setRequireSelectedEntities("ONE");
                 info.setEntityType(entityActionConfig.functionalEntity.get().getName());
                 info.setEntityTypeTitle(entityTitle);
                 info.setRootEntityType(type);
@@ -155,7 +154,6 @@ public class MasterInfoProvider {
             info.setDesc("/master_ui/ua.com.fielden.platform.entity.EntityNewAction");
             info.setShortDesc(entityTitle);
             info.setLongDesc(format("Add new %s", entityTitle));
-            info.setRequireSelectedEntities("ONE");
             info.setEntityType(EntityNewAction.class.getName());
             info.setEntityTypeTitle(entityTitle);
             info.setRootEntityType(type);
