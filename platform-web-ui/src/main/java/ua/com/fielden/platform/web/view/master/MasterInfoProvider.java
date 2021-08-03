@@ -175,8 +175,8 @@ public class MasterInfoProvider {
      */
     private Supplier<? extends MasterInfo> tryOtherMasters(final Class<? extends AbstractEntity<?>> type, final String relativePropertyName, final BiFunction<Class<? extends AbstractEntity<?>>, String, MasterInfo> keepSearch) {
          return () -> getBaseTypeForSyntheticEntity(type)
-                     .map(baseType -> buildConfiguredMasterActionInfo(baseType, relativePropertyName))
-                     .orElseGet(() -> getSingleMemberOfEntityType(type).map(keyTypeName -> buildConfiguredMasterActionInfo(keyTypeName._1, keyTypeName._2)).orElse(null));
+                     .map(baseType -> keepSearch.apply(baseType, relativePropertyName))
+                     .orElseGet(() -> getSingleMemberOfEntityType(type).map(keyTypeName -> keepSearch.apply(keyTypeName._1, keyTypeName._2)).orElse(null));
     }
 
     /**
