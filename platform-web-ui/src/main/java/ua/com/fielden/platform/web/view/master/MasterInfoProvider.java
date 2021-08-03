@@ -80,10 +80,8 @@ public class MasterInfoProvider {
                 info.setDesc(actionElement.getAttr("component-uri").value.toString());
                 info.setShortDesc(actionElement.getAttr("short-desc").value.toString());
                 info.setLongDesc(actionElement.getAttr("long-desc").value.toString());
-                info.setShouldRefreshParentCentreAfterSave(actionElement.getAttr("should-refresh-parent-centre-after-save") != null);
-                info.setRequireSelectionCriteria(actionElement.getAttr("require-selection-criteria").value.toString());
-                info.setRequireSelectedEntities(actionElement.getAttr("require-selected-entities").value.toString());
-                info.setRequireMasterEntity(actionElement.getAttr("require-master-entity").value.toString());
+                info.setShouldRefreshParentCentreAfterSave(false);
+                info.setRequireSelectedEntities("ONE");
                 info.setEntityType(entityActionConfig.functionalEntity.get().getName());
                 info.setRelativePropertyName(relativePropertyName);
                 info.setEntityTypeTitle(getEntityTitleAndDesc(type).getKey());
@@ -132,6 +130,7 @@ public class MasterInfoProvider {
                 info.setShortDesc(entityTitle);
                 info.setLongDesc(format("Add new %s", entityTitle));
                 info.setShouldRefreshParentCentreAfterSave(false);
+                info.setRequireSelectedEntities("ONE");
                 info.setEntityType(entityActionConfig.functionalEntity.get().getName());
                 info.setEntityTypeTitle(entityTitle);
                 info.setRootEntityType(type);
