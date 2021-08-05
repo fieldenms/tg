@@ -1173,7 +1173,7 @@ const TgEntityMasterBehaviorImpl = {
                     const newData = {
                         savingException: data.savingException, // leave data.savingException and data.entity the same, this allows flexibility of changing 'refreshEntities' method in tg-entity-centre-behavior according to such information
                         entity: data.entity,
-                        entityPath: [self._currEntity,...data.entityPath], //path of entities from masters those are on a chain of refresh cycle
+                        entityPath: [ self._currEntity, ...data.entityPath ], // prepend the path of entities from masters, that are on a chain of refresh cycle, with current entity
                         shouldRefreshParentCentreAfterSave: true,
                         selectedEntitiesInContext: [] // provide empty selectedEntitiesInContext, this ensures that parent centre will always be refreshed as per 'refreshEntities' method in tg-entity-centre-behavior
                     };
@@ -1182,11 +1182,11 @@ const TgEntityMasterBehaviorImpl = {
                         topic: 'detail.saved',
                         data: newData
                     });
-                    // Revalidate the current master if it is simple (i.e. doesn't have an embedded view)
-                    // and entity path doesn't contain pesrsistent and not persisted entity, in order to update master editors;
+                    // revalidate the current master if it is simple (i.e. doesn't have an embedded view)
+                    // and entity path doesn't contain persistent and not persisted (or invalid) entity, in order to update master editors;
                     // do this, for example, if a postal 'detail.saved' event was published by child master;
                     // these child masters include those opened with entity editor title (i.e. openMasterAction), or from property / entity / continuation actions
-                    if (!self._hasEmbededView() && !data.entityPath.some(e => e.type().isPersistent() && !e.isPersisted())) {
+                    if (!self._hasEmbededView() && !data.entityPath.some(entity => entity.type().isPersistent() && (!entity.isPersisted() || !entity.isValidWithoutException()) )) {
                         self.validate();
                     }
                 }
