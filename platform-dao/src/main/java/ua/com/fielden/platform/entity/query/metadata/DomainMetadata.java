@@ -110,6 +110,7 @@ public class DomainMetadata {
     //    private final static PropertyMetadata idProperty(final Class<? extends AbstractEntity<?>> entityType) { return new PropertyMetadata.Builder(AbstractEntity.ID, entityType, /*Long.class,*/ false).column(id).hibType(TypeFactory.basic("long")).type(ID).build();}
 
     public final DbVersion dbVersion;
+    public final boolean eql2;
     /**
      * Map between java type and hibernate persistence type (implementers of Type, IUserTypeInstantiate, ICompositeUserTypeInstantiate).
      */
@@ -118,16 +119,27 @@ public class DomainMetadata {
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, ModelledEntityMetadata> modelledEntityMetadataMap;
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, PureEntityMetadata> pureEntityMetadataMap;
 
-    private final List<Class<? extends AbstractEntity<?>>> entityTypes;
+    public final List<Class<? extends AbstractEntity<?>>> entityTypes;
+    public final Map<Class<?>, Class<?>> htd = new HashMap<>(); 
     
-    private Injector hibTypesInjector;
+    public Injector hibTypesInjector;
 
     public DomainMetadata(//
             final Map<Class, Class> hibTypesDefaults, //
             final Injector hibTypesInjector, //
             final List<Class<? extends AbstractEntity<?>>> entityTypes, //
             final DbVersion dbVersion) {
+        this(hibTypesDefaults, hibTypesInjector, entityTypes, dbVersion, false);
+    }
+    
+    public DomainMetadata(//
+            final Map<Class, Class> hibTypesDefaults, //
+            final Injector hibTypesInjector, //
+            final List<Class<? extends AbstractEntity<?>>> entityTypes, //
+            final DbVersion dbVersion,
+            final boolean eql2) {
         this.dbVersion = dbVersion;
+        this.eql2 = eql2;
 
         this.hibTypesDefaults = new ConcurrentHashMap<>(entityTypes.size());
         this.persistedEntityMetadataMap = new ConcurrentHashMap<>(entityTypes.size());
@@ -135,7 +147,7 @@ public class DomainMetadata {
         this.pureEntityMetadataMap = new ConcurrentHashMap<>(entityTypes.size());
         
         this.entityTypes = new ArrayList<>(entityTypes);
-        
+
         // initialise meta-data for basic entity properties, which is RDBMS dependent
         if (dbVersion != DbVersion.ORACLE) {
             id = new PropertyColumn("_ID");
@@ -149,6 +161,10 @@ public class DomainMetadata {
         
         // carry on with other stuff
         if (hibTypesDefaults != null) {
+            for (final Entry<Class, Class> el : hibTypesDefaults.entrySet()) {
+                htd.put(el.getKey(), el.getValue());
+            }
+
             for (final Entry<Class, Class> entry : hibTypesDefaults.entrySet()) {
                 htd.put(entry.getKey(), entry.getValue());
                 try {
@@ -168,7 +184,7 @@ public class DomainMetadata {
         // the following operations are a bit heave and benefit from parallel processing
         entityTypes.parallelStream().forEach(entityType -> {
             try {
-                EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = new EntityTypeInfo<>(entityType);
+                final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = new EntityTypeInfo<>(entityType);
                 switch (parentInfo.category) {
                 case PERSISTED:
                     persistedEntityMetadataMap.put(entityType, generatePersistedEntityMetadata(parentInfo));

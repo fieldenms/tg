@@ -68,6 +68,7 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgReVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
+import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
@@ -524,6 +525,12 @@ public class EntityUtilsTest {
                 keyPaths(TgVehicle.class));
     }
 
+    @Test
+    public void key_paths_works_for_entity_type_key() {
+        assertEquals(listOf("key.key"), 
+                keyPaths(TgVehicleFinDetails.class));
+    }
+    
     @Test
     public void key_paths_works_for_composite_key_without_further_nesting() {
         assertEquals(listOf("vehicle.key", "readingDate"),

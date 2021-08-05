@@ -19,6 +19,7 @@ public class EqlPropertyMetadata {
     public final PropColumn column;
     private final List<EqlPropertyMetadata> subitems;
     public final ExpressionModel expressionModel;
+    public final boolean implicit;
     
     private EqlPropertyMetadata(final Builder builder) {
         name = Objects.requireNonNull(builder.name);
@@ -29,6 +30,7 @@ public class EqlPropertyMetadata {
         column = builder.column;
         subitems = builder.subitems;
         expressionModel = builder.expressionModel;
+        implicit = builder.implicit;
     }
 
     public List<EqlPropertyMetadata> subitems() {
@@ -49,11 +51,12 @@ public class EqlPropertyMetadata {
         int result = 1;
         result = prime * result + name.hashCode();
         result = prime * result + javaType.hashCode();
-        result = prime * result + ((hibType == null) ? 0 : hibType.hashCode());
+        result = prime * result + hibType.hashCode();
         result = prime * result + (required ? 0 : (required ? 1231 : 1237));
         result = prime * result + (critOnly ? 0 : (critOnly ? 1231 : 1237));
         result = prime * result + ((column == null) ? 0 : column.hashCode());
         result = prime * result + ((expressionModel == null) ? 0 : expressionModel.hashCode());
+        result = prime * result + (implicit ? 0 : (implicit ? 1231 : 1237));
         result = prime * result + subitems.hashCode();
         return result;
     }
@@ -76,6 +79,7 @@ public class EqlPropertyMetadata {
                 Objects.equals(required, other.required) && 
                 Objects.equals(critOnly, other.critOnly) &&
                 Objects.equals(expressionModel, other.expressionModel) &&
+                Objects.equals(implicit, other.implicit) &&
                 Objects.equals(subitems, other.subitems) &&
                 Objects.equals(column, other.column);
     }
@@ -91,6 +95,7 @@ public class EqlPropertyMetadata {
         private PropColumn column;
         private final List<EqlPropertyMetadata> subitems = new ArrayList<>();
         private ExpressionModel expressionModel;
+        private boolean implicit = false;
 
         public EqlPropertyMetadata build() {
             return new EqlPropertyMetadata(this);
@@ -124,6 +129,11 @@ public class EqlPropertyMetadata {
         
         public Builder expression(final ExpressionModel val) {
             expressionModel = val;
+            return this;
+        }
+
+        public Builder implicit() {
+            implicit = true;
             return this;
         }
 

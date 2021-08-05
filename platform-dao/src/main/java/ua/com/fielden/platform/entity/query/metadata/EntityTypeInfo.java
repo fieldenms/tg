@@ -8,6 +8,7 @@ import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSI
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PURE;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.UNION;
+import static ua.com.fielden.platform.eql.meta.DomainMetadataUtils.getOriginalEntityTypeFullName;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
@@ -18,12 +19,15 @@ import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.ExecutionException;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.collect.ImmutableList;
 
+import sun.security.krb5.internal.ETypeInfo;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
@@ -35,7 +39,7 @@ public class EntityTypeInfo <ET extends AbstractEntity<?>> {
 
     /** A cache of table names for entity class names, which includes both ordinary and generated entities. */
     private static final Cache<String, String> ENTITY_NAME_TO_TABLE_NAME = CacheBuilder.newBuilder().initialCapacity(500).maximumSize(1000).concurrencyLevel(50).build();
-    
+    private static final ConcurrentMap<String, EntityTypeInfo<?>> entityTypesInfos = new ConcurrentHashMap<>();
     public final Class<ET> entityType;
     public final EntityCategory category;
     public final String tableName;
@@ -70,7 +74,21 @@ public class EntityTypeInfo <ET extends AbstractEntity<?>> {
         compositeKeyMembers = isCompositeEntity(entityType) ? ImmutableList.copyOf(getCompositeKeyMembers(entityType)) : ImmutableList.of();
     }
 
-    private String getTableClause(final Class<ET> entityType) {
+    public static <T extends AbstractEntity<?>> EntityTypeInfo<T> getEntityTypeInfo(final Class<T> type) {
+        final EntityTypeInfo<T> existing = (EntityTypeInfo<T>) entityTypesInfos.get(getOriginalEntityTypeFullName(type.getName()));
+        if (existing != null) {
+            return existing;
+        } else {
+            final EntityTypeInfo<T> parentInfo = new EntityTypeInfo<>(type);
+//            if (parentInfo.category != PURE) {
+                entityTypesInfos.put(type.getName(), parentInfo);
+                return parentInfo;
+//            }
+        }
+//        return null;
+    }
+    
+    private static String getTableClause(final Class<? extends AbstractEntity<?>> entityType) {
         try {
             return ENTITY_NAME_TO_TABLE_NAME.get(entityType.getSimpleName(), () -> {
                     final MapEntityTo mapEntityToAnnotation = getAnnotation(entityType, MapEntityTo.class);

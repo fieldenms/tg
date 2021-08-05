@@ -122,6 +122,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(ITgCategory.class).to(TgCategoryDao.class);
         bind(ITgCategoryAttachment.class).to(TgCategoryAttachmentDao.class);
         bind(ITgVehicle.class).to(TgVehicleDao.class);
+        bind(ITeVehicle.class).to(TeVehicleDao.class);
         bind(ITgWebApiEntity.class).to(TgWebApiEntityDao.class);
         bind(ITgWebApiEntitySyntheticSingle.class).to(TgWebApiEntitySyntheticSingleDao.class);
         bind(ITgWebApiEntitySyntheticMulti.class).to(TgWebApiEntitySyntheticMultiDao.class);
@@ -129,15 +130,20 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(ITgCompoundEntityDetail.class).to(TgCompoundEntityDetailDao.class);
         bind(ITgCompoundEntityChild.class).to(TgCompoundEntityChildDao.class);
         bind(ITgVehicleFinDetails.class).to(TgVehicleFinDetailsDao.class);
+        bind(ITeVehicleFinDetails.class).to(TeVehicleFinDetailsDao.class);
         bind(ITgPersonName.class).to(TgPersonNameDao.class);
         bind(ITgAuthor.class).to(TgAuthorDao.class);
         bind(ITgFuelUsage.class).to(TgFuelUsageDao.class);
+        bind(ITeVehicleFuelUsage.class).to(TeVehicleFuelUsageDao.class);
         bind(ITgWorkOrder.class).to(TgWorkOrderDao.class);
+        bind(ITeWorkOrder.class).to(TeWorkOrderDao.class);
         bind(ITgModelCount.class).to(TgModelCountDao.class);
         bind(ITgModelYearCount.class).to(TgModelYearCountDao.class);
         bind(ITgFuelType.class).to(TgFuelTypeDao.class);
         bind(ITgVehicleModel.class).to(TgVehicleModelDao.class);
+        bind(ITeVehicleModel.class).to(TeVehicleModelDao.class);
         bind(ITgVehicleMake.class).to(TgVehicleMakeDao.class);
+        bind(ITeVehicleMake.class).to(TeVehicleMakeDao.class);
         bind(ITgMeterReading.class).to(TgMeterReadingDao.class);
         bind(IMigrationError.class).to(MigrationErrorDao.class);
         bind(IMigrationRun.class).to(MigrationRunDao.class);
@@ -151,12 +157,12 @@ public class PlatformTestServerModule extends BasicWebServerModule {
 
         bind(ITgMakeCount.class).to(TgMakeCountDao.class);
         bind(ITgAverageFuelUsage.class).to(TgAverageFuelUsageDao.class);
+        bind(ITeAverageFuelUsage.class).to(TeAverageFuelUsageDao.class);
         bind(ITgVehicleFuelUsage.class).to(TgVehicleFuelUsageDao.class);
         bind(ITgEntityWithComplexSummaries.class).to(TgEntityWithComplexSummariesDao.class);
 
         bind(ITgAuthorship.class).to(TgAuthorshipDao.class);
         bind(ITgAuthorRoyalty.class).to(TgAuthorRoyaltyDao.class);
-        bind(ITgEntityWithLoopedCalcProps.class).to(TgEntityWithLoopedCalcPropsDao.class);
         bind(ITgPublishedYearly.class).to(TgPublishedYearlyDao.class);
 
 
