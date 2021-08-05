@@ -24,6 +24,7 @@ import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.master.MasterInfo;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
 import ua.com.fielden.platform.web.view.master.exceptions.MissingEntityTypeException;
@@ -66,29 +67,34 @@ public class MasterInfoProvider {
         }
     }
 
+    private static MasterInfo buildMasterInfo(final Class<? extends AbstractEntity<?>> type, final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> openerType, final Optional<String> relativePropertyNameOpt, final Optional<PrefDim> prefDimOpt) {
+        final String entityTitle = getEntityTitleAndDesc(type).getKey();
+        final MasterInfo info = new MasterInfo();
+        info.setKey(format("tg-%s-master", openerType.getSimpleName()));
+        info.setDesc(format("/master_ui/%s", openerType.getName()));
+        info.setShortDesc(entityTitle);
+        info.setLongDesc(format(relativePropertyNameOpt.isPresent() ? "Edit %s" : "Add new %s", entityTitle));
+        info.setShouldRefreshParentCentreAfterSave(false);
+        info.setEntityType(openerType.getName());
+        info.setEntityTypeTitle(entityTitle);
+        info.setRootEntityType(type);
+        prefDimOpt.ifPresent(prefDim -> {
+            info.setWidth(prefDim.width);
+            info.setHeight(prefDim.height);
+            info.setWidthUnit(prefDim.widthUnit.value);
+            info.setHeightUnit(prefDim.heightUnit.value);
+        });
+        if (relativePropertyNameOpt.isPresent()) {
+            info.setRequireSelectedEntities("ONE");
+            info.setRelativePropertyName(relativePropertyNameOpt.get());
+        }
+        return info;
+    }
+
     private MasterInfo buildConfiguredMasterActionInfo(final Class<? extends AbstractEntity<?>> type, final String relativePropertyName) {
         try {
             return webUiConfig.configApp().getOpenMasterAction(type).get().map(entityActionConfig -> {
-                final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> openerType = entityActionConfig.functionalEntity.get();
-                final String entityTitle = getEntityTitleAndDesc(type).getKey();
-                final MasterInfo info = new MasterInfo();
-                info.setKey(format("tg-%s-master", openerType.getSimpleName()));
-                info.setDesc(format("/master_ui/%s", openerType.getName()));
-                info.setShortDesc(entityTitle);
-                info.setLongDesc(format("Edit %s", entityTitle));
-                info.setShouldRefreshParentCentreAfterSave(false);
-                info.setEntityType(openerType.getName());
-                info.setEntityTypeTitle(entityTitle);
-                info.setRootEntityType(type);
-                entityActionConfig.prefDimForView.ifPresent(prefDim -> {
-                    info.setWidth(prefDim.width);
-                    info.setHeight(prefDim.height);
-                    info.setWidthUnit(prefDim.widthUnit.value);
-                    info.setHeightUnit(prefDim.heightUnit.value);
-                });
-                info.setRequireSelectedEntities("ONE");
-                info.setRelativePropertyName(relativePropertyName);
-                return info;
+                return buildMasterInfo(type, entityActionConfig.functionalEntity.get(), of(relativePropertyName), entityActionConfig.prefDimForView);
             }).orElse(buildDefaultMasterConfiguration(type, relativePropertyName));
         } catch (final WebUiBuilderException e) {
             return buildDefaultMasterConfiguration(type, relativePropertyName);
@@ -97,20 +103,7 @@ public class MasterInfoProvider {
 
     private MasterInfo buildDefaultMasterConfiguration(final Class<? extends AbstractEntity<?>> type, final String relativePropertyName) {
         return webUiConfig.configApp().getMaster(type).map(master -> {
-            final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> openerType = EntityEditAction.class;
-            final String entityTitle = getEntityTitleAndDesc(type).getKey();
-            final MasterInfo info = new MasterInfo();
-            info.setKey(format("tg-%s-master", openerType.getSimpleName()));
-            info.setDesc(format("/master_ui/%s", openerType.getName()));
-            info.setShortDesc(entityTitle);
-            info.setLongDesc(format("Edit %s", entityTitle));
-            info.setShouldRefreshParentCentreAfterSave(false);
-            info.setEntityType(openerType.getName());
-            info.setEntityTypeTitle(entityTitle);
-            info.setRootEntityType(type);
-            info.setRequireSelectedEntities("ONE");
-            info.setRelativePropertyName(relativePropertyName);
-            return info;
+            return buildMasterInfo(type, EntityEditAction.class, of(relativePropertyName), empty());
         }).orElseGet(tryOtherMasters(type, relativePropertyName));
     }
 
@@ -131,24 +124,7 @@ public class MasterInfoProvider {
     private MasterInfo buildConfiguredNewEntityMasterActionInfo(final Class<? extends AbstractEntity<?>> type) {
         try {
             return webUiConfig.configApp().getOpenMasterAction(type).get().map(entityActionConfig -> {
-                final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> openerType = AbstractFunctionalEntityToOpenCompoundMaster.class.isAssignableFrom(entityActionConfig.functionalEntity.get()) ? entityActionConfig.functionalEntity.get() : EntityNewAction.class;
-                final String entityTitle = getEntityTitleAndDesc(type).getKey();
-                final MasterInfo info = new MasterInfo();
-                info.setKey(format("tg-%s-master", openerType.getSimpleName()));
-                info.setDesc(format("/master_ui/%s", openerType.getName()));
-                info.setShortDesc(entityTitle);
-                info.setLongDesc(format("Add new %s", entityTitle));
-                info.setShouldRefreshParentCentreAfterSave(false);
-                info.setEntityType(openerType.getName());
-                info.setEntityTypeTitle(entityTitle);
-                info.setRootEntityType(type);
-                entityActionConfig.prefDimForView.ifPresent(prefDim -> {
-                    info.setWidth(prefDim.width);
-                    info.setHeight(prefDim.height);
-                    info.setWidthUnit(prefDim.widthUnit.value);
-                    info.setHeightUnit(prefDim.heightUnit.value);
-                });
-                return info;
+                return buildMasterInfo(type, AbstractFunctionalEntityToOpenCompoundMaster.class.isAssignableFrom(entityActionConfig.functionalEntity.get()) ? entityActionConfig.functionalEntity.get() : EntityNewAction.class, empty(), entityActionConfig.prefDimForView);
             }).orElse(buildDefaultNewEntityMasterConfiguration(type));
         } catch (final WebUiBuilderException e) {
             return buildDefaultNewEntityMasterConfiguration(type);
@@ -157,18 +133,7 @@ public class MasterInfoProvider {
 
     private MasterInfo buildDefaultNewEntityMasterConfiguration(final Class<? extends AbstractEntity<?>> type) {
         return webUiConfig.configApp().getMaster(type).map(master -> {
-            final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> openerType = EntityNewAction.class;
-            final String entityTitle = getEntityTitleAndDesc(type).getKey();
-            final MasterInfo info = new MasterInfo();
-            info.setKey(format("tg-%s-master", openerType.getSimpleName()));
-            info.setDesc(format("/master_ui/%s", openerType.getName()));
-            info.setShortDesc(entityTitle);
-            info.setLongDesc(format("Add new %s", entityTitle));
-            info.setShouldRefreshParentCentreAfterSave(false);
-            info.setEntityType(openerType.getName());
-            info.setEntityTypeTitle(entityTitle);
-            info.setRootEntityType(type);
-            return info;
+            return buildMasterInfo(type, EntityNewAction.class, empty(), empty());
         }).orElseGet(tryOtherMastersNew(type));
     }
 
