@@ -50,7 +50,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Prop2 vehModelProp = prop(vehSource, pi(VEHICLE, "model"));
         final Prop2 modelIdProp = prop(modelSource, pi(MODEL, "id"));
         final Conditions2 vehConditions = cond(eq(vehModelProp, modelIdProp));
-        final Yields2 vehYields = yields(yieldCountAll("qty"));
+        final Yields2 vehYields = mkYields(yieldCountAll("qty"));
 
         final SourceQuery2 vehSourceSubQry = srcqry(vehSources, vehConditions, vehYields);
         
@@ -59,10 +59,10 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         
         final Source2BasedOnSubqueries qtyQrySource = source(entityInfo, "2", vehSourceSubQry);
         final ISources2<? extends ISources3> qtyQrySources = sources(qtyQrySource);
-        final Yields2 qtyQryYields = yields(yield(prop(qtyQrySource, new PrimTypePropInfo<>("qty", H_INTEGER, INTEGER)), ""));
+        final Yields2 qtyQryYields = mkYields(QmToStage2TransformationTest.mkYield(prop(qtyQrySource, new PrimTypePropInfo<>("qty", H_INTEGER, INTEGER)), ""));
         
         
-        final Yields2 modelQryYields = yields(yield(subqry(qtyQrySources, qtyQryYields, INTEGER, H_INTEGER), "qty"));
+        final Yields2 modelQryYields = mkYields(QmToStage2TransformationTest.mkYield(subqry(qtyQrySources, qtyQryYields, INTEGER, H_INTEGER), "qty"));
         
         final ResultQuery2 expQry = qry(sources(modelSource), modelQryYields);
         assertEquals(expQry, actQry);
@@ -85,7 +85,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Prop2 vehModelProp1 = prop(vehSource1, pi(VEHICLE, "model"));
         final Prop2 vehIdProp1 = prop(vehSource1, pi(VEHICLE, "id"));
         final Conditions2 vehConditions1 = or(and(isNotNull(vehIdProp1), eq(vehModelProp1, modelIdProp)));
-        final Yields2 vehYields1 = yields(yieldCountAll("qty"));
+        final Yields2 vehYields1 = mkYields(yieldCountAll("qty"));
 
         final SourceQuery2 vehSourceSubQry1 = srcqry(vehSources1, vehConditions1, vehYields1);
 
@@ -94,7 +94,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final Prop2 vehModelProp2 = prop(vehSource2, pi(VEHICLE, "model"));
         final Prop2 vehIdProp2 = prop(vehSource2, pi(VEHICLE, "id"));
         final Conditions2 vehConditions2 = or(and(isNull(vehIdProp2), eq(vehModelProp2, modelIdProp)));
-        final Yields2 vehYields2 = yields(yieldCountAll("qty"));
+        final Yields2 vehYields2 = mkYields(yieldCountAll("qty"));
 
         final SourceQuery2 vehSourceSubQry2 = srcqry(vehSources2, vehConditions2, vehYields2);
 
@@ -103,10 +103,10 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         
         final Source2BasedOnSubqueries qtyQrySource = source(entityInfo, "3", vehSourceSubQry1, vehSourceSubQry2);
         final ISources2<? extends ISources3> qtyQrySources = sources(qtyQrySource);
-        final Yields2 qtyQryYields = yields(yield(prop(qtyQrySource, new PrimTypePropInfo<>("qty", H_INTEGER, INTEGER)), ""));
+        final Yields2 qtyQryYields = mkYields(mkYield(prop(qtyQrySource, new PrimTypePropInfo<>("qty", H_INTEGER, INTEGER)), ""));
         
         
-        final Yields2 modelQryYields = yields(yield(subqry(qtyQrySources, qtyQryYields, INTEGER, H_INTEGER), "qty"));
+        final Yields2 modelQryYields = mkYields(mkYield(subqry(qtyQrySources, qtyQryYields, INTEGER, H_INTEGER), "qty"));
         
         final ResultQuery2 expQry = qry(sources(modelSource), modelQryYields);
         assertEquals(expQry, actQry);

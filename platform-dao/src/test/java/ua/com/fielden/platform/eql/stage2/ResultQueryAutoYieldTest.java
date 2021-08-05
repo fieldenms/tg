@@ -16,14 +16,14 @@ public class ResultQueryAutoYieldTest extends EqlStage2TestCase {
     public void auto_yield_for_type_based_query_works() {
         final ResultQuery2 actQry = qry(select(BOGIE).model());
         final Source2BasedOnPersistentType bogie = source("1", BOGIE);
-        final Yields2 yields = yields(
-                yield(prop(bogie, pi(BOGIE, "key")), "key"),
-                yield(prop(bogie, pi(BOGIE, "desc")), "desc"),
-                yield(prop(bogie, pi(BOGIE, "id")), "id"),
-                yield(prop(bogie, pi(BOGIE, "version")), "version"),
-                yield(prop(bogie, pi(BOGIE, "location")), "location"),
-                yield(prop(bogie, pi(BOGIE, "location"), pi(BOGIE, "location", "wagonSlot")), "location.wagonSlot"),
-                yield(prop(bogie, pi(BOGIE, "location"), pi(BOGIE, "location", "workshop")), "location.workshop")
+        final Yields2 yields = mkYields(
+                mkYield(prop(bogie, pi(BOGIE, "key")), "key"),
+                mkYield(prop(bogie, pi(BOGIE, "desc")), "desc"),
+                mkYield(prop(bogie, pi(BOGIE, "id")), "id"),
+                mkYield(prop(bogie, pi(BOGIE, "version")), "version"),
+                mkYield(prop(bogie, pi(BOGIE, "location")), "location"),
+                mkYield(prop(bogie, pi(BOGIE, "location"), pi(BOGIE, "location", "wagonSlot")), "location.wagonSlot"),
+                mkYield(prop(bogie, pi(BOGIE, "location"), pi(BOGIE, "location", "workshop")), "location.workshop")
                 );
         assertEquals(yields, actQry.yields);
     }

@@ -123,7 +123,7 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new QueryBlocks2(sources, conditions, yields, emptyGroupBys, orderBys);
     }
 
-    protected static Yields2 yields(final Yield2... yields) {
+    protected static Yields2 mkYields(final Yield2... yields) {
         if (yields.length > 0) {
             return new Yields2(asList(yields)); 
         } else {
@@ -155,7 +155,7 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new Yield2(CountAll2.INSTANCE, alias, false);
     }
 
-    protected static Yield2 yield(final ISingleOperand2<? extends ISingleOperand3> operand, final String alias) {
+    protected static Yield2 mkYield(final ISingleOperand2<? extends ISingleOperand3> operand, final String alias) {
         return new Yield2(operand, alias, false);
     }
 
@@ -265,7 +265,7 @@ public class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static ResultQuery2 qryCountAll(final ISources2<? extends ISources3> sources, final Conditions2 conditions) {
-        return new ResultQuery2(qb2(sources, conditions, yields(yieldCountAll("KOUNT"))), EntityAggregates.class);
+        return new ResultQuery2(qb2(sources, conditions, mkYields(yieldCountAll("KOUNT"))), EntityAggregates.class);
     }
 
     protected static ResultQuery2 qry(final ISources2<? extends ISources3> sources, final Conditions2 conditions, final Yields2 yields) {
@@ -293,7 +293,7 @@ public class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static ResultQuery2 qryCountAll(final ISources2<? extends ISources3> sources) {
-        return new ResultQuery2(qb2(sources, emptyConditions, yields(yieldCountAll("KOUNT"))), EntityAggregates.class);
+        return new ResultQuery2(qb2(sources, emptyConditions, mkYields(yieldCountAll("KOUNT"))), EntityAggregates.class);
     }
 
     protected static SubQuery2 subqry(final ISources2<? extends ISources3> sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType, final Object hibType) {
