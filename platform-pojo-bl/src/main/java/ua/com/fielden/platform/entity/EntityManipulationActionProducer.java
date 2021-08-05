@@ -35,14 +35,14 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
     protected T provideDefaultValues(final T entity) {
         if (contextNotEmpty()) {
             final Supplier<? extends Class<AbstractEntity<?>>> determineTypeFrom = () -> chosenEntityType().orElseGet(() -> { // if it is empty
-                if (selectionCrit() != null) { // use selection criteria type as a fallback (or otherwise return 'null')
+                if (selectionCrit() != null) { // use selection criteria type as a fallback
                     return (Class<AbstractEntity<?>>) selectionCrit().getEntityClass();
                 }
-                final String rootEntityTypeName = (String) getContext().getCustomObject().get("@@rootEntityType");
+                final String rootEntityTypeName = (String) getContext().getCustomObject().get("@@rootEntityType"); // then try auxiliary root entity type, if present
                 try {
-                    return !isEmpty(rootEntityTypeName) ? (Class<AbstractEntity<?>>) forName(rootEntityTypeName) : null;
-                } catch (final ClassNotFoundException e) {
-                    return null;
+                    return !isEmpty(rootEntityTypeName) ? (Class<AbstractEntity<?>>) forName(rootEntityTypeName) : null; // (or otherwise return 'null')
+                } catch (final ClassNotFoundException ex) {
+                    return null; // (in case of unrecognisable type return 'null' too)
                 }
             });
             ofNullable(
