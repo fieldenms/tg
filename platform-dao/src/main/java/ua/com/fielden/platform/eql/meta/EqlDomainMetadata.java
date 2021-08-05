@@ -98,7 +98,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 public class EqlDomainMetadata {
 
     private static final TypeConfiguration typeConfiguration = new TypeConfiguration();
-    private static final TypeResolver typeResolver = new TypeResolver(typeConfiguration, new TypeFactory(typeConfiguration));
+    public static final TypeResolver typeResolver = new TypeResolver(typeConfiguration, new TypeFactory(typeConfiguration));
     private static final Type H_LONG = typeResolver.basic("long");
     private static final Type H_STRING = typeResolver.basic("string");
     private static final Type H_BOOLEAN = typeResolver.basic("yes_no");
