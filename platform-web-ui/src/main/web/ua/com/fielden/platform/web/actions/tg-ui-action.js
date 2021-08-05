@@ -502,8 +502,8 @@ Polymer({
                     const masterInfo = this.rootEntityType ? currentEntityType.newEntityMaster() : currentEntityType.entityMaster();
                     if (!masterInfo) {
                         const masterErrorMessage = `Could not find master for entity type: ${currentEntityType.notEnhancedFullClassName()}.`;
-                        this.toaster && this.toaster.openToastForError("Entity Master Error", masterErrorMessage, true);
-                        throw {msg: masterErrorMessage};
+                        this.toaster && this.toaster.openToastForError('Entity Master Error', masterErrorMessage, true);
+                        throw { msg: masterErrorMessage };
                     }
                     this._setEntityMasterInfo(masterInfo);
                     postMasterInfoRetrieve();

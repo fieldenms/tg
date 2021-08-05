@@ -76,7 +76,6 @@ const additionalTemplate = html`
         }
     </style>
     <iron-ajax id="ajaxSearcher" headers="[[_headers]]" loading="{{searching}}" url="[[_url]]" method="POST" handle-as="json" on-response="_processSearcherResponse" reject-with-request on-error="_processSearcherError"></iron-ajax>
-    <iron-ajax id="entityExistSearcher" headers="[[_headers]]" method="POST" handle-as="json" on-response="_processEntityExistResponse" reject-with-request on-error="_processEntityExistError"></iron-ajax>
     <tg-serialiser id="serialiser"></tg-serialiser>`;
 const customLabelTemplate = html`
     <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" 
@@ -529,58 +528,42 @@ export class TgEntityEditor extends TgEditor {
     _openEntityMaster () {
         if (this.openMasterAction && this.actionAvailable) {
             delete this.openMasterAction.modifyFunctionalEntity;
-            delete this.openMasterAction.postActionSuccess; 
-            const entityValue = this.reflector().tg_getFullValue(this.entity, this.propertyName);
-            if (this._isValueAvailableAndWithoutError()) {
-                this.openMasterAction._runDynamicAction(() => entityValue, null);
+            delete this.openMasterAction.postActionSuccess;
+            
+            // get meta-property to analyse if it is in error and its last attempted value
+            const metaProperty = this.reflector().tg_getFullEntity(this.entity).prop(this.propertyName);
+            // if the property is in error then lastInvalidValue() holds attempted value; otherwise attempted value was successful is currently in entity's property value
+            const lastAttemptedValue = this.reflector().isError(metaProperty.validationResult()) ? metaProperty.lastInvalidValue() : this.reflector().tg_getFullValue(this.entity, this.propertyName);
+            
+            if (this.reflector().isEntity(lastAttemptedValue) && !this.reflector().isMockNotFoundEntity(lastAttemptedValue) && lastAttemptedValue.isPersisted()) {
+                // open last attempted value i.e. the value that is visible in the editor (either in error or not) if it is not empty, is persisted and does not represent 'value not found' case
+                this.openMasterAction._runDynamicAction(() => lastAttemptedValue, null);
             } else {
-                const serialisedSearchQuery = {key: this._editingValue};
-                const runWithNew = () => {
-                    const entity = createNewEntity(this.reflector(), this._editingValue, this.newEntityMaster.rootEntityType);
-                    this.openMasterAction.modifyFunctionalEntity = (bindingEntity, master, action) => {
-                        const dataLoadedCallback = (e) => {
-                            const embeddedMaster = e.detail;
-                            if (embeddedMaster) {
-                                setKeyFields(entity, embeddedMaster);
-                            }
-                            master.removeEventListener("data-loaded-and-focused", dataLoadedCallback);
+                // otherwise open master for new entity and set key values from _editingValue, if not empty
+                const entity = createNewEntity(this.reflector(), this._editingValue, this.newEntityMaster.rootEntityType);
+                this.openMasterAction.modifyFunctionalEntity = (bindingEntity, master, action) => {
+                    const dataLoadedCallback = (e) => {
+                        const embeddedMaster = e.detail;
+                        if (embeddedMaster) {
+                            setKeyFields(entity, embeddedMaster);
                         }
-                        master.addEventListener("data-loaded-and-focused", dataLoadedCallback);
-                    };
-                    this.openMasterAction.postActionSuccess = (savedEntity, action, master) => {
-                        let value = null;
-                        if (savedEntity.type() === entity.type()) {
-                            value = savedEntity;
-                        } else if (this.reflector().isEntity(savedEntity.get("key")) && savedEntity.get("key").type() === entity.type()) {
-                            value = savedEntity.get("key");
-                        }
-                        if (!this._disabled && value !== null && value.get("id") !== null) {
-                            this.assignConcreteValue(value, this.reflector().tg_convert.bind(this.reflector()));
-                            this.commit();
-                        }
+                        master.removeEventListener("data-loaded-and-focused", dataLoadedCallback);
                     }
-                    this.openMasterAction._runDynamicActionForNew(this.newEntityMaster.rootEntityType);
+                    master.addEventListener("data-loaded-and-focused", dataLoadedCallback);
+                };
+                this.openMasterAction.postActionSuccess = (savedEntity, action, master) => {
+                    let value = null;
+                    if (savedEntity.type() === entity.type()) {
+                        value = savedEntity;
+                    } else if (this.reflector().isEntity(savedEntity.get("key")) && savedEntity.get("key").type() === entity.type()) {
+                        value = savedEntity.get("key");
+                    }
+                    if (!this._disabled && value !== null && value.get("id") !== null) {
+                        this.assignConcreteValue(value, this.reflector().tg_convert.bind(this.reflector()));
+                        this.commit();
+                    }
                 }
-                if (!serialisedSearchQuery.key) {
-                    runWithNew();
-                } else {
-                    this.$.entityExistSearcher.url = `/entityid/${this.newEntityMaster.rootEntityType}`;
-                    this.$.entityExistSearcher.body = JSON.stringify(serialisedSearchQuery);
-                    this.$.entityExistSearcher.generateRequest().completes.then((request) => {
-                        if (request.xhr.status === 200 && request.response) {
-                            const foundedResult = this.$.serialiser.deserialise(request.response);
-                            if (!this.reflector().isWarning(foundedResult) && !this.reflector().isError(foundedResult) && foundedResult.instance) {
-                                this.openMasterAction._runDynamicAction(() => foundedResult.instance, null);
-                            } else {
-                                runWithNew();
-                            }
-                        } else {
-                            runWithNew();
-                        }
-                    }).catch((e) => {
-                        runWithNew();
-                    });
-                }
+                this.openMasterAction._runDynamicActionForNew(this.newEntityMaster.rootEntityType);
             }
         }
     }
