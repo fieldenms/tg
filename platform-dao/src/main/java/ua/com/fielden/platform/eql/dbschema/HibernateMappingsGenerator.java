@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.dbschema;
 
 import static java.util.Collections.emptyList;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
@@ -12,18 +13,15 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.SortedMap;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.metadata.EntityCategory;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.EqlEntityMetadata;
 import ua.com.fielden.platform.eql.meta.EqlPropertyMetadata;
 import ua.com.fielden.platform.eql.meta.PropColumn;
-import ua.com.fielden.platform.types.tuples.T3;
 
 /**
  * Generates hibernate class mappings from MapTo annotations on domain entity types.
@@ -32,7 +30,7 @@ import ua.com.fielden.platform.types.tuples.T3;
  *
  */
 public class HibernateMappingsGenerator {
-    private static final Logger LOGGER = Logger.getLogger(HibernateMappingsGenerator.class);
+    private static final Logger LOGGER = getLogger(HibernateMappingsGenerator.class);
 
     public static final String ID_SEQUENCE_NAME = "TG_ENTITY_ID_SEQ";
     
