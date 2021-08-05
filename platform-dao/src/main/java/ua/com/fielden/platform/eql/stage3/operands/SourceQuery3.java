@@ -1,17 +1,11 @@
 package ua.com.fielden.platform.eql.stage3.operands;
 
-import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.QueryBlocks3;
 
 public class SourceQuery3 extends AbstractQuery3 {
 
     public SourceQuery3(final QueryBlocks3 queryBlocks, final Class<?> resultType) {
         super(queryBlocks, resultType);
-    }
-
-    @Override
-    public String sql(final DbVersion dbVersion) {
-        return "(" + super.sql(dbVersion) + ")";
     }
 
     @Override
