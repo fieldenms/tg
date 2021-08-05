@@ -95,7 +95,7 @@ public class MasterInfoProvider {
         try {
             return webUiConfig.configApp().getOpenMasterAction(type).get().map(entityActionConfig -> {
                 return buildMasterInfo(type, entityActionConfig.functionalEntity.get(), of(relativePropertyName), entityActionConfig.prefDimForView);
-            }).orElse(buildDefaultMasterConfiguration(type, relativePropertyName));
+            }).orElseGet(() -> buildDefaultMasterConfiguration(type, relativePropertyName));
         } catch (final WebUiBuilderException e) {
             return buildDefaultMasterConfiguration(type, relativePropertyName);
         }
@@ -125,7 +125,7 @@ public class MasterInfoProvider {
         try {
             return webUiConfig.configApp().getOpenMasterAction(type).get().map(entityActionConfig -> {
                 return buildMasterInfo(type, AbstractFunctionalEntityToOpenCompoundMaster.class.isAssignableFrom(entityActionConfig.functionalEntity.get()) ? entityActionConfig.functionalEntity.get() : EntityNewAction.class, empty(), entityActionConfig.prefDimForView);
-            }).orElse(buildDefaultNewEntityMasterConfiguration(type));
+            }).orElseGet(() -> buildDefaultNewEntityMasterConfiguration(type));
         } catch (final WebUiBuilderException e) {
             return buildDefaultNewEntityMasterConfiguration(type);
         }
