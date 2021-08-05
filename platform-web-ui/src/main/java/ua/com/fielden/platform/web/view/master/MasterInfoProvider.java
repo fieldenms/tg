@@ -130,10 +130,8 @@ public class MasterInfoProvider {
 
     private MasterInfo buildConfiguredNewEntityMasterActionInfo(final Class<? extends AbstractEntity<?>> type) {
         try {
-            return webUiConfig.configApp().getOpenMasterAction(type).get()
-                    .filter(entityActionConfig -> AbstractFunctionalEntityToOpenCompoundMaster.class.isAssignableFrom(entityActionConfig.functionalEntity.get()))
-                    .map(entityActionConfig -> {
-                final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> openerType = entityActionConfig.functionalEntity.get();
+            return webUiConfig.configApp().getOpenMasterAction(type).get().map(entityActionConfig -> {
+                final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> openerType = AbstractFunctionalEntityToOpenCompoundMaster.class.isAssignableFrom(entityActionConfig.functionalEntity.get()) ? entityActionConfig.functionalEntity.get() : EntityNewAction.class;
                 final String entityTitle = getEntityTitleAndDesc(type).getKey();
                 final MasterInfo info = new MasterInfo();
                 info.setKey(format("tg-%s-master", openerType.getSimpleName()));
