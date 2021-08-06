@@ -41,7 +41,7 @@ public class Source3BasedOnSubqueries implements ISource3 {
 
     @Override
     public String sql(final DbVersion dbVersion) {
-        return "(" + models.stream().map(m -> m.sql(dbVersion)).collect(joining("\n UNION ALL")) + ") AS " + sqlAlias();
+        return "(" + models.stream().map(m -> m.sql(dbVersion)).collect(joining("\n UNION ALL \n")) + ") AS " + sqlAlias();
     }
 
     @Override
