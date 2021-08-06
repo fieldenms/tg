@@ -1053,7 +1053,7 @@ export class TgEntityEditor extends TgEditor {
     _generateTooltip (value, actionAvailable) {
         let tooltip = this._formatTooltipText(value);
         tooltip += this.propDesc ? (tooltip ? '<br><br>' : '') + this.propDesc : '';
-        tooltip += actionAvailable ? ((tooltip ? '<br><br>' : '') + this._getActionTooltip(value)) : '';
+        tooltip += actionAvailable ? ((tooltip ? '<br><br>' : '') + this._getActionTooltip()) : '';
         return tooltip;
     }
 
@@ -1075,8 +1075,8 @@ export class TgEntityEditor extends TgEditor {
     /**
      * Calculates title action tooltip.
      */
-    _getActionTooltip  (value) {
-        const entityMaster = this.reflector().isEntity(value) ? this.entityMaster : this.newEntityMaster;
+    _getActionTooltip () {
+        const entityMaster = this._valueToEdit(this.entity, this.propertyName) ? this.entityMaster : this.newEntityMaster;
         const shortDesc = entityMaster.shortDesc ? "<b>" + entityMaster.shortDesc + "</b>" : "";
         let longDesc;
         if (shortDesc) {
