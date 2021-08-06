@@ -129,6 +129,10 @@ function replaceAll(find, replace, str) {
     return str.replace(new RegExp(escapeRegExp(find), 'g', 'i'), replace);
 }
 
+/**
+ * Creates new entity of type 'rootEntityType' and fills in key properties with values from 'editingValue' string.
+ * Composite key strings are split using 'rootEntityType' key separator.
+ */
 function createNewEntity(reflector, editingValue, rootEntityType) {
     const entity = reflector.newEntity(rootEntityType);
     if (entity.type().isCompositeEntity()) {
@@ -142,10 +146,14 @@ function createNewEntity(reflector, editingValue, rootEntityType) {
     return entity;
 }
 
+/**
+ * Sets string values from 'entity' keys into 'embeddedMaster' key editors.
+ */
 function setKeyFields(entity, embeddedMaster) {
     const keys = entity.type().isCompositeEntity() ? entity.type().compositeKeyNames(): ["key"];
     keys.forEach(keyProp => {
-        if (!embeddedMaster.$["editor_4_" + keyProp]._disabled) {
+        const keyEditor = embeddedMaster.$["editor_4_" + keyProp];
+        if (keyEditor && !keyEditor._disabled) {
             embeddedMaster.setEditorValue4PropertyFromConcreteValue(keyProp, entity.get(keyProp));
         }
     })
@@ -541,16 +549,17 @@ export class TgEntityEditor extends TgEditor {
             delete this.openMasterAction.postActionSuccess;
             
             const valueToEdit = this._valueToEdit(this.entity, this.propertyName);
-            if (valueToEdit) {
+            if (valueToEdit) { // open EDIT master for valueToEdit entity
                 this.openMasterAction._runDynamicAction(() => valueToEdit, null);
-            } else {
-                // otherwise open master for new entity and set key values from _editingValue, if not empty
+            } else { // otherwise open master for new entity and set key values from _editingValue, if not empty
+                // create entity that will hold values for embedded master
                 const entity = createNewEntity(this.reflector(), this._editingValue, this.newEntityMaster.rootEntityType);
+                // add function to EntityNewAction (or compound) wrapper action to catch data loaded event from its embedded master
                 this.openMasterAction.modifyFunctionalEntity = (bindingEntity, master, action) => {
                     const dataLoadedCallback = (e) => {
                         const embeddedMaster = e.detail;
                         if (embeddedMaster) {
-                            setKeyFields(entity, embeddedMaster);
+                            setKeyFields(entity, embeddedMaster); // provide values into embedded master key fields from previously created 'entity'
                         }
                         master.removeEventListener("data-loaded-and-focused", dataLoadedCallback);
                     }
@@ -558,9 +567,9 @@ export class TgEntityEditor extends TgEditor {
                 };
                 this.openMasterAction.postActionSuccess = (savedEntity, action, master) => {
                     let value = null;
-                    if (savedEntity.type() === entity.type()) {
+                    if (savedEntity.type() === entity.type()) { // for EntityNewAction which is master-with-master, postActionSuccess will be invoked with savedEntity of embedded master type
                         value = savedEntity;
-                    } else if (this.reflector().isEntity(savedEntity.get("key")) && savedEntity.get("key").type() === entity.type()) {
+                    } else if (this.reflector().isEntity(savedEntity.get("key")) && savedEntity.get("key").type() === entity.type()) { // for Open...MasterAction, postActionSuccess will be invoked with savedEntity of Open...MasterAction type and its key contains desired value
                         value = savedEntity.get("key");
                     }
                     if (!this._disabled && value !== null && value.get("id") !== null) {
