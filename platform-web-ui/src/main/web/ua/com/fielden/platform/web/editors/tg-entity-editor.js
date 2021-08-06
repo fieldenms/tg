@@ -516,10 +516,20 @@ export class TgEntityEditor extends TgEditor {
         }
     }
 
-    _isValueAvailableAndWithoutError() {
-        const entityValue = this.reflector().tg_getFullValue(this.entity, this.propertyName);
-        return this.reflector().isEntity(entityValue) && 
-            !this.reflector().isError(this.reflector().tg_getFullEntity(this.entity).prop(this.propertyName).validationResult());
+    /**
+     * Returns entity-typed property value suitable for editing, or otherwise 'null'.
+     * In case of error, this method returns erroneous value, if it does not represent 'not found value' case.
+     */
+    _valueToEdit (entity, propertyName) {
+        // get meta-property to analyse if it is in error and its last attempted value
+        const metaProperty = this.reflector().tg_getFullEntity(entity).prop(propertyName);
+        // if the property is in error then lastInvalidValue() holds attempted value; otherwise attempted value was successful is currently in entity's property value
+        const lastAttemptedValue = this.reflector().isError(metaProperty.validationResult()) ? metaProperty.lastInvalidValue() : this.reflector().tg_getFullValue(entity, propertyName);
+        
+        if (this.reflector().isEntity(lastAttemptedValue) && !this.reflector().isMockNotFoundEntity(lastAttemptedValue) && lastAttemptedValue.isPersisted() && lastAttemptedValue.get('id') >= 0) {
+            return lastAttemptedValue; // last attempted value i.e. the value that is visible in the editor (either in error or not) if it is not empty, is persisted and does not represent 'value not found' case
+        }
+        return null;
     }
 
     /**
@@ -530,14 +540,9 @@ export class TgEntityEditor extends TgEditor {
             delete this.openMasterAction.modifyFunctionalEntity;
             delete this.openMasterAction.postActionSuccess;
             
-            // get meta-property to analyse if it is in error and its last attempted value
-            const metaProperty = this.reflector().tg_getFullEntity(this.entity).prop(this.propertyName);
-            // if the property is in error then lastInvalidValue() holds attempted value; otherwise attempted value was successful is currently in entity's property value
-            const lastAttemptedValue = this.reflector().isError(metaProperty.validationResult()) ? metaProperty.lastInvalidValue() : this.reflector().tg_getFullValue(this.entity, this.propertyName);
-            
-            if (this.reflector().isEntity(lastAttemptedValue) && !this.reflector().isMockNotFoundEntity(lastAttemptedValue) && lastAttemptedValue.isPersisted()) {
-                // open last attempted value i.e. the value that is visible in the editor (either in error or not) if it is not empty, is persisted and does not represent 'value not found' case
-                this.openMasterAction._runDynamicAction(() => lastAttemptedValue, null);
+            const valueToEdit = this._valueToEdit(this.entity, this.propertyName);
+            if (valueToEdit) {
+                this.openMasterAction._runDynamicAction(() => valueToEdit, null);
             } else {
                 // otherwise open master for new entity and set key values from _editingValue, if not empty
                 const entity = createNewEntity(this.reflector(), this._editingValue, this.newEntityMaster.rootEntityType);
@@ -1137,13 +1142,13 @@ export class TgEntityEditor extends TgEditor {
             return false;
         }
         return currentState === 'EDIT' // currentState is not 'EDIT' e.g. where refresh / saving process is in progress
-            && (this._isValueAvailableAndWithoutError() || (!this._isValueAvailableAndWithoutError() && !_disabled));
+            && (!_disabled || this._valueToEdit(entity, this.propertyName));
     }
 
     _actionIcon (actionAvailable, entity) {
         if (actionAvailable) {
-            if (this._isValueAvailableAndWithoutError()) {
-                return "editor:mode-edit"
+            if (this._valueToEdit(entity, this.propertyName)) {
+                return "editor:mode-edit";
             }
             return "add-circle-outline";
         }
