@@ -160,7 +160,7 @@ public class EqlDomainMetadata {
             try {
                 final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = getEntityTypeInfo(entityType);
                 if (parentInfo.category != PURE) {
-                    final List<EqlPropertyMetadata> propsMetadatas = generatePropertyMetadatasForEntity(parentInfo);
+                    final List<EqlPropertyMetadata> propsMetadatas = generatePropertyMetadatasForEntity(parentInfo, entityType);
                     entityPropsMetadata.put(entityType, new EqlEntityMetadata(parentInfo, propsMetadatas));
                     if (parentInfo.category == PERSISTED) {
                         tables.put(entityType.getName(), generateTable(parentInfo.tableName, propsMetadatas));
@@ -178,7 +178,7 @@ public class EqlDomainMetadata {
 
         for (EqlEntityMetadata el : entityPropsMetadata.values()) {
             if (el.typeInfo.category == QUERY_BASED) {
-                final EntityInfo<? extends AbstractEntity<?>> enhancedEntityInfo = generateEnhancedEntityInfoForSyntheticType(el.typeInfo);
+                final EntityInfo<? extends AbstractEntity<?>> enhancedEntityInfo = generateEnhancedEntityInfoForSyntheticType(el.typeInfo, el.typeInfo.entityType);
                 domainInfo.put(enhancedEntityInfo.javaType(), enhancedEntityInfo);
             }
         }
@@ -192,11 +192,11 @@ public class EqlDomainMetadata {
      * @param parentInfo
      * @return
      */
-    private <T extends AbstractEntity<?>> EntityInfo<T> generateEnhancedEntityInfoForSyntheticType(final EntityTypeInfo<T> parentInfo) {
+    private <T extends AbstractEntity<?>> EntityInfo<?> generateEnhancedEntityInfoForSyntheticType(final EntityTypeInfo<T> parentInfo, final Class<? extends AbstractEntity<?>> actualType) {
         final TransformationContext context = new TransformationContext(this);
         final Yields2 yields = gen.generateAsSyntheticEntityQuery(parentInfo.entityModels.get(0), parentInfo.entityType).transform(context).yields;
         final Map<String, YieldInfoNode> yieldInfoNodes = YieldInfoNodesGenerator.generate(yields.getYields());
-        return Source1BasedOnSubqueries.produceEntityInfoForDefinedEntityType(this, yieldInfoNodes, parentInfo.entityType);
+        return Source1BasedOnSubqueries.produceEntityInfoForDefinedEntityType(this, yieldInfoNodes, actualType/*parentInfo.entityType*/);
     }
 
     private void validateCalcProps() {
@@ -375,7 +375,7 @@ public class EqlDomainMetadata {
         return generateUnionEntityPropertyContextualExpression(unionMembersNames, DESC, contextPropName);
     }
 
-    private List<EqlPropertyMetadata> generatePropertyMetadatasForEntity(final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo) {
+    private List<EqlPropertyMetadata> generatePropertyMetadatasForEntity(final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo, final Class<? extends AbstractEntity<?>> actualType) {
         final List<EqlPropertyMetadata> result = new ArrayList<>();
         if (UNION == parentInfo.category) {
             result.addAll(generateUnionImplicitCalcSubprops((Class<? extends AbstractUnionEntity>) parentInfo.entityType, null));
@@ -385,7 +385,7 @@ public class EqlDomainMetadata {
 
             result.add(generateKeyPropertyMetadata(parentInfo));
 
-            final List<Field> restOfPropsFields = getRestOfProperties(parentInfo);
+            final List<Field> restOfPropsFields = getRestOfProperties(parentInfo, actualType);
             final Set<String> addedProps = new HashSet<>();
             addedProps.add(DESC);
             parentInfo.compositeKeyMembers.stream().forEach(f -> addedProps.add(f._1));
@@ -398,22 +398,22 @@ public class EqlDomainMetadata {
             }
 
             for (final Field field : restOfPropsFields.stream().filter(p -> !addedProps.contains(p.getName())).collect(toList())) {
-                result.add(isOne2One_association(parentInfo.entityType, field.getName()) ? getOneToOnePropInfo(field, parentInfo)
-                        : getCommonPropInfo(field, parentInfo.entityType, null));
+                result.add(isOne2One_association(actualType/*parentInfo.entityType*/, field.getName()) ? getOneToOnePropInfo(field, parentInfo)
+                        : getCommonPropInfo(field, actualType/*parentInfo.entityType*/, null));
             }
         }
 
         return result;
     }
 
-    public static List<Field> getRestOfProperties(final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo) {
-        return getRealProperties(parentInfo.entityType).stream().filter(propField -> (isAnnotationPresent(propField, Calculated.class) ||
+    public static List<Field> getRestOfProperties(final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo, final Class<? extends AbstractEntity<?>> actualType) {
+        return getRealProperties(actualType/*parentInfo.entityType*/).stream().filter(propField -> (isAnnotationPresent(propField, Calculated.class) ||
                 isAnnotationPresent(propField, MapTo.class) ||
                 isAnnotationPresent(propField, CritOnly.class) ||
-                isOne2One_association(parentInfo.entityType, propField.getName()) ||
+                isOne2One_association(actualType/*parentInfo.entityType*/, propField.getName()) ||
                 parentInfo.category == QUERY_BASED) &&
                 !specialProps.contains(propField.getName()) &&
-                !(Collection.class.isAssignableFrom(propField.getType()) && hasLinkProperty(parentInfo.entityType, propField.getName()))).collect(toList());
+                !(Collection.class.isAssignableFrom(propField.getType()) && hasLinkProperty(actualType/*parentInfo.entityType*/, propField.getName()))).collect(toList());
     }
 
     private String getColumnName(final String propName, final MapTo mapTo, final String parentPrefix) {
@@ -572,9 +572,8 @@ public class EqlDomainMetadata {
         if (existing != null) {
             return existing;
         }
-
         final EntityTypeInfo<?> eti = getEntityTypeInfo(type);
-        final List<EqlPropertyMetadata> propsMetadatas = generatePropertyMetadatasForEntity(eti);
+        final List<EqlPropertyMetadata> propsMetadatas = generatePropertyMetadatasForEntity(eti, type);
         //entityPropsMetadata.put(type, t2(eti.category, propsMetadatas));
         final EntityInfo<?> created = new EntityInfo<>(type, eti.category);
         //domainInfo.put(type, created);
@@ -591,7 +590,7 @@ public class EqlDomainMetadata {
 
         final EntityTypeInfo<?> eti = getEntityTypeInfo(type);
         if (eti.category == QUERY_BASED) {
-            return generateEnhancedEntityInfoForSyntheticType(eti);
+            return generateEnhancedEntityInfoForSyntheticType(eti, type);
         } else {
             return getEntityInfo(type);
         }
