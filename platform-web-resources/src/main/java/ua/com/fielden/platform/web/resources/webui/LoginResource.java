@@ -12,7 +12,6 @@ import java.io.ByteArrayInputStream;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
@@ -46,7 +45,6 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
-import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -72,11 +70,14 @@ public class LoginResource extends AbstractWebResource {
     private final IUserSession coUserSession;
     private final RestServerUtil restUtil;
     private final IUniversalConstants constants;
+    
+    private final byte[] loginPage;
 
     /**
      * Creates {@link LoginResource}.
      */
     public LoginResource(
+            final byte[] loginPage,
             final String domainName,
             final String path,
             final IUniversalConstants constants,
@@ -99,6 +100,7 @@ public class LoginResource extends AbstractWebResource {
         this.coUser = coUser;
         this.coUserSession = coUserSession;
         this.restUtil = restUtil;
+        this.loginPage = loginPage;
     }
 
     @Get
@@ -121,22 +123,12 @@ public class LoginResource extends AbstractWebResource {
                 }
             }
 
-            // otherwise just load the login page for user to login in explicitly
-            return loginPage();
+            // otherwise just return the login page for user to login in explicitly
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(loginPage), MediaType.TEXT_HTML));
         } catch (final Exception ex) {
-            // in case of an exception try try return a login page.
+            // in case of an exception log the error and return the login page for the user to try again
             LOGGER.fatal(ex.getMessage(), ex);
-            return loginPage();
-        }
-    }
-
-    public Representation loginPage() {
-        try {
-            final byte[] body = StringUtils.replace(ResourceLoader.getText("ua/com/fielden/platform/web/login.html"), "@title", "Login").getBytes("UTF-8");
-            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body), MediaType.TEXT_HTML));
-        } catch (final Exception ex) {
-            LOGGER.fatal(ex.getMessage(), ex);
-            throw new IllegalStateException(ex);
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(loginPage), MediaType.TEXT_HTML));
         }
     }
 
