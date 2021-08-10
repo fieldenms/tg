@@ -19,7 +19,7 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
  */
 @KeyType(String.class)
 @KeyTitle(value = "Key", desc = "Some key description")
-@CompanionObject(ITgEntityWithPropertyDescriptor.class)
+@CompanionObject(TgEntityWithPropertyDescriptorCo.class)
 @MapEntityTo
 public class TgEntityWithPropertyDescriptor extends AbstractPersistentEntity<String> {
     private static final long serialVersionUID = 1L;
