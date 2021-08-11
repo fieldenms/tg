@@ -26,6 +26,10 @@ public class OrderBys2 {
     }
 
     public TransformationResult<OrderBys3> transform(final TransformationContext context, final Yields3 yields) {
+        if (models.isEmpty()) {
+            return new TransformationResult<>(null, context);
+        }
+        
         final List<OrderBy3> transformed = new ArrayList<>();
         TransformationContext currentContext = context;
         for (final OrderBy2 orderBy : models) {

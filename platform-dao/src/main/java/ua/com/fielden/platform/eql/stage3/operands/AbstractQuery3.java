@@ -36,7 +36,7 @@ public abstract class AbstractQuery3 {
         sb.append(sources != null ? "\nFROM\n" + sources.sql(dbVersion) : (dbVersion == ORACLE ? " FROM DUAL " : ""));
         sb.append(conditions != null ? "\nWHERE " + conditions.sql(dbVersion) : "");
         sb.append(groups != null ? "\nGROUP BY " + groups.sql(dbVersion) : "");
-        sb.append(orderings.sql(dbVersion));
+        sb.append(orderings != null ? "\nORDER BY " + orderings.sql(dbVersion) : "");
         return sb.toString();
     }
 
@@ -50,7 +50,7 @@ public abstract class AbstractQuery3 {
         final int prime = 31;
         int result = 1;
         result = prime * result + yields.hashCode();
-        result = prime * result + orderings.hashCode();
+        result = prime * result + ((orderings == null) ? 0 : orderings.hashCode());
         result = prime * result + ((groups == null) ? 0 : groups.hashCode());
         result = prime * result + ((conditions == null) ? 0 : conditions.hashCode());
         result = prime * result + ((sources == null) ? 0 : sources.hashCode());
