@@ -93,10 +93,10 @@ public class PropertyTypeDeterminator {
      */
     public static Class<?> determineClass(final Class<?> clazz, final String propertyOrFunction, final boolean determineKeyType, final boolean determineElementType) {
         if (StringUtils.isEmpty(propertyOrFunction)) {
-            throw new IllegalArgumentException("Empty string should not be used here. clazz = " + clazz + ", propertyOrFunction = " + propertyOrFunction);
+            throw new ReflectionException("Empty string should not be used here. clazz = " + clazz + ", propertyOrFunction = " + propertyOrFunction);
         }
         if (isDotNotation(propertyOrFunction)) {
-            throw new IllegalArgumentException("Dot-notation should not be used here. clazz = " + clazz + ", propertyOrFunction = " + propertyOrFunction);
+            throw new ReflectionException("Dot-notation should not be used here. clazz = " + clazz + ", propertyOrFunction = " + propertyOrFunction);
         }
         if (determineKeyType && (AbstractEntity.KEY.equals(propertyOrFunction) || AbstractEntity.GETKEY.equals(propertyOrFunction)) && AbstractEntity.class.equals(clazz)) {
             return Comparable.class;
@@ -360,9 +360,9 @@ public class PropertyTypeDeterminator {
     public static Pair<Class<?>, String> transform(final Class<?> type, final String dotNotationExp) {
         if (isDotNotation(dotNotationExp)) { // dot-notation expression defines property/function.
             final Pair<String, String> pl = penultAndLast(dotNotationExp);
-            return new Pair<>(determinePropertyType(type, pl.getKey()), pl.getValue());
+            return pair(determinePropertyType(type, pl.getKey()), pl.getValue());
         } else { // empty or first level property/function.
-            return new Pair<>(type, dotNotationExp);
+            return pair(type, dotNotationExp);
         }
     }
 
