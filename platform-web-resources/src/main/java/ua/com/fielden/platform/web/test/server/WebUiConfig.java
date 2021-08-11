@@ -4,10 +4,8 @@ import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
@@ -35,9 +33,9 @@ import static ua.com.fielden.platform.web.test.server.config.StandardActions.EDI
 import static ua.com.fielden.platform.web.test.server.config.StandardActions.SEQUENTIAL_EDIT_ACTION;
 import static ua.com.fielden.platform.web.test.server.config.StandardMessages.DELETE_CONFIRMATION;
 
+import java.lang.reflect.Field;
 import java.math.BigDecimal;
 import java.util.Date;
-import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.function.Function;
@@ -52,7 +50,7 @@ import fielden.test_app.config.compound.TgCompoundEntityWebUiConfig;
 import fielden.test_app.main.menu.close_leave.MiTgCloseLeaveExample;
 import ua.com.fielden.platform.attachment.AttachmentsUploadAction;
 import ua.com.fielden.platform.basic.autocompleter.AbstractSearchEntityByKeyWithCentreContext;
-import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
+import ua.com.fielden.platform.basic.autocompleter.AbstractSearchPropertyDescriptorByKeyWithCentreContext;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
@@ -393,7 +391,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final Class<PropertyDescriptor<TgPersistentEntityWithProperties>> propDescriptorType = (Class) PropertyDescriptor.class;
         final EntityCentre<TgEntityWithPropertyDescriptorExt> propDescriptorCentre = new EntityCentre<>(MiTgEntityWithPropertyDescriptorExt.class, "Property Descriptor Example",
                 EntityCentreBuilder.centreFor(TgEntityWithPropertyDescriptorExt.class)
-                //.runAutomatically()
                 .addTopAction(action(EntityNewAction.class).
                         withContext(context().withSelectionCrit().build()).
                         icon("add-circle-outline").
@@ -420,10 +417,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     .withMatcher(TgEntityWithPropertyDescriptorExtPropertyDescriptorMatcher.class).also()
                 .addCrit("propertyDescriptorSingleCrit").asSingle().autocompleter(propDescriptorType)
                     .withMatcher(TgEntityWithPropertyDescriptorExtPropertyDescriptorMatcher.class).also()
-                .addCrit("propertyDescriptorMultiCrit").asMulti().autocompleter(propDescriptorType)
-                    .withMatcher(TgEntityWithPropertyDescriptorExtPropertyDescriptorMatcher.class).also()
-                .addCrit("propertyDescriptorMultiCritCollectional").asMulti().autocompleter(propDescriptorType)
-                    .withMatcher(TgEntityWithPropertyDescriptorExtPropertyDescriptorMatcher.class)
+                .addCrit("propertyDescriptorMultiCrit").asMulti().autocompleter(propDescriptorType).also() // standard FallbackPropertyDescriptorMatcherWithCentreContext is used here
+                .addCrit("propertyDescriptorMultiCritCollectional").asMulti().autocompleter(propDescriptorType) // standard FallbackPropertyDescriptorMatcherWithCentreContext is used here
                 .setLayoutFor(DESKTOP, empty(), mkGridForCentre(3, 2))
 
                 .addProp("this")
@@ -1206,29 +1201,17 @@ public class WebUiConfig extends AbstractWebUiConfig {
      *
      * @author TG Team
      */
-    public static class TgEntityWithPropertyDescriptorExtPropertyDescriptorMatcher extends AbstractSearchEntityByKeyWithCentreContext<PropertyDescriptor<TgPersistentEntityWithProperties>> {
-        @Inject
+    public static class TgEntityWithPropertyDescriptorExtPropertyDescriptorMatcher extends AbstractSearchPropertyDescriptorByKeyWithCentreContext<TgPersistentEntityWithProperties> {
+        
         public TgEntityWithPropertyDescriptorExtPropertyDescriptorMatcher() {
-            super(null);
+            super(TgPersistentEntityWithProperties.class);
         }
-
+        
         @Override
-        public List<PropertyDescriptor<TgPersistentEntityWithProperties>> findMatches(final String searchString) {
-            final List<PropertyDescriptor<TgPersistentEntityWithProperties>> allPropertyDescriptors = getPropertyDescriptors(TgPersistentEntityWithProperties.class);
-            final PojoValueMatcher<PropertyDescriptor<TgPersistentEntityWithProperties>> matcher = new PojoValueMatcher<>(allPropertyDescriptors, KEY, allPropertyDescriptors.size());
-            final List<PropertyDescriptor<TgPersistentEntityWithProperties>> matchedPropertyDescriptors = matcher.findMatches(searchString);
-            return matchedPropertyDescriptors;
+        protected boolean shouldSkip(final Field field) {
+            return field.getName().startsWith("cos"); // filter out 'cos...' properties
         }
-
-        @Override
-        public List<PropertyDescriptor<TgPersistentEntityWithProperties>> findMatchesWithModel(final String searchString, final int dataPage) {
-            return findMatches(searchString);
-        }
-
-        @Override
-        protected ConditionModel makeSearchCriteriaModel(final CentreContext<PropertyDescriptor<TgPersistentEntityWithProperties>, ?> context, final String searchString) {
-            throw new UnsupportedOperationException("EQL queries should not be used for property descriptors retrieval.");
-        }
+        
     }
 
     public static class KeyPropValueMatcherForCentre extends AbstractSearchEntityByKeyWithCentreContext<TgPersistentEntityWithProperties> {
