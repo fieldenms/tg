@@ -3,6 +3,7 @@ package ua.com.fielden.platform.serialisation.jackson.entities;
 import java.math.BigDecimal;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapTo;
@@ -17,6 +18,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  *
  */
 @KeyType(String.class)
+@DescTitle("Description")
 public class EntityWithBigDecimal extends AbstractEntity<String> {
 
     @IsProperty(precision = 10, scale = 3)
