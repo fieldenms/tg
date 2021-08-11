@@ -9,6 +9,8 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 
 /**
  * Key-based value matcher for {@link PropertyDescriptor}s, which supports context assignment.
+ * <p>
+ * Suitable for entity master's matchers.
  * 
  * @author TG Team
  *

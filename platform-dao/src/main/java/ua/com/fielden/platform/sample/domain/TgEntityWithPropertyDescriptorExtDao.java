@@ -23,7 +23,7 @@ public class TgEntityWithPropertyDescriptorExtDao extends CommonEntityDao<TgEnti
 
     @Override
     protected IFetchProvider<TgEntityWithPropertyDescriptorExt> createFetchProvider() {
-        return super.createFetchProvider().with("propertyDescriptor", "propertyDescriptorSingleCrit");
+        return super.createFetchProvider().with("propertyDescriptorSingleCrit");
     }
 
 }

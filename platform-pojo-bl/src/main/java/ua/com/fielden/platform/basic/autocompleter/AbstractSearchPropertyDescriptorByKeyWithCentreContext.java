@@ -9,7 +9,9 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
- * Key-based value matcher for {@link PropertyDescriptor}s, which supports entity centre context assignment.
+ * Key-based value matcher for {@link PropertyDescriptor}s, which supports centre context assignment.
+ * <p>
+ * Suitable for entity centre's selection criteria matchers.
  * 
  * @author TG Team
  *

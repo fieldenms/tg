@@ -27,7 +27,7 @@ import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layo
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.CELL_LAYOUT;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN_PIX;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkGridForCentre;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkVarGridForCentre;
 import static ua.com.fielden.platform.web.test.server.config.LocatorFactory.mkLocator;
 import static ua.com.fielden.platform.web.test.server.config.StandardActions.EDIT_ACTION;
 import static ua.com.fielden.platform.web.test.server.config.StandardActions.SEQUENTIAL_EDIT_ACTION;
@@ -388,7 +388,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     return centre;
                 });
 
-        final Class<PropertyDescriptor<TgPersistentEntityWithProperties>> propDescriptorType = (Class) PropertyDescriptor.class;
+        final Class<PropertyDescriptor<TgPersistentEntityWithProperties>> propDescriptorType = (Class) PropertyDescriptor.class; // this is a recommended way to define type in .asAutocompleter(...) calls; this will assist in further .withMatcher(...) calls
         final EntityCentre<TgEntityWithPropertyDescriptorExt> propDescriptorCentre = new EntityCentre<>(MiTgEntityWithPropertyDescriptorExt.class, "Property Descriptor Example",
                 EntityCentreBuilder.centreFor(TgEntityWithPropertyDescriptorExt.class)
                 .addTopAction(action(EntityNewAction.class).
@@ -419,7 +419,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     .withMatcher(TgEntityWithPropertyDescriptorExtPropertyDescriptorMatcher.class).also()
                 .addCrit("propertyDescriptorMultiCrit").asMulti().autocompleter(propDescriptorType).also() // standard FallbackPropertyDescriptorMatcherWithCentreContext is used here
                 .addCrit("propertyDescriptorMultiCritCollectional").asMulti().autocompleter(propDescriptorType) // standard FallbackPropertyDescriptorMatcherWithCentreContext is used here
-                .setLayoutFor(DESKTOP, empty(), mkGridForCentre(3, 2))
+                .setLayoutFor(DESKTOP, empty(), mkVarGridForCentre(2, 2, 1))
 
                 .addProp("this")
                     .width(60)

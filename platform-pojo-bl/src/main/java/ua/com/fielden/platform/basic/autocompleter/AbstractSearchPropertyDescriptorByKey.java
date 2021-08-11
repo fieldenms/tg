@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
  * @param <T> -- enclosing entity type
  */
 abstract class AbstractSearchPropertyDescriptorByKey<T extends AbstractEntity<?>> implements IValueMatcherWithFetch<PropertyDescriptor<T>> {
+    private static final String ERR_FETCH_MODEL_NOT_APPLICABLE = "Fetch model should not be used for property descriptors retrieval.";
     private final Class<T> enclosingEntityType;
 
     /**
@@ -68,12 +69,12 @@ abstract class AbstractSearchPropertyDescriptorByKey<T extends AbstractEntity<?>
 
     @Override
     public fetch<PropertyDescriptor<T>> getFetch() {
-        throw new UnsupportedOperationException("Fetch model should not be used for property descriptors retrieval.");
+        throw new UnsupportedOperationException(ERR_FETCH_MODEL_NOT_APPLICABLE);
     }
 
     @Override
     public void setFetch(final fetch<PropertyDescriptor<T>> fetchModel) {
-        throw new UnsupportedOperationException("Fetch model should not be used for property descriptors retrieval.");
+        throw new UnsupportedOperationException(ERR_FETCH_MODEL_NOT_APPLICABLE);
     }
 
 }
