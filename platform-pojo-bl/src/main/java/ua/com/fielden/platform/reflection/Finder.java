@@ -28,7 +28,6 @@ import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
@@ -228,7 +227,7 @@ public class Finder {
      */
     @SafeVarargs
     public static List<Field> findProperties(final Class<?> entityType, final Class<? extends Annotation>... annotations) {
-        return streamProperties(entityType, annotations).collect(Collectors.toList());
+        return streamProperties(entityType, annotations).collect(toList());
     }
 
     /**
@@ -824,7 +823,7 @@ public class Finder {
         final List<List<Field>> propertiesSet = new ArrayList<List<Field>>();
         for (int classIndex = 0; classIndex < entityTypes.size(); classIndex++) {
             final List<Field> fields = new ArrayList<Field>();
-            for (final Field propertyField : findProperties(entityTypes.get(classIndex))) {
+            for (final Field propertyField : findRealProperties(entityTypes.get(classIndex))) {
                 fields.add(propertyField);
             }
             propertiesSet.add(fields);

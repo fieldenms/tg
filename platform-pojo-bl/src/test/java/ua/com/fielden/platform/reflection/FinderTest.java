@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.reflection;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -13,6 +14,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.stream.Collectors;
 
@@ -127,7 +129,7 @@ public class FinderTest {
 
     
     @Test
-    public void testFindCommonProperties() {
+    public void common_properties_for_different_entity_types_are_those_that_match_by_name_and_type() {
         final List<Class<? extends AbstractEntity<?>>> types = new ArrayList<>();
         types.add(SimpleEntityWithCommonProperties.class);
         types.add(ComplexEntity.class);
@@ -141,19 +143,18 @@ public class FinderTest {
     }
 
     @Test
-    public void testFindCommonPropertiesWithoutDesc() {
+    public void common_properties_do_not_include_desc_if_one_or_more_entity_types_do_not_define_it() {
         final List<Class<? extends AbstractEntity<?>>> types = new ArrayList<>();
         types.add(SimpleEntityWithCommonProperties.class);
         types.add(ComplexEntity.class);
         types.add(DynamicKeyEntity.class);
         types.add(EntityWithoutDesc.class);
         final List<String> commonProperties = Finder.findCommonProperties(types);
-        System.out.println(commonProperties);
-        assertEquals("The number of common properties must be 2", 2, commonProperties.size());
+        assertEquals("The number of common properties must be 1.", 1, commonProperties.size());
         assertFalse("Key can not be common property", commonProperties.contains("key"));
+        assertFalse("Desc can not be common property", commonProperties.contains("desc"));
         assertTrue("commonProperty must be common for all tested classes", commonProperties.contains("commonProperty"));
         assertFalse("uncommonProperty can not be common", commonProperties.contains("uncommonProperty"));
-        assertTrue("desc must be common for all tested classes", commonProperties.contains("desc"));
     }
 
     @Test
@@ -568,6 +569,38 @@ public class FinderTest {
         assertTrue("Should be present.", Finder.isPropertyPresent(SecondLevelEntity.class, "propertyOfSelfType.propertyOfSelfType.critOnlyAEProperty"));
         assertFalse("Should not be present.", Finder.isPropertyPresent(SecondLevelEntity.class, "propertyOfSelfType.propertyOfSelfType.serialVersionUID"));
         assertFalse("Should not be present.", Finder.isPropertyPresent(SecondLevelEntity.class, "propertyOfSelfType.propertyOfSelfType.blablabla"));
+    }
+
+    @Test
+    public void real_properties_for_union_types_only_contain_union_properties() {
+        final Set<String> realProperties = Finder.streamRealProperties(UnionEntityForReflector.class).map(Field::getName).collect(Collectors.toSet());
+        assertEquals(3, realProperties.size());
+        assertTrue(realProperties.contains("simplePartEntity"));
+        assertTrue(realProperties.contains("complexPartEntity"));
+        assertTrue(realProperties.contains("dynamicKeyPartEntity"));
+
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void properties_for_union_types_are_the_union_of_union_properties_and_their_common_properties() {
+        // first let's build a collection of expected properties
+        final List<Field> unionProperties = Finder.findRealProperties(UnionEntityForReflector.class);
+        final List<String> commonProperties = Finder.findCommonProperties(unionProperties.stream().map(f -> (Class<? extends AbstractEntity<?>>) f.getType()).collect(toList()));
+        final List<String> expectedProperties = new ArrayList<>(commonProperties);
+        unionProperties.forEach(f -> expectedProperties.add(f.getName()));
+        
+        // and now let's get properties of a union type and assert them agains the expected list
+        final List<String> properties = Finder.streamProperties(UnionEntityForReflector.class).map(Field::getName).collect(toList());
+        assertEquals(expectedProperties.size(), properties.size());
+        assertTrue(properties.stream().allMatch(p -> expectedProperties.contains(p) ));
+    }
+
+    @Test
+    public void properties_and_real_properties_are_the_same_for_product_types_that_have_both_key_and_desc_as_real_properties() {
+        final Set<Field> properties = Finder.streamProperties(SimplePartEntity.class).collect(Collectors.toSet());
+        final Set<Field> realProperties = Finder.streamRealProperties(SimplePartEntity.class).collect(Collectors.toSet());
+        assertEquals(properties, realProperties);
     }
 
 }
