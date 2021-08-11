@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.reflection;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
@@ -114,12 +115,8 @@ public class Finder {
     public static <T extends AbstractEntity<?>> List<PropertyDescriptor<T>> getPropertyDescriptors(final Class<T> entityType, final EntityFactory factory) {
         final List<PropertyDescriptor<T>> result = new ArrayList<>();
         for (final Field field : findProperties(entityType)) {
-            try {
-                final PropertyDescriptor<T> pd = PropertyDescriptor.fromString(entityType.getName() + ":" + field.getName(), Optional.of(factory));
-                result.add(pd);
-            } catch (final Exception e) {
-                throw new IllegalStateException(e);
-            }
+            final PropertyDescriptor<T> pd = PropertyDescriptor.fromString(entityType.getName() + ":" + field.getName(), Optional.of(factory));
+            result.add(pd);
         }
         return result;
     }
@@ -148,7 +145,7 @@ public class Finder {
             if (op.isPresent()) {
                 metaProperties.add(op.get());
             } else {
-                throw new IllegalArgumentException("Failed to locate meta-property " + dotNotationExp + " starting with entity " + entity.getType() + ": " + entity);
+                throw new ReflectionException("Failed to locate meta-property " + dotNotationExp + " starting with entity " + entity.getType() + ": " + entity);
             }
             // obtain the value for the current property, which might be an entity instance
             // and needs to be recognized as an owner for the property at the next level
@@ -348,7 +345,7 @@ public class Finder {
      * @param klass
      * @return
      */
-    public static final List<Field> getKeyMembers(final Class<?> type) {
+    public static final List<Field> getKeyMembers(final Class<? extends AbstractEntity<?>> type) {
         // NOTE: please note that perhaps for generated types the key members are often similar as in
         // original types. But this is not the case when someone changed a key member property
         // by adding another property inside it etc. (this is fully allowed in TG). Thus such an optimisation
@@ -366,7 +363,7 @@ public class Finder {
      * @param type
      * @return
      */
-    private static final List<Field> loadAndCacheKeyMembers(final Class<?> type) {
+    private static final List<Field> loadAndCacheKeyMembers(final Class<? extends AbstractEntity<?>> type) {
         final List<Field> loadedKeyMembers = Collections.unmodifiableList(loadKeyMembers(type)); // should be immutable
         ENTITY_KEY_MEMBERS.put(type, loadedKeyMembers);
         return loadedKeyMembers;
@@ -382,7 +379,7 @@ public class Finder {
      * @param klass
      * @return
      */
-    private static final List<Field> loadKeyMembers(final Class<?> type) {
+    private static final List<Field> loadKeyMembers(final Class<? extends AbstractEntity<?>> type) {
         // the use of SortedMap ensures the correct order of properties to be used for composite key
         final SortedMap<Integer, Field> properties = new TreeMap<>();
         final List<Field> compositeKeyFields = findRealProperties(type, CompositeKeyMember.class);
@@ -479,7 +476,7 @@ public class Finder {
         // check if passed "dotNotationExp" is correct:
         PropertyTypeDeterminator.determinePropertyType(type, dotNotationExp);
         if (dotNotationExp.endsWith("()")) {
-            throw new MethodFoundException("Legal situation : method was found by according dot-notation expression == [" + dotNotationExp + "]");
+            throw new MethodFoundException("Illegal situation : a method was found from the dot-notation expression == [" + dotNotationExp + "]");
         }
         final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(type, dotNotationExp);
         return getFieldByName(transformed.getKey(), transformed.getValue());
@@ -999,7 +996,7 @@ public class Finder {
     public static String findLinkProperty(final Class<? extends AbstractEntity<?>> type, final String dotNotationExp) {
         final Field field = Finder.findFieldByName(type, dotNotationExp);
         if (!AnnotationReflector.isAnnotationPresent(field, IsProperty.class)) {
-            throw new IllegalArgumentException("Field " + dotNotationExp + " in type " + type.getName() + " is not a property.");
+            throw new ReflectionException("Field " + dotNotationExp + " in type " + type.getName() + " is not a property.");
         }
 
         final IsProperty propAnnotation = AnnotationReflector.getAnnotation(field, IsProperty.class);
@@ -1009,7 +1006,7 @@ public class Finder {
         }
         // otherwise try to determine link property dynamically based on property type and composite key
         final Class<?> masterType = DynamicEntityClassLoader.getOriginalType(field.getDeclaringClass());
-        final Class<?> propType = PropertyTypeDeterminator.determinePropertyType(type, dotNotationExp);
+        final Class<? extends AbstractEntity<?>> propType = (Class<? extends AbstractEntity<?>>) PropertyTypeDeterminator.determinePropertyType(type, dotNotationExp);
         final boolean collectionalProp = PropertyTypeDeterminator.isCollectional(type, dotNotationExp);
 
         // to be in association property should be an entity type

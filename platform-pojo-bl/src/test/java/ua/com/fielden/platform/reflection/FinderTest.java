@@ -93,7 +93,7 @@ public class FinderTest {
         boolean exceptionHasBeenThrown = false;
         try {
             metaProperties = Finder.findMetaProperties(entity, "propertyOfSelfType.nonExistentProperty");
-        } catch (final IllegalArgumentException e) {
+        } catch (final ReflectionException e) {
             exceptionHasBeenThrown = true;
         }
         assertTrue(exceptionHasBeenThrown);
@@ -189,8 +189,7 @@ public class FinderTest {
         // /////////////////////// simple case -- first level property ////////////////////
         final SecondLevelEntity entity = factory.newByKey(SecondLevelEntity.class, "key-1-1", "key-1-2", 1L);
         final SortedSet<MetaProperty<?>> metaProperties = Finder.getMetaProperties(entity);
-        // expected 6 -- 2 inherited from AbstractEntity, 2 -- from FirstLevelEntity and 2 are declared within SecondLevelEntity
-        assertEquals("Incorrect number of properties.", 8, metaProperties.size());
+        assertEquals("Incorrect number of properties.", 7, metaProperties.size());
     }
 
     @Test
@@ -256,7 +255,7 @@ public class FinderTest {
     @Test
     public void test_that_getSimpleFieldsAnnotatedWith() {
         List<Field> properties = Finder.findRealProperties(FirstLevelEntity.class);
-        assertEquals("Incorrect number of properties in class FirstLevelEntity.", 5, properties.size()); // key is annotated
+        assertEquals("Incorrect number of properties in class FirstLevelEntity.", 4, properties.size()); // key is annotated
         assertEquals("Incorrect property name.", "propertyTwo", properties.get(0).getName());
         assertEquals("Incorrect property type.", String.class, properties.get(0).getType());
 
@@ -266,7 +265,8 @@ public class FinderTest {
         assertEquals("Incorrect property type.", String.class, properties.get(0).getType());
 
         properties = Finder.findRealProperties(UnionEntityForReflector.class);
-        assertEquals("Incorrect number of properties in class UnionEntity", 5, properties.size());
+        assertEquals("Incorrect number of properties in class UnionEntity", 3, properties.size());
+        
         assertTrue("UnionEntity must contain simplePartEntity property", Finder.getFieldNames(properties).contains("simplePartEntity"));
         assertTrue("UnionEntity must contain complexPartEntity property", Finder.getFieldNames(properties).contains("complexPartEntity"));
         assertTrue("UnionEntity must contain dynamicKeyPartEntity property", Finder.getFieldNames(properties).contains("dynamicKeyPartEntity"));
@@ -395,7 +395,7 @@ public class FinderTest {
             Finder.findFieldByName(SecondLevelEntity.class, methodName);
             fail("Field should not be found for method [" + methodName + "] definition.");
         } catch (final Finder.MethodFoundException e) {
-            System.out.println("All is ok: " + e.getMessage());
+            // valid case
         } catch (final Exception e) {
             fail("Method [" + methodName + "] should be found.");
         }
@@ -405,7 +405,7 @@ public class FinderTest {
             Finder.findFieldByName(SecondLevelEntity.class, methodName);
             fail("Field should not be found for inherited method [" + methodName + "] definition.");
         } catch (final Finder.MethodFoundException e) {
-            System.out.println("All is ok: " + e.getMessage());
+            // valid case
         } catch (final Exception e) {
             fail("Inherited method [" + methodName + "] should be found.");
         }
@@ -416,8 +416,8 @@ public class FinderTest {
             fail("Field should not be found for method [" + methodName + "] definition.");
         } catch (final Finder.MethodFoundException e) {
             fail("Method [" + methodName + "] should not be found.");
-        } catch (final IllegalArgumentException e) {
-            System.out.println("All is ok: " + e.getMessage());
+        } catch (final ReflectionException e) {
+            // valid case
         }
 
         final String fieldName = "propertyOfSelfType.getPropertyOfSelfType().propertyOfSelfType";

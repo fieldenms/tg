@@ -359,15 +359,13 @@ public class AbstractEntityTest {
         final EntityWithDynamicEntityKey entityWithDynamicEntityKey = factory.newByKey(EntityWithDynamicEntityKey.class, key1, key2, key3);
 
         final Set<MetaProperty<?>> metaProperties = Finder.getMetaProperties(entityWithDynamicEntityKey);
-        assertEquals("Incorrect number of meta properties.", 5, metaProperties.size());
+        assertEquals("Incorrect number of meta properties.", 3, metaProperties.size());
 
         final List<MetaProperty<?>> list = new ArrayList<>();
         list.addAll(metaProperties);
         assertEquals("Incorrect sorting order for meta-properties.", "key1", list.get(0).getName());
         assertEquals("Incorrect sorting order for meta-properties.", "key2", list.get(1).getName());
         assertEquals("Incorrect sorting order for meta-properties.", "key3", list.get(2).getName());
-        assertEquals("Incorrect sorting order for meta-properties.", "desc", list.get(3).getName());
-        assertEquals("Incorrect sorting order for meta-properties.", "key", list.get(4).getName());
     }
 
     @Test
