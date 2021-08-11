@@ -248,8 +248,12 @@ public class Finder {
 
     /**
      * Returns "real" properties (fields annotated with {@link IsProperty}) for <code>entityType</code> that are also annotated with specified <code>annotations</code> (if any).
+     * Refer issue <a href='https://github.com/fieldenms/tg/issues/1729'>#1729</a> for more details.
      * <p>
-     * For {@link AbstractUnionEntity} <code>entityType</code>s common properties are disregarded.
+     * For union entities (i.e. those extending {@link AbstractUnionEntity}), properties {@code key} and {@code desc} are not considered to be "real" properties.
+     * <p>
+     * For product entities, property {@code desc} is excluded if {@link EntityUtils#hasDescProperty(Class)} returns {@code false}.<br>
+     * And property {@code key} is excluded if {@link EntityUtils#isCompositeEntity(Class)} returns {@code true}.
      *
      * @param entityType
      * @param annotations
@@ -257,8 +261,8 @@ public class Finder {
      * @return
      */
     @SafeVarargs
-    public static List<Field> findRealProperties(final Class<?> entityType, final Class<? extends Annotation>... annotations) {
-        return streamRealProperties(entityType, annotations).collect(Collectors.toList());
+    public static List<Field> findRealProperties(final Class<? extends AbstractEntity<?>> entityType, final Class<? extends Annotation>... annotations) {
+        return streamRealProperties(entityType, annotations).collect(toList());
     }
 
     /**
@@ -269,8 +273,14 @@ public class Finder {
      * @return
      */
     @SafeVarargs
-    public static Stream<Field> streamRealProperties(final Class<?> entityType, final Class<? extends Annotation>... annotations) {
-        return getFieldsAnnotatedWith(entityType, false, IsProperty.class, annotations);
+    public static Stream<Field> streamRealProperties(final Class<? extends AbstractEntity<?>> entityType, final Class<? extends Annotation>... annotations) {
+        final boolean hasDesc = EntityUtils.hasDescProperty(entityType);
+        final boolean hasCompositeKey = EntityUtils.isCompositeEntity(entityType);
+        final boolean isUnion = EntityUtils.isUnionEntityType(entityType);
+        return getFieldsAnnotatedWith(entityType, false, IsProperty.class, annotations)
+               .filter(f -> (hasDesc || !DESC.equals(f.getName())) && 
+                            (!hasCompositeKey || !KEY.equals(f.getName())))
+               .filter(f -> {if (isUnion) return !KEY.equals(f.getName()); else return true;});
     }
 
     /**
@@ -278,7 +288,7 @@ public class Finder {
      *
      * @return
      */
-    public static List<Field> findLifecycleProperties(final Class<? extends AbstractEntity> clazz) {
+    public static List<Field> findLifecycleProperties(final Class<? extends AbstractEntity<?>> clazz) {
         final List<Field> properties = findProperties(clazz, Monitoring.class);
         properties.remove(getFieldByName(clazz, KEY));
         properties.remove(getFieldByName(clazz, DESC));
