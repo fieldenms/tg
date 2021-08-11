@@ -649,13 +649,7 @@ public class EntityUtils {
      * @return
      */
     public static <T extends AbstractEntity<?>> boolean isCompositeEntity(final Class<T> entityType) {
-        final KeyType keyAnnotation = AnnotationReflector.getAnnotation(entityType, KeyType.class);
-
-        if (keyAnnotation != null) {
-            return DynamicEntityKey.class.isAssignableFrom(keyAnnotation.value());
-        } else {
-            return false;
-        }
+        return DynamicEntityKey.class.equals(AnnotationReflector.getKeyType(entityType));
     }
 
     /**
@@ -970,6 +964,12 @@ public class EntityUtils {
         return result;
     }
 
+    /**
+     * A predicate that evaluates to {@code true} for entity types with "real" property {@code desc}.
+     *
+     * @param entityType
+     * @return
+     */
     public static boolean hasDescProperty(final Class<? extends AbstractEntity<?>> entityType) {
         return AnnotationReflector.isAnnotationPresentForClass(DescTitle.class, entityType);
     }
