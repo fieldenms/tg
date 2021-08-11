@@ -1,16 +1,22 @@
 package ua.com.fielden.platform.entity_centre.review;
 
 import static java.lang.Boolean.TRUE;
+import static java.util.Arrays.stream;
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Stream.concat;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.paramValue;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
+import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 import static ua.com.fielden.platform.utils.EntityUtils.isRangeType;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
@@ -21,20 +27,25 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
+import ua.com.fielden.platform.basic.autocompleter.PojoValueMatcher;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoin;
@@ -976,9 +987,11 @@ public class DynamicQueryBuilder {
             return cond().prop(propertyName).iLike().anyOfValues((Object[]) prepCritValuesForStringTypedProp((String) property.getValue())).model();
         } else if (isEntityType(property.getType())) {
             if (property.isSingle()) {
-                return propertyLike(propertyName, property.getValue());
+                return propertyEquals(propertyName, property.getValue()); // this covers PropertyDescriptor case too
             } else {
-                return propertyLike(propertyName, (List<String>) property.getValue(), baseEntityType((Class<AbstractEntity<?>>) property.getType()));
+                return isPropertyDescriptor(property.getType())
+                    ? propertyDescriptorLike(propertyName, (List<String>) property.getValue(), (Class<AbstractEntity<?>>) getPropertyAnnotation(IsProperty.class, property.getEntityClass(), property.getPropertyName()).value())
+                    : propertyLike(propertyName, (List<String>) property.getValue(), baseEntityType((Class<AbstractEntity<?>>) property.getType()));
             }
         } else {
             throw new UnsupportedTypeException(property.getType());
@@ -986,14 +999,37 @@ public class DynamicQueryBuilder {
     }
 
     /**
-     * Generates condition for single entity type property for property name and value.
+     * Generates condition for crit-only single entity type property for property name and value.
+     * <p>
+     * This method is used in critCondition cases only. In other cases crit-only single properties are ignored.
      *
      * @param propertyName
      * @param value
      * @return
      */
-    private static ConditionModel propertyLike(final String propertyName, final Object value) {
-        return cond().prop(propertyName).eq().val(value).model();
+    private static ConditionModel propertyEquals(final String propertyName, final Object value) {
+        return cond().prop(propertyName).eq().val(value).model(); // this covers PropertyDescriptor case too due to its proper conversion using .toString() on EQL level
+    }
+
+    /**
+     * Generates condition for {@link PropertyDescriptor}-typed property with {@code searchValues} criteria and {@code enclosingEntityType}.
+     *
+     * @param propertyNameWithKey -- the name of property concatenated with ".key"
+     * @param searchValues
+     * @param enclosingEntityType -- the type parameter in <i>PropertyDescriptor<...></i> property definition meaning the type that holds "descripted" properties
+     * @return
+     */
+    private static ConditionModel propertyDescriptorLike(final String propertyNameWithKey, final List<String> searchValues, final Class<AbstractEntity<?>> enclosingEntityType) {
+        final List<PropertyDescriptor<AbstractEntity<?>>> allPropertyDescriptors = getPropertyDescriptors(enclosingEntityType);
+        final Map<Boolean, List<String>> searchVals = searchValues.stream().collect(groupingBy(str -> str.contains("*")));
+        final Set<PropertyDescriptor<AbstractEntity<?>>> matchedPropDescriptors = new LinkedHashSet<>();
+        concat(
+            searchVals.getOrDefault(false, emptyList()).stream(),
+            stream(prepCritValuesForEntityTypedProp(searchVals.getOrDefault(true, emptyList())))
+        ).forEach(val -> matchedPropDescriptors.addAll(new PojoValueMatcher<>(allPropertyDescriptors, KEY, allPropertyDescriptors.size()).findMatches(val)));
+        return matchedPropDescriptors.isEmpty()
+            ? cond().val(0).eq().val(1).model() // no matching values -- can not be passed into '.in().values(...)'
+            : cond().prop(getPropertyNameWithoutKeyPart(propertyNameWithKey)).in().values(matchedPropDescriptors.toArray()).model(); // passing of PropertyDescriptor instances works due to their proper conversion using .toString() on EQL level
     }
 
     /**

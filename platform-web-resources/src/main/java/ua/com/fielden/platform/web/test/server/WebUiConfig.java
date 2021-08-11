@@ -4,8 +4,10 @@ import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
@@ -20,12 +22,14 @@ import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreCo
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.multi;
 import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construction.options.DefaultValueOptions.single;
 import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.mkProp;
+import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.subheaderOpen;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.CELL_LAYOUT;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN_PIX;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkGridForCentre;
 import static ua.com.fielden.platform.web.test.server.config.LocatorFactory.mkLocator;
 import static ua.com.fielden.platform.web.test.server.config.StandardActions.EDIT_ACTION;
 import static ua.com.fielden.platform.web.test.server.config.StandardActions.SEQUENTIAL_EDIT_ACTION;
@@ -60,8 +64,6 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.reflection.ClassesRetriever;
-import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.sample.domain.ExportAction;
 import ua.com.fielden.platform.sample.domain.ExportActionProducer;
@@ -80,7 +82,7 @@ import ua.com.fielden.platform.sample.domain.TgDummyAction;
 import ua.com.fielden.platform.sample.domain.TgEntityForColourMaster;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependencyProducer;
-import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptor;
+import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptorExt;
 import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntityProducer;
@@ -114,7 +116,7 @@ import ua.com.fielden.platform.ui.menu.sample.MiDetailsCentre;
 import ua.com.fielden.platform.ui.menu.sample.MiEntityCentreNotGenerated;
 import ua.com.fielden.platform.ui.menu.sample.MiTgCollectionalSerialisationParent;
 import ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithPropertyDependency;
-import ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithPropertyDescriptor;
+import ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithPropertyDescriptorExt;
 import ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.ui.menu.sample.MiTgFetchProviderTestEntity;
 import ua.com.fielden.platform.ui.menu.sample.MiTgGeneratedEntity;
@@ -388,9 +390,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     return centre;
                 });
 
-        final EntityCentre<TgEntityWithPropertyDescriptor> propDescriptorCentre = new EntityCentre<>(MiTgEntityWithPropertyDescriptor.class, "Property Descriptor Example",
-                EntityCentreBuilder.centreFor(TgEntityWithPropertyDescriptor.class)
-                .runAutomatically()
+        final Class<PropertyDescriptor<TgPersistentEntityWithProperties>> propDescriptorType = (Class) PropertyDescriptor.class;
+        final EntityCentre<TgEntityWithPropertyDescriptorExt> propDescriptorCentre = new EntityCentre<>(MiTgEntityWithPropertyDescriptorExt.class, "Property Descriptor Example",
+                EntityCentreBuilder.centreFor(TgEntityWithPropertyDescriptorExt.class)
+                //.runAutomatically()
                 .addTopAction(action(EntityNewAction.class).
                         withContext(context().withSelectionCrit().build()).
                         icon("add-circle-outline").
@@ -412,10 +415,16 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         longDesc("Selected Entities Example").
                         withNoParentCentreRefresh().
                         build())
-                .addCrit("this").asMulti().autocompleter(TgEntityWithPropertyDescriptor.class).also()
-                .addCrit("propertyDescriptor").asMulti().autocompleter((Class<PropertyDescriptor<TgPersistentEntityWithProperties>>) ClassesRetriever.findClass("ua.com.fielden.platform.entity.meta.PropertyDescriptor"))
-                    .withMatcher(TgEntityWithPropertyDescriptorPropertyDescriptorMatcher.class, context().withSelectedEntities().build())
-                .setLayoutFor(Device.DESKTOP, Optional.empty(), "[['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']]]")
+                .addCrit("this").asMulti().autocompleter(TgEntityWithPropertyDescriptorExt.class).also()
+                .addCrit("propertyDescriptor").asMulti().autocompleter(propDescriptorType)
+                    .withMatcher(TgEntityWithPropertyDescriptorExtPropertyDescriptorMatcher.class).also()
+                .addCrit("propertyDescriptorSingleCrit").asSingle().autocompleter(propDescriptorType)
+                    .withMatcher(TgEntityWithPropertyDescriptorExtPropertyDescriptorMatcher.class).also()
+                .addCrit("propertyDescriptorMultiCrit").asMulti().autocompleter(propDescriptorType)
+                    .withMatcher(TgEntityWithPropertyDescriptorExtPropertyDescriptorMatcher.class).also()
+                .addCrit("propertyDescriptorMultiCritCollectional").asMulti().autocompleter(propDescriptorType)
+                    .withMatcher(TgEntityWithPropertyDescriptorExtPropertyDescriptorMatcher.class)
+                .setLayoutFor(DESKTOP, empty(), mkGridForCentre(3, 2))
 
                 .addProp("this")
                     .width(60)
@@ -1193,22 +1202,20 @@ public class WebUiConfig extends AbstractWebUiConfig {
     }
 
     /**
-     * Value matcher for PropertyDescriptor<TgPersistentEntityWithProperties> propertyDescriptor property for TgEntityWithPropertyDescriptor entity centre's criterion.
+     * Value matcher for PropertyDescriptor<TgPersistentEntityWithProperties> propertyDescriptor property for TgEntityWithPropertyDescriptorExt entity centre's criterion.
      *
      * @author TG Team
      */
-    public static class TgEntityWithPropertyDescriptorPropertyDescriptorMatcher extends AbstractSearchEntityByKeyWithCentreContext<PropertyDescriptor<TgPersistentEntityWithProperties>> {
-
+    public static class TgEntityWithPropertyDescriptorExtPropertyDescriptorMatcher extends AbstractSearchEntityByKeyWithCentreContext<PropertyDescriptor<TgPersistentEntityWithProperties>> {
         @Inject
-        public TgEntityWithPropertyDescriptorPropertyDescriptorMatcher() {
+        public TgEntityWithPropertyDescriptorExtPropertyDescriptorMatcher() {
             super(null);
         }
 
         @Override
         public List<PropertyDescriptor<TgPersistentEntityWithProperties>> findMatches(final String searchString) {
-            // final Class<WorkOrder> enclosingEntityType = (Class<WorkOrder>) AnnotationReflector.getPropertyAnnotation(IsProperty.class, WoStatusRequiredProperty.class, "requiredProperty").value();
-            final List<PropertyDescriptor<TgPersistentEntityWithProperties>> allPropertyDescriptors = Finder.getPropertyDescriptors(TgPersistentEntityWithProperties.class);
-            final PojoValueMatcher<PropertyDescriptor<TgPersistentEntityWithProperties>> matcher = new PojoValueMatcher<>(allPropertyDescriptors, AbstractEntity.KEY, allPropertyDescriptors.size());
+            final List<PropertyDescriptor<TgPersistentEntityWithProperties>> allPropertyDescriptors = getPropertyDescriptors(TgPersistentEntityWithProperties.class);
+            final PojoValueMatcher<PropertyDescriptor<TgPersistentEntityWithProperties>> matcher = new PojoValueMatcher<>(allPropertyDescriptors, KEY, allPropertyDescriptors.size());
             final List<PropertyDescriptor<TgPersistentEntityWithProperties>> matchedPropertyDescriptors = matcher.findMatches(searchString);
             return matchedPropertyDescriptors;
         }
