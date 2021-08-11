@@ -2,12 +2,15 @@ package ua.com.fielden.platform.reflection;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -44,6 +47,7 @@ import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.SimpleEntity;
 import ua.com.fielden.platform.reflection.test_entities.SimpleEntityWithCommonProperties;
 import ua.com.fielden.platform.reflection.test_entities.SimplePartEntity;
+import ua.com.fielden.platform.reflection.test_entities.SimpleWithoutDescEntity;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityForReflector;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityHolder;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityWithoutDesc;
@@ -597,10 +601,40 @@ public class FinderTest {
     }
 
     @Test
-    public void properties_and_real_properties_are_the_same_for_product_types_that_have_both_key_and_desc_as_real_properties() {
-        final Set<Field> properties = Finder.streamProperties(SimplePartEntity.class).collect(Collectors.toSet());
-        final Set<Field> realProperties = Finder.streamRealProperties(SimplePartEntity.class).collect(Collectors.toSet());
+    public void properties_and_real_properties_are_the_same_for_product_entities_that_have_both_key_and_desc_as_real_properties() {
+        final Set<Field> properties = Finder.streamProperties(SimplePartEntity.class).collect(toSet());
+        final Set<Field> realProperties = Finder.streamRealProperties(SimplePartEntity.class).collect(toSet());
         assertEquals(properties, realProperties);
+    }
+
+    @Test
+    public void real_properties_exclude_property_desc_for_product_entities_without_DescTitle_annotation() {
+        final Set<String> realProperties = Finder.streamRealProperties(SimpleWithoutDescEntity.class).map(Field::getName).collect(toSet());
+        assertFalse(realProperties.contains(DESC));
+    }
+
+    @Test
+    public void properties_and_real_properties_differ_for_product_entities_without_DescTitle_annotation() {
+        final Set<String> properties = Finder.streamProperties(SimpleWithoutDescEntity.class).map(Field::getName).collect(toSet());
+        final Set<String> realProperties = Finder.streamRealProperties(SimpleWithoutDescEntity.class).map(Field::getName).collect(toSet());
+        assertEquals(properties.size(), realProperties.size() + 1);
+        assertTrue(properties.contains(DESC));
+        assertFalse(realProperties.contains(DESC));
+    }
+    
+    @Test
+    public void real_properties_exclude_property_key_for_composite_product_entities() {
+        final Set<String> realProperties = Finder.streamRealProperties(DynamicKeyEntity.class).map(Field::getName).collect(toSet());
+        assertFalse(realProperties.contains(KEY));
+    }
+
+    @Test
+    public void properties_and_real_properties_differ_for_composite_product_entities() {
+        final Set<String> properties = Finder.streamProperties(DynamicKeyEntity.class).map(Field::getName).collect(toSet());
+        final Set<String> realProperties = Finder.streamRealProperties(DynamicKeyEntity.class).map(Field::getName).collect(toSet());
+        assertEquals(properties.size(), realProperties.size() + 1);
+        assertTrue(properties.contains(KEY));
+        assertFalse(realProperties.contains(KEY));
     }
 
 }
