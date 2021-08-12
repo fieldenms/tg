@@ -9,6 +9,9 @@ import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LINK_PROPERTY;
 import static ua.com.fielden.platform.reflection.Reflector.MAXIMUM_CACHE_SIZE;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
+import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
+import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -270,13 +273,12 @@ public class Finder {
      */
     @SafeVarargs
     public static Stream<Field> streamRealProperties(final Class<? extends AbstractEntity<?>> entityType, final Class<? extends Annotation>... annotations) {
-        final boolean hasDesc = EntityUtils.hasDescProperty(entityType);
-        final boolean hasCompositeKey = EntityUtils.isCompositeEntity(entityType);
-        final boolean isUnion = EntityUtils.isUnionEntityType(entityType);
+        final boolean hasDesc = hasDescProperty(entityType);
+        final boolean hasCompositeKey = isCompositeEntity(entityType);
+        final boolean isUnion = isUnionEntityType(entityType);
         return getFieldsAnnotatedWith(entityType, false, IsProperty.class, annotations)
-               .filter(f -> (hasDesc || !DESC.equals(f.getName())) && 
-                            (!hasCompositeKey || !KEY.equals(f.getName())))
-               .filter(f -> {if (isUnion) return !KEY.equals(f.getName()); else return true;});
+               .filter(f -> (hasDesc                      || !DESC.equals(f.getName()))  // if does not have desc (including union type) then exclude DESC
+                         && (!hasCompositeKey && !isUnion || !KEY.equals(f.getName()))); // if hasCompositeKey or isUnion then exclude KEY
     }
 
     /**
