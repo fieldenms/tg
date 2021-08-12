@@ -5,8 +5,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresent;
+import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
-import static ua.com.fielden.platform.utils.EntityUtils.getRealProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
@@ -65,7 +65,7 @@ public class DomainEntitiesDependenciesUtils {
         final Map<Class<? extends AbstractEntity<?>>, DomainEntityDependencies> map = new HashMap<>();
         domainEntityTypes.stream().filter(entType -> isPersistedEntityType(entType))
         .forEach(entType -> {
-            for (final Field field : getRealProperties(entType)) {
+            for (final Field field : findRealProperties(entType)) {
                 if (isAnnotationPresent(field, MapTo.class) && isPersistedEntityType(field.getType())) {
                     if (!map.containsKey(field.getType())) {
                         map.put(((Class<? extends AbstractEntity<?>>) field.getType()), new DomainEntityDependencies(((Class<? extends AbstractEntity<?>>) field.getType())));
