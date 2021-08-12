@@ -1008,15 +1008,16 @@ public class DynamicQueryBuilder {
      * @return
      */
     private static ConditionModel propertyEquals(final String propertyName, final Object value) {
-        return cond().prop(propertyName).eq().val(value).model(); // this covers PropertyDescriptor case too due to its proper conversion using .toString() on EQL level
+        // this condition covers the PropertyDescriptor case too due to its proper conversion .toString() at the EQL level
+        return cond().prop(propertyName).eq().val(value).model();
     }
 
     /**
      * Generates condition for {@link PropertyDescriptor}-typed property with {@code searchValues} criteria and {@code enclosingEntityType}.
      *
      * @param propertyNameWithKey -- the name of property concatenated with ".key"
-     * @param searchValues
-     * @param enclosingEntityType -- the type parameter in <i>PropertyDescriptor<...></i> property definition meaning the type that holds "descripted" properties
+     * @param searchValues -- represent search strings for the titles of properties modeled by {@link PropertyDescriptor}
+     * @param enclosingEntityType -- the type parameter in <i>PropertyDescriptor<...></i> property definition, which is the type that holds "described" properties
      * @return
      */
     private static ConditionModel propertyDescriptorLike(final String propertyNameWithKey, final List<String> searchValues, final Class<AbstractEntity<?>> enclosingEntityType) {
@@ -1029,7 +1030,7 @@ public class DynamicQueryBuilder {
         ).forEach(val -> matchedPropDescriptors.addAll(new PojoValueMatcher<>(allPropertyDescriptors, KEY, allPropertyDescriptors.size()).findMatches(val)));
         return matchedPropDescriptors.isEmpty()
             ? cond().val(0).eq().val(1).model() // no matching values -- can not be passed into '.in().values(...)'
-            : cond().prop(getPropertyNameWithoutKeyPart(propertyNameWithKey)).in().values(matchedPropDescriptors.toArray()).model(); // passing of PropertyDescriptor instances works due to their proper conversion using .toString() on EQL level
+            : cond().prop(getPropertyNameWithoutKeyPart(propertyNameWithKey)).in().values(matchedPropDescriptors.toArray()).model(); // passing of PropertyDescriptor instances works due to their proper conversion .toString() at the EQL level
     }
 
     /**
