@@ -11,11 +11,10 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 @DescTitle(value = "Simple description")
 public class SimpleEntityWithCommonProperties extends AbstractEntity<String> {
 
-    private static final long serialVersionUID = 6035523278316182024L;
-
     @IsProperty
     private String commonProperty;
 
     @IsProperty
     private SimpleEntity uncommonProperty;
+
 }

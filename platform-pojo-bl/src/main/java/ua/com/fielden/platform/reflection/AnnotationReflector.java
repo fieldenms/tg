@@ -42,7 +42,6 @@ import ua.com.fielden.platform.entity.annotation.TransactionEntity;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.utils.Pair;
 
 /**
  * This is a helper class to provide methods related to {@link Annotation}s determination and related entity/property/method analysis based on them.
