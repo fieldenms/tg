@@ -7,8 +7,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 
 public class UnionEntityForReflector extends AbstractUnionEntity {
 
-    private static final long serialVersionUID = 8000899765577496777L;
-
     @IsProperty
     @Title(value = "First entity", desc = "First entity description")
     private SimplePartEntity simplePartEntity;

@@ -1,18 +1,23 @@
 package ua.com.fielden.platform.reflection;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.SortedSet;
 import java.util.stream.Collectors;
 
@@ -42,6 +47,7 @@ import ua.com.fielden.platform.reflection.test_entities.SecondLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.SimpleEntity;
 import ua.com.fielden.platform.reflection.test_entities.SimpleEntityWithCommonProperties;
 import ua.com.fielden.platform.reflection.test_entities.SimplePartEntity;
+import ua.com.fielden.platform.reflection.test_entities.SimpleWithoutDescEntity;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityForReflector;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityHolder;
 import ua.com.fielden.platform.reflection.test_entities.UnionEntityWithoutDesc;
@@ -93,7 +99,7 @@ public class FinderTest {
         boolean exceptionHasBeenThrown = false;
         try {
             metaProperties = Finder.findMetaProperties(entity, "propertyOfSelfType.nonExistentProperty");
-        } catch (final IllegalArgumentException e) {
+        } catch (final ReflectionException e) {
             exceptionHasBeenThrown = true;
         }
         assertTrue(exceptionHasBeenThrown);
@@ -127,7 +133,7 @@ public class FinderTest {
 
     
     @Test
-    public void testFindCommonProperties() {
+    public void common_properties_for_different_entity_types_are_those_that_match_by_name_and_type() {
         final List<Class<? extends AbstractEntity<?>>> types = new ArrayList<>();
         types.add(SimpleEntityWithCommonProperties.class);
         types.add(ComplexEntity.class);
@@ -141,19 +147,18 @@ public class FinderTest {
     }
 
     @Test
-    public void testFindCommonPropertiesWithoutDesc() {
+    public void common_properties_do_not_include_desc_if_one_or_more_entity_types_do_not_define_it() {
         final List<Class<? extends AbstractEntity<?>>> types = new ArrayList<>();
         types.add(SimpleEntityWithCommonProperties.class);
         types.add(ComplexEntity.class);
         types.add(DynamicKeyEntity.class);
         types.add(EntityWithoutDesc.class);
         final List<String> commonProperties = Finder.findCommonProperties(types);
-        System.out.println(commonProperties);
-        assertEquals("The number of common properties must be 2", 2, commonProperties.size());
+        assertEquals("The number of common properties must be 1.", 1, commonProperties.size());
         assertFalse("Key can not be common property", commonProperties.contains("key"));
+        assertFalse("Desc can not be common property", commonProperties.contains("desc"));
         assertTrue("commonProperty must be common for all tested classes", commonProperties.contains("commonProperty"));
         assertFalse("uncommonProperty can not be common", commonProperties.contains("uncommonProperty"));
-        assertTrue("desc must be common for all tested classes", commonProperties.contains("desc"));
     }
 
     @Test
@@ -189,8 +194,7 @@ public class FinderTest {
         // /////////////////////// simple case -- first level property ////////////////////
         final SecondLevelEntity entity = factory.newByKey(SecondLevelEntity.class, "key-1-1", "key-1-2", 1L);
         final SortedSet<MetaProperty<?>> metaProperties = Finder.getMetaProperties(entity);
-        // expected 6 -- 2 inherited from AbstractEntity, 2 -- from FirstLevelEntity and 2 are declared within SecondLevelEntity
-        assertEquals("Incorrect number of properties.", 8, metaProperties.size());
+        assertEquals("Incorrect number of properties.", 7, metaProperties.size());
     }
 
     @Test
@@ -256,7 +260,7 @@ public class FinderTest {
     @Test
     public void test_that_getSimpleFieldsAnnotatedWith() {
         List<Field> properties = Finder.findRealProperties(FirstLevelEntity.class);
-        assertEquals("Incorrect number of properties in class FirstLevelEntity.", 5, properties.size()); // key is annotated
+        assertEquals("Incorrect number of properties in class FirstLevelEntity.", 4, properties.size()); // key is annotated
         assertEquals("Incorrect property name.", "propertyTwo", properties.get(0).getName());
         assertEquals("Incorrect property type.", String.class, properties.get(0).getType());
 
@@ -266,7 +270,8 @@ public class FinderTest {
         assertEquals("Incorrect property type.", String.class, properties.get(0).getType());
 
         properties = Finder.findRealProperties(UnionEntityForReflector.class);
-        assertEquals("Incorrect number of properties in class UnionEntity", 5, properties.size());
+        assertEquals("Incorrect number of properties in class UnionEntity", 3, properties.size());
+        
         assertTrue("UnionEntity must contain simplePartEntity property", Finder.getFieldNames(properties).contains("simplePartEntity"));
         assertTrue("UnionEntity must contain complexPartEntity property", Finder.getFieldNames(properties).contains("complexPartEntity"));
         assertTrue("UnionEntity must contain dynamicKeyPartEntity property", Finder.getFieldNames(properties).contains("dynamicKeyPartEntity"));
@@ -395,7 +400,7 @@ public class FinderTest {
             Finder.findFieldByName(SecondLevelEntity.class, methodName);
             fail("Field should not be found for method [" + methodName + "] definition.");
         } catch (final Finder.MethodFoundException e) {
-            System.out.println("All is ok: " + e.getMessage());
+            // valid case
         } catch (final Exception e) {
             fail("Method [" + methodName + "] should be found.");
         }
@@ -405,7 +410,7 @@ public class FinderTest {
             Finder.findFieldByName(SecondLevelEntity.class, methodName);
             fail("Field should not be found for inherited method [" + methodName + "] definition.");
         } catch (final Finder.MethodFoundException e) {
-            System.out.println("All is ok: " + e.getMessage());
+            // valid case
         } catch (final Exception e) {
             fail("Inherited method [" + methodName + "] should be found.");
         }
@@ -416,8 +421,8 @@ public class FinderTest {
             fail("Field should not be found for method [" + methodName + "] definition.");
         } catch (final Finder.MethodFoundException e) {
             fail("Method [" + methodName + "] should not be found.");
-        } catch (final IllegalArgumentException e) {
-            System.out.println("All is ok: " + e.getMessage());
+        } catch (final ReflectionException e) {
+            // valid case
         }
 
         final String fieldName = "propertyOfSelfType.getPropertyOfSelfType().propertyOfSelfType";
@@ -568,6 +573,68 @@ public class FinderTest {
         assertTrue("Should be present.", Finder.isPropertyPresent(SecondLevelEntity.class, "propertyOfSelfType.propertyOfSelfType.critOnlyAEProperty"));
         assertFalse("Should not be present.", Finder.isPropertyPresent(SecondLevelEntity.class, "propertyOfSelfType.propertyOfSelfType.serialVersionUID"));
         assertFalse("Should not be present.", Finder.isPropertyPresent(SecondLevelEntity.class, "propertyOfSelfType.propertyOfSelfType.blablabla"));
+    }
+
+    @Test
+    public void real_properties_for_union_types_only_contain_union_properties() {
+        final Set<String> realProperties = Finder.streamRealProperties(UnionEntityForReflector.class).map(Field::getName).collect(Collectors.toSet());
+        assertEquals(3, realProperties.size());
+        assertTrue(realProperties.contains("simplePartEntity"));
+        assertTrue(realProperties.contains("complexPartEntity"));
+        assertTrue(realProperties.contains("dynamicKeyPartEntity"));
+
+    }
+
+    @SuppressWarnings("unchecked")
+    @Test
+    public void properties_for_union_types_are_the_union_of_union_properties_and_their_common_properties() {
+        // first let's build a collection of expected properties
+        final List<Field> unionProperties = Finder.findRealProperties(UnionEntityForReflector.class);
+        final List<String> commonProperties = Finder.findCommonProperties(unionProperties.stream().map(f -> (Class<? extends AbstractEntity<?>>) f.getType()).collect(toList()));
+        final List<String> expectedProperties = new ArrayList<>(commonProperties);
+        unionProperties.forEach(f -> expectedProperties.add(f.getName()));
+        
+        // and now let's get properties of a union type and assert them agains the expected list
+        final List<String> properties = Finder.streamProperties(UnionEntityForReflector.class).map(Field::getName).collect(toList());
+        assertEquals(expectedProperties.size(), properties.size());
+        assertTrue(properties.stream().allMatch(p -> expectedProperties.contains(p) ));
+    }
+
+    @Test
+    public void properties_and_real_properties_are_the_same_for_product_entities_that_have_both_key_and_desc_as_real_properties() {
+        final Set<Field> properties = Finder.streamProperties(SimplePartEntity.class).collect(toSet());
+        final Set<Field> realProperties = Finder.streamRealProperties(SimplePartEntity.class).collect(toSet());
+        assertEquals(properties, realProperties);
+    }
+
+    @Test
+    public void real_properties_exclude_property_desc_for_product_entities_without_DescTitle_annotation() {
+        final Set<String> realProperties = Finder.streamRealProperties(SimpleWithoutDescEntity.class).map(Field::getName).collect(toSet());
+        assertFalse(realProperties.contains(DESC));
+    }
+
+    @Test
+    public void properties_and_real_properties_differ_for_product_entities_without_DescTitle_annotation() {
+        final Set<String> properties = Finder.streamProperties(SimpleWithoutDescEntity.class).map(Field::getName).collect(toSet());
+        final Set<String> realProperties = Finder.streamRealProperties(SimpleWithoutDescEntity.class).map(Field::getName).collect(toSet());
+        assertEquals(properties.size(), realProperties.size() + 1);
+        assertTrue(properties.contains(DESC));
+        assertFalse(realProperties.contains(DESC));
+    }
+    
+    @Test
+    public void real_properties_exclude_property_key_for_composite_product_entities() {
+        final Set<String> realProperties = Finder.streamRealProperties(DynamicKeyEntity.class).map(Field::getName).collect(toSet());
+        assertFalse(realProperties.contains(KEY));
+    }
+
+    @Test
+    public void properties_and_real_properties_differ_for_composite_product_entities() {
+        final Set<String> properties = Finder.streamProperties(DynamicKeyEntity.class).map(Field::getName).collect(toSet());
+        final Set<String> realProperties = Finder.streamRealProperties(DynamicKeyEntity.class).map(Field::getName).collect(toSet());
+        assertEquals(properties.size(), realProperties.size() + 1);
+        assertTrue(properties.contains(KEY));
+        assertFalse(realProperties.contains(KEY));
     }
 
 }

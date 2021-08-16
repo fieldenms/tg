@@ -85,7 +85,7 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
                 final List<String> originalTypeProperties = Finder.streamRealProperties(originalType)
                     .map(Field::getName)
                     .collect(Collectors.toList());
-                final String[] propsToBeProxied = Finder.streamRealProperties(el.getClass())
+                final String[] propsToBeProxied = Finder.streamRealProperties((Class<? extends AbstractEntity<?>>) el.getClass())
                     .map(Field::getName)
                     .filter(name -> Reflector.isPropertyProxied(el, name) && originalTypeProperties.contains(name))
                     .collect(Collectors.toList())
