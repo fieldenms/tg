@@ -410,7 +410,7 @@ public class EqlDomainMetadata {
     }
 
     public static List<Field> getRestOfProperties(final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo, final Class<? extends AbstractEntity<?>> actualType) {
-       return streamRealProperties(parentInfo.entityType).
+       return streamRealProperties(actualType/*parentInfo.entityType*/).
                 filter(propField -> 
                     (isAnnotationPresent(propField, Calculated.class) || 
                      isAnnotationPresent(propField, MapTo.class) ||
