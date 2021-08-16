@@ -124,7 +124,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void null_entity_should_be_restored() throws Exception {
+    public void null_entity_should_be_restored() {
         final EmptyEntity entity = factory.createNullEmptyEntity();
         final EmptyEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EmptyEntity.class);
 
@@ -132,7 +132,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void empty_entity_should_be_restored() throws Exception {
+    public void empty_entity_should_be_restored() {
         final EmptyEntity entity = factory.createSimpleEmptyEntity();
 
         final EmptyEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EmptyEntity.class);
@@ -152,7 +152,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void empty_entity_with_null_id_should_be_restored() throws Exception {
+    public void empty_entity_with_null_id_should_be_restored() {
         final EmptyEntity entity = factory.createEmptyEntityWithNoId();
         final EmptyEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EmptyEntity.class);
 
@@ -171,7 +171,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void empty_entity_with_null_key_should_be_restored() throws Exception {
+    public void empty_entity_with_null_key_should_be_restored() {
         final EmptyEntity entity = factory.createEmptyEntityWithNoKey();
         final EmptyEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EmptyEntity.class);
 
@@ -190,7 +190,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void empty_entity_with_null_desc_should_be_restored() throws Exception {
+    public void empty_entity_with_null_desc_should_be_restored() {
         final EmptyEntity entity = factory.createEmptyEntityWithNoDescription();
         final EmptyEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EmptyEntity.class);
 
@@ -209,7 +209,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void entity_with_big_decimal_prop_should_be_restored() throws Exception {
+    public void entity_with_big_decimal_prop_should_be_restored() {
         final EntityWithBigDecimal entity = factory.createEntityWithBigDecimal();
 
         final EntityWithBigDecimal restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithBigDecimal.class);
@@ -223,7 +223,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void entity_with_prop_should_be_restored_and_have_observable_property() throws Exception {
+    public void entity_with_prop_should_be_restored_and_have_observable_property() {
         final EntityWithBigDecimal entity = factory.createEntityWithBigDecimal();
 
         final EntityWithBigDecimal restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithBigDecimal.class);
@@ -238,7 +238,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void arrays_as_list_of_entities_should_be_restored() throws Exception {
+    public void arrays_as_list_of_entities_should_be_restored() {
         final EntityWithInteger entity1 = factory.getFactory().newEntity(EntityWithInteger.class, 1L, "key1", "description");
         final EntityWithInteger entity2 = factory.getFactory().newEntity(EntityWithInteger.class, 2L, "key2", "description");
         final List<EntityWithInteger> entities = Arrays.asList(entity1, entity2);
@@ -253,7 +253,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void list_of_entities_should_be_restored() throws Exception {
+    public void list_of_entities_should_be_restored() {
         final EntityWithInteger entity1 = factory.getFactory().newEntity(EntityWithInteger.class, 1L, "key1", "description");
         final EntityWithInteger entity2 = factory.getFactory().newEntity(EntityWithInteger.class, 2L, "key2", "description");
         final List<EntityWithInteger> entities = new ArrayList<>(); // Arrays.asList(entity1, entity2);
@@ -271,7 +271,7 @@ public class EntitySerialisationWithJacksonTest {
 
     @Test
     @Ignore
-    public void list_of_entities_under_map_should_be_restored() throws Exception {
+    public void list_of_entities_under_map_should_be_restored() {
         final EntityWithInteger entity0 = factory.getFactory().newEntity(EntityWithInteger.class, 0L, "key0", "description");
         final EntityWithInteger entity1 = factory.getFactory().newEntity(EntityWithInteger.class, 1L, "key1", "description");
         final EntityWithInteger entity2 = factory.getFactory().newEntity(EntityWithInteger.class, 2L, "key2", "description");
@@ -304,7 +304,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void successfull_result_with_list_of_entities_should_be_restored() throws Exception {
+    public void successfull_result_with_list_of_entities_should_be_restored() {
         final EntityWithInteger entity1 = factory.getFactory().newEntity(EntityWithInteger.class, 1L, "key1", "description");
         final EntityWithInteger entity2 = factory.getFactory().newEntity(EntityWithInteger.class, 2L, "key2", "description");
         final List<EntityWithInteger> entities = new ArrayList<>(); // Arrays.asList(entity1, entity2);
@@ -332,7 +332,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void successfull_result_with_arrays_as_list_of_entities_should_be_restored() throws Exception {
+    public void successfull_result_with_arrays_as_list_of_entities_should_be_restored() {
         final EntityWithInteger entity1 = factory.getFactory().newEntity(EntityWithInteger.class, 1L, "key1", "description");
         final EntityWithInteger entity2 = factory.getFactory().newEntity(EntityWithInteger.class, 2L, "key2", "description");
         final List<EntityWithInteger> entities = Arrays.asList(entity1, entity2);
@@ -358,7 +358,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void entity_with_integer_prop_should_be_restored() throws Exception {
+    public void entity_with_integer_prop_should_be_restored() {
         final EntityWithInteger entity = factory.createEntityWithInteger();
         final EntityWithInteger restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithInteger.class);
 
@@ -370,7 +370,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void entity_with_string_prop_should_be_restored() throws Exception {
+    public void entity_with_string_prop_should_be_restored() {
         final EntityWithString entity = factory.createEntityWithString();
         final EntityWithString restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithString.class);
 
@@ -383,7 +383,7 @@ public class EntitySerialisationWithJacksonTest {
 
     /////////////////////////////// MetaProperty restoration ///////////////////////////////
     @Test
-    public void entity_with_non_editable_prop_should_be_restored() throws Exception {
+    public void entity_with_non_editable_prop_should_be_restored() {
         final EntityWithString entity = factory.createEntityWithStringNonEditable();
         final EntityWithString restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithString.class);
         
@@ -396,7 +396,7 @@ public class EntitySerialisationWithJacksonTest {
     }
     
     @Test
-    public void entity_with_non_visible_prop_should_be_restored() throws Exception {
+    public void entity_with_non_visible_prop_should_be_restored() {
         final EntityWithString entity = factory.createEntityWithStringNonVisible();
         final EntityWithString restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithString.class);
         
@@ -407,7 +407,7 @@ public class EntitySerialisationWithJacksonTest {
     }
     
     @Test
-    public void entity_with_changedFromOriginal_prop_should_be_restored_and_its_original_value_properly_restored_too() throws Exception {
+    public void entity_with_changedFromOriginal_prop_should_be_restored_and_its_original_value_properly_restored_too() {
         final EntityWithSameEntity entity = factory.createEntityWithSameEntityThatIsChangedFromOriginal();
         assertEquals("Incorrect prop.", "key3", entity.getProp().getKey());
         assertEquals("Incorrect validity.", true, entity.<EntityWithSameEntity>getProperty("prop").isValid());
@@ -427,7 +427,7 @@ public class EntitySerialisationWithJacksonTest {
     }
     
     @Test
-    public void entity_with_required_prop_should_be_restored() throws Exception {
+    public void entity_with_required_prop_should_be_restored() {
         final EntityWithString entity = factory.createEntityWithStringRequired();
         final EntityWithString restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithString.class);
         
@@ -675,7 +675,7 @@ public class EntitySerialisationWithJacksonTest {
     }
     
     @Test
-    public void uninstrumented_entity_with_proxy_type_should_be_restored_into_uninstrumented_entity_with_the_same_proxy_type() throws Exception {
+    public void uninstrumented_entity_with_proxy_type_should_be_restored_into_uninstrumented_entity_with_the_same_proxy_type() {
         final Class<EntityWithOtherEntity> entityType = EntityWithOtherEntity.class;
         final AbstractEntity entity = factory.createUninstrumentedEntity(true, entityType);
         
@@ -696,7 +696,7 @@ public class EntitySerialisationWithJacksonTest {
     }
     
     @Test
-    public void uninstrumented_entity_with_id_only_proxy_property_should_be_restored_into_uninstrumented_entity_with_the_same_id_only_proxy_property() throws Exception {
+    public void uninstrumented_entity_with_id_only_proxy_property_should_be_restored_into_uninstrumented_entity_with_the_same_id_only_proxy_property() {
         final Class<EntityWithOtherEntity> entityType = EntityWithOtherEntity.class;
         final AbstractEntity entity = factory.createUninstrumentedEntity(false, entityType).beginInitialising().set("prop", createIdOnlyProxy()).endInitialising();
         
@@ -718,7 +718,7 @@ public class EntitySerialisationWithJacksonTest {
     }
     
     @Test
-    public void instrumented_entity_with_proxy_type_should_be_restored_into_instrumented_entity_with_the_same_proxy_type() throws Exception {
+    public void instrumented_entity_with_proxy_type_should_be_restored_into_instrumented_entity_with_the_same_proxy_type() {
         final Class<EntityWithOtherEntity> entityType = EntityWithOtherEntity.class;
         final AbstractEntity entity = factory.createInstrumentedEntity(true, entityType);
         
@@ -741,7 +741,7 @@ public class EntitySerialisationWithJacksonTest {
     }
     
     @Test
-    public void instrumented_entity_with_id_only_proxy_property_should_be_restored_into_instrumented_entity_with_the_same_id_only_proxy_property() throws Exception {
+    public void instrumented_entity_with_id_only_proxy_property_should_be_restored_into_instrumented_entity_with_the_same_id_only_proxy_property() {
         final Class<EntityWithOtherEntity> entityType = EntityWithOtherEntity.class;
         final AbstractEntity entity = factory.createInstrumentedEntity(false, entityType).beginInitialising().set("prop", createIdOnlyProxy()).endInitialising();
         
@@ -763,7 +763,7 @@ public class EntitySerialisationWithJacksonTest {
     }
     
     @Test
-    public void uninstrumented_generated_entity_with_proxy_type_should_be_restored_into_uninstrumented_generated_entity_with_the_same_proxy_type() throws Exception {
+    public void uninstrumented_generated_entity_with_proxy_type_should_be_restored_into_uninstrumented_generated_entity_with_the_same_proxy_type() {
         final Class<EntityWithOtherEntity> entityType = EntityWithOtherEntity.class;
         final Class<MiEntityWithOtherEntity> miType = MiEntityWithOtherEntity.class;
         final T2<AbstractEntity<?>, Class<AbstractEntity<?>>> entityAndGeneratedType = factory.createUninstrumentedGeneratedEntity(true, entityType, miType);
@@ -790,7 +790,7 @@ public class EntitySerialisationWithJacksonTest {
     }
     
     @Test
-    public void uninstrumented_generated_entity_with_id_only_proxy_property_should_be_restored_into_uninstrumented_generated_entity_with_the_same_id_only_proxy_property() throws Exception {
+    public void uninstrumented_generated_entity_with_id_only_proxy_property_should_be_restored_into_uninstrumented_generated_entity_with_the_same_id_only_proxy_property() {
         final Class<EntityWithOtherEntity> entityType = EntityWithOtherEntity.class;
         final Class<MiEntityWithOtherEntity> miType = MiEntityWithOtherEntity.class;
         final T2<AbstractEntity<?>, Class<AbstractEntity<?>>> entityAndGeneratedType = factory.createUninstrumentedGeneratedEntity(false, entityType, miType);
@@ -819,7 +819,7 @@ public class EntitySerialisationWithJacksonTest {
     }
     
     @Test
-    public void instrumented_generated_entity_with_proxy_type_should_be_restored_into_instrumented_generated_entity_with_the_same_proxy_type() throws Exception {
+    public void instrumented_generated_entity_with_proxy_type_should_be_restored_into_instrumented_generated_entity_with_the_same_proxy_type() {
         final Class<EntityWithOtherEntity> entityType = EntityWithOtherEntity.class;
         final Class<MiEntityWithOtherEntity> miType = MiEntityWithOtherEntity.class;
         final T2<AbstractEntity<?>, Class<AbstractEntity<?>>> entityAndGeneratedType = factory.createInstrumentedGeneratedEntity(true, entityType, miType);
@@ -848,7 +848,7 @@ public class EntitySerialisationWithJacksonTest {
     }
     
     @Test
-    public void instrumented_generated_entity_with_id_only_proxy_property_should_be_restored_into_instrumented_generated_entity_with_the_same_id_only_proxy_property() throws Exception {
+    public void instrumented_generated_entity_with_id_only_proxy_property_should_be_restored_into_instrumented_generated_entity_with_the_same_id_only_proxy_property() {
         final Class<EntityWithOtherEntity> entityType = EntityWithOtherEntity.class;
         final Class<MiEntityWithOtherEntity> miType = MiEntityWithOtherEntity.class;
         final T2<AbstractEntity<?>, Class<AbstractEntity<?>>> entityAndGeneratedType = factory.createInstrumentedGeneratedEntity(false, entityType, miType);
@@ -877,7 +877,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void entity_with_prop_with_failure_should_be_restored() throws Exception {
+    public void entity_with_prop_with_failure_should_be_restored() {
         final EntityWithString entity = factory.createEntityWithStringAndFailure();
         assertNull("Entity's first warning is empty.", entity.getProperty("prop").getFirstWarning());
         final Result firstFailure = entity.getProperty("prop").getFirstFailure();
@@ -900,7 +900,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void entity_with_prop_with_propertyConflict_should_be_restored() throws Exception {
+    public void entity_with_prop_with_propertyConflict_should_be_restored() {
         final EntityWithString entity = factory.createEntityWithStringAndPropertyConflict();
         assertNull("Entity's first warning is empty.", entity.getProperty("prop").getFirstWarning());
         final Result firstFailure = entity.getProperty("prop").getFirstFailure();
@@ -923,7 +923,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void entity_with_prop_with_warning_should_be_restored() throws Exception {
+    public void entity_with_prop_with_warning_should_be_restored() {
         final EntityWithString entity = factory.createEntityWithStringAndWarning();
         assertNull("Entity's first failure is empty.", entity.getProperty("prop").getFirstFailure());
         final Result firstWarning = entity.getProperty("prop").getFirstWarning();
@@ -946,7 +946,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void entity_with_prop_with_successful_result_should_be_restored() throws Exception {
+    public void entity_with_prop_with_successful_result_should_be_restored() {
         final EntityWithString entity = factory.createEntityWithStringAndSuccessfulResult();
         assertNull("Entity's first failure is empty.", entity.getProperty("prop").getFirstFailure());
         assertNull("Entity's first warning is empty.", entity.getProperty("prop").getFirstWarning());
@@ -961,7 +961,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void entity_with_definer_should_be_restored_and_its_definer_should_not_be_invoked_afterwards() throws Exception {
+    public void entity_with_definer_should_be_restored_and_its_definer_should_not_be_invoked_afterwards() {
         final EntityWithDefiner entity = factory.createEntityWithPropertyWithDefiner();
         assertNull("Entity should have uninitialised prop2.", entity.getProp2());
         final EntityWithDefiner restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithDefiner.class);
@@ -973,7 +973,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void entity_with_boolean_prop_should_be_restored() throws Exception {
+    public void entity_with_boolean_prop_should_be_restored() {
         final EntityWithBoolean entity = factory.createEntityWithBoolean();
         final EntityWithBoolean restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithBoolean.class);
 
@@ -985,7 +985,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void entity_with_date_prop_should_be_restored() throws Exception {
+    public void entity_with_date_prop_should_be_restored() {
         final EntityWithDate entity = factory.createEntityWithDate();
 
         final EntityWithDate restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithDate.class);
@@ -998,7 +998,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void entity_with_money_prop_should_be_restored() throws Exception {
+    public void entity_with_money_prop_should_be_restored() {
         final EntityWithMoney entity = factory.createEntityWithMoney();
         final EntityWithMoney restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithMoney.class);
 
@@ -1010,7 +1010,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void entity_with_other_entity_prop_should_be_restored() throws Exception {
+    public void entity_with_other_entity_prop_should_be_restored() {
         final EntityWithOtherEntity entity = factory.createEntityWithOtherEntity();
         final EntityWithOtherEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithOtherEntity.class);
 
@@ -1022,7 +1022,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void entity_with_the_same_entity_prop_should_be_restored() throws Exception {
+    public void entity_with_the_same_entity_prop_should_be_restored() {
         final EntityWithSameEntity entity = factory.createEntityWithSameEntity();
         final EntityWithSameEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithSameEntity.class);
 
@@ -1034,7 +1034,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void entity_with_the_same_entity_prop_and_circular_referencing_itself_should_be_restored() throws Exception {
+    public void entity_with_the_same_entity_prop_and_circular_referencing_itself_should_be_restored() {
         final EntityWithSameEntity entity = factory.createEntityWithSameEntityCircularlyReferencingItself();
         final EntityWithSameEntity restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithSameEntity.class);
 
@@ -1046,7 +1046,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void entity_with_the_other_entity_prop_and_double_circular_reference_should_be_restored() throws Exception {
+    public void entity_with_the_other_entity_prop_and_double_circular_reference_should_be_restored() {
         final Entity1WithEntity2 entity1 = factory.createEntityWithOtherEntityCircularlyReferencingItself();
         final Entity1WithEntity2 restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity1), Entity1WithEntity2.class);
 
@@ -1058,7 +1058,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void entity_with_the_set_of_entities_prop_and_circular_referencing_itself_should_be_restored() throws Exception {
+    public void entity_with_the_set_of_entities_prop_and_circular_referencing_itself_should_be_restored() {
         final EntityWithSetOfEntities entity = factory.createEntityWithSetOfSameEntities();
         assertFalse("Incorrect prop dirtiness.", entity.getProperty("prop").isDirty());
         assertFalse("Incorrect prop changedFromOriginal.", entity.getProperty("prop").isChangedFromOriginal());
@@ -1088,7 +1088,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void entity_with_the_list_of_entities_prop_and_circular_referencing_itself_should_be_restored() throws Exception {
+    public void entity_with_the_list_of_entities_prop_and_circular_referencing_itself_should_be_restored() {
         final EntityWithListOfEntities entity = factory.createEntityWithListOfSameEntities();
         assertFalse("Incorrect prop dirtiness.", entity.getProperty("prop").isDirty());
         assertFalse("Incorrect prop changedFromOriginal.", entity.getProperty("prop").isChangedFromOriginal());
@@ -1118,7 +1118,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void entity_with_the_ARRAYS_ASLIST_of_entities_prop_and_circular_referencing_itself_should_be_restored() throws Exception {
+    public void entity_with_the_ARRAYS_ASLIST_of_entities_prop_and_circular_referencing_itself_should_be_restored() {
         final EntityWithListOfEntities entity = factory.createEntityWithArraysAsListOfSameEntities();
         assertFalse("Incorrect prop dirtiness.", entity.getProperty("prop").isDirty());
         assertFalse("Incorrect prop changedFromOriginal.", entity.getProperty("prop").isChangedFromOriginal());
@@ -1148,7 +1148,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void entity_with_the_map_of_entities_prop_and_circular_referencing_itself_should_be_restored() throws Exception {
+    public void entity_with_the_map_of_entities_prop_and_circular_referencing_itself_should_be_restored() {
         final EntityWithMapOfEntities entity = factory.createEntityWithMapOfSameEntities();
         assertFalse("Incorrect prop dirtiness.", entity.getProperty("prop").isDirty());
 
@@ -1178,7 +1178,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void entity_with_composite_key_should_be_restored() throws Exception {
+    public void entity_with_composite_key_should_be_restored() {
         final EntityWithCompositeKey entity = factory.createEntityWithCompositeKey();
         final EntityWithCompositeKey restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), EntityWithCompositeKey.class);
 
@@ -1193,7 +1193,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void successful_result_with_entity_should_be_restored() throws Exception {
+    public void successful_result_with_entity_should_be_restored() {
         final EntityWithInteger entity = factory.getFactory().newEntity(EntityWithInteger.class, 1L, "key", null);
         entity.setProp(new Integer(23));
         final Result result = new Result(entity, "All cool.");
@@ -1212,7 +1212,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void unsuccessful_result_with_entity_and_exception_should_be_restored() throws Exception {
+    public void unsuccessful_result_with_entity_and_exception_should_be_restored() {
         final EntityWithInteger entity = factory.getFactory().newEntity(EntityWithInteger.class, 1L, "key", null);
         entity.setProp(new Integer(23));
         final Result result = new Result(entity, new Exception("exception message"));
@@ -1225,7 +1225,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void successful_warning_with_entity_should_be_restored() throws Exception {
+    public void successful_warning_with_entity_should_be_restored() {
         final EntityWithInteger entity = factory.getFactory().newEntity(EntityWithInteger.class, 1L, "key", null);
         entity.setProp(new Integer(23));
         final Warning warning = new Warning(entity, "warning message");
@@ -1244,16 +1244,16 @@ public class EntitySerialisationWithJacksonTest {
 
     @Test
     @Ignore
-    public void entity_with_property_descriptor_prop_should_be_restored() throws Exception {
+    public void entity_with_property_descriptor_prop_should_be_restored() {
     }
 
     @Test
     @Ignore
-    public void entity_with_byte_array_prop_should_be_restored() throws Exception {
+    public void entity_with_byte_array_prop_should_be_restored() {
     }
 
     @Test
-    public void test_serialisation_of_entity_with_polymorphyc_property() throws Exception {
+    public void test_serialisation_of_entity_with_polymorphyc_property() {
         final EntityWithPolymorphicProp entity = factory.getFactory().newEntity(EntityWithPolymorphicProp.class, 1L, "key", "description");
         entity.setPolyProperty(factory.getFactory().newEntity(SubBaseEntity1.class, 1L, "key", "description"));
 
@@ -1261,7 +1261,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void test_serialisation_of_entity_with_polymorphyc_property_defined_as_AbstractEntity() throws Exception {
+    public void test_serialisation_of_entity_with_polymorphyc_property_defined_as_AbstractEntity() {
         final EntityWithPolymorphicAEProp entity = factory.getFactory().newEntity(EntityWithPolymorphicAEProp.class, 1L, "key", "description");
         entity.setPolyProperty(factory.getFactory().newEntity(SubBaseEntity1.class, 1L, "key", "description"));
 
@@ -1269,7 +1269,7 @@ public class EntitySerialisationWithJacksonTest {
     }
 
     @Test
-    public void test_deserialisation_when_specifying_ancestor_as_the_type() throws Exception {
+    public void test_deserialisation_when_specifying_ancestor_as_the_type() {
         final EntityWithInteger entity = factory.getFactory().newEntity(EntityWithInteger.class, 1L, "key", "description");
 
         final AbstractEntity<?> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), AbstractEntity.class);
@@ -1281,7 +1281,7 @@ public class EntitySerialisationWithJacksonTest {
     }
     
     @Test
-    public void property_descriptor_should_be_restored() throws Exception {
+    public void property_descriptor_should_be_restored() {
         final PropertyDescriptor<EntityWithInteger> entity = factory.createPropertyDescriptor();
 
         final PropertyDescriptor<EntityWithInteger> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), PropertyDescriptor.class);
@@ -1296,7 +1296,7 @@ public class EntitySerialisationWithJacksonTest {
     }
     
     @Test
-    public void instrumented_property_descriptor_should_be_restored() throws Exception {
+    public void instrumented_property_descriptor_should_be_restored() {
         final PropertyDescriptor<EntityWithInteger> entity = factory.createPropertyDescriptorInstrumented();
 
         final PropertyDescriptor<EntityWithInteger> restoredEntity = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(entity), PropertyDescriptor.class);

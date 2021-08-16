@@ -206,13 +206,13 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgCollectionalSerialisationParent csp1 = save(new_(TgCollectionalSerialisationParent.class, "CSP1").setDesc("desc1"));
         save(new_composite(TgCollectionalSerialisationChild.class, csp1, "1").setDesc("desc1"));
 
-        save(new_(TgEntityWithPropertyDescriptor.class, "KEY1").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "integerProp")));
-        save(new_(TgEntityWithPropertyDescriptor.class, "KEY2"));
-        save(new_(TgEntityWithPropertyDescriptor.class, "KEY3").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "integerProp")));
+        final TgEntityWithPropertyDescriptor ewpd1 = save(new_(TgEntityWithPropertyDescriptor.class, "KEY1").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "integerProp"))); // has children -- to be used for collectional crit-only multi criteria
+        final TgEntityWithPropertyDescriptor ewpd2 = save(new_(TgEntityWithPropertyDescriptor.class, "KEY2").setParent(ewpd1)); // has children -- to be used for collectional crit-only multi criteria
+        save(new_(TgEntityWithPropertyDescriptor.class, "KEY3").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "integerProp")).setParent(ewpd1));
         save(new_(TgEntityWithPropertyDescriptor.class, "KEY4").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "bigDecimalProp")));
-        save(new_(TgEntityWithPropertyDescriptor.class, "KEY5").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "entityProp")));
-        save(new_(TgEntityWithPropertyDescriptor.class, "KEY6").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "stringProp")));
-        save(new_(TgEntityWithPropertyDescriptor.class, "KEY7").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "booleanProp")));
+        save(new_(TgEntityWithPropertyDescriptor.class, "KEY5").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "entityProp")).setParent(ewpd2));
+        save(new_(TgEntityWithPropertyDescriptor.class, "KEY6").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "stringProp")).setParent(ewpd2));
+        save(new_(TgEntityWithPropertyDescriptor.class, "KEY7").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "booleanProp")).setParent(ewpd2));
         save(new_(TgEntityWithPropertyDescriptor.class, "KEY8").setPropertyDescriptor(new PropertyDescriptor<>(TgPersistentEntityWithProperties.class, "dateProp")));
 
         save(new_(TgEntityWithTimeZoneDates.class, "KEY1").setDatePropUtc(new Date(3609999)));

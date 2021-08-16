@@ -10,7 +10,6 @@ import static java.util.stream.Stream.of;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang.StringUtils.lastIndexOf;
 import static org.apache.commons.lang.StringUtils.length;
-import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
@@ -649,13 +648,7 @@ public class EntityUtils {
      * @return
      */
     public static <T extends AbstractEntity<?>> boolean isCompositeEntity(final Class<T> entityType) {
-        final KeyType keyAnnotation = AnnotationReflector.getAnnotation(entityType, KeyType.class);
-
-        if (keyAnnotation != null) {
-            return DynamicEntityKey.class.isAssignableFrom(keyAnnotation.value());
-        } else {
-            return false;
-        }
+        return DynamicEntityKey.class.equals(AnnotationReflector.getKeyType(entityType));
     }
 
     /**
@@ -953,23 +946,11 @@ public class EntityUtils {
     }
 
     /**
-     * Retrieves all persisted properties fields within given entity type
+     * A predicate that evaluates to {@code true} for entity types with "real" property {@code desc}.
      *
      * @param entityType
      * @return
      */
-    public static List<Field> getRealProperties(final Class<? extends AbstractEntity<?>> entityType) {
-        final List<Field> result = new ArrayList<>();
-
-        for (final Field propField : Finder.findRealProperties(entityType)) { //, MapTo.class
-            if (!(DESC.equals(propField.getName()) && !hasDescProperty(entityType))) {
-                result.add(propField);
-            }
-        }
-
-        return result;
-    }
-
     public static boolean hasDescProperty(final Class<? extends AbstractEntity<?>> entityType) {
         return AnnotationReflector.isAnnotationPresentForClass(DescTitle.class, entityType);
     }

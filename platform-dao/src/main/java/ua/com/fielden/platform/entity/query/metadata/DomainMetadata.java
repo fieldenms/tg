@@ -33,11 +33,11 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotati
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresent;
+import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
 import static ua.com.fielden.platform.reflection.Finder.hasLinkProperty;
 import static ua.com.fielden.platform.reflection.Finder.isOne2One_association;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.CollectionUtil.unmodifiableListOf;
-import static ua.com.fielden.platform.utils.EntityUtils.getRealProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
@@ -373,7 +373,7 @@ public class DomainMetadata {
         safeMapAdd(result, generateVersionPropertyMetadata(parentInfo));
         safeMapAdd(result, generateKeyPropertyMetadata(parentInfo));
 
-        for (final Field field : getRealProperties(parentInfo.entityType)) {
+        for (final Field field : findRealProperties(parentInfo.entityType)) {
             if (!result.containsKey(field.getName())) {
                 if (Collection.class.isAssignableFrom(field.getType()) && hasLinkProperty(parentInfo.entityType, field.getName())) {
                     safeMapAdd(result, getCollectionalPropInfo(field, parentInfo));

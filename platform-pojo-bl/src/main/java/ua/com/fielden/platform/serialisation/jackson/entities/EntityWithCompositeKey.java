@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
+import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapTo;
@@ -18,6 +19,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  *
  */
 @KeyType(value = DynamicEntityKey.class, keyMemberSeparator = " :: ")
+@DescTitle("Description")
 public class EntityWithCompositeKey extends AbstractEntity<DynamicEntityKey> {
 
     @IsProperty

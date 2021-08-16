@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
@@ -22,7 +23,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -92,8 +92,10 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
             // logger.debug(format("SEARCH STRING %s, PAGE %s", searchString, dataPage));
            
             valueMatcher.setContext(context);
-            final fetch<T> fetch = master.createFetchModelForAutocompleter(propertyName, (Class<T>) ("".equals(propertyName) ? entityType : determinePropertyType(entityType, propertyName)));
-            valueMatcher.setFetch(fetch);
+            final Class<T> propType = (Class<T>) ("".equals(propertyName) ? entityType : determinePropertyType(entityType, propertyName));
+            if (!isPropertyDescriptor(propType)) {
+                valueMatcher.setFetch(master.createFetchModelForAutocompleter(propertyName, propType));
+            }
             final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%", dataPage);
 
             // logger.debug("ENTITY_AUTOCOMPLETION_RESOURCE: search finished.");

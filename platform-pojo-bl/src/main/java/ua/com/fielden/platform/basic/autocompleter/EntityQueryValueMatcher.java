@@ -63,7 +63,7 @@ public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IVa
         if (!EntityUtils.isCompositeEntity((Class<T>) pair.getKey())) { // the key is not composite
             this.queryModel = select(dao.getEntityType()).where().prop(propertyName).iLike().param(propertyParamName).model();
         } else { // the key is composite
-            final String additionalSearchProp = createSearchProp(propertyName, pair.getKey());
+            final String additionalSearchProp = createSearchProp(propertyName, (Class<? extends AbstractEntity<?>>) pair.getKey());
             // create query model, which is the same for non-composite case, but with an additional criteria for the property representing the last composite key member
             this.queryModel = select(dao.getEntityType()).where().//
             begin().//
@@ -82,7 +82,7 @@ public class EntityQueryValueMatcher<T extends AbstractEntity<?>> implements IVa
      * @param pair
      * @return
      */
-    private static String createSearchProp(final String propertyName, final Class<?> typeForEntityWithCompositeKey) {
+    private static String createSearchProp(final String propertyName, final Class<? extends AbstractEntity<?>> typeForEntityWithCompositeKey) {
         // find key members... the last one is of our interest
         final List<Field> keyMembers = Finder.getKeyMembers(typeForEntityWithCompositeKey);
         // form new search property that should be based on the dot notated propertyName without the last portion + the name of the last composite key member
