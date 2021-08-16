@@ -80,6 +80,17 @@ public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEnt
         return new PropertyDescriptor<>(entityType, propName);
     }
 
+    /**
+     * A convenience factory method to produce a parameterised class {@link PropertyDescriptor} for a specific {@code entityType}.
+     *
+     * @param <T>
+     * @param entityType
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> Class<PropertyDescriptor<T>> pdTypeFor(final Class<T> entityType) {
+        return (Class) PropertyDescriptor.class;
+    }
+
     public Class<T> getEntityType() {
         return entityType;
     }

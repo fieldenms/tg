@@ -4,6 +4,7 @@ import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pdTypeFor;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
@@ -57,7 +58,6 @@ import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
-import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
@@ -388,7 +388,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     return centre;
                 });
 
-        final Class<PropertyDescriptor<TgPersistentEntityWithProperties>> propDescriptorType = (Class) PropertyDescriptor.class; // this is a recommended way to define type in .asAutocompleter(...) calls; this will assist in further .withMatcher(...) calls
         final EntityCentre<TgEntityWithPropertyDescriptorExt> propDescriptorCentre = new EntityCentre<>(MiTgEntityWithPropertyDescriptorExt.class, "Property Descriptor Example",
                 EntityCentreBuilder.centreFor(TgEntityWithPropertyDescriptorExt.class)
                 .addTopAction(action(EntityNewAction.class).
@@ -413,19 +412,17 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         withNoParentCentreRefresh().
                         build())
                 .addCrit("this").asMulti().autocompleter(TgEntityWithPropertyDescriptorExt.class).also()
-                .addCrit("propertyDescriptor").asMulti().autocompleter(propDescriptorType)
+                .addCrit("propertyDescriptor").asMulti().autocompleter(pdTypeFor(TgPersistentEntityWithProperties.class))
                     .withMatcher(TgEntityWithPropertyDescriptorExtPropertyDescriptorMatcher.class).also()
-                .addCrit("propertyDescriptorSingleCrit").asSingle().autocompleter(propDescriptorType)
+                .addCrit("propertyDescriptorSingleCrit").asSingle().autocompleter(pdTypeFor(TgPersistentEntityWithProperties.class))
                     .withMatcher(TgEntityWithPropertyDescriptorExtPropertyDescriptorMatcher.class).also()
-                .addCrit("propertyDescriptorMultiCrit").asMulti().autocompleter(propDescriptorType).also() // standard FallbackPropertyDescriptorMatcherWithCentreContext is used here
-                .addCrit("propertyDescriptorMultiCritCollectional").asMulti().autocompleter(propDescriptorType) // standard FallbackPropertyDescriptorMatcherWithCentreContext is used here
+                .addCrit("propertyDescriptorMultiCrit").asMulti().autocompleter(pdTypeFor(TgPersistentEntityWithProperties.class)).also() // standard FallbackPropertyDescriptorMatcherWithCentreContext is used here
+                .addCrit("propertyDescriptorMultiCritCollectional").asMulti().autocompleter(pdTypeFor(TgPersistentEntityWithProperties.class)) // standard FallbackPropertyDescriptorMatcherWithCentreContext is used here
                 .setLayoutFor(DESKTOP, empty(), mkVarGridForCentre(2, 2, 1))
 
-                .addProp("this")
-                    .width(60)
-                .also()
-                .addProp("propertyDescriptor")
-                    .minWidth(160)
+                .addProp("this").width(60).also()
+                .addProp("parent").width(60).also()
+                .addProp("propertyDescriptor").minWidth(160)
                 .addPrimaryAction(action(EntityEditAction.class).
                         withContext(context().withCurrentEntity().withSelectionCrit().build()).
                         icon("editor:mode-edit").
