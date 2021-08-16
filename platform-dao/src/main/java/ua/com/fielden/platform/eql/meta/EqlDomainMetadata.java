@@ -410,16 +410,16 @@ public class EqlDomainMetadata {
     }
 
     public static List<Field> getRestOfProperties(final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo, final Class<? extends AbstractEntity<?>> actualType) {
-        return streamRealProperties(parentInfo.entityType).
-                 filter(propField -> 
-                     (isAnnotationPresent(propField, Calculated.class) || 
-                      isAnnotationPresent(propField, MapTo.class) ||
-                      isAnnotationPresent(propField, CritOnly.class) ||
-                      isOne2One_association(actualType/*parentInfo.entityType*/, propField.getName()) ||
-                      parentInfo.category == QUERY_BASED) &&
-                     !specialProps.contains(propField.getName()) &&
-                     !(Collection.class.isAssignableFrom(propField.getType()) && hasLinkProperty(actualType/*parentInfo.entityType*/, propField.getName())))
-                 .collect(toList());
+       return streamRealProperties(parentInfo.entityType).
+                filter(propField -> 
+                    (isAnnotationPresent(propField, Calculated.class) || 
+                     isAnnotationPresent(propField, MapTo.class) ||
+                     isAnnotationPresent(propField, CritOnly.class) ||
+                     isOne2One_association(actualType/*parentInfo.entityType*/, propField.getName()) ||
+                     parentInfo.category == QUERY_BASED) &&
+                    !specialProps.contains(propField.getName()) &&
+                    !(Collection.class.isAssignableFrom(propField.getType()) && hasLinkProperty(actualType/*parentInfo.entityType*/, propField.getName())))
+                .collect(toList());
     }
 
     private String getColumnName(final String propName, final MapTo mapTo, final String parentPrefix) {
