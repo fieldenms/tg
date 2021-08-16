@@ -8,6 +8,7 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.validateRootType;
 import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchNone;
@@ -15,6 +16,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isInteger;
+import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 import static ua.com.fielden.platform.utils.EntityUtils.isRangeType;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.utils.Pair.pair;
@@ -62,6 +64,7 @@ import com.google.common.collect.ListMultimap;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
+import ua.com.fielden.platform.basic.autocompleter.FallbackPropertyDescriptorMatcherWithCentreContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentreContext;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.data.generator.IGenerator;
@@ -1402,14 +1405,22 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 .map(propertyType -> (Class<V>) propertyType)
                 .orElseGet(() -> (Class<V>) ("".equals(originalPropertyName) ? getOriginalType(criteriaType) : determinePropertyType(getOriginalType(criteriaType), originalPropertyName)));
 
+        final boolean isPropDescriptor = isPropertyDescriptor(propType);
         final Pair<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>> matcherAndConfig =
             dslDefaultConfig.getValueMatchersForSelectionCriteria() // take all matchers
             .map(matchers -> matchers.get(dslName(originalPropertyName))) // choose single matcher with concrete property name
             .map(customMatcherAndConfig -> pair((IValueMatcherWithCentreContext<V>) injector.getInstance(customMatcherAndConfig.getKey()), customMatcherAndConfig.getValue())) // instantiate the matcher: [matcherType; config] => [matcherInstance; config]
-            .orElseGet(() -> pair(new FallbackValueMatcherWithCentreContext<>(companionFinder.find(propType)), empty())); // if no custom matcher was created then create default matcher
+            .orElseGet(() -> pair( // if no custom matcher was created then create default matcher
+                isPropDescriptor
+                    ? (IValueMatcherWithCentreContext<V>) new FallbackPropertyDescriptorMatcherWithCentreContext<>((Class<AbstractEntity<?>>) getPropertyAnnotation(IsProperty.class, getOriginalType(criteriaType), originalPropertyName).value())
+                    : new FallbackValueMatcherWithCentreContext<>(companionFinder.find(propType)),
+                empty()
+            ));
 
         // provide fetch model for created matcher
-        matcherAndConfig.getKey().setFetch(createFetchModelForAutocompleter(originalPropertyName, propType));
+        if (!isPropDescriptor) {
+            matcherAndConfig.getKey().setFetch(createFetchModelForAutocompleter(originalPropertyName, propType));
+        }
         return matcherAndConfig;
     }
 

@@ -9,9 +9,8 @@ import ua.com.fielden.platform.entity.validation.annotation.Final;
 /**
  * Entity with {@link DynamicEntityKey} for testing purposes
  *
- * @author Yura, Jhou
+ * @author TG Team
  */
-@SuppressWarnings("serial")
 @KeyType(DynamicEntityKey.class)
 public class EntityWithDynamicEntityKey extends AbstractEntity<DynamicEntityKey> {
 

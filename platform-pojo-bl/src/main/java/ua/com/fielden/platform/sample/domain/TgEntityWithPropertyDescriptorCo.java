@@ -8,6 +8,6 @@ import ua.com.fielden.platform.dao.IEntityDao;
  * @author Developers
  *
  */
-public interface ITgEntityWithPropertyDescriptor extends IEntityDao<TgEntityWithPropertyDescriptor> {
+public interface TgEntityWithPropertyDescriptorCo extends IEntityDao<TgEntityWithPropertyDescriptor> {
 
 }
