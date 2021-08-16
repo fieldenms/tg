@@ -108,8 +108,8 @@ public class FinderTest {
     @Test
     public void non_filtered_property_descriptor_creation_includes_all_properties_in_entity_hierarchy() {
         assertEquals("Incorrect number of properties.", 4, Finder.getPropertyDescriptors(SimpleEntity.class).size());
-        assertEquals("Incorrect number of properties.", 5, Finder.getPropertyDescriptors(FirstLevelEntity.class).size());
-        assertEquals("Incorrect number of properties.", 8, Finder.getPropertyDescriptors(SecondLevelEntity.class).size());
+        assertEquals("Incorrect number of properties.", 4, Finder.getPropertyDescriptors(FirstLevelEntity.class).size());
+        assertEquals("Incorrect number of properties.", 7, Finder.getPropertyDescriptors(SecondLevelEntity.class).size());
     }
 
     @Test

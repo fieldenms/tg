@@ -68,6 +68,18 @@ public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEnt
         this.propertyName = propertyName;
     }
 
+    /**
+     * A convenience factory method.
+     *
+     * @param <T>
+     * @param entityType
+     * @param propName
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> PropertyDescriptor<T> pd(final Class<T> entityType, final String propName) {
+        return new PropertyDescriptor<>(entityType, propName);
+    }
+
     public Class<T> getEntityType() {
         return entityType;
     }
