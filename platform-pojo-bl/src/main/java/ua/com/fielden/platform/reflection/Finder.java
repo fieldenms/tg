@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LINK_PROPERTY;
+import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pd;
 import static ua.com.fielden.platform.reflection.Reflector.MAXIMUM_CACHE_SIZE;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
@@ -80,7 +81,7 @@ public class Finder {
     // ======================================================================================================
     ///////////////////////////////////// Finding/getting MetaProperties and PropertyDescriptors ////////////
     /**
-     * Produces a list of property descriptors for a given entity type, including properties inherited from a super type.
+     * Produces a list of property descriptors for "real properties" of a given entity type, including properties declared in its type hierarchy.
      *
      * @param <T>
      * @param entityType
@@ -91,17 +92,16 @@ public class Finder {
     }
 
     /**
-     * The same as above, but provides a way to skip some properties. This could be convenient at times when some more system level properties should be avoided.
-     * 
+     * The same as {@link #getPropertyDescriptors(Class)}, but with ability to skip some properties.
+     * This is convenient at times where some properties need to be skipped.
+     *
+     * @param <T>
+     * @param entityType
+     * @param shouldSkip
+     * @return
      */
     public static <T extends AbstractEntity<?>> List<PropertyDescriptor<T>> getPropertyDescriptors(final Class<T> entityType, final Predicate<Field> shouldSkip) {
-        final List<PropertyDescriptor<T>> result = new ArrayList<>();
-        for (final Field field : findProperties(entityType)) {
-            if (!shouldSkip.test(field)) {
-                result.add(new PropertyDescriptor<T>(entityType, field.getName()));
-            }
-        }
-        return result;
+        return streamRealProperties(entityType).filter(shouldSkip.negate()).map(f -> pd(entityType, f.getName())).collect(toList());
     }
 
     /**
