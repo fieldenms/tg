@@ -544,7 +544,7 @@ public class DynamicEntityTypeGenerationTest {
         assertEquals("Description", annot.desc());
 
         assertEquals(3, Finder.getPropertyDescriptors(TopLevelEntity.class).size());
-        assertEquals(5, Finder.getPropertyDescriptors(newType).size()); // The new type has new properties 'desc' and 'pd1', with expected total number of properties be grater by 2 than in the original type.
+        assertEquals(5, Finder.getPropertyDescriptors(newType).size()); // The new type has new properties 'desc' and 'pd1', with the expected total number of properties to be grater than in the original type by 2.
         assertEquals("Incorrect setter return type.", Void.TYPE, Reflector.obtainPropertySetter(newType, pd1.name).getReturnType());
     }
 
