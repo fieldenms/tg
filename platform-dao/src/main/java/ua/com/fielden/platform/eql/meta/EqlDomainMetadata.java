@@ -30,13 +30,13 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresent;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
+import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
 import static ua.com.fielden.platform.reflection.Finder.hasLinkProperty;
 import static ua.com.fielden.platform.reflection.Finder.isOne2One_association;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isRequiredByDefinition;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.unmodifiableListOf;
-import static ua.com.fielden.platform.utils.EntityUtils.getRealProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
@@ -410,7 +410,7 @@ public class EqlDomainMetadata {
     }
 
     public static List<Field> getRestOfProperties(final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo, final Class<? extends AbstractEntity<?>> actualType) {
-        return getRealProperties(actualType/*parentInfo.entityType*/).stream().filter(propField -> (isAnnotationPresent(propField, Calculated.class) ||
+        return findRealProperties(parentInfo.entityType).
                 isAnnotationPresent(propField, MapTo.class) ||
                 isAnnotationPresent(propField, CritOnly.class) ||
                 isOne2One_association(actualType/*parentInfo.entityType*/, propField.getName()) ||

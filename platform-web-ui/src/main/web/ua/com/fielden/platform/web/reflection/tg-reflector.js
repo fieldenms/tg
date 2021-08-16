@@ -418,7 +418,11 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
                 const activeEntity = this._activeEntity();
                 return activeEntity === null ? null : activeEntity.get(name);
             } else if (this._isObjectUndefined(name)) {
-                throw new StrictProxyException(name, (this.constructor.prototype.type.call(this))._simpleClassName());
+                if ('desc' === name) { // undefined 'desc' most likely means that it is not a real property and null value can be returned
+                    return null;
+                } else { // otherwise, need to raise a strict proxy exception
+                    throw new StrictProxyException(name, (this.constructor.prototype.type.call(this))._simpleClassName());
+                }
             } else if (this._isIdOnlyProxy(name)) {
                 throw new StrictProxyException(name, this.type()._simpleClassName(), true);
             }
@@ -884,8 +888,12 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
             return this.prop(first).type().prop(rest);
         } else {
             const prop = typeof this._props !== 'undefined' && this._props && this._props[name];
-            if (!prop && this.isCompositeEntity() && name === 'key') {
-                return { type: function () { return 'DynamicEntityKey'; } };
+            if (!prop && name === 'key') {
+                if (this.isCompositeEntity()) {
+                    return { type: function () { return 'DynamicEntityKey'; } }
+                } else if (this.isUnionEntity()) { // the key type for union entities at the Java level is "String", but for JS its actual type is determined at runtime base on the active property
+                    return { type: function () { return 'String'; } }
+                }
             }
             return prop ? prop : null;
         }

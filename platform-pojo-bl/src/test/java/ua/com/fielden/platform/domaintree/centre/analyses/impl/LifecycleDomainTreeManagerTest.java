@@ -23,6 +23,7 @@ import ua.com.fielden.platform.domaintree.testing.EvenSlaverEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityDatePropCategorizer.MasterEntityDatePropCategory;
 import ua.com.fielden.platform.domaintree.testing.MasterEntitySimpleEntityPropCategorizer.MasterEntitySimpleEntityPropCategory;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel.GroupingPeriods;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.Pair;
@@ -263,7 +264,7 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
         final ILifecycleDomainTreeManager dtm2 = (ILifecycleDomainTreeManager) centre.getAnalysisManager("Lifecycle report (new)");
 
         // final Field[] fields = centre.getEnhancer().getManagedType(MasterEntity.class).getFields();
-        final List<Field> fields = Finder.findRealProperties(centre.getEnhancer().getManagedType(MasterEntity.class));
+        final List<Field> fields = Finder.findRealProperties((Class<? extends AbstractEntity<?>>)centre.getEnhancer().getManagedType(MasterEntity.class));
         for (final Field f : fields) {
             System.err.println(f.getName());
         }

@@ -226,7 +226,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
                 iter.remove();
             }
         }
-        final List<Field> keys = getKeyMembers(type);
+        final List<Field> keys = getKeyMembers((Class<? extends AbstractEntity<?>>) type);
         properties.removeAll(keys); // remove composite key members if any
 
         // now let's ensure that that key related properties and desc are first in the list of properties
@@ -298,9 +298,9 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
         return Collection.class.isAssignableFrom(realType) &&
                 isEntityType(elementType) &&
                 isCompositeEntity((Class<AbstractEntity<?>>) elementType) &&
-                getKeyMembers(elementType).size() == 2 &&
-                getKeyMembers(elementType).stream().allMatch(field -> isEntityType(field.getType())) &&
-                getKeyMembers(elementType).stream().anyMatch(field -> isShortCollectionKeyCompatible(field.getType(), penultAndLast.getKey()));
+                getKeyMembers((Class<? extends AbstractEntity<?>>) elementType).size() == 2 &&
+                getKeyMembers((Class<? extends AbstractEntity<?>>) elementType).stream().allMatch(field -> isEntityType(field.getType())) &&
+                getKeyMembers((Class<? extends AbstractEntity<?>>) elementType).stream().anyMatch(field -> isShortCollectionKeyCompatible(field.getType(), penultAndLast.getKey()));
     }
 
     /**
@@ -325,7 +325,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      */
     public static String shortCollectionKey(final Class<?> root, final String property) {
         final Pair<Class<?>, String> penultAndLast = transform(root, property);
-        final Class<?> elementType = determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, true);
+        final Class<? extends AbstractEntity<?>> elementType = (Class<? extends AbstractEntity<?>>) determineClass(penultAndLast.getKey(), penultAndLast.getValue(), true, true);
         return getKeyMembers(elementType).stream()
             .filter(field -> !isShortCollectionKeyCompatible(field.getType(), penultAndLast.getKey()))
             .findAny() // stream should return exactly one key field out of two entity-typed key fields after above filtering

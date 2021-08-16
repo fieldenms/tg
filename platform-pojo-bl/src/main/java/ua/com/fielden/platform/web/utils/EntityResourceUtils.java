@@ -3,6 +3,8 @@ package ua.com.fielden.platform.web.utils;
 import static java.lang.Class.forName;
 import static java.lang.String.format;
 import static java.util.Locale.getDefault;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static java.util.regex.Pattern.quote;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
@@ -13,6 +15,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
+import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
@@ -840,13 +843,12 @@ public class EntityResourceUtils {
      * @return
      */
     private static Optional<PropertyDescriptor<AbstractEntity<?>>> extractPropertyDescriptor(final String value, final Class<AbstractEntity<?>> enclosingEntityType) {
-        final List<PropertyDescriptor<AbstractEntity<?>>> allPropertyDescriptors = Finder.getPropertyDescriptors(enclosingEntityType);
-        final PojoValueMatcher<PropertyDescriptor<AbstractEntity<?>>> matcher = new PojoValueMatcher<>(allPropertyDescriptors, AbstractEntity.KEY, allPropertyDescriptors.size());
-        final List<PropertyDescriptor<AbstractEntity<?>>> matchedPropertyDescriptors = matcher.findMatches(value);
+        final List<PropertyDescriptor<AbstractEntity<?>>> allPropertyDescriptors = getPropertyDescriptors(enclosingEntityType);
+        final List<PropertyDescriptor<AbstractEntity<?>>> matchedPropertyDescriptors = new PojoValueMatcher<>(allPropertyDescriptors, KEY, allPropertyDescriptors.size()).findMatches(value);
         if (matchedPropertyDescriptors.size() != 1) {
-            return Optional.empty();
+            return empty();
         }
-        return Optional.of(matchedPropertyDescriptors.get(0));
+        return of(matchedPropertyDescriptors.get(0));
     }
 
     /**

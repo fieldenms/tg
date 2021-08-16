@@ -13,8 +13,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @DescTitle(value = "description", desc = "desc description")
 public class SimplePartEntity extends AbstractEntity<String> {
 
-    private static final long serialVersionUID = -5808741389722460450L;
-
     @IsProperty
     @Title(value = "Common property", desc = "Common property description")
     private String commonProperty;
