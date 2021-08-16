@@ -10,6 +10,7 @@ import ua.com.fielden.platform.basic.IValueMatcherWithFetch;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.reflection.Finder;
 
 /**
  * Abstract key-based value matcher implementation for {@link PropertyDescriptor}s. Suitable for both centre and master matchers.
@@ -19,7 +20,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
  * @param <T> -- enclosing entity type
  */
 abstract class AbstractSearchPropertyDescriptorByKey<T extends AbstractEntity<?>> implements IValueMatcherWithFetch<PropertyDescriptor<T>> {
-    private static final String ERR_FETCH_MODEL_NOT_APPLICABLE = "Fetch model should not be used for property descriptors retrieval.";
+    private static final String ERR_FETCH_MODEL_NOT_APPLICABLE = "No fetch model should be used to retrieve property descriptors.";
     private final Class<T> enclosingEntityType;
 
     /**
@@ -42,9 +43,11 @@ abstract class AbstractSearchPropertyDescriptorByKey<T extends AbstractEntity<?>
     }
     
     /**
-     * Specifies custom property field exclusion logic when building property descriptors to be matched against.
+     * A predicate to exclude properties from the matcher considerations.
+     * This predicated is passed into {@link Finder#getPropertyDescriptors(Class, java.util.function.Predicate)} in method {@link #findPropertyDescriptorMatches(String)}.
      * <p>
-     * Override this method to provide custom behaviour.
+     * No properties are excluded by default. 
+     * Override this method to provide a domain-specific logic for excluding properties from the matcher consideration.
      *  
      * @param field
      */

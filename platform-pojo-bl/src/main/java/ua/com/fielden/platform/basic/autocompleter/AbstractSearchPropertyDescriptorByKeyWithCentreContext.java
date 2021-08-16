@@ -1,6 +1,3 @@
-/**
- *
- */
 package ua.com.fielden.platform.basic.autocompleter;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
