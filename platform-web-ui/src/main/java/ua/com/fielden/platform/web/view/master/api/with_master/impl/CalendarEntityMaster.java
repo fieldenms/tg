@@ -22,7 +22,7 @@ import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 
 /**
- * An entity master that contains calendar view.
+ * An entity master that contains a calendar view.
  *
  * @author TG Team
  *
