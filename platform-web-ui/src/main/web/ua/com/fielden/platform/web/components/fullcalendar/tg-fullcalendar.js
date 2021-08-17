@@ -82,10 +82,10 @@ const template = html`
     <slot id="editActionSlot" name="calendar-action"></slot>
     <tg-flex-layout class="toolbar" when-desktop="[[_desktopToolbarLayout]]" when-mobile="[[_mobileToolbarLayout]]">
         <div class="left-toolbar">
-            <paper-icon-button icon="event" on-tap="_today"></paper-icon-button>
-            <paper-icon-button icon="chevron-left" on-tap="_prev"></paper-icon-button>
-            <paper-icon-button icon="chevron-right" on-tap="_next"></paper-icon-button>
-            <paper-icon-button id="calendarTrigger" icon="tg-icons:legend" on-tap="_showLegend"></paper-icon-button>
+            <paper-icon-button icon="event" tooltip-text="Today" on-tap="_today"></paper-icon-button>
+            <paper-icon-button icon="chevron-left" tooltip-text="Previous" on-tap="_prev"></paper-icon-button>
+            <paper-icon-button icon="chevron-right" tooltip-text="Next" on-tap="_next"></paper-icon-button>
+            <paper-icon-button id="calendarTrigger" icon="tg-icons:legend" tooltip-text="Show the colour legend." on-tap="_showLegend"></paper-icon-button>
         </div>
         <span class="centre-toolbar" pos="center">[[calendarTitle]]</span>
         <tg-dropdown-switch view-index="0" views="[[viewTypes]]" button-width="40" change-current-view-on-select on-tg-centre-view-change="_changeView"></tg-dropdown-switch>

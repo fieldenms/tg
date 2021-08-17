@@ -94,7 +94,7 @@ export class TgDropdownSwitch extends mixinBehaviors([TgElementSelectorBehavior]
             buttonWidth: Number,
             mainButtonTooltipText:{
                 type: String,
-                value: "Choose the view"
+                value: "Choose a view."
             },
             changeCurrentViewOnSelect: {
                 type: Boolean,
