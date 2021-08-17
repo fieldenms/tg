@@ -42,6 +42,7 @@ import ua.com.fielden.platform.sample.domain.TgEntityStringKey;
 import ua.com.fielden.platform.sample.domain.TgEntityTwoEntityKeys;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptor;
+import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptorExt;
 import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
@@ -141,6 +142,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgDummyAction.class);
         add(TgEntityWithPropertyDependency.class);
         add(TgEntityWithPropertyDescriptor.class);
+        add(TgEntityWithPropertyDescriptorExt.class);
         add(DumpCsvTxtProcessor.class);
         add(NewEntityAction.class);
         add(ExportAction.class);
