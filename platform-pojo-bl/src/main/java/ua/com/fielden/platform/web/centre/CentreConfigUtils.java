@@ -17,12 +17,13 @@ import ua.com.fielden.platform.error.Result;
 
 /**
  * Utility methods for all centre config functional entities (producers, companions).
- * 
+ *
  * @author TG Team
  *
  */
 public class CentreConfigUtils {
     private static final String CONFIGURATION_HAS_BEEN_DELETED = "Configuration has been deleted.";
+
     /**
      * The key for customObject's value containing indicator that configuration should be autoRun.
      * <p>
@@ -42,7 +43,7 @@ public class CentreConfigUtils {
         // get modifHolder and apply it against 'fresh' centre to be able to later identify validity of 'fresh' centre
         return selectionCrit.freshCentreApplier(selectionCrit.centreContextHolder().getModifHolder());
     }
-    
+
     /**
      * Creates custom object with centre information for concrete <code>appliedCriteriaEntity</code>.
      * 
@@ -54,7 +55,7 @@ public class CentreConfigUtils {
     static Map<String, Object> getCustomObject(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final Optional<Optional<String>> configUuid) {
         return getCustomObject(selectionCrit, appliedCriteriaEntity, selectionCrit.saveAsName(), configUuid, empty());
     }
-    
+
     /**
      * Creates custom object with centre information for concrete <code>appliedCriteriaEntity</code>.
      * <p>
@@ -70,7 +71,7 @@ public class CentreConfigUtils {
     public static Map<String, Object> getCustomObject(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity, final Optional<String> saveAsNameToCompare, final Optional<Optional<String>> configUuid, final Optional<Integer> preferredView) {
         return selectionCrit.centreCustomObject(appliedCriteriaEntity, saveAsNameToCompare, configUuid, preferredView);
     }
-    
+
     /**
      * Prepares default centre before its loading. This is applicable to both {@link CentreConfigNewAction} and {@link CentreConfigDeleteAction}.
      * 
@@ -83,7 +84,7 @@ public class CentreConfigUtils {
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> newSelectionCrit = selectionCrit.createCriteriaValidationPrototype(empty());
         return getCustomObject(selectionCrit, newSelectionCrit, empty(), of(empty()) /* update with empty uuid indicating default config */, of(newSelectionCrit.getCentreDomainTreeMangerAndEnhancer().getPreferredView())); // return corresponding custom object
     }
-    
+
     /**
      * Returns {@code true} in case where {@code saveAsName}d configuration represents default configuration,
      * otherwise {@code false}.
@@ -94,7 +95,7 @@ public class CentreConfigUtils {
     public static boolean isDefault(final Optional<String> saveAsName) {
         return !saveAsName.isPresent();
     }
-    
+
     /**
      * Returns {@code true} in case where {@code saveAsName}d configuration represents link configuration,
      * otherwise {@code false}.
@@ -105,7 +106,7 @@ public class CentreConfigUtils {
     public static boolean isLink(final Optional<String> saveAsName) {
         return !isDefault(saveAsName) && LINK_CONFIG_TITLE.equals(saveAsName.get());
     }
-    
+
     /**
      * Returns {@code true} in case where {@code saveAsName}d configuration represents default or link configuration,
      * otherwise {@code false}.
@@ -116,7 +117,7 @@ public class CentreConfigUtils {
     public static boolean isDefaultOrLink(final Optional<String> saveAsName) {
         return isDefault(saveAsName) || LINK_CONFIG_TITLE.equals(saveAsName.get());
     }
-    
+
     /**
      * Returns {@code true} in case where {@code saveAsName}d configuration represents link configuration or inherited from base user configuration or inherited from shared configuration,
      * otherwise {@code false}.
@@ -128,7 +129,7 @@ public class CentreConfigUtils {
     public static boolean isLinkOrInherited(final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
         return isLink(saveAsName) || isInherited(saveAsName, selectionCrit);
     }
-    
+
     /**
      * Returns {@code true} in case where {@code saveAsName}d configuration represents default / link configuration or inherited from base user configuration or inherited from shared configuration,
      * otherwise {@code false}.
@@ -140,7 +141,7 @@ public class CentreConfigUtils {
     public static boolean isDefaultOrLinkOrInherited(final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
         return isDefaultOrLink(saveAsName) || isInherited(saveAsName, selectionCrit);
     }
-    
+
     /**
      * Returns {@code loadableConfig} for non-empty inherited {@code loadableConfig}, empty optional otherwise.
      * 
@@ -150,7 +151,7 @@ public class CentreConfigUtils {
     public static Optional<LoadableCentreConfig> inherited(final Optional<LoadableCentreConfig> loadableConfig) {
         return loadableConfig.filter(LoadableCentreConfig::isInherited);
     }
-    
+
     /**
      * Returns {@code true} in case where {@code saveAsName}d configuration represents inherited from base user configuration or inherited from shared configuration,
      * otherwise {@code false}.
@@ -162,7 +163,7 @@ public class CentreConfigUtils {
     public static boolean isInherited(final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
         return inherited(findLoadableConfig(saveAsName, selectionCrit)).isPresent();
     }
-    
+
     /**
      * Returns {@code true} in case where {@code saveAsName}d configuration represents inherited from base user configuration or inherited from shared configuration,
      * otherwise {@code false}.
@@ -174,7 +175,7 @@ public class CentreConfigUtils {
     public static boolean isInherited(final Optional<String> saveAsName, final Supplier<Stream<LoadableCentreConfig>> streamLoadableConfigurations) {
         return inherited(findLoadableConfig(saveAsName, streamLoadableConfigurations)).isPresent();
     }
-    
+
     /**
      * Returns {@code loadableConfig} for non-empty 'inherited from base' {@code loadableConfig}, empty optional otherwise.
      * 
@@ -184,7 +185,7 @@ public class CentreConfigUtils {
     public static Optional<LoadableCentreConfig> inheritedFromBase(final Optional<LoadableCentreConfig> loadableConfig) {
         return inherited(loadableConfig).filter(LoadableCentreConfig::isBase);
     }
-    
+
     /**
      * Returns {@code true} in case where {@code saveAsName}d configuration represents inherited from base user configuration,
      * otherwise {@code false}.
@@ -196,7 +197,7 @@ public class CentreConfigUtils {
     public static boolean isInheritedFromBase(final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
         return inheritedFromBase(findLoadableConfig(saveAsName, selectionCrit)).isPresent();
     }
-    
+
     /**
      * Finds {@link LoadableCentreConfig} instance for concrete {@code saveAsName}. Default or link configurations are not loadable and empty {@link Optional} is returned.
      * 
@@ -208,7 +209,7 @@ public class CentreConfigUtils {
     public static Optional<LoadableCentreConfig> findLoadableConfig(final Optional<String> saveAsName, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) throws Result {
         return findLoadableConfig(saveAsName, () -> selectionCrit.loadableCentreConfigs().apply(of(saveAsName)).stream());
     }
-    
+
     /**
      * Finds {@link LoadableCentreConfig} instance for concrete {@code saveAsName}. Default or link configurations are not loadable and empty {@link Optional} is returned.
      * 
@@ -227,5 +228,5 @@ public class CentreConfigUtils {
                 .orElseThrow(() -> failure(CONFIGURATION_HAS_BEEN_DELETED))
             );
     }
-    
+
 }

@@ -16,12 +16,12 @@ import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntit
  *
  */
 public class CentreColumnWidthConfigUpdaterProducer extends DefaultEntityProducerWithContext<CentreColumnWidthConfigUpdater> {
-    
+
     @Inject
     public CentreColumnWidthConfigUpdaterProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
         super(factory, CentreColumnWidthConfigUpdater.class, companionFinder);
     }
-    
+
     @Override
     protected CentreColumnWidthConfigUpdater provideDefaultValues(final CentreColumnWidthConfigUpdater action) {
         if (selectionCritNotEmpty()) {
@@ -40,7 +40,8 @@ public class CentreColumnWidthConfigUpdaterProducer extends DefaultEntityProduce
                     }
                 });
             });
-            action.setCentreDirty(criteriaEntityBeingUpdated.isCentreDirty()); // centre will be changed after this action; changes can be discarded using DISCARD button on selection criteria
+            // centre will be changed after this action; changes can be discarded using DISCARD button on selection criteria
+            action.setCentreDirty(criteriaEntityBeingUpdated.isCentreDirty());
         }
         return action;
     }

@@ -21,11 +21,11 @@ import ua.com.fielden.platform.entity.annotation.Title;
 public class CentrePreferredViewUpdater extends AbstractFunctionalEntityWithCentreContext<NoKey> {
 
     @IsProperty
-    @Title(value = "Preferred View", desc = "Preferred View Index")
+    @Title(value = "Preferred View", desc = "The index of the preferred view.")
     private Integer preferredView;
 
     @IsProperty
-    @Title(value = "Centre Dirty", desc = "Indicates whether successful saving of this entity actually changed centre configuration or it is New (aka default, link or inherited).")
+    @Title(value = "Centre dirty?", desc = "Indicates whether successful saving of this entity actually changed the centre configuration or it is 'new' (i.e. default, link or inherited).")
     private boolean centreDirty;
 
     public CentrePreferredViewUpdater() {

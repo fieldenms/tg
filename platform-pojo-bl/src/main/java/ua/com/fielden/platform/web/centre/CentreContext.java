@@ -36,6 +36,8 @@ import ua.com.fielden.platform.reflection.Reflector;
  */
 public final class CentreContext<T extends AbstractEntity<?>, M extends AbstractEntity<?>> {
 
+    public static final String ERR_CANNOT_DETERMINE_CURRENT_ENTITY = "The current entity cannot be determined due to unexpected number of selected entities (%s).";
+
     /**
      * An action may be applicable to zero, one or more entities that are selected on an entity centre. If an action is applicable only to one entity it is associated with (i.e.
      * button in a row against an entity) then only this one entity should be present in the list of selected entities. The action configuration should drive the client side logic
@@ -66,18 +68,23 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
      */
     private Optional<BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object>> computation = Optional.empty();
 
-    private String chosenProperty;
-    
     /**
-     * Bag of custom properties in the context. Usually contains some technical properties for context restoration and may contain custom properties provided by client-side application.
+     * The name of a property that is considered to be "chosen" in the current context.
+     * For example, this could be a property that was tapped on in EGI to invoke the associated action.
+     */
+    private String chosenProperty;
+
+    /**
+     * A bag of custom properties in the context.
+     * Usually contains some technical properties to restore the context and may contain custom properties provided by the client-side logic.
      */
     private final Map<String, Object> customObject = new LinkedHashMap<>();
-    
+
     public T getCurrEntity() {
         if (selectedEntities.size() == 1) {
             return selectedEntities.get(0);
         }
-        throw new IllegalStateException(format("The number of selected entities is %s, which is not applicable for determining a current entity.", selectedEntities.size()));
+        throw new IllegalStateException(format(ERR_CANNOT_DETERMINE_CURRENT_ENTITY, selectedEntities.size()));
     }
 
     public List<AbstractEntity<?>> getSelectedEntities() {
@@ -144,27 +151,24 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
     public Optional<BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object>> getComputation() {
         return computation;
     }
-    
+
     public String getChosenProperty() {
         return chosenProperty;
     }
-    
+
     public CentreContext<T, M> setChosenProperty(final String chosenProperty) {
         this.chosenProperty = chosenProperty;
         return this;
     }
-    
+
     public CentreContext<T, M> setCustomObject(final Map<String, Object> customObject) {
         this.customObject.clear();
         this.customObject.putAll(customObject);
         return this;
     }
-    
-    /**
-     * Bag of custom properties in the context. Usually contains some technical properties for context restoration and may contain custom properties provided by client-side application.
-     */
+
     public Map<String, Object> getCustomObject() {
         return unmodifiableMap(customObject);
     }
-    
+
 }

@@ -132,11 +132,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      */
     static final String META_VALUES = "metaValues";
     /**
-     * The key for customObject's value containing message for stale criteria or empty if not stale.
+     * The key for customObject's value, which either contains a message for stale criteria or is empty if no criteria are stale.
      */
     static final String STALE_CRITERIA_MESSAGE = "staleCriteriaMessage";
     /**
-     * The key for customObject's value containing preferred view index.
+     * The key for customObject's value containing the preferred view index.
      */
     static final String PREFERRED_VIEW = "preferredView";
 
