@@ -64,7 +64,7 @@ const template = html`
             @apply --layout-flex-none;
         }
     </style>
-    <paper-button id="trigger" class="view-item main" dropdown-opened$="[[dropDownOpened]]" on-tap="_showViews" tooltip-text="Choose the view">
+    <paper-button id="trigger" class="view-item main" dropdown-opened$="[[dropDownOpened]]" on-tap="_showViews" tooltip-text$=[[mainButtonTooltipText]]>
         <iron-icon icon="[[_currentView.icon]]" style$="[[_currentView.iconStyle]]"></iron-icon>
         <span class="truncate item-title" style$="[[_calcButtonStyle(buttonWidth)]]">[[_currentView.title]]</span>
         <iron-icon icon="icons:arrow-drop-down"></iron-icon>
@@ -72,7 +72,7 @@ const template = html`
     <iron-dropdown id="dropdown" horizontal-align="left" vertical-offset="40" restore-focus-on-close always-on-top on-iron-overlay-opened="_dropdownOpened" on-iron-overlay-closed="_dropdownClosed">
         <paper-listbox id="availableViews" class="dropdown-content" slot="dropdown-content" attr-for-selected="view-index" on-iron-select="_changeView">
             <template is="dom-repeat" items="[[views]]" as="view">
-                <paper-item class="view-item" view-index$="[[view.index]]">
+                <paper-item class="view-item" view-index$="[[view.index]]" tooltip-text$="[[view.desc]]">
                     <iron-icon icon="[[view.icon]]" style$="[[view.iconStyle]]"></iron-icon>
                     <span class="truncate item-title">[[view.title]]</span>
                 </paper-item>
@@ -92,6 +92,10 @@ export class TgDropdownSwitch extends mixinBehaviors([TgElementSelectorBehavior]
             viewIndex: Number, 
             views: Array,
             buttonWidth: Number,
+            mainButtonTooltipText:{
+                type: String,
+                value: "Choose the view"
+            },
             changeCurrentViewOnSelect: {
                 type: Boolean,
                 value: false,

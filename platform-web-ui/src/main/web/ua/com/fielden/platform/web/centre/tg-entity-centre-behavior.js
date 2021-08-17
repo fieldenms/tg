@@ -131,7 +131,7 @@ const createPreferredViewUpdaterAction = function (entityCentre) {
 };
 
 const createViewsFromInsPoints = function (altViews) {
-    return altViews.map((insPoint, index) => {return {index: 2 + index, title: insPoint.shortDesc, icon: insPoint.icon, iconStyle: insPoint.iconStyle}});
+    return altViews.map((insPoint, index) => {return {index: 2 + index, title: insPoint.shortDesc, desc: insPoint.longDesc, icon: insPoint.icon, iconStyle: insPoint.iconStyle}});
 };
 
 const MSG_SAVE_OR_CANCEL = "Please save or cancel changes.";
@@ -586,7 +586,7 @@ const TgEntityCentreBehaviorImpl = {
         const altViews = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point[alternative-view]');
         this.allViews = [this.$.selection_criteria, this.$.egi, ...altViews];
         // Create result views to create centre view switch button
-        this.resultViews = [{index: 1, icon: this.$.egi.icon, iconStyle: this.$.egi.iconStyle, title: "Grid"}, ...createViewsFromInsPoints([...altViews])];
+        this.resultViews = [{index: 1, icon: this.$.egi.icon, iconStyle: this.$.egi.iconStyle, title: "Grid", desc: "Standard gird representation."}, ...createViewsFromInsPoints([...altViews])];
         if (this.allViews.length === 2 && this.$.egi.isHidden() && egiInsertionPoints.length === 0) {
             throw new Error(NOT_ENOUGH_RESULT_VIEWS);
         } else {

@@ -17,7 +17,7 @@ import ua.com.fielden.platform.web.minijs.JsCode;
 /**
  * Configuration for default toolbars available for entity centres and alternative views.
  * This implementation can be overridden to provide adjustments for button placement and contents.
- * 
+ *
  * @author TG Team
  *
  */
@@ -27,7 +27,7 @@ public class CentreToolbar implements IToolbarConfig {
 
     /**
      * Creates standard {@link CentreToolbar}. Standard switch view button width will be 60 (if present).
-     * 
+     *
      * @param switchViewButtonWidth
      */
     public CentreToolbar() {
@@ -36,7 +36,7 @@ public class CentreToolbar implements IToolbarConfig {
 
     /**
      * Creates standard {@link CentreToolbar} with custom switch view button width (if present).
-     * 
+     *
      * @param switchViewButtonWidth
      */
     public CentreToolbar(final int switchViewButtonWidth) {
@@ -45,7 +45,7 @@ public class CentreToolbar implements IToolbarConfig {
 
     /**
      * Creates standard {@link CentreToolbar} with custom switch view button width (if present).
-     * 
+     *
      * @param switchViewButtonWidth
      */
     public static CentreToolbar withSwitchViewButtonWidth(final int switchViewButtonWidth) {
@@ -99,6 +99,7 @@ public class CentreToolbar implements IToolbarConfig {
                 .attr("slot", "standart-action")
                 .attr("view-index", viewIndex)
                 .attr("button-width", width)
+                .attr("main-button-tooltip-text", "Choose an alternative view.")
                 .attr("views", "[[resultViews]]");
     }
 
