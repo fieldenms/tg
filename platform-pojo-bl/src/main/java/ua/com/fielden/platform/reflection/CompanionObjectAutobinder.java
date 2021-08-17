@@ -30,7 +30,10 @@ import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
  * 
  */
 public class CompanionObjectAutobinder {
-    
+
+    public static final String ERR_MISSING_CO = "Could not find a implementation for companion object of type [%s].";
+    public static final String ERR_MISSING_CO_DECLARATION = "Entity of type [%s] is missing a companion object declaration.";
+
     private CompanionObjectAutobinder() {}
 
     /**
@@ -57,8 +60,8 @@ public class CompanionObjectAutobinder {
     }
 
     /**
-     * Uses the provided {@code bindFunction} to bind a companion object implementation to entity's companion object contract.
-     * 
+     * Uses the specified {@code bindFunction} to bind a companion object for {@code entityType} to its implementation.
+     *
      * @param entityType
      * @param bindFunction
      */
@@ -66,7 +69,7 @@ public class CompanionObjectAutobinder {
         final Class<T> co = companionObjectType(entityType);
 
         if (co == null) { // check if the companion is declared
-            throw new EntityDefinitionException(format("Entity of type [%s] is missing a companion object declaration.",  entityType.getSimpleName()));
+            throw new EntityDefinitionException(format(ERR_MISSING_CO_DECLARATION,  entityType.getSimpleName()));
         } else {
             // determine a type implementing the companion for the passed in entity type
             // and bind it if found, otherwise throw an exception
@@ -75,7 +78,9 @@ public class CompanionObjectAutobinder {
                     format("%s.Co%s", entityType.getPackage().getName(), entityType.getSimpleName())) // the new Co naming strategy
             .map(name -> (Class<T>) fromString(name))
             .filter(Objects::nonNull).findFirst()
-            .map(type -> bindFunction.apply(co, type)).orElseThrow(() -> new EntityDefinitionException(format("Could not find a implementation for companion object of type [%s]", co.getSimpleName()))); 
+            .map(type -> bindFunction.apply(co, type)).orElseThrow(() -> {
+                return new EntityDefinitionException(format(ERR_MISSING_CO, co.getSimpleName()));
+            }); 
         }
     }
     
