@@ -10,7 +10,8 @@ import ua.com.fielden.platform.dom.DomContainer;
 import ua.com.fielden.platform.dom.DomElement;
 
 /**
- * Toolbar for insertion points. (This is normal centre toolbar without custom actions and without config button.)
+ * A toolbar for insertion points.
+ * This is a standard Entity Centre toolbar without custom actions and without the config action.
  *
  * @author TG Team
  *
@@ -26,4 +27,5 @@ public class InsertionPointToolbar extends CentreToolbar {
     public List<String> getAvailableShortcuts() {
         return of(paginationShortcut(), refreshShortcut()).flatMap(Collection::stream).collect(toList());
     }
+
 }
