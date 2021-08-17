@@ -867,19 +867,12 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         if (this == obj) {
             return true;
         }
-        if (!super.equals(obj)) {
+        if (!(obj instanceof CentreDomainTreeManager)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         final CentreDomainTreeManager other = (CentreDomainTreeManager) obj;
-        if (preferredView == null && other.preferredView != null || preferredView != null && !preferredView.equals(other.preferredView)) {
-            return false;
-        }
-
-
-        return true;
+        return Objects.equals(preferredView, other.preferredView);
     }
 
 }
