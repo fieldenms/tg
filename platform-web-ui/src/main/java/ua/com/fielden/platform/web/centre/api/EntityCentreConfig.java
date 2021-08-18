@@ -833,10 +833,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
                     .collect(Collectors.toList())
                     .get(actionNumber);
         } else if (INSERTION_POINT == actionKind) {
-            if (!getInsertionPointConfigs().isPresent()) {
+            if (getInsertionPointConfigs().isEmpty()) {
                 throw new IllegalArgumentException("No insertion point exists.");
             }
-            return getInsertionPointConfigs().get().get(actionNumber).getInsertionPointAction();
+            return getInsertionPointConfigs().get(actionNumber).getInsertionPointAction();
         } else if (FRONT == actionKind) {
             if (getFrontActions().isEmpty()) {
                 throw new IllegalArgumentException("No front action exists.");
@@ -880,11 +880,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return Collections.unmodifiableList(frontActions);
     }
 
-    public Optional<List<InsertionPointConfig>> getInsertionPointConfigs() {
-        if (insertionPointConfigs.isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.of(Collections.unmodifiableList(insertionPointConfigs));
+    public List<InsertionPointConfig> getInsertionPointConfigs() {
+        return Collections.unmodifiableList(insertionPointConfigs);
     }
 
     public Optional<String> getSseUri() {

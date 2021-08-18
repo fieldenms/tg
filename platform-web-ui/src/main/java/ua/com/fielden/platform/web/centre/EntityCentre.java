@@ -307,13 +307,12 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @param dslDefaultConfig
      */
     private static <T extends AbstractEntity<?>> void validateViewConfiguration(final Class<? extends MiWithConfigurationSupport<?>> miType, final EntityCentreConfig<T> dslDefaultConfig) {
-        final long altViewCount = dslDefaultConfig.getInsertionPointConfigs().orElse(new ArrayList<>())
-            .stream()
+        final long altViewCount = dslDefaultConfig.getInsertionPointConfigs().stream()
             .filter(ip -> ip.getInsertionPointAction().whereToInsertView.map(whereToInsert -> whereToInsert == ALTERNATIVE_VIEW).orElse(FALSE)).count();
-        final long insPointCount = dslDefaultConfig.getInsertionPointConfigs().orElse(new ArrayList<>()).size() - altViewCount;
+        final long insPointCount = dslDefaultConfig.getInsertionPointConfigs().size() - altViewCount;
 
         if (dslDefaultConfig.isEgiHidden() && insPointCount == 0 && altViewCount == 0) {
-            throw new WebUiBuilderException(format("At least one result view should be available for %s entity centre.", miType.getSimpleName()));
+            throw new WebUiBuilderException(format("At least one result view should be available for entity centre %s.", miType.getSimpleName()));
         }
     }
 
@@ -473,11 +472,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @return
      */
     private static <T extends AbstractEntity<?>> Integer calculatePreferredViewIndex(final EntityCentreConfig<T> dslDefaultConfig) {
-        final List<InsertionPointConfig> altViews = dslDefaultConfig.getInsertionPointConfigs().orElse(new ArrayList<>())
-            .stream()
+        final List<InsertionPointConfig> altViews = dslDefaultConfig.getInsertionPointConfigs().stream()
             .filter(ip -> ip.getInsertionPointAction().whereToInsertView.map(whereToInsert -> whereToInsert == ALTERNATIVE_VIEW).orElse(FALSE))
             .collect(toList());
-        final long insPointCount = dslDefaultConfig.getInsertionPointConfigs().orElse(new ArrayList<>()).size() - altViews.size();
+        final long insPointCount = dslDefaultConfig.getInsertionPointConfigs().size() - altViews.size();
         final AtomicInteger preferredViewIndex = new AtomicInteger(!dslDefaultConfig.isEgiHidden() || insPointCount > 0 ? 1 : 2);
         for (int idx = 0; idx < altViews.size(); idx++) {
             if (altViews.get(idx).isPreferred()) {
@@ -1132,12 +1130,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         logger.debug("Initiating insertion point actions...");
 
         final List<InsertionPointBuilder> insertionPointActionsElements = new ArrayList<>();
-        final Optional<List<InsertionPointConfig>> insertionPointConfigs = this.dslDefaultConfig.getInsertionPointConfigs();
-        if (insertionPointConfigs.isPresent()) {
-            for (int index = 0; index < insertionPointConfigs.get().size(); index++) {
-                final InsertionPointBuilder el = new InsertionPointBuilder(insertionPointConfigs.get().get(index), index);
-                insertionPointActionsElements.add(el);
-            }
+        final List<InsertionPointConfig> insertionPointConfigs = this.dslDefaultConfig.getInsertionPointConfigs();
+        for (int index = 0; index < insertionPointConfigs.size(); index++) {
+            final InsertionPointBuilder el = new InsertionPointBuilder(insertionPointConfigs.get(index), index);
+            insertionPointActionsElements.add(el);
         }
 
         final DomContainer insertionPointActionsDom = new DomContainer();
