@@ -867,7 +867,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         if (this == obj) {
             return true;
         }
-        if (!(obj instanceof CentreDomainTreeManager)) {
+        if (!super.equals(obj) || getClass() != obj.getClass()) {
             return false;
         }
 
