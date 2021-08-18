@@ -74,6 +74,8 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     private final boolean egiHidden;
+    private final String gridViewIcon;
+    private final String gridViewIconStyle;
     private final boolean draggable;
     private final boolean hideCheckboxes;
     private final IToolbarConfig toolbarConfig;
@@ -391,6 +393,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     ///////////////////////////////////
     public EntityCentreConfig(
             final boolean egiHidden,
+            final String gridViewIcon,
+            final String gridViewIconStyle,
             final boolean draggable,
             final boolean hideCheckboxes,
             final IToolbarConfig toolbarConfig,
@@ -461,6 +465,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Pair<Class<?>, Class<?>> generatorTypes,
             final IFetchProvider<T> fetchProvider) {
         this.egiHidden = egiHidden;
+        this.gridViewIcon = gridViewIcon;
+        this.gridViewIconStyle = gridViewIconStyle;
         this.draggable = draggable;
         this.hideCheckboxes = hideCheckboxes;
         this.toolbarConfig = toolbarConfig;
@@ -827,10 +833,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
                     .collect(Collectors.toList())
                     .get(actionNumber);
         } else if (INSERTION_POINT == actionKind) {
-            if (!getInsertionPointConfigs().isPresent()) {
+            if (getInsertionPointConfigs().isEmpty()) {
                 throw new IllegalArgumentException("No insertion point exists.");
             }
-            return getInsertionPointConfigs().get().get(actionNumber).getInsertionPointAction();
+            return getInsertionPointConfigs().get(actionNumber).getInsertionPointAction();
         } else if (FRONT == actionKind) {
             if (getFrontActions().isEmpty()) {
                 throw new IllegalArgumentException("No front action exists.");
@@ -874,11 +880,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return Collections.unmodifiableList(frontActions);
     }
 
-    public Optional<List<InsertionPointConfig>> getInsertionPointConfigs() {
-        if (insertionPointConfigs.isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.of(Collections.unmodifiableList(insertionPointConfigs));
+    public List<InsertionPointConfig> getInsertionPointConfigs() {
+        return Collections.unmodifiableList(insertionPointConfigs);
     }
 
     public Optional<String> getSseUri() {
@@ -887,6 +890,14 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public boolean isEgiHidden() {
         return egiHidden;
+    }
+
+    public String getGridViewIcon() {
+        return gridViewIcon;
+    }
+
+    public String getGridViewIconStyle() {
+        return gridViewIconStyle;
     }
 
     public boolean shouldHideCheckboxes() {

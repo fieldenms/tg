@@ -17,13 +17,13 @@ import ua.com.fielden.platform.pagination.IPage;
 import com.google.inject.Inject;
 
 /**
- * DAO implementation for companion object {@link IEntityCentreAnalysisConfig}.
+ * DAO implementation for companion object {@link EntityCentreAnalysisConfigCo}.
  * 
  * @author Developers
  * 
  */
 @EntityType(EntityCentreAnalysisConfig.class)
-public class EntityCentreAnalysisConfigDao extends CommonEntityDao<EntityCentreAnalysisConfig> implements IEntityCentreAnalysisConfig {
+public class EntityCentreAnalysisConfigDao extends CommonEntityDao<EntityCentreAnalysisConfig> implements EntityCentreAnalysisConfigCo {
     @Inject
     public EntityCentreAnalysisConfigDao(final IFilter filter) {
         super(filter);

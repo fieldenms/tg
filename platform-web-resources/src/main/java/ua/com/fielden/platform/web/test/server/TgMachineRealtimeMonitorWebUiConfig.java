@@ -1,10 +1,11 @@
 package ua.com.fielden.platform.web.test.server;
 
+import static java.util.Optional.empty;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
-
-import java.util.Optional;
+import static ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder.centreFor;
+import static ua.com.fielden.platform.web.centre.api.resultset.scrolling.impl.ScrollConfig.configScroll;
 
 import com.google.inject.Injector;
 
@@ -16,9 +17,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
-import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
-import ua.com.fielden.platform.web.centre.api.resultset.scrolling.impl.ScrollConfig;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
@@ -51,14 +50,13 @@ public class TgMachineRealtimeMonitorWebUiConfig {
      * @return created entity centre
      */
     private EntityCentre<TgMachine> createCentre(final Injector injector) {
-        final EntityCentreConfig<TgMachine> centre = EntityCentreBuilder.centreFor(TgMachine.class)
+        final EntityCentreConfig<TgMachine> centre = centreFor(TgMachine.class)
                 .runAutomatically()
                 .hasEventSourceAt("/sse/message-update-events")
                 .addCrit("this").asMulti().autocompleter(TgMachine.class).also()
                 .addCrit("orgUnit").asMulti().autocompleter(TgOrgUnit.class)
-                .setLayoutFor(Device.DESKTOP, Optional.empty(), "[['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']]]")
-                .setToolbar(new TgMachineRealtimeMonitorCentreToolbar())
-                .withScrollingConfig(ScrollConfig.configScroll().withFixedHeader().withFixedSummary().done())
+                .setLayoutFor(Device.DESKTOP, empty(), "[['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']]]")
+                .withScrollingConfig(configScroll().withFixedHeader().withFixedSummary().done())
                 .setPageCapacity(10000)
                 .setVisibleRowsCount(10)
 
@@ -95,7 +93,7 @@ public class TgMachineRealtimeMonitorWebUiConfig {
     
     public static EntityMaster<TgMachineRealtimeMonitorMap> createTgMachineRealtimeMonitorMapMaster(final Injector injector) {
         final IMaster<TgMachineRealtimeMonitorMap> config = new TgMachineRealtimeMonitorMapMaster();
-        return new EntityMaster<TgMachineRealtimeMonitorMap>(
+        return new EntityMaster<>(
                 TgMachineRealtimeMonitorMap.class,
                 config,
                 injector);

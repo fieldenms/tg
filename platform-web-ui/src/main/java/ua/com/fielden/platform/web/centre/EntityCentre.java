@@ -1,9 +1,12 @@
 package ua.com.fielden.platform.web.centre;
 
+import static java.lang.Boolean.FALSE;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.commons.lang.StringUtils.join;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.validateRootType;
 import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
@@ -36,6 +39,8 @@ import static ua.com.fielden.platform.web.centre.EgiConfigurations.TOOLBAR_VISIB
 import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
 import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp.derivePropName;
+import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints.ALTERNATIVE_VIEW;
+import static ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl.CentreToolbar.selectView;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalPropertyName;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalType;
@@ -53,6 +58,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
@@ -92,9 +98,9 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.EntityCentreConfigCo;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
+import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -169,6 +175,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static final String EGI_LAYOUT = "@gridLayout";
     private static final String EGI_LAYOUT_CONFIG = "//gridLayoutConfig";
     private static final String EGI_SHORTCUTS = "@customShortcuts";
+    private static final String EGI_VIEW_ICON = "@egiViewIcon";
+    private static final String EGI_VIEW_ICON_STYLE = "@egiViewStyle";
     private static final String EGI_TOOLBAR_VISIBLE = "@toolbarVisible";
     private static final String EGI_HIDDEN = "@hidden";
     private static final String EGI_DRAGGABLE = "@canDragFrom";
@@ -192,6 +200,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static final String EGI_FUNCTIONAL_ACTION_DOM = "<!--@functional_actions-->";
     private static final String EGI_PRIMARY_ACTION_DOM = "<!--@primary_action-->";
     private static final String EGI_SECONDARY_ACTIONS_DOM = "<!--@secondary_actions-->";
+    //Custom toolbar action for switching view
+    private static final String SWITCH_VIEW_ACTION_DOM = "<!--@switch_view_actions-->";
     // Front actions
     private static final String FRONT_ACTIONS_DOM = "<!--@custom-front-actions-->";
     private static final String FRONT_ACTIONS = "//generatedFrontActionObjects";
@@ -213,6 +223,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static final String RIGHT_INSERTION_POINT_DOM = "<!--@right_insertion_points-->";
     private static final String TOP_INSERTION_POINT_DOM = "<!--@top_insertion_points-->";
     private static final String BOTTOM_INSERTION_POINT_DOM = "<!--@bottom_insertion_points-->";
+    private static final String ALTERNATIVE_VIEW_INSERTION_POINT_DOM = "<!--@alternative_view_insertion_points-->";
     // generic custom code
     private static final String READY_CUSTOM_CODE = "//@centre-is-ready-custom-code";
     private static final String ATTACHED_CUSTOM_CODE = "//@centre-has-been-attached-custom-code";
@@ -231,7 +242,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
     private final EntityCentreConfigCo eccCompanion;
-    private final IMainMenuItem mmiCompanion;
+    private final MainMenuItemCo mmiCompanion;
     private final IUser userCompanion;
 
     /**
@@ -244,7 +255,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     public EntityCentre(final Class<? extends MiWithConfigurationSupport<?>> miType, final EntityCentreConfig<T> dslDefaultConfig, final Injector injector) {
         this(miType, miType.getSimpleName(), dslDefaultConfig, injector, null);
     }
-    
+
     /**
      * Creates new {@link EntityCentre} instance for the menu item type and with specified name.
      *
@@ -262,6 +273,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         this.injector = injector;
 
         validateMenuItemTypeRootType(miType);
+        validateViewConfiguration(miType, dslDefaultConfig);
+
         this.miType = miType;
         this.entityType = EntityResourceUtils.getEntityType(miType);
         this.companionFinder = this.injector.getInstance(ICompanionObjectFinder.class);
@@ -286,6 +299,21 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
         final Class<?> root = etAnnotation.value();
         validateRootType(root);
+    }
+
+    /**
+     * Validates entity centre's views and their availability.
+     *
+     * @param dslDefaultConfig
+     */
+    private static <T extends AbstractEntity<?>> void validateViewConfiguration(final Class<? extends MiWithConfigurationSupport<?>> miType, final EntityCentreConfig<T> dslDefaultConfig) {
+        final long altViewCount = dslDefaultConfig.getInsertionPointConfigs().stream()
+            .filter(ip -> ip.getInsertionPointAction().whereToInsertView.map(whereToInsert -> whereToInsert == ALTERNATIVE_VIEW).orElse(FALSE)).count();
+        final long insPointCount = dslDefaultConfig.getInsertionPointConfigs().size() - altViewCount;
+
+        if (dslDefaultConfig.isEgiHidden() && insPointCount == 0 && altViewCount == 0) {
+            throw new WebUiBuilderException(format("At least one result view should be available for entity centre %s.", miType.getSimpleName()));
+        }
     }
 
     /**
@@ -377,6 +405,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
         final ICentreDomainTreeManagerAndEnhancer cdtmae = createEmptyCentre(entityType, entityFactory, domainTreeEnhancerCache, createCalculatedAndCustomProperties(entityType, resultSetProps, summaryExpressions), miType);
 
+        cdtmae.setPreferredView(calculatePreferredViewIndex(dslDefaultConfig));
+
         final Optional<List<String>> selectionCriteria = dslDefaultConfig.getSelectionCriteria();
         if (selectionCriteria.isPresent()) {
             for (final String property : selectionCriteria.get()) {
@@ -433,6 +463,26 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         cdtmae.getSecondTick().setNumberOfHeaderLines(dslDefaultConfig.getNumberOfHeaderLines());
 
         return postCentreCreated == null ? cdtmae : postCentreCreated.apply(cdtmae);
+    }
+
+    /**
+     * Calculates preferred view index. It can be 1 (EGI) or other alternative view index (2, 3...).
+     *
+     * @param dslDefaultConfig
+     * @return
+     */
+    private static <T extends AbstractEntity<?>> Integer calculatePreferredViewIndex(final EntityCentreConfig<T> dslDefaultConfig) {
+        final List<InsertionPointConfig> altViews = dslDefaultConfig.getInsertionPointConfigs().stream()
+            .filter(ip -> ip.getInsertionPointAction().whereToInsertView.map(whereToInsert -> whereToInsert == ALTERNATIVE_VIEW).orElse(FALSE))
+            .collect(toList());
+        final long insPointCount = dslDefaultConfig.getInsertionPointConfigs().size() - altViews.size();
+        final AtomicInteger preferredViewIndex = new AtomicInteger(!dslDefaultConfig.isEgiHidden() || insPointCount > 0 ? 1 : 2);
+        for (int idx = 0; idx < altViews.size(); idx++) {
+            if (altViews.get(idx).isPreferred()) {
+                preferredViewIndex.set(2 + idx); // should be shifted by 2 to take into account EGI and selection criteria view indices
+            }
+        }
+        return preferredViewIndex.get();
     }
 
     /**
@@ -1006,10 +1056,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         logger.debug("Initiating functional actions...");
         final StringBuilder functionalActionsObjects = new StringBuilder();
 
-        final DomContainer functionalActionsDom = new DomContainer();
+        final DomElement functionalActionsDom = new DomContainer();
 
         for (int i = 0; i < actionGroups.size(); i++) {
-            final DomElement groupElement = new DomElement("div").attr("selectable-elements-container", null).attr("slot", "entity-specific-action").clazz("entity-specific-action", i == 0 ? "first-group" : "group");
+            final DomElement groupElement = createActionGroupDom(i);
             for (final FunctionalActionElement el : actionGroups.get(i)) {
                 importPaths.add(el.importPath());
                 groupElement.add(el.render());
@@ -1080,12 +1130,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         logger.debug("Initiating insertion point actions...");
 
         final List<InsertionPointBuilder> insertionPointActionsElements = new ArrayList<>();
-        final Optional<List<InsertionPointConfig>> insertionPointConfigs = this.dslDefaultConfig.getInsertionPointConfigs();
-        if (insertionPointConfigs.isPresent()) {
-            for (int index = 0; index < insertionPointConfigs.get().size(); index++) {
-                final InsertionPointBuilder el = new InsertionPointBuilder(insertionPointConfigs.get().get(index), index);
-                insertionPointActionsElements.add(el);
-            }
+        final List<InsertionPointConfig> insertionPointConfigs = this.dslDefaultConfig.getInsertionPointConfigs();
+        for (int index = 0; index < insertionPointConfigs.size(); index++) {
+            final InsertionPointBuilder el = new InsertionPointBuilder(insertionPointConfigs.get(index), index);
+            insertionPointActionsElements.add(el);
         }
 
         final DomContainer insertionPointActionsDom = new DomContainer();
@@ -1097,12 +1145,22 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         }
         importPaths.add(dslDefaultConfig.getToolbarConfig().importPath());
 
+        final List<String> toolbarCode = new ArrayList<>();
+        toolbarCode.add(dslDefaultConfig.getToolbarConfig().code(entityType).toString());
+        final List<String> toolbarStyles = new ArrayList<>();
+        toolbarStyles.add(dslDefaultConfig.getToolbarConfig().styles().toString());
+
         final DomContainer topInsertionPointsDom = new DomContainer();
         final DomContainer leftInsertionPointsDom = new DomContainer();
         final DomContainer rightInsertionPointsDom = new DomContainer();
         final DomContainer bottomInsertionPointsDom = new DomContainer();
+        final List<String> alternativeViewsDom = new ArrayList<>();
         for (final InsertionPointBuilder el : insertionPointActionsElements) {
             final DomElement insertionPoint = el.render();
+            el.toolbar().ifPresent(toolbar -> {
+                toolbarCode.add(toolbar.code(entityType).toString());
+                toolbarStyles.add(toolbar.styles().toString());
+            });
             if (el.whereToInsert() == InsertionPoints.TOP) {
                 topInsertionPointsDom.add(insertionPoint);
             } else if (el.whereToInsert() == InsertionPoints.LEFT) {
@@ -1111,10 +1169,16 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 rightInsertionPointsDom.add(insertionPoint);
             } else if (el.whereToInsert() == InsertionPoints.BOTTOM) {
                 bottomInsertionPointsDom.add(insertionPoint);
+            } else if (el.whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW) {
+                final Optional<DomElement> switchButtons = switchViewButtons(insertionPointActionsElements, Optional.of(el));
+                alternativeViewsDom.add(insertionPoint.toString().replace(SWITCH_VIEW_ACTION_DOM, switchButtons.map(domElem -> domElem.toString()).orElse("")));
             } else {
                 throw new IllegalArgumentException("Unexpected insertion point type.");
             }
         }
+
+        final Optional<DomElement> egiSwitchViewButtons = switchViewButtons(insertionPointActionsElements, Optional.empty());
+
         //Generating shortcuts for EGI
         final StringBuilder shortcuts = new StringBuilder();
 
@@ -1132,6 +1196,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 }
             }
         }
+
         ///////////////////////////////////////
         final String frontActionString = frontActionsObjects.toString();
         final String shareActionsString = shareActionsObjects.toString();
@@ -1152,6 +1217,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(MI_TYPE, flattenedNameOf(miType)).
                 //egi related properties
                 replace(EGI_SHORTCUTS, shortcuts).
+                replace(EGI_VIEW_ICON, dslDefaultConfig.getGridViewIcon()).
+                replace(EGI_VIEW_ICON_STYLE, dslDefaultConfig.getGridViewIconStyle()).
                 replace(EGI_HIDDEN, HIDDEN.eval(dslDefaultConfig.isEgiHidden())).
                 replace(EGI_DRAGGABLE, DRAGGABLE.eval(dslDefaultConfig.isDraggable())).
                 replace(EGI_TOOLBAR_VISIBLE, TOOLBAR_VISIBLE.eval(!dslDefaultConfig.shouldHideToolbar())).
@@ -1167,9 +1234,11 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(EGI_ROW_HEIGHT, dslDefaultConfig.getRowHeight()).
                 replace(EGI_FIT_TO_HEIGHT, FIT_TO_HEIGHT.eval(dslDefaultConfig.isFitToHeight())).
                 ///////////////////////
-                replace(TOOLBAR_DOM, dslDefaultConfig.getToolbarConfig().render().toString()).
-                replace(TOOLBAR_JS, dslDefaultConfig.getToolbarConfig().code(entityType).toString()).
-                replace(TOOLBAR_STYLES, dslDefaultConfig.getToolbarConfig().styles().toString()).
+                replace(TOOLBAR_DOM, dslDefaultConfig.getToolbarConfig().render().toString()
+                        .replace(EGI_FUNCTIONAL_ACTION_DOM, functionalActionsDom.toString())
+                        .replace(SWITCH_VIEW_ACTION_DOM, egiSwitchViewButtons.map(domEl -> domEl.toString()).orElse(""))).
+                replace(TOOLBAR_JS, join(toolbarCode, "\n")).
+                replace(TOOLBAR_STYLES, join(toolbarStyles, "\n")).
                 replace(FULL_MI_TYPE, miType.getName()).
                 replace(QUERY_ENHANCER_CONFIG, queryEnhancerContextConfigString()).
                 replace(CRITERIA_DOM, editorContainer.toString()).
@@ -1189,7 +1258,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                         : propActionsString).
                 replace(SELECTION_CRITERIA_LAYOUT_CONFIG, layout.code().toString()).
                 replace(EGI_LAYOUT_CONFIG, gridLayoutConfig.getValue()).
-                replace(EGI_FUNCTIONAL_ACTION_DOM, functionalActionsDom.toString()).
                 replace(EGI_PRIMARY_ACTION_DOM, primaryActionDom.toString()).
                 replace(EGI_SECONDARY_ACTIONS_DOM, secondaryActionsDom.toString()).
                 replace(INSERTION_POINT_ACTIONS_DOM, insertionPointActionsDom.toString()).
@@ -1197,6 +1265,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(RIGHT_INSERTION_POINT_DOM, rightInsertionPointsDom.toString()).
                 replace(TOP_INSERTION_POINT_DOM, topInsertionPointsDom.toString()).
                 replace(BOTTOM_INSERTION_POINT_DOM, bottomInsertionPointsDom.toString()).
+                replace(ALTERNATIVE_VIEW_INSERTION_POINT_DOM, join(alternativeViewsDom, "\n")).
                 replace(READY_CUSTOM_CODE, customCode.map(code -> code.toString()).orElse("")).
                 replace(ATTACHED_CUSTOM_CODE, customCodeOnAttach.map(code -> code.toString()).orElse(""));
         logger.debug("Finishing...");
@@ -1208,6 +1277,33 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         };
         logger.debug("Done.");
         return representation;
+    }
+
+    /**
+     * Creates dropdown button with selected insertionPoint, that allows to switch between other alternative views including EGI.
+     * It might return empty optional if this centre doesn't have enough alternative views to switch between
+     * (i.e. there is only EGI or only one alternative view with hidden EGI and without other insertion points)
+     *
+     * @param insertionPointActionsElements
+     * @param insertionPoint
+     * @return
+     */
+    private Optional<DomElement> switchViewButtons(final List<InsertionPointBuilder> insertionPointActionsElements, final Optional<InsertionPointBuilder> insertionPoint) {
+        final List<InsertionPointBuilder> altViews = insertionPointActionsElements.stream().filter(insPoint -> insPoint.whereToInsert() == ALTERNATIVE_VIEW).collect(toList());
+        final long otherViewCount = insertionPointActionsElements.size() - altViews.size();//Calculate the number of insertion points those are not an alternative view.
+        final long allViewCount = altViews.size() + (!dslDefaultConfig.isEgiHidden() || otherViewCount > 0 ? 1 : 0);//Calculate the number of views to switch between.
+        if (allViewCount > 1) {//If there are more than one available views (EGI and alternative views) then create switch view button
+            if (!insertionPoint.isPresent()) {//Create switch view button for EGI view.
+                return of(selectView(1, dslDefaultConfig.getToolbarConfig().getSwitchViewButtonWidth()));
+            } else {//Create switch view button for alternative view.
+                return of(selectView(altViews.indexOf(insertionPoint.get()) + 2, insertionPoint.get().toolbar().map(toolbar -> toolbar.getSwitchViewButtonWidth()).orElse(0)));
+            }
+        }
+        return empty(); //Otherwise return empty switch view button indicating that there are no enough available views to switch between
+    }
+
+    private DomElement createActionGroupDom(final int groupIndex) {
+        return new DomElement("div").attr("selectable-elements-container", null).attr("slot", "entity-specific-action").clazz("entity-specific-action", groupIndex == 0 ? "first-group" : "group");
     }
 
     /**

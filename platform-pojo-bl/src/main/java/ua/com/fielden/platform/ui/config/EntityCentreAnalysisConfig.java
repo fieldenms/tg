@@ -21,7 +21,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle(value = "Analysis configuration key", desc = "Analysis configuration key")
-@CompanionObject(IEntityCentreAnalysisConfig.class)
+@CompanionObject(EntityCentreAnalysisConfigCo.class)
 @MapEntityTo("ENTITY_CENTRE_ANALYSIS_CONFIG")
 @DenyIntrospection
 public class EntityCentreAnalysisConfig extends AbstractEntity<DynamicEntityKey> {

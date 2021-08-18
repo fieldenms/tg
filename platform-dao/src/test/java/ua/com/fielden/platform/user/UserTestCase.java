@@ -26,7 +26,7 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.security.user.IUserSecret;
+import ua.com.fielden.platform.security.user.UserSecretCo;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserSecret;
 import ua.com.fielden.platform.security.user.validators.UserBaseOnUserValidator;
@@ -43,7 +43,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 public class UserTestCase extends AbstractDaoTestCase {
 
     private final IUser coUser = co$(User.class);
-    private final IUserSecret coUserSecret = co$(UserSecret.class);
+    private final UserSecretCo coUserSecret = co$(UserSecret.class);
 
     @Test
     public void username_does_not_permit_password_reset_UUID_separator() {

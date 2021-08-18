@@ -27,11 +27,11 @@ EntityStyling.prototype.getColor = function (feature) {
     if (feature) {
         const featureType = this.featureType(feature);
         if (featureType === 'TgMessage') {
-            return (feature.get('vectorSpeed') > 0) ? "blue" : "red"; // TODO this is irrelevant because Message is represented with markers
+            return (feature.get('vectorSpeed') > 0) ? 'blue' : 'red'; // TODO this is irrelevant because Message is represented with markers
         } else if (featureType === 'Summary_TgMessage') {
-            return "blue";
+            return 'blue';
         } else {
-            throw "EntityStyling.prototype.getColor: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'TgMessage' or 'Summary_TgMessage'.";
+            return 'red';
         }
     } else {
         throw "EntityStyling.prototype.getColor: [" + feature + "] is empty.";

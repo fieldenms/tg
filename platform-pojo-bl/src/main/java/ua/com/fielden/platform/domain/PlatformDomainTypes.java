@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.domain;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.AttachmentPreviewEntityAction;
@@ -12,6 +14,7 @@ import ua.com.fielden.platform.dashboard.DashboardRefreshFrequencyUnit;
 import ua.com.fielden.platform.domain.metadata.DomainExplorer;
 import ua.com.fielden.platform.domain.metadata.DomainExplorerInsertionPoint;
 import ua.com.fielden.platform.domain.metadata.DomainProperty;
+import ua.com.fielden.platform.domain.metadata.DomainPropertyHolder;
 import ua.com.fielden.platform.domain.metadata.DomainPropertyTreeEntity;
 import ua.com.fielden.platform.domain.metadata.DomainTreeEntity;
 import ua.com.fielden.platform.domain.metadata.DomainType;
@@ -71,12 +74,15 @@ import ua.com.fielden.platform.web.centre.CentreConfigNewAction;
 import ua.com.fielden.platform.web.centre.CentreConfigSaveAction;
 import ua.com.fielden.platform.web.centre.CentreConfigShareAction;
 import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
+import ua.com.fielden.platform.web.centre.CentrePreferredViewUpdater;
 import ua.com.fielden.platform.web.centre.CustomisableColumn;
 import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
 import ua.com.fielden.platform.web.centre.OverrideCentreConfig;
 
 public class PlatformDomainTypes {
     public static final List<Class<? extends AbstractEntity<?>>> types = new ArrayList<>();
+    public static final Set<Class<? extends AbstractEntity<?>>> typesDependentOnWebUI = new LinkedHashSet<>();
+    public static final Set<Class<? extends AbstractEntity<?>>> typesNotDependentOnWebUI = new LinkedHashSet<>();
 
     static {
         types.add(MainMenuItem.class);
@@ -87,10 +93,11 @@ public class PlatformDomainTypes {
         types.add(UserRole.class);
         types.add(UserRoleTokensUpdater.class);
         types.add(SecurityTokenInfo.class);
+
         types.add(CentreConfigUpdater.class);
         types.add(CustomisableColumn.class);
         types.add(CentreColumnWidthConfigUpdater.class);
-
+        types.add(CentrePreferredViewUpdater.class);
         types.add(CentreConfigShareAction.class);
         types.add(CentreConfigNewAction.class);
         types.add(CentreConfigDuplicateAction.class);
@@ -101,6 +108,8 @@ public class PlatformDomainTypes {
         types.add(LoadableCentreConfig.class);
         types.add(OverrideCentreConfig.class);
         types.add(CentreConfigConfigureAction.class);
+        types.add(DashboardRefreshFrequencyUnit.class);
+        types.add(DashboardRefreshFrequency.class);
 
         types.add(UserAndRoleAssociation.class);
         types.add(SecurityRoleAssociation.class);
@@ -145,11 +154,20 @@ public class PlatformDomainTypes {
         types.add(Action.class);
         types.add(DomainType.class);
         types.add(DomainProperty.class);
+        types.add(DomainPropertyHolder.class);
         types.add(DomainExplorer.class);
         types.add(DomainExplorerInsertionPoint.class);
         types.add(DomainTreeEntity.class);
         types.add(DomainPropertyTreeEntity.class);
-        types.add(DashboardRefreshFrequencyUnit.class);
-        types.add(DashboardRefreshFrequency.class);
+        
+        typesDependentOnWebUI.add(EntityExportAction.class);
+        typesDependentOnWebUI.add(CentreConfigUpdater.class);
+        typesDependentOnWebUI.add(CentreConfigLoadAction.class);
+        typesDependentOnWebUI.add(CentreConfigEditAction.class);
+        typesDependentOnWebUI.add(CentreConfigSaveAction.class);
+        typesDependentOnWebUI.add(CentreConfigConfigureAction.class);
+        
+        typesNotDependentOnWebUI.addAll(types);
+        typesNotDependentOnWebUI.removeAll(typesDependentOnWebUI);
     }
 }
