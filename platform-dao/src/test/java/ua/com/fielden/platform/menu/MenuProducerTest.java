@@ -10,8 +10,11 @@ import java.util.List;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
@@ -68,7 +71,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
                         "module2/module2group2/module2group2item2",
                         "module2/module2group2/module2group2item3"))));
 
-        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
+        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(IAuthorisationModel.class), getInstance(ISecurityTokenProvider.class), getInstance(IApplicationSettings.class), getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
         final CentreContext context = new CentreContext();
         context.setChosenProperty("desktop");
         menuProducer.setContext(context);
@@ -137,7 +140,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
                         "module2/module2group2/module2group2item3"))));
 
         up.setUser(co$(User.class).findByKey("USER_2"));
-        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
+        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(IAuthorisationModel.class), getInstance(ISecurityTokenProvider.class), getInstance(IApplicationSettings.class), getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
         final CentreContext context = new CentreContext();
         context.setChosenProperty("desktop");
         menuProducer.setContext(context);

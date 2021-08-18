@@ -7,9 +7,9 @@ import com.google.inject.name.Named;
 
 /**
  * Default implementation of the contract for generally used in the application settings.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class ApplicationSettings implements IApplicationSettings {
     private final String appName;
@@ -19,6 +19,7 @@ public class ApplicationSettings implements IApplicationSettings {
     private final String pathToSecurityTokens;
     private final String securityTokensPackageName;
     private final String workflow;
+    private final String menuVisibilityMode;
     private final String smtpServer;
     private final String fromAddress;
 
@@ -31,6 +32,7 @@ public class ApplicationSettings implements IApplicationSettings {
             final @Named("tokens.path") String pathToSecurityTokens,//
             final @Named("tokens.package") String securityTokensPackageName,//
             final @Named("workflow") String workflow,
+            final @Named("menuVisibilityMode") String menuVisibilityMode,
             final @Named("email.smtp") String smtpServer,
             final @Named("email.fromAddress") String fromAddress) {
         this.appName = appName;
@@ -40,6 +42,7 @@ public class ApplicationSettings implements IApplicationSettings {
         this.pathToSecurityTokens = pathToSecurityTokens;
         this.securityTokensPackageName = securityTokensPackageName;
         this.workflow = workflow;
+        this.menuVisibilityMode = menuVisibilityMode;
         this.smtpServer = smtpServer;
         this.fromAddress = fromAddress;
     }
@@ -102,6 +105,11 @@ public class ApplicationSettings implements IApplicationSettings {
         return workflow;
     }
 
+    @Override
+    public String menuVisibilityMode() {
+        return menuVisibilityMode;
+    }
+
     public String getSmtpServer() {
         return smtpServer;
     }
@@ -109,5 +117,4 @@ public class ApplicationSettings implements IApplicationSettings {
     public String getFromAddress() {
         return fromAddress;
     }
-
 }

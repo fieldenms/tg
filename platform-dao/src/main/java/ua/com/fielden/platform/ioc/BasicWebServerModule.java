@@ -109,6 +109,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bindConstant().annotatedWith(Names.named("tokens.path")).to(props.getProperty("tokens.path"));
         bindConstant().annotatedWith(Names.named("tokens.package")).to(props.getProperty("tokens.package"));
         bindConstant().annotatedWith(Names.named("workflow")).to(props.getProperty("workflow"));
+        bindConstant().annotatedWith(Names.named("menuVisibilityMode")).to(props.getProperty("menuVisibilityMode"));
         bindConstant().annotatedWith(Names.named("attachments.location")).to(props.getProperty("attachments.location"));
         bindConstant().annotatedWith(Names.named("email.smtp")).to(props.getProperty("email.smtp"));
         bindConstant().annotatedWith(Names.named("email.fromAddress")).to(props.getProperty("email.fromAddress"));
@@ -135,7 +136,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
             .forEach(type -> bindCo(type, binder()));
         bind(IUserAndRoleAssociationBatchAction.class).to(UserAndRoleAssociationBatchActionDao.class);
         bind(ISecurityRoleAssociationBatchAction.class).to(SecurityRoleAssociationBatchActionDao.class);
-        
+
         bind(ISecurityTokenController.class).to(SecurityTokenController.class);
         if (tokenProvider != null) {
             bind(SecurityTokenProvider.class).toInstance(tokenProvider);
