@@ -132,6 +132,7 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
         return this;
     }
 
+    @Override
     public List<Module> getMenu() {
         return unmodifiableList(menu);
     }
@@ -148,6 +149,11 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
 
     @Override
     public void makeMenuItemInvisible(final String title) {
+    }
+
+    @Override
+    public View getView() {
+        return null;
     }
 
 }

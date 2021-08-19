@@ -38,6 +38,7 @@ import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanReadModel
 import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanRead_Token;
+import ua.com.fielden.platform.security.tokens.user.SecurityMatrixInsertionPoint_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.user.UserRoleTokensUpdater_CanExecute_Token;
@@ -58,16 +59,16 @@ import ua.com.fielden.platform.utils.CollectionUtil;
  * The result is presented as as a tree-like structure containing all tokens with correctly determined association between them.
  * <p>
  * <b>A fundamental assumption:</b> simple class names uniquely identify security tokens and entities!
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class SecurityTokenProvider implements ISecurityTokenProvider {
     public static final String ERR_DUPLICATE_SECURITY_TOKENS = "Not all security tokens are unique in their simple class name. This is required.";
 
-    /** 
-     * A map between token classes and their names. 
-     * Used as a cache for obtaining class by name. 
+    /**
+     * A map between token classes and their names.
+     * Used as a cache for obtaining class by name.
      */
     private final Map<String, Class<? extends ISecurityToken>> tokenClassesByName = new HashMap<>();
     private final Map<String, Class<? extends ISecurityToken>> tokenClassesBySimpleName = new HashMap<>();
@@ -80,7 +81,7 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
     /**
      * Creates security provider by automatically determining all security tokens available on the path within the specified package. May throw an exception as a result of failure
      * to loaded token classes.
-     * 
+     *
      * @param path
      *            -- a path to classes or a jar (requires jar file name too) where security tokens are located.
      * @param packageName
@@ -107,6 +108,7 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
                 UserAndRoleAssociation_CanReadModel_Token.class,
                 UserRolesUpdater_CanExecute_Token.class,
                 UserRoleTokensUpdater_CanExecute_Token.class,
+                SecurityMatrixInsertionPoint_CanRead_Token.class,
                 Attachment_CanSave_Token.class,
                 Attachment_CanRead_Token.class,
                 Attachment_CanReadModel_Token.class,
@@ -173,7 +175,7 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
 
     /**
      * Determines and creates token nodes representing sub tokens for the passed in current token node.
-     * 
+     *
      * @param superTokenNode
      *            -- current token node for which sub tokens are being searched
      * @param remainingTokens

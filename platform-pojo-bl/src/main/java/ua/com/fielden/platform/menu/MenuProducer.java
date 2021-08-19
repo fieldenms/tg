@@ -2,6 +2,7 @@ package ua.com.fielden.platform.menu;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseReading;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 
@@ -25,6 +26,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.IAuthorisationModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
+import ua.com.fielden.platform.security.tokens.Template;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -77,7 +79,25 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
 
     private Menu buildMenuForTokenBasedConfiguration() {
         final Menu menu = menuRetirever.getMenuEntity(DESKTOP).setUserName(userProvider.getUser().getKey()).setCanEdit(false);
+        menu.getMenu().forEach(module -> removeEmptyAndNonReadableMenuItems(module));
         return menu;
+    }
+
+    private void removeEmptyAndNonReadableMenuItems(final IMenuManager menuManager) {
+        final List<IMenuManager> menuItems = new ArrayList<>(menuManager.getMenu());
+        menuItems.forEach(menuItem -> {
+            if (menuItem.getView() != null) {
+                if (!authoriseReading(menuItem.getView().getEntityType(), Template.READ, authorisation, securityTokenProvider).isSuccessful()) {
+                    menuManager.removeMenuItem(menuItem.getKey());
+                }
+            } else {
+                removeEmptyAndNonReadableMenuItems(menuItem);
+                if (menuItem.getMenu().isEmpty()) {
+                    menuManager.removeMenuItem(menuItem.getKey());
+                }
+            }
+        });
+
     }
 
     private Menu buildMenuForBaseUserConfiguration() {

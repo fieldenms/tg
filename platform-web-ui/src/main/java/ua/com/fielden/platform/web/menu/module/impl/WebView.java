@@ -3,6 +3,9 @@ package ua.com.fielden.platform.web.menu.module.impl;
 import static java.lang.String.format;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
 
+import java.util.Optional;
+
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.menu.CustomView;
 import ua.com.fielden.platform.menu.EntityCentreView;
 import ua.com.fielden.platform.menu.EntityMasterView;
@@ -94,12 +97,14 @@ public class WebView implements IExecutable {
                     : (entityCentre != null ? (flattenedNameOf(entityCentre.getMenuItemType()) + "-centre") : customView.getViewName());
             final String elementName = "tg-" + typeName + "";
             final String viewType = entityMaster != null ? "master" : (entityCentre != null ? "centre" : "view");
+            final Optional<Class<? extends AbstractEntity<?>>> optionalEntityType = Optional.ofNullable(entityMaster != null ? entityMaster.getEntityType() : (entityCentre != null ? entityCentre.getEntityType() : null));
 
             final View view = new View();
             view.setKey("view");
             view.setHtmlImport(importUrl);
             view.setElementName(elementName);
             view.setViewType(viewType);
+            optionalEntityType.ifPresent(entityType -> view.setEntityType(entityType.getSimpleName()));
             if (entityMaster != null) {
                 // TODO the next piece of code was provided analogously to tg-mobile-app's hardcoded stuff.
                 view.setAttrs(new EntityMasterView().

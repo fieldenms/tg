@@ -33,6 +33,20 @@ public class View extends AbstractEntity<String> {
     @Title("Attributes")
     private AbstractView attrs;
 
+    @IsProperty
+    @Title(value = "Entity Type", desc = "Entity Type Name")
+    private String entityType;
+
+    @Observable
+    public View setEntityType(final String entityType) {
+        this.entityType = entityType;
+        return this;
+    }
+
+    public String getEntityType() {
+        return entityType;
+    }
+
     @Observable
     public View setAttrs(final AbstractView attrs) {
         this.attrs = attrs;
