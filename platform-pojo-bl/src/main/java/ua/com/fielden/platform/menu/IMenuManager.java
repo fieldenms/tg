@@ -15,5 +15,5 @@ public interface IMenuManager {
 
     View getView();
 
-    String getKey();
+    String getTitle();
 }

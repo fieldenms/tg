@@ -16,8 +16,8 @@ import java.util.function.Consumer;
 import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
-import ua.com.fielden.platform.basic.config.IApplicationSettings;
 import ua.com.fielden.platform.basic.config.MenuVisibilityMode;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
@@ -39,7 +39,7 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
     private final IWebMenuItemInvisibility miInvisible;
     private final IAuthorisationModel authorisation;
     private final ISecurityTokenProvider securityTokenProvider;
-    private final IApplicationSettings settings;
+    private final String menuVisibilityMode;
 
     @Inject
     public MenuProducer(
@@ -48,23 +48,23 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
             final IUserProvider userProvider,
             final IAuthorisationModel authorisation,
             final ISecurityTokenProvider securityTokenProvider,
-            final IApplicationSettings settings,
             final ICompanionObjectFinder coFinder,
-            final EntityFactory entityFactory) {
+            final EntityFactory entityFactory,
+            final @Named("menuVisibilityMode") String menuVisibilityMode) {
         super(entityFactory, Menu.class, coFinder);
         this.menuRetirever = menuRetirever;
         this.miInvisible = miInvisible;
         this.userProvider = userProvider;
         this.authorisation = authorisation;
         this.securityTokenProvider = securityTokenProvider;
-        this.settings = settings;
+        this.menuVisibilityMode = menuVisibilityMode;
     }
 
     @Override
     protected Menu provideDefaultValues(final Menu entity) {
         final Menu menu;
         if (chosenPropertyEqualsTo("desktop")) {
-            if (MenuVisibilityMode.tokenBased.name().equals(settings.menuVisibilityMode())) {
+            if (MenuVisibilityMode.tokenBased.name().equals(menuVisibilityMode)) {
                 menu = buildMenuForTokenBasedConfiguration();
             } else {
                 menu = buildMenuForBaseUserConfiguration();
@@ -88,12 +88,12 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
         menuItems.forEach(menuItem -> {
             if (menuItem.getView() != null) {
                 if (!authoriseReading(menuItem.getView().getEntityType(), Template.READ, authorisation, securityTokenProvider).isSuccessful()) {
-                    menuManager.removeMenuItem(menuItem.getKey());
+                    menuManager.removeMenuItem(menuItem.getTitle());
                 }
             } else {
                 removeEmptyAndNonReadableMenuItems(menuItem);
                 if (menuItem.getMenu().isEmpty()) {
-                    menuManager.removeMenuItem(menuItem.getKey());
+                    menuManager.removeMenuItem(menuItem.getTitle());
                 }
             }
         });

@@ -22,6 +22,4 @@ public interface IApplicationSettings {
     String securityTokensPackageName();
 
     String workflow();
-
-    String menuVisibilityMode();
 }

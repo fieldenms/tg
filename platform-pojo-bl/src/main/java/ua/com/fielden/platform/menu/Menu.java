@@ -156,4 +156,9 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
         return null;
     }
 
+    @Override
+    public String getTitle() {
+        return getKey();
+    }
+
 }

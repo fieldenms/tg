@@ -3,6 +3,7 @@ package ua.com.fielden.platform.ioc;
 import static ua.com.fielden.platform.reflection.CompanionObjectAutobinder.bindCo;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.Properties;
 
 import com.google.inject.Singleton;
@@ -109,7 +110,8 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bindConstant().annotatedWith(Names.named("tokens.path")).to(props.getProperty("tokens.path"));
         bindConstant().annotatedWith(Names.named("tokens.package")).to(props.getProperty("tokens.package"));
         bindConstant().annotatedWith(Names.named("workflow")).to(props.getProperty("workflow"));
-        bindConstant().annotatedWith(Names.named("menuVisibilityMode")).to(props.getProperty("menuVisibilityMode"));
+        final Optional<String> readedMenuMode = Optional.ofNullable(props.getProperty("menuVisibilityMode"));
+        bindConstant().annotatedWith(Names.named("menuVisibilityMode")).to(readedMenuMode.orElse("baseUserConfiguration"));
         bindConstant().annotatedWith(Names.named("attachments.location")).to(props.getProperty("attachments.location"));
         bindConstant().annotatedWith(Names.named("email.smtp")).to(props.getProperty("email.smtp"));
         bindConstant().annotatedWith(Names.named("email.fromAddress")).to(props.getProperty("email.fromAddress"));
