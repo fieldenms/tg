@@ -78,7 +78,7 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
     }
 
     private Menu buildMenuForTokenBasedConfiguration() {
-        final Menu menu = menuRetirever.getMenuEntity(DESKTOP).setUserName(userProvider.getUser().getKey()).setCanEdit(false);
+        final Menu menu = menuRetirever.getMenuEntity(DESKTOP).setUserName(userProvider.getUser().getKey()).setCanEdit(userProvider.getUser().isBase());
         menu.getMenu().forEach(module -> removeEmptyAndNonReadableMenuItems(module));
         return menu;
     }
@@ -88,12 +88,12 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
         menuItems.forEach(menuItem -> {
             if (menuItem.getView() != null) {
                 if (!authoriseReading(menuItem.getView().getEntityType(), Template.READ, authorisation, securityTokenProvider).isSuccessful()) {
-                    menuManager.removeMenuItem(menuItem.getTitle());
+                    computeVisibility(userProvider, menuItem.getTitle()).accept(menuManager);
                 }
             } else {
                 removeEmptyAndNonReadableMenuItems(menuItem);
                 if (menuItem.getMenu().isEmpty()) {
-                    menuManager.removeMenuItem(menuItem.getTitle());
+                    computeVisibility(userProvider, menuItem.getTitle()).accept(menuManager);
                 }
             }
         });
