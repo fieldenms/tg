@@ -82,6 +82,7 @@ public class UserWebUiConfig {
                 .also()
                 .addProp("basedOnUser").width(200).also()
                 .addProp("base").width(80).also()
+                .addProp("role").width(200).also()
                 .addProp(EMAIL).minWidth(150).also()
                 .addProp(ACTIVE).minWidth(50)
                 .addPrimaryAction(UserActions.EDIT_ACTION.mkAction()).also()
@@ -103,6 +104,7 @@ public class UserWebUiConfig {
             "['padding:20px', "
             + format("[[%s], [%s]], ", fmr, fmrLast) // key, basedOnUser
             + format("[[%s], [%s]], ", fmr, fmrLast) // active, base
+            +        "['flex']," // base user role
             +        "['flex']" // email
             + "]";
 
@@ -112,12 +114,13 @@ public class UserWebUiConfig {
                 .addProp("basedOnUser").asAutocompleter().also()
                 .addProp("active").asCheckbox().also()
                 .addProp("base").asCheckbox().also()
+                .addProp("role").asAutocompleter().also()
                 .addProp("email").asSinglelineText().also()
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE)
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), format(bottomButtonPanel, actionButton, actionButton))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
-                .withDimensions(mkDim(400, 324))
+                .withDimensions(mkDim(400, 388))
                 .done();
         return new EntityMaster<>(
                 User.class,

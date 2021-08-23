@@ -76,12 +76,12 @@ public class User extends ActivatableAbstractEntity<String> {
             return SU.matches(username) || UNIT_TEST_USER.matches(username) || VIRTUAL_USER.matches(username);
         }
     }
-    
+
     @IsProperty
     @MapTo
     @BeforeChange(@Handler(value = StringValidator.class, str = {@StrParam(name = regexProp, value = USER_NAME_REGEX)}))
     private String key;
-    
+
     @IsProperty(value = UserAndRoleAssociation.class, linkProperty = "user")
     @Title(value = "Roles", desc = "The associated with this user roles.")
     private final Set<UserAndRoleAssociation> roles = new HashSet<>();
@@ -115,18 +115,33 @@ public class User extends ActivatableAbstractEntity<String> {
     @AfterChange(UserActivationDefiner.class)
     private boolean active;
 
+    @IsProperty
+    @MapTo
+    @Title(value = "Role", desc = "Base User Role")
+    private UserRole role;
+
+    @Observable
+    public User setRole(final UserRole role) {
+        this.role = role;
+        return this;
+    }
+
+    public UserRole getRole() {
+        return role;
+    }
+
     @Override
     @Observable
-    public User setActive(boolean active) {
+    public User setActive(final boolean active) {
         this.active = active;
         return this;
     }
-    
+
     @Override
     public boolean isActive() {
         return active;
     }
-    
+
     @Observable
     public User setEmail(final String email) {
         this.email = email;
@@ -136,8 +151,9 @@ public class User extends ActivatableAbstractEntity<String> {
     public String getEmail() {
         return email;
     }
-    
-    
+
+
+    @Override
     public String getKey() {
         return key;
     }
@@ -207,7 +223,7 @@ public class User extends ActivatableAbstractEntity<String> {
 
         return superResult;
     }
-    
+
     @Override
     public boolean equals(final Object obj) {
         // if "this" and "that" users are persisted and not dirty then an id-based comparison should be used
@@ -216,7 +232,7 @@ public class User extends ActivatableAbstractEntity<String> {
             if (that.isPersisted() && (!that.isInstrumented() || !that.isDirty())) {
                 return this.getId().equals(that.getId());
             }
-            
+
         }
         return super.equals(obj);
     }
