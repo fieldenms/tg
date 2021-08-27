@@ -10,6 +10,7 @@ import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
@@ -203,7 +204,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     @Override
     public User findUser(final String username) {
         // it is critical that the fetch is as tight here as possible in order not to leak any sensitive info to the client
-        final fetch<User> fetch = fetchOnly(User.class).with(KEY).with(ACTIVE).with("base").with("basedOnUser", fetchIdOnly(User.class));                
+        final fetch<User> fetch = fetchOnly(User.class).with(KEY).with(ACTIVE).with("base").with("role", fetchKeyAndDescOnly(UserRole.class)).with("basedOnUser", fetchIdOnly(User.class));
         return findByKeyAndFetch(fetch, username);
     }
 
@@ -213,7 +214,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     }
 
     /**
-     * A convenient method that either returns an instance of {@link UserSecret} that is already associated with {@code user}, 
+     * A convenient method that either returns an instance of {@link UserSecret} that is already associated with {@code user},
      * or a new instance of {@link UserSecret}.
      *
      * @param user
@@ -236,9 +237,9 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         if (user != null) {
             save(user.setActive(false));
         }
-        
+
         // attempt to delete user secret regardless of whether user exists or not
-        // this is to reduce the difference in the computation time that is required for processing existing and non-existing accounts 
+        // this is to reduce the difference in the computation time that is required for processing existing and non-existing accounts
         final UserSecretCo coUserSecret = co(UserSecret.class);
         coUserSecret.batchDelete(select(UserSecret.class).where().prop("key.key").eq().val(username).model());
     }
@@ -249,7 +250,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     public UserSecret resetPasswd(final User forUser, final String passwd) {
         try {
             final User user = forUser.isInstrumented() && forUser.isDirty() ? save(forUser) : forUser;
-            
+
             final UserSecretCo co$UserSecret = co$(UserSecret.class);
             final UserSecret secret = findOrCreateNewSecret(user, co$UserSecret);
             // salt needs to be unique... at least amongst the users
@@ -269,7 +270,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             secret.setPassword(co$UserSecret.hashPasswd(passwd, secret.getSalt()));
             secret.setResetUuid(null);
             final UserSecret savedSecret = co$UserSecret.save(secret);
-            
+
             // clear all the current user sessions
             this.<IUserSession, UserSession>co$(UserSession.class).clearAll(savedSecret.getKey());
             return savedSecret;
@@ -299,13 +300,13 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             return empty();
         }
         final String userName = uuidParts[0];
-        
+
         final EntityResultQueryModel<User> query = select(UserSecret.class)
                 .where()
                     .prop("key.key").eq().val(userName).and()
                     .prop("resetUuid").eq().val(uuid)
                 .yield().prop("key").modelAsEntity(User.class);
-        
+
         final User user = getEntity(from(query).with(fetchAll(User.class)).model());
         return ofNullable(user);
     }
@@ -329,7 +330,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         if (user != null) {
             final UserSecretCo co$UserSecret = co$(UserSecret.class);
             final UserSecret secret = findOrCreateNewSecret(user, co$UserSecret);
-            
+
             final String uuid = format("%s%s%s%s%s", user.getKey(), SECRET_RESET_UUID_SEPERATOR, crypto.nextSessionId(), SECRET_RESET_UUID_SEPERATOR, getUniversalConstants().now().plusMinutes(RESER_UUID_EXPIRATION_IN_MUNUTES).getMillis());
             return of(co$UserSecret.save(secret.setResetUuid(uuid)));
         }

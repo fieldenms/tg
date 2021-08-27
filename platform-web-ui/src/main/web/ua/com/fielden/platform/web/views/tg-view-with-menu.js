@@ -469,6 +469,9 @@ Polymer({
         var visisbleItems = [];
         var invisibleItems = [];
         var arrayToBeUsed = modelVisibility ? visisbleItems : invisibleItems;
+        if (e.model.firstLevelItem.view) {
+            arrayToBeUsed.push(groupUri);
+        }
         this.set("menuItem.menu." + e.model.groupIndex + ".visible", modelVisibility);
         if (e.model.firstLevelItem.menu) {
             e.model.firstLevelItem.menu.forEach(function (menuItem, menuItemIndex) {

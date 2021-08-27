@@ -33,7 +33,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 
 public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
 
-    private final Logger logger = Logger.getLogger(this.getClass());
+    private static final Logger logger = Logger.getLogger(MenuProducer.class);
 
     private final IMenuRetriever menuRetriever;
     private final IUserProvider userProvider;
@@ -155,7 +155,7 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
         }};
     }
 
-    private List<String> decodeParts(final String[] menuParts) {
+    public static List<String> decodeParts(final String[] menuParts) {
         final List<String> decodedParts = new ArrayList<>();
         try {
             for (int partIndex = 0; partIndex < menuParts.length; partIndex++) {
