@@ -11,6 +11,8 @@ public interface IMenuManager {
 
     void makeMenuItemInvisible(String title);
 
+    public boolean isVisible();
+
     <U extends IMenuManager> List<U> getMenu();
 
     View getView();

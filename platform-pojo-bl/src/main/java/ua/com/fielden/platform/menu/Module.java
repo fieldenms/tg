@@ -158,4 +158,9 @@ public class Module extends AbstractEntity<String> implements IMenuManager {
     public String getTitle() {
         return getKey();
     }
+
+    @Override
+    public boolean isVisible() {
+        return true;
+    }
 }

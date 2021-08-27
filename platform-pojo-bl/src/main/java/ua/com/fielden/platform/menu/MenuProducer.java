@@ -9,6 +9,7 @@ import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -34,7 +35,7 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
 
     private final Logger logger = Logger.getLogger(this.getClass());
 
-    private final IMenuRetriever menuRetirever;
+    private final IMenuRetriever menuRetriever;
     private final IUserProvider userProvider;
     private final IWebMenuItemInvisibility miInvisible;
     private final IAuthorisationModel authorisation;
@@ -43,7 +44,7 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
 
     @Inject
     public MenuProducer(
-            final IMenuRetriever menuRetirever,
+            final IMenuRetriever menuRetriever,
             final IWebMenuItemInvisibility miInvisible,
             final IUserProvider userProvider,
             final IAuthorisationModel authorisation,
@@ -52,7 +53,7 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
             final EntityFactory entityFactory,
             final @Named("menuVisibilityMode") String menuVisibilityMode) {
         super(entityFactory, Menu.class, coFinder);
-        this.menuRetirever = menuRetirever;
+        this.menuRetriever = menuRetriever;
         this.miInvisible = miInvisible;
         this.userProvider = userProvider;
         this.authorisation = authorisation;
@@ -70,7 +71,7 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
                 menu = buildMenuForBaseUserConfiguration();
             }
         } else { // chosenPropertyEqualsTo("mobile")
-            menu = menuRetirever.getMenuEntity(MOBILE).setUserName(userProvider.getUser().getKey()).setCanEdit(false);
+            menu = menuRetriever.getMenuEntity(MOBILE).setUserName(userProvider.getUser().getKey()).setCanEdit(false);
             // At this stage all items are visible for mobile profile.
             // In case where invisibility logic should be implemented, there is a need to extend persistent WebMenuItemInvisibility entity.
         }
@@ -78,7 +79,7 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
     }
 
     private Menu buildMenuForTokenBasedConfiguration() {
-        final Menu menu = menuRetirever.getMenuEntity(DESKTOP).setUserName(userProvider.getUser().getKey()).setCanEdit(userProvider.getUser().isBase());
+        final Menu menu = menuRetriever.getMenuEntity(DESKTOP).setUserName(userProvider.getUser().getKey()).setCanEdit(userProvider.getUser().isBase());
         menu.getMenu().forEach(module -> removeEmptyAndNonReadableMenuItems(module));
         return menu;
     }
@@ -88,20 +89,28 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
         menuItems.forEach(menuItem -> {
             if (menuItem.getView() != null) {
                 if (!authoriseReading(menuItem.getView().getEntityType(), Template.READ, authorisation, securityTokenProvider).isSuccessful()) {
-                    computeVisibility(userProvider, menuItem.getTitle()).accept(menuManager);
+                    computeVisibility(menuItem.getTitle()).accept(menuManager);
                 }
             } else {
                 removeEmptyAndNonReadableMenuItems(menuItem);
-                if (menuItem.getMenu().isEmpty()) {
-                    computeVisibility(userProvider, menuItem.getTitle()).accept(menuManager);
+                if (!isMenuVisible(menuItem)) {
+                    computeVisibility(menuItem.getTitle()).accept(menuManager);
                 }
             }
         });
 
     }
 
+    private boolean isMenuVisible(final IMenuManager menuItem) {
+        if (userProvider.getUser().isBase()) {
+            return menuItem.getMenu().stream().anyMatch(item -> item.isVisible());
+        } else {
+            return !menuItem.getMenu().isEmpty();
+        }
+    }
+
     private Menu buildMenuForBaseUserConfiguration() {
-        final Menu menu = menuRetirever.getMenuEntity(DESKTOP).setUserName(userProvider.getUser().getKey()).setCanEdit(userProvider.getUser().isBase());
+        final Menu menu = menuRetriever.getMenuEntity(DESKTOP).setUserName(userProvider.getUser().getKey()).setCanEdit(userProvider.getUser().isBase());
         //Get all invisible menu items
         final QueryExecutionModel<WebMenuItemInvisibility, EntityResultQueryModel<WebMenuItemInvisibility>> queryModel =
                 from(select(WebMenuItemInvisibility.class).where().prop("owner").eq().val(userProvider.getUser().isBase() ? userProvider.getUser()
@@ -111,24 +120,35 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
         //Remove all retrieved menu items from the menu entity.
         for (final WebMenuItemInvisibility menuItem : invisibleItems) {
             final List<String> menuParts = decodeParts(menuItem.getMenuItemUri().split("/"));
-            final String lastMenuPart = menuParts.remove(menuParts.size() - 1);
-            menuParts.stream()
-            .reduce(Optional.of(menu), MenuProducer::accumulator, MenuProducer::combiner)
-            .ifPresent(computeVisibility(userProvider, lastMenuPart));
+            removeMenuItem(Arrays.asList(menu), menuParts);
         }
         return menu;
     }
 
-    private static Optional<IMenuManager> accumulator(final Optional<IMenuManager> menuItemManager, final String menuPart) {
-        return menuItemManager.flatMap(value -> value.getMenuItem(menuPart));
+    private void removeMenuItem(final List<IMenuManager> menuPath, final List<String> menuParts) {
+        if (menuParts.size() > 1) {
+            final IMenuManager lastItem = menuPath.get(menuPath.size() - 1);
+            final Optional<IMenuManager> nextItem = lastItem.getMenuItem(menuParts.get(0));
+            nextItem.ifPresent(i -> {
+                final ArrayList<IMenuManager> newMenuPath = new ArrayList<>(menuPath);
+                newMenuPath.add(i);
+                removeMenuItem(newMenuPath, menuParts.subList(1, menuParts.size()));
+            });
+        }
+        if (menuPath.size() > 2 && menuParts.size() > 0) {
+            final IMenuManager lastMenuItem = menuPath.get(menuPath.size() - 1);
+            if (menuParts.size() == 1) {
+                computeVisibility(menuParts.get(0)).accept(lastMenuItem);
+            }
+            if (!isMenuVisible(lastMenuItem)) {
+                final IMenuManager beforeLastMenuItem = menuPath.get(menuPath.size() - 2);
+                computeVisibility(lastMenuItem.getTitle()).accept(beforeLastMenuItem);
+            }
+        }
     }
 
-    private static Optional<IMenuManager> combiner(final Optional<IMenuManager> menuItemManager1, final Optional<IMenuManager> menuItemManager2) {
-        return menuItemManager2;
-    }
-
-    private Consumer<IMenuManager> computeVisibility(final IUserProvider up, final String lastMenuPart) {
-        return (menuItem) -> {if (up.getUser().isBase()) {
+    private Consumer<IMenuManager> computeVisibility(final String lastMenuPart) {
+        return (menuItem) -> {if (userProvider.getUser().isBase()) {
             menuItem.makeMenuItemInvisible(lastMenuPart);
         } else {
             menuItem.removeMenuItem(lastMenuPart);

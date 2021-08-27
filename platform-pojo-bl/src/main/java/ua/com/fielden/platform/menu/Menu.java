@@ -161,4 +161,9 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
         return getKey();
     }
 
+    @Override
+    public boolean isVisible() {
+        return true;
+    }
+
 }
