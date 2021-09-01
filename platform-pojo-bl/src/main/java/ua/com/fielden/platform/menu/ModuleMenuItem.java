@@ -58,6 +58,7 @@ public class ModuleMenuItem extends AbstractEntity<String> implements IMenuManag
         return this;
     }
 
+    @Override
     public boolean isVisible() {
         return visible;
     }
@@ -79,6 +80,7 @@ public class ModuleMenuItem extends AbstractEntity<String> implements IMenuManag
         return this;
     }
 
+    @Override
     public List<ModuleMenuItem> getMenu() {
         return Collections.unmodifiableList(menu);
     }
@@ -106,5 +108,10 @@ public class ModuleMenuItem extends AbstractEntity<String> implements IMenuManag
     @Override
     public ModuleMenuItem setDesc(final String desc) {
         return (ModuleMenuItem) super.setDesc(desc);
+    }
+
+    @Override
+    public String getTitle() {
+        return getKey();
     }
 }

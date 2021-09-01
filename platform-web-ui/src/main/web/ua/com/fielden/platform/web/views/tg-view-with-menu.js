@@ -469,8 +469,10 @@ Polymer({
         var visisbleItems = [];
         var invisibleItems = [];
         var arrayToBeUsed = modelVisibility ? visisbleItems : invisibleItems;
+        if (e.model.firstLevelItem.view) {
+            arrayToBeUsed.push(groupUri);
+        }
         this.set("menuItem.menu." + e.model.groupIndex + ".visible", modelVisibility);
-        arrayToBeUsed.push(groupUri);
         if (e.model.firstLevelItem.menu) {
             e.model.firstLevelItem.menu.forEach(function (menuItem, menuItemIndex) {
                 if (menuItem.visible !== modelVisibility) {
@@ -487,7 +489,6 @@ Polymer({
 
     _changeVisibility: function (e) {
         var menuItemUri = this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key, e.model.item.key);
-        var groupUri = this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key);
         var modelVisibility = e.target.checked;
         var visisbleItems = [];
         var invisibleItems = [];
@@ -501,7 +502,6 @@ Polymer({
         var arrayToBeUsed = modelVisibility ? visisbleItems : invisibleItems;
         arrayToBeUsed.push(menuItemUri);
         if (shouldChangeGroupVisibility) {
-            arrayToBeUsed.push(groupUri);
             this.set("menuItem.menu." + e.model.groupIndex + ".visible", modelVisibility);
         }
         var checkbox = this.$.menu.querySelector("paper-checkbox[group-item='" + e.model.groupIndex + "']");

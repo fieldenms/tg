@@ -83,6 +83,7 @@ public class Module extends AbstractEntity<String> implements IMenuManager {
         return this;
     }
 
+    @Override
     public List<ModuleMenuItem> getMenu() {
         return Collections.unmodifiableList(menu);
     }
@@ -150,5 +151,15 @@ public class Module extends AbstractEntity<String> implements IMenuManager {
     @Override
     public Module setDesc(final String desc) {
         return (Module) super.setDesc(desc);
+    }
+
+    @Override
+    public String getTitle() {
+        return getKey();
+    }
+
+    @Override
+    public boolean isVisible() {
+        return true;
     }
 }
