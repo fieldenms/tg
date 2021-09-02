@@ -410,7 +410,7 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
                 const dynamicKey = new DynamicEntityKey();
                 dynamicKey._entity = this;
                 return dynamicKey;
-            } else if ((this.constructor.prototype.type.call(this)).isUnionEntity() && ['id', 'key', 'desc'].indexOf(name) !== -1) {
+            } else if (this.constructor.prototype.type.call(this).isUnionEntity() && (this.constructor.prototype.type.call(this).unionCommonProps().includes(name) || ['id', 'key', 'desc'].indexOf(name) !== -1)) { // this is to be in sync with Finder.getAbstractUnionEntityFieldValue
                 // In case of union entity, its [key / desc / id] should return the [key / desc / id] of corresponding 'active entity'.
                 // This slightly deviates from Java 'AbstractUnionEntity' logic in two aspects:
                 // 1) Here the key is exactly equal to key of active entity, but in Java the key is equal to String representation of the key of active entity.
@@ -812,7 +812,14 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
      *
      */
     EntityType.prototype.isUnionEntity = function () {
-        return typeof this['_union'] === 'undefined' ? false : this['_union'];
+        return typeof this['_unionCommonProps'] !== 'undefined';
+    }
+
+    /** 
+     * Returns the property names for common properties (can be empty) in case of union entity; not defined otherwise.
+     */
+    EntityType.prototype.unionCommonProps = function () {
+        return this._unionCommonProps;
     }
 
     /**

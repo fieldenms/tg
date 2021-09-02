@@ -5,9 +5,11 @@ import static java.lang.reflect.Modifier.isInterface;
 import static java.util.Collections.unmodifiableList;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isShortCollection;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.shortCollectionKey;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.commonProperties;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
+import static ua.com.fielden.platform.reflection.Finder.getFieldByName;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getTimeZone;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isCompositeKeySeparatorDefault;
@@ -26,6 +28,7 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isUpperCaseDefault;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -95,7 +98,22 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
     public EntitySerialiser(final Class<T> type, final TgJacksonModule module, final ObjectMapper mapper, final EntityFactory factory, final EntityTypeInfoGetter entityTypeInfoGetter, final boolean excludeNulls, final ISerialisationTypeEncoder serialisationTypeEncoder, final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache, final boolean propertyDescriptorType) {
         // cache all properties annotated with @IsProperty
         properties = createCachedProperties(type);
-        this.entityTypeInfo = createEntityTypeInfo(type, properties, entityTypeInfoGetter, serialisationTypeEncoder);
+        final List<CachedProperty> propertiesWithUnion = new ArrayList<>();
+        propertiesWithUnion.addAll(properties);
+        if (isUnionEntityType(type)) {
+            for (final String commonProp : commonProperties((Class<? extends AbstractUnionEntity>) type)) {
+                final Field propertyField = getFieldByName(type, commonProp);
+                propertyField.setAccessible(true);
+                
+                final CachedProperty prop = new CachedProperty(propertyField);
+                propertiesWithUnion.add(prop);
+                final Class<?> fieldType = stripIfNeeded(propertyField.getType());
+                if (isFieldTypeSupported(fieldType)) {
+                    prop.setPropertyType(fieldType);
+                }
+            }
+        }
+        this.entityTypeInfo = createEntityTypeInfo(type, propertiesWithUnion, entityTypeInfoGetter, serialisationTypeEncoder);
 
         final EntityJsonSerialiser<T> serialiser = new EntityJsonSerialiser<>(type, properties, this.entityTypeInfo, excludeNulls, propertyDescriptorType);
         final EntityJsonDeserialiser<T> deserialiser = new EntityJsonDeserialiser<>(mapper, factory, type, properties, serialisationTypeEncoder, idOnlyProxiedEntityTypeCache, propertyDescriptorType);
@@ -138,7 +156,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             }
         }
         if (AbstractUnionEntity.class.isAssignableFrom(type)) {
-            entityTypeInfo.set_union(true);
+            entityTypeInfo.set_unionCommonProps(commonProperties((Class<AbstractUnionEntity>) type));
         }
         if (AbstractFunctionalEntityToOpenCompoundMaster.class.isAssignableFrom(type)) {
             entityTypeInfo.set_compoundOpenerType(getKeyType(type).getName());
