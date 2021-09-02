@@ -5,6 +5,8 @@ import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.commonProperties;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnlyAndInstrument;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
@@ -22,6 +24,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.reflect.Field;
@@ -34,6 +37,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -336,15 +340,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
     private FetchProvider<T> enhanceWith0(final String dotNotationProperty, final FetchProvider<AbstractEntity<?>> propertyProvider) {
         if (isDotNotation(dotNotationProperty)) {
             final Pair<String, String> firstAndRest = firstAndRest(dotNotationProperty);
-            final String firstName = firstAndRest.getKey();
-            final String restDotNotation = firstAndRest.getValue();
-            final boolean exists = propertyProviders.containsKey(firstName);
-            if (exists) {
-                propertyProviders.get(firstName).enhanceWith0(restDotNotation, propertyProvider);
-            } else {
-                final Class<?> firstType = determinePropertyType(entityType, firstName);
-                propertyProviders.put(firstName, createDefaultFetchProviderForEntityTypedProperty((Class<AbstractEntity<?>>) firstType, defaultChildFetchCategory()).enhanceWith0(restDotNotation, propertyProvider));
-            }
+            enhanceWith0DotNotated(firstAndRest.getKey(), firstAndRest.getValue(), propertyProvider);
         } else {
             final boolean exists = propertyProviders.containsKey(dotNotationProperty);
             final Class<?> propertyType = determinePropertyType(entityType, dotNotationProperty);
@@ -360,8 +356,22 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
                     propertyProviders.put(dotNotationProperty, null);
                 }
             }
+            if (isUnionEntityType(entityType) && commonProperties((Class<AbstractUnionEntity>) entityType).contains(dotNotationProperty)) {
+                unionProperties((Class<AbstractUnionEntity>) entityType).stream()
+                    .forEach(unionPropField -> enhanceWith0DotNotated(unionPropField.getName(), dotNotationProperty, propertyProvider));
+            }
         }
         return this;
+    }
+
+    public void enhanceWith0DotNotated(final String firstName, final String restDotNotation, final FetchProvider<AbstractEntity<?>> propertyProvider) {
+        final boolean exists = propertyProviders.containsKey(firstName);
+        if (exists) {
+            propertyProviders.get(firstName).enhanceWith0(restDotNotation, propertyProvider);
+        } else {
+            final Class<?> firstType = determinePropertyType(entityType, firstName);
+            propertyProviders.put(firstName, createDefaultFetchProviderForEntityTypedProperty((Class<AbstractEntity<?>>) firstType, defaultChildFetchCategory()).enhanceWith0(restDotNotation, propertyProvider));
+        }
     }
     
     /**
