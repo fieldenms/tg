@@ -372,6 +372,10 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
             final Class<?> firstType = determinePropertyType(entityType, firstName);
             propertyProviders.put(firstName, createDefaultFetchProviderForEntityTypedProperty((Class<AbstractEntity<?>>) firstType, defaultChildFetchCategory()).enhanceWith0(restDotNotation, propertyProvider));
         }
+        if (isUnionEntityType(entityType) && commonProperties((Class<AbstractUnionEntity>) entityType).contains(firstName)) {
+            unionProperties((Class<AbstractUnionEntity>) entityType).stream()
+                .forEach(unionPropField -> enhanceWith0DotNotated(unionPropField.getName(), firstName + "." + restDotNotation, propertyProvider));
+        }
     }
     
     /**
