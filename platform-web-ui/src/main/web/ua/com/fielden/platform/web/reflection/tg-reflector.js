@@ -387,18 +387,18 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
         if (name === '') { // empty property name means 'entity itself'
             return this;
         }
-        var dotIndex = name.indexOf(".");
+        const dotIndex = name.indexOf(".");
         if (dotIndex > -1) {
-            var first = name.slice(0, dotIndex);
-            var rest = name.slice(dotIndex + 1);
-            var firstVal = this.get(first);
+            const first = name.slice(0, dotIndex);
+            const rest = name.slice(dotIndex + 1);
+            const firstVal = this.get(first);
             if (firstVal === null) {
                 return null;
             } else if (_isEntity(firstVal)) {
                 return firstVal.get(rest);
             } else if (firstVal instanceof Array) {
-                var internalList = [];
-                for (var index = 0; index < firstVal.length; index++) {
+                const internalList = [];
+                for (let index = 0; index < firstVal.length; index++) {
                     internalList.push(firstVal[index].get(rest));
                 }
                 return internalList;
@@ -406,11 +406,12 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
                 throw 'Unsupported dot-notation [' + name + '] in type [' + this.constructor.prototype.type.call(this).fullClassName() + '].';
             }
         } else {
-            if ('key' === name && this.constructor.prototype.type.call(this).isCompositeEntity()) {
+            const type = this.constructor.prototype.type.call(this);
+            if ('key' === name && type.isCompositeEntity()) {
                 const dynamicKey = new DynamicEntityKey();
                 dynamicKey._entity = this;
                 return dynamicKey;
-            } else if (this.constructor.prototype.type.call(this).isUnionEntity() && (this.constructor.prototype.type.call(this).unionCommonProps().includes(name) || ['id', 'key', 'desc'].indexOf(name) !== -1)) { // this is to be in sync with Finder.getAbstractUnionEntityFieldValue
+            } else if (type.isUnionEntity() && type.unionCommonProps().concat(['id', 'key', 'desc']).includes(name)) { // this is to be in sync with Finder.getAbstractUnionEntityFieldValue
                 // In case of union entity, its [key / desc / id] should return the [key / desc / id] of corresponding 'active entity'.
                 // This slightly deviates from Java 'AbstractUnionEntity' logic in two aspects:
                 // 1) Here the key is exactly equal to key of active entity, but in Java the key is equal to String representation of the key of active entity.
@@ -421,10 +422,10 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
                 if ('desc' === name) { // undefined 'desc' most likely means that it is not a real property and null value can be returned
                     return null;
                 } else { // otherwise, need to raise a strict proxy exception
-                    throw new StrictProxyException(name, (this.constructor.prototype.type.call(this))._simpleClassName());
+                    throw new StrictProxyException(name, type._simpleClassName());
                 }
             } else if (this._isIdOnlyProxy(name)) {
-                throw new StrictProxyException(name, this.constructor.prototype.type.call(this)._simpleClassName(), true);
+                throw new StrictProxyException(name, type._simpleClassName(), true);
             }
             return this[name];
         }
