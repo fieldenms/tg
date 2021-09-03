@@ -200,7 +200,7 @@ export class TgEntityEditor extends TgEditor {
            /**
             * Action to open master on title click.
             */
-           openMasterAction: {
+           tgOpenMasterAction: {
                type: Object,
                value: null
            },
@@ -544,18 +544,18 @@ export class TgEntityEditor extends TgEditor {
      * Opens entity master for an entity-typed value contained in this autocompleter.
      */
     _openEntityMaster () {
-        if (this.openMasterAction && this.actionAvailable) {
-            delete this.openMasterAction.modifyFunctionalEntity;
-            delete this.openMasterAction.postActionSuccess;
+        if (this.tgOpenMasterAction && this.actionAvailable) {
+            delete this.tgOpenMasterAction.modifyFunctionalEntity;
+            delete this.tgOpenMasterAction.postActionSuccess;
             
             const valueToEdit = this._valueToEdit(this.entity, this.propertyName);
             if (valueToEdit) { // open EDIT master for valueToEdit entity
-                this.openMasterAction._runDynamicAction(() => valueToEdit, null);
+                this.tgOpenMasterAction._runDynamicAction(() => valueToEdit, null);
             } else { // otherwise open master for new entity and set key values from _editingValue, if not empty
                 // create entity that will hold values for embedded master
                 const entity = createNewEntity(this.reflector(), this._editingValue, this.newEntityMaster.rootEntityType);
                 // add function to EntityNewAction (or compound) wrapper action to catch data loaded event from its embedded master
-                this.openMasterAction.modifyFunctionalEntity = (bindingEntity, master, action) => {
+                this.tgOpenMasterAction.modifyFunctionalEntity = (bindingEntity, master, action) => {
                     const dataLoadedCallback = (e) => {
                         const embeddedMaster = e.detail;
                         if (embeddedMaster) {
@@ -565,7 +565,7 @@ export class TgEntityEditor extends TgEditor {
                     }
                     master.addEventListener("data-loaded-and-focused", dataLoadedCallback);
                 };
-                this.openMasterAction.postActionSuccess = (savedEntity, action, master) => {
+                this.tgOpenMasterAction.postActionSuccess = (savedEntity, action, master) => {
                     let value = null;
                     if (savedEntity.type() === entity.type()) { // for EntityNewAction which is master-with-master, postActionSuccess will be invoked with savedEntity of embedded master type
                         value = savedEntity;
@@ -577,7 +577,7 @@ export class TgEntityEditor extends TgEditor {
                         this.commit();
                     }
                 }
-                this.openMasterAction._runDynamicActionForNew(this.newEntityMaster.rootEntityType);
+                this.tgOpenMasterAction._runDynamicActionForNew(this.newEntityMaster.rootEntityType);
             }
         }
     }

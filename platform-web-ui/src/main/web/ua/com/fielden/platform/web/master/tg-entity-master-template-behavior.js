@@ -15,7 +15,7 @@ const TgEntityMasterTemplateBehaviorImpl = {
         /**
          * Represents the action that allows to open entity master for specified entity-typed property.
          */
-        openMasterAction: {
+        tgOpenMasterAction: {
             type: Object,
             value: null
         },
@@ -37,12 +37,12 @@ const TgEntityMasterTemplateBehaviorImpl = {
             self.uuid = self.is + '/' + generateUUID();
         }
 
-        // initialise openMasterAction properties
+        // initialise tgOpenMasterAction properties
         self._openMasterActionAttrs = {
             currentState: 'EDIT',
             centreUuid: self.uuid
         };
-        self.openMasterAction = self.$.openMasterAction;
+        self.tgOpenMasterAction = self.$.tgOpenMasterAction;
     },
 
     attached: function () {

@@ -1185,7 +1185,7 @@ const TgEntityMasterBehaviorImpl = {
                     // revalidate the current master if it is simple (i.e. doesn't have an embedded view)
                     // and entity path doesn't contain persistent and not persisted (or invalid) entity, in order to update master editors;
                     // do this, for example, if a postal 'detail.saved' event was published by child master;
-                    // these child masters include those opened with entity editor title (i.e. openMasterAction), or from property / entity / continuation actions
+                    // these child masters include those opened with entity editor title (i.e. tgOpenMasterAction), or from property / entity / continuation actions
                     if (!self._hasEmbededView() && !data.entityPath.some(entity => entity.type().isPersistent() && (!entity.isPersisted() || !entity.isValidWithoutException()) )) {
                         self.validate();
                     }
