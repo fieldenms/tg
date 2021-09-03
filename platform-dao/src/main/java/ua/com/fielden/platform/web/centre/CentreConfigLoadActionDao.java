@@ -16,7 +16,9 @@ import java.util.Optional;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
@@ -79,7 +81,8 @@ public class CentreConfigLoadActionDao extends CommonEntityDao<CentreConfigLoadA
         if (!isInheritedFromShared) {
             selectionCrit.makePreferredConfig(actualSaveAsName); // 'own save-as / inherited from base' kinds -- can be preferred
         }
-        final Map<String, Object> customObject = getCustomObject(selectionCrit, selectionCrit.createCriteriaValidationPrototype(actualSaveAsName), actualSaveAsName, of(selectionCrit.centreConfigUuid(actualSaveAsName)));
+        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> newSelectionCrit = selectionCrit.createCriteriaValidationPrototype(actualSaveAsName);
+        final Map<String, Object> customObject = getCustomObject(selectionCrit, newSelectionCrit, actualSaveAsName, of(selectionCrit.centreConfigUuid(actualSaveAsName)), of(newSelectionCrit.getCentreDomainTreeMangerAndEnhancer().getPreferredView()));
         customObject.put(AUTO_RUN, selectionCrit.centreRunAutomatically(actualSaveAsName));
         entity.setCustomObject(customObject);
         return super.save(entity);

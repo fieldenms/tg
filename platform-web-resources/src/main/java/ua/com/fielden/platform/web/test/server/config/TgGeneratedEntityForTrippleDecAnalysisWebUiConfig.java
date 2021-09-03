@@ -36,6 +36,7 @@ import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
+import ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl.InsertionPointToolbar;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.layout.api.impl.LayoutComposer;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
@@ -207,7 +208,7 @@ public class TgGeneratedEntityForTrippleDecAnalysisWebUiConfig {
                 .addProp("hours").minWidth(60)
                     .withSummary("sum_hours_", "SUM(hours)", "Sum of hours property")
                 .addPrimaryAction(standardEditAction)
-                .addInsertionPointWithPagination(
+                .addInsertionPoint(
                         action(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class)
                              .withContext(context().withSelectionCrit().build())
                              .icon("stub")
@@ -215,7 +216,7 @@ public class TgGeneratedEntityForTrippleDecAnalysisWebUiConfig {
                              .prefDimForView(mkDim("'auto'", "'770px'"))
                              .withNoParentCentreRefresh()
                              .build(),
-                         InsertionPoints.BOTTOM)
+                         InsertionPoints.BOTTOM).setToolbar(new InsertionPointToolbar())
                 .build();
 
         final EntityCentre<TgGeneratedEntityForTrippleDecAnalysis> entityCentre = new EntityCentre<>(MiTgGeneratedEntityForTrippleDecAnalysis.class, "MiTgGeneratedEntityForTrippleDecAnalysis", ecc, injector, null);

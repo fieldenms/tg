@@ -44,6 +44,7 @@ import ua.com.fielden.snappy.MnemonicEnum;
  *
  */
 public class CentreDomainTreeManager extends AbstractDomainTreeManager implements ICentreDomainTreeManager {
+    private Integer preferredView;
     /**
      * A <i>manager</i> constructor for the first time instantiation.
      *
@@ -843,17 +844,35 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
     }
 
     @Override
+    public Integer getPreferredView() {
+        return preferredView;
+    }
+
+    @Override
+    public ICentreDomainTreeManager setPreferredView(final Integer preferredView) {
+        this.preferredView = preferredView;
+        return this;
+    }
+
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = super.hashCode();
+        result = prime * result + ((preferredView == null) ? 0 : preferredView.hashCode());
+        return result;
+    }
+
+    @Override
     public boolean equals(final Object obj) {
         if (this == obj) {
             return true;
         }
-        if (!super.equals(obj)) {
+        if (!super.equals(obj) || getClass() != obj.getClass()) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        return true;
+
+        final CentreDomainTreeManager other = (CentreDomainTreeManager) obj;
+        return Objects.equals(preferredView, other.preferredView);
     }
 
 }

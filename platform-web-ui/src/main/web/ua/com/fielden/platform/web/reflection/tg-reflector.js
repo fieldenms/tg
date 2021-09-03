@@ -403,7 +403,7 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
                 }
                 return internalList;
             } else {
-                throw 'Unsupported dot-notation [' + name + '] in type [' + this.type().fullClassName() + '].';
+                throw 'Unsupported dot-notation [' + name + '] in type [' + this.constructor.prototype.type.call(this).fullClassName() + '].';
             }
         } else {
             if ('key' === name && this.constructor.prototype.type.call(this).isCompositeEntity()) {
@@ -418,9 +418,13 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
                 const activeEntity = this._activeEntity();
                 return activeEntity === null ? null : activeEntity.get(name);
             } else if (this._isObjectUndefined(name)) {
-                throw new StrictProxyException(name, (this.constructor.prototype.type.call(this))._simpleClassName());
+                if ('desc' === name) { // undefined 'desc' most likely means that it is not a real property and null value can be returned
+                    return null;
+                } else { // otherwise, need to raise a strict proxy exception
+                    throw new StrictProxyException(name, (this.constructor.prototype.type.call(this))._simpleClassName());
+                }
             } else if (this._isIdOnlyProxy(name)) {
-                throw new StrictProxyException(name, this.type()._simpleClassName(), true);
+                throw new StrictProxyException(name, this.constructor.prototype.type.call(this)._simpleClassName(), true);
             }
             return this[name];
         }
@@ -646,8 +650,8 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
      * Note: this method closely resembles AbstractEntity.toString method.
      */
     Entity.prototype.toString = function () {
-        const convertedKey = _toString(_convert(this.get('key')), this.type(), 'key');
-        return convertedKey === '' && !this.type().isUnionEntity() ? KEY_NOT_ASSIGNED : convertedKey;
+        const convertedKey = _toString(_convert(this.get('key')), this.constructor.prototype.type.call(this), 'key');
+        return convertedKey === '' && !this.constructor.prototype.type.call(this).isUnionEntity() ? KEY_NOT_ASSIGNED : convertedKey;
     }
     
     return Entity;
@@ -691,7 +695,7 @@ const _createDynamicEntityKeyPrototype = function () {
         }
         const entity1 = this._entity;
         const entity2 = dynamicEntityKey2._entity;
-        const compositeKeyNames = entity1.type().compositeKeyNames();
+        const compositeKeyNames = entity1.constructor.prototype.type.call(entity1).compositeKeyNames();
         for (let i = 0; i < compositeKeyNames.length; i++) {
             const compositePartName = compositeKeyNames[i];
             let compositePart1, compositePart2;
@@ -884,8 +888,12 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
             return this.prop(first).type().prop(rest);
         } else {
             const prop = typeof this._props !== 'undefined' && this._props && this._props[name];
-            if (!prop && this.isCompositeEntity() && name === 'key') {
-                return { type: function () { return 'DynamicEntityKey'; } };
+            if (!prop && name === 'key') {
+                if (this.isCompositeEntity()) {
+                    return { type: function () { return 'DynamicEntityKey'; } }
+                } else if (this.isUnionEntity()) { // the key type for union entities at the Java level is "String", but for JS its actual type is determined at runtime base on the active property
+                    return { type: function () { return 'String'; } }
+                }
             }
             return prop ? prop : null;
         }
@@ -1950,6 +1958,7 @@ export const TgReflector = Polymer({
      */
     setCustomProperty: function (centreContextHolder, name, value) {
         centreContextHolder["customObject"][name] = value;
+        return centreContextHolder;
     },
 
     /**

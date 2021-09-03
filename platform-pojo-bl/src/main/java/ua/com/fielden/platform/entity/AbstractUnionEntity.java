@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -125,17 +126,15 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
     }
 
     private String getNameOfAssignedUnionProperty() {
-        final List<Field> fields = Finder.findRealProperties(getType());
+        final List<Field> fields = findRealProperties(getType());
         for (final Field field : fields) {
-            if (!KEY.equals(field.getName()) && !DESC.equals(field.getName())) {
-                field.setAccessible(true);
-                try {
-                    if (field.get(this) != null) {
-                        return field.getName();
-                    }
-                } catch (final Exception e) {
-                    throw new IllegalStateException(e);
+            field.setAccessible(true);
+            try {
+                if (field.get(this) != null) {
+                    return field.getName();
                 }
+            } catch (final Exception e) {
+                throw new IllegalStateException(e);
             }
         }
         return null;

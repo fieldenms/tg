@@ -1,65 +1,63 @@
 package ua.com.fielden.platform.web.centre.api.insertion_points;
 
+import static java.util.Optional.empty;
+
+import java.util.Optional;
+
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 
 /**
  * Represents the insertion point configuration. Configuration includes the entity action configuration object and indicator whether insertion point
  * has pagination buttons or not.
- * 
+ *
  * @author TG Team
  *
  */
 public class InsertionPointConfig {
 
     private final EntityActionConfig insertionPointAction;
-    private final boolean hasPaginationButtons;
-    private boolean flex = false;
+    private boolean preferred = false;
+    private Optional<IToolbarConfig> toolbar = empty();
 
     /**
-     * Initiates the insertion point configuration object with action configuration and pagination indicator 
-     * 
+     * Initiates the insertion point configuration object with action configuration and pagination indicator
+     *
      * @param insertionPointAction
-     * @param hasPaginationButtons
      */
-    private InsertionPointConfig(final EntityActionConfig insertionPointAction, final boolean hasPaginationButtons) {
+    private InsertionPointConfig(final EntityActionConfig insertionPointAction) {
         this.insertionPointAction = insertionPointAction;
-        this.hasPaginationButtons = hasPaginationButtons;
     }
 
     /**
-     * A factory method for creating insertion point configuration without pagination controls. 
-     * 
+     * A factory method for creating insertion point configuration without pagination controls.
+     *
      * @param insertionPointAction
      * @return
      */
     public static InsertionPointConfig configInsertionPoint(final EntityActionConfig insertionPointAction) {
-        return new InsertionPointConfig(insertionPointAction, false);
+        return new InsertionPointConfig(insertionPointAction);
     }
-    
-    /**
-     * A factory method for creating insertion point configuration with pagination controls.
-     * 
-     * @param insertionPointAction
-     * @return
-     */
-    public static InsertionPointConfig configInsertionPointWithPagination(final EntityActionConfig insertionPointAction) {
-        return new InsertionPointConfig(insertionPointAction, true);
-    }
-    
+
     public EntityActionConfig getInsertionPointAction() {
         return insertionPointAction;
     }
 
-    public boolean hasPaginationButtons() {
-        return hasPaginationButtons;
-    }
-
-    public InsertionPointConfig setFlex(final boolean flex) {
-        this.flex = flex;
+    public InsertionPointConfig setPreferred(final boolean preferred) {
+        this.preferred = preferred;
         return this;
     }
 
-    public boolean isFlex() {
-        return flex;
+    public boolean isPreferred() {
+        return preferred;
+    }
+
+    public InsertionPointConfig setToolbar(final Optional<IToolbarConfig> toolbar) {
+        this.toolbar = toolbar;
+        return this;
+    }
+
+    public Optional<IToolbarConfig> getToolbar() {
+        return toolbar;
     }
 }

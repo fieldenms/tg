@@ -11,6 +11,7 @@ public enum InsertionPoints {
     TOP,
     LEFT,
     BOTTOM,
-    RIGHT;
+    RIGHT,
+    ALTERNATIVE_VIEW;
 
 }

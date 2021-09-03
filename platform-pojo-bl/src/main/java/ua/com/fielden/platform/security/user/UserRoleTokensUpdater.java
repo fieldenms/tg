@@ -17,7 +17,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  * @author TG Team
  *
  */
-@CompanionObject(IUserRoleTokensUpdater.class)
+@CompanionObject(UserRoleTokensUpdaterCo.class)
 @KeyTitle(value = "User Role Id", desc = "Id of user role, whose 'tokens' collection modifies by this functional action.")
 public class UserRoleTokensUpdater extends AbstractFunctionalEntityForCollectionModification<String> {
 

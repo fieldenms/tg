@@ -107,9 +107,9 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
+import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
+import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.EntityCentreConfigCo;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
@@ -158,7 +158,7 @@ public class CriteriaResource extends AbstractWebResource {
     private final ICentreConfigSharingModel sharingModel;
     private User user;
     private EntityCentreConfigCo eccCompanion;
-    private IMainMenuItem mmiCompanion;
+    private MainMenuItemCo mmiCompanion;
     private IUser userCompanion;
     private Class<? extends MiWithConfigurationSupport<?>> miType;
 
@@ -469,7 +469,7 @@ public class CriteriaResource extends AbstractWebResource {
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final EntityCentreConfigCo eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
@@ -482,7 +482,8 @@ public class CriteriaResource extends AbstractWebResource {
                 of(configUuid),
                 of(appliedCriteriaEntity.centreRunAutomatically(saveAsName)), // in case if configuration is runAutomatically perform client-side auto-running (first time loading, changing browser's URI e.g by tapping Back / Forward buttons)
                 of(ofNullable(saveAsDesc)),
-                empty()
+                empty(),
+                of(updatedFreshCentre.getPreferredView())
             )
         );
     }
@@ -501,7 +502,7 @@ public class CriteriaResource extends AbstractWebResource {
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final EntityCentreConfigCo eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
@@ -514,7 +515,8 @@ public class CriteriaResource extends AbstractWebResource {
                         empty(),
                         of(false), // even though configuration can be runAutomatically, do not perform auto-running on Discard action
                         saveAsDesc,
-                        of(ofNullable(staleCriteriaMessage))
+                        of(ofNullable(staleCriteriaMessage)),
+                        of(updatedFreshCentre.getPreferredView())
                 )//
         );
     }
@@ -531,7 +533,7 @@ public class CriteriaResource extends AbstractWebResource {
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final EntityCentreConfigCo eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion) {
         if (wasRun != null) {
             // When changing centre we can change selection criteria and mnemonics, but also columns sorting, order, visibility and width / grow factors.
@@ -810,7 +812,7 @@ public class CriteriaResource extends AbstractWebResource {
             final DeviceProfile device,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final EntityCentreConfigCo eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
         final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resList = new ArrayList<>();
@@ -876,7 +878,7 @@ public class CriteriaResource extends AbstractWebResource {
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final EntityCentreConfigCo eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICompanionObjectFinder companionFinder) {
         resultantCustomObject.put(CENTRE_DIRTY, centreDirtyCalculator.apply(saveAsName).apply(() -> updatedFreshCentre));
@@ -901,7 +903,7 @@ public class CriteriaResource extends AbstractWebResource {
             final DeviceProfile device,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final EntityCentreConfigCo eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
         if (queryEnhancerConfig.isPresent()) {
