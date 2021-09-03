@@ -41,7 +41,22 @@ const template = html`
         <neon-animated-pages id="pages" class="fit" attr-for-selected="name" on-neon-animation-finish="_animationFinished" animate-initial-selection>
             <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]" app-title="[[appTitle]]"></tg-app-menu>
             <template is="dom-repeat" items="[[menuConfig.menu]]" on-dom-change="_modulesRendered">
-                <tg-app-view class="fit hero-animatable" name$="[[item.key]]" menu="[[menuConfig.menu]]" menu-item="[[item]]" can-edit="[[menuConfig.canEdit]]" menu-save-callback="[[_saveMenuVisibilityChanges]]" selected-module="[[_selectedModule]]" selected-submodule="{{_selectedSubmodule}}"></tg-app-view>
+                <tg-app-view class="fit hero-animatable" name$="[[item.key]]" menu="[[menuConfig.menu]]" menu-item="[[item]]" can-edit="[[menuConfig.canEdit]]" menu-save-callback="[[_saveMenuVisibilityChanges]]" selected-module="[[_selectedModule]]" selected-submodule="{{_selectedSubmodule}}">
+                    <tg-ui-action
+                        id="openUserMenuVisibilityAssociatorMaster"
+                        ui-role='ICON'
+                        component-uri='/master_ui/ua.com.fielden.platform.menu.UserMenuVisibilityAssociator'
+                        element-name='tg-UserMenuVisibilityAssociator-master'
+                        show-dialog='[[_showDialog]]'
+                        toaster='[[toaster]]'
+                        create-context-holder='[[_createContextHolder]]'
+                        attrs='[[_openUserMenuVisibilityAssociatorAttrs]]'
+                        require-selection-criteria='false'
+                        require-selected-entities='ONE'
+                        require-master-entity='false'
+                        slot="menuItemAction">
+                    </tg-ui-action>
+                </tg-app-view>
             </template>
         </neon-animated-pages>
     </div>
@@ -512,6 +527,7 @@ Polymer({
         this.uuid = this.is + '/' + generateUUID();
         this._attrs = {entityType: "ua.com.fielden.platform.menu.MenuSaveAction", currentState: "EDIT", centreUuid: this.uuid};
         this._openMasterAttrs = {currentState: "EDIT", centreUuid: this.uuid};
+        this._openUserMenuVisibilityAssociatorAttrs = {entityType: "ua.com.fielden.platform.menu.UserMenuVisibilityAssociator", currentState: "EDIT", centreUuid: this.uuid};
         //Binding to 'this' functions those are used outside the scope of this component.
         this._checkWhetherCanLeave = this._checkWhetherCanLeave.bind(this);
         

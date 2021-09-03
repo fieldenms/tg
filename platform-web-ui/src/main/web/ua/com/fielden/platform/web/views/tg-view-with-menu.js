@@ -19,7 +19,7 @@ import '/resources/polymer/@polymer/neon-animation/animations/slide-from-bottom-
 import '/resources/polymer/@polymer/neon-animation/animations/slide-up-animation.js';
 import '/resources/polymer/@polymer/neon-animation/animations/slide-down-animation.js';
 
-import { TgReflector } from '/app/tg-reflector.js';
+import '/resources/actions/tg-ui-action.js';
 import '/resources/components/tg-menu-search-input.js';
 import '/resources/views/tg-menu-item-view.js';
 import '/resources/components/tg-sublistbox.js'
@@ -27,6 +27,7 @@ import '/resources/components/tg-sublistbox.js'
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
+import { TgReflector } from '/app/tg-reflector.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import {TgBackButtonBehavior} from '/resources/views/tg-back-button-behavior.js';
 import { tearDownEvent, allDefined, isMobileApp, isIPhoneOs } from '/resources/reflection/tg-polymer-utils.js';
@@ -166,6 +167,7 @@ const template = html`
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    <slot id="menuItemAction" name="menuItemAction"></slot>
     <app-drawer-layout id="drawerPanel" fullbleed force-narrow>
 
         <app-drawer disable-swipe="[[!mobile]]" slot="drawer" on-app-drawer-transitioned="_appDrawerTransitioned">
@@ -178,6 +180,23 @@ const template = html`
                         <paper-item tooltip-text$="[[firstLevelItem.desc]]" slot="trigger">
                             <iron-icon class="menu-icon" icon="[[firstLevelItem.icon]]" has-no-any-icon$="[[!_hasSomeIcon]]" has-no-icon$="[[_calcHasNoIcon(firstLevelItem.icon)]]"></iron-icon>
                             <span class="flex menu-item-title">[[firstLevelItem.key]]</span>
+                            <tg-ui-action
+                                hidden$="[[!_menuItemActionVisible(canEdit, firstLevelItem.visible, firstLevelItem.menu)]]"
+                                ui-role="ICON"
+                                short-desc="Hide for users"
+                                long-desc="Opens master to hide menu item for specific users" 
+                                icon="icons:list"
+                                component-uri="[[_menuItemAction.componentUri]]"
+                                element-name="[[_menuItemAction.elementName]]"
+                                show-dialog="[[_menuItemAction.showDialog]]"
+                                toaster="[[_menuItemAction.toaster]]"
+                                create-context-holder="[[_menuItemAction.createContextHolder]]"
+                                attrs="[[_menuItemAction.attrs]]"
+                                require-selection-criteria="[[_menuItemAction.requireSelectionCriteria]]"
+                                require-selected-entities="[[_menuItemAction.requireSelectedEntities]]"
+                                require-master-entity="[[_menuItemAction.requireMasterEntity]]"
+                                current-entity="[[_visibilityMenuItem(firstLevelItem)]]">
+                            </tg-ui-action>
                             <paper-checkbox class$="[[_calcGroupStyle(firstLevelItem)]]" group-item$="[[groupIndex]]" hidden$="[[!canEdit]]" checked="[[firstLevelItem.visible]]" on-change="_changeGroupVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(firstLevelItem.menu, firstLevelItem.visible)]]"></paper-checkbox>
                             <iron-icon class="submenu-trigger-icon" icon="[[_calcExpandCollapseIcon(firstLevelItem.opened)]]" opened$="[[firstLevelItem.opened]]" has-no-any-icon$="[[!_hasSomeMenu]]" without-menu$="[[!_isMenuPresent(firstLevelItem.menu)]]"></iron-icon>
                         </paper-item>
@@ -187,6 +206,23 @@ const template = html`
                                     <paper-item class="submenu-item" name$="[[_calcItemPath(firstLevelItem, item, groupIndex)]]" tooltip-text$="[[item.desc]]">
                                         <iron-icon class="menu-icon" icon="[[item.icon]]" has-no-icon$="[[_calcHasNoIcon(item.icon)]]"></iron-icon>
                                         <span class="flex menu-item-title">[[item.key]]</span>
+                                        <tg-ui-action
+                                            hidden$="[[!_menuItemActionVisible(canEdit, item.visible, item.menu)]]"
+                                            ui-role="ICON"
+                                            short-desc="Hide for users"
+                                            long-desc="Opens master to hide menu item for specific users" 
+                                            icon="icons:list"
+                                            component-uri="[[_menuItemAction.componentUri]]"
+                                            element-name="[[_menuItemAction.elementName]]"
+                                            show-dialog="[[_menuItemAction.showDialog]]"
+                                            toaster="[[_menuItemAction.toaster]]"
+                                            create-context-holder="[[_menuItemAction.createContextHolder]]"
+                                            attrs="[[_menuItemAction.attrs]]"
+                                            require-selection-criteria="[[_menuItemAction.requireSelectionCriteria]]"
+                                            require-selected-entities="[[_menuItemAction.requireSelectedEntities]]"
+                                            require-master-entity="[[_menuItemAction.requireMasterEntity]]"
+                                            current-entity="[[_visibilityMenuItem(firstLevelItem, item)]]">
+                                        </tg-ui-action>
                                         <paper-checkbox hidden$="[[!canEdit]]" checked="[[item.visible]]" on-change="_changeVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(item.menu, item.visible)]]"></paper-checkbox>
                                         <iron-icon class="submenu-trigger-icon" without-menu></iron-icon>
                                     </paper-item>
@@ -288,7 +324,9 @@ Polymer({
         saveAsDesc: {
             type: String,
             value: ''
-        }
+        },
+        //Action to open user to menu item visibility associator 
+        _menuItemAction: Object,
     },
 
     behaviors: [
@@ -321,6 +359,7 @@ Polymer({
         this.$.menu._focusPrevious = this._focusPreviousMenuItem;
         this._oldMenuEscKey = this.$.menu._onEscKey;
         this.$.menu._onEscKey = this._menuEscKey;
+        this._menuItemAction = this.$.menuItemAction.assignedNodes({ flatten: true })[0];
 
         this.animationConfig = {
             'entry': [
@@ -461,6 +500,17 @@ Polymer({
             clazz += " undone";
         }
         return clazz;
+    },
+
+    _menuItemActionVisible: function (canEdit, visible, menu) {
+        return canEdit && visible && (!menu || menu.length == 0);
+    },
+
+    _visibilityMenuItem: function (firstLevelItem, item) {
+        const menuItemUri = this._createUriFromModel(this.menuItem.key, firstLevelItem.key, item && item.key);
+        const entity = this._reflector.newEntity('ua.com.fielden.platform.menu.WebMenuItemInvisibility');
+        entity['menuItemUri'] = menuItemUri;
+        return () => entity;
     },
 
     _changeGroupVisibility: function (e) {

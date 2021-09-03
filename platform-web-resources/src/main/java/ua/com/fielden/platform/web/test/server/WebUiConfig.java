@@ -1199,16 +1199,16 @@ public class WebUiConfig extends AbstractWebUiConfig {
      * @author TG Team
      */
     public static class TgEntityWithPropertyDescriptorExtPropertyDescriptorMatcher extends AbstractSearchPropertyDescriptorByKeyWithCentreContext<TgPersistentEntityWithProperties> {
-        
+
         public TgEntityWithPropertyDescriptorExtPropertyDescriptorMatcher() {
             super(TgPersistentEntityWithProperties.class);
         }
-        
+
         @Override
         protected boolean shouldSkip(final Field field) {
             return field.getName().startsWith("cos"); // filter out 'cos...' properties
         }
-        
+
     }
 
     public static class KeyPropValueMatcherForCentre extends AbstractSearchEntityByKeyWithCentreContext<TgPersistentEntityWithProperties> {

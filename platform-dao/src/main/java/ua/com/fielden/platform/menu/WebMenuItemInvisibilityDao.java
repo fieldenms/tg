@@ -1,7 +1,12 @@
 package ua.com.fielden.platform.menu;
 
+import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKeyFor;
+
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+
+import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -9,8 +14,6 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-
-import com.google.inject.Inject;
 /**
  * DAO implementation for companion object {@link IWebMenuItemInvisibility}.
  *
@@ -48,6 +51,11 @@ public class WebMenuItemInvisibilityDao extends CommonEntityDao<WebMenuItemInvis
     @SessionRequired
     public int batchDelete(final EntityResultQueryModel<WebMenuItemInvisibility> model) {
         return defaultBatchDelete(model);
+    }
+
+    @Override
+    public void removeAssociation(final Set<WebMenuItemInvisibility> associations) {
+        createQueryByKeyFor(getDbVersion(), getEntityType(), getKeyType(), associations).map(this::batchDelete);
     }
 
 }
