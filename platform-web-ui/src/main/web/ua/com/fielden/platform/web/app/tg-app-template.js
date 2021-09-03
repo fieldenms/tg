@@ -219,7 +219,7 @@ Polymer({
         }
     },
 
-    _openMasterAction: function () {
+    _tgOpenMasterAction: function () {
         if (this.$.tgOpenMasterAction.isActionInProgress || this.disableNextHistoryChange) {
             return;
         }
@@ -402,7 +402,7 @@ Polymer({
             if (currentlySelected === moduleToSelect) {
                 if (selected === 'master') {
                     this._selectedSubmodule = this._subroute.path;
-                    this._openMasterAction();
+                    this._tgOpenMasterAction();
                 } else if (this._selectedSubmodule === this._subroute.path) {
                     if (currentlySelectedElement && currentlySelectedElement.selectSubroute) {
                         currentlySelectedElement.selectSubroute(this._subroute.path.substring(1).split("?")[0]);
@@ -443,12 +443,12 @@ Polymer({
      * @param {Object} source 
      */
     _animationFinished: function (e, detail, source) {
-        var target = e.target || e.srcElement;
+        const target = e.target || e.srcElement;
         if (target === this.$.pages){
             this._selectedModule = this._routeData.moduleName;
             if (this._routeData.moduleName === 'master') {
                 this._selectedSubmodule = this._subroute.path;
-                this._openMasterAction();
+                this._tgOpenMasterAction();
             } else if (this._selectedSubmodule === this._subroute.path) {
                 if (detail.toPage.selectSubroute) {
                     detail.toPage.selectSubroute(this._subroute.path.substring(1).split("?")[0]);

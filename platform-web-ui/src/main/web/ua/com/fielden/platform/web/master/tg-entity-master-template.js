@@ -17,7 +17,7 @@ const template = html`<!-- TODO layout vertical -->
         toaster='[[toaster]]'
         create-context-holder='[[_createContextHolder]]'
         dynamic-action
-        attrs='[[_openMasterActionAttrs]]'
+        attrs='[[_tgOpenMasterActionAttrs]]'
         require-selection-criteria='false'
         require-selected-entities='ONE'
         require-master-entity='true'

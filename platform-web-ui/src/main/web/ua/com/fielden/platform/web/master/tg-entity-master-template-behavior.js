@@ -23,7 +23,7 @@ const TgEntityMasterTemplateBehaviorImpl = {
         /**
          * Attributes for the action that allows to open entity master for specified entity-typed property.
          */
-        _openMasterActionAttrs: Object
+        _tgOpenMasterActionAttrs: Object
     },
 
     ready: function () {
@@ -38,7 +38,7 @@ const TgEntityMasterTemplateBehaviorImpl = {
         }
 
         // initialise tgOpenMasterAction properties
-        self._openMasterActionAttrs = {
+        self._tgOpenMasterActionAttrs = {
             currentState: 'EDIT',
             centreUuid: self.uuid
         };
