@@ -160,13 +160,17 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
         this.chosenProperty = chosenProperty;
         return this;
     }
-
+    
     public CentreContext<T, M> setCustomObject(final Map<String, Object> customObject) {
         this.customObject.clear();
         this.customObject.putAll(customObject);
         return this;
     }
 
+    /**
+     * Bag of custom properties in the context.
+     * Usually contains some technical properties for context restoration and may contain custom properties provided by client-side application.
+     */
     public Map<String, Object> getCustomObject() {
         return unmodifiableMap(customObject);
     }
