@@ -8,6 +8,8 @@ import static ua.com.fielden.platform.security.tokens.TokenUtils.authoriseOpenin
 
 import java.util.function.Supplier;
 
+import org.apache.log4j.Logger;
+
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -20,14 +22,16 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 public class EntityManipulationActionProducer<T extends AbstractEntityManipulationAction> extends DefaultEntityProducerWithContext<T> {
-    @Inject
-    private IAuthorisationModel authorisation;
-    @Inject
-    private ISecurityTokenProvider securityTokenProvider;
+    private final Logger logger = Logger.getLogger(this.getClass());
+
+    private final IAuthorisationModel authorisation;
+    private final ISecurityTokenProvider securityTokenProvider;
 
     @Inject
-    public EntityManipulationActionProducer(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder companionFinder) {
+    public EntityManipulationActionProducer(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder companionFinder, final IAuthorisationModel authorisation, final ISecurityTokenProvider securityTokenProvider) {
         super(factory, entityType, companionFinder);
+        this.authorisation = authorisation;
+        this.securityTokenProvider = securityTokenProvider;
     }
 
     @SuppressWarnings("unchecked")
@@ -40,9 +44,10 @@ public class EntityManipulationActionProducer<T extends AbstractEntityManipulati
                 }
                 final String rootEntityTypeName = (String) getContext().getCustomObject().get("@@rootEntityType"); // then try auxiliary root entity type, if present
                 try {
-                    return !isEmpty(rootEntityTypeName) ? (Class<AbstractEntity<?>>) forName(rootEntityTypeName) : null; // (or otherwise return 'null')
+                    return !isEmpty(rootEntityTypeName) ? (Class<AbstractEntity<?>>) forName(rootEntityTypeName) : null; // otherwise return 'null'
                 } catch (final ClassNotFoundException ex) {
-                    return null; // (in case of unrecognisable type return 'null' too)
+                    logger.error(format("Could not find class [%s].", rootEntityTypeName), ex);
+                    return null; // in case of unrecognised type return 'null'
                 }
             });
             ofNullable(
