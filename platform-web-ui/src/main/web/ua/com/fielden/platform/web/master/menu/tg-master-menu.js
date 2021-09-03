@@ -141,7 +141,7 @@ Polymer({
         },
 
         /**
-         * A menu route that should be activated when the master gets shown. This can be changed (comparing to '_originalDefaultRoute') after compound opener retrieval (producer domain-specific logic) or on 'modifyFunctionalEntity' callback (see tg-app-template._openMasterAction).
+         * A menu route that should be activated when the master gets shown. This can be changed (comparing to '_originalDefaultRoute') after compound opener retrieval (producer domain-specific logic) or on 'modifyFunctionalEntity' callback (see tg-app-template._tgOpenMasterAction).
          */
         defaultRoute: {
             type: String

@@ -945,6 +945,14 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
     EntityType.prototype.entityMaster = function () {
         return this._entityMaster;
     }
+    
+    /**
+     * Returns associated entity master for new entity informational object for this entity type.
+     * Returns 'null' if there is no entity master for this type.
+     */
+    EntityType.prototype.newEntityMaster = function () {
+        return this._newEntityMaster;
+    }
 
     return EntityType;
 };

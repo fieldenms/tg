@@ -62,6 +62,7 @@ const TgEgiMasterBehaviorImpl = {
                     data: {
                         shouldRefreshParentCentreAfterSave: true,
                         entity: potentiallySavedOrNewEntity,
+                        entityPath: [ potentiallySavedOrNewEntity ], // the starting point of the path of entities from masters that are on a chain of refresh cycle
                         // send selectedEntitiesInContext further to be able to update only them on EGI
                         selectedEntitiesInContext: [potentiallySavedOrNewEntity]
                     }
