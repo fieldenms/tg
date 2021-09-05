@@ -160,7 +160,7 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
         this.chosenProperty = chosenProperty;
         return this;
     }
-    
+
     public CentreContext<T, M> setCustomObject(final Map<String, Object> customObject) {
         this.customObject.clear();
         this.customObject.putAll(customObject);
