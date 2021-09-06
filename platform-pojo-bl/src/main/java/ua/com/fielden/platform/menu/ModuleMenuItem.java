@@ -39,6 +39,10 @@ public class ModuleMenuItem extends AbstractEntity<String> implements IMenuManag
     private boolean visible = true;
 
     @IsProperty
+    @Title(value = "Visible For All Users?", desc = "Is menu item visible for all users?")
+    private boolean visibleForAllUsers = true;
+
+    @IsProperty
     @Title(value = "Icon", desc = "Menu item icon")
     private String icon;
 
@@ -50,6 +54,17 @@ public class ModuleMenuItem extends AbstractEntity<String> implements IMenuManag
 
     public String getIcon() {
         return icon;
+    }
+
+    @Observable
+    public ModuleMenuItem setVisibleForAllUsers(final boolean isVisibleForAllUsers) {
+        this.visibleForAllUsers = isVisibleForAllUsers;
+        return this;
+    }
+
+    @Override
+    public boolean isVisibleForAllUsers() {
+        return visibleForAllUsers;
     }
 
     @Observable
@@ -113,5 +128,10 @@ public class ModuleMenuItem extends AbstractEntity<String> implements IMenuManag
     @Override
     public String getTitle() {
         return getKey();
+    }
+
+    @Override
+    public void makeMenuItemInvisibleForSomeUser(final String title) {
+        menu.stream().filter(menuItem -> menuItem.getKey().equals(title)).findFirst().ifPresent(menuItem -> menuItem.setVisibleForAllUsers(false));
     }
 }

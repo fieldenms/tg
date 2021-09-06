@@ -152,12 +152,21 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
     }
 
     @Override
+    public void makeMenuItemInvisibleForSomeUser(final String title) {
+    }
+
+    @Override
     public String getTitle() {
         return getKey();
     }
 
     @Override
     public boolean isVisible() {
+        return true;
+    }
+
+    @Override
+    public boolean isVisibleForAllUsers() {
         return true;
     }
 }

@@ -144,6 +144,11 @@ public class Module extends AbstractEntity<String> implements IMenuManager {
     }
 
     @Override
+    public void makeMenuItemInvisibleForSomeUser(final String title) {
+        menu.stream().filter(menuItem -> menuItem.getKey().equals(title)).findFirst().ifPresent(menuItem -> menuItem.setVisibleForAllUsers(false));
+    }
+
+    @Override
     public Module setKey(final String key) {
         return (Module) super.setKey(key);
     }
@@ -160,6 +165,11 @@ public class Module extends AbstractEntity<String> implements IMenuManager {
 
     @Override
     public boolean isVisible() {
+        return true;
+    }
+
+    @Override
+    public boolean isVisibleForAllUsers() {
         return true;
     }
 }

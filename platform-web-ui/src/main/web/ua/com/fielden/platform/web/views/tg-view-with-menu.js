@@ -223,7 +223,7 @@ const template = html`
                                             require-master-entity="[[_menuItemAction.requireMasterEntity]]"
                                             current-entity="[[_visibilityMenuItem(firstLevelItem, item)]]">
                                         </tg-ui-action>
-                                        <paper-checkbox hidden$="[[!canEdit]]" checked="[[item.visible]]" on-change="_changeVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(item.menu, item.visible)]]"></paper-checkbox>
+                                        <paper-checkbox class$="[[_calcItemStyle(item)]]" hidden$="[[!canEdit]]" checked="[[item.visible]]" on-change="_changeVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(item.menu, item.visible)]]"></paper-checkbox>
                                         <iron-icon class="submenu-trigger-icon" without-menu></iron-icon>
                                     </paper-item>
                                 </template>
@@ -492,14 +492,20 @@ Polymer({
 
     _calcGroupStyle: function (firstLevelItem) {
         var clazz = "";
-        if (firstLevelItem.visible && firstLevelItem.menu && !firstLevelItem.menu.every(function (element) {
+        if ((firstLevelItem.visible && firstLevelItem.menu && !firstLevelItem.menu.every(function (element) {
             return element.visible === true
         }) && !firstLevelItem.menu.every(function (element) {
             return element.visible === false
-        })) {
+        })) || !firstLevelItem.visibleForAllUsers) {
             clazz += " undone";
         }
         return clazz;
+    },
+
+    _calcItemStyle: function (item) {
+        if (!item.visibleForAllUsers) {
+            return "undone";
+        }
     },
 
     _menuItemActionVisible: function (canEdit, visible, menu) {

@@ -11,7 +11,11 @@ public interface IMenuManager {
 
     void makeMenuItemInvisible(String title);
 
+    void makeMenuItemInvisibleForSomeUser(String title);
+
     public boolean isVisible();
+
+    public boolean isVisibleForAllUsers();
 
     <U extends IMenuManager> List<U> getMenu();
 
