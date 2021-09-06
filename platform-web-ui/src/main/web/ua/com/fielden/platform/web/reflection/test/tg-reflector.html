@@ -514,6 +514,28 @@
                 assert.strictEqual(reflector.getType(typeName10).prop('parentKey.entityKey.key'), reflector.getType(typeName9).prop('key'));
                 done();
             });
+
+            const typeName11 = 'ua.com.fielden.platform.sample.domain.TgUnionHolder';
+            
+            test('EntityType.prop: union property is defined', function (done) {
+                assert.exists(reflector.getType(typeName11).prop('union'));
+                done();
+            });
+            
+            test('EntityType.prop: union\'s common property is defined', function (done) {
+                assert.exists(reflector.getType(typeName11).prop('union.common'));
+                done();
+            });
+            
+            test('EntityType.prop: union\'s common property defines meta-information as it is in first declared union type', function (done) {
+                assert.strictEqual(reflector.getType(typeName11).prop('union.common').title(), 'Common Property (from TgUnionType1)');
+                done();
+            });
+            
+            test('EntityType.prop: union\'s common subproperty is defined', function (done) {
+                assert.exists(reflector.getType(typeName11).prop('union.common.desc'));
+                done();
+            });
             
             test('tg_determinePropertyType: boolean prop type is defined', function (done) {
                 assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName8), 'booleanKey'), 'boolean');
@@ -598,6 +620,24 @@
             
             test('tg_determinePropertyType: three-level dot-notated prop type is defined', function (done) {
                 assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName10), 'parentKey.entityKey.key'), 'String');
+                done();
+            });
+
+            const typeName12 = 'ua.com.fielden.platform.sample.domain.TgUnion';
+            const typeName13 = 'ua.com.fielden.platform.sample.domain.TgUnionCommonType';
+            
+            test('tg_determinePropertyType: union property type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName11), 'union'), reflector.getType(typeName12));
+                done();
+            });
+            
+            test('tg_determinePropertyType: union\'s common property type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName11), 'union.common'), reflector.getType(typeName13));
+                done();
+            });
+            
+            test('tg_determinePropertyType: union\'s common subproperty is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType(typeName11), 'union.common.desc'), 'String');
                 done();
             });
             
@@ -1748,8 +1788,19 @@
             });
             
             test('isUnionEntity method works', function (done) {
-                assert.strictEqual(reflector.getType('ua.com.fielden.platform.sample.domain.UnionEntity').isUnionEntity(), true);
+                assert.strictEqual(reflector.getType('ua.com.fielden.platform.sample.domain.TgUnion').isUnionEntity(), true);
                 assert.strictEqual(reflector.getType('ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext').isUnionEntity(), false);
+                done();
+            });
+            
+            test('unionCommonProps method works', function (done) {
+                assert.deepEqual(reflector.getType('ua.com.fielden.platform.sample.domain.TgUnion').unionCommonProps(), [
+                    'key', // key is always at the beginning of common props list (if present)
+                    'common',
+                    'active', 'refCount',
+                    'createdBy', 'createdDate', 'createdTransactionGuid', 'lastUpdatedBy', 'lastUpdatedDate', 'lastUpdatedTransactionGuid',
+                    'desc'
+                ]);
                 done();
             });
             
