@@ -8,6 +8,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LINK_PROPERTY;
 import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pd;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.Reflector.MAXIMUM_CACHE_SIZE;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
@@ -822,20 +823,20 @@ public class Finder {
      * @return
      */
     public static List<String> findCommonProperties(final List<Class<? extends AbstractEntity<?>>> entityTypes) {
-        final List<List<Field>> propertiesSet = new ArrayList<List<Field>>();
+        final List<List<Field>> propertiesSet = new ArrayList<>();
         for (int classIndex = 0; classIndex < entityTypes.size(); classIndex++) {
-            final List<Field> fields = new ArrayList<Field>();
+            final List<Field> fields = new ArrayList<>();
             for (final Field propertyField : findRealProperties(entityTypes.get(classIndex))) {
                 fields.add(propertyField);
             }
             propertiesSet.add(fields);
         }
-        final List<String> commonProperties = new ArrayList<String>();
+        final List<String> commonProperties = new ArrayList<>();
         if (propertiesSet.size() > 0) {
             for (final Field property : propertiesSet.get(0)) {
                 boolean common = true;
                 for (int setIndex = 1; setIndex < propertiesSet.size(); setIndex++) {
-                    if (!isPropertyPresent(property, propertiesSet.get(setIndex))) {
+                    if (!isPropertyPresent(property, entityTypes.get(0), propertiesSet.get(setIndex), entityTypes.get(setIndex))) {
                         common = false;
                         break;
                     }
@@ -856,18 +857,15 @@ public class Finder {
      * @param properties
      * @return
      */
-    private static boolean isPropertyPresent(final Field field, final List<Field> properties) {
+    private static boolean isPropertyPresent(final Field field, final Class<? extends AbstractEntity<?>> fieldOwner, final List<Field> properties, final Class<? extends AbstractEntity<?>> propertyOwner) {
         for (final Field property : properties) {
             // Need a special handle for property key
             if (field.getName().equals(property.getName())) {
                 Class<?> fieldType = field.getType();
                 Class<?> propertyType = property.getType();
                 if (KEY.equals(field.getName())) {
-                    final Class<AbstractEntity> fieldOwner = (Class<AbstractEntity>) field.getDeclaringClass();
-                    final Class<AbstractEntity> propertyOwner = (Class<AbstractEntity>) property.getDeclaringClass();
-
-                    fieldType = AnnotationReflector.getKeyType(fieldOwner);
-                    propertyType = AnnotationReflector.getKeyType(propertyOwner);
+                    fieldType = getKeyType(fieldOwner);
+                    propertyType = getKeyType(propertyOwner);
                 }
                 if (fieldType != null && propertyType != null && fieldType.equals(propertyType)) {
                     return true;
@@ -902,7 +900,7 @@ public class Finder {
      * @return
      */
     public static List<String> getFieldNames(final List<Field> fields) {
-        final List<String> result = new ArrayList<String>();
+        final List<String> result = new ArrayList<>();
         for (int index = 0; index < fields.size(); index++) {
             result.add(fields.get(index).getName());
         }
@@ -961,7 +959,7 @@ public class Finder {
 
     /** This is an actual implementation of the above method. */
     private static List<String> findPathsForPropertiesOfType(final String name, final List<Class<?>> entityTypes, final Class<? extends AbstractEntity> propertyType, final IPropertyPathFilteringCondition filter) {
-        final List<String> result = new ArrayList<String>();
+        final List<String> result = new ArrayList<>();
 
         if (filter.ignore(entityTypes.get(entityTypes.size() - 1))) {
             return result;
@@ -1049,7 +1047,7 @@ public class Finder {
             }
         }
 
-        return new Pair<Integer, String>(count, linkProperty);
+        return new Pair<>(count, linkProperty);
     }
 
     /**
