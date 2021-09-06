@@ -7,6 +7,7 @@ import static java.util.stream.Stream.of;
 import java.util.ArrayList;
 import java.util.List;
 
+import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
@@ -21,6 +22,7 @@ import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchyLevel;
  *
  */
 @KeyType(String.class)
+@DescTitle("# of references")
 public class ReferenceHierarchyEntry extends AbstractTreeEntry<String> {
 
     @IsProperty

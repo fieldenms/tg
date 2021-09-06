@@ -116,7 +116,7 @@ public class WebResourceLoader implements IWebResourceLoader {
 
     /**
      * Generates 'tg-reflector' resource with type table containing master configurations.
-     * 
+     *
      * @param webUiConfig -- web UI configuration containing information about all entity masters
      * @param serialiser
      * @param tgJackson
@@ -130,7 +130,7 @@ public class WebResourceLoader implements IWebResourceLoader {
     /**
      * Extends types in {@code typeTable} with information about their masters.
      * The type can have no master -- in this case {@link EntityType#get_entityMaster()} will be empty ({@code null}).
-     * 
+     *
      * @param webUiConfig -- web UI configuration containing information about all entity masters
      * @param typeTable
      * @return
@@ -139,6 +139,7 @@ public class WebResourceLoader implements IWebResourceLoader {
         final MasterInfoProvider masterInfoProvider = new MasterInfoProvider(webUiConfig);
         typeTable.forEach((typeName, entityType) -> {
             entityType.set_entityMaster(masterInfoProvider.getMasterInfo(typeName));
+            entityType.set_newEntityMaster(masterInfoProvider.getNewEntityMasterInfo(typeName));
         });
         return typeTable;
     }

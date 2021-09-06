@@ -5,6 +5,8 @@ import java.util.function.Supplier;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity_master.exceptions.SimpleMasterException;
+import ua.com.fielden.platform.security.IAuthorisationModel;
+import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
@@ -19,8 +21,8 @@ public class AbstractEntityEditActionProducer<T extends EntityEditAction> extend
     static final String NOTHING_TO_OPEN_MSG = "There is nothing to open.";
     private static final Supplier<? extends RuntimeException> NOTHING_TO_OPEN_EXCEPTION_SUPPLIER = () -> new SimpleMasterException(NOTHING_TO_OPEN_MSG);
 
-    public AbstractEntityEditActionProducer(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder companionFinder) {
-        super(factory, entityType, companionFinder);
+    public AbstractEntityEditActionProducer(final EntityFactory factory, final Class<T> entityType, final ICompanionObjectFinder companionFinder, final IAuthorisationModel authorisation, final ISecurityTokenProvider securityTokenProvider) {
+        super(factory, entityType, companionFinder, authorisation, securityTokenProvider);
     }
 
     @Override

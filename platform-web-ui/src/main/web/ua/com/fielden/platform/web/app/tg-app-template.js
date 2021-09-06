@@ -88,7 +88,7 @@ const template = html`
             require-master-entity='false'>
         </tg-ui-action>
         <tg-ui-action
-            id="openMasterAction"
+            id="tgOpenMasterAction"
             ui-role='ICON'
             show-dialog='[[_showDialog]]'
             toaster='[[toaster]]'
@@ -234,8 +234,8 @@ Polymer({
         }
     },
 
-    _openMasterAction: function () {
-        if (this.$.openMasterAction.isActionInProgress || this.disableNextHistoryChange) {
+    _tgOpenMasterAction: function () {
+        if (this.$.tgOpenMasterAction.isActionInProgress || this.disableNextHistoryChange) {
             return;
         }
         const entityInfo = this._selectedSubmodule.substring(1).split('/');
@@ -253,12 +253,12 @@ Polymer({
             const entity = this._reflector().newEntity(mainTypeName);
             entity['id'] = parseInt(idStr);
             if (menuItemTypeName) {
-                this.$.openMasterAction.modifyFunctionalEntity = (bindingEntity) => {
+                this.$.tgOpenMasterAction.modifyFunctionalEntity = (bindingEntity) => {
                     bindingEntity.setAndRegisterPropertyTouch('menuToOpen', menuItemTypeName);
-                    delete this.$.openMasterAction.modifyFunctionalEntity;
+                    delete this.$.tgOpenMasterAction.modifyFunctionalEntity;
                 };
             }
-            this.$.openMasterAction._runDynamicAction(() => entity, null);
+            this.$.tgOpenMasterAction._runDynamicAction(() => entity, null);
         }
     },
     
@@ -417,7 +417,7 @@ Polymer({
             if (currentlySelected === moduleToSelect) {
                 if (selected === 'master') {
                     this._selectedSubmodule = this._subroute.path;
-                    this. _openMasterAction();
+                    this._tgOpenMasterAction();
                 } else if (this._selectedSubmodule === this._subroute.path) {
                     if (currentlySelectedElement && currentlySelectedElement.selectSubroute) {
                         currentlySelectedElement.selectSubroute(this._subroute.path.substring(1).split("?")[0]);
@@ -458,12 +458,12 @@ Polymer({
      * @param {Object} source 
      */
     _animationFinished: function (e, detail, source) {
-        var target = e.target || e.srcElement;
+        const target = e.target || e.srcElement;
         if (target === this.$.pages){
             this._selectedModule = this._routeData.moduleName;
             if (this._routeData.moduleName === 'master') {
                 this._selectedSubmodule = this._subroute.path;
-                this. _openMasterAction();
+                this._tgOpenMasterAction();
             } else if (this._selectedSubmodule === this._subroute.path) {
                 if (detail.toPage.selectSubroute) {
                     detail.toPage.selectSubroute(this._subroute.path.substring(1).split("?")[0]);
