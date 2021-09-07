@@ -39,8 +39,8 @@ public class ModuleMenuItem extends AbstractEntity<String> implements IMenuManag
     private boolean visible = true;
 
     @IsProperty
-    @Title(value = "Visible For All Users?", desc = "Is menu item visible for all users?")
-    private boolean visibleForAllUsers = true;
+    @Title(value = "Semi Visible?", desc = "Is menu item semi visible?")
+    private boolean semiVisible = false;
 
     @IsProperty
     @Title(value = "Icon", desc = "Menu item icon")
@@ -57,14 +57,14 @@ public class ModuleMenuItem extends AbstractEntity<String> implements IMenuManag
     }
 
     @Observable
-    public ModuleMenuItem setVisibleForAllUsers(final boolean isVisibleForAllUsers) {
-        this.visibleForAllUsers = isVisibleForAllUsers;
+    public ModuleMenuItem setSemiVisible(final boolean semiVisible) {
+        this.semiVisible = semiVisible;
         return this;
     }
 
     @Override
-    public boolean isVisibleForAllUsers() {
-        return visibleForAllUsers;
+    public boolean isSemiVisible() {
+        return this.semiVisible;
     }
 
     @Observable
@@ -131,7 +131,7 @@ public class ModuleMenuItem extends AbstractEntity<String> implements IMenuManag
     }
 
     @Override
-    public void makeMenuItemInvisibleForSomeUser(final String title) {
-        menu.stream().filter(menuItem -> menuItem.getKey().equals(title)).findFirst().ifPresent(menuItem -> menuItem.setVisibleForAllUsers(false));
+    public void makeMenuItemSemiVisible(final String title) {
+        menu.stream().filter(menuItem -> menuItem.getKey().equals(title)).findFirst().ifPresent(menuItem -> menuItem.setSemiVisible(true));
     }
 }

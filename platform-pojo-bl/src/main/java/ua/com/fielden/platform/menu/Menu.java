@@ -152,7 +152,7 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
     }
 
     @Override
-    public void makeMenuItemInvisibleForSomeUser(final String title) {
+    public void makeMenuItemSemiVisible(final String title) {
     }
 
     @Override
@@ -166,7 +166,8 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
     }
 
     @Override
-    public boolean isVisibleForAllUsers() {
-        return true;
+    public boolean isSemiVisible() {
+        return false;
     }
+
 }

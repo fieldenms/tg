@@ -2,6 +2,7 @@ package ua.com.fielden.platform.menu;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toSet;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumentedWithKeyAndDesc;
@@ -11,7 +12,7 @@ import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -73,11 +74,11 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
         }
     }
 
-    private boolean isMenuVisibleForAllUsers(final IMenuManager menuItem) {
+    private boolean isMenuSemiVisible(final IMenuManager menuItem) {
         if (userProvider.getUser().isBase()) {
-            return !menuItem.getMenu().stream().anyMatch(item -> !item.isVisibleForAllUsers());
+            return menuItem.getMenu().stream().anyMatch(item -> !item.isVisible() || item.isSemiVisible());
         }
-        return true;
+        return false;
     }
 
     private Menu buildMenuConfiguration() {
@@ -85,12 +86,53 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
         //Get all invisible menu items
         final Map<String, Set<User>> invisibleItems = miInvisible.getAllEntities(createMenuInvisibilityQuery()).stream()
                 .collect(groupingBy(WebMenuItemInvisibility::getMenuItemUri, Collectors.mapping(WebMenuItemInvisibility::getOwner, toSet())));
+        final Set<User> availableUsers = getAvailableUsers();
         //Remove all retrieved menu items from the menu entity.
         for (final String menuItem : invisibleItems.keySet()) {
+            //Split menu items by '/' and decode it with URL decoder
             final List<String> menuParts = decodeParts(menuItem.split("/"));
-            processMenuItem(Arrays.asList(menu), menuParts, invisibleItems.get(menuItem));
+            //Find menu path that is a list of menu managers starting from menu, then module menu and so on, that corresponds to menuParts
+            final List<IMenuManager> menuPath = findMenuPath(menu, menuParts);
+            //If menu item was found (e.a. menu path is not empty) then process each menu item with his parent until module menu to set their visible and semiVisible properties
+            final Set<User> excludedUsers = invisibleItems.get(menuItem);
+            if (menuPath.size() > 2) {
+                computeVisibility(menuPath.get(menuPath.size() - 2), menuPath.get(menuPath.size() - 1).getTitle(), excludedUsers, availableUsers);
+                for (int itemIndex = menuPath.size() - 2; itemIndex > 1; itemIndex --) {
+                    computeVisibilityForGroup(menuPath.get(itemIndex - 1), menuPath.get(itemIndex));
+                }
+            }
         }
         return menu;
+    }
+
+    private List<IMenuManager> findMenuPath(final IMenuManager menu, final List<String> menuParts) {
+        final List<IMenuManager> menuPath = new  ArrayList<>();
+        menuPath.add(menu);
+        for(final String menuPart : menuParts) {
+            final IMenuManager lastItem = menuPath.get(menuPath.size() - 1);
+            final Optional<IMenuManager> nextItem = lastItem.getMenuItem(menuPart);
+            if (nextItem.isPresent()) {
+                menuPath.add(nextItem.get());
+            } else {
+                return new ArrayList<>();
+            }
+        }
+        return menuPath;
+    }
+
+    private Set<User> getAvailableUsers() {
+        final Set<User> availableUsers = new HashSet<>();
+        final User user = userProvider.getUser();
+        if (user.isBase()) {
+            availableUsers.addAll(co(User.class).getAllEntities(from(
+                    select(User.class).where()
+                    .prop("active").eq().val(true).and()
+                    .prop("base").eq().val(false).and()
+                    .prop("basedOnUser").eq().val(user).model()).with(fetchKeyAndDescOnly(User.class)).model()));
+        } else {
+            availableUsers.add(user);
+        }
+        return availableUsers;
     }
 
     private QueryExecutionModel<WebMenuItemInvisibility, EntityResultQueryModel<WebMenuItemInvisibility>> createMenuInvisibilityQuery() {
@@ -103,69 +145,34 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
     private IWhere0<WebMenuItemInvisibility> buildQueryPartForUserType(final IWhere0<WebMenuItemInvisibility> queryPart) {
         final User user = userProvider.getUser();
         if (user.isBase()) {
-            return queryPart
-                    .begin()
-                        .prop("owner").eq().val(user)
-                        .or().prop("owner.basedOnUser").eq().val(user)
-                    .end().and();
+            return queryPart.prop("owner.basedOnUser").eq().val(user).and();
         } else {
-            return queryPart
-                    .begin()
-                        .prop("owner").eq().val(user)
-                        .or().prop("owner").eq().val(user.getBasedOnUser())
-                    .end().and();
+            return queryPart.prop("owner").eq().val(user).and();
         }
     }
 
-    private void processMenuItem(final List<IMenuManager> menuPath, final List<String> menuParts, final Set<User> excludedUsers) {
-        if (menuParts.size() > 1) {
-            final IMenuManager lastItem = menuPath.get(menuPath.size() - 1);
-            final Optional<IMenuManager> nextItem = lastItem.getMenuItem(menuParts.get(0));
-            nextItem.ifPresent(i -> {
-                final ArrayList<IMenuManager> newMenuPath = new ArrayList<>(menuPath);
-                newMenuPath.add(i);
-                processMenuItem(newMenuPath, menuParts.subList(1, menuParts.size()), excludedUsers);
-            });
-        }
-        if (menuPath.size() > 2 && menuParts.size() > 0) {
-            final IMenuManager lastMenuItem = menuPath.get(menuPath.size() - 1);
-            if (menuParts.size() == 1) {
-                computeVisibility(lastMenuItem, menuParts.get(0), excludedUsers);
+    private void computeVisibilityForGroup(final IMenuManager parentItem, final IMenuManager menuItem) {
+        final User currentUser = userProvider.getUser();
+        if (!isMenuVisible(menuItem)) {
+            if (currentUser.isBase()) {
+                parentItem.makeMenuItemInvisible(menuItem.getTitle());
+            } else {
+                parentItem.removeMenuItem(menuItem.getTitle());
             }
-            final IMenuManager beforeLastMenuItem = menuPath.get(menuPath.size() - 2);
-            if (!isMenuVisible(lastMenuItem)) {
-                computeVisibilityForGroup(beforeLastMenuItem, lastMenuItem.getTitle());
-            }
-            if (!isMenuVisibleForAllUsers(lastMenuItem)) {
-                computeVisibilityForAllUsersAndGroup(beforeLastMenuItem, lastMenuItem.getTitle());
+        } else if (isMenuSemiVisible(menuItem)) {
+            if (currentUser.isBase()) {
+                parentItem.makeMenuItemSemiVisible(menuItem.getTitle());
             }
         }
     }
 
-    private void computeVisibilityForAllUsersAndGroup(final IMenuManager parentItem, final String menuItemTitle) {
+    private void computeVisibility(final IMenuManager parentItem, final String menuItemTitle, final Set<User> excludedUsers, final Set<User> availableUsers) {
         final User currentUser = userProvider.getUser();
         if (currentUser.isBase()) {
-            parentItem.makeMenuItemInvisibleForSomeUser(menuItemTitle);
-        }
-    }
-
-    private void computeVisibilityForGroup(final IMenuManager parentItem, final String menuItemTitle) {
-        final User currentUser = userProvider.getUser();
-        if (currentUser.isBase()) {
-            parentItem.makeMenuItemInvisible(menuItemTitle);
-        } else {
-            parentItem.removeMenuItem(menuItemTitle);
-        }
-    }
-
-    private void computeVisibility(final IMenuManager parentItem, final String menuItemTitle, final Set<User> excludedUsers) {
-        final User currentUser = userProvider.getUser();
-        if (currentUser.isBase()) {
-            if (excludedUsers.contains(currentUser)) {
+            if (excludedUsers.containsAll(availableUsers)) {
                 parentItem.makeMenuItemInvisible(menuItemTitle);
-            }
-            if (excludedUsers.size() > 1 || !excludedUsers.contains(currentUser)) {
-                parentItem.makeMenuItemInvisibleForSomeUser(menuItemTitle);
+            } else {
+                parentItem.makeMenuItemSemiVisible(menuItemTitle);
             }
         } else {
             parentItem.removeMenuItem(menuItemTitle);

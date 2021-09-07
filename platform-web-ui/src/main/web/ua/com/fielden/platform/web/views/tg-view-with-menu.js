@@ -78,8 +78,11 @@ const template = html`
         .main-content {
             @apply --layout-vertical;
         }
+        tg-ui-action {
+            padding-right: 8px;
+        }
         paper-checkbox {
-            padding-right: 16px;
+            padding-right: 8px;
             --paper-checkbox-size: 16px;
             --paper-checkbox-unchecked-color: var(--paper-listbox-color);
             --paper-checkbox-unchecked-ink-color: var(--paper-listbox-color);
@@ -90,6 +93,10 @@ const template = html`
             }
         }
         paper-checkbox.undone {
+            --paper-checkbox-checked-color: var(--checkbox-undone-color);
+            --paper-checkbox-checked-ink-color: var(--checkbox-undone-color);
+        }
+        paper-checkbox[undone] {
             --paper-checkbox-checked-color: var(--checkbox-undone-color);
             --paper-checkbox-checked-ink-color: var(--checkbox-undone-color);
         }
@@ -114,9 +121,9 @@ const template = html`
             padding: 0 16px;
         }
         iron-icon.submenu-trigger-icon {
+            padding-left: 8px;
             padding-right: 16px; 
         }
-        iron-icon[without-menu],
         iron-icon[has-no-icon] {
             visibility: hidden;
         }
@@ -180,11 +187,14 @@ const template = html`
                         <paper-item tooltip-text$="[[firstLevelItem.desc]]" slot="trigger">
                             <iron-icon class="menu-icon" icon="[[firstLevelItem.icon]]" has-no-any-icon$="[[!_hasSomeIcon]]" has-no-icon$="[[_calcHasNoIcon(firstLevelItem.icon)]]"></iron-icon>
                             <span class="flex menu-item-title">[[firstLevelItem.key]]</span>
+                            <paper-checkbox undone$="[[firstLevelItem.semiVisible]]" group-item$="[[groupIndex]]" hidden$="[[!canEdit]]" checked="[[firstLevelItem.visible]]" on-change="_changeGroupVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(firstLevelItem.menu, firstLevelItem.visible)]]"></paper-checkbox>
                             <tg-ui-action
-                                hidden$="[[!_menuItemActionVisible(canEdit, firstLevelItem.visible, firstLevelItem.menu)]]"
+                                hidden$="[[!_menuItemActionVisible(canEdit, firstLevelItem.menu)]]"
                                 ui-role="ICON"
-                                short-desc="Hide for users"
-                                long-desc="Opens master to hide menu item for specific users" 
+                                group-item-index="[[groupIndex]]"
+                                menu-item-index="[[groupIndex]]"
+                                short-desc="[[_calcShortDescForMenuItem(firstLevelItem)]]"
+                                long-desc="[[_calcLongDescForMenuItem(firstLevelItem)]]" 
                                 icon="icons:list"
                                 component-uri="[[_menuItemAction.componentUri]]"
                                 element-name="[[_menuItemAction.elementName]]"
@@ -195,10 +205,10 @@ const template = html`
                                 require-selection-criteria="[[_menuItemAction.requireSelectionCriteria]]"
                                 require-selected-entities="[[_menuItemAction.requireSelectedEntities]]"
                                 require-master-entity="[[_menuItemAction.requireMasterEntity]]"
-                                current-entity="[[_visibilityMenuItem(firstLevelItem)]]">
+                                current-entity="[[_visibilityMenuItem(firstLevelItem)]]"
+                                post-action-success="[[_menuVisibilitySaved]]">
                             </tg-ui-action>
-                            <paper-checkbox class$="[[_calcGroupStyle(firstLevelItem)]]" group-item$="[[groupIndex]]" hidden$="[[!canEdit]]" checked="[[firstLevelItem.visible]]" on-change="_changeGroupVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(firstLevelItem.menu, firstLevelItem.visible)]]"></paper-checkbox>
-                            <iron-icon class="submenu-trigger-icon" icon="[[_calcExpandCollapseIcon(firstLevelItem.opened)]]" opened$="[[firstLevelItem.opened]]" has-no-any-icon$="[[!_hasSomeMenu]]" without-menu$="[[!_isMenuPresent(firstLevelItem.menu)]]"></iron-icon>
+                            <iron-icon class="submenu-trigger-icon" icon="[[_calcExpandCollapseIcon(firstLevelItem.opened)]]" opened$="[[firstLevelItem.opened]]" has-no-any-icon$="[[!_hasSomeMenu]]" hidden$="[[!_isMenuPresent(firstLevelItem.menu)]]"></iron-icon>
                         </paper-item>
                         <template is="dom-if" if="[[_isMenuPresent(firstLevelItem.menu)]]">
                             <paper-listbox slot="content" name$="[[_calcItemPath(firstLevelItem)]]" attr-for-selected="name">
@@ -206,11 +216,14 @@ const template = html`
                                     <paper-item class="submenu-item" name$="[[_calcItemPath(firstLevelItem, item, groupIndex)]]" tooltip-text$="[[item.desc]]">
                                         <iron-icon class="menu-icon" icon="[[item.icon]]" has-no-icon$="[[_calcHasNoIcon(item.icon)]]"></iron-icon>
                                         <span class="flex menu-item-title">[[item.key]]</span>
+                                        <paper-checkbox hidden$="[[!canEdit]]" undone$="[[item.semiVisible]]" checked="[[item.visible]]" on-change="_changeVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(item.menu, item.visible)]]"></paper-checkbox>
                                         <tg-ui-action
-                                            hidden$="[[!_menuItemActionVisible(canEdit, item.visible, item.menu)]]"
+                                            hidden$="[[!_menuItemActionVisible(canEdit, item.menu)]]"
                                             ui-role="ICON"
-                                            short-desc="Hide for users"
-                                            long-desc="Opens master to hide menu item for specific users" 
+                                            group-item-index="[[groupIndex]]"
+                                            menu-item-index="[[index]]"
+                                            short-desc="[[_calcShortDescForMenuItem(item)]]"
+                                            long-desc="[[_calcLongDescForMenuItem(item)]]" 
                                             icon="icons:list"
                                             component-uri="[[_menuItemAction.componentUri]]"
                                             element-name="[[_menuItemAction.elementName]]"
@@ -221,10 +234,9 @@ const template = html`
                                             require-selection-criteria="[[_menuItemAction.requireSelectionCriteria]]"
                                             require-selected-entities="[[_menuItemAction.requireSelectedEntities]]"
                                             require-master-entity="[[_menuItemAction.requireMasterEntity]]"
-                                            current-entity="[[_visibilityMenuItem(firstLevelItem, item)]]">
+                                            current-entity="[[_visibilityMenuItem(firstLevelItem, item)]]"
+                                            post-action-success="[[_menuVisibilitySaved]]">
                                         </tg-ui-action>
-                                        <paper-checkbox class$="[[_calcItemStyle(item)]]" hidden$="[[!canEdit]]" checked="[[item.visible]]" on-change="_changeVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(item.menu, item.visible)]]"></paper-checkbox>
-                                        <iron-icon class="submenu-trigger-icon" without-menu></iron-icon>
                                     </paper-item>
                                 </template>
                             </paper-listbox>
@@ -285,6 +297,31 @@ function findNestedMenuItem (itemPath, menuItem) {
         unknownSubpath: path.slice(currentItem ? pathIndex : pathIndex - 1).join('/')
     };
 };
+function _changeVisibilityForMenuItem(entity, groupIndex, itemIndex) {
+    let menuItem = this.menuItem.menu[groupIndex];
+    let basePropName = 'menuItem.menu.' + groupIndex;
+    if (this._isMenuPresent(menuItem.menu)) {
+        menuItem = menuItem.menu[itemIndex];
+        basePropName += '.menu.' + itemIndex;
+    }
+    if (entity.chosenIds.length === entity.users.length || entity.chosenIds.length === 0) {
+        this.set(basePropName + '.visible', entity.chosenIds.length === entity.users.length);
+        this.set(basePropName + '.semiVisible', false);
+    } else {
+        this.set(basePropName + '.visible', true);
+        this.set(basePropName + '.semiVisible', true);
+    }
+};
+function _changeVisibilityForGroupItem(groupIndex) {
+    if (this._isMenuPresent(this.menuItem.menu[groupIndex].menu)) {
+        const groupMenuItemVisible = this.menuItem.menu[groupIndex].menu.some(item => item.visible);
+        const groupMenuItemSemiVisible = groupMenuItemVisible && 
+            (this.menuItem.menu[groupIndex].menu.some(item => !item.visible) || this.menuItem.menu[groupIndex].menu.some(item => item.semiVisible));
+        const basePropName = 'menuItem.menu.' + groupIndex;
+        this.set(basePropName + '.visible', groupMenuItemVisible);
+        this.set(basePropName + '.semiVisible', groupMenuItemSemiVisible);
+    }
+}
 
 Polymer({
     _template: template, 
@@ -354,6 +391,7 @@ Polymer({
         this._watermark = window.TG_APP.watermark;
         this._focusNextMenuItem = this._focusNextMenuItem.bind(this.$.menu);
         this._focusPreviousMenuItem = this._focusPreviousMenuItem.bind(this.$.menu);
+        this._menuVisibilitySaved = this._menuVisibilitySaved.bind(this);
         this._menuEscKey = this._menuEscKey.bind(this);
         this.$.menu._focusNext = this._focusNextMenuItem;
         this.$.menu._focusPrevious = this._focusPreviousMenuItem;
@@ -490,26 +528,8 @@ Polymer({
         return "Toggle to make this " + (this._isMenuPresent(menu) ? "group of menu items " : "menu item ") + (visible ? "invisible" : "visible");
     },
 
-    _calcGroupStyle: function (firstLevelItem) {
-        var clazz = "";
-        if ((firstLevelItem.visible && firstLevelItem.menu && !firstLevelItem.menu.every(function (element) {
-            return element.visible === true
-        }) && !firstLevelItem.menu.every(function (element) {
-            return element.visible === false
-        })) || !firstLevelItem.visibleForAllUsers) {
-            clazz += " undone";
-        }
-        return clazz;
-    },
-
-    _calcItemStyle: function (item) {
-        if (!item.visibleForAllUsers) {
-            return "undone";
-        }
-    },
-
-    _menuItemActionVisible: function (canEdit, visible, menu) {
-        return canEdit && visible && (!menu || menu.length == 0);
+    _menuItemActionVisible: function (canEdit, menu) {
+        return canEdit && !this._isMenuPresent(menu);
     },
 
     _visibilityMenuItem: function (firstLevelItem, item) {
@@ -517,6 +537,21 @@ Polymer({
         const entity = this._reflector.newEntity('ua.com.fielden.platform.menu.WebMenuItemInvisibility');
         entity['menuItemUri'] = menuItemUri;
         return () => entity;
+    },
+
+    _calcShortDescForMenuItem: function (menuItem) {
+        return `Hide ${menuItem.key} menu item`;
+    },
+
+    _calcLongDescForMenuItem: function (menuItem) {
+        return `Opens master to hide ${menuItem.key} menu item for specific users`; 
+    },
+
+    _menuVisibilitySaved: function (entity, action, master) {
+        //First change the visibility and visible for all users property for menu item
+        _changeVisibilityForMenuItem.bind(this)(entity, action.groupItemIndex, action.menuItemIndex);
+        _changeVisibilityForGroupItem.bind(this)(action.groupItemIndex);
+        this.updateStyles();
     },
 
     _changeGroupVisibility: function (e) {
@@ -534,42 +569,29 @@ Polymer({
                 if (menuItem.visible !== modelVisibility) {
                     arrayToBeUsed.push(this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key, menuItem.key));
                     this.set("menuItem.menu." + e.model.groupIndex + ".menu." + menuItemIndex + ".visible", modelVisibility);
+                    this.set("menuItem.menu." + e.model.groupIndex + ".menu." + menuItemIndex + ".semiVisible", false);
                 }
             }.bind(this));
         }
-        var checkbox = this.$.menu.querySelector("paper-checkbox[group-item='" + e.model.groupIndex + "']");
-        checkbox.classList.toggle("undone", false);
+        this.set('menuItem.menu.' + e.model.groupIndex + '.semiVisible', false);
         this.updateStyles();
         this.menuSaveCallback(visisbleItems, invisibleItems);
     },
 
     _changeVisibility: function (e) {
-        var menuItemUri = this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key, e.model.item.key);
-        var modelVisibility = e.target.checked;
-        var visisbleItems = [];
-        var invisibleItems = [];
+        const menuItemUri = this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key, e.model.item.key);
+        const modelVisibility = e.target.checked;
+        const visisbleItems = [];
+        const invisibleItems = [];
         // Changing model in order to find out whether group item should be changed or not.
         this.set("menuItem.menu." + e.model.groupIndex + ".menu." + e.model.index + ".visible", modelVisibility);
-        var shouldChangeGroupVisibility = e.model.firstLevelItem.menu.every(function (element) {
-                return element.visible === modelVisibility
-            }) ||
-            (modelVisibility && e.model.firstLevelItem.visible === false);
+        this.set("menuItem.menu." + e.model.groupIndex + ".menu." + e.model.index + ".semiVisible", false);
+        
         // Find out what action should be performed hiding menu items or to make them visible.
-        var arrayToBeUsed = modelVisibility ? visisbleItems : invisibleItems;
+        const arrayToBeUsed = modelVisibility ? visisbleItems : invisibleItems;
         arrayToBeUsed.push(menuItemUri);
-        if (shouldChangeGroupVisibility) {
-            this.set("menuItem.menu." + e.model.groupIndex + ".visible", modelVisibility);
-        }
-        var checkbox = this.$.menu.querySelector("paper-checkbox[group-item='" + e.model.groupIndex + "']");
-        if (this.menuItem.menu[e.model.groupIndex].visible && !e.model.firstLevelItem.menu.every(function (element) {
-            return element.visible === true
-        }) && !e.model.firstLevelItem.menu.every(function (element) {
-            return element.visible === false
-        })) {
-            checkbox.classList.toggle("undone", true);
-        } else {
-            checkbox.classList.toggle("undone", false);
-        }
+        
+        _changeVisibilityForGroupItem.bind(this)(e.model.groupIndex);
         this.updateStyles();
         this.menuSaveCallback(visisbleItems, invisibleItems);
     },
