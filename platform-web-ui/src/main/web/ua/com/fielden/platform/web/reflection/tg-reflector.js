@@ -414,7 +414,7 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
             } else if (type.isUnionEntity() && type.unionCommonProps().concat(['key', 'desc', 'id']).includes(name)) { // common property (perhaps with KEY / DESC) or non-common KEY, DESC and ID for which the value can still be taken; this is to be in sync with Finder.getAbstractUnionEntityFieldValue
                 // In case of union entity, its [key / desc / id / common_prop] should return the [key / desc / id / common_prop] of corresponding 'active entity'.
                 // This slightly deviates from Java 'AbstractUnionEntity' logic in two aspects:
-                // 1) Here the key is exactly equal to key of active entity, but in Java the key is equal to String representation of the key of active entity.
+                // 1) Here the key is exactly equal to key of active entity, but in Java the key is equal to String representation of the key of active entity -- see AbstractUnionEntity.getKey(); however in AbstractEntity.get() in Java there is no conversion to String (see Finder.getAbstractUnionEntityFieldValue)
                 // 2) In case where [key / desc / id] is accessed from empty union entity -- here empty values (aka nulls) are returned, but in Java -- exception is thrown. 
                 const activeEntity = this._activeEntity();
                 return activeEntity === null ? null : activeEntity.get(name);
