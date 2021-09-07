@@ -106,20 +106,18 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
     @Override
     protected final void setMetaPropertyFactory(final IMetaPropertyFactory metaPropertyFactory) {
         // check for inappropriate union entity properties
-        final List<Field> fields = Finder.findRealProperties(getType());
+        final List<Field> fields = findRealProperties(getType());
         final List<Class<? extends AbstractEntity<?>>> propertyTypes = new ArrayList<>();
         for (final Field field : fields) {
-            if (!COMMON_PROPS.contains(field.getName())) {
-                // union entities should not have properties that are not of entity type
-                if (!AbstractEntity.class.isAssignableFrom(field.getType())) {
-                    throw new IllegalStateException("Union entity should not contain properties of ordinary type."); // kind one error
-                }
-                // union properties should not contain more than one property of a certain entity type
-                if (propertyTypes.contains(field.getType())) {
-                    throw new IllegalStateException("Union entity should contain only properties of unique types."); // kind two error
-                }
-                propertyTypes.add((Class<AbstractEntity<?>>) field.getType());
+            // union entities should not have properties that are not of entity type
+            if (!AbstractEntity.class.isAssignableFrom(field.getType())) {
+                throw new IllegalStateException("Union entity should not contain properties of ordinary type."); // kind one error
             }
+            // union properties should not contain more than one property of a certain entity type
+            if (propertyTypes.contains(field.getType())) {
+                throw new IllegalStateException("Union entity should contain only properties of unique types."); // kind two error
+            }
+            propertyTypes.add((Class<AbstractEntity<?>>) field.getType());
         }
         // run the super logic
         super.setMetaPropertyFactory(metaPropertyFactory);
@@ -149,7 +147,7 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
         final Stream<String> propertyNames = Finder.streamRealProperties(getType()).map(Field::getName);
 
         return propertyNames
-                .filter(propName -> !Reflector.isPropertyProxied(this, propName) && !COMMON_PROPS.contains(propName) && get(propName) != null)
+                .filter(propName -> !Reflector.isPropertyProxied(this, propName) && get(propName) != null)
                 .findFirst() // returns Optional
                 .map(propName -> (AbstractEntity<?>) get(propName)) // map optional propName value to an actual property value
                 .orElse(null); // return the property value or null if there was no matching propName
