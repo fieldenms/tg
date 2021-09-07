@@ -278,7 +278,7 @@ public class Finder {
         final boolean hasCompositeKey = isCompositeEntity(entityType);
         final boolean isUnion = isUnionEntityType(entityType);
         return getFieldsAnnotatedWith(entityType, false, IsProperty.class, annotations)
-               .filter(f -> (hasDesc                      || !DESC.equals(f.getName()))  // if does not have desc (including union type) then exclude DESC
+               .filter(f -> (hasDesc          && !isUnion || !DESC.equals(f.getName()))  // if not hasDesc     or isUnion then exclude DESC
                          && (!hasCompositeKey && !isUnion || !KEY.equals(f.getName()))); // if hasCompositeKey or isUnion then exclude KEY
     }
 
