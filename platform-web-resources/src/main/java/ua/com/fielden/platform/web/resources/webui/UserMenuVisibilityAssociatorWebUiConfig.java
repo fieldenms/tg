@@ -30,7 +30,7 @@ public class UserMenuVisibilityAssociatorWebUiConfig {
     private EntityMaster<UserMenuVisibilityAssociator> createMaster(final Injector injector) {
         final IMaster<UserMenuVisibilityAssociator> masterConfig = new SimpleMasterBuilder<UserMenuVisibilityAssociator>()
                 .forEntity(UserMenuVisibilityAssociator.class)
-                .addProp("users").asCollectionalEditor()
+                .addProp("users").asCollectionalEditor().withStaticOrder()
                 .also()
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
                 .addAction(MasterActions.SAVE)
