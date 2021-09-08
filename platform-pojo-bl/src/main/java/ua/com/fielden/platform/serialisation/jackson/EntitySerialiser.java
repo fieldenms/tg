@@ -5,6 +5,7 @@ import static java.lang.reflect.Modifier.isInterface;
 import static java.util.Collections.unmodifiableList;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.isShortCollection;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.shortCollectionKey;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.commonProperties;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
@@ -26,7 +27,6 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isSecreteDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isTrailingZerosDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isUpperCaseDefault;
-import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
@@ -107,7 +107,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
                 
                 final CachedProperty prop = new CachedProperty(propertyField);
                 propertiesWithUnion.add(prop);
-                final Class<?> fieldType = stripIfNeeded(propertyField.getType());
+                final Class<?> fieldType = KEY.equals(propertyField.getName()) ? getKeyType(type) : stripIfNeeded(propertyField.getType());
                 if (isFieldTypeSupported(fieldType)) {
                     prop.setPropertyType(fieldType);
                 }
@@ -295,27 +295,14 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
      * @return
      */
     public static <T extends AbstractEntity<?>> List<CachedProperty> createCachedProperties(final Class<T> type) {
-        final boolean hasCompositeKey = isCompositeEntity(type);
         final List<CachedProperty> properties = new ArrayList<>();
-        for (final Field propertyField : findRealProperties(type)) {
+        for (final Field propertyField : findRealProperties(type)) { // composite 'key' field not included in real props set
             propertyField.setAccessible(true);
-            // need to handle property key in a special way -- composite key does not have to be serialised
-            if (AbstractEntity.KEY.equals(propertyField.getName())) {
-                if (!hasCompositeKey) {
-                    final CachedProperty prop = new CachedProperty(propertyField);
-                    properties.add(prop);
-                    final Class<?> fieldType = getKeyType(type);
-                    if (isFieldTypeSupported(fieldType)) {
-                        prop.setPropertyType(fieldType);
-                    }
-                }
-            } else {
-                final CachedProperty prop = new CachedProperty(propertyField);
-                properties.add(prop);
-                final Class<?> fieldType = stripIfNeeded(propertyField.getType());
-                if (isFieldTypeSupported(fieldType)) {
-                    prop.setPropertyType(fieldType);
-                }
+            final CachedProperty prop = new CachedProperty(propertyField);
+            properties.add(prop);
+            final Class<?> fieldType = KEY.equals(propertyField.getName()) ? getKeyType(type) : stripIfNeeded(propertyField.getType());
+            if (isFieldTypeSupported(fieldType)) {
+                prop.setPropertyType(fieldType);
             }
         }
         return unmodifiableList(properties);

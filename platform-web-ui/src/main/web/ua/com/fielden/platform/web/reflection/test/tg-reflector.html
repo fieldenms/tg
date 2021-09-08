@@ -631,6 +631,11 @@
                 done();
             });
             
+            test('tg_determinePropertyType: union\'s common key property type is defined', function (done) {
+                assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType('ua.com.fielden.platform.sample.domain.TgUnionHolder'), 'union.key'), 'String');
+                done();
+            });
+            
             test('tg_determinePropertyType: union\'s common subproperty is defined', function (done) {
                 assert.strictEqual(reflector.tg_determinePropertyType(reflector.getType('ua.com.fielden.platform.sample.domain.TgUnionHolder'), 'union.common.desc'), 'String');
                 done();
@@ -896,6 +901,21 @@
                 
                 entity.union = union;
                 assert.strictEqual(reflector.tg_toString(entity.get('union.common'), entity.type(), 'union.common'), 'common val');
+                
+                done();
+            });
+            
+            test('tg_toString standard: union\'s common key property converts', function (done) {
+                const entity = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgUnionHolder');
+                
+                const union = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgUnion');
+                const union1Val = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgUnionType1');
+                union1Val.key = 'U1';
+                union.union1 = union1Val;
+                union.union2 = null;
+                
+                entity.union = union;
+                assert.strictEqual(reflector.tg_toString(entity.get('union.key'), entity.type(), 'union.key'), 'U1');
                 
                 done();
             });
@@ -1956,6 +1976,22 @@
                 assert.strictEqual(union.get('active'), false);
                 assert.strictEqual(union.get('refCount'), 7);
                 assert.strictEqual(union.get('createdTransactionGuid'), 'xxyyzz');
+                assert.strictEqual(union.get('desc'), 'U1 description');
+                
+                done();
+            });
+            
+            test('non-empty union entity gives value for common key and common desc properties from its active entity', function (done) {
+                const union = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgUnion');
+                
+                const union1Val = reflector.newEntity('ua.com.fielden.platform.sample.domain.TgUnionType1');
+                union1Val.key = 'U1';
+                union1Val.desc = 'U1 description';
+                union1Val.id = 101;
+                union.union1 = union1Val;
+                union.union2 = null;
+                
+                assert.strictEqual(union.get('key'), 'U1');
                 assert.strictEqual(union.get('desc'), 'U1 description');
                 
                 done();
