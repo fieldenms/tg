@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.entity.query.model;
 
+import static ua.com.fielden.platform.entity.query.fluent.enums.Functions.COUNT_ALL;
+import static ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory.COLLECTIONAL_FUNCTION;
+
 import java.util.List;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
@@ -22,5 +25,9 @@ public class ExpressionModel extends AbstractModel {
 
     public boolean containsSingleValueToken() {
         return getTokens().size() == 1 && getTokens().get(0).getKey() == TokenCategory.VAL;
+    }
+    
+    public boolean containsAggregations() {
+        return getTokens().stream().anyMatch(t -> t.getKey() == COLLECTIONAL_FUNCTION || t.getValue() == COUNT_ALL);
     }
 }

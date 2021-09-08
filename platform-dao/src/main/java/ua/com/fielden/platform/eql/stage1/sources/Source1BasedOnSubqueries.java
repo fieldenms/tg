@@ -89,9 +89,10 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
             entityInfo.addProp(declaredProps.get(ID));
         } else {
             for (final Entry<String, YieldInfoNode> yield : yieldInfoNodes.entrySet()) {
-                if (declaredProps.containsKey(yield.getKey())) {
+                final AbstractPropInfo<?> declaredProp = declaredProps.get(yield.getKey());
+                if (declaredProp != null) {
                     //TODO check children
-                    entityInfo.addProp(declaredProps.get(yield.getKey()));
+                    entityInfo.addProp(declaredProp.hasExpression() ? declaredProp.cloneWithoutExpression() : declaredProp); 
                 } else {
                     entityInfo.addProp(isEntityType(yield.getValue().javaType)
                             ? new EntityTypePropInfo(yield.getKey(), domainInfo.getEntityInfo((Class<? extends AbstractEntity<?>>) yield.getValue().javaType), LongType.INSTANCE, false /*yield.hasRequiredHint*/)

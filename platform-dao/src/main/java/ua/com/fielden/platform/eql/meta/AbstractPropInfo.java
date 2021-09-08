@@ -29,10 +29,16 @@ public abstract class AbstractPropInfo<T> implements IResolvable<T> {
 
     public abstract AbstractPropInfo<T> cloneRenamed(final String newName);
     
+    public abstract AbstractPropInfo<T> cloneWithoutExpression();
+    
     public boolean hasExpression() {
         return expression != null;
     }
 
+    public boolean hasAggregation() {
+        return expression != null && expression.containsAggregations();
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;
