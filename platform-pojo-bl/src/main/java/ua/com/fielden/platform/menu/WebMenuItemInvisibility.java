@@ -11,6 +11,9 @@ import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.annotation.mutator.Handler;
+import ua.com.fielden.platform.menu.validators.UserAsConfigurationOwnerValidator;
 import ua.com.fielden.platform.security.user.User;
 /**
  * Master entity object.
@@ -28,7 +31,7 @@ public class WebMenuItemInvisibility extends AbstractPersistentEntity<DynamicEnt
     @CompositeKeyMember(1)
     @Title(value = "User", desc = "Application user owning this configuration.")
     @MapTo
-    //@BeforeChange(@Handler(UserAsConfigurationOwnerValidator.class))
+    @BeforeChange(@Handler(UserAsConfigurationOwnerValidator.class))
     private User owner;
 
     @IsProperty

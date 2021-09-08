@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.menu;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.Collection;
@@ -41,7 +41,7 @@ public class UserMenuVisibilityAssociatorController implements ICollectionModifi
         if (user.isBase()) {
             return new LinkedHashSet<>(coUser.getAllEntities(
                     from(select(User.class).where().prop("base").eq().val(false).and().prop("active").eq().val(true).and().prop("basedOnUser").eq().val(user).model())
-                    .with(fetchKeyAndDescOnly(User.class))
+                    .with(coUser.getFetchProvider().fetchModel()).with(orderBy().prop("key").asc().model())
                     .model()));
         }
         return new LinkedHashSet<User>();

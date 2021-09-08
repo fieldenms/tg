@@ -4,12 +4,14 @@ import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
@@ -18,13 +20,17 @@ import static ua.com.fielden.platform.security.user.User.EMAIL;
 import static ua.com.fielden.platform.security.user.UserSecret.RESER_UUID_EXPIRATION_IN_MUNUTES;
 import static ua.com.fielden.platform.security.user.UserSecret.SECRET_RESET_UUID_SEPERATOR;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumentedWithKeyAndDesc;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
 
@@ -114,21 +120,59 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         }
 
         //Remove all invisibility menu items for non base user which have changed it's based on user property
+        final List<String> menuItemsToSave = new ArrayList<>();
         if (user.isPersisted() && !user.isBase() && user.getProperty("basedOnUser").isDirty()) {
             final IWebMenuItemInvisibility coMenuItemInvisibility = co(WebMenuItemInvisibility.class);
             coMenuItemInvisibility.batchDelete(select(WebMenuItemInvisibility.class).where().prop("owner").eq().val(user).model());
+            menuItemsToSave.addAll(invisibleMenuItems(user));
         }
 
         // if a new active user is being created then need to send an activation email
         // this is possible only if an email address is associated with the user, which is required for active users
         // there could also be a situation where an inactive existing user, which did not have their password set in the first place, is being activated... this also warrants an activation email
+        User savedUser;
         if ((!user.isPersisted() && user.isActive()) ||
             (user.isPersisted() && user.isActive() && user.getProperty(ACTIVE).isDirty() && passwordNotAssigned(user))) {
-            final User savedUser = super.save(user);
+            savedUser = super.save(user);
             newUserNotifier.notify(assignPasswordResetUuid(savedUser.getKey()).orElseThrow(() -> new SecurityException("Could not initiate password reset.")));
-            return savedUser;
         } else {
-            return super.save(user);
+            savedUser = super.save(user);
+        }
+
+        saveMenuItemInvisibility(menuItemsToSave, savedUser);
+        return savedUser;
+    }
+
+    private void saveMenuItemInvisibility(final List<String> menuItems, final User savedUser) {
+        final IWebMenuItemInvisibility co$MenuItemInvisibility = co$(WebMenuItemInvisibility.class);
+        menuItems.forEach(menuItem -> {
+            co$MenuItemInvisibility.save(co$MenuItemInvisibility.new_().setOwner(savedUser).setMenuItemUri(menuItem));
+        });
+    }
+
+    private List<String> invisibleMenuItems(final User user) {
+        final Set<User> availableUsers = getAvailableUsers(user.getBasedOnUser());
+        final Map<String, Set<User>> invisibleMenuItems = getInvisibleMenuItemsForBaseUser(user.getBasedOnUser());
+        return invisibleMenuItems.entrySet().stream()
+            .filter(entry -> entry.getValue().containsAll(availableUsers))
+            .map(entry -> entry.getKey()).collect(Collectors.toList());
+    }
+
+    private Set<User> getAvailableUsers(final User baseUser) {
+        return new HashSet<>(co(User.class).getAllEntities(from(
+                select(User.class).where()
+                .prop("active").eq().val(true).and()
+                .prop("base").eq().val(false).and()
+                .prop("basedOnUser").eq().val(baseUser).model()).with(fetchKeyAndDescOnly(User.class)).model()));
+    }
+
+    private Map<String, Set<User>> getInvisibleMenuItemsForBaseUser(final User baseUser) {
+        final IWebMenuItemInvisibility co$MenuItemInvisibility = co$(WebMenuItemInvisibility.class);
+        final EntityResultQueryModel<WebMenuItemInvisibility> query = select(WebMenuItemInvisibility.class).where()
+                .prop("owner.basedOnUser").eq().val(baseUser).and()
+                .prop("owner.active").eq().val(true).model();
+        try (Stream<WebMenuItemInvisibility> stream = co$MenuItemInvisibility.stream(from(query).with(fetchNotInstrumentedWithKeyAndDesc(WebMenuItemInvisibility.class).fetchModel()).model())) {
+            return stream.collect(Collectors.groupingBy(WebMenuItemInvisibility::getMenuItemUri, Collectors.mapping(WebMenuItemInvisibility::getOwner, toSet())));
         }
     }
 

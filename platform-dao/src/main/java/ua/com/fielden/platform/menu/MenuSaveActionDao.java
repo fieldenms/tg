@@ -17,6 +17,7 @@ import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 
@@ -77,11 +78,12 @@ public class MenuSaveActionDao extends CommonEntityDao<MenuSaveAction> implement
         final Set<User> availableUsers = new HashSet<>();
         final User user = userProvider.getUser();
         if (user.isBase()) {
-            availableUsers.addAll(co(User.class).getAllEntities(from(
+            final IUser coUser = co(User.class);
+            availableUsers.addAll(coUser.getAllEntities(from(
                     select(User.class).where()
                     .prop("active").eq().val(true).and()
                     .prop("base").eq().val(false).and()
-                    .prop("basedOnUser").eq().val(user).model()).with(fetchKeyAndDescOnly(User.class)).model()));
+                    .prop("basedOnUser").eq().val(user).model()).with(coUser.getFetchProvider().fetchModel()).model()));
         } else {
             availableUsers.add(user);
         }

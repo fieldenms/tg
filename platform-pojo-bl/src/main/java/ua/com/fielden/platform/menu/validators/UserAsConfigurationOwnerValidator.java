@@ -1,12 +1,14 @@
 package ua.com.fielden.platform.menu.validators;
 
-import static java.lang.String.*;
+import static java.lang.String.format;
+
 import java.lang.annotation.Annotation;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.menu.WebMenuItemInvisibility;
 import ua.com.fielden.platform.security.user.User;
 
 /**
@@ -17,9 +19,11 @@ import ua.com.fielden.platform.security.user.User;
  */
 public class UserAsConfigurationOwnerValidator implements IBeforeChangeEventHandler<User> {
 
+    public static final String USER_S_IS_A_BASE_USER_ERROR = "User [%s] is a base user.";
+
     @Override
     public Result handle(final MetaProperty<User> property, final User newValue, final Set<Annotation> mutatorAnnotations) {
-        return newValue.isBase() ? Result.successful(newValue) : Result.failure(format("User [%s] is not a base user.", newValue));
+        return newValue.isBase() ? Result.failure(format(USER_S_IS_A_BASE_USER_ERROR, newValue)) : Result.successful(newValue);
     }
 
 }

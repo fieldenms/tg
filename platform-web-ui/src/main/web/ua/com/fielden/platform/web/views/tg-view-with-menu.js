@@ -540,11 +540,11 @@ Polymer({
     },
 
     _calcShortDescForMenuItem: function (menuItem) {
-        return `Hide ${menuItem.key} menu item`;
+        return `${menuItem.key} menu item visibility`;
     },
 
     _calcLongDescForMenuItem: function (menuItem) {
-        return `Opens master to hide ${menuItem.key} menu item for specific users`; 
+        return `Edit ${menuItem.key} menu item visibility`; 
     },
 
     _menuVisibilitySaved: function (entity, action, master) {

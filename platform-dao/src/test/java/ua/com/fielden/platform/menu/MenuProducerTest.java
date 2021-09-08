@@ -6,12 +6,15 @@ import static org.junit.Assert.assertTrue;
 
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
@@ -55,13 +58,12 @@ public class MenuProducerTest extends AbstractDaoTestCase {
     @Test
     public void menu_restored_with_base_user_has_all_menu_items_with_appropriate_visible_property() {
         final IUserProvider up = getInstance(IUserProvider.class);
-        final IWebMenuItemInvisibility mii = co$(WebMenuItemInvisibility.class);
+        final IWebMenuItemInvisibility mii = co(WebMenuItemInvisibility.class);
 
-        up.setUser(co$(User.class).findByKey("USER_1"));
+        up.setUser(co(User.class).findByKey("BUSER_1"));
         save(new_(MenuSaveAction.class)
                 .setInvisibleMenuItems(new HashSet<>(Arrays.asList(
                         "module1/module1item3",
-                        "module2/module2group1",
                         "module2/module2group1/module2group1item1",
                         "module2/module2group1/module2group1item2",
                         "module2/module2item2",
@@ -121,22 +123,26 @@ public class MenuProducerTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void menu_restored_wtih_non_base_user_has_no_invisible_menu_items() {
+    public void menu_restored_with_non_base_user_has_no_invisible_menu_items() {
         final IUserProvider up = getInstance(IUserProvider.class);
-        final IWebMenuItemInvisibility mii = co$(WebMenuItemInvisibility.class);
+        final IWebMenuItemInvisibility mii = co(WebMenuItemInvisibility.class);
 
-        up.setUser(co$(User.class).findByKey("USER_1"));
+        up.setUser(co(User.class).findByKey("BUSER_1"));
         save(new_(MenuSaveAction.class)
                 .setInvisibleMenuItems(new HashSet<>(Arrays.asList(
                         "module1/module1item3",
-                        "module2/module2group1",
                         "module2/module2group1/module2group1item1",
                         "module2/module2group1/module2group1item2",
                         "module2/module2item2",
                         "module2/module2group2/module2group2item2",
                         "module2/module2group2/module2group2item3"))));
 
-        up.setUser(co$(User.class).findByKey("USER_2"));
+        checkMenuVisibilityForUser("USER_1", up, mii);
+        checkMenuVisibilityForUser("USER_2", up, mii);
+    }
+
+    private void checkMenuVisibilityForUser(final String user, final IUserProvider up, final IWebMenuItemInvisibility mii) {
+        up.setUser(co(User.class).findByKey(user));
         final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
         final CentreContext context = new CentreContext();
         context.setChosenProperty("desktop");
@@ -164,11 +170,147 @@ public class MenuProducerTest extends AbstractDaoTestCase {
         assertEquals("The menu key in module2group2 is incorrect", "module2group2item1", group.get(0).getKey());
     }
 
+    @Test
+    public void menu_configured_for_one_non_base_user_has_no_effect_for_another_non_base_user() {
+        final IUserProvider up = getInstance(IUserProvider.class);
+        final IWebMenuItemInvisibility mii = co(WebMenuItemInvisibility.class);
+
+        up.setUser(co(User.class).findByKey("BUSER_1"));
+        makeInvisibleMenuItemsForUser(new HashSet<>(Arrays.asList(
+                "module1/module1item3",
+                "module2/module2group1/module2group1item1",
+                "module2/module2group1/module2group1item2",
+                "module2/module2item2",
+                "module2/module2group2/module2group2item2",
+                "module2/module2group2/module2group2item3")), "USER_1");
+
+        checkMenuVisibilityForUser("USER_1", up, mii);
+
+        up.setUser(co(User.class).findByKey("USER_2"));
+
+        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
+        final CentreContext context = new CentreContext();
+        context.setChosenProperty("desktop");
+        menuProducer.setContext(context);
+        final Menu menu = menuProducer.newEntity();
+
+        assertEquals("The menu has incorrect number of modules", 2, menu.getMenu().size());
+
+        final List<Module> modules = menu.getMenu();
+        for (int moduleIndex = 0; moduleIndex < 2; moduleIndex++) {
+            assertEquals("The module key is incorrect", "module" + (moduleIndex + 1), modules.get(moduleIndex).getKey());
+        }
+        //Module 1 Check
+        assertEquals("The menu of the module1 has incorrect size", 5, modules.get(0).getMenu().size());
+        assertEquals("The menu key in module1 is incorrect", "module1item1", modules.get(0).getMenu().get(0).getKey());
+        assertEquals("The menu key in module1 is incorrect", "module1item2", modules.get(0).getMenu().get(1).getKey());
+        assertEquals("The menu key in module1 is incorrect", "module1item3", modules.get(0).getMenu().get(2).getKey());
+        assertEquals("The menu key in module1 is incorrect", "module1item4", modules.get(0).getMenu().get(3).getKey());
+        assertEquals("The menu key in module1 is incorrect", "module1item5", modules.get(0).getMenu().get(4).getKey());
+        //Module 2 check
+        assertEquals("The menu of the module2 has incorrect size", 4, modules.get(1).getMenu().size());
+        //Group 1 of module 2 check
+        assertEquals("The menu key in module2 is incorrect", "module2group1", modules.get(1).getMenu().get(0).getKey());
+        assertEquals("The menu group1 in module2 has incorrect number of menu items", 2, modules.get(1).getMenu().get(0).getMenu().size());
+        final List<ModuleMenuItem> group1 = modules.get(1).getMenu().get(0).getMenu();
+        assertEquals("The menu key in module2group1 is incorrect", "module2group1item1", group1.get(0).getKey());
+        assertEquals("The menu key in module2group1 is incorrect", "module2group1item2", group1.get(1).getKey());
+        //Menu items of module 2 check
+        assertEquals("The menu key in module2 is incorrect", "module2item1", modules.get(1).getMenu().get(1).getKey());
+        assertEquals("The menu key in module2 is incorrect", "module2item2", modules.get(1).getMenu().get(2).getKey());
+        //Group 2 of module 2 check
+        assertEquals("The menu key in module2 is incorrect", "module2group2", modules.get(1).getMenu().get(3).getKey());
+        assertEquals("The menu group2 in module2 has incorrect number of menu items", 3, modules.get(1).getMenu().get(3).getMenu().size());
+        final List<ModuleMenuItem> group2 = modules.get(1).getMenu().get(3).getMenu();
+        assertEquals("The menu key in module2group2 is incorrect", "module2group2item1", group2.get(0).getKey());
+        assertEquals("The menu key in module2group2 is incorrect", "module2group2item2", group2.get(1).getKey());
+        assertEquals("The menu key in module2group2 is incorrect", "module2group2item3", group2.get(2).getKey());
+    }
+
+    private void makeInvisibleMenuItemsForUser(final Set<String> menuItems, final String userName) {
+        final UserMenuVisibilityAssociatorCo umiaCo = co(UserMenuVisibilityAssociator.class);
+        final UserMenuVisibilityAssociatorProducer umvProducer = new UserMenuVisibilityAssociatorProducer(getInstance(EntityFactory.class), getInstance(IUserProvider.class), getInstance(ICompanionObjectFinder.class));
+        final User userToExclude = co(User.class).findByKey(userName);
+
+        menuItems.forEach(menuItem -> {
+            final CentreContext context = new CentreContext();
+            context.setSelectedEntities(Arrays.asList(new WebMenuItemInvisibility().setMenuItemUri(menuItem)));
+            umvProducer.setContext(context);
+            final UserMenuVisibilityAssociator newEntity = umvProducer.newEntity();
+            newEntity.setRemovedIds(new LinkedHashSet<>(Arrays.asList(userToExclude.getId())));
+            umiaCo.save(newEntity);
+        });
+    }
+
+    @Test
+    public void menu_item_visisble_for_non_base_user_should_become_invisible_after_changing_base_user_with_invisible_menu_item() {
+        final IUserProvider up = getInstance(IUserProvider.class);
+        final IWebMenuItemInvisibility mii = co(WebMenuItemInvisibility.class);
+        final IUser coUser = co(User.class);
+
+        up.setUser(coUser.findByKey("BUSER_2"));
+        save(new_(MenuSaveAction.class)
+                .setInvisibleMenuItems(new HashSet<>(Arrays.asList(
+                        "module2/module2group1/module2group1item1"))));
+
+        up.setUser(coUser.findByKey("BUSER_1"));
+        makeInvisibleMenuItemsForUser(new HashSet<>(Arrays.asList(
+                "module2/module2group1/module2group1item2")), "USER_1");
+
+        up.setUser(coUser.findByKey(UNIT_TEST_USER));
+        final IUser co$User = co$(User.class);
+        co$User.save(co$User.findByKeyAndFetch(coUser.getFetchProvider().fetchModel(),"USER_1").setBasedOnUser(coUser.findByKey("BUSER_2")));
+
+        up.setUser(co(User.class).findByKey("USER_1"));
+        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
+        final CentreContext context = new CentreContext();
+        context.setChosenProperty("desktop");
+        menuProducer.setContext(context);
+        final Menu menu = menuProducer.newEntity();
+
+        final ModuleMenuItem module2group1 = menu.getMenu().get(1).getMenu().get(0);
+
+        assertEquals("The menu group1 in module2 has incorrect number of menu items", 1, module2group1.getMenu().size());
+        assertEquals("The menu key in module2group1 is incorrect", "module2group1item2", module2group1.getMenu().get(0).getKey());
+    }
+
+    @Test
+    public void new_non_base_user_should_see_menu_item_that_is_semi_visible() {
+        final IUserProvider up = getInstance(IUserProvider.class);
+        final IWebMenuItemInvisibility mii = co(WebMenuItemInvisibility.class);
+        final IUser coUser = co(User.class);
+
+        up.setUser(coUser.findByKey("BUSER_2"));
+        makeInvisibleMenuItemsForUser(new HashSet<>(Arrays.asList(
+                "module2/module2group1/module2group1item1")), "USER_3");
+
+        up.setUser(coUser.findByKey(UNIT_TEST_USER));
+        final IUser co$User = co$(User.class);
+        co$User.save(co$User.findByKeyAndFetch(coUser.getFetchProvider().fetchModel(),"USER_1").setBasedOnUser(coUser.findByKey("BUSER_2")));
+
+        up.setUser(co(User.class).findByKey("USER_1"));
+        final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
+        final CentreContext context = new CentreContext();
+        context.setChosenProperty("desktop");
+        menuProducer.setContext(context);
+        final Menu menu = menuProducer.newEntity();
+
+        final ModuleMenuItem module2group1 = menu.getMenu().get(1).getMenu().get(0);
+
+        assertEquals("The menu group1 in module2 has incorrect number of menu items", 2, module2group1.getMenu().size());
+        assertEquals("The menu key in module2group1 is incorrect", "module2group1item1", module2group1.getMenu().get(0).getKey());
+        assertEquals("The menu key in module2group1 is incorrect", "module2group1item2", module2group1.getMenu().get(1).getKey());
+    }
+
     @Override
     protected void populateDomain() {
         super.populateDomain();
         //Creating base and based on users
-        final User user1 = save(new_(User.class, "USER_1").setBase(true).setActive(true).setEmail("user1@mail"));
+        final User user1 = save(new_(User.class, "BUSER_1").setBase(true).setActive(true).setEmail("buser1@mail"));
+        save(new_(User.class, "USER_1").setBase(false).setActive(true).setEmail("user1@mail").setBasedOnUser(user1));
         save(new_(User.class, "USER_2").setBase(false).setActive(true).setEmail("user2@mail").setBasedOnUser(user1));
+        final User user2 = save(new_(User.class, "BUSER_2").setBase(true).setActive(true).setEmail("buser2@mail"));
+        save(new_(User.class, "USER_3").setBase(false).setActive(true).setEmail("user3@mail").setBasedOnUser(user2));
+        save(new_(User.class, "USER_4").setBase(false).setActive(true).setEmail("user4@mail").setBasedOnUser(user2));
     }
 }
