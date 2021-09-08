@@ -56,20 +56,20 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
         final Yields2 yields2 = yields.transform(enhancedContext);
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
         final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, sources2.mainSource());
-        final Yields2 enhancedYields2 = expand(enhanceYields(yields2, sources2.mainSource()));
+        final Yields2 enhancedYields2 = expand(enhanceYields(yields2, sources2.mainSource(), context.shouldIncludeCalcProps));
         final QueryBlocks2 entQueryBlocks = new QueryBlocks2(sources2, conditions2, enhancedYields2, groups2, orderings2);
         return new SourceQuery2(entQueryBlocks, resultType);
     }
 
-    private Yields2 enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
+    private Yields2 enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource, final boolean shouldIncludeCalcProps) {
         if (yields.getYields().isEmpty() || yieldAll) {
             final List<Yield2> enhancedYields = new ArrayList<>(yields.getYields());
             for (final Entry<String, AbstractPropInfo<?>> el : mainSource.entityInfo().getProps().entrySet()) {
-                if (!el.getValue().hasExpression()) {
+                if (!el.getValue().hasExpression() || shouldIncludeCalcProps && !(el.getValue().hasAggregation() || el.getValue().implicit)) {
                     enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(el.getValue())), el.getKey(), false));
                 }
             }
-            return new Yields2(enhancedYields, yields.getYields().isEmpty());
+            return new Yields2(enhancedYields, yields.getYields().isEmpty() && !shouldIncludeCalcProps);
         }
 
         final Yield2 firstYield = yields.getYields().iterator().next();

@@ -21,6 +21,11 @@ public class PrimTypePropInfo<T> extends AbstractPropInfo<T> {
     public AbstractPropInfo<T> cloneRenamed(final String newName) {
         return new PrimTypePropInfo<T>(newName, hibType, propType);
     }
+
+    @Override
+    public AbstractPropInfo<T> cloneWithoutExpression() {
+        return new PrimTypePropInfo<T>(name, hibType, propType);
+    }
     
     @Override
     public PropResolutionProgress resolve(final PropResolutionProgress context) {

@@ -46,7 +46,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
         if (sources == null) {
             return new ResultQuery2(transformSourceless(context), resultType);
         }
-        final TransformationResult<? extends ISources2<?>> sourcesTr = sources.transform(context);
+        final TransformationResult<? extends ISources2<?>> sourcesTr = transformAndEnhanceSource(context);
         final TransformationContext enhancedContext = sourcesTr.updatedContext;
         final ISources2<? extends ISources3> sources2 = sourcesTr.item;
         final Conditions2 conditions2 = enhanceWithUserDataFilterConditions(sources2.mainSource(), context, conditions.transform(enhancedContext));
@@ -57,6 +57,32 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
         final QueryBlocks2 entQueryBlocks = new QueryBlocks2(sources2, conditions2, enhancedYields2, groups2, orderings2);
 
         return new ResultQuery2(entQueryBlocks, resultType);
+    }
+    
+    private TransformationResult<? extends ISources2<?>> transformAndEnhanceSource(final TransformationContext context) {
+        final TransformationResult<? extends ISources2<?>> sourcesTr = sources.transform(context);
+        if (fetchModel == null) {
+            return sourcesTr;
+        }
+        
+        final ISources2<? extends ISources3> sources2 = sourcesTr.item;
+        boolean allAggregated = false;
+        final ISource2<? extends ISource3> mainSource = sources2.mainSource();
+        if (mainSource.sourceType().equals(fetchModel.getEntityType())) {
+            allAggregated = true;
+            for (final String primProp : fetchModel.getPrimProps()) {
+                final AbstractPropInfo<?> fetchedProp = mainSource.entityInfo().getProps().get(primProp.split("\\.")[0]);
+                if (fetchedProp != null) {
+                    allAggregated = allAggregated && fetchedProp.hasAggregation();
+                }
+            }
+        }
+        
+        if (!allAggregated) {
+            return sourcesTr;
+        } else {
+            return sources.transform(context.cloneForAggregates());
+        } 
     }
     
     private Yields2 enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource) {

@@ -27,6 +27,12 @@ public class UnionTypePropInfo<T extends AbstractUnionEntity> extends AbstractPr
     public UnionTypePropInfo<T> cloneRenamed(final String newName) {
         return new UnionTypePropInfo<T>(newName, propEntityInfo, hibType, required);
     }
+    
+
+    @Override
+    public AbstractPropInfo<T> cloneWithoutExpression() {
+        return new UnionTypePropInfo<T>(name, propEntityInfo, hibType, required);
+    }
 
     @Override
     public PropResolutionProgress resolve(final PropResolutionProgress context) {
