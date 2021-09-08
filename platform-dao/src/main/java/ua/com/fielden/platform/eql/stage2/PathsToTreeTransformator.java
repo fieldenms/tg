@@ -220,7 +220,7 @@ public class PathsToTreeTransformator {
             final ExpressionModel expressionModel, // 
             final String context) {
         final String sourceId = sourceForCalcPropResolution.id() + "_" + context;
-        final TransformationContext prc = new TransformationContext(domainInfo, asList(asList(sourceForCalcPropResolution)), sourceId);
+        final TransformationContext prc = new TransformationContext(domainInfo, asList(asList(sourceForCalcPropResolution)), sourceId, false);
         final Expression1 exp = (Expression1) (new StandAloneExpressionBuilder(gen, expressionModel)).getResult().getValue();
         return exp.transform(prc);
     }
