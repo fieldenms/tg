@@ -119,6 +119,8 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             coUserSecrete.batchDelete(listOf(user.getId()));
         }
 
+        //If the non user is new or became active or changed it's base user then remove it's previous invisible menu items and create new one
+        //for menu items those are invisible for all non base users based on user that is also base for specified user.
         final List<String> menuItemsToSave = new ArrayList<>();
         if (!user.isBase() && user.isActive() &&
                 (!user.isPersisted() ||
@@ -131,7 +133,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         // if a new active user is being created then need to send an activation email
         // this is possible only if an email address is associated with the user, which is required for active users
         // there could also be a situation where an inactive existing user, which did not have their password set in the first place, is being activated... this also warrants an activation email
-        User savedUser;
+        final User savedUser;
         if ((!user.isPersisted() && user.isActive()) ||
             (user.isPersisted() && user.isActive() && user.getProperty(ACTIVE).isDirty() && passwordNotAssigned(user))) {
             savedUser = super.save(user);
@@ -144,6 +146,12 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         return savedUser;
     }
 
+    /**
+     * Saves new {@link WebMenuItemInvisibility} for menu item URIs specified in menuItems, and specified non base user.
+     *
+     * @param menuItems
+     * @param savedUser
+     */
     private void saveMenuItemInvisibility(final List<String> menuItems, final User savedUser) {
         final IWebMenuItemInvisibility co$MenuItemInvisibility = co$(WebMenuItemInvisibility.class);
         menuItems.forEach(menuItem -> {
@@ -151,28 +159,45 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         });
     }
 
+    /**
+     * Returns menu item URIs to save as invisible menu items for specified user. That is needed when user changes it's base user or it is new user or
+     * the user that becomes active. The given user should be non base user
+     *
+     * @param user
+     * @return
+     */
     private List<String> invisibleMenuItems(final User user) {
-        final Set<User> availableUsers = getAvailableUsers(user.getBasedOnUser());
+        //First find all active non base users for specified non base user.
+        final Set<User> availableUsers = findNonBaseUsers(user.getBasedOnUser(), fetchKeyAndDescOnly(User.class));
+        //Then find all invisible menu items for non base users based on the same user as base user of given user.
         final Map<String, Set<User>> invisibleMenuItems = getInvisibleMenuItemsForBaseUser(user.getBasedOnUser());
+        //Find all menu items those are invisible for all non base user of specified user's base user.
         return invisibleMenuItems.entrySet().stream()
             .filter(entry -> entry.getValue().containsAll(availableUsers))
             .map(entry -> entry.getKey()).collect(Collectors.toList());
     }
 
-    private Set<User> getAvailableUsers(final User baseUser) {
+    @Override
+    public Set<User> findNonBaseUsers(final User baseUser, final fetch<User> userFetch) {
         return new HashSet<>(co(User.class).getAllEntities(from(
                 select(User.class).where()
                 .prop("active").eq().val(true).and()
                 .prop("base").eq().val(false).and()
-                .prop("basedOnUser").eq().val(baseUser).model()).with(fetchKeyAndDescOnly(User.class)).model()));
+                .prop("basedOnUser").eq().val(baseUser).model()).with(userFetch).model()));
     }
 
+    /**
+     * Returns all invisible menu items for active non base users based on given base user.
+     *
+     * @param baseUser
+     * @return
+     */
     private Map<String, Set<User>> getInvisibleMenuItemsForBaseUser(final User baseUser) {
-        final IWebMenuItemInvisibility co$MenuItemInvisibility = co$(WebMenuItemInvisibility.class);
+        final IWebMenuItemInvisibility coMenuItemInvisibility = co(WebMenuItemInvisibility.class);
         final EntityResultQueryModel<WebMenuItemInvisibility> query = select(WebMenuItemInvisibility.class).where()
                 .prop("owner.basedOnUser").eq().val(baseUser).and()
                 .prop("owner.active").eq().val(true).model();
-        try (Stream<WebMenuItemInvisibility> stream = co$MenuItemInvisibility.stream(from(query).with(fetchNotInstrumentedWithKeyAndDesc(WebMenuItemInvisibility.class).fetchModel()).model())) {
+        try (Stream<WebMenuItemInvisibility> stream = coMenuItemInvisibility.stream(from(query).with(fetchNotInstrumentedWithKeyAndDesc(WebMenuItemInvisibility.class).fetchModel()).model())) {
             return stream.collect(Collectors.groupingBy(WebMenuItemInvisibility::getMenuItemUri, Collectors.mapping(WebMenuItemInvisibility::getOwner, toSet())));
         }
     }
@@ -446,5 +471,4 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         // and only now can we delete users
         return defaultBatchDelete(userIds);
     }
-
 }

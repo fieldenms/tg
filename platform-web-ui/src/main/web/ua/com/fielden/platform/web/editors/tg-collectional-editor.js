@@ -225,7 +225,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
             },
 
             /**
-             * Indicates whether order of arrived entities remains the same even if some of them are selected
+             * Indicates whether order of arrived entities remains the same even if some of items are selected.
              */
             staticOrder: {
                 type: Boolean,

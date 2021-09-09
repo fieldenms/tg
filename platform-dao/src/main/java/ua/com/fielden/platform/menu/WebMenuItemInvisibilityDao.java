@@ -41,10 +41,8 @@ public class WebMenuItemInvisibilityDao extends CommonEntityDao<WebMenuItemInvis
     }
 
     @Override
-    protected IFetchProvider<WebMenuItemInvisibility> createFetchProvider() {
-        // TODO: uncomment the following line and specify the properties, which are required for the UI
-        // return super.createFetchProvider().with("key", "desc");
-        throw new UnsupportedOperationException("Please specify the properties, which are required for the UI in WebMenuItemInvisibilityDao.createFetchProvider()");
+    public IFetchProvider<WebMenuItemInvisibility> createFetchProvider() {
+        return IWebMenuItemInvisibility.FETCH_PROVIDER;
     }
 
     @Override
@@ -57,5 +55,4 @@ public class WebMenuItemInvisibilityDao extends CommonEntityDao<WebMenuItemInvis
     public void removeAssociation(final Set<WebMenuItemInvisibility> associations) {
         createQueryByKeyFor(getDbVersion(), getEntityType(), getKeyType(), associations).map(this::batchDelete);
     }
-
 }

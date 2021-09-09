@@ -9,6 +9,12 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 
+/**
+ * DAO implementation for companion object {@link UserMenuInvisibilityAssociationBatchActionCo}.
+ *
+ * @author TG Team
+ *
+ */
 @EntityType(UserMenuInvisibilityAssociationBatchAction.class)
 public class UserMenuInvisibilityAssociationBatchActionDao extends CommonEntityDao<UserMenuInvisibilityAssociationBatchAction> implements UserMenuInvisibilityAssociationBatchActionCo {
 
@@ -20,6 +26,9 @@ public class UserMenuInvisibilityAssociationBatchActionDao extends CommonEntityD
         this.coMenuItemInvisibility = coMenuItemInvisibility;
     }
 
+    /**
+     * Saves and removes association specified in batch action.
+     */
     @Override
     @SessionRequired
     public UserMenuInvisibilityAssociationBatchAction save(final UserMenuInvisibilityAssociationBatchAction entity) {

@@ -18,6 +18,7 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.tuples.T2;
 
 /**
+ * DAO implementation for {@link UserMenuVisibilityAssociatorCo}.
  *
  * @author TG Team
  *
@@ -37,7 +38,7 @@ public class UserMenuVisibilityAssociatorDao extends CommonEntityDao<UserMenuVis
     @SessionRequired
     public UserMenuVisibilityAssociator save(final UserMenuVisibilityAssociator entity) {
         if (userProvider.getUser().isBase()) {
-            final T2<UserMenuVisibilityAssociator, WebMenuItemInvisibility> actionAndUserBeingUpdated = validateAction(entity, this, Long.class, new UserMenuVisibilityAssociatorController(co(User.class), userProvider));
+            final T2<UserMenuVisibilityAssociator, WebMenuItemInvisibility> actionAndUserBeingUpdated = validateAction(entity, this, Long.class, new UserMenuVisibilityAssociatorController(co(User.class), userProvider, co(WebMenuItemInvisibility.class)));
             final UserMenuVisibilityAssociator actionToSave = actionAndUserBeingUpdated._1;
             final Map<Object, User> availableUsers = toMapById(actionToSave.getUsers());
 

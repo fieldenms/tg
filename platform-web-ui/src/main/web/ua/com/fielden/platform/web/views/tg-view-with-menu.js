@@ -297,21 +297,37 @@ function findNestedMenuItem (itemPath, menuItem) {
         unknownSubpath: path.slice(currentItem ? pathIndex : pathIndex - 1).join('/')
     };
 };
+
+/**
+ * Calculates menu item visible and ssemiVisible properties
+ * 
+ * @param {Entity} entity - saved entity for edit menu item visibility master
+ * @param {Number} groupIndex - index of the hroup menu item that contains menu item on itemIndex.
+ * @param {Number} itemIndex - index of the menu item in group. It might be undefined if the grpup doesn't have sub menu.
+ */
 function _changeVisibilityForMenuItem(entity, groupIndex, itemIndex) {
     let menuItem = this.menuItem.menu[groupIndex];
     let basePropName = 'menuItem.menu.' + groupIndex;
+    //If menu item has submenu
     if (this._isMenuPresent(menuItem.menu)) {
         menuItem = menuItem.menu[itemIndex];
         basePropName += '.menu.' + itemIndex;
     }
+    //If all items were selected or unselected then it is visible
     if (entity.chosenIds.length === entity.users.length || entity.chosenIds.length === 0) {
         this.set(basePropName + '.visible', entity.chosenIds.length === entity.users.length);
         this.set(basePropName + '.semiVisible', false);
-    } else {
+    } else { //Otherwise it is semi-visible
         this.set(basePropName + '.visible', true);
         this.set(basePropName + '.semiVisible', true);
     }
 };
+
+/**
+ * Calculates visible and semiVisible proeprties for group menu item with sub menu.
+ * 
+ * @param {Number} groupIndex The index of group menu item that has submenu
+ */
 function _changeVisibilityForGroupItem(groupIndex) {
     if (this._isMenuPresent(this.menuItem.menu[groupIndex].menu)) {
         const groupMenuItemVisible = this.menuItem.menu[groupIndex].menu.some(item => item.visible);
@@ -528,10 +544,24 @@ Polymer({
         return "Toggle to make this " + (this._isMenuPresent(menu) ? "group of menu items " : "menu item ") + (visible ? "invisible" : "visible");
     },
 
+    /**
+     * Calculates the value that controls access to menu item action.
+     * 
+     * @param {Boolean} canEdit Indicates whether current user can edit menu item or not
+     * @param {Object} menu - the sub menu 
+     * @returns Boolean value that indicates whether menu item action is visible or not
+     */
     _menuItemActionVisible: function (canEdit, menu) {
         return canEdit && !this._isMenuPresent(menu);
     },
 
+    /**
+     * Creates menu item invisibility entity and returns as current entity.
+     * 
+     * @param {Object} firstLevelItem - group menu item
+     * @param {Object} item  - menu item
+     * @returns current entity function.
+     */
     _visibilityMenuItem: function (firstLevelItem, item) {
         const menuItemUri = this._createUriFromModel(this.menuItem.key, firstLevelItem.key, item && item.key);
         const entity = this._reflector.newEntity('ua.com.fielden.platform.menu.WebMenuItemInvisibility');
@@ -547,6 +577,9 @@ Polymer({
         return `Edit ${menuItem.key} menu item visibility`; 
     },
 
+    /**
+     * Post save success method for menu item actions that calculates visible and semi visible properties for menu item and griup menu item.
+     */
     _menuVisibilitySaved: function (entity, action, master) {
         //First change the visibility and visible for all users property for menu item
         _changeVisibilityForMenuItem.bind(this)(entity, action.groupItemIndex, action.menuItemIndex);

@@ -1,9 +1,5 @@
 package ua.com.fielden.platform.menu;
 
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.Set;
@@ -15,12 +11,20 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
+/**
+ * Controller for {@link UserMenuVisibilityAssociator} that provides access to master entity and available users.
+ *
+ * @author TG Team
+ *
+ */
 public class UserMenuVisibilityAssociatorController implements ICollectionModificationController<WebMenuItemInvisibility, UserMenuVisibilityAssociator, Long, User> {
 
     private IUser coUser;
     private final IUserProvider userProvider;
+    private final IWebMenuItemInvisibility coMenuItemInvisibility;
 
-    public UserMenuVisibilityAssociatorController(final IUser coUser, final IUserProvider userProvider) {
+    public UserMenuVisibilityAssociatorController(final IUser coUser, final IUserProvider userProvider, final IWebMenuItemInvisibility coMenuItemInvisibility) {
+        this.coMenuItemInvisibility = coMenuItemInvisibility;
         this.userProvider = userProvider;
         this.coUser = coUser;
     }
@@ -39,10 +43,7 @@ public class UserMenuVisibilityAssociatorController implements ICollectionModifi
     public Collection<User> refetchAvailableItems(final WebMenuItemInvisibility masterEntity) {
         final User user = userProvider.getUser();
         if (user.isBase()) {
-            return new LinkedHashSet<>(coUser.getAllEntities(
-                    from(select(User.class).where().prop("base").eq().val(false).and().prop("active").eq().val(true).and().prop("basedOnUser").eq().val(user).model())
-                    .with(coUser.getFetchProvider().fetchModel()).with(orderBy().prop("key").asc().model())
-                    .model()));
+            return coUser.findNonBaseUsers(user, coMenuItemInvisibility.getFetchProvider().<User>fetchFor("owner").fetchModel());
         }
         return new LinkedHashSet<User>();
     }

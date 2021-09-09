@@ -18,6 +18,12 @@ import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 
+/**
+ * Producer for {@link UserMenuVisibilityAssociator} entity.
+ *
+ * @author TG Team
+ *
+ */
 public class UserMenuVisibilityAssociatorProducer extends AbstractFunctionalEntityForCollectionModificationProducer<WebMenuItemInvisibility, UserMenuVisibilityAssociator, Long, User> {
 
     private final ICollectionModificationController<WebMenuItemInvisibility, UserMenuVisibilityAssociator, Long, User> controller;
@@ -29,7 +35,7 @@ public class UserMenuVisibilityAssociatorProducer extends AbstractFunctionalEnti
         super(factory, UserMenuVisibilityAssociator.class, companionFinder);
         this.coUser = co(User.class);
         this.userProvider = userProvider;
-        this.controller = new UserMenuVisibilityAssociatorController(this.coUser, this.userProvider);
+        this.controller = new UserMenuVisibilityAssociatorController(this.coUser, this.userProvider, co(WebMenuItemInvisibility.class));
     }
 
     @Override
