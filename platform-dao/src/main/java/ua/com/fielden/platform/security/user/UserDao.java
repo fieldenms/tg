@@ -119,9 +119,10 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             coUserSecrete.batchDelete(listOf(user.getId()));
         }
 
-        //Remove all invisibility menu items for non base user which have changed it's based on user property
         final List<String> menuItemsToSave = new ArrayList<>();
-        if (user.isPersisted() && !user.isBase() && user.getProperty("basedOnUser").isDirty()) {
+        if (!user.isBase() && user.isActive() &&
+                (!user.isPersisted() ||
+                (user.isPersisted() && (user.getProperty("basedOnUser").isDirty() || user.getProperty(ACTIVE).isDirty())))) {
             final IWebMenuItemInvisibility coMenuItemInvisibility = co(WebMenuItemInvisibility.class);
             coMenuItemInvisibility.batchDelete(select(WebMenuItemInvisibility.class).where().prop("owner").eq().val(user).model());
             menuItemsToSave.addAll(invisibleMenuItems(user));

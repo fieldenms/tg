@@ -243,12 +243,13 @@ public class MenuProducerTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void menu_item_visisble_for_non_base_user_should_become_invisible_after_changing_base_user_with_invisible_menu_item() {
+    public void rebased_new_activated_non_base_users_should_not_see_invisible_menu_item() {
         final IUserProvider up = getInstance(IUserProvider.class);
         final IWebMenuItemInvisibility mii = co(WebMenuItemInvisibility.class);
         final IUser coUser = co(User.class);
 
-        up.setUser(coUser.findByKey("BUSER_2"));
+        final User baseUser = coUser.findByKey("BUSER_2");
+        up.setUser(baseUser);
         save(new_(MenuSaveAction.class)
                 .setInvisibleMenuItems(new HashSet<>(Arrays.asList(
                         "module2/module2group1/module2group1item1"))));
@@ -259,8 +260,16 @@ public class MenuProducerTest extends AbstractDaoTestCase {
 
         up.setUser(coUser.findByKey(UNIT_TEST_USER));
         final IUser co$User = co$(User.class);
-        co$User.save(co$User.findByKeyAndFetch(coUser.getFetchProvider().fetchModel(),"USER_1").setBasedOnUser(coUser.findByKey("BUSER_2")));
+        save(co$User.findByKeyAndFetch(coUser.getFetchProvider().fetchModel(),"USER_1").setBasedOnUser(baseUser));
+        save(new_(User.class, "USER_6").setBase(false).setActive(true).setEmail("user6@mail").setBasedOnUser(baseUser));
+        save(co$User.findByKeyAndFetch(coUser.getFetchProvider().fetchModel(),"USER_5").setActive(true));
 
+        testMenuInvisibilityForUser("USER_1", up, mii);
+        testMenuInvisibilityForUser("USER_6", up, mii);
+        testMenuInvisibilityForUser("USER_5", up, mii);
+    }
+
+    private void testMenuInvisibilityForUser(final String userName, final IUserProvider up, final IWebMenuItemInvisibility mii) {
         up.setUser(co(User.class).findByKey("USER_1"));
         final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
         final CentreContext context = new CentreContext();
@@ -275,20 +284,29 @@ public class MenuProducerTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void new_non_base_user_should_see_menu_item_that_is_semi_visible() {
+    public void rebased_new_activated_non_base_user_should_see_menu_item_that_is_semi_visible() {
         final IUserProvider up = getInstance(IUserProvider.class);
         final IWebMenuItemInvisibility mii = co(WebMenuItemInvisibility.class);
         final IUser coUser = co(User.class);
 
-        up.setUser(coUser.findByKey("BUSER_2"));
+        final User baseUser = coUser.findByKey("BUSER_2");
+        up.setUser(baseUser);
         makeInvisibleMenuItemsForUser(new HashSet<>(Arrays.asList(
                 "module2/module2group1/module2group1item1")), "USER_3");
 
         up.setUser(coUser.findByKey(UNIT_TEST_USER));
         final IUser co$User = co$(User.class);
-        co$User.save(co$User.findByKeyAndFetch(coUser.getFetchProvider().fetchModel(),"USER_1").setBasedOnUser(coUser.findByKey("BUSER_2")));
+        save(co$User.findByKeyAndFetch(coUser.getFetchProvider().fetchModel(),"USER_1").setBasedOnUser(baseUser));
+        save(new_(User.class, "USER_6").setBase(false).setActive(true).setEmail("user6@mail").setBasedOnUser(baseUser));
+        save(co$User.findByKeyAndFetch(coUser.getFetchProvider().fetchModel(),"USER_5").setActive(true));
 
-        up.setUser(co(User.class).findByKey("USER_1"));
+        testMenuVisibilityForUser("USER_1", up, mii);
+        testMenuVisibilityForUser("USER_6", up, mii);
+        testMenuVisibilityForUser("USER_5", up, mii);
+    }
+
+    private void testMenuVisibilityForUser(final String userName, final IUserProvider up, final IWebMenuItemInvisibility mii) {
+        up.setUser(co(User.class).findByKey(userName));
         final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
         final CentreContext context = new CentreContext();
         context.setChosenProperty("desktop");
@@ -312,5 +330,6 @@ public class MenuProducerTest extends AbstractDaoTestCase {
         final User user2 = save(new_(User.class, "BUSER_2").setBase(true).setActive(true).setEmail("buser2@mail"));
         save(new_(User.class, "USER_3").setBase(false).setActive(true).setEmail("user3@mail").setBasedOnUser(user2));
         save(new_(User.class, "USER_4").setBase(false).setActive(true).setEmail("user4@mail").setBasedOnUser(user2));
+        save(new_(User.class, "USER_5").setBase(false).setActive(false).setEmail("user5@mail").setBasedOnUser(user2));
     }
 }
