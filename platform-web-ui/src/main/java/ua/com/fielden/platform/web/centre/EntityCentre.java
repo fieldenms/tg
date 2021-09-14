@@ -79,6 +79,7 @@ import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
+import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.centre.impl.CentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.domaintree.impl.CalculatedPropertyInfo;
@@ -442,9 +443,16 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         if (propOrdering.isPresent()) {
 
             // by default ordering occurs by "this" that is why it needs to be switched off in the presence of alternative ordering configuration
-            if (cdtmae.getSecondTick().isChecked(entityType, "")) {
-                cdtmae.getSecondTick().toggleOrdering(entityType, "");
-                cdtmae.getSecondTick().toggleOrdering(entityType, "");
+            final List<Pair<String, Ordering>> orderedPropsByDefault = cdtmae.getSecondTick().orderedProperties(entityType);
+            if (!orderedPropsByDefault.isEmpty()) {
+                orderedPropsByDefault.forEach(propOrder -> {
+                    if (propOrder.getValue() == Ordering.ASCENDING) {
+                        cdtmae.getSecondTick().toggleOrdering(entityType, propOrder.getKey());
+                        cdtmae.getSecondTick().toggleOrdering(entityType, propOrder.getKey());
+                    } else if (propOrder.getValue() == Ordering.DESCENDING) {
+                        cdtmae.getSecondTick().toggleOrdering(entityType, propOrder.getKey());
+                    }
+                });
             }
 
             // let's now apply the ordering as per configuration

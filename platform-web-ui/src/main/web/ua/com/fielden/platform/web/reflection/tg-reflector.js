@@ -936,7 +936,7 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
      * Returns 'null' if there is no entity master for this type.
      */
     EntityType.prototype.entityMaster = function () {
-        return this._entityMaster;
+        return _typeTable[this.notEnhancedFullClassName()]._entityMaster;
     }
     
     /**
@@ -944,7 +944,7 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
      * Returns 'null' if there is no entity master for this type.
      */
     EntityType.prototype.newEntityMaster = function () {
-        return this._newEntityMaster;
+        return _typeTable[this.notEnhancedFullClassName()]._newEntityMaster;
     }
 
     return EntityType;
