@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.fetch;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
@@ -472,8 +473,10 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
      * @return
      */
     private FetchProvider<T> excludeCritOnlyAndCommonProps(final FetchProvider<T> fetchProvider) {
-        final List<String> critOnlyAndCommonProps = new ArrayList<>(streamProperties(entityType, CritOnly.class).map(field -> field.getName()).collect(toList()));
-        critOnlyAndCommonProps.addAll(isUnionEntityType(entityType) ? commonProperties((Class<? extends AbstractUnionEntity>) entityType) : new ArrayList<>());
+        final List<String> critOnlyAndCommonProps = streamProperties(entityType, CritOnly.class).map(field -> field.getName()).collect(toCollection(ArrayList::new));
+        if (isUnionEntityType(entityType)) {
+            critOnlyAndCommonProps.addAll(commonProperties((Class<? extends AbstractUnionEntity>) entityType));
+        }
         return critOnlyAndCommonProps.size() > 0 ? (FetchProvider<T>) fetchProvider.without(critOnlyAndCommonProps.get(0), critOnlyAndCommonProps.subList(1, critOnlyAndCommonProps.size()).toArray(new String[0])) : fetchProvider;
     }
 
