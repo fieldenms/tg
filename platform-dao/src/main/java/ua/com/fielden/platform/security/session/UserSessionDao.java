@@ -422,6 +422,10 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
      * @param seriesId
      */
     private UserSession assignAuthenticator(final UserSession userSession, final String seriesId) {
+        // let's be a bit more defensive
+        if (userSession == null) {
+            return null;
+        }
         try {
             userSession.beginInitialising();
             userSession.setAuthenticator(mkAuthenticator(userSession.getUser(), seriesId /* un-hashed */, userSession.getVersion(), userSession.getExpiryTime()));
