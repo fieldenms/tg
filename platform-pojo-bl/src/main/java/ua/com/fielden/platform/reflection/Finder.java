@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.reflection;
 
 import static java.lang.String.format;
-import static java.util.Arrays.asList;
 import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
@@ -14,6 +13,7 @@ import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pd;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.Reflector.MAXIMUM_CACHE_SIZE;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
@@ -694,6 +694,7 @@ public class Finder {
      * @return
      * @throws IllegalAccessException
      */
+    private static final Set<String> KEY_DESC_ID = setOf(KEY, DESC, ID);
     private static Object getAbstractUnionEntityFieldValue(final AbstractUnionEntity value, final String property) {
         final Optional<Field> field;
         final Object valueToRetrieveFrom;
@@ -704,7 +705,7 @@ public class Finder {
             if (unionProperties.contains(property)) { // union properties:
                 field = ofNullable(getFieldByName(value.getClass(), property));
                 valueToRetrieveFrom = value;
-            } else if (commonProperties.contains(property) || asList(KEY, DESC, ID).contains(property)) { // common property (perhaps with KEY / DESC) or non-common KEY, DESC and ID for which the value can still be taken
+            } else if (commonProperties.contains(property) || KEY_DESC_ID.contains(property)) { // common property (perhaps with KEY / DESC) or non-common KEY, DESC and ID for which the value can still be taken
                 final AbstractEntity<?> activeEntity = value.activeEntity();
                 field = ofNullable(activeEntity != null ? getFieldByName(activeEntity.getClass(), property) : null);
                 valueToRetrieveFrom = activeEntity;
@@ -853,23 +854,21 @@ public class Finder {
     }
 
     /**
-     * Returns true if the field with appropriate name and type is present in the list of specified properties.
+     * Returns {@code true} if the {@code field} is present in the list of specified properties, which is determined by matching field names and types.
+     * In case of property with name "key", special care is taken to determine its type.
      *
-     *
-     * @param field
-     * @param properties
+     * @param field -- the field to check.
+     * @param fieldOwner -- the type where {@code field} is declared; this is required to overcome the problem with the absence of type reification in case of generic inherited properties.
+     * @param properties -- a list of fields to check the {@code field} against.
+     * @param propertyOwner -- the type on which the check is happening; this is the owner type for {@code properties}.
      * @return
      */
     private static boolean isPropertyPresent(final Field field, final Class<? extends AbstractEntity<?>> fieldOwner, final List<Field> properties, final Class<? extends AbstractEntity<?>> propertyOwner) {
         for (final Field property : properties) {
-            // Need a special handle for property key
             if (field.getName().equals(property.getName())) {
-                Class<?> fieldType = field.getType();
-                Class<?> propertyType = property.getType();
-                if (KEY.equals(field.getName())) {
-                    fieldType = getKeyType(fieldOwner);
-                    propertyType = getKeyType(propertyOwner);
-                }
+                final boolean isKey = KEY.equals(field.getName()); // need special handling for property key
+                final Class<?> fieldType    = isKey ? getKeyType(fieldOwner)    : field.getType();
+                final Class<?> propertyType = isKey ? getKeyType(propertyOwner) : property.getType();
                 if (fieldType != null && propertyType != null && fieldType.equals(propertyType)) {
                     return true;
                 }
