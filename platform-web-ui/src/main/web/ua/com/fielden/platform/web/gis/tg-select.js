@@ -12,14 +12,15 @@ export const Select = function (_map, _getLayerById, _markerFactory, tgMap, find
     self._featureToLeafletIds = {};
     self._prevId = null;
     self._tgMap = tgMap;
+    self.getLayerIdByEntity = entity => 
+        entity.properties && entity.properties.layerId 
+            ? entity.properties.layerId
+            : (typeof entity.arcGisId !== 'undefined' ? getLayerByGlobalId(entity.get('arcGisId'))._leaflet_id : null);
 
     self._centreSelectionHandler = function (newSelection) {
         if (newSelection.entities.length == 1) {
             const selectionEntity = newSelection.entities[0];
-            const layerId = 
-                selectionEntity.entity.properties && selectionEntity.entity.properties.layerId 
-                    ? selectionEntity.entity.properties.layerId
-                    : getLayerByGlobalId(selectionEntity.entity.get('arcGisId'))._leaflet_id;
+            const layerId = self.getLayerIdByEntity(selectionEntity.entity);
             if (selectionEntity.select) {
                 self._silentlySelectById(layerId);
             } else {
@@ -47,13 +48,6 @@ Select.prototype.select = function (layerId) {
         
         if (prevId !== null) {
             this._silentlyDeselect(prevId);
-            const prevEntity = this.findEntityBy(this._getLayerById(prevId).feature);
-            if (_isEntity(prevEntity)) {
-                details.push({
-                    entity: prevEntity,
-                    select: false
-                });
-            }
         }
         if (details.length > 0) {
             const event = new CustomEvent('tg-entity-selected', {
@@ -70,28 +64,6 @@ Select.prototype.select = function (layerId) {
     }
 }
 
-Select.prototype._deselect = function (layerId) {
-    const layer = this._getLayerById(layerId);
-    const feature = layer.feature;
-
-    const entity = this.findEntityBy(feature);
-    if (_isEntity(entity)) {
-        const event = new CustomEvent('tg-entity-selected', {
-            detail: {
-                shouldScrollToSelected: true,
-                entities: [{
-                    entity: entity,
-                    select: false
-                }]
-            },
-            bubbles: true,
-            composed: true,
-            cancelable: true
-        });
-        this._tgMap.getCustomEventTarget().dispatchEvent(event);
-    }
-}
-
 Select.prototype._silentlySelectById = function (layerId) {
     if (this._prevId !== layerId) {
         const prevId = this._prevId;
@@ -99,7 +71,7 @@ Select.prototype._silentlySelectById = function (layerId) {
         this._prevId = layerId;
 
         if (prevId !== null) { // at the moment of selecting the feature - there has been other previously selected feature (or, perhaps, the same) 
-            this._deselect(prevId);
+            this._silentlyDeselect(prevId);
         }
     }
 }

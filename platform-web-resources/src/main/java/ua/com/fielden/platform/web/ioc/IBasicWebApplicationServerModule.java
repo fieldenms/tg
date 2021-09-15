@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.ioc;
 
+import static ua.com.fielden.platform.reflection.CompanionObjectAutobinder.bindCo;
 import static ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector.INSTANCE;
 
 import com.google.inject.Binder;
@@ -7,8 +8,7 @@ import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.binder.AnnotatedBindingBuilder;
 
-import ua.com.fielden.platform.entity.EntityExportActionDao;
-import ua.com.fielden.platform.entity.EntityExportActionCo;
+import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.menu.IMenuRetriever;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
@@ -17,18 +17,6 @@ import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.SerialisationTypeEncoder;
 import ua.com.fielden.platform.web.app.ThreadLocalDeviceProvider;
-import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterDao;
-import ua.com.fielden.platform.web.centre.CentreConfigConfigureActionDao;
-import ua.com.fielden.platform.web.centre.CentreConfigEditActionDao;
-import ua.com.fielden.platform.web.centre.CentreConfigLoadActionDao;
-import ua.com.fielden.platform.web.centre.CentreConfigSaveActionDao;
-import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
-import ua.com.fielden.platform.web.centre.ICentreColumnWidthConfigUpdater;
-import ua.com.fielden.platform.web.centre.CentreConfigConfigureActionCo;
-import ua.com.fielden.platform.web.centre.CentreConfigEditActionCo;
-import ua.com.fielden.platform.web.centre.CentreConfigLoadActionCo;
-import ua.com.fielden.platform.web.centre.CentreConfigSaveActionCo;
-import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
 import ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
@@ -72,16 +60,11 @@ public interface IBasicWebApplicationServerModule {
 
         // bind ICriteriaEntityRestorer to its implementation as singleton -- it is dependent on IWebUiConfig, IServerGlobalDomainTreeManager, IUserProvider and other Web UI infrastructure
         bindType(ICriteriaEntityRestorer.class).to(CriteriaEntityRestorer.class).in(Scopes.SINGLETON);
-        // bind companion object implementations that are dependent on ICriteriaEntityRestorer
-        bindType(EntityExportActionCo.class).to(EntityExportActionDao.class);
-        bindType(ICentreConfigUpdater.class).to(CentreConfigUpdaterDao.class);
-        bindType(ICentreColumnWidthConfigUpdater.class).to(CentreColumnWidthConfigUpdaterDao.class);
 
-        bindType(CentreConfigLoadActionCo.class).to(CentreConfigLoadActionDao.class);
-        bindType(CentreConfigEditActionCo.class).to(CentreConfigEditActionDao.class);
-        bindType(CentreConfigSaveActionCo.class).to(CentreConfigSaveActionDao.class);
-        bindType(CentreConfigConfigureActionCo.class).to(CentreConfigConfigureActionDao.class);
-        
+        // bind companion object implementations that are dependent on ICriteriaEntityRestorer
+        PlatformDomainTypes.typesDependentOnWebUI.stream().forEach(type -> bindCo(type, (co, t) -> bindType(co).to(t)));
+
+        // bind SingleActionSelector to its singleton
         bindType(SingleActionSelector.class).toInstance(INSTANCE); // singleton
     }
 

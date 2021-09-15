@@ -24,7 +24,6 @@ import static ua.com.fielden.platform.reflection.EntityMetadata.entityExistsAnno
 import static ua.com.fielden.platform.reflection.EntityMetadata.isEntityExistsValidationApplicable;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNumeric;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
-import static ua.com.fielden.platform.utils.CollectionUtil.unmodifiableSetOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isHyperlink;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 
@@ -292,7 +291,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     public static final String GETKEY = "getKey()";
     public static final String DESC = "desc";
     public static final String KEY_NOT_ASSIGNED = "[key is not assigned]";
-    public static final Set<String> COMMON_PROPS = unmodifiableSetOf(KEY, DESC, "referencesCount", "referenced");
     
     /**
      * A flag that provides a way to enforce more strict model verification, which is the default approach.

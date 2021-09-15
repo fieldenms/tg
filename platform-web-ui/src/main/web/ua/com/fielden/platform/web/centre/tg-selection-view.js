@@ -16,6 +16,7 @@ import '/resources/actions/tg-ui-action.js';
 import '/resources/images/tg-document-related-icons.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import '/resources/egi/tg-responsive-toolbar.js';
+import { getKeyEventTarget } from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
@@ -30,6 +31,7 @@ const template = html`
             };
         }
         tg-responsive-toolbar {
+            margin-top: 8px;
             padding: 0 12px;
             height: auto;
             position: relative;
@@ -131,7 +133,7 @@ Polymer({
     attached: function () {
         const self = this;
         this.async(function () {
-            self.keyEventTarget = self._getKeyEventTarget();
+            self.keyEventTarget = getKeyEventTarget(this, this.parentElement.parentElement);
 
             self.topLevelActions = [
                 self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigNewAction'),
@@ -142,14 +144,6 @@ Polymer({
                 self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigConfigureAction')
             ];
         }, 1);
-    },
-
-    _getKeyEventTarget: function () {
-        let parent = this;
-        while (parent && (parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG' && parent.tagName !== 'TG-MENU-ITEM-VIEW')) {
-            parent = parent.parentElement || parent.getRootNode().host;
-        }
-        return parent || this.parentElement.parentElement;
     },
 
     _shortcutPressed: function (e) {

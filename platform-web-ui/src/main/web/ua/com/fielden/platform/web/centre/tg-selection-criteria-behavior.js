@@ -1,13 +1,16 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
+import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 
 //Actions those can be applied to entity centre.
-const RunActions = {
+export const RunActions = {
     run: "run",
     navigate: "navigate",
     refresh: "refresh"
 };
+
+const CRITERIA_NOT_LOADED_MSG = "Cannot activate result-set view (not initialised criteria).";
 
 const TgSelectionCriteriaBehaviorImpl = {
 
@@ -115,6 +118,14 @@ const TgSelectionCriteriaBehaviorImpl = {
             type: Number
         },
 
+        /**
+         * Preferred view retrieved with selection criteria.
+         */
+        preferredView: {
+            type: Number,
+            notify: true
+        },
+
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
         //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -208,6 +219,15 @@ const TgSelectionCriteriaBehaviorImpl = {
         isRunning: {
             type: Boolean,
             notify: true
+        },
+
+        /**
+         * Indicates the reason why data for this selection criteria's centre changed. This should have a type of RunActions.
+         */
+        dataChangeReason: {
+            type: String,
+            notify: true,
+            value: null,
         },
 
         /**
@@ -401,6 +421,9 @@ const TgSelectionCriteriaBehaviorImpl = {
             delete this.loadCentreFreezed;
             this.configUuid = customObject.configUuid;
         }
+        if (typeof customObject.preferredView !== 'undefined') {
+            this.preferredView = customObject.preferredView;
+        }
     },
 
     _configUuidChanged: function (newConfigUuid, oldConfigUuid) {
@@ -566,6 +589,36 @@ const TgSelectionCriteriaBehaviorImpl = {
     },
 
     /**
+     * A function to cancel active autocompletion search request.
+     */
+    _cancelAutocompletion: function () {
+        this._dom().querySelectorAll('tg-entity-editor').forEach((currentValue, currentIndex, list) => {
+            if (currentValue.searching) {
+                currentValue._cancelSearch();
+            }
+        });
+    },
+
+    /**
+     * @returns object that explains the reason why this selection criteria can not be left or undefined.
+     */
+    canLeave: function () {
+        if (this._criteriaLoaded === false) {
+            return {
+                msg: CRITERIA_NOT_LOADED_MSG
+            };
+        }
+    },
+
+    //Performs custom tasks before leaving this selection criteria.
+    leave: function () {
+        // cancel any autocompleter searches
+        this._cancelAutocompletion();
+        //Persist active element
+        this.persistActiveElement();
+    },
+
+    /**
      * Starts the process of centre run.
      *
      * isAutoRunning -- returns true if this running action represents autoRun event action invocation rather than simple running, undefined or false otherwise; not to be confused with 'link' centre auto-running capability
@@ -615,6 +668,7 @@ const TgSelectionCriteriaBehaviorImpl = {
 
             // cancel previous validation before starting saving process -- it includes validation process internally!
             self._validator().abortValidationIfAny();
+            self.dataChangeReason = action;
             resolve(
                 self._runModifiedProperties(
                     self._createContextHolderForRunning(function () {
@@ -767,6 +821,7 @@ const TgSelectionCriteriaBehaviorImpl = {
 
 export const TgSelectionCriteriaBehavior = [
     TgEntityBinderBehavior,
+    TgFocusRestorationBehavior,
     TgSelectionCriteriaBehaviorImpl,
     TgElementSelectorBehavior
 ];

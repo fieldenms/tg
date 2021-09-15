@@ -1,5 +1,7 @@
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 
+import { isInHierarchy } from '/resources/reflection/tg-polymer-utils.js';
+
 import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
@@ -17,13 +19,6 @@ const template = html`
         .grid-toolbar-content {
             min-width:fit-content;
             @apply --layout-horizontal;
-            @apply --layout-center;
-        }
-        .pagintaion-text:first-child {
-            padding-left:8px;
-        }
-        .grid-toolbar-content ::slotted(*) {
-            margin-top: 8px;
         }
         .grid-toolbar-content ::slotted(.first-group) {
             @apply --layout-horizontal;
@@ -31,9 +26,6 @@ const template = html`
         .grid-toolbar-content ::slotted(.group) {
             margin-left: 30px;
             @apply --layout-horizontal;
-        }
-        #expandToolbarButton {
-            margin-top: 8px;
         }
         #expandToolbarButton.invisible {
             display: none;
@@ -191,7 +183,7 @@ export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior],
     _resizeEventListener (e) {
         const thisComponentWidth = this.offsetWidth;
         const widthOfToolbar = this.$.leftToolbarContainer.offsetWidth + this.$.rightToolbarContainer.offsetWidth;
-        if (e.composedPath()[0] !== this.$.dropdown) {
+        if (e.composedPath()[0] !== this.$.dropdown && !isInHierarchy(this.$.dropdown, e.composedPath()[0])) {
             if (this.$.dropdown.opened) {
                 this.$.dropdown.close();
             }

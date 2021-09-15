@@ -20,7 +20,7 @@ import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
 import '/resources/polymer/@polymer/paper-toolbar/paper-toolbar.js';
 /* TG ELEMENTS */
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
-import { isInHierarchy, deepestActiveElement, tearDownEvent, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
+import { getKeyEventTarget, isInHierarchy, deepestActiveElement, tearDownEvent, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import '/app/tg-app-config.js';
 import '/resources/components/postal-lib.js';
@@ -101,14 +101,6 @@ const template = html`
     </app-drawer-layout>
 `;
 
-const getKeyEventTarget = function (startFrom) {
-    let parent = startFrom;
-    while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
-        parent = parent.parentElement || parent.getRootNode().host;
-    }
-    return parent || startFrom;
-};
-
 const findMenuItemSection = function (path) {
     return path.find(element => element.tagName === "TG-MASTER-MENU-ITEM-SECTION");
 };
@@ -149,7 +141,7 @@ Polymer({
         },
 
         /**
-         * A menu route that should be activated when the master gets shown. This can be changed (comparing to '_originalDefaultRoute') after compound opener retrieval (producer domain-specific logic) or on 'modifyFunctionalEntity' callback (see tg-app-template._openMasterAction).
+         * A menu route that should be activated when the master gets shown. This can be changed (comparing to '_originalDefaultRoute') after compound opener retrieval (producer domain-specific logic) or on 'modifyFunctionalEntity' callback (see tg-app-template._tgOpenMasterAction).
          */
         defaultRoute: {
             type: String
@@ -397,7 +389,7 @@ Polymer({
         });
         //Configure key event target for menu triggering.
         self.async(function () {
-            self.keyEventTarget = getKeyEventTarget(self);
+            self.keyEventTarget = getKeyEventTarget(self, self);
         }, 1);
         //Reset narrow state to remove no-transition attribute
         afterNextRender(this, () => {

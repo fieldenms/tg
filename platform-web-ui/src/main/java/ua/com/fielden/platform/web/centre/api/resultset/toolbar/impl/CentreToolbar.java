@@ -14,12 +14,46 @@ import ua.com.fielden.platform.dom.InnerTextElement;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.minijs.JsCode;
 
+/**
+ * Configuration for default toolbars available for entity centres and alternative views.
+ * This implementation can be overridden to provide adjustments for button placement and contents.
+ *
+ * @author TG Team
+ *
+ */
 public class CentreToolbar implements IToolbarConfig {
 
-    protected final InnerTextElement topLevelPlacement = new InnerTextElement("<!-- GENERATED FUNCTIONAL ACTIONS: -->\n<!--@functional_actions-->");
+    private final int switchViewButtonWidth;
+
+    /**
+     * Creates standard {@link CentreToolbar}. Standard switch view button width will be 60 (if present).
+     *
+     * @param switchViewButtonWidth
+     */
+    public CentreToolbar() {
+        this(60); //Default width of switch view button
+    }
+
+    /**
+     * Creates standard {@link CentreToolbar} with custom switch view button width (if present).
+     *
+     * @param switchViewButtonWidth
+     */
+    public CentreToolbar(final int switchViewButtonWidth) {
+        this.switchViewButtonWidth = switchViewButtonWidth;
+    }
+
+    /**
+     * Creates standard {@link CentreToolbar} with custom switch view button width (if present).
+     *
+     * @param switchViewButtonWidth
+     */
+    public static CentreToolbar withSwitchViewButtonWidth(final int switchViewButtonWidth) {
+        return new CentreToolbar(switchViewButtonWidth);
+    }
 
     protected DomElement createToolbarElement() {
-        return new DomContainer().add(topLevelPlacement, configButton(), pagination("standart-action"), refreshButton());
+        return new DomContainer().add(topLevelPlacement, switchViewPlacement, configButton(), pagination("standart-action"), refreshButton());
     }
 
     @Override
@@ -60,6 +94,15 @@ public class CentreToolbar implements IToolbarConfig {
                 .attr("tooltip-text$", "[[computeConfigButtonTooltip(staleCriteriaMessage)]]");
     }
 
+    public static DomElement selectView(final int viewIndex, final int width) {
+        return new DomElement("tg-dropdown-switch")
+                .attr("slot", "standart-action")
+                .attr("view-index", viewIndex)
+                .attr("button-width", width)
+                .attr("main-button-tooltip-text", "Choose an alternative view.")
+                .attr("views", "[[resultViews]]");
+    }
+
     public static List<String> configShortcut() {
         return Arrays.asList("ctrl+e");
     }
@@ -83,7 +126,7 @@ public class CentreToolbar implements IToolbarConfig {
                         .attr("disabled$", "[[canNotPrev(pageNumber, isRunning)]]")
                         .attr("tooltip-text", "Previous page, Ctrl&nbsp+&nbsp<span style=\"font-size:18px;font-weight:bold\">&#8592</span>"))
                 .add(new DomElement("span")
-                        .clazz("standart-action pagintaion-text")
+                        .clazz("standart-action pagination-text")
                         .style("white-space:nowrap")
                         .attr("slot", slot)
                         .add(new InnerTextElement("[[currPageFeedback(pageNumberUpdated, pageCountUpdated)]]")))
@@ -122,5 +165,10 @@ public class CentreToolbar implements IToolbarConfig {
                 .attr("on-tap", "currentPageTap")
                 .attr("disabled$", "[[canNotCurrent(pageNumber, pageCount, isRunning)]]")
                 .attr("tooltip-text", "Refresh, F5");
+    }
+
+    @Override
+    public int getSwitchViewButtonWidth() {
+        return switchViewButtonWidth;
     }
 }

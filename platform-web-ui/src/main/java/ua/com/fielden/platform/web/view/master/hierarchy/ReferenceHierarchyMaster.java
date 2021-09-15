@@ -110,9 +110,7 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
     private String readyCallback() {
         return "self.classList.add('layout');\n"
                 + "self.classList.add('vertical');\n"
-                + "self.canLeave = function () {\n"
-                + "    return null;\n"
-                + "}.bind(self);\n"
+                + "self.classList.remove('canLeave');\n"
                 + "self._showDataLoadingPromt = function (msg) {\n"
                 + "    this.$.refrenceHierarchy.lock = true;\n"
                 + "    this._toastGreeting().text = msg;\n"

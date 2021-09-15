@@ -35,8 +35,8 @@ import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
 import ua.com.fielden.platform.serialisation.api.ISerialiserEngine;
 import ua.com.fielden.platform.serialisation.api.impl.TgJackson;
 import ua.com.fielden.platform.serialisation.jackson.EntityTypeInfoGetter;
-import ua.com.fielden.platform.ui.config.api.EntityCentreConfigCo;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
+import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
+import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.menu.MiType;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
@@ -54,7 +54,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
     private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
     private final EntityCentreConfigCo eccCompanion;
-    private final IMainMenuItem mmiCompanion;
+    private final MainMenuItemCo mmiCompanion;
     private final IUser userCompanion;
     private final ICompanionObjectFinder companionFinder;
     
@@ -66,7 +66,7 @@ public class SerialisationTypeEncoder implements ISerialisationTypeEncoder {
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final EntityCentreConfigCo eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICompanionObjectFinder companionFinder) {
         this.deviceProvider = deviceProvider;
