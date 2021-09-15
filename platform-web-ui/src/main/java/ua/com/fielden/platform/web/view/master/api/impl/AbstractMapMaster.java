@@ -25,7 +25,7 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
  *
  * @param <T>
  */
-public abstract class AbstractMapMaster<T extends AbstractFunctionalEntityWithCentreContext<String>> implements IMaster<T> {
+public abstract class AbstractMapMaster<T extends AbstractFunctionalEntityWithCentreContext<?>> implements IMaster<T> {
     private final IRenderable renderable;
 
     public AbstractMapMaster(final Class<T> entityType, final String gisComponentImportPath, final String gisComponentName) {
@@ -38,10 +38,14 @@ public abstract class AbstractMapMaster<T extends AbstractFunctionalEntityWithCe
                 .attr("column-properties-mapper", "{{columnPropertiesMapper}}")
                 .attr("centre-selection", "[[centreSelection]]")
                 .attr("custom-event-target", "[[customEventTarget]]")
+                .attr("data-change-reason", "[[dataChangeReason]]")
                 .attr("retrieved-entities", "{{retrievedEntities}}")
                 .attr("retrieved-totals", "{{retrievedTotals}}");
 
         final String primaryActionObjectsString = primaryActionObjects.toString();
+
+        final StringBuilder prefDimBuilder = new StringBuilder();
+        prefDimBuilder.append("{'width': function() {return '100%'}, 'height': function() {return '100%'}, 'widthUnit': '', 'heightUnit': ''}");
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
                 .replace(IMPORTS, createImports(linkedSetOf("gis/tg-map")) + "import { " + gisComponentName + " } from '/resources/" + gisComponentImportPath + ".js';\n" )
@@ -52,7 +56,7 @@ public abstract class AbstractMapMaster<T extends AbstractFunctionalEntityWithCe
                 .replace("//@attached-callback",
                         "self.classList.remove('canLeave');\n"
                         + "self.shadowRoot.querySelector('.tg-map').initialiseOrInvalidate(" + gisComponentName + ");\n")
-                .replace("@prefDim", "null")
+                .replace("@prefDim", prefDimBuilder.toString())
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");
 

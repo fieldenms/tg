@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.security.user;
 
-import ua.com.fielden.platform.dao.ISecurityRoleAssociation;
 import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -24,7 +23,7 @@ import ua.com.fielden.platform.utils.ClassComparator;
  */
 @KeyType(DynamicEntityKey.class)
 @MapEntityTo
-@CompanionObject(ISecurityRoleAssociation.class)
+@CompanionObject(SecurityRoleAssociationCo.class)
 public class SecurityRoleAssociation extends AbstractPersistentEntity<DynamicEntityKey> {
 
     @IsProperty

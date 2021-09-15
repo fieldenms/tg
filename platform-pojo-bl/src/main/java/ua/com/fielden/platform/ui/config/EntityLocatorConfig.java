@@ -16,7 +16,6 @@ import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.menu.validators.UserAsConfigurationOwnerValidator;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
 
 /**
  * This is a class to persist configuration of an individual entity locator.
@@ -29,7 +28,7 @@ import ua.com.fielden.platform.ui.config.api.IEntityLocatorConfig;
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle("Entity locator configuration")
-@CompanionObject(IEntityLocatorConfig.class)
+@CompanionObject(EntityLocatorConfigCo.class)
 @MapEntityTo("ENTITY_LOCATOR_CONFIG")
 @DenyIntrospection
 public class EntityLocatorConfig extends AbstractConfiguration<DynamicEntityKey> {

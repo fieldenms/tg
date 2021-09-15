@@ -53,8 +53,7 @@ public class DomainExplorerWebUiConfig {
                              .icon("stub")
                              .withNoParentCentreRefresh()
                              .build(),
-                         InsertionPoints.BOTTOM
-                     ).flex()
+                         InsertionPoints.ALTERNATIVE_VIEW)
                 .build();
 
         final EntityCentre<DomainExplorer> entityCentre = new EntityCentre<>(MiDomainExplorer.class, "MiDomainExplorer", ecc, injector, null);

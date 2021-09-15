@@ -25,7 +25,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
-import ua.com.fielden.platform.ui.config.api.EntityCentreConfigCo;
+import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.centre.CentreConfigShareAction;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;

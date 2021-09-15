@@ -30,7 +30,7 @@ import { TgElementSelectorBehavior } from '/resources/components/tg-element-sele
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import { getFirstEntityType, tearDownEvent, getRelativePos, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
+import { getKeyEventTarget, tearDownEvent, getRelativePos, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
@@ -57,6 +57,7 @@ const template = html`
             max-height: 100%;
         }
         tg-responsive-toolbar {
+            margin-top: 8px;
             flex-grow: 0;
             flex-shrink: 0;
             z-index: 1;
@@ -628,6 +629,8 @@ const template = html`
         </tg-secondary-action-dropdown>
     </div>`;
 
+const MSG_SAVE_OR_CANCEL = "Please save or cancel changes.";
+
 function calculateColumnWidthExcept (egi, columnIndex, columnElements, columnLength, dragAnchor, checkboxes, primaryActions, secondaryActions) {
     let columnWidth = 0;
     if (egi.canDragFrom && dragAnchor()) {
@@ -713,6 +716,16 @@ Polymer({
         columns: {
             type: Array
         },
+
+        /**
+         * The icon for insertion point
+         */
+        icon: String,
+        /**
+         * The icon style for insertion point
+         */
+        iconStyle: String,
+        
         master: Object,
         allColumns: Array,
         fixedColumns: Array,
@@ -991,14 +1004,15 @@ Polymer({
                 const column = this.columns[index];
                 const entry = {
                     dotNotation: column.property,
-                    value: this.getBindedValue(entity, column)
+                    value: this.getBindedValue(entity, column),
+                    column: column
                 };
                 result.push(entry);
             }
             return result;
         }).bind(this);
         this.async(function () {
-            this.keyEventTarget = this._getKeyEventTarget();
+            this.keyEventTarget = getKeyEventTarget(this, this);
             if (this.master) {
                 this._initMasterEditors();
                 this.appendChild(this.master.saveButton);
@@ -1117,8 +1131,9 @@ Polymer({
      * Indicates the presence of default action for 'entity' in the specified 'column'.
      */
     hasDefaultAction: function (entity, column) {
-        if (entity && entity.type && entity.type()) {
-            const propertyType = this._reflector.tg_determinePropertyType(entity.type(), column.collectionalProperty || column.property);
+        const type = entity && entity.constructor.prototype.type && entity.constructor.prototype.type.call(entity);
+        if (type) {
+            const propertyType = this._reflector.tg_determinePropertyType(type, column.collectionalProperty || column.property);
             if (propertyType instanceof this._reflector._getEntityTypePrototype()) { // only entity-typed columns can have default actions ...
                 return propertyType.entityMaster(); // ... and only those, that have corresponding entity masters
             }
@@ -2123,7 +2138,8 @@ Polymer({
     _generateEntityTooltip: function (entity, column) {
         const valueToFormat = this.getValueFromEntity(entity, column);
         if (Array.isArray(valueToFormat)) {
-            return this._reflector.tg_toString(valueToFormat, this.getRealEntity(entity, column).type(), this.getRealProperty(column), { collection: true, asTooltip: true });
+            const realEntity = this.getRealEntity(entity, column);
+            return this._reflector.tg_toString(valueToFormat, realEntity.constructor.prototype.type.call(realEntity), this.getRealProperty(column), { collection: true, asTooltip: true });
         } else {
             let desc;
             try {
@@ -2219,14 +2235,6 @@ Polymer({
         }.bind(this), 1);
     },
 
-    _getKeyEventTarget: function () {
-        let parent = this;
-        while (parent && (parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG' && parent.tagName !== 'TG-MENU-ITEM-VIEW')) {
-            parent = parent.parentElement || parent.getRootNode().host;
-        }
-        return parent || this;
-    },
-
     _getHeaderColumns: function () {
         const topLeftCells = this.$.top_left_egi.querySelector(".table-header-row").querySelectorAll(".cell");
         const topCells = this.$.top_egi.querySelector(".table-header-row").querySelectorAll(".cell");
@@ -2268,10 +2276,31 @@ Polymer({
         return {};
     },
 
+    /**
+     * @returns value that indicates whether this EGI is hidden or not.
+     */
+    isHidden: function () {
+        return this.hasAttribute("hidden");
+    },
+
     /************ EGI MASTER RELATED FUNCTIONS ***************/
     isEditing: function () {
         return this.$.centre_egi_master.offsetParent !== null;
     },
+
+    /**
+     * @returns object that explains the reason why this EGI can not be left or undefined.
+     */
+    canLeave: function () {
+        if (this.isEditing()) {
+            return {
+                msg: MSG_SAVE_OR_CANCEL
+            }
+        }
+    },
+
+    //Performs custom tasks before leaving this EGI.
+    leave: function() {},
 
     canOpenMaster: function () {
         return true;

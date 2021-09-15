@@ -30,7 +30,7 @@ import ua.com.fielden.platform.web.centre.definers.CentreConfigUpdaterSortingVal
  * @author TG Team
  *
  */
-@CompanionObject(ICentreConfigUpdater.class)
+@CompanionObject(CentreConfigUpdaterCo.class)
 // !@MapEntityTo -- here the entity is not persistent intentionally
 public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionModification<String> {
 

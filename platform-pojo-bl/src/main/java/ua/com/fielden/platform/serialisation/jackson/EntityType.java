@@ -34,7 +34,7 @@ public class EntityType extends AbstractEntity<String> {
 
     @IsProperty(String.class)
     @Title(value = "Composite Keys", desc = "Composite key property names")
-    private List<String> _compositeKeyNames = new ArrayList<>();
+    private final List<String> _compositeKeyNames = new ArrayList<>();
 
     @IsProperty
     @Title(value = "Composite Key Separator", desc = "Separator for composite key members (for autocompletion)")
@@ -50,7 +50,7 @@ public class EntityType extends AbstractEntity<String> {
 
     @IsProperty(EntityTypeProp.class)
     @Title(value = "Entity Type Properties", desc = "A map of entity type properties by their names")
-    private Map<String, EntityTypeProp> _props = new LinkedHashMap<>();
+    private final Map<String, EntityTypeProp> _props = new LinkedHashMap<>();
 
     @IsProperty
     @Title(value = "Is Persistent?", desc = "Indicated whether the associated entity type represents a persistent entity.")
@@ -65,8 +65,8 @@ public class EntityType extends AbstractEntity<String> {
     private Boolean _continuation;
 
     @IsProperty
-    @Title(value = "Is Union?", desc = "Indicates whether the associated entity type represents an union entity.")
-    private Boolean _union;
+    @Title(value = "Union Common Properties", desc = "The list of common properties (can be empty) in case if the associated entity type represents union entity type; null otherwise.")
+    private List<String> _unionCommonProps; // intentionally null (i.e. not serialised) to differentiate between [empty set of common properties for union entity type] and [non-union entity type]
 
     @IsProperty
     @Title(value = "Compound Opener Type", desc = "Represents main persistent type for this compound master opener (if it is of such kind, empty otherwise).")
@@ -79,6 +79,20 @@ public class EntityType extends AbstractEntity<String> {
     @IsProperty
     @Title(value = "Entity Master", desc = "Entity Master Data")
     private MasterInfo _entityMaster;
+
+    @IsProperty
+    @Title(value = "New Entity Master", desc = "Entity master data for new entity action")
+    private MasterInfo _newEntityMaster;
+
+    @Observable
+    public EntityType set_newEntityMaster(final MasterInfo _newEntityMaster) {
+        this._newEntityMaster = _newEntityMaster;
+        return this;
+    }
+
+    public MasterInfo get_newEntityMaster() {
+        return _newEntityMaster;
+    }
 
     @Observable
     public EntityType set_entityMaster(final MasterInfo _entityMaster) {
@@ -111,13 +125,13 @@ public class EntityType extends AbstractEntity<String> {
     }
 
     @Observable
-    public EntityType set_union(final Boolean _union) {
-        this._union = _union;
+    public EntityType set_unionCommonProps(final List<String> value) {
+        this._unionCommonProps = value;
         return this;
     }
 
-    public Boolean is_union() {
-        return _union;
+    public List<String> get_unionCommonProps() {
+        return _unionCommonProps;
     }
 
     @Observable

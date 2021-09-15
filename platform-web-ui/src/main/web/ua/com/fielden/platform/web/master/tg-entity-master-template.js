@@ -11,13 +11,13 @@ const template = html`<!-- TODO layout vertical -->
     <style include="tg-entity-master-styles"></style> <!-- imported as part of tg-entity-master-template-behavior to reduce the size of resultant generated file -->
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <tg-ui-action
-        id="openMasterAction"
+        id="tgOpenMasterAction"
         ui-role='ICON'
         show-dialog='[[_showDialog]]'
         toaster='[[toaster]]'
         create-context-holder='[[_createContextHolder]]'
         dynamic-action
-        attrs='[[_openMasterActionAttrs]]'
+        attrs='[[_tgOpenMasterActionAttrs]]'
         require-selection-criteria='false'
         require-selected-entities='ONE'
         require-master-entity='true'

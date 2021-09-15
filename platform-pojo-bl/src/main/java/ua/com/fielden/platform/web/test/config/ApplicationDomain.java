@@ -78,6 +78,11 @@ import ua.com.fielden.platform.sample.domain.TgSelectedEntitiesExampleAction;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgStop;
 import ua.com.fielden.platform.sample.domain.TgStopMap;
+import ua.com.fielden.platform.sample.domain.TgUnion;
+import ua.com.fielden.platform.sample.domain.TgUnionCommonType;
+import ua.com.fielden.platform.sample.domain.TgUnionHolder;
+import ua.com.fielden.platform.sample.domain.TgUnionType1;
+import ua.com.fielden.platform.sample.domain.TgUnionType2;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 import ua.com.fielden.platform.sample.domain.TgVehicleFuelUsage;
@@ -224,6 +229,12 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgWebApiEntity.class);
         add(TgWebApiEntitySyntheticSingle.class);
         add(TgWebApiEntitySyntheticMulti.class);
+        
+        add(TgUnionHolder.class);
+        add(TgUnion.class);
+        add(TgUnionType1.class);
+        add(TgUnionType2.class);
+        add(TgUnionCommonType.class);
     }
 
     @Override
