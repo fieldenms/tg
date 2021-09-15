@@ -119,10 +119,10 @@ public class EqlDomainMetadata {
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EqlEntityMetadata> entityPropsMetadata;
     
     private final ConcurrentMap<String, Table> tables = new ConcurrentHashMap<>();
-    private final Injector hibTypesInjector;
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo;
     private final EntQueryGenerator gen;
 
+    private final Injector hibTypesInjector;
 
     public EqlDomainMetadata(//
             final Map<Class<?>, Class<?>> hibTypesDefaults, //
