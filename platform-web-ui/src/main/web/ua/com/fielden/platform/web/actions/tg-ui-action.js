@@ -350,13 +350,6 @@ Polymer({
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         /**
-         * The type of entity for which dynamic action was invoked previous time.
-         */
-        _previousEntityType: {
-            type: Object,
-            value: null
-        },
-        /**
          * The saved short desc in case the action is dynamic 
          * If short desc wasn't specified then short desc should be specified every time new master is retrieved
          * And this property becomes an indicator of that fact. 
@@ -456,6 +449,18 @@ Polymer({
         self._runDynamicAction = function (currentEntity, chosenProperty) {
             this.currentEntity = currentEntity;
             this.chosenProperty = chosenProperty;
+            this.rootEntityType = null;
+
+            this._run();
+        }.bind(this);
+
+        /**
+         * Runs dynamic action [for creating New instances] with the specified mandatory root entity type.
+         */
+        self._runDynamicActionForNew = function (rootEntityType) {
+            this.currentEntity = () => null;
+            this.chosenProperty = null;
+            this.rootEntityType = rootEntityType;
 
             this._run();
         }.bind(this);
@@ -487,26 +492,25 @@ Polymer({
 
             self.persistActiveElement();
 
-            
-            if (this.dynamicAction && this.currentEntity()) {
-                const currentEntityTypeGetter = () => getFirstEntityType(this.currentEntity(), this.chosenProperty); // returned currentEntityType is never empty due to this.currentEntity() never empty here
-                const currentEntityType = currentEntityTypeGetter();
-                if (this._previousEntityType !== currentEntityType) {
-                    if (!this.elementName) {//Element name for dynamic action is not specified at first run
-                        this._originalShortDesc = this.shortDesc;//It means that shortDesc wasn't changed yet.
+            if (this.dynamicAction && (this.rootEntityType || this.currentEntity())) {
+                const currentEntityType = this.rootEntityType ? this._reflector.getType(this.rootEntityType) : getFirstEntityType(this.currentEntity(), this.chosenProperty); // currentEntityType is never empty due to either this.rootEntityType not empty or this.currentEntity() not empty
+                if (!this.elementName) { // element name for dynamic action is not specified at first run
+                    this._originalShortDesc = this.shortDesc; // it means that shortDesc wasn't changed yet
+                }
+                this.isActionInProgress = true;
+                try {
+                    const masterInfo = this.rootEntityType ? currentEntityType.newEntityMaster() : currentEntityType.entityMaster();
+                    if (!masterInfo) {
+                        const masterErrorMessage = `Could not find master for entity type: ${currentEntityType.notEnhancedFullClassName()}.`;
+                        this.toaster && this.toaster.openToastForError('Entity Master Error', masterErrorMessage, true);
+                        throw { msg: masterErrorMessage };
                     }
-                    this.isActionInProgress = true;
-                    try {
-                        this._setEntityMasterInfo(currentEntityType);
-                        this._previousEntityType = currentEntityTypeGetter();
-                        postMasterInfoRetrieve();
-                    } catch (e) {
-                        this.isActionInProgress = false;
-                        this.restoreActionState();
-                        console.log("The action was rejected with error: " + e);
-                    }
-                } else {
-                    postMasterInfoRetrieve();    
+                    this._setEntityMasterInfo(masterInfo);
+                    postMasterInfoRetrieve();
+                } catch (e) {
+                    this.isActionInProgress = false;
+                    this.restoreActionState();
+                    console.log("The action was rejected with error: " + e);
                 }
             } else {
                 postMasterInfoRetrieve();
@@ -572,6 +576,7 @@ Polymer({
                     data: {
                         shouldRefreshParentCentreAfterSave: this.shouldRefreshParentCentreAfterSave,
                         entity: potentiallySavedOrNewEntity,
+                        entityPath: [ potentiallySavedOrNewEntity ], // the starting point of the path of entities from masters that are on a chain of refresh cycle
                         // send selectedEntitiesInContext further to be able to update only them on EGI
                         selectedEntitiesInContext: selectedEntitiesSupplier()
                     }
@@ -682,6 +687,9 @@ Polymer({
         if (self.chosenProperty !== null) {
             self._enhanceContextWithChosenProperty(context, self.chosenProperty);
         }
+        if (self.rootEntityType) {
+            this._reflector.setCustomProperty(context, '@@rootEntityType', self.rootEntityType);
+        }
         return context;
     },
 
@@ -734,13 +742,7 @@ Polymer({
         return isActionInProgress || disabled;
     },
 
-    _setEntityMasterInfo: function (entityType) {
-        const masterInfo = entityType.entityMaster();
-        if (!masterInfo) {
-            const masterErrorMessage = `Could not find master for entity type: ${entityType.notEnhancedFullClassName()}.`
-            this.toaster && this.toaster.openToastForError("Entity Master Error", masterErrorMessage, true);
-            throw {msg: masterErrorMessage};
-        }
+    _setEntityMasterInfo: function (masterInfo) {
         this.elementName = masterInfo.key;
         this.componentUri = masterInfo.desc;
         this.shortDesc = this._originalShortDesc || masterInfo.shortDesc;

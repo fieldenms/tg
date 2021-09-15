@@ -1,7 +1,8 @@
 import '/resources/polymer/@polymer/polymer/lib/elements/custom-style.js';
+import '/resources/polymer/@polymer/iron-icon/iron-icon.js';
 import { L, leafletStylesName } from '/resources/gis/leaflet/leaflet-lib.js';
 import { esri } from '/resources/gis/leaflet/esri/esri-leaflet-lib.js';
-import { _featureType } from '/resources/gis/tg-gis-utils.js';
+import { _featureType, createStyleModule } from '/resources/gis/tg-gis-utils.js';
 import { BaseLayers } from '/resources/gis/tg-base-layers.js';
 import { EntityStyling } from '/resources/gis/tg-entity-styling.js';
 import { MarkerFactory, tgIconFactoryStylesName } from '/resources/gis/tg-marker-factory.js';
@@ -9,16 +10,31 @@ import { MarkerCluster, leafletMarkerClusterStylesName, tgMarkerClusterStylesNam
 import { Select } from '/resources/gis/tg-select.js';
 import { Controls, leafletDrawStylesName, leafletControlloadingStylesName, leafletEasybuttonStylesName } from '/resources/gis/tg-controls.js';
 import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
+import { TgReflector, _isEntity } from '/app/tg-reflector.js';
+import { TgAppConfig } from '/app/tg-app-config.js';
+import { RunActions } from '/resources/centre/tg-selection-criteria-behavior.js';
+
+const tgGisComponentStyles = `
+    .bool-true-icon {
+        --iron-icon-height: 16px;
+        --iron-icon-width: 16px;
+    }
+`;
+const tgGisComponentStylesName = 'tg-gis-component-styles';
+createStyleModule(tgGisComponentStylesName, tgGisComponentStyles);
 
 export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap, ...otherStyles) {
     // IMPORTANT: use the following reference in cases when you need some properties of the 
     // GisComponent inside the functions or nested classes
     const self = this;
     tgMap._gisComponent = self;
+    this._reflector = new TgReflector();
+    this._appConfig = new TgAppConfig();
 
     this.appendStyles(tgMap, 
         leafletStylesName,
 
+        tgGisComponentStylesName,
         tgIconFactoryStylesName,
 
         leafletMarkerClusterStylesName,
@@ -31,7 +47,21 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     );
 
     tgMap.retrivedEntitiesHandler = function (newRetrievedEntities) {
+        const isRunAction = tgMap.dataChangeReason === RunActions.run;
+        self._markerCluster.setShouldFitToBounds(isRunAction); // only fitToBounds on Run action, not on Navigate / Refresh
         self.initReload();
+        const _select = self._select; // tg-select component (can be not initialised yet)
+        const prevId = _select ? _select._prevId : null; // leaflet id of previously selected layer
+        let prevEntity = null;
+        let wasPopupOpen = false;
+        if (!isRunAction && prevId !== null) { // if there was some selected layer; (note for navigation: potentially selected entity can be moved to e.g. the next page when going forward and it would be nice to preserve selection and popup for this entity too)
+            _select._prevId = null; // clear that selected layer information
+            const prevLayer = _select._getLayerById(prevId); // capture selected layer (that will be removed from map soon)
+            if (prevLayer) {
+                wasPopupOpen = prevLayer.isPopupOpen(); // capture indicator whether the popup was opened on it
+                prevEntity = _select.findEntityBy(prevLayer.feature); // get the entity (that will be removed from map soon) from which that layer was formed
+            }
+        }
         self.clearAll();
 
         // Shallow copy of this array is needed to be done: not to alter original array, that is bound to EGI.
@@ -43,11 +73,23 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
 
         self._markerCluster.getGisMarkerClusterGroup().addLayer(self._geoJsonOverlay);
         self.finishReload();
-
-        // In standard cases ShouldFitToBounds is always true. However, sse (event sourcing) dataHandlers could change ShouldFitToBounds to false.
-        // In such cases, the map will not be fitted to bounds (after newRetrievedEntities appear), but ShouldFitToBounds after that should become true again.
-        // Please note that, centre running, refreshing, navigating between pages provides automatic fittingToBounds.
-        self._markerCluster.setShouldFitToBounds(true);
+        if (_isEntity(prevEntity)) { // if there was previously selected layer (with or without popup) and corresponding entity was found
+            const foundEntity = self._entities.find(entity => self._reflector.equalsEx(entity, prevEntity)); // find new entity that is equal to previous entity (if present)
+            if (foundEntity) {
+                const foundLayerId = _select.getLayerIdByEntity(foundEntity); // find leaflet layer id of the new corresponding layer (if present)
+                if (foundLayerId) {
+                    _select._silentlySelectById(foundLayerId); // perform selection of new leaflet layer to preserve selected state of the same entity on map after refreshing
+                    const foundLayer = _select._getLayerById(foundLayerId);
+                    if (foundLayer && wasPopupOpen) { // if popup was open previously
+                        if (!foundEntity.properties.popupContentInitialised) { // initialise popupContent on new entity
+                            foundLayer.bindPopup(self.createPopupContent(foundEntity)); // and bind updated popup
+                            foundEntity.properties.popupContentInitialised = true;
+                        }
+                        foundLayer.openPopup(); // and then open updated popup to preserve it on the same entity on map after refreshing
+                    }
+                }
+            }
+        }
     };
     self.tgMap = tgMap;
 
@@ -56,7 +98,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     };
 
     // creating and configuring all layers
-    self._baseLayers = new BaseLayers();
+    self._baseLayers = self.createBaseLayers();
 
     self._map = L.map(mapDiv, {
         layers: [self._baseLayers.getBaseLayer(self.defaultBaseLayer())], // only add one!
@@ -206,6 +248,13 @@ GisComponent.prototype.createOverlays = function () {
     return {};
 };
 
+/**
+ * Creates component that defines base map layers. Override this method to define custom base layers. BaseLayers component (tg-base-layers) can be used as a basis.
+ */
+GisComponent.prototype.createBaseLayers = function () {
+    return new BaseLayers();
+};
+
 GisComponent.prototype.defaultBaseLayer = function () {
     return 'Open Street Map';
 };
@@ -259,9 +308,6 @@ GisComponent.prototype.finishReload = function () {
 GisComponent.prototype.clearAll = function () {
     this._geoJsonOverlay.clearLayers();
     this._markerCluster.getGisMarkerClusterGroup().clearLayers();
-    if (this._select) {
-        this._select._prevId = null;
-    }
 };
 
 GisComponent.prototype.promoteEntities = function (newEntities) {
@@ -401,6 +447,15 @@ GisComponent.prototype.createCoordinatesFromMessage = function (message) {
     return (message.altitude) ? [message.x, message.y, message.altitude] : [message.x, message.y]
 }
 
+/**
+ * List of additional properties (dot-notations) to be displayed inside feature popup at the end of the list.
+ * These props should be specified in case if they are not present in EGI Centre DSL configuration but is needed in a popup.
+ * They must be fetched by specifying '.setFetchProvider(...)' in Centre DSL configuration.
+ */
+GisComponent.prototype.additionalPopupProps = function (feature) {
+    return [];
+}
+
 GisComponent.prototype.createPopupContent = function (feature) {
     const self = this;
     
@@ -411,21 +466,20 @@ GisComponent.prototype.createPopupContent = function (feature) {
         return string.charAt(0).toUpperCase() + string.slice(1);
     }
     
-    const titleFor = function (key) {
-        if (key === 'angle') {
-            return 'Angle (°)';
-        } else if (key === 'speed') {
-            return 'Speed (km / h)';
-        } else if (key === 'altitude') {
-            return 'Altitude (m)';
-        } else if (key === 'gpstime') {
-            return 'GPS Time';
-        } else {
-            return capitalizeFirstLetter(key);
-        }
-    };
-    
     if (feature.properties && feature.properties.GlobalID) { // this is ArcGIS feature
+        const titleFor = function (key) {
+            if (key === 'angle') {
+                return 'Angle (°)';
+            } else if (key === 'speed') {
+                return 'Speed (km / h)';
+            } else if (key === 'altitude') {
+                return 'Altitude (m)';
+            } else if (key === 'gpstime') {
+                return 'GPS Time';
+            } else {
+                return capitalizeFirstLetter(key);
+            }
+        };
         Object.keys(feature.properties).forEach(key => {
             if (key !== 'layerId' && key !== 'popupContentInitialised' && key !== '_featureType' && (
                     key === 'desc' || key === 'buildingLevel' || key === 'description' || key === 'criticality' || key === 'angle' || key === 'asset' || key === 'gpstime' || key === 'speed' || key === 'altitude'
@@ -440,16 +494,40 @@ GisComponent.prototype.createPopupContent = function (feature) {
     const entity = self.findEntityBy(feature);
     if (entity) {
         const columnPropertiesMapped = self.columnPropertiesMapper(entity);
+        const extendPopupText = entry => {
+            if (entry.value) { // entry.value is already converted to string; if entry.value === '' it will be considered empty and such property will not be shown in a popup
+                const value = entry.value === 'true' ? '<iron-icon class="bool-true-icon" icon="icons:check"></iron-icon>' : (entry.value === 'false' ? '' : entry.value);
+                popupText = popupText + '<tr class="popup-row" title="' + entry.title + '"><td>' + entry.title + ':</td><td><div>' + value + '</div></td></tr>';
+            }
+        };
         
-        for (let index = 0; index < columnPropertiesMapped.length && index < 10; index++) {
+        for (let index = 0; index < columnPropertiesMapped.length; index++) {
             const entry = columnPropertiesMapped[index];
-            const value = entry.value === true ? '&#x2714' : (entry.value === false ? '&#x2718' : entry.value);
-            const type = entity.constructor.prototype.type.call(entity);
-            popupText = popupText + '<tr' + (entry.dotNotation === '' ? ' class="this-row"' : '') + '><td>' + self.titleFor(entity, entry.dotNotation) + ':</td><td>' + value + '</td></tr>';
+            extendPopupText({ value: entry.value, dotNotation: entry.dotNotation, title: entry.column.columnTitle });
         }
+        
+        this.additionalPopupProps().forEach(property => {
+            const entryValue = this._reflector.tg_toString(entity.get(property), entity.constructor.prototype.type.call(entity), property, { display: true, locale: this._appConfig.locale });
+            extendPopupText({ value: entryValue, dotNotation: property, title: self.titleFor(entity, property) });
+        });
     }
     template.innerHTML = popupText + '</table>';
     const element = template.content.firstChild;
+    
+    if (entity && entity.get('key') && feature.properties) { // for the 'entity' that is present on the map ... 
+        const rows = element.children[0].querySelectorAll('.popup-row'); // ... find all popup 'rows' ... ('element' is a <table> and its first child is a <tbody> that contains all <tr>s)
+        const columnPropertiesMapped = self.columnPropertiesMapper(entity);
+        rows.forEach(row => {
+            const foundEntry = columnPropertiesMapped.find(entry => entry.column.columnTitle === row.title);
+            if (foundEntry && foundEntry.column && foundEntry.column.parentNode /* EGI */ && foundEntry.column.parentNode.hasAction(entity, foundEntry.column)) {
+                const valueElement = row.children[1].children[0]; // ... 'row' is a <tr> element; second child of it represents <td> with a value; make the child of this <td> (<div> element) clickable ...
+                valueElement.className = 'popup-button';
+                valueElement.addEventListener('click', function () {
+                    foundEntry.column.parentNode._tapColumn(entity, foundEntry.column); // ... with a function exactly as in EGI
+                });
+            }
+        });
+    }
     
     if (entity && entity.get('key') && feature.properties && feature.properties.GlobalID) {
         const featureType = this.featureType(entity);
@@ -473,7 +551,7 @@ GisComponent.prototype.findEntityBy = function (feature) {
         const globalId = feature.properties.GlobalID;
         for (let i = 0; i < this._entities.length; i++) {
             const entity = this._entities[i];
-            if (entity.get('arcGisId') === globalId) {
+            if (typeof entity.arcGisId !== 'undefined' && entity.get('arcGisId') === globalId) {
                 return entity;
             }
         }
@@ -483,20 +561,15 @@ GisComponent.prototype.findEntityBy = function (feature) {
     }
 }
 
+/**
+ * Returns title for entity property. For empty property returns title of the key.
+ */
 GisComponent.prototype.titleFor = function (feature, dotNotation) {
-    const root = feature.constructor.prototype.type.call(feature);
+    const rootType = feature.constructor.prototype.type.call(feature);
     if (dotNotation === '') { // empty property name means 'entity itself'
-        return root.prop('key').title();
+        return rootType.prop('key').title();
     }
-    const lastDotIndex = dotNotation.lastIndexOf(".");
-    if (lastDotIndex > -1) {
-        const first = dotNotation.slice(0, lastDotIndex);
-        const rest = dotNotation.slice(lastDotIndex + 1);
-        const firstVal = feature.get(first);
-        return firstVal === null ? 'UNDEFINED' : (firstVal.constructor.prototype.type.call(firstVal)).prop(rest).title();
-    } else {
-        return root.prop(dotNotation).title();
-    }
+    return rootType.prop(dotNotation).title();
 }
 
 GisComponent.prototype.valueToString = function (value) {

@@ -1,15 +1,19 @@
 package ua.com.fielden.platform.reflection;
 
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
-import static ua.com.fielden.platform.entity.AbstractEntity.COMMON_PROPS;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.commonProperties;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LINK_PROPERTY;
 import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pd;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.Reflector.MAXIMUM_CACHE_SIZE;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
@@ -277,7 +281,7 @@ public class Finder {
         final boolean hasCompositeKey = isCompositeEntity(entityType);
         final boolean isUnion = isUnionEntityType(entityType);
         return getFieldsAnnotatedWith(entityType, false, IsProperty.class, annotations)
-               .filter(f -> (hasDesc                      || !DESC.equals(f.getName()))  // if does not have desc (including union type) then exclude DESC
+               .filter(f -> (hasDesc          && !isUnion || !DESC.equals(f.getName()))  // if not hasDesc     or isUnion then exclude DESC
                          && (!hasCompositeKey && !isUnion || !KEY.equals(f.getName()))); // if hasCompositeKey or isUnion then exclude KEY
     }
 
@@ -690,19 +694,20 @@ public class Finder {
      * @return
      * @throws IllegalAccessException
      */
+    private static final Set<String> KEY_DESC_ID = setOf(KEY, DESC, ID);
     private static Object getAbstractUnionEntityFieldValue(final AbstractUnionEntity value, final String property) {
         final Optional<Field> field;
         final Object valueToRetrieveFrom;
-        final List<String> unionProperties = getFieldNames(AbstractUnionEntity.unionProperties(value.getClass()));
-        final List<String> commonProperties = AbstractUnionEntity.commonProperties(value.getClass());
+        final List<String> unionProperties = getFieldNames(unionProperties(value.getClass()));
+        final List<String> commonProperties = commonProperties(value.getClass());
 
         try {
             if (unionProperties.contains(property)) { // union properties:
-                field = Optional.ofNullable(getFieldByName(value.getClass(), property));
+                field = ofNullable(getFieldByName(value.getClass(), property));
                 valueToRetrieveFrom = value;
-            } else if (commonProperties.contains(property) || COMMON_PROPS.contains(property) || ID.equals(property)) { // common property:
+            } else if (commonProperties.contains(property) || KEY_DESC_ID.contains(property)) { // common property (perhaps with KEY / DESC) or non-common KEY, DESC and ID for which the value can still be taken
                 final AbstractEntity<?> activeEntity = value.activeEntity();
-                field = Optional.ofNullable(activeEntity != null ? getFieldByName(activeEntity.getClass(), property) : null);
+                field = ofNullable(activeEntity != null ? getFieldByName(activeEntity.getClass(), property) : null);
                 valueToRetrieveFrom = activeEntity;
             } else { // not-properly specified property:
                 throw new ReflectionException(format("Property [%s] is not properly specified. Maybe \"activeEntity.\" prefix should be explicitly specified.", property));
@@ -822,20 +827,20 @@ public class Finder {
      * @return
      */
     public static List<String> findCommonProperties(final List<Class<? extends AbstractEntity<?>>> entityTypes) {
-        final List<List<Field>> propertiesSet = new ArrayList<List<Field>>();
+        final List<List<Field>> propertiesSet = new ArrayList<>();
         for (int classIndex = 0; classIndex < entityTypes.size(); classIndex++) {
-            final List<Field> fields = new ArrayList<Field>();
+            final List<Field> fields = new ArrayList<>();
             for (final Field propertyField : findRealProperties(entityTypes.get(classIndex))) {
                 fields.add(propertyField);
             }
             propertiesSet.add(fields);
         }
-        final List<String> commonProperties = new ArrayList<String>();
+        final List<String> commonProperties = new ArrayList<>();
         if (propertiesSet.size() > 0) {
             for (final Field property : propertiesSet.get(0)) {
                 boolean common = true;
                 for (int setIndex = 1; setIndex < propertiesSet.size(); setIndex++) {
-                    if (!isPropertyPresent(property, propertiesSet.get(setIndex))) {
+                    if (!isPropertyPresent(property, entityTypes.get(0), propertiesSet.get(setIndex), entityTypes.get(setIndex))) {
                         common = false;
                         break;
                     }
@@ -849,26 +854,21 @@ public class Finder {
     }
 
     /**
-     * Returns true if the field with appropriate name and type is present in the list of specified properties.
+     * Returns {@code true} if the {@code field} is present in the list of specified properties, which is determined by matching field names and types.
+     * In case of property with name "key", special care is taken to determine its type.
      *
-     *
-     * @param field
-     * @param properties
+     * @param field -- the field to check.
+     * @param fieldOwner -- the type where {@code field} is declared; this is required to overcome the problem with the absence of type reification in case of generic inherited properties.
+     * @param properties -- a list of fields to check the {@code field} against.
+     * @param propertyOwner -- the type on which the check is happening; this is the owner type for {@code properties}.
      * @return
      */
-    private static boolean isPropertyPresent(final Field field, final List<Field> properties) {
+    private static boolean isPropertyPresent(final Field field, final Class<? extends AbstractEntity<?>> fieldOwner, final List<Field> properties, final Class<? extends AbstractEntity<?>> propertyOwner) {
         for (final Field property : properties) {
-            // Need a special handle for property key
             if (field.getName().equals(property.getName())) {
-                Class<?> fieldType = field.getType();
-                Class<?> propertyType = property.getType();
-                if (KEY.equals(field.getName())) {
-                    final Class<AbstractEntity> fieldOwner = (Class<AbstractEntity>) field.getDeclaringClass();
-                    final Class<AbstractEntity> propertyOwner = (Class<AbstractEntity>) property.getDeclaringClass();
-
-                    fieldType = AnnotationReflector.getKeyType(fieldOwner);
-                    propertyType = AnnotationReflector.getKeyType(propertyOwner);
-                }
+                final boolean isKey = KEY.equals(field.getName()); // need special handling for property key
+                final Class<?> fieldType    = isKey ? getKeyType(fieldOwner)    : field.getType();
+                final Class<?> propertyType = isKey ? getKeyType(propertyOwner) : property.getType();
                 if (fieldType != null && propertyType != null && fieldType.equals(propertyType)) {
                     return true;
                 }
@@ -902,7 +902,7 @@ public class Finder {
      * @return
      */
     public static List<String> getFieldNames(final List<Field> fields) {
-        final List<String> result = new ArrayList<String>();
+        final List<String> result = new ArrayList<>();
         for (int index = 0; index < fields.size(); index++) {
             result.add(fields.get(index).getName());
         }
@@ -961,7 +961,7 @@ public class Finder {
 
     /** This is an actual implementation of the above method. */
     private static List<String> findPathsForPropertiesOfType(final String name, final List<Class<?>> entityTypes, final Class<? extends AbstractEntity> propertyType, final IPropertyPathFilteringCondition filter) {
-        final List<String> result = new ArrayList<String>();
+        final List<String> result = new ArrayList<>();
 
         if (filter.ignore(entityTypes.get(entityTypes.size() - 1))) {
             return result;
@@ -1049,7 +1049,7 @@ public class Finder {
             }
         }
 
-        return new Pair<Integer, String>(count, linkProperty);
+        return new Pair<>(count, linkProperty);
     }
 
     /**

@@ -248,6 +248,21 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
     IAddToResultTickManager getSecondTick();
 
     /**
+     * Returns the index of preferred resultant view of the entity centre.
+     *
+     * @return
+     */
+    Integer getPreferredView();
+
+    /**
+     * Sets the index of preferred resultant view for this entity centre.
+     *
+     * @param prefViewIndex
+     * @return
+     */
+    ICentreDomainTreeManager setPreferredView(final Integer preferredView);
+
+    /**
      * This interface defines <b>entity centre</b> domain tree can be managed for <b>criteria</b> (property represents as a criteria editor). <br>
      * <br>
      *

@@ -99,7 +99,7 @@ public class EqlDomainMetadata {
     private final ConcurrentMap<Class<?>, Object> hibTypesDefaults;
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EqlEntityMetadata> entityPropsMetadata;
     
-    private Injector hibTypesInjector;
+    private final Injector hibTypesInjector;
 
     public EqlDomainMetadata(//
             final Map<Class<?>, Class<?>> hibTypesDefaults, //
@@ -342,7 +342,7 @@ public class EqlDomainMetadata {
         subitems.add(new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).expression(generateUnionEntityPropertyContextualExpression(unionMembersNames, ID, contextPropName)).build());
         subitems.add(new EqlPropertyMetadata.Builder(DESC, String.class, H_STRING).expression(generateUnionCommonDescPropExpressionModel(unionMembers, contextPropName)).build());
 
-        final List<String> commonProps = commonProperties(unionPropType).stream().filter(n -> !DESC.equals(n)).collect(toList());
+        final List<String> commonProps = commonProperties(unionPropType).stream().filter(n -> !DESC.equals(n) && !KEY.equals(n)).collect(toList());
         final Class<?> firstUnionEntityPropType = unionMembers.get(0).getType(); // e.g. WagonSlot in TgBogieLocation
         for (final String commonProp : commonProps) {
             if (unionMembersNames.contains(commonProp)) {

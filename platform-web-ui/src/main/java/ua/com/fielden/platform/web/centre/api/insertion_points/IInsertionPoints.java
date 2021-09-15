@@ -20,15 +20,5 @@ public interface IInsertionPoints<T extends AbstractEntity<?>> extends IEcbCompl
      * @param whereToInsertView
      * @return
      */
-    IInsertionPointsFlexible<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView);
-
-    /**
-     * The same as {@link #addInsertionPoint(EntityActionConfig, InsertionPoints)} but also adds pagination buttons to the insertion point which
-     * become visible only when insertion point is in expanded mode.
-     *
-     * @param actionConfig
-     * @param whereToInsertView
-     * @return
-     */
-    IInsertionPointsFlexible<T> addInsertionPointWithPagination(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView);
+    IInsertionPointPreferred<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView);
 }

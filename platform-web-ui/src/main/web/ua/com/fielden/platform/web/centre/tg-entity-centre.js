@@ -138,14 +138,14 @@ const template = html`
 
     <tg-confirmation-dialog id="confirmationDialog"></tg-confirmation-dialog>
 
-    <iron-pages id="views" selected="[[_selectedView]]" on-iron-select="_pageSelectionChanged">
+    <iron-pages id="views" selected="[[_selectedView]]">
         <div class="fit layout vertical">
             <div class="paper-material selection-material layout vertical" elevation="1">
                 <tg-selection-view id="selectionView" initiate-auto-run="[[initiateAutoRun]]" _show-dialog="[[_showDialog]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _create-action-object="[[_createActionObject]]" _button-disabled="[[_buttonDisabled]]" embedded="[[embedded]]">
                     <slot name="custom-front-action" slot="custom-front-action"></slot>
                     <slot name="custom-share-action" slot="custom-share-action"></slot>
-                    <slot name="custom-selection-criteria" slot="custom-selection-criteria"></slot>
-                    <tg-ui-action slot="left-selection-criteria-button" id="saveAction" shortcut="ctrl+s" ui-role='BUTTON' short-desc='Save' long-desc='Save configuration, Ctrl&nbsp+&nbsps'
+                    <slot id="customCriteria" name="custom-selection-criteria" slot="custom-selection-criteria"></slot>
+                    <tg-ui-action slot="left-selection-criteria-button" id="saveAction" shortcut="ctrl+s meta+s" ui-role='BUTTON' short-desc='Save' long-desc='Save configuration, Ctrl&nbsp+&nbsps'
                                     component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigSaveAction' element-name='tg-CentreConfigSaveAction-master' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]'
                                     attrs='[[bottomActions.0.attrs]]' pre-action='[[bottomActions.0.preAction]]' post-action-success='[[bottomActions.0.postActionSuccess]]' post-action-error='[[bottomActions.0.postActionError]]'
                                     require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false'
@@ -182,6 +182,7 @@ const template = html`
             </div>
             <div id="fantomSplitter" class="fantom-splitter"></div>
         </tg-centre-result-view>
+        <slot id="alternativeViewSlot" name="alternative-view-insertion-point"></slot>
     </iron-pages>`;
 
 Polymer({
@@ -198,10 +199,22 @@ Polymer({
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         _selectedView: {
-            type: Number,
-            notify: true,
-            observer: '_selectedViewChanged'
+            type: Number
         },
+
+        /**
+         * Container of all views (selection criteria, egi, alternative views) to switch between them.
+         */
+        _allViews: {
+            type: Array,
+            value: () => []
+        },
+
+        /**
+         * The previous view index.
+         */
+         _previousView: Number,
+
         _url: Function,
         /**
          * Binds centre info from custom object that contains it. In case where custom object is deliberately empty then does nothing.
@@ -216,7 +229,10 @@ Polymer({
         },
         _processDiscarderResponse: Function,
         _processDiscarderError: Function,
-        _buttonDisabled: Boolean,
+        _buttonDisabled: {
+            type: Boolean,
+            observer: "_buttonDisabledChanged"
+        },
         _centreDirtyOrEdited: Boolean,
         _viewerDisabled: Boolean,
         embedded: Boolean,
@@ -260,15 +276,40 @@ Polymer({
     behaviors: [ IronResizableBehavior, TgFocusRestorationBehavior, TgElementSelectorBehavior ],
 
     ready: function () {
-        setTimeout(function() {
-            this.leftInsertionPointPresent = this.$.leftInsertionPointContent.assignedNodes({ flatten: true })[0].children.length > 0;
-            this.rightInsertionPointPresent = this.$.rightInsertionPointContent.assignedNodes({ flatten: true })[0].children.length > 0;
-        }.bind(this), 0);
+        this.leftInsertionPointPresent = this.$.leftInsertionPointContent.assignedNodes({ flatten: true })[0].children.length > 0;
+        this.rightInsertionPointPresent = this.$.rightInsertionPointContent.assignedNodes({ flatten: true })[0].children.length > 0;
         this._leftSplitterUpdater = this._leftSplitterUpdater.bind(this);
         this._rightSplitterUpdater = this._rightSplitterUpdater.bind(this);
         this._leftInsertionPointContainerUpdater = this._leftInsertionPointContainerUpdater.bind(this);
         this._rightInsertionPointContainerUpdater = this._rightInsertionPointContainerUpdater.bind(this);
+        this._allViews = [this.$.selectionView, 
+            this.$.customEgiSlot.assignedNodes({ flatten: true })[0], 
+            ...this.$.alternativeViewSlot.assignedNodes({ flatten: true })];
         this._confirm = this.confirm.bind(this);
+
+        // to properly focus first element (_pageSelectionChanged method), we wait for criteria entity to be loaded ...
+        this.$.customCriteria.assignedNodes({ flatten: true })[0].addEventListener("_criteria-loaded-changed", (e) => {
+            if(e.detail.value) {
+                this.$.views.addEventListener("iron-select", this._pageSelectionChanged.bind(this));
+                //.. after selection criteria is loaded create promise that gets resolved when buttons become enabled.
+                new Promise((resolve, reject) => {
+                    this._afterCriteriaLoadedPromise = resolve;
+                }).then((res) => {
+                    // After buttons become enabled call _pageSelectionChanged to configure view bindings and to focus first focusable element.
+                    this.async(() => this._pageSelectionChanged({target: this.$.views}), 1);
+                });
+            }
+        });
+    },
+
+    /**
+     * Listens when buttons become enabled and if there is promise that waits for that action then resolve that promise to focus first focusable element on current view.
+     */
+    _buttonDisabledChanged: function (newValue) {
+        if (!newValue && this._afterCriteriaLoadedPromise) {
+            this._afterCriteriaLoadedPromise(newValue);
+            this._afterCriteriaLoadedPromise = null;
+        }
     },
 
     attached: function () {
@@ -467,32 +508,29 @@ Polymer({
         return this.$.confirmationDialog;
     },
 
+    /**
+     * Configures current view binding; removes view binding for previous view; focuses first focusable element in current view.
+     */
     _pageSelectionChanged: function (event) {
         const target = event.target || event.srcElement;
         if (target === this.$.views) {
-            const egi = this.$.customEgiSlot.assignedNodes({ flatten: true })[0];
-            const selectionView = this.$.selectionView;
-            if (this._selectedView === 0) {
-                this._configViewBindings(egi, selectionView);
-            } else if (this._selectedView === 1) {
-                this._configViewBindings(selectionView, egi);
-            }
+            const prevView = this._allViews[this._previousView];
+            const currentView = this._allViews[this._selectedView];
+            this._configViewBindings(prevView, currentView);
             this.focusSelectedView();
             tearDownEvent(event);
-            (this._selectedView === 0 ? this.$.selectionView: this.$.centreResultContainer).fire("tg-centre-page-was-selected");
+            (this._selectedView === 1 ? this.$.centreResultContainer : this._allViews[this._selectedView]).fire("tg-centre-page-was-selected");
         }
     },
 
     _configViewBindings: function (prevView, newView) {
-        prevView.removeOwnKeyBindings();
+        if (prevView) {
+            prevView.removeOwnKeyBindings();
+        }
         const ownKeyBindings = newView._ownKeyBindings;
         for (let shortcuts in ownKeyBindings) {
             newView.addOwnKeyBinding(shortcuts, ownKeyBindings[shortcuts]);
         }
-    },
-
-    _selectedViewChanged: function (newValue, oldValue) {
-        this._prevSelectedView = oldValue;
     },
 
     _getVisibleFocusableElementIn: function (container) {
@@ -500,52 +538,36 @@ Polymer({
     },
 
     focusSelectedView: function () {
-        if (!isMobileApp() && this._selectedView === 0) {
-            const elementToFocus = this._getVisibleFocusableElementIn(this.$.selectionView);
-            // needs to be focused anyway (first-time loading, moving to selectionCrit from EGI or from another module)
-            if (elementToFocus) {
-                elementToFocus.focus();
-            } else {
-                this.$.selectionView.keyEventTarget.focus();
-            }
-            if (this._prevSelectedView === undefined) {
-                this.$.views.scrollTop = 0; // scrolls centre content to the top when first time loading the view
-                this._prevSelectedView = 0;
-            } else {
-                // do not scroll anywhere, scrolling position will be preserved (for e.g. when moving from another module back)
-                this.restoreActiveElement(); // restore active element (only if such element was persisted previously, for e.g. when using f5 and some editor is focused or when explicitly clicking on Run button)
-            }
-        } else if (!isMobileApp() && this._selectedView === 1) {
-            const egi = this.$.customEgiSlot.assignedNodes({ flatten: true })[0];
-            if (!egi.isEditing()) {
-                const elementToFocus = this._getVisibleFocusableElementIn(egi);
-                // Element to focus is present only for grid representation of EGI. The card representation doesn't support focusing.
+        if (!isMobileApp()) {
+            const elementToFocus = this._getVisibleFocusableElementIn(this._allViews[this._selectedView]);
+            if (this._selectedView !== 1 || !this._allViews[1].isEditing()) {
                 if (elementToFocus) {
                     elementToFocus.focus();
-                    this.$.views.scrollTop = 0; // scrolls EGI to the top when changing selectionCrit -> EGI views or going to this centre from another centre / module
+                    this.$.views.scrollTop = this._selectedView === 1 ? 0 : this.$.views.scrollTop;
                 } else {
-                    egi.keyEventTarget.focus();
+                    this._allViews[this._selectedView].keyEventTarget.focus();
                 }
             }
+            if (this._selectedView === 0) {
+                if (this._previousView === undefined) {
+                    this.$.views.scrollTop = 0; // scrolls centre content to the top when first time loading the view
+                } else {
+                    // do not scroll anywhere, scrolling position will be preserved (for e.g. when moving from another module back)
+                    this.restoreActiveElement(); // restore active element (only if such element was persisted previously, for e.g. when using f5 and some editor is focused or when explicitly clicking on Run button)
+                }
+            }   
         }
     },
 
     addOwnKeyBindings: function () {
-        const egi = this.$.customEgiSlot.assignedNodes({ flatten: true })[0];
-        const selectionCriteria = this.$.selectionView;
-        if (this._selectedView === 0) {
-            this._configViewBindings(egi, selectionCriteria);
-        } else if (this._selectedView === 1) {
-            this._configViewBindings(selectionCriteria, egi);
-        }
+        const view = this._allViews[this._selectedView];
+        const previousView = this._allViews[this._previousView];
+        this._configViewBindings(previousView, view);
     },
 
     removeOwnKeyBindings: function () {
-        if (this._selectedView === 0) {
-            this.$.selectionView.removeOwnKeyBindings();
-        } else if (this._selectedView === 1) {
-            this.$.customEgiSlot.assignedNodes({ flatten: true })[0].removeOwnKeyBindings();
-        }
+        const view = this._allViews[this._selectedView];
+        view.removeOwnKeyBindings();
     },
 
     discardAsync: function () {

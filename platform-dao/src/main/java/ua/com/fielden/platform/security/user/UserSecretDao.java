@@ -23,13 +23,13 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
 
 /**
- * DAO implementation of {@link IUserSecret}.
+ * DAO implementation of {@link UserSecretCo}.
  *
  * @author TG Team
  *
  */
 @EntityType(UserSecret.class)
-public class UserSecretDao extends CommonEntityDao<UserSecret> implements IUserSecret {
+public class UserSecretDao extends CommonEntityDao<UserSecret> implements UserSecretCo {
 
     private final Logger logger = getLogger(getClass());
     private final SessionIdentifierGenerator crypto;

@@ -1,53 +1,23 @@
 package ua.com.fielden.platform.web.centre;
 
-import java.util.HashMap;
-
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
-import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
-import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 /**
- * DAO implementation for companion object {@link ICentreColumnWidthConfigUpdater}.
+ * DAO implementation for companion object {@link CentreColumnWidthConfigUpdaterCo}.
  *
  * @author TG Team
  *
  */
 @EntityType(CentreColumnWidthConfigUpdater.class)
-public class CentreColumnWidthConfigUpdaterDao extends CommonEntityDao<CentreColumnWidthConfigUpdater> implements ICentreColumnWidthConfigUpdater {
-    private final ICriteriaEntityRestorer criteriaEntityRestorer;
-
+public class CentreColumnWidthConfigUpdaterDao extends CommonEntityDao<CentreColumnWidthConfigUpdater> implements CentreColumnWidthConfigUpdaterCo {
+    
     @Inject
-    public CentreColumnWidthConfigUpdaterDao(final IFilter filter, final EntityFactory factory, final ICriteriaEntityRestorer criteriaEntityRestorer) {
+    public CentreColumnWidthConfigUpdaterDao(final IFilter filter) {
         super(filter);
-        this.criteriaEntityRestorer = criteriaEntityRestorer;
     }
-
-    @Override
-    @SessionRequired
-    public CentreColumnWidthConfigUpdater save(final CentreColumnWidthConfigUpdater action) {
-        // retrieve criteria entity
-        final EnhancedCentreEntityQueryCriteria<?, ?> criteriaEntityBeingUpdated = criteriaEntityRestorer.restoreCriteriaEntity(action.getCriteriaEntityHolder());
-        final Class<?> root = criteriaEntityBeingUpdated.getEntityClass();
-        // use centreColumnWidthsAdjuster to update column widths in PREVIOUSLY_RUN and FRESH centre managers; commit them to the database
-        criteriaEntityBeingUpdated.adjustColumnWidths(centreManager ->
-            action.getColumnParameters().entrySet().forEach(entry -> {
-                if (entry.getValue().containsKey("width")) {
-                    centreManager.getSecondTick().setWidth(root, entry.getKey(), entry.getValue().get("width"));
-                }
-                if (entry.getValue().containsKey("growFactor")) {
-                    centreManager.getSecondTick().setGrowFactor(root, entry.getKey(), entry.getValue().get("growFactor"));
-                }
-            })
-        );
-        
-        action.setColumnParameters(new HashMap<>());
-        action.setCentreDirty(criteriaEntityBeingUpdated.isCentreDirty()); // centre will be changed after this action; changes can be discarded using DISCARD button on selection criteria
-        return super.save(action);
-    }
+    
 }

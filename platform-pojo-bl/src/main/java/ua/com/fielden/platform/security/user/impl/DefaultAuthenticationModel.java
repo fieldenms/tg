@@ -13,7 +13,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.IAuthenticationModel;
-import ua.com.fielden.platform.security.user.IUserSecret;
+import ua.com.fielden.platform.security.user.UserSecretCo;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserSecret;
 
@@ -26,11 +26,11 @@ import ua.com.fielden.platform.security.user.UserSecret;
 public class DefaultAuthenticationModel implements IAuthenticationModel {
 
     private static final Result failedAuthResult = failure("The presented login credentials are not recognized.");
-    private final IUserSecret coUserSecret;
+    private final UserSecretCo coUserSecret;
     private final String protectiveSalt;
 
     @Inject
-    public DefaultAuthenticationModel(final IUserSecret coUserSecret) {
+    public DefaultAuthenticationModel(final UserSecretCo coUserSecret) {
         this.coUserSecret = coUserSecret;
         this.protectiveSalt = coUserSecret.newSalt();
     }

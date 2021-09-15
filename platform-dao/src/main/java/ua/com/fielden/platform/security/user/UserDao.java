@@ -35,8 +35,6 @@ import com.nulabinc.zxcvbn.Zxcvbn;
 
 import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
 import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.IUserAndRoleAssociation;
-import ua.com.fielden.platform.dao.IUserRole;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
@@ -111,7 +109,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         if (user.isPersisted() && !user.isActive() && user.getProperty(ACTIVE).isDirty()) {
             final IUserSession coUserSession = co(UserSession.class);
             coUserSession.clearAll(user);
-            final IUserSecret coUserSecrete = co(UserSecret.class);
+            final UserSecretCo coUserSecrete = co(UserSecret.class);
             coUserSecrete.batchDelete(listOf(user.getId()));
         }
 
@@ -134,7 +132,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     @Override
     public List<? extends UserRole> findAllUserRoles() {
-        return this.<IUserRole, UserRole>co$(UserRole.class).findAll();
+        return this.<UserRoleCo, UserRole>co$(UserRole.class).findAll();
     }
 
     @Override
@@ -174,7 +172,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         }
 
         // first remove user/role associations
-        this.<IUserAndRoleAssociation, UserAndRoleAssociation>co$(UserAndRoleAssociation.class).removeAssociation(removeList);
+        this.<UserAndRoleAssociationCo, UserAndRoleAssociation>co$(UserAndRoleAssociation.class).removeAssociation(removeList);
         // then insert new user/role associations
         saveAssociation(saveList);
     }
@@ -223,7 +221,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
      * @param coUserSecret
      * @return
      */
-    private UserSecret findOrCreateNewSecret(final User user, final IUserSecret coUserSecret) {
+    private UserSecret findOrCreateNewSecret(final User user, final UserSecretCo coUserSecret) {
         if (!user.isPersisted()) {
             throw new SecurityException("User must be persisted.");
         }
@@ -242,7 +240,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         
         // attempt to delete user secret regardless of whether user exists or not
         // this is to reduce the difference in the computation time that is required for processing existing and non-existing accounts 
-        final IUserSecret coUserSecret = co(UserSecret.class);
+        final UserSecretCo coUserSecret = co(UserSecret.class);
         coUserSecret.batchDelete(select(UserSecret.class).where().prop("key.key").eq().val(username).model());
     }
 
@@ -253,7 +251,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         try {
             final User user = forUser.isInstrumented() && forUser.isDirty() ? save(forUser) : forUser;
             
-            final IUserSecret co$UserSecret = co$(UserSecret.class);
+            final UserSecretCo co$UserSecret = co$(UserSecret.class);
             final UserSecret secret = findOrCreateNewSecret(user, co$UserSecret);
             // salt needs to be unique... at least amongst the users
             // it should be unique algorithmically, but let's be defensive and regenerate the salt if it conflicts with existing values
@@ -330,7 +328,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         // if the user was found then a password reset request UUID needs to be generated
         // and associated wit the identified user
         if (user != null) {
-            final IUserSecret co$UserSecret = co$(UserSecret.class);
+            final UserSecretCo co$UserSecret = co$(UserSecret.class);
             final UserSecret secret = findOrCreateNewSecret(user, co$UserSecret);
             
             final String uuid = format("%s%s%s%s%s", user.getKey(), SECRET_RESET_UUID_SEPERATOR, crypto.nextSessionId(), SECRET_RESET_UUID_SEPERATOR, getUniversalConstants().now().plusMinutes(RESER_UUID_EXPIRATION_IN_MUNUTES).getMillis());
@@ -354,7 +352,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             final boolean expired = getUniversalConstants().now().getMillis() >= expirationTime;
             // dissociation UUID form user if it has expired
             if (expired) {
-                final IUserSecret co$UserSecret = co$(UserSecret.class);
+                final UserSecretCo co$UserSecret = co$(UserSecret.class);
                 final UserSecret secret = findOrCreateNewSecret(user.get(), co$UserSecret);
                 co$UserSecret.save(secret.setResetUuid(null));
             }

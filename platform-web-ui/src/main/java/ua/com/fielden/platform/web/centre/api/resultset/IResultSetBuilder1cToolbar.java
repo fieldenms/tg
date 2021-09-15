@@ -5,7 +5,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 
 /**
  *
- * Provides a convenient abstraction to specify toolbar visibility.
+ * Provides a convenient abstraction to specify the toolbar visibility.
  *
  * @author TG Team
  *
@@ -14,7 +14,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 public interface IResultSetBuilder1cToolbar<T extends AbstractEntity<?>> extends IResultSetBuilder1dScroll<T> {
 
     /**
-     * Provides custom toolbar configuration instead of standard one.
+     * Provides a custom toolbar configuration instead of the standard one.
      *
      * @param toolbar
      * @return
@@ -22,7 +22,7 @@ public interface IResultSetBuilder1cToolbar<T extends AbstractEntity<?>> extends
     IResultSetBuilder1dScroll<T> setToolbar(IToolbarConfig toolbar);
 
 	/**
-	 * TODO Should potentially be expanded to support hiding of the individual standard parts of EGI toolbar
+	 * TODO Should potentially be expanded to support hiding of the individual standard parts of the EGI toolbar.
 	 * @return
 	 */
     IResultSetBuilder1dScroll<T> hideToolbar();

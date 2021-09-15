@@ -16,13 +16,13 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
 /**
- * DAO implementation for companion object {@link ICentreConfigUpdater}.
+ * DAO implementation for companion object {@link CentreConfigUpdaterCo}.
  *
  * @author TG Team
  *
  */
 @EntityType(CentreConfigUpdater.class)
-public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater> implements ICentreConfigUpdater {
+public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater> implements CentreConfigUpdaterCo {
     private final ICriteriaEntityRestorer criteriaEntityRestorer;
 
     @Inject

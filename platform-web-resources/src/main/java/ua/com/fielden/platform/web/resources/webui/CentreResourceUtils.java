@@ -81,8 +81,8 @@ import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
-import ua.com.fielden.platform.ui.config.api.EntityCentreConfigCo;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
+import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
+import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.menu.MiType;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
@@ -133,9 +133,13 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      */
     static final String META_VALUES = "metaValues";
     /**
-     * The key for customObject's value containing message for stale criteria or empty if not stale.
+     * The key for customObject's value, which either contains a message for stale criteria or is empty if no criteria are stale.
      */
     static final String STALE_CRITERIA_MESSAGE = "staleCriteriaMessage";
+    /**
+     * The key for customObject's value containing the preferred view index.
+     */
+    static final String PREFERRED_VIEW = "preferredView";
 
     /** Private default constructor to prevent instantiation. */
     private CentreResourceUtils() {
@@ -184,6 +188,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param autoRun -- represents autoRun parameter of configuration to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      * @param saveAsDesc -- represents a configuration title's tooltip to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      * @param staleCriteriaMessage
+     * @param preferredView -- represents a configuration preferred view index to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      *
      * @return
      */
@@ -194,7 +199,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final Optional<Optional<String>> configUuid,
         final Optional<Boolean> autoRun,
         final Optional<Optional<String>> saveAsDesc,
-        final Optional<Optional<String>> staleCriteriaMessage
+        final Optional<Optional<String>> staleCriteriaMessage,
+        final Optional<Integer> preferredView
     ) {
         final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(criteriaMetaValues, centreDirty);
         saveAsName.ifPresent(name -> {
@@ -211,6 +217,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         });
         staleCriteriaMessage.ifPresent(message -> {
             customObject.put(STALE_CRITERIA_MESSAGE, message.orElse(null));
+        });
+        preferredView.ifPresent(prefView -> {
+            customObject.put(PREFERRED_VIEW, prefView);
         });
         return customObject;
     }
@@ -543,7 +552,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final EntityCentreConfigCo eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
         // generates validation prototype
@@ -586,7 +595,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             )
         );
         // creates custom object representing centre information for concrete criteriaEntity and saveAsName
-        validationPrototype.setCentreCustomObjectGetter(appliedCriteriaEntity -> customObjectSaveAsName -> configUuid -> {
+        validationPrototype.setCentreCustomObjectGetter(appliedCriteriaEntity -> customObjectSaveAsName -> configUuid -> preferredView -> {
             final ICentreDomainTreeManagerAndEnhancer freshCentre = appliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
             // In both cases (criteria entity valid or not) create customObject with criteriaEntity to be returned and bound into tg-entity-centre after save.
             final Map<String, Object> customObject = createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
@@ -596,7 +605,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 configUuid,
                 of(false), // even though configuration can be runAutomatically, do not perform auto-running on any action (except Load, see CentreConfigLoadActionDao)
                 of(validationPrototype.centreTitleAndDesc(customObjectSaveAsName).map(titleDesc -> titleDesc._2)),
-                empty()
+                empty(),
+                preferredView
             );
             customObject.put(APPLIED_CRITERIA_ENTITY_NAME, appliedCriteriaEntity);
             return customObject;
@@ -716,7 +726,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             return validationPrototype.centreCustomObject(
                 createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, of(newName), user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel),
                 of(newName),
-                empty() // no need to update already existing client-side configUuid
+                empty(), // no need to update already existing client-side configUuid
+                empty() // no need to update already loaded preferredView
             );
         });
         // changes runAutomatically for current saveAsName'd configuration; returns custom object containing centre information
@@ -726,7 +737,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             return validationPrototype.centreCustomObject(
                 createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, saveAsName, user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel),
                 saveAsName,
-                empty() // no need to update already existing client-side configUuid
+                empty(), // no need to update already existing client-side configUuid
+                empty() // no need to update already loaded preferredView
             );
         });
         // performs copying of current configuration with the specified title / desc; makes it preferred; returns custom object containing centre information
@@ -755,7 +767,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             return validationPrototype.centreCustomObject(
                 createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, newSaveAsName, user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel),
                 newSaveAsName,
-                of(of(newConfigUuid))
+                of(of(newConfigUuid)),
+                empty() // do not update preferredView on client when copying centre configuration
             );
         });
         // returns ordered alphabetically list of 'loadable' configurations for current user
@@ -899,7 +912,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final DeviceProfile device,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final EntityCentreConfigCo eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
         if (contextConfig.isPresent()) {
@@ -918,6 +931,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 context.setComputation(config.computation.get());
             }
             context.setChosenProperty(chosenProperty);
+            context.setCustomObject(centreContextHolder != null && !centreContextHolder.proxiedPropertyNames().contains("customObject") ? centreContextHolder.getCustomObject() : new HashMap<>());
             return Optional.of(context);
         } else {
             return Optional.empty();
@@ -943,7 +957,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final List<AbstractEntity<?>> selectedEntities,
             final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity,
             final Optional<EntityActionConfig> config,
-            final String chosenProperty
+            final String chosenProperty,
+            final Map<String, Object> customObject
     ) {
         final CentreContext<T, AbstractEntity<?>> context = new CentreContext<>();
         context.setSelectionCrit(criteriaEntity);
@@ -953,6 +968,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             context.setComputation(config.get().context.get().computation.get());
         }
         context.setChosenProperty(chosenProperty);
+        context.setCustomObject(customObject);
         return context;
     }
 
@@ -974,7 +990,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final DeviceProfile device,
         final IDomainTreeEnhancerCache domainTreeEnhancerCache,
         final EntityCentreConfigCo eccCompanion,
-        final IMainMenuItem mmiCompanion,
+        final MainMenuItemCo mmiCompanion,
         final IUser userCompanion,
         final ICentreConfigSharingModel sharingModel) {
 
@@ -1024,7 +1040,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final DeviceProfile device,
         final IDomainTreeEnhancerCache domainTreeEnhancerCache,
         final EntityCentreConfigCo eccCompanion,
-        final IMainMenuItem mmiCompanion,
+        final MainMenuItemCo mmiCompanion,
         final IUser userCompanion,
         final ICentreConfigSharingModel sharingModel) {
 
@@ -1121,7 +1137,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final EntityCentreConfigCo eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
         final ICentreDomainTreeManagerAndEnhancer updatedPreviouslyRunCentre = updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
@@ -1144,7 +1160,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final IDomainTreeEnhancerCache domainTreeEnhancerCache,
         final IWebUiConfig webUiConfig,
         final EntityCentreConfigCo eccCompanion,
-        final IMainMenuItem mmiCompanion,
+        final MainMenuItemCo mmiCompanion,
         final IUser userCompanion,
         final ICentreConfigSharingModel sharingModel) {
         return createCriteriaEntity(false, modifiedPropertiesHolder, companionFinder, critGenerator, miType, saveAsName, user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
@@ -1168,7 +1184,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final IDomainTreeEnhancerCache domainTreeEnhancerCache,
         final IWebUiConfig webUiConfig,
         final EntityCentreConfigCo eccCompanion,
-        final IMainMenuItem mmiCompanion,
+        final MainMenuItemCo mmiCompanion,
         final IUser userCompanion,
         final ICentreConfigSharingModel sharingModel) {
         return createCriteriaEntity(true, modifiedPropertiesHolder, companionFinder, critGenerator, miType, saveAsName, user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
@@ -1192,7 +1208,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final EntityCentreConfigCo eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
         if (isEmpty(modifiedPropertiesHolder)) {

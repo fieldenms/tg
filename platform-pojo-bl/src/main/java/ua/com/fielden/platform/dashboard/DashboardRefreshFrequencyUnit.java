@@ -28,9 +28,9 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  * @see ua.com.fielden.platform.dashboard.DashboardRefreshFrequency
  */
-@EntityTitle("Duration Unit")
+@EntityTitle("Dashboard Refresh Frequency Unit")
 @KeyType(DynamicEntityKey.class)
-@KeyTitle("Duration Unit")
+@KeyTitle("Dashboard Refresh Frequency Unit")
 @CompanionObject(DashboardRefreshFrequencyUnitCo.class)
 @MapEntityTo
 public class DashboardRefreshFrequencyUnit extends AbstractEntity<DynamicEntityKey> {
