@@ -46,9 +46,7 @@ public class LoginResourceFactory extends Restlet {
     }
 
     public LoginResourceFactory(final RestServerUtil util, final Injector injector) {
-        this.util = util;
-        this.injector = injector;
-        this.loginPage = loadLoginPage(false);
+        this(false, util, injector);
     }
 
     /**
