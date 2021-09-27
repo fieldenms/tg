@@ -24,16 +24,16 @@ public class RetrieverBatchUpdateStmtGenerator extends AbstractRetrieverBatchStm
     }
 
     @Override
-    protected String generateInsertStmt(final List<PropertyMetadata> fields, final String tableName) {
+    protected String generateInsertStmt(final List<String> columns, final String tableName) {
         final StringBuffer sb = new StringBuffer();
 
         sb.append("UPDATE ");
         sb.append(tableName);
         sb.append(" SET ");
-        for (final Iterator<PropertyMetadata> iterator = fields.iterator(); iterator.hasNext();) {
-            final PropertyMetadata propName = iterator.next();
+        for (final Iterator<String> iterator = columns.iterator(); iterator.hasNext();) {
+            final String propColumnName = iterator.next();
 
-            sb.append(propName.getColumn() + " = ? ");
+            sb.append(propColumnName + " = ? ");
             sb.append(iterator.hasNext() ? ", " : "");
         }
         sb.append(" WHERE _ID = ?");
