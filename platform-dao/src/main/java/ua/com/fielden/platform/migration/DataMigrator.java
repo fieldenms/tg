@@ -110,7 +110,7 @@ public class DataMigrator {
      * @throws Exception
      */
     private boolean validateRetrievalSqlForKeyFieldsUniqueness(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> retriever, final Connection conn) {
-        final String sql = new RetrieverSqlProducer(dma).getKeyUniquenessViolationSql(retriever);
+        final String sql = RetrieverSqlProducer.getKeyUniquenessViolationSql(retriever, dma);
         boolean result = false;
         try (final Statement st = conn.createStatement()) {
             LOGGER.debug("Checking uniqueness of key data for [" + retriever.getClass().getSimpleName() + "]");
@@ -138,7 +138,7 @@ public class DataMigrator {
      */
     private boolean checkRetrievalSqlForSyntaxErrors(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> retriever, final Connection conn) {
 
-        final String sql = new RetrieverSqlProducer(dma).getSql(retriever);
+        final String sql = RetrieverSqlProducer.getSql(retriever);
         boolean result = false;
         LOGGER.debug("Checking sql syntax for [" + retriever.getClass().getSimpleName() + "]");
         try (final Statement st = conn.createStatement();
@@ -253,11 +253,10 @@ public class DataMigrator {
     }
 
     private long batchInsert(final DomainMetadataAnalyser dma, final Connection legacyConn, final long startingId) throws SQLException {
-        final RetrieverSqlProducer rsp = new RetrieverSqlProducer(dma);
         long id = startingId;
             for (final IRetriever<? extends AbstractEntity<?>> retriever : retrievers) {
                 try (final Statement legacyStmt = legacyConn.createStatement();
-                    final ResultSet legacyRs = legacyStmt.executeQuery(rsp.getSql(retriever))) {
+                    final ResultSet legacyRs = legacyStmt.executeQuery(RetrieverSqlProducer.getSql(retriever))) {
                 // retriever.getClass().getName().contains("StPoInventoryLineRetriever");
 
                 LOGGER.info("Processing retriever " + retriever);

@@ -41,7 +41,7 @@ public class IdCache {
         return cache.get(entityType);
     }
 
-    private SortedSet<String> getKeyFields(final Class<? extends AbstractEntity<?>> entityType) {
+    private static SortedSet<String> getKeyFields(final Class<? extends AbstractEntity<?>> entityType, final DomainMetadataAnalyser dma) {
         final List<String> keyMembersFirstLevelProps = Finder.getFieldNames(Finder.getKeyMembers(entityType));
         return new TreeSet<>(dma.getLeafPropsFromFirstLevelProps(null, entityType, new HashSet<>(keyMembersFirstLevelProps)));
     }
@@ -70,7 +70,7 @@ public class IdCache {
             throw ex;
         }
 
-        final SortedSet<String> keyFields = getKeyFields(entityType);
+        final SortedSet<String> keyFields = getKeyFields(entityType, dma);
         for (final AbstractEntity<?> abstractEntity : entities) {
             result.put(prepareValueForCache(abstractEntity, keyFields), abstractEntity.getId());
         }
