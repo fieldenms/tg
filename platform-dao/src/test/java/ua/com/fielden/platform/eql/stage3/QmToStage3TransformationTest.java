@@ -30,8 +30,14 @@ import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnTable;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TeVehicleModel;
 import ua.com.fielden.platform.sample.domain.TeWorkOrder;
+import ua.com.fielden.platform.sample.domain.TgSynBogie;
 
 public class QmToStage3TransformationTest extends EqlStage3TestCase {
+    
+    @Test
+    public void common_subproperty_of_union_property_is_resolved() {
+        qryCountAll(select(TgSynBogie.class).where().prop("location.id").isNotNull());
+    }
     
     @Test
     public void invoking_id_property_on_persistent_property_of_entity_type_does_not_generate_extra_join() {

@@ -78,6 +78,7 @@ import ua.com.fielden.platform.sample.domain.TgSelectedEntitiesExampleAction;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgStop;
 import ua.com.fielden.platform.sample.domain.TgStopMap;
+import ua.com.fielden.platform.sample.domain.TgSynBogie;
 import ua.com.fielden.platform.sample.domain.TgUnion;
 import ua.com.fielden.platform.sample.domain.TgUnionCommonType;
 import ua.com.fielden.platform.sample.domain.TgUnionHolder;
@@ -235,6 +236,8 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgUnionType1.class);
         add(TgUnionType2.class);
         add(TgUnionCommonType.class);
+        
+        add(TgSynBogie.class);
     }
 
     @Override

@@ -520,10 +520,22 @@ public class EqlDomainMetadata {
                 return resultInProgress.subitems(getCompositeUserTypeSubpropsMetadata((ICompositeUserTypeInstantiate) hibType, null, extractExpressionModelFromCalculatedProperty(entityType, propField))).build();
             }
         } else { // synthetic entity
-            if (!(hibType instanceof ICompositeUserTypeInstantiate)) {
-                return resultInProgress.build();
+            if (isUnionEntityType(propType)) {
+                final List<EqlPropertyMetadata> subitems = new ArrayList<>();
+                final Class<? extends AbstractUnionEntity> unionPropType = (Class<? extends AbstractUnionEntity>) propType;
+                subitems.addAll(generateUnionImplicitCalcSubprops(unionPropType, propName));
+                for (final Field subpropField : unionProperties(unionPropType)) {
+                    subitems.add(getCommonPropInfo(subpropField, (Class<? extends AbstractEntity<?>>) propType, null));
+                }
+
+                return resultInProgress.subitems(subitems).build();
             } else {
-                return resultInProgress.subitems(getCompositeUserTypeSubpropsMetadata((ICompositeUserTypeInstantiate) hibType, null, null)).build();
+                if (!(hibType instanceof ICompositeUserTypeInstantiate)) {
+                    return resultInProgress.build();
+                } else {
+                    return resultInProgress.subitems(getCompositeUserTypeSubpropsMetadata((ICompositeUserTypeInstantiate) hibType, null, null)).build();
+                }
+
             }
         }
     }
