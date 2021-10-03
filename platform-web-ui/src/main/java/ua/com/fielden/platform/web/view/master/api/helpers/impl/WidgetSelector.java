@@ -188,6 +188,11 @@ public class WidgetSelector<T extends AbstractEntity<?>> implements IWidgetSelec
     }
 
     @Override
+    public ISpinnerConfig<T> asInteger() {
+        return asSpinner();
+    }
+
+    @Override
     public IMoneyConfig<T> asMoney() {
         widget = new MoneyWidget(TitlesDescsGetter.getTitleAndDesc(propertyName, smBuilder.getEntityType()), propertyName);
         return new MoneyConfig<>((MoneyWidget) widget, smBuilder);
