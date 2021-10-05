@@ -432,9 +432,9 @@ const template = html`
     <slot id="egi_master" name="egi-master" hidden></slot>
     <!--EGI template-->
     <div id="paperMaterial" class="grid-container" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
+        <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
         <!--Table toolbar-->
         <tg-responsive-toolbar id="egiToolbar" show-top-shadow$="[[_toolbarShadowVisible(_showTopShadow, headerFixed)]]" style$="[[_calcToolbarStyle(canDragFrom)]]">
-            <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
             <slot id="top_action_selctor" slot="entity-specific-action" name="entity-specific-action"></slot>
             <slot slot="standart-action" name="standart-action"></slot>
         </tg-responsive-toolbar>
