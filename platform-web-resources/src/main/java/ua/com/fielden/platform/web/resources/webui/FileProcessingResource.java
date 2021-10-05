@@ -42,7 +42,7 @@ import ua.com.fielden.platform.web.sse.resources.EventSourcingResourceFactory;
  */
 public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> extends AbstractWebResource {
 
-    private final IEntityDao<T> companion;
+    protected final IEntityDao<T> companion;
     private final EntityFactory factory;
     private final Function<EntityFactory, T> entityCreator;
     private final RestServerUtil restUtil;
@@ -170,11 +170,15 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             entity.setEventSourceSubject(subject);
             entity.setMime(mime);
 
-            final T applied = companion.save(entity);
+            final T applied = saveRaw(entity);
             return restUtil.singleJsonRepresentation(applied);
         } finally {
             router.detach(eventSource);
         }
+    }
+
+    protected T saveRaw(final T entity) {
+        return companion.save(entity);
     }
 
 }

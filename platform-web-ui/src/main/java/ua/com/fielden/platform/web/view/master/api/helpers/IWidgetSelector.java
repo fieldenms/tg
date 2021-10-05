@@ -52,7 +52,7 @@ public interface IWidgetSelector<T extends AbstractEntity<?>> {
     /** An editor for properties of type BigDecimal. */
     IDecimalConfig<T> asDecimal();
     /** An editor for properties of type Integer. */
-    @Deprecated(since = "2021; use asInteger() instead.")
+    @Deprecated//(since = "2021; use asInteger() instead.")
     ISpinnerConfig<T> asSpinner();
     /** An editor for properties of type Integer. */
     ISpinnerConfig<T> asInteger();
