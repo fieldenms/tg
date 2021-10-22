@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.migration;
 
 import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.migration.MigrationUtils.keyPathes;
 import static ua.com.fielden.platform.migration.MigrationUtils.produceContainers;
@@ -12,13 +13,19 @@ import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.types.tuples.T2;
 
+/**
+ * Generates an INSERT statement from field mappings and populates it with values from the legacy database.
+ *
+ * @author TG Team
+ *
+ */
 public class TargetDataInsert {
 
     public final Class<? extends AbstractEntity<?>> retrieverEntityType;
@@ -26,9 +33,9 @@ public class TargetDataInsert {
     public final List<PropInfo> containers;
     public final List<Integer> keyIndices;
     
-    public TargetDataInsert( //
-            final Class<? extends AbstractEntity<?>> retrieverEntityType, //
-            final Map<String, Integer> retrieverResultFieldsIndices, //
+    public TargetDataInsert(
+            final Class<? extends AbstractEntity<?>> retrieverEntityType,
+            final Map<String, Integer> retrieverResultFieldsIndices,
             final EntityMd entityMd) {
         
         this.retrieverEntityType = retrieverEntityType;
@@ -37,45 +44,27 @@ public class TargetDataInsert {
         this.keyIndices = unmodifiableList(produceKeyFieldsIndices(retrieverEntityType, retrieverResultFieldsIndices));
     }
     
-    public static String generateInsertStmt(final List<String> columns, final String tableName, final boolean hasId) {
-        final StringBuilder sb = new StringBuilder();
-
-        sb.append("INSERT INTO ");
-        sb.append(tableName);
-        sb.append(" (");
-        final StringBuilder sbValues = new StringBuilder();
-        sbValues.append(" VALUES(");
-        for (final Iterator<String> iterator = columns.iterator(); iterator.hasNext();) {
-            final String propColumnName = iterator.next();
-
-            sb.append(propColumnName);
-            sb.append(iterator.hasNext() ? ", " : "");
-
-            sbValues.append("?");
-            sbValues.append(iterator.hasNext() ? ", " : "");
-        }
-        sbValues.append(", ?");
-        sb.append(", _VERSION");
+    public static String generateInsertStmt(final List<String> columnNames, final String tableName, final boolean hasId) {
+        // let's add version and id if necessary to a list of columns
+        final var columns = new ArrayList<String>(columnNames);
+        columns.add("_VERSION");
         if (hasId) {
-            sbValues.append(", ?");
-            sb.append(", _ID");
+            columns.add("_ID");
         }
 
-        sb.append(") ");
-        sbValues.append(") ");
-        sb.append(sbValues.toString());
-
+        // let's form the INSERT statement
+        final var sb = new StringBuilder();
+        sb.append("INSERT INTO " + tableName);
+        sb.append(" (" + columns.stream().collect(joining(", ")) + ") ");
+        sb.append(" VALUES(" + Stream.generate(() -> "?").limit(columns.size()).collect(joining(", ")) + ") ");
         return sb.toString();
     }
 
     public List<T2<Object, Boolean>> transformValuesForInsert(final ResultSet legacyRs, final IdCache cache, final long id) throws SQLException {
-        final List<T2<Object, Boolean>> result = new ArrayList<>();
-        for (final PropInfo container : containers) {
-            final List<Object> values = new ArrayList<>();
-            for (final Integer index : container.indices) {
-                values.add(legacyRs.getObject(index.intValue()));
-            }
-            result.add(t2(transformValue(container.propType, values, cache), container.utcType));
+        final var result = new ArrayList<T2<Object, Boolean>>();
+        for (final var propInfo : containers) {
+            final var values = propInfo.indices.stream().map(index -> {try {return legacyRs.getObject(index.intValue());} catch (Exception ex) {throw new DataMigrationException("Could not read data.", ex);}}).collect(toList());
+            result.add(t2(transformValue(propInfo.propType, values, cache), propInfo.utcType));
         }
 
         result.add(t2(0, false)); // for version 
@@ -85,4 +74,5 @@ public class TargetDataInsert {
 
         return result;
     }
+
 }
