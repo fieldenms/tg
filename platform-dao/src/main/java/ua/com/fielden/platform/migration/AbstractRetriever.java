@@ -18,14 +18,14 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
  * @param <T>
  */
 public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements IRetriever<T> {
-    protected final IEntityDao<T> dao;
+    protected final Class<T> entityType;
 
     protected AbstractRetriever(final IEntityDao<T> dao) {
-        this.dao = dao;
+        this.entityType = dao.getEntityType();
     }
 
     public Class<T> type() {
-        return dao.getEntityType();
+        return entityType;
     }
 
     @Override
@@ -65,7 +65,7 @@ public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements 
         }
 
     }
-
+    
     public static SortedMap<String, String> map(final FieldMapping... pairs) {
         final SortedMap<String, String> result = new TreeMap<String, String>();
         for (final FieldMapping pair : pairs) {
