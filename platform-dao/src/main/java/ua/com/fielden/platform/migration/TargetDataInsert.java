@@ -38,7 +38,7 @@ public class TargetDataInsert {
         
         this.retrieverEntityType = retrieverEntityType;
         this.containers = produceContainers(entityMd.props(), keyPaths(retrieverEntityType), retrieverResultFieldsIndices, false);
-        this.insertStmt = generateInsertStmt(containers.stream().map(f -> f.column).collect(toList()), entityMd.tableName(), !isOneToOne(retrieverEntityType));
+        this.insertStmt = generateInsertStmt(containers.stream().map(f -> f.column()).collect(toList()), entityMd.tableName(), !isOneToOne(retrieverEntityType));
         this.keyIndices = produceKeyFieldsIndices(retrieverEntityType, retrieverResultFieldsIndices);
     }
     
@@ -61,8 +61,8 @@ public class TargetDataInsert {
     public List<T2<Object, Boolean>> transformValuesForInsert(final ResultSet legacyRs, final IdCache cache, final long id) {
         final var result = new ArrayList<T2<Object, Boolean>>();
         for (final var propInfo : containers) {
-            final var values = propInfo.indices.stream().map(index -> {try {return legacyRs.getObject(index.intValue());} catch (Exception ex) {throw new DataMigrationException("Could not read data.", ex);}}).collect(toList());
-            result.add(t2(transformValue(propInfo.propType, values, cache), propInfo.utcType));
+            final var values = propInfo.indices().stream().map(index -> {try {return legacyRs.getObject(index.intValue());} catch (Exception ex) {throw new DataMigrationException("Could not read data.", ex);}}).collect(toList());
+            result.add(t2(transformValue(propInfo.propType(), values, cache), propInfo.utcType()));
         }
 
         result.add(t2(0, false)); // for version

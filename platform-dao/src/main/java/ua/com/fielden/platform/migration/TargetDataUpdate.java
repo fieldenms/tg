@@ -32,7 +32,7 @@ public class TargetDataUpdate {
             final EntityMd entityMd) {
         this.retrieverEntityType = retrieverEntityType;
         this.containers = produceContainers(entityMd.props(), keyPaths(retrieverEntityType), retrieverResultFieldsIndices, true);
-        this.updateStmt = generateUpdateStmt(containers.stream().map(f -> f.column).collect(toList()), entityMd.tableName());
+        this.updateStmt = generateUpdateStmt(containers.stream().map(f -> f.column()).collect(toList()), entityMd.tableName());
         this.keyIndices = produceKeyFieldsIndices(retrieverEntityType, retrieverResultFieldsIndices);
     }
 
@@ -44,8 +44,8 @@ public class TargetDataUpdate {
     public List<Object> transformValuesForUpdate(final ResultSet legacyRs, final IdCache cache, final long id) {
         final var result = new ArrayList<>();
         for (final var propInfo : containers) {
-            final var values = propInfo.indices.stream().map(index -> {try {return legacyRs.getObject(index.intValue());} catch (Exception ex) {throw new DataMigrationException("Could not read data.", ex);}}).collect(toList());
-            result.add(transformValue(propInfo.propType, values, cache));
+            final var values = propInfo.indices().stream().map(index -> {try {return legacyRs.getObject(index.intValue());} catch (Exception ex) {throw new DataMigrationException("Could not read data.", ex);}}).collect(toList());
+            result.add(transformValue(propInfo.propType(), values, cache));
         }
         result.add(id);
         return result;

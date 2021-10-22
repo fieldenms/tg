@@ -22,9 +22,8 @@ import ua.com.fielden.platform.utils.EntityUtils;
 public class MigrationUtils {
 
     public static final EntityMd generateEntityMd(final String tableName, final List<EqlPropertyMetadata> propsMetadatas) {
-        final List<PropMd> props = new ArrayList<>();
+        final var props = new ArrayList<PropMd>();
         for (final EqlPropertyMetadata el : propsMetadatas) {
-
             if (el.column != null && !el.name.equals(ID) && !el.name.equals(VERSION)) {
                 props.add(new PropMd(el.name, el.javaType, el.column.name, el.required, 
                         el.hibType instanceof IUtcDateTimeType,
@@ -44,7 +43,6 @@ public class MigrationUtils {
             }
 
         }
-
         return new EntityMd(tableName, unmodifiableList(props));
     }
 
@@ -63,12 +61,11 @@ public class MigrationUtils {
             }
         }
         return unmodifiableList(result);
-
     }
     
     public static <ET extends AbstractEntity<?>> List<String> keyPaths(final Class<ET> et) {
-        final List<String> result = new ArrayList<>();
-        final List<T2<String, Class<?>>> keyMembers = getEntityTypeInfo(et).compositeKeyMembers;
+        final var result = new ArrayList<String>();
+        final var keyMembers = getEntityTypeInfo(et).compositeKeyMembers;
         if (keyMembers.isEmpty()) {
             if (EntityUtils.isOneToOne(et)) {
                 result.addAll(keyPaths(KEY, (Class<ET>) EntityMetadata.keyTypeInfo(et)));
@@ -89,29 +86,29 @@ public class MigrationUtils {
 
     public static List<PropInfo> produceContainers(final List<PropMd> props, final List<String> keyMemberPaths, final Map<String, Integer> retrieverResultFields, final boolean updater) {
         // TODO need to ensure that all retrieverResultFields are consumed 
-        final List<PropInfo> result = new ArrayList<>();
+        final var result = new ArrayList<PropInfo>();
 
         for (final PropMd propMd : props) {
-            final List<Integer> indices = obtainIndices(propMd.leafProps(), retrieverResultFields);
+            final var indices = obtainIndices(propMd.leafProps(), retrieverResultFields);
             if (!indices.contains(null)) {
                 result.add(new PropInfo(propMd.name(), propMd.type(), propMd.column(), propMd.utcType(), indices));
             } else if (propMd.required() && !updater) {
-                throw new IllegalStateException("prop " + propMd.name() + " is required");
+                throw new DataMigrationException("prop " + propMd.name() + " is required");
             }
         }
 
-        for (String keyMemberPath : keyMemberPaths) {
+        for (final var keyMemberPath : keyMemberPaths) {
             if (!retrieverResultFields.containsKey(keyMemberPath)) {
-                throw new IllegalStateException("Sql mapping for property [" + keyMemberPath + "] is required (as it is part of key definition).");
+                throw new DataMigrationException("Sql mapping for property [" + keyMemberPath + "] is required (as it is part of key definition).");
             }
         }
-        
+
         return unmodifiableList(result);
     }
 
     private static List<Integer> obtainIndices(final List<String> leafProps, final Map<String, Integer> retrieverResultFields) {
-        final List<Integer> result = new ArrayList<>();
-        for (final String lp : leafProps) {
+        final var result = new ArrayList<Integer>();
+        for (final var lp : leafProps) {
             result.add(retrieverResultFields.get(lp));
         }
         return unmodifiableList(result);
