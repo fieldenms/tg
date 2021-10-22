@@ -65,7 +65,7 @@ public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements 
         }
 
     }
-    
+
     public static SortedMap<String, String> map(final FieldMapping... pairs) {
         final SortedMap<String, String> result = new TreeMap<String, String>();
         for (final FieldMapping pair : pairs) {
