@@ -25,7 +25,7 @@ public class RetrieverPropsRequirednessChecker {
 
     private Set<String> getRetrieverSqls(final IRetriever<? extends AbstractEntity<?>> retriever) {
         final Set<String> result = new HashSet<String>();
-        final String retrieverSql = RetrieverSqlProducer.getSql(retriever);
+        final String retrieverSql = RetrieverSqlProducer.getSql(retriever, false);
         for (final Entry<String, String> entry : retriever.resultFields().entrySet()) {
             if (!dma.isNullable(retriever.type(), entry.getKey())) {
                 final StringBuffer sb = new StringBuffer();

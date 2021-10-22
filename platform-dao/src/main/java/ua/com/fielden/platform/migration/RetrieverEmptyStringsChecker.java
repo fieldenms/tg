@@ -26,7 +26,7 @@ public class RetrieverEmptyStringsChecker {
 
     private Set<String> getRetrieverSqls(final IRetriever<? extends AbstractEntity<?>> retriever) {
         final Set<String> result = new HashSet<>();
-        final String retrieverSql = RetrieverSqlProducer.getSql(retriever);
+        final String retrieverSql = RetrieverSqlProducer.getSql(retriever, false);
         for (final Entry<String, String> entry : retriever.resultFields().entrySet()) {
             if (retriever == null) {
                 System.out.println("retriever == null");

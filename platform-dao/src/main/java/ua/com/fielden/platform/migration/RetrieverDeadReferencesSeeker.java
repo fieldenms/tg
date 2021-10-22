@@ -55,7 +55,7 @@ public class RetrieverDeadReferencesSeeker {
         sb.append(") AS TTT WHERE NOT ("); //NOT EXISTS (SELECT * FROM " + referencedType.getSimpleName() + " WHERE ...)");
 
         final Map<String, String> criteria = new HashMap<String, String>();
-        for (final Iterator<String> iterator = RetrieverSqlProducer.getKeyProps(referencedType, dma).iterator(); iterator.hasNext();) {
+        for (final Iterator<String> iterator = MigrationUtils.keyPaths(referencedType).iterator(); iterator.hasNext();) {
             final String keyProp = iterator.next();
             sb.append("TTT.\"" + keyProp + "\" IS NULL");
             sb.append(iterator.hasNext() ? " AND " : "");
