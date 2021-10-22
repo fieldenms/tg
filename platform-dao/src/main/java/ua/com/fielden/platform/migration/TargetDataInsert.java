@@ -60,14 +60,14 @@ public class TargetDataInsert {
         return sb.toString();
     }
 
-    public List<T2<Object, Boolean>> transformValuesForInsert(final ResultSet legacyRs, final IdCache cache, final long id) throws SQLException {
+    public List<T2<Object, Boolean>> transformValuesForInsert(final ResultSet legacyRs, final IdCache cache, final long id) {
         final var result = new ArrayList<T2<Object, Boolean>>();
         for (final var propInfo : containers) {
             final var values = propInfo.indices.stream().map(index -> {try {return legacyRs.getObject(index.intValue());} catch (Exception ex) {throw new DataMigrationException("Could not read data.", ex);}}).collect(toList());
             result.add(t2(transformValue(propInfo.propType, values, cache), propInfo.utcType));
         }
 
-        result.add(t2(0, false)); // for version 
+        result.add(t2(0, false)); // for version
         if (!isOneToOne(retrieverEntityType)) {
             result.add(t2(id, false)); // for ID where applicable
         }
