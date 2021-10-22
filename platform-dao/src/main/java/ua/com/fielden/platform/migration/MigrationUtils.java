@@ -1,10 +1,11 @@
 package ua.com.fielden.platform.migration;
 
+import static java.util.Collections.unmodifiableList;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo.getEntityTypeInfo;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.utils.CollectionUtil.unmodifiableListOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
 import java.util.ArrayList;
@@ -28,26 +29,26 @@ public class MigrationUtils {
                 props.add(new PropMd(el.name, el.javaType, el.column.name, el.required, 
                         el.hibType instanceof IUtcDateTimeType,
                         isPersistedEntityType(el.javaType)
-                                ? keyPathes(el.name, (Class<? extends AbstractEntity<?>>) el.javaType)
-                                : listOf(el.name)));
+                                ? keyPaths(el.name, (Class<? extends AbstractEntity<?>>) el.javaType)
+                                : unmodifiableListOf(el.name)));
             } else if (!el.subitems().isEmpty()) {
                 for (final EqlPropertyMetadata subitem : el.subitems()) {
                     if (subitem.expressionModel == null) {
                         props.add(new PropMd(el.name + "." + subitem.name, subitem.javaType, subitem.column.name, subitem.required, 
                                 subitem.hibType instanceof IUtcDateTimeType, 
                                 isPersistedEntityType(subitem.javaType)
-                                        ? keyPathes(el.name + "." + subitem.name, (Class<? extends AbstractEntity<?>>) subitem.javaType)
-                                        : listOf(el.name + "." + subitem.name)));
+                                        ? keyPaths(el.name + "." + subitem.name, (Class<? extends AbstractEntity<?>>) subitem.javaType)
+                                        : unmodifiableListOf(el.name + "." + subitem.name)));
                     }
                 }
             }
 
         }
 
-        return new EntityMd(tableName, props);
+        return new EntityMd(tableName, unmodifiableList(props));
     }
 
-    public static <ET extends AbstractEntity<?>> List<String> keyPathes(final String propName, final Class<ET> et) {
+    public static <ET extends AbstractEntity<?>> List<String> keyPaths(final String propName, final Class<ET> et) {
         final List<String> result = new ArrayList<>();
         final List<T2<String, Class<?>>> keyMembers = getEntityTypeInfo(et).compositeKeyMembers;
         if (keyMembers.isEmpty()) {
@@ -57,20 +58,20 @@ public class MigrationUtils {
                 if (!EntityUtils.isPersistedEntityType(keyMember._2)) {
                     result.add(propName + "." + keyMember._1);
                 } else {
-                    result.addAll(keyPathes(propName + "." + keyMember._1, (Class<? extends AbstractEntity<?>>) keyMember._2));
+                    result.addAll(keyPaths(propName + "." + keyMember._1, (Class<? extends AbstractEntity<?>>) keyMember._2));
                 }
             }
         }
-        return result;
+        return unmodifiableList(result);
 
     }
     
-    public static <ET extends AbstractEntity<?>> List<String> keyPathes(final Class<ET> et) {
+    public static <ET extends AbstractEntity<?>> List<String> keyPaths(final Class<ET> et) {
         final List<String> result = new ArrayList<>();
         final List<T2<String, Class<?>>> keyMembers = getEntityTypeInfo(et).compositeKeyMembers;
         if (keyMembers.isEmpty()) {
             if (EntityUtils.isOneToOne(et)) {
-                result.addAll(keyPathes(KEY, (Class<ET>) EntityMetadata.keyTypeInfo(et)));
+                result.addAll(keyPaths(KEY, (Class<ET>) EntityMetadata.keyTypeInfo(et)));
             } else {
                 result.add(KEY);
             }
@@ -79,11 +80,11 @@ public class MigrationUtils {
                 if (!EntityUtils.isPersistedEntityType(keyMember._2)) {
                     result.add(keyMember._1);
                 } else {
-                    result.addAll(keyPathes(keyMember._1, (Class<? extends AbstractEntity<?>>) keyMember._2));
+                    result.addAll(keyPaths(keyMember._1, (Class<? extends AbstractEntity<?>>) keyMember._2));
                 }
             }
         }
-        return result;
+        return unmodifiableList(result);
     }
 
     public static List<PropInfo> produceContainers(final List<PropMd> props, final List<String> keyMemberPaths, final Map<String, Integer> retrieverResultFields, final boolean updater) {
@@ -91,11 +92,11 @@ public class MigrationUtils {
         final List<PropInfo> result = new ArrayList<>();
 
         for (final PropMd propMd : props) {
-            final List<Integer> indices = obtainIndices(propMd.leafProps, retrieverResultFields);
+            final List<Integer> indices = obtainIndices(propMd.leafProps(), retrieverResultFields);
             if (!indices.contains(null)) {
-                result.add(new PropInfo(propMd.name, propMd.type, propMd.column, propMd.utcType, indices));
-            } else if (propMd.required && !updater) {
-                throw new IllegalStateException("prop " + propMd.name + " is required");
+                result.add(new PropInfo(propMd.name(), propMd.type(), propMd.column(), propMd.utcType(), indices));
+            } else if (propMd.required() && !updater) {
+                throw new IllegalStateException("prop " + propMd.name() + " is required");
             }
         }
 
@@ -105,7 +106,7 @@ public class MigrationUtils {
             }
         }
         
-        return result;
+        return unmodifiableList(result);
     }
 
     private static List<Integer> obtainIndices(final List<String> leafProps, final Map<String, Integer> retrieverResultFields) {
@@ -113,11 +114,11 @@ public class MigrationUtils {
         for (final String lp : leafProps) {
             result.add(retrieverResultFields.get(lp));
         }
-        return result;
+        return unmodifiableList(result);
     }
 
     public static List<Integer> produceKeyFieldsIndices(final Class<? extends AbstractEntity<?>> entityType, final Map<String, Integer> retrieverResultFields) {
-        return obtainIndices(keyPathes(entityType), retrieverResultFields);
+        return obtainIndices(keyPaths(entityType), retrieverResultFields);
     }
 
     public static Object transformValue(final Class<?> type, final List<Object> values, final IdCache cache) {
@@ -129,4 +130,5 @@ public class MigrationUtils {
             return cacheForType.get(entityKeyObject);
         }
     }
+
 }

@@ -2,7 +2,7 @@ package ua.com.fielden.platform.migration;
 
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static ua.com.fielden.platform.migration.MigrationUtils.keyPathes;
+import static ua.com.fielden.platform.migration.MigrationUtils.keyPaths;
 import static ua.com.fielden.platform.migration.MigrationUtils.produceContainers;
 import static ua.com.fielden.platform.migration.MigrationUtils.produceKeyFieldsIndices;
 import static ua.com.fielden.platform.migration.MigrationUtils.transformValue;
@@ -31,8 +31,8 @@ public class TargetDataUpdate {
             final Map<String, Integer> retrieverResultFieldsIndices,
             final EntityMd entityMd) {
         this.retrieverEntityType = retrieverEntityType;
-        this.containers = produceContainers(entityMd.props, keyPathes(retrieverEntityType), retrieverResultFieldsIndices, true);
-        this.updateStmt = generateUpdateStmt(containers.stream().map(f -> f.column).collect(toList()), entityMd.tableName);
+        this.containers = produceContainers(entityMd.props(), keyPaths(retrieverEntityType), retrieverResultFieldsIndices, true);
+        this.updateStmt = generateUpdateStmt(containers.stream().map(f -> f.column).collect(toList()), entityMd.tableName());
         this.keyIndices = produceKeyFieldsIndices(retrieverEntityType, retrieverResultFieldsIndices);
     }
 

@@ -58,7 +58,7 @@ public class IdCache {
             throw ex;
         }
 
-        final List<String> keyFields = MigrationUtils.keyPathes(entityType);
+        final List<String> keyFields = MigrationUtils.keyPaths(entityType);
 
         for (final AbstractEntity<?> abstractEntity : entities) {
             result.put(prepareValueForCache(abstractEntity, keyFields), abstractEntity.getId());

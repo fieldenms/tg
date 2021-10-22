@@ -25,7 +25,7 @@ public class RetrieverSqlProducer {
     }
 
     public static String getKeyUniquenessViolationSql(final IRetriever<? extends AbstractEntity<?>> retriever, final DomainMetadataAnalyser dma) {
-        final List<String> keyProps = MigrationUtils.keyPathes(retriever.type());
+        final List<String> keyProps = MigrationUtils.keyPaths(retriever.type());
 
         final StringBuffer sb = new StringBuffer();
         final String baseSql = getKeyResultsOnlySql(retriever, keyProps);

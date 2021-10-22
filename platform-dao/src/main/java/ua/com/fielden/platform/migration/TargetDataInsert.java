@@ -1,9 +1,8 @@
 package ua.com.fielden.platform.migration;
 
-import static java.util.Collections.unmodifiableList;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static ua.com.fielden.platform.migration.MigrationUtils.keyPathes;
+import static ua.com.fielden.platform.migration.MigrationUtils.keyPaths;
 import static ua.com.fielden.platform.migration.MigrationUtils.produceContainers;
 import static ua.com.fielden.platform.migration.MigrationUtils.produceKeyFieldsIndices;
 import static ua.com.fielden.platform.migration.MigrationUtils.transformValue;
@@ -11,7 +10,6 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 
 import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -39,9 +37,9 @@ public class TargetDataInsert {
             final EntityMd entityMd) {
         
         this.retrieverEntityType = retrieverEntityType;
-        this.containers = unmodifiableList(produceContainers(entityMd.props, keyPathes(retrieverEntityType), retrieverResultFieldsIndices, false));
-        this.insertStmt = generateInsertStmt(containers.stream().map(f -> f.column).collect(toList()), entityMd.tableName, !isOneToOne(retrieverEntityType));
-        this.keyIndices = unmodifiableList(produceKeyFieldsIndices(retrieverEntityType, retrieverResultFieldsIndices));
+        this.containers = produceContainers(entityMd.props(), keyPaths(retrieverEntityType), retrieverResultFieldsIndices, false);
+        this.insertStmt = generateInsertStmt(containers.stream().map(f -> f.column).collect(toList()), entityMd.tableName(), !isOneToOne(retrieverEntityType));
+        this.keyIndices = produceKeyFieldsIndices(retrieverEntityType, retrieverResultFieldsIndices);
     }
     
     public static String generateInsertStmt(final List<String> columnNames, final String tableName, final boolean hasId) {
