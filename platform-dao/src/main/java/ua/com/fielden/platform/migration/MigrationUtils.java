@@ -1,16 +1,23 @@
 package ua.com.fielden.platform.migration;
 
 import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo.getEntityTypeInfo;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.unmodifiableListOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
 import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+import java.util.TreeSet;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.EqlPropertyMetadata;
@@ -20,11 +27,12 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class MigrationUtils {
-
+    private static final Set<String> PROPS_TO_IGNORE = setOf(ID, VERSION);
+    
     public static final EntityMd generateEntityMd(final String tableName, final List<EqlPropertyMetadata> propsMetadatas) {
         final var props = new ArrayList<PropMd>();
         for (final EqlPropertyMetadata el : propsMetadatas) {
-            if (el.column != null && !el.name.equals(ID) && !el.name.equals(VERSION)) {
+            if (el.column != null && !PROPS_TO_IGNORE.contains(el.name)) {
                 props.add(new PropMd(el.name, el.javaType, el.column.name, el.required, 
                         el.hibType instanceof IUtcDateTimeType,
                         isPersistedEntityType(el.javaType)
@@ -85,37 +93,49 @@ public class MigrationUtils {
     }
 
     public static List<PropInfo> produceContainers(final List<PropMd> props, final List<String> keyMemberPaths, final Map<String, Integer> retrieverResultFields, final boolean updater) {
-        // TODO need to ensure that all retrieverResultFields are consumed 
         final var result = new ArrayList<PropInfo>();
 
+        final var usedPaths = new HashSet<String>();
         for (final PropMd propMd : props) {
             final var indices = obtainIndices(propMd.leafProps(), retrieverResultFields);
-            if (!indices.contains(null)) {
-                result.add(new PropInfo(propMd.name(), propMd.type(), propMd.column(), propMd.utcType(), indices));
+            // need to determine incomplete mapping for key members of entity property
+            // if the number of null values doesn't match the number of indices then mapping is incomplete  
+            final long countOfNullValuedIndices = indices.values().stream().filter(Objects::isNull).count();
+            if (countOfNullValuedIndices > 0 && countOfNullValuedIndices != indices.size()) {
+                throw new DataMigrationException("Mapping for prop [" + propMd.name() + "] does not have all its members specified: " + indices.entrySet().stream().filter(entry -> entry.getValue() == null).map(entry -> entry.getKey()).collect(toList()));
+            } else if (!indices.values().contains(null)) {
+                result.add(new PropInfo(propMd.name(), propMd.type(), propMd.column(), propMd.utcType(), new ArrayList<Integer>(indices.values())));
+                usedPaths.addAll(propMd.leafProps());
             } else if (propMd.required() && !updater) {
-                throw new DataMigrationException("prop " + propMd.name() + " is required");
+                throw new DataMigrationException("prop [" + propMd.name() + "] is required");
             }
         }
 
         for (final var keyMemberPath : keyMemberPaths) {
             if (!retrieverResultFields.containsKey(keyMemberPath)) {
-                throw new DataMigrationException("Sql mapping for property [" + keyMemberPath + "] is required (as it is part of key definition).");
+                throw new DataMigrationException("Sql mapping for property [" + keyMemberPath + "] is required as it is a part of the key definition.");
             }
         }
 
+        if (!retrieverResultFields.keySet().equals(usedPaths)) {
+            final var declaredProps = new TreeSet<String>(retrieverResultFields.keySet());
+            declaredProps.removeAll(usedPaths); // compute the diff between the declared and used.
+            throw new DataMigrationException("Used and declared props are different. The following props are specified but not used: " + declaredProps);
+        }
+        
         return unmodifiableList(result);
     }
 
-    private static List<Integer> obtainIndices(final List<String> leafProps, final Map<String, Integer> retrieverResultFields) {
-        final var result = new ArrayList<Integer>();
+    private static LinkedHashMap<String, Integer> obtainIndices(final List<String> leafProps, final Map<String, Integer> retrieverResultFields) {
+        final var result = new LinkedHashMap<String, Integer>();
         for (final var lp : leafProps) {
-            result.add(retrieverResultFields.get(lp));
+            result.put(lp, retrieverResultFields.get(lp));
         }
-        return unmodifiableList(result);
+        return result;
     }
 
     public static List<Integer> produceKeyFieldsIndices(final Class<? extends AbstractEntity<?>> entityType, final Map<String, Integer> retrieverResultFields) {
-        return obtainIndices(keyPaths(entityType), retrieverResultFields);
+        return new ArrayList<Integer>(obtainIndices(keyPaths(entityType), retrieverResultFields).values());
     }
 
     public static Object transformValue(final Class<?> type, final List<Object> values, final IdCache cache) {
