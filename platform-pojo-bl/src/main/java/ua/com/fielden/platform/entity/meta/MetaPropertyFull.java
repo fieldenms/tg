@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.meta;
 
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isRequiredByDefinition;
@@ -487,17 +488,6 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
             }
         }
         return result;
-    }
-
-    /**
-     * A convenient method, which ensures that only string values are tested for empty when required. This prevents accidental and redundant lazy loading when invoking
-     * values.toString() on entity instances.
-     *
-     * @param value
-     * @return
-     */
-    private boolean isEmpty(final Object value) {
-        return value instanceof String ? StringUtils.isEmpty(value.toString()) : false;
     }
 
     /**
