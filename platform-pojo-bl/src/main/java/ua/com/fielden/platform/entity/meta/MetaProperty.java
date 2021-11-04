@@ -36,6 +36,7 @@ import ua.com.fielden.platform.utils.Pair;
 public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
 
     public static final String ERR_REQUIRED = "Required property [%s] is not specified for entity [%s].";
+    public static final String ERR_REQUIRED_BOOLEAN = "Required property [%s] must be true for entity [%s].";
     public static final String EDITABLE_PROPERTY_NAME = "editable";
     public static final String REQUIRED_PROPERTY_NAME = "required";
     public static final String VALIDATION_RESULTS_PROPERTY_NAME = "validationResults";
@@ -358,6 +359,10 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     }
 
     public MetaProperty<T> setRequired(final boolean required) {
+        throw new StrictProxyException(format("Invalid call [setRequired] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
+    }
+
+    public MetaProperty<T> setRequired(final boolean required, final String errorMsg) {
         throw new StrictProxyException(format("Invalid call [setRequired] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 

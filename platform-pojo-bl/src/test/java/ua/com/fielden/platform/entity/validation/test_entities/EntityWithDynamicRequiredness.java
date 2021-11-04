@@ -43,6 +43,10 @@ public class EntityWithDynamicRequiredness extends AbstractEntity<String> {
     @AfterChange(MakeProp1Required.class)
     private Integer prop4;
 
+    @IsProperty
+    @MapTo
+    @Title(value = "Prop 5", desc = "Boolean property for testing requireness.")
+    private boolean prop5;
 
     @Observable
     public EntityWithDynamicRequiredness setProp4(final Integer prop4) {
@@ -82,6 +86,16 @@ public class EntityWithDynamicRequiredness extends AbstractEntity<String> {
 
     public Integer getProp1() {
         return prop1;
+    }
+
+    @Observable
+    public EntityWithDynamicRequiredness setProp5(final boolean prop5) {
+        this.prop5 = prop5;
+        return this;
+    }
+
+    public boolean getProp5() {
+        return prop5;
     }
 
 }
