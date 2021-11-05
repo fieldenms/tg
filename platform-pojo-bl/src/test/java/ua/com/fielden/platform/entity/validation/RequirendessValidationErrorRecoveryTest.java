@@ -153,4 +153,30 @@ public class RequirendessValidationErrorRecoveryTest {
         assertEquals("Required property [Prop 5] must be true for entity [Entity With Dynamic Requiredness].", mp.getFirstFailure().getMessage());
     }
 
+    @Test
+    public void relaxing_requiredness_for_boolean_property_after_unsuccessful_attempt_to_assings_false() {
+        final EntityWithDynamicRequiredness entity = factory.newByKey(EntityWithDynamicRequiredness.class, "KEY VALUE");
+        final MetaProperty<Boolean> mp = entity.getProperty("prop5");
+        assertFalse(mp.getValue());
+        assertTrue(mp.isValidWithRequiredCheck(true));
+
+        mp.setRequired(true);
+        assertFalse(mp.getValue());
+        assertFalse(mp.isValidWithRequiredCheck(true));
+
+        mp.setValue(true);
+        assertTrue(mp.getValue());
+        assertTrue(mp.isValidWithRequiredCheck(true));
+        
+        mp.setValue(false);
+        assertFalse(mp.getLastInvalidValue());
+        assertFalse(mp.getLastAttemptedValue());
+        assertTrue(mp.getValue());
+        assertFalse(mp.isValid());
+
+        mp.setRequired(false);
+        assertFalse(mp.getValue());
+        assertTrue(mp.isValid());
+    }
+
 }

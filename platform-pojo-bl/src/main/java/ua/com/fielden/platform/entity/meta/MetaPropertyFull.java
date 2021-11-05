@@ -208,6 +208,11 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
                 throw new IllegalArgumentException("There are no or there is more than one REQUIRED validation handler for required property!");
             }
 
+            // for boolean properties the last invalid value would not be null, so it needs to be assigned here
+            if (isBoolean(type)) {
+                setLastInvalidValue(newValue);
+            }
+
             final Result result = mkRequiredError();
 
             setValidationResultNoSynch(ValidationAnnotation.REQUIRED, requiredHandler.keySet().iterator().next(), result);
@@ -827,9 +832,11 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         // if requirement changed from true to false, then update REQUIRED validation result to be successful
         if (!required && oldRequired) {
             if (containsRequiredValidator()) {
-                // if both current and last attempted values are null then it can be safely assumed that the requiredness validation can be considered successful 
+                // if both current and last attempted values are null then it can be safely assumed that the requiredness validation can be considered successful
                 // the same holds if the assigned requiredness validation result already successful
-                if ((getValue() == null && getLastAttemptedValue() == null) || 
+                // a special case if the boolean properties where current values cannot be null by definition
+                // in this case we only need to rely on the last attempted value -- if it null then there was no attempt to assign any boolean value
+                if ((((getValue() == null || isBoolean(type)) && getLastAttemptedValue() == null)) ||
                     ofNullable(getValidationResult(ValidationAnnotation.REQUIRED)).map(res -> res.isSuccessful()).orElse(true)) {
                     setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton(), new Result(this.getEntity(), "'Required' became false. The validation result cleared."));
                 } else { // otherwise, it is necessary to enforce reassignment of the last attempted value to trigger revalidation
