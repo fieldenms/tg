@@ -107,14 +107,16 @@ const TgFileProcessingBehaviorImpl = {
 
     /* A create callback to perform initialisation. */
     created: function () {
+        this.useTimerBasedScheduling = false; // perform dataHandler immediately when SSE event arrives (not exactly immediately -- scheduled on a main thread waiting for current operations to be completed, as usual)
+
         // need to assign SSE data handler to reflect the server side file processing progress
         this.dataHandler = (msg) => {
             if (this.fpFileProcessingProgressEventHandler) {
                 this.fpFileProcessingProgressEventHandler(msg.prc);
             }
         }
-        // SSE error handler to prevent reconnection
-        this.errorHandler = (e) => { this.shouldReconnectWhenError = false }
+        // wait 1 second before the next try for SSE error reconnection
+        this.errorReconnectionDelay = 1000;
 
         // let's create a dummy file input element to be used for opening a file dialog
         this._uploadInput = document.createElement('input');
