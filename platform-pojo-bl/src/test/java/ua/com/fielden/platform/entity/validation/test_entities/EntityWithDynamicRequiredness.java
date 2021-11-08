@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.entity.validation.test_entities;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.Dependent;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
@@ -16,6 +18,8 @@ import ua.com.fielden.platform.entity.validation.test_entities.definers.MakeProp
  * @author TG Team
  */
 @KeyType(String.class)
+@CompanionObject(EntityWithDynamicRequirednessCo.class)
+@MapEntityTo
 public class EntityWithDynamicRequiredness extends AbstractEntity<String> {
 
     @IsProperty
@@ -45,8 +49,56 @@ public class EntityWithDynamicRequiredness extends AbstractEntity<String> {
 
     @IsProperty
     @MapTo
-    @Title(value = "Prop 5", desc = "Boolean property for testing requireness.")
+    @Title(value = "Prop 5", desc = "Boolean property for testing requiredness semantics in application to this single property.")
     private boolean prop5;
+    
+    @IsProperty
+    @MapTo
+    @Title(value = "Prop 6", desc = "Boolean property that is mutually exclusive with Prop 7 and Prop 8.")
+    @AfterChange(EntityWithDynamicRequirednessEitherOrDefiner.class)
+    private boolean prop6;
+    
+    @IsProperty
+    @MapTo
+    @Title(value = "Prop 7", desc = "Boolean property that is mutually exclusive with Prop 6 and Prop 8.")
+    @AfterChange(EntityWithDynamicRequirednessEitherOrDefiner.class)
+    private boolean prop7;
+    
+    @IsProperty
+    @MapTo
+    @Title(value = "Prop 8", desc = "Boolean property that is mutually exclusive with Prop 7 and Prop 8.")
+    @AfterChange(EntityWithDynamicRequirednessEitherOrDefiner.class)
+    private boolean prop8;
+
+    @Observable
+    public EntityWithDynamicRequiredness setProp8(final boolean prop8) {
+        this.prop8 = prop8;
+        return this;
+    }
+
+    public boolean isProp8() {
+        return prop8;
+    }
+
+    @Observable
+    public EntityWithDynamicRequiredness setProp7(final boolean prop7) {
+        this.prop7 = prop7;
+        return this;
+    }
+
+    public boolean isProp7() {
+        return prop7;
+    }
+
+    @Observable
+    public EntityWithDynamicRequiredness setProp6(final boolean prop6) {
+        this.prop6 = prop6;
+        return this;
+    }
+
+    public boolean isProp6() {
+        return prop6;
+    }
 
     @Observable
     public EntityWithDynamicRequiredness setProp4(final Integer prop4) {
@@ -94,7 +146,7 @@ public class EntityWithDynamicRequiredness extends AbstractEntity<String> {
         return this;
     }
 
-    public boolean getProp5() {
+    public boolean isProp5() {
         return prop5;
     }
 
