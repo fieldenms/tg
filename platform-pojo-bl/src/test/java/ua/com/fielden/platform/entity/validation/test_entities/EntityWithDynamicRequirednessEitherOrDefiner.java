@@ -17,7 +17,7 @@ public class EntityWithDynamicRequirednessEitherOrDefiner extends AbstractAfterC
         final MetaProperty<Boolean> mpProp6 = entity.getProperty("prop6");
         final MetaProperty<Boolean> mpProp7 = entity.getProperty("prop7");
         final MetaProperty<Boolean> mpProp8 = entity.getProperty("prop8");
-        property.setRequired(value);
+        property.setRequired(value, ERR_NONE_SELECTED);
         if (!entity.isInitialising() && value) {
             if ("prop6".equals(property.getName())) {
                 mpProp7.setRequired(false);
@@ -35,11 +35,6 @@ public class EntityWithDynamicRequirednessEitherOrDefiner extends AbstractAfterC
                 entity.setProp6(false);
                 entity.setProp7(false);
             }
-        } else {
-            final boolean required = !entity.isProp6() && !entity.isProp7() && !entity.isProp8();
-            mpProp6.setRequired(required || entity.isProp6(), ERR_NONE_SELECTED);
-            mpProp7.setRequired(required || entity.isProp7(), ERR_NONE_SELECTED);
-            mpProp8.setRequired(required || entity.isProp8(), ERR_NONE_SELECTED);
         }
     }
 

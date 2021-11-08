@@ -29,11 +29,11 @@ public class RequirednessForBooleanPropsIncludingMutuallyExclusiveTest extends A
      * which is required by some other tests. So if a regression happens, this test would catch it.
      */
     @Test
-    public void mutually_exclusive_boolean_props_are_not_required_initially() {
+    public void mutually_exclusive_boolean_props_are_required_initially() {
         final EntityWithDynamicRequiredness entity = new_(EntityWithDynamicRequiredness.class, "KEY VALUE");
-        assertFalse(entity.getProperty("prop6").isRequired());
-        assertFalse(entity.getProperty("prop7").isRequired());
-        assertFalse(entity.getProperty("prop8").isRequired());
+        assertTrue(entity.getProperty("prop6").isRequired());
+        assertTrue(entity.getProperty("prop7").isRequired());
+        assertTrue(entity.getProperty("prop8").isRequired());
     }
 
     @Test
@@ -104,7 +104,7 @@ public class RequirednessForBooleanPropsIncludingMutuallyExclusiveTest extends A
     }
 
     @Test
-    public void mebp_chaning_true_to_false_associates_requiredness_validation_error_only_with_that_single_property() {
+    public void mebp_changing_true_to_false_associates_requiredness_validation_error_only_with_that_single_property() {
         final EntityWithDynamicRequiredness entity = co$(EntityWithDynamicRequiredness.class).findByKeyAndFetch(EntityWithDynamicRequirednessCo.FETCH_PROVIDER.fetchModel(), "EWR-01");
         final MetaProperty<Boolean> mpProp6 = entity.getProperty("prop6");
         final MetaProperty<Boolean> mpProp7 = entity.getProperty("prop7");
