@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.test.ioc;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
@@ -15,11 +16,14 @@ import com.google.inject.TypeLiteral;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolderDao;
 import ua.com.fielden.platform.entity.functional.centre.ICentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.ISavingInfoHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolderDao;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamicRequirednessCo;
+import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamicRequirednessDao;
 import ua.com.fielden.platform.ioc.BasicWebServerModule;
 import ua.com.fielden.platform.migration.MigrationErrorCo;
 import ua.com.fielden.platform.migration.MigrationErrorDao;
@@ -61,6 +65,8 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
  */
 public class PlatformTestServerModule extends BasicWebServerModule {
 
+    private final List<Class<? extends AbstractEntity<?>>> domainTypes;
+    
     public PlatformTestServerModule(final Map<Class, Class> defaultHibernateTypes, //
             final IApplicationDomainProvider applicationDomainProvider,//
             final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
@@ -68,6 +74,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
             final SecurityTokenProvider tokenProvider,//
             final Properties props) throws Exception {
         super(defaultHibernateTypes, applicationDomainProvider, serialisationClassProviderType, automaticDataFilterType, tokenProvider, props);
+        domainTypes = applicationDomainProvider.entityTypes();
     }
 
     public PlatformTestServerModule(final Map<Class, Class> defaultHibernateTypes, //
@@ -76,6 +83,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
             final Class<? extends IFilter> automaticDataFilterType, //
             final Properties props) throws Exception {
         super(defaultHibernateTypes, applicationDomainProvider, serialisationClassProviderType, automaticDataFilterType, null, props);
+        domainTypes = applicationDomainProvider.entityTypes();
     }
 
     @Override
@@ -178,6 +186,16 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(ITgCentreDiffSerialisationPersistentChild.class).to(TgCentreDiffSerialisationPersistentChildDao.class);
         bind(ITgCentreDiffSerialisationNonPersistentChild.class).to(TgCentreDiffSerialisationNonPersistentChildDao.class);
         bind(ITgCentreDiffSerialisationNonPersistentCompositeChild.class).to(TgCentreDiffSerialisationNonPersistentCompositeChildDao.class);
+        bind(EntityWithDynamicRequirednessCo.class).to(EntityWithDynamicRequirednessDao.class);
+
+        // FIXME the following approach should have been the correct one for binding companion objects,
+        //       however, not all test domain entities actually have companions, hence manual binding...
+        //       this should really be corrected at some stage
+        // dynamically bind DAO implementations for all companion objects
+        // for (final Class<? extends AbstractEntity<?>> entityType : domainTypes) {
+        //     CompanionObjectAutobinder.bindCo(entityType, binder());
+        // }
+
     }
 
     public static class TestSessionCacheBuilder implements Provider<Cache<String, UserSession>> {
