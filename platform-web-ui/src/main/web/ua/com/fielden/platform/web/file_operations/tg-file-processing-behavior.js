@@ -254,7 +254,7 @@ const TgFileProcessingBehaviorImpl = {
                 }
             }.bind(this);
 
-            // let's also monitor and provide indicattion of the file upload...
+            // let's also monitor and provide indication of the file upload...
             xhr.upload.onprogress = function (event) {
                 var prc = event.loaded / event.total * 100;
                 if (this.fpFileUploadingProgressEventHandler) {
@@ -274,6 +274,7 @@ const TgFileProcessingBehaviorImpl = {
 
             // file uploading/processing error might also need to be handled externally
             // and to invoke an external response handler if provided
+            // onerror usually happens in case of networking issues
             xhr.onerror = function (e) {
                 this.closeEventSource();
                 this._cleanup();
