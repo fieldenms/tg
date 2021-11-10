@@ -20,7 +20,7 @@
     <developers>
         <developer>
             <id>01es</id>
-            <url/>
+            <url />
             <name>Oles Hodych</name>
             <organization>FMS.ua</organization>
             <organizationUrl>
@@ -34,7 +34,7 @@
         </developer>
         <developer>
             <id>nazar</id>
-            <url/>
+            <url />
             <name>Nazar Chaykivskyy</name>
             <organization>FMS.ua</organization>
             <organizationUrl>
@@ -48,7 +48,7 @@
         </developer>
         <developer>
             <id>jhou</id>
-            <url/>
+            <url />
             <name>Yura Prokopiv</name>
             <organization>FMS.ua</organization>
             <organizationUrl>
@@ -62,7 +62,7 @@
         </developer>
         <developer>
             <id>oleh</id>
-            <url/>
+            <url />
             <name>Oleh Maykovych</name>
             <organization>FMS.ua</organization>
             <organizationUrl>
@@ -154,23 +154,55 @@
                     <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
-            <!-- The maven-source-plugin has been commented as it appears to get executed twice during
+            <!-- The problem described below seems to have been resolved. Keeping this description for posterity in case similar occurs again.
+
+                 The maven-source-plugin has been commented as it appears to get executed twice during
                  `mvn deploy`, which causes uploads to GitHub to undergo upgrade as a resource cannot
                  be overwritten, and uploading the same file with the same name and the same build
                  timestamp causes this.  This behaviour might be fixed in maven 3.7 - see:
                  https://issues.apache.org/jira/browse/MNG-5868 -->
-            <!--plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
-                <version>3.2.1</version>
                 <executions>
                     <execution>
+                        <id>attach-sources</id>
                         <goals>
                             <goal>jar</goal>
                         </goals>
                     </execution>
                 </executions>
-            </plugin-->
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <additionalparam>-Xdoclint:none</additionalparam>
+                    <additionalOptions>-Xdoclint:none</additionalOptions>
+                    <additionalJOption>-Xdoclint:none</additionalJOption>
+                 </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <!-- explicitly define maven-deploy-plugin after other to force exec order -->
+                <artifactId>maven-deploy-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>deploy</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>deploy</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-release-plugin</artifactId>
