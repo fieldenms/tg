@@ -14,7 +14,6 @@ import java.util.Date;
 import java.util.Set;
 import java.util.function.Function;
 
-import org.apache.commons.lang.StringUtils;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -79,29 +78,23 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         this.deviceProvider = deviceProvider;
         this.dates = dates;
         this.types = types;
-        
-        this.jobUid = request.getHeaders().getFirstValue("jobUid", /*ignore case*/ true);
-        if (StringUtils.isEmpty(jobUid)) {
-            throw new IllegalArgumentException("jobUid is required");
-        }
-        
+
         try {
-            this.origFileName = URLDecoder.decode(request.getHeaders().getFirstValue("origFileName", /*ignore case*/ true), StandardCharsets.UTF_8.toString());
-        } catch (final UnsupportedEncodingException ex) {
-            throw new IllegalArgumentException("Could not decode the value for origFileName.", ex);
+            this.jobUid = request.getHeaders().getFirstValue("jobUid", /*ignore case*/ true);
+    
+            try {
+                this.origFileName = URLDecoder.decode(request.getHeaders().getFirstValue("origFileName", /*ignore case*/ true), StandardCharsets.UTF_8.toString());
+            } catch (final UnsupportedEncodingException ex) {
+                throw new IllegalArgumentException("Could not decode the value for origFileName.", ex);
+            }
+            this.mimeAsProvided = request.getHeaders().getFirstValue("mime", /*ignore case*/ true);
+    
+            final long lastModified = Long.parseLong(request.getHeaders().getFirstValue("lastModified", /*ignore case*/ true));
+            this.fileLastModified = new Date(lastModified);
+        } catch (final Exception ex) {
+            exhaustInputStream(request.getEntity());
+            throw ex;
         }
-        
-        if (isEmpty(origFileName)) {
-            throw new IllegalArgumentException("origFileName is required");
-        }
-        
-        this.mimeAsProvided = request.getHeaders().getFirstValue("mime", /*ignore case*/ true);
-        if (isEmpty(this.mimeAsProvided)) {
-            throw new IllegalArgumentException("File MIME type is missing.");
-        }
-        
-        final long lastModified = Long.parseLong(request.getHeaders().getFirstValue("lastModified", /*ignore case*/ true));
-        this.fileLastModified = new Date(lastModified);
     }
 
     /**
@@ -110,32 +103,63 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
      * @throws IOException
      */
     @Put
-    public Representation receiveFile(final Representation entity) throws IOException {
-        final Representation response;
-        if (entity == null) {
-            getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-            return restUtil.errorJsonRepresentation("The file content is empty, which is prohibited.");
-        } else if (!isMediaTypeSupported(entity.getMediaType())) {
-            getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
-            return restUtil.errorJsonRepresentation(format("Unexpected media type [%s].", entity.getMediaType()));
-        } else if (entity.getSize() == -1) {
-            getResponse().setStatus(Status.CLIENT_ERROR_LENGTH_REQUIRED);
-            return restUtil.errorJsonRepresentation("File size is required.");
-        } else if (entity.getSize() > sizeLimitBytes) {
-            getResponse().setStatus(Status.CLIENT_ERROR_REQUEST_ENTITY_TOO_LARGE);
-            return restUtil.errorJsonRepresentation("File is too large.");
-        } else {
-            final InputStream stream = entity.getStream();
-            response = handleUndesiredExceptions(getResponse(), () -> tryToProcess(stream, getMime(entity.getMediaType())), restUtil);
+    public Representation receiveFile(final Representation input) throws IOException {
+        String msg = "Successful processing.";
+        try {
+            final Representation rep;
+            
+            if (isEmpty(jobUid)) {
+                getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+                rep =  restUtil.errorJsonRepresentation(msg = "jobUid is required.");
+            } else if (isEmpty(origFileName)) {
+                getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+                rep =  restUtil.errorJsonRepresentation(msg = "origFileName is missing, but is required.");
+            } else if (isEmpty(this.mimeAsProvided)) {
+                getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+                rep =  restUtil.errorJsonRepresentation(msg = "File MIME type is missing.");
+            } else  if (input == null) {
+                getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+                rep = restUtil.errorJsonRepresentation(msg = "The file content is empty, which is prohibited.");
+            } else if (!isMediaTypeSupported(input.getMediaType())) {
+                getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
+                rep = restUtil.errorJsonRepresentation(msg = format("Unexpected media type [%s].", input.getMediaType()));
+            } else if (input.getSize() == -1) {
+                getResponse().setStatus(Status.CLIENT_ERROR_LENGTH_REQUIRED);
+                rep = restUtil.errorJsonRepresentation(msg = "File size is required.");
+            } else if (input.getSize() > sizeLimitBytes) {
+                getResponse().setStatus(Status.CLIENT_ERROR_REQUEST_ENTITY_TOO_LARGE);
+                rep = restUtil.errorJsonRepresentation(msg = "File is too large.");
+            } else {
+                final InputStream stream = input.getStream();
+                rep = handleUndesiredExceptions(getResponse(), () -> tryToProcess(stream, getMime(input.getMediaType())), restUtil);
+            }
+            return rep;
+        } finally {
+            final String logMsg = String.format("Processed file: %s, result: %s", this.origFileName, msg);
+            // TODO add logging
+            exhaustInputStream(input);
         }
+    }
 
-        return response;
+    /**
+     * Need to exhaust the input stream representing a file being uploaded for processing.
+     * Not fully consumed streams could happen due to various errors (including validation) before or during their processing.
+     * Without consuming the input stream entirely, the client may get blocked waiting for the connection to be terminated by the server (e.g. by HAProxy).
+     *
+     * @param input
+     */
+    private void exhaustInputStream(final Representation input) {
+        try {
+            input.exhaust();
+        } catch (final Exception ex) {
+            // TODO There can be an IO or some other exceptions when exhausting the entity, so just in case let's log any exception if it occurs 
+        }
     }
 
     private String getMime(final MediaType mediaType) {
         return mediaType != null ? mediaType.getName() : this.mimeAsProvided;
     }
-    
+
     private boolean isMediaTypeSupported(final MediaType mediaType) {
         // simply checking types.contains(mediaType) may not be sufficient as there could be something like IMAGE/*
         final String mime = getMime(mediaType);
@@ -148,7 +172,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         final boolean anySubtype = "*".equals(mime1Parts[1]);
         return equalsEx(mime1Parts[0], mime2Parts[0]) && (equalsEx(mime1Parts[1], mime2Parts[1]) || anySubtype); 
     }
-    
+
     /**
      * Registers an event sourcing resource that sends file processing progress back to the client.
      * Instantiates an entity that is responsible for file processing and executes it (call method <code>save</code>).
