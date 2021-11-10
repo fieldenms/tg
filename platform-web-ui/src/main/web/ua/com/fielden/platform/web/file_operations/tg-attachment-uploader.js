@@ -376,12 +376,17 @@ Polymer({
                 }
             }
 
-            this.error = getResult(e.currentTarget.response);
-            this._errorMsg = this.error.message;
+            if (e.currentTarget.response) {
+                this.error = getResult(e.currentTarget.response);
+                this._errorMsg = this.error.message;
+            } else {
+                this._errorMsg = "Networking error occurred.";
+                this.error = { message: this._errorMsg };
+            }
 
             this.status = this.statuses.ERROR;
             if (this.processError) {
-                this.processError(result);
+                this.processError(e);
             }
         }.bind(this);
 
