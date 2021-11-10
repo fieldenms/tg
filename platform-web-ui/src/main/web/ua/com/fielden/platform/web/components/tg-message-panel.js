@@ -125,11 +125,11 @@ Polymer({
     observers: ["_shoudDisplayMsg(isRecomendedClient, closed)"],
 
     ready: function () {
-        this.isRecomendedClient = isMobile.any() || isDesktop.isSafari() || isDesktop.isChrome();
+        this.isRecomendedClient = isMobile.any() || isDesktop.isSafari() || isDesktop.isChrome() || isDesktop.isFirefox();
         this.closed = this.isRecomendedClient;
         if (!this.isRecomendedClient) {
             if (isDesktop.isIE()) {
-                this.messageText = "Application cannot be opened in Internet Explorer. Chrome must be used.";
+                this.messageText = "Application cannot be opened in Internet Explorer. A Chromium based browser is recommended.";
                 this.style.backgroundColor = "#FF8A80";
             } else {
                 this.messageText = "Chrome is highly recommended for this application.";
