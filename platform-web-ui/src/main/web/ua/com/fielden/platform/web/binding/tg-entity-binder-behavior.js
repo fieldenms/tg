@@ -418,8 +418,8 @@ export const TgEntityBinderBehavior = {
         return attachment => {
             if (attachment.isPersisted()) {
                 const openAsHyperLink = attachment.title.startsWith('https://') || attachment.title.startsWith('http://') ||
-                    attachment.title.startsWith('ftp://') || attachment.title.startsWith('ftps://') ||
-                    attachment.title.startsWith('mailto:')
+                                        attachment.title.startsWith('ftp://') || attachment.title.startsWith('ftps://') ||
+                                        attachment.title.startsWith('mailto:')
                 if (openAsHyperLink === true) {
                     const win = window.open(attachment.title, '_blank');
                     win.focus();
