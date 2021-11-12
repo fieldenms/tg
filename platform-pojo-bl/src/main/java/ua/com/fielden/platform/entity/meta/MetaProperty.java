@@ -40,7 +40,7 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     public static final String EDITABLE_PROPERTY_NAME = "editable";
     public static final String REQUIRED_PROPERTY_NAME = "required";
     public static final String VALIDATION_RESULTS_PROPERTY_NAME = "validationResults";
-    public static final String CUSTROM_ERR_MSG_FOR_REQUREDNESS_PROPERTY_NAME = "customErrorMsgForRequiredness";
+    public static final String CUSTOM_ERR_MSG_FOR_REQUREDNESS_PROPERTY_NAME = "customErrorMsgForRequiredness";
 
     protected final AbstractEntity<?> entity;
     protected final String name;
@@ -324,7 +324,7 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     }
 
     public String getCustomErrorMsgForRequiredness() {
-        throw new StrictProxyException(format("Invalid call [getCustomErrorMsgForRequiredness] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));        
+        throw new StrictProxyException(format("Invalid call [getCustomErrorMsgForRequiredness] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
     public T getLastInvalidValue() {

@@ -201,7 +201,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                                 existingMetaProps.put("_originalVal", valueObject(metaProperty.getOriginalValue(), prop.isEntityTyped()));
                             }
                             if (!StringUtils.isEmpty(metaProperty.getCustomErrorMsgForRequiredness())) {
-                                existingMetaProps.put("_" + MetaProperty.CUSTROM_ERR_MSG_FOR_REQUREDNESS_PROPERTY_NAME, metaProperty.getCustomErrorMsgForRequiredness());
+                                existingMetaProps.put("_" + MetaProperty.CUSTOM_ERR_MSG_FOR_REQUREDNESS_PROPERTY_NAME, metaProperty.getCustomErrorMsgForRequiredness());
                             }
                             if (!isRequiredDefault(metaProperty)) {
                                 existingMetaProps.put("_" + MetaProperty.REQUIRED_PROPERTY_NAME, metaProperty.isRequired());
