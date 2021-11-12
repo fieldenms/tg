@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import com.fasterxml.jackson.core.JsonGenerator;
@@ -198,6 +199,9 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                                     existingMetaProps.put("_cfo", metaProperty.isChangedFromOriginal());
                                 }
                                 existingMetaProps.put("_originalVal", valueObject(metaProperty.getOriginalValue(), prop.isEntityTyped()));
+                            }
+                            if (!StringUtils.isEmpty(metaProperty.getCustomErrorMsgForRequiredness())) {
+                                existingMetaProps.put("_" + MetaProperty.CUSTROM_ERR_MSG_FOR_REQUREDNESS_PROPERTY_NAME, metaProperty.getCustomErrorMsgForRequiredness());
                             }
                             if (!isRequiredDefault(metaProperty)) {
                                 existingMetaProps.put("_" + MetaProperty.REQUIRED_PROPERTY_NAME, metaProperty.isRequired());

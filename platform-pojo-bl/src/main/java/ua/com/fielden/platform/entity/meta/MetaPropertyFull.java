@@ -125,7 +125,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     private boolean editable = true;
     private boolean visible = true;
     private boolean required = false;
-    private String requirednessCustomErrorMsg;
+    private String customErrorMsgForRequiredness;
     public final boolean isRequiredByDefinition;
     private final boolean calculated;
     private final boolean upperCase;
@@ -230,7 +230,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
 
     private Result mkRequiredError() {
         // obtain custom error message in case it has been provided at the domain level
-        final String reqErrorMsg = !isEmpty(requirednessCustomErrorMsg) ? requirednessCustomErrorMsg : processReqErrorMsg(name, getEntity().getType());
+        final String reqErrorMsg = !isEmpty(customErrorMsgForRequiredness) ? customErrorMsgForRequiredness : processReqErrorMsg(name, getEntity().getType());
 
         final Result result;
         if (!isEmpty(reqErrorMsg)) {
@@ -775,6 +775,11 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     }
 
     @Override
+    public String getCustomErrorMsgForRequiredness() {
+        return customErrorMsgForRequiredness;
+    }
+
+    @Override
     public final T getLastInvalidValue() {
         return lastInvalidValue;
     }
@@ -863,7 +868,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     @Override
     public MetaProperty<T> setRequired(final boolean required, final String errorMsg) {
         setRequired(required);
-        this.requirednessCustomErrorMsg = errorMsg;
+        this.customErrorMsgForRequiredness = errorMsg;
         return this;
     }
 
