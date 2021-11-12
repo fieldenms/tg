@@ -24,9 +24,9 @@ public class EntityWithDynamicRequirednessDao extends CommonEntityDao<EntityWith
     @Override
     public EntityWithDynamicRequiredness new_() {
         final EntityWithDynamicRequiredness entity = super.new_();
-        entity.getProperty("prop6").setRequired(true);
-        entity.getProperty("prop7").setRequired(true);
-        entity.getProperty("prop8").setRequired(true);
+        entity.getProperty("prop6").setRequired(true, EntityWithDynamicRequirednessCo.ERR_REQUIRED);
+        entity.getProperty("prop7").setRequired(true, EntityWithDynamicRequirednessCo.ERR_REQUIRED);
+        entity.getProperty("prop8").setRequired(true, EntityWithDynamicRequirednessCo.ERR_REQUIRED);
         return entity;
     }
     
