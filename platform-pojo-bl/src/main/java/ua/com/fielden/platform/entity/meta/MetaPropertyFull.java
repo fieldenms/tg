@@ -3,7 +3,7 @@ package ua.com.fielden.platform.entity.meta;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isRequiredByDefinition;
