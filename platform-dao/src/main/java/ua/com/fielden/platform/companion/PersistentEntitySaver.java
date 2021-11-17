@@ -507,7 +507,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
                             session.get().detach(persistedEntity);
                             // the last invalid value would now be set to persistedEntity, which is proxied by Hibernate and cannot be serialised
                             // this is why we need to reset the last invalid value to the re-fetched value, which is effectively being revalidated
-                            final IEntityDao co = coFinder.get().find(value.getType(), true);
+                            final IEntityDao co = coFinder.get().find(value.getType(), true /* uninstrumented */);
                             final ActivatableAbstractEntity<?> refetchedValue = (ActivatableAbstractEntity<?>) co.findById(value.getId(), FetchModelReconstructor.reconstruct(value));
                             prop.setLastInvalidValue(refetchedValue);
                             throw res;
