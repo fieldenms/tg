@@ -9,6 +9,9 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public interface EntityWithDynamicRequirednessCo extends IEntityDao<EntityWithDynamicRequiredness> {
+    
+    public static final String ERR_REQUIRED = "Required test message.";
+    
     public static final IFetchProvider<EntityWithDynamicRequiredness> FETCH_PROVIDER = EntityUtils.fetch(EntityWithDynamicRequiredness.class)
             .with(Finder.streamRealProperties(EntityWithDynamicRequiredness.class).map(Field::getName).collect(Collectors.toSet()));
 }

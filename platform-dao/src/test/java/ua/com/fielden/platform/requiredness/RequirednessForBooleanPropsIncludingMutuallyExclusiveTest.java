@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.requiredness;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -32,8 +33,20 @@ public class RequirednessForBooleanPropsIncludingMutuallyExclusiveTest extends A
     public void mutually_exclusive_boolean_props_are_required_initially() {
         final EntityWithDynamicRequiredness entity = new_(EntityWithDynamicRequiredness.class, "KEY VALUE");
         assertTrue(entity.getProperty("prop6").isRequired());
+        entity.getProperty("prop6").isValidWithRequiredCheck(true);
+        final Result resProp6 = entity.getProperty("prop6").getFirstFailure();
+        assertNotNull(resProp6);
+        assertEquals(EntityWithDynamicRequirednessCo.ERR_REQUIRED, resProp6.getMessage());
         assertTrue(entity.getProperty("prop7").isRequired());
+        entity.getProperty("prop7").isValidWithRequiredCheck(true);
+        final Result resProp7 = entity.getProperty("prop7").getFirstFailure();
+        assertNotNull(resProp7);
+        assertEquals(EntityWithDynamicRequirednessCo.ERR_REQUIRED, resProp7.getMessage());
         assertTrue(entity.getProperty("prop8").isRequired());
+        entity.getProperty("prop8").isValidWithRequiredCheck(true);
+        final Result resProp8 = entity.getProperty("prop8").getFirstFailure();
+        assertNotNull(resProp8);
+        assertEquals(EntityWithDynamicRequirednessCo.ERR_REQUIRED, resProp8.getMessage());
     }
 
     @Test
