@@ -113,7 +113,7 @@ public class UserWebUiConfig {
         final IMaster<User> masterConfigForUser = new SimpleMasterBuilder<User>()
                 .forEntity(User.class)
                 .addProp("key").asSinglelineText().also()
-                .addProp("basedOnUser").asAutocompleter().also()
+                .addProp("basedOnUser").asAutocompleter().withMatcher(UserMasterBaseUserMatcher.class).also()
                 .addProp("active").asCheckbox().also()
                 .addProp("base").asCheckbox().also()
                 .addProp("email").asSinglelineText().also()
