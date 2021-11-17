@@ -8,6 +8,7 @@ import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MAST
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.test.server.config.LocatorFactory.mkLocator;
 
 import java.util.Optional;
 
@@ -16,16 +17,21 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
+import ua.com.fielden.platform.security.user.ReUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserProducer;
+import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.security.user.UserRolesUpdater;
 import ua.com.fielden.platform.security.user.UserRolesUpdaterProducer;
+import ua.com.fielden.platform.security.user.locator.UserLocator;
 import ua.com.fielden.platform.ui.menu.sample.MiUser;
 import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
+import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
+import ua.com.fielden.platform.web.layout.api.impl.LayoutComposer;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
@@ -42,11 +48,15 @@ public class UserWebUiConfig {
     private static final String bottomButtonPanel = "['horizontal', 'padding: 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
 
     public final EntityMaster<UserRolesUpdater> rolesUpdater;
-    public final EntityCentre<User> centre;
+    public final EntityCentre<ReUser> centre;
     public final EntityMaster<User> master;
 
-    public UserWebUiConfig(final Injector injector) {
-        centre = createCentre(injector);
+    public static UserWebUiConfig register(final Injector injector, final IWebUiBuilder builder) {
+        return new UserWebUiConfig(injector, builder);
+    }
+
+    private UserWebUiConfig(final Injector injector, final IWebUiBuilder builder) {
+        centre = createCentre(injector, builder, mkLocator(builder, injector, UserLocator.class, "user"));
         master = createMaster(injector);
         rolesUpdater = createRolesUpdater(injector);
     }
@@ -56,37 +66,39 @@ public class UserWebUiConfig {
      *
      * @return
      */
-    private static EntityCentre<User> createCentre(final Injector injector) {
-        final String fmr = "'flex', 'margin-right: 20px', 'width: 200px'";
-        final String fmrLast = "'flex', 'width: 200px'";
-        final String critLayout = "['vertical', 'center-justified', "
-                + format("[[%s], [%s]], ", fmr, fmrLast)
-                + format("[[%s], [%s]], ", fmr, fmrLast)
-                + format("['flex']")
-                + "]";
+    private static EntityCentre<ReUser> createCentre(final Injector injector, final IWebUiBuilder builder, final EntityActionConfig locator) {
+        final String layout = LayoutComposer.mkVarGridForCentre(2, 2, 2);
 
-        final EntityCentre<User> userCentre = new EntityCentre<>(MiUser.class, "Users",
-                EntityCentreBuilder.centreFor(User.class)
-                .runAutomatically()
-                .addTopAction(UserActions.NEW_ACTION.mkAction()).also()
-                .addTopAction(UserActions.DELETE_ACTION.mkAction())
+        final EntityActionConfig userNewAction = UserActions.NEW_ACTION.mkAction();
+        final EntityActionConfig userEditAction = UserActions.EDIT_ACTION.mkAction();
+        builder.registerOpenMasterAction(User.class, userEditAction);
+
+        final EntityCentre<ReUser> userCentre = new EntityCentre<>(MiUser.class,
+                EntityCentreBuilder.centreFor(ReUser.class)
+                .addFrontAction(userNewAction).also()
+                .addFrontAction(locator)
+                .addTopAction(userNewAction).also()
+                .addTopAction(UserActions.DELETE_ACTION.mkAction()).also()
+                .addTopAction(locator)
                 .addCrit("this").asMulti().autocompleter(User.class).also()
                 .addCrit("basedOnUser").asMulti().autocompleter(User.class).also()
                 .addCrit(ACTIVE).asMulti().bool().also()
                 .addCrit("base").asMulti().bool().also()
-                .addCrit(EMAIL).asMulti().text()
-                .setLayoutFor(Device.DESKTOP, Optional.empty(), critLayout)
+                .addCrit(EMAIL).asMulti().text().also()
+                .addCrit("userRoles").asMulti().autocompleter(UserRole.class)
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .addProp("this")
                     .order(1).asc()
                     .width(200)
+                    .withSummary("total_count_", "COUNT(SELF)", "Count:The total number of matching users.")
                 .also()
                 .addProp("basedOnUser").width(200).also()
                 .addProp("base").width(80).also()
                 .addProp(EMAIL).minWidth(150).also()
                 .addProp(ACTIVE).minWidth(50)
-                .addPrimaryAction(UserActions.EDIT_ACTION.mkAction()).also()
+                .addPrimaryAction(userEditAction).also()
                 .addSecondaryAction(UserActions.MANAGE_ROLES_ACTION.mkAction())
-                .build(), injector, null);
+                .build(), injector);
         return userCentre;
     }
 
@@ -96,15 +108,7 @@ public class UserWebUiConfig {
      * @return
      */
     private static EntityMaster<User> createMaster(final Injector injector) {
-        final String fmr = "'flex', 'margin-right: 20px', 'width: 200px'";
-        final String fmrLast = "'flex', 'width: 200px'";
-
-        final String layout =
-            "['padding:20px', "
-            + format("[[%s], [%s]], ", fmr, fmrLast) // key, basedOnUser
-            + format("[[%s], [%s]], ", fmr, fmrLast) // active, base
-            +        "['flex']" // email
-            + "]";
+        final String layout = LayoutComposer.mkVarGridForMasterFitWidth(2, 2, 1, 1);
 
         final IMaster<User> masterConfigForUser = new SimpleMasterBuilder<User>()
                 .forEntity(User.class)
@@ -113,17 +117,14 @@ public class UserWebUiConfig {
                 .addProp("active").asCheckbox().also()
                 .addProp("base").asCheckbox().also()
                 .addProp("email").asSinglelineText().also()
-                .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
-                .addAction(MasterActions.SAVE)
+                .addProp("roles").asCollectionalRepresentor().also()
+                .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancel changes if any and refresh.")
+                .addAction(MasterActions.SAVE).shortDesc("Save").longDesc("Save changes.")
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), format(bottomButtonPanel, actionButton, actionButton))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
-                .withDimensions(mkDim(400, 324))
+                .withDimensions(mkDim(580, 390))
                 .done();
-        return new EntityMaster<>(
-                User.class,
-                UserProducer.class,
-                masterConfigForUser,
-                injector);
+        return new EntityMaster<>(User.class, UserProducer.class, masterConfigForUser, injector);
     }
 
     /**
