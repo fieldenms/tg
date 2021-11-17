@@ -24,6 +24,7 @@ import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.security.user.UserRolesUpdater;
 import ua.com.fielden.platform.security.user.UserRolesUpdaterProducer;
 import ua.com.fielden.platform.security.user.locator.UserLocator;
+import ua.com.fielden.platform.security.user.value_matchers.UserMasterBaseUserMatcher;
 import ua.com.fielden.platform.ui.menu.sample.MiUser;
 import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
@@ -160,7 +161,7 @@ public class UserWebUiConfig {
             @Override
             public EntityActionConfig mkAction() {
                 return action(EntityNewAction.class)
-                        .withContext(context().withSelectionCrit().build())
+                        .withContext(context().withSelectionCrit().withComputation((entity, context) -> User.class).build())
                         .icon("add-circle-outline")
                         .shortDesc("Add new User")
                         .longDesc("Initiates creation of a new User.")
@@ -190,7 +191,7 @@ public class UserWebUiConfig {
             public EntityActionConfig mkAction() {
                 final String desc = "Delete selected user(s).";
                 return action(EntityDeleteAction.class)
-                        .withContext(context().withSelectedEntities().build())
+                        .withContext(context().withSelectedEntities().withComputation((entity, context) -> User.class).build())
                         .preAction(okCancel("Please confirm whether the selected user(s) should be deleted?"))
                         .icon("remove-circle-outline")
                         .shortDesc(desc)
