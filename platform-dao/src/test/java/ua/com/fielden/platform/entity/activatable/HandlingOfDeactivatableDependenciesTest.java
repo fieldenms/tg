@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity;
+package ua.com.fielden.platform.entity.activatable;
 
 import static java.util.stream.Collectors.toSet;
 import static org.junit.Assert.assertEquals;
@@ -11,6 +11,8 @@ import java.util.stream.Collectors;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.sample.domain.TgAuthoriser;

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity;
+package ua.com.fielden.platform.entity.activatable;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
