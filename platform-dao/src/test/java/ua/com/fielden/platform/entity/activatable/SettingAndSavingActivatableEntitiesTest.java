@@ -420,6 +420,20 @@ public class SettingAndSavingActivatableEntitiesTest extends AbstractDaoTestCase
         assertEquals(cat1.getRefCount() + 1, co$(TgCategory.class).findByKey("Cat1").getRefCount() + 0);
     }
 
+    @Test
+    public void new_entity_is_validated_upon_activation() {
+        final TgCategory cat = save(new_(TgCategory.class, "InactiveCat").setActive(false));
+        final TgSystem sys = new_(TgSystem.class, "Sys").setCategory(cat);
+        assertFalse(sys.isActive());
+        assertTrue(sys.isValid().isSuccessful());
+
+        sys.setActive(true);
+        final MetaProperty<Boolean> mpActive = sys.getProperty(ACTIVE);
+        assertFalse(mpActive.isValid());
+        assertEquals("Property [Category] in Tg System [Sys] references inactive Tg Category [InactiveCat].",
+                     mpActive.getFirstFailure().getMessage());
+    }
+
     @Override
     protected void populateDomain() {
         super.populateDomain();
