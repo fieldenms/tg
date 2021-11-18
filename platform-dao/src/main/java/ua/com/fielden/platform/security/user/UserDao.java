@@ -46,6 +46,7 @@ import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.menu.WebMenuItemInvisibility;
 import ua.com.fielden.platform.pagination.IPage;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.session.IUserSession;
@@ -94,7 +95,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
         // anybody should be able to save updated reference count
         if (user.getDirtyProperties().stream().count() == 1 && user.getProperty(User.REF_COUNT).isDirty()) {
-            return super.save(user);
+            return super.save(user); // use super save without refetch
         } else {
             return ordinarySave(user);
         }
@@ -117,14 +118,19 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         // there could also be a situation where an inactive existing user, which did not have their password set in the first place, is being activated... this also warrants an activation email
         if ((!user.isPersisted() && user.isActive()) ||
             (user.isPersisted() && user.isActive() && user.getProperty(ACTIVE).isDirty() && passwordNotAssigned(user))) {
-            final User savedUser = super.save(user);
+            final User savedUser = saveWithRefetch(user);
             newUserNotifier.notify(assignPasswordResetUuid(savedUser.getKey()).orElseThrow(() -> new SecurityException("Could not initiate password reset.")));
             return savedUser;
         } else {
-            return super.save(user);
+            return saveWithRefetch(user);
         }
     }
 
+    private User saveWithRefetch(final User user) {
+        final User savedUser = super.save(user);
+        return co$(User.class).findById(savedUser.getId(), IUser.FETCH_PROVIDER.fetchModel());
+    }
+    
     private Boolean passwordNotAssigned(final User user) {
         return co(UserSecret.class).findByIdOptional(user.getId()).map(us -> isEmpty(us.getPassword())).orElse(true);
     }
