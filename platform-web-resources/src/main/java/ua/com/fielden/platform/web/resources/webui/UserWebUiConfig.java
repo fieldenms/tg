@@ -98,7 +98,7 @@ public class UserWebUiConfig {
                 .addProp(EMAIL).minWidth(150).also()
                 .addProp(ACTIVE).minWidth(50)
                 .addPrimaryAction(userEditAction).also()
-                .addSecondaryAction(UserActions.MANAGE_ROLES_ACTION.mkAction())
+                .addSecondaryAction(UserActions.MANAGE_ROLES_SECONDARY_ACTION.mkAction())
                 .build(), injector);
         return userCentre;
     }
@@ -118,7 +118,7 @@ public class UserWebUiConfig {
                 .addProp("active").asCheckbox().also()
                 .addProp("base").asCheckbox().also()
                 .addProp("email").asSinglelineText().also()
-                .addProp("roles").asCollectionalRepresentor().also()
+                .addProp("roles").asCollectionalRepresentor().withAction(UserActions.MANAGE_ROLES_MASTER_PROP_ACTION.mkAction()).also()
                 .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancel changes if any and refresh.")
                 .addAction(MasterActions.SAVE).shortDesc("Save").longDesc("Save changes.")
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), format(bottomButtonPanel, actionButton, actionButton))
@@ -202,11 +202,24 @@ public class UserWebUiConfig {
 
         },
 
-        MANAGE_ROLES_ACTION {
+        MANAGE_ROLES_SECONDARY_ACTION {
             @Override
             public EntityActionConfig mkAction() {
                 return action(UserRolesUpdater.class)
                         .withContext(context().withCurrentEntity().build())
+                        .icon("av:recent-actors")
+                        .shortDesc("Add/Remove Roles")
+                        .longDesc("Add/remove user roles.")
+                        .build();
+            }
+
+        },
+
+        MANAGE_ROLES_MASTER_PROP_ACTION {
+            @Override
+            public EntityActionConfig mkAction() {
+                return action(UserRolesUpdater.class)
+                        .withContext(context().withMasterEntity().build())
                         .icon("av:recent-actors")
                         .shortDesc("Add/Remove Roles")
                         .longDesc("Add/remove user roles.")
