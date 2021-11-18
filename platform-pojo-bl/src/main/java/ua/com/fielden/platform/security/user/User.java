@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.property.validator.StringValidator.regexPr
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -30,6 +31,7 @@ import ua.com.fielden.platform.property.validator.StringValidator;
 import ua.com.fielden.platform.security.user.definers.UserActivationDefiner;
 import ua.com.fielden.platform.security.user.definers.UserBaseDefiner;
 import ua.com.fielden.platform.security.user.definers.UserBasedOnUserDefiner;
+import ua.com.fielden.platform.security.user.validators.NonBaseUserShouldHaveRolesBeforeBecomingActiveValidator;
 import ua.com.fielden.platform.security.user.validators.UserBaseOnUserValidator;
 import ua.com.fielden.platform.security.user.validators.UserBaseValidator;
 
@@ -84,14 +86,14 @@ public class User extends ActivatableAbstractEntity<String> {
     
     @IsProperty(value = UserAndRoleAssociation.class, linkProperty = "user")
     @Title(value = "Roles", desc = "The associated with this user roles.")
-    private final Set<UserAndRoleAssociation> roles = new HashSet<>();
+    private final Set<UserAndRoleAssociation> roles = new TreeSet<>();
 
     @IsProperty
     @Title(value = "Is base user?", desc = "Indicates whether this is a base user, which is used for application configuration and creation of other application users.")
     @MapTo
     @BeforeChange(@Handler(UserBaseValidator.class))
     @AfterChange(UserBaseDefiner.class)
-    @Dependent("email")
+    @Dependent({"email", "active"})
     private boolean base = false;
 
     @IsProperty
@@ -111,7 +113,8 @@ public class User extends ActivatableAbstractEntity<String> {
     @IsProperty
     @MapTo
     @Title(value = "Active?", desc = "Designates whether an entity instance is active or not.")
-    @BeforeChange(@Handler(ActivePropertyValidator.class))
+    @BeforeChange( {@Handler(ActivePropertyValidator.class),
+                    @Handler(NonBaseUserShouldHaveRolesBeforeBecomingActiveValidator.class) })
     @AfterChange(UserActivationDefiner.class)
     private boolean active;
 
