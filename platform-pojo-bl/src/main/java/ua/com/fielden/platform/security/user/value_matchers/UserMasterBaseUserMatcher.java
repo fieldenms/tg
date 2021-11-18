@@ -24,9 +24,9 @@ public class UserMasterBaseUserMatcher extends FallbackValueMatcherWithContext<U
     }
 
     @Override
-    protected ConditionModel makeSearchCriteriaModel(final User context, final String searchString) {
-        final ConditionModel originalSearchCriteria = super.makeSearchCriteriaModel(context, searchString);
-        return cond().condition(originalSearchCriteria).and().prop("base").eq().val(true).model();
+    protected ConditionModel makeSearchCriteriaModel(final User contextUser, final String searchString) {
+        final ConditionModel originalSearchCriteria = super.makeSearchCriteriaModel(contextUser, searchString);
+        return cond().prop("base").eq().val(true).and().prop("id").ne().val(contextUser).and().condition(originalSearchCriteria).model();
     }
 
 }
