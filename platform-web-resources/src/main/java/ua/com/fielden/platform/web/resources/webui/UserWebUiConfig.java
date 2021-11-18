@@ -19,7 +19,6 @@ import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.security.user.ReUser;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.security.user.UserProducer;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.security.user.UserRolesUpdater;
 import ua.com.fielden.platform.security.user.UserRolesUpdaterProducer;
@@ -96,7 +95,8 @@ public class UserWebUiConfig {
                 .addProp("basedOnUser").width(200).also()
                 .addProp("base").width(80).also()
                 .addProp(EMAIL).minWidth(150).also()
-                .addProp(ACTIVE).minWidth(50)
+                .addProp(ACTIVE).width(50).also()
+                .addProp("roles").minWidth(70).withAction(UserActions.MANAGE_ROLES_SECONDARY_ACTION.mkAction())
                 .addPrimaryAction(userEditAction).also()
                 .addSecondaryAction(UserActions.MANAGE_ROLES_SECONDARY_ACTION.mkAction())
                 .build(), injector);
@@ -125,7 +125,7 @@ public class UserWebUiConfig {
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .withDimensions(mkDim(580, 390))
                 .done();
-        return new EntityMaster<>(User.class, UserProducer.class, masterConfigForUser, injector);
+        return new EntityMaster<>(User.class, masterConfigForUser, injector);
     }
 
     /**
