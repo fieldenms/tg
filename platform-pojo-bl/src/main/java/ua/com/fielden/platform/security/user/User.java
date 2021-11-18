@@ -95,7 +95,7 @@ public class User extends ActivatableAbstractEntity<String> {
     private boolean base = false;
 
     @IsProperty
-    @Title(value = "Base user", desc = "A user on which the current user is based. This mainly relates to the application configuration and security user roles.")
+    @Title(value = "Base User", desc = "A user on which the current user is based (aka a profile user). This relates to the application configurations such as visibility of menu items and entity centre configurations.")
     @MapTo
     @BeforeChange(@Handler(UserBaseOnUserValidator.class))
     @AfterChange(UserBasedOnUserDefiner.class)

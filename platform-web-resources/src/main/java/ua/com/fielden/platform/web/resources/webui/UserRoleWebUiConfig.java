@@ -26,6 +26,7 @@ import ua.com.fielden.platform.security.user.UserRoleTokensUpdater;
 import ua.com.fielden.platform.security.user.UserRoleTokensUpdaterProducer;
 import ua.com.fielden.platform.ui.menu.sample.MiUserRole;
 import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
+import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
@@ -50,7 +51,11 @@ public class UserRoleWebUiConfig {
     public final EntityCentre<UserRole> centre;
     public final EntityMaster<UserRole> master;
 
-    public UserRoleWebUiConfig(final Injector injector) {
+    public static UserRoleWebUiConfig register(final Injector injector, final IWebUiBuilder builder) {
+        return new UserRoleWebUiConfig(injector);
+    }
+
+    private UserRoleWebUiConfig(final Injector injector) {
         centre = createCentre(injector);
         master = createMaster(injector);
         tokensUpdater = createTokensUpdater(injector);
