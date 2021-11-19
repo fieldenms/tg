@@ -121,7 +121,7 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
         final UserRole userRole3 = save(new_(UserRole.class, "nrole3", "nrole desc 3"));
 
         final String newUserName = "new_user";
-        User user = save(new_(User.class, newUserName, "new user desc").setEmail("new_email@gmail.com"));
+        User user = save(new_(User.class, newUserName, "new user desc").setBase(true).setEmail("new_email@gmail.com"));
 
         Set<UserAndRoleAssociation> userRolesAssociation = new HashSet<>();
         userRolesAssociation.add(new_composite(UserAndRoleAssociation.class, user, userRole1));

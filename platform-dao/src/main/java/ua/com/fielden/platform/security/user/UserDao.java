@@ -87,6 +87,11 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         this.crypto = crypto;
     }
 
+    @Override
+    public User new_() {
+        return super.new_().getProperty(User.BASED_ON_USER).setRequired(true).getEntity();
+    }
+
     /**
      * Saves a user instance. Special care is taken for the case where only property {@code refCount} is changed.
      * This is why this method is not annotated with {@code @Authorise(User_CanSave_Token.class)}.
