@@ -5,7 +5,6 @@ import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.property.validator.StringValidator.regexProp;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.TreeSet;
 
@@ -31,7 +30,6 @@ import ua.com.fielden.platform.property.validator.StringValidator;
 import ua.com.fielden.platform.security.user.definers.UserActivationDefiner;
 import ua.com.fielden.platform.security.user.definers.UserBaseDefiner;
 import ua.com.fielden.platform.security.user.definers.UserBasedOnUserDefiner;
-import ua.com.fielden.platform.security.user.validators.NonBaseUserShouldHaveRolesBeforeBecomingActiveValidator;
 import ua.com.fielden.platform.security.user.validators.UserBaseOnUserValidator;
 import ua.com.fielden.platform.security.user.validators.UserBaseValidator;
 
@@ -47,6 +45,8 @@ import ua.com.fielden.platform.security.user.validators.UserBaseValidator;
 @CompanionObject(IUser.class)
 public class User extends ActivatableAbstractEntity<String> {
 
+    public static final String ROLES = "roles";
+    public static final String BASED_ON_USER = "basedOnUser";
     public static final String EMAIL = "email";
     public static final String USER_NAME_REGEX = "^\\w+$"; // permits only letters and digits, must not permit SECRET_RESET_UUID_SEPERATOR
 
@@ -113,8 +113,7 @@ public class User extends ActivatableAbstractEntity<String> {
     @IsProperty
     @MapTo
     @Title(value = "Active?", desc = "Designates whether an entity instance is active or not.")
-    @BeforeChange( {@Handler(ActivePropertyValidator.class),
-                    @Handler(NonBaseUserShouldHaveRolesBeforeBecomingActiveValidator.class) })
+    @BeforeChange(@Handler(ActivePropertyValidator.class))
     @AfterChange(UserActivationDefiner.class)
     private boolean active;
 
