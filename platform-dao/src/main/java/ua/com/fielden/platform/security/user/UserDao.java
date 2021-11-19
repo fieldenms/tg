@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 
 import org.apache.log4j.Logger;
 
@@ -35,6 +36,7 @@ import com.nulabinc.zxcvbn.Zxcvbn;
 import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
@@ -46,7 +48,6 @@ import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.menu.WebMenuItemInvisibility;
 import ua.com.fielden.platform.pagination.IPage;
-import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.security.Authorise;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.session.IUserSession;
@@ -54,6 +55,7 @@ import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.tokens.AlwaysAccessibleToken;
 import ua.com.fielden.platform.security.tokens.user.User_CanDelete_Token;
 import ua.com.fielden.platform.security.tokens.user.User_CanSave_Token;
+import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
 import ua.com.fielden.platform.ui.config.EntityMasterConfig;
@@ -85,25 +87,31 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         this.crypto = crypto;
     }
 
+    /**
+     * Saves a user instance. Special care is taken for the case where only property {@code refCount} is changed.
+     * This is why this method is not annotated with {@code @Authorise(User_CanSave_Token.class)}.
+     * Authorisation happens for {@link #save(User, Optional)}, which is invoked for all other cases.
+     */
     @Override
     @SessionRequired
-    // Do not annotate with @Authorise(User_CanSave_Token.class). Refer ordinarySave.
     public User save(final User user) {
-        if (User.system_users.VIRTUAL_USER.matches(user)) {
-            throw new SecurityException("VIRTUAL_USER cannot be persisted.");
-        }
-
         // anybody should be able to save updated reference count
-        if (user.getDirtyProperties().stream().count() == 1 && user.getProperty(User.REF_COUNT).isDirty()) {
-            return super.save(user); // use super save without refetch
+        if (user.getDirtyProperties().size() == 1 && user.getProperty(User.REF_COUNT).isDirty()) {
+            // use super save with refetching based on the reconstructed fetch model,
+            // which should be slim comparing to IUser.FETCH_PROVIDER
+            return super.save(user);
         } else {
-            return ordinarySave(user);
+            return save(user, of(FETCH_PROVIDER.fetchModel())).orElseThrow(id -> new EntityCompanionException(format("Unexpected error: user ID [%s] was returned instead of an instance after saving user [%s].", id, user)));
         }
 
     }
 
+    @Override
     @Authorise(User_CanSave_Token.class)
-    protected User ordinarySave(final User user) {
+    protected Either<Long, User> save(final User user, final Optional<fetch<User>> maybeFetch) {
+        if (User.system_users.VIRTUAL_USER.matches(user)) {
+            throw new SecurityException("VIRTUAL_USER cannot be persisted.");
+        }
         user.isValid().ifFailure(Result::throwRuntime);
         // remove all authenticated sessions in case the user is being deactivated
         if (user.isPersisted() && !user.isActive() && user.getProperty(ACTIVE).isDirty()) {
@@ -118,19 +126,15 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         // there could also be a situation where an inactive existing user, which did not have their password set in the first place, is being activated... this also warrants an activation email
         if ((!user.isPersisted() && user.isActive()) ||
             (user.isPersisted() && user.isActive() && user.getProperty(ACTIVE).isDirty() && passwordNotAssigned(user))) {
-            final User savedUser = saveWithRefetch(user);
-            newUserNotifier.notify(assignPasswordResetUuid(savedUser.getKey()).orElseThrow(() -> new SecurityException("Could not initiate password reset.")));
+            final Either<Long, User> savedUser = super.save(user, maybeFetch);
+            final Function<Long, EntityCompanionException> error = (Long id) -> new EntityCompanionException(format("Unexpected error: user ID [%s] was returned instead of an instance after saving user [%s].", id, user));
+            newUserNotifier.notify(assignPasswordResetUuid(savedUser.orElseThrow(error).getKey()).orElseThrow(() -> new SecurityException("Could not initiate password reset.")));
             return savedUser;
         } else {
-            return saveWithRefetch(user);
+            return super.save(user, maybeFetch);
         }
     }
 
-    private User saveWithRefetch(final User user) {
-        final User savedUser = super.save(user);
-        return co$(User.class).findById(savedUser.getId(), IUser.FETCH_PROVIDER.fetchModel());
-    }
-    
     private Boolean passwordNotAssigned(final User user) {
         return co(UserSecret.class).findByIdOptional(user.getId()).map(us -> isEmpty(us.getPassword())).orElse(true);
     }
