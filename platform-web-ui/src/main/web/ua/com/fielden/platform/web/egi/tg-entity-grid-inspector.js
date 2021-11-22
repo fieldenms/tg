@@ -1379,6 +1379,7 @@ Polymer({
     },
 
     _filteredEntitiesChanged: function (newValue) {
+        const noneFilteredOut = newValue.length === this.entities.length;
         const tempEgiModel = [];
         newValue.forEach(newEntity => {
             const selectEntInd = this._findEntity(newEntity, this.selectedEntities);
@@ -1389,9 +1390,9 @@ Polymer({
                 this.editingEntity = newEntity;
             }
         });
-        newValue.forEach(newEntity => {
+        newValue.forEach((newEntity, filteredEntIndex) => {
             const isSelected = this.selectedEntities.indexOf(newEntity) > -1;
-            const index = this.findEntityIndex(newEntity);
+            const index = noneFilteredOut ? filteredEntIndex : this.findEntityIndex(newEntity);
             const newRendHints = (this.renderingHints && this.renderingHints[index]) || {};
             const newPrimaryActionIndex = (this.primaryActionIndices && this.primaryActionIndices[index]) || 0;
             const defaultSecondaryActionIndices = this._secondaryActions.map(action => 0);
@@ -2003,8 +2004,9 @@ Polymer({
 
     _renderingHintsChanged: function (newValue) {
         if (this.egiModel) {
-            this.egiModel.forEach((egiEntity) => {
-                egiEntity.renderingHints = (newValue && newValue[this.findEntityIndex(egiEntity.entity)]) || {};
+            const noneFilteredOut = this.egiModel.length === this.entities.length;
+            this.egiModel.forEach((egiEntity, egiEntIndex) => {
+                egiEntity.renderingHints = (newValue && newValue[noneFilteredOut ? egiEntIndex : this.findEntityIndex(egiEntity.entity)]) || {};
                 egiEntity._renderingHintsChangedHandler && egiEntity._renderingHintsChangedHandler();
             });
             this._updateTableSizeAsync();
@@ -2013,16 +2015,18 @@ Polymer({
 
     _primaryActionIndicesChanged: function (newValue) {
         if (this.egiModel) {
+            const noneFilteredOut = this.egiModel.length === this.entities.length;
             this.egiModel.forEach((egiEntity, index) => {
-                this.set("egiModel." + index + ".primaryActionIndex", newValue[this.findEntityIndex(egiEntity.entity)]);
+                this.set("egiModel." + index + ".primaryActionIndex", newValue[noneFilteredOut ? index : this.findEntityIndex(egiEntity.entity)]);
             });
         }
     },
 
     _secondaryActionIndicesChanged: function (newValue) {
         if (this.egiModel) {
+            const noneFilteredOut = this.egiModel.length === this.entities.length;
             this.egiModel.forEach((egiEntity, index) => {
-                this.set("egiModel." + index + ".secondaryActionIndices", newValue[this.findEntityIndex(egiEntity.entity)]);
+                this.set("egiModel." + index + ".secondaryActionIndices", newValue[noneFilteredOut ? index : this.findEntityIndex(egiEntity.entity)]);
             });
         }
     },
