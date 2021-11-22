@@ -16,7 +16,7 @@ import '/resources/images/tg-icons.js';
 import '/resources/egi/tg-egi-multi-action.js';
 import '/resources/egi/tg-secondary-action-button.js';
 import '/resources/egi/tg-secondary-action-dropdown.js';
-import '/resources/egi/tg-egi-cell.js';
+import {EGI_CELL_PADDING, EGI_CELL_PADDING_TEMPLATE} from '/resources/egi/tg-egi-cell.js';
 import '/resources/egi/tg-responsive-toolbar.js';
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
@@ -31,6 +31,9 @@ import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 import { getKeyEventTarget, tearDownEvent, getRelativePos, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
+
+const EGI_BOTTOM_MARGIN = "15px";
+const EGI_BOTTOM_MARGIN_TEMPLATE = html`15px`;
 
 const template = html`
     <style>
@@ -263,7 +266,7 @@ const template = html`
             min-width: fit-content;
             flex-grow: 0;
             flex-shrink: 0;
-            padding-bottom: var(--egi-bottom-margin, 15px);
+            padding-bottom: ${EGI_BOTTOM_MARGIN_TEMPLATE};
             @apply --layout-vertical;
         }
         .drag-anchor {
@@ -314,7 +317,7 @@ const template = html`
         .table-master-cell, .table-cell {
             @apply --layout-horizontal;
             @apply --layout-relative;
-            padding: 0 var(--egi-cell-padding, 0.6rem);
+            padding: 0 ${EGI_CELL_PADDING_TEMPLATE};
         }
         .table-cell {
             @apply --layout-center;
@@ -1818,8 +1821,7 @@ Polymer({
     },
 
     _calcSelectCheckBoxStyle: function (canDragFrom) {
-        const cellPadding = this.getComputedStyleValue('--egi-cell-padding').trim() || "0.6rem";
-        return "width:18px; padding-left:" + (canDragFrom ? "0;" : cellPadding);
+        return "width:18px; padding-left:" + (canDragFrom ? "0;" : EGI_CELL_PADDING);
     },
 
     _toolbarShadowVisible: function (_showTopShadow, headerFixed) {
@@ -1989,8 +1991,7 @@ Polymer({
         } else if (visibleRowsCount > 0) { //Set the height or max height for the scroll container so that only specified number of rows become visible.
             this.$.paperMaterial.style["min-height"] = "fit-content";
             const rowCount = visibleRowsCount + (summaryFixed ? _totalsRowCount : 0);
-            const bottomMargin = this.getComputedStyleValue('--egi-bottom-margin').trim() || "15px";
-            const height = "calc(3rem + " + rowCount + " * " + rowHeight + " + " + rowCount + "px" + (summaryFixed && _totalsRowCount > 0 ? (" + " + bottomMargin) : "") + ")";
+            const height = "calc(3rem + " + rowCount + " * " + rowHeight + " + " + rowCount + "px" + (summaryFixed && _totalsRowCount > 0 ? (" + " + EGI_BOTTOM_MARGIN) : "") + ")";
             if (fitToHeight) {
                 this.$.scrollableContainer.style["height"] = height;
             } else {
