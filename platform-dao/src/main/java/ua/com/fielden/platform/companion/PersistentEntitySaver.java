@@ -42,6 +42,7 @@ import org.hibernate.Session;
 import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -492,20 +493,24 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             final Set<String> keyMembers = Finder.getKeyMembers(entity.getType()).stream().map(Field::getName).collect(toSet());
             final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> activatableDirtyProperties = collectActivatableDirtyProperties(entity, keyMembers);
 
-            for (final MetaProperty<? extends ActivatableAbstractEntity<?>> prop : activatableDirtyProperties) {
+            for (final MetaProperty prop : activatableDirtyProperties) {
                 if (prop.getValue() != null) {
                     // need to update refCount for the activatable entity
-                    final ActivatableAbstractEntity<?> value = prop.getValue();
+                    final ActivatableAbstractEntity<?> value = (ActivatableAbstractEntity<?>) prop.getValue();
                     final ActivatableAbstractEntity<?>  persistedEntity = (ActivatableAbstractEntity<?> ) session.get().load(value.getType(), value.getId(), UPGRADE);
                     // the returned value could already be inactive due to some concurrent modification
                     // therefore it is critical to ensure that the property of the current entity being saved can still accept the obtained value if it is inactive
                     if (!persistedEntity.isActive()) {
-                        entity.beginInitialising();
-                        entity.set(prop.getName(), persistedEntity);
-                        entity.endInitialising();
-                        
-                        final Result res = prop.revalidate(false);
-                        if (!res.isSuccessful()) {
+                        prop.setValue(persistedEntity, true);
+
+                        final Result res = prop.getFirstFailure();
+                        if (res != null) {
+                            session.get().detach(persistedEntity);
+                            // the last invalid value would now be set to persistedEntity, which is proxied by Hibernate and cannot be serialised
+                            // this is why we need to reset the last invalid value to the re-fetched value, which is effectively being revalidated
+                            final IEntityDao co = coFinder.get().find(value.getType(), true /* uninstrumented */);
+                            final ActivatableAbstractEntity<?> refetchedValue = (ActivatableAbstractEntity<?>) co.findById(value.getId(), FetchModelReconstructor.reconstruct(value));
+                            prop.setLastInvalidValue(refetchedValue);
                             throw res;
                         }
                     }
