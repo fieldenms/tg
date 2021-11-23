@@ -213,7 +213,10 @@ Polymer({
 
                         // if the next PENDING uploader was found then activate it
                         if (pendingUploader) {
-                            pendingUploader.canUpload = true;
+                            // spread out processing of files -- this is to reduce concurrent SSE server thread count, as they are not closed immediately (as connections are), but their closing is governed by ScheduledThreadPoolExecutor;
+                            // usually it takes up to 7 seconds to close corresponding EventSourceEmitter and server thread after connection was closed client-side (by invoking EventSource.close());
+                            // 700 milliseconds is compromise between acceptible user-friendliness and good reduction of concurrent server-side resources
+                            setTimeout(() => pendingUploader.canUpload = true, 700);
                         } else {
                             // if there is nothin else to upload then report that all uploading has stopped
                             this.uploadInProgress = false;

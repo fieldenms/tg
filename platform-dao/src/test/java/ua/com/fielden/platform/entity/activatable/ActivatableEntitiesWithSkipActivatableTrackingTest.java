@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.entity;
+package ua.com.fielden.platform.entity.activatable;
 
 import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;

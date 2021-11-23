@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.companion;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.hibernate.LockOptions.UPGRADE;
@@ -146,10 +148,10 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      */
     @Override
     public T save(final T entity) {
-        return coreSave(entity, false)._2;
+        return coreSave(entity, false, empty())._2;
     }
 
-    public T2<Long, T> coreSave(final T entity, final boolean skipRefetching) {
+    public T2<Long, T> coreSave(final T entity, final boolean skipRefetching, final Optional<fetch<T>> maybeFetch) {
         if (entity == null || !entity.isPersistent()) {
             throw new EntityCompanionException(format("Only non-null persistent entities are permitted for saving. Ether type [%s] is not persistent or entity is null.", entityType.getName()));
         } else if (!entity.isInstrumented()) {
@@ -158,7 +160,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             final Result isValid = validateEntity(entity);
             if (isValid.isSuccessful()) {
                 //logger.debug(format("Entity [%s] is not dirty (ID = %s). Saving is skipped. Entity refetched.", entity, entity.getId()));
-                return t2(entity.getId(), skipRefetching ? entity : findById.apply(entity.getId(), FetchModelReconstructor.reconstruct(entity)));
+                return t2(entity.getId(), skipRefetching ? entity : findById.apply(entity.getId(), maybeFetch.orElseGet(() -> FetchModelReconstructor.reconstruct(entity))));
             } else {
                 throw isValid;
             }
@@ -181,9 +183,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             // entity is valid and we should proceed with saving
             // new and previously saved entities are handled differently
             if (!entity.isPersisted()) { // is it a new entity?
-                result = saveNewEntity(entity, skipRefetching);
+                result = saveNewEntity(entity, skipRefetching, maybeFetch);
             } else { // so, this is a modified entity
-                result = saveModifiedEntity(entity, skipRefetching);
+                result = saveModifiedEntity(entity, skipRefetching, maybeFetch);
             }
         } finally {
             //logger.debug("Finished saving entity " + entity + " (ID = " + entity.getId() + ")");
@@ -233,7 +235,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      * @param entity
      * @param skipRefetching
      */
-    private T2<Long, T> saveModifiedEntity(final T entity, final boolean skipRefetching) {
+    private T2<Long, T> saveModifiedEntity(final T entity, final boolean skipRefetching, final Optional<fetch<T>> maybeFetch) {
         // let's first prevent not permissibly modifications that could not be checked any earlier than this,
         // which pertain to required and marked as assign before save properties that must have values
         checkDirtyMarkedForAssignmentBeforeSaveProperties(entity);
@@ -255,8 +257,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         }
 
         // reconstruct entity fetch model for future retrieval at the end of the method call
-        final Optional<fetch<T>> entityFetchOption = skipRefetching ? Optional.empty() : Optional.of(FetchModelReconstructor.reconstruct(entity));
-
+        final Optional<fetch<T>> entityFetchOption = skipRefetching ? empty() : (maybeFetch.isPresent() ? maybeFetch : of(FetchModelReconstructor.reconstruct(entity)));
 
         // proceed with property assignment from entity to persistent entity, which in case of a resolvable conflict acts like a fetch/rebase in git
         // it is essential that if a property is of an entity type it should be re-associated with the current session before being set
@@ -463,7 +464,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      * @param entity
      * @param skipRefetching
      */
-    private T2<Long, T> saveNewEntity(final T entity, final boolean skipRefetching) {
+    private T2<Long, T> saveNewEntity(final T entity, final boolean skipRefetching, final Optional<fetch<T>> maybeFetch) {
         // let's make sure that entity is not a duplicate
         if (entityExists.apply(createQueryByKey(dbVersion.get(), entityType, keyType, false, entity.getKey()))) {
             throw new EntityAlreadyExists(format("%s [%s] already exists.", TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey(), entity));
@@ -476,7 +477,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         assignPropertiesBeforeSave(entity);
 
         // reconstruct entity fetch model for future retrieval at the end of the method call
-        final Optional<fetch<T>> entityFetchOption = skipRefetching ? Optional.empty() : Optional.of(FetchModelReconstructor.reconstruct(entity));
+        final Optional<fetch<T>> entityFetchOption = skipRefetching ? empty() : (maybeFetch.isPresent() ? maybeFetch : of(FetchModelReconstructor.reconstruct(entity)));
 
         // new entity might be activatable, but this has no effect on its refCount -- should be zero as no other entity could yet reference it
         // however, it might reference other activatable entities, which warrants update to their refCount.

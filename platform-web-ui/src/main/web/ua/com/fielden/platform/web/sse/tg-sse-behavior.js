@@ -1,6 +1,5 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { random } from '/resources/reflection/tg-numeric-utils.js';
-import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
 export const TgSseBehavior = {
 
@@ -34,6 +33,12 @@ export const TgSseBehavior = {
             value: true
         },
 
+        /* Time in milliseconds when the next try for SSE reconnection will be performed after SSE error. Works only if shouldReconnectWhenError is true. */
+        errorReconnectionDelay: {
+            type: Number,
+            value: 15000
+        },
+
         /* A reference to an established EventSource object. */
         _source: {
             type: Object,
@@ -50,16 +55,27 @@ export const TgSseBehavior = {
         _timerIdForReconnection: {
             type: Number,
             value: null
+        },
+
+        /* Indicates the need to schedule dataHandler execution based on 'minDelay' and 'delay' properties of event data. */
+        useTimerBasedScheduling: {
+            type: Boolean,
+            value: true
         }
+
     },
 
-    /* Closes an existing event source connection. */
+    /* Closes an existing event source connection. This operation also ensures that any scheduled reconnections are cancelled and cleared after EventSource closing. */
     closeEventSource: function () {
         if (this._source) {
             this._initialised = false;
             const src = this._source;
             this._source = null;
             src.close();
+        }
+        if (typeof this._timerIdForReconnection === 'number') { // if there is in-progress timeout handling reconnection
+            clearTimeout(this._timerIdForReconnection); // then cancel this timeout immediately
+            this._timerIdForReconnection = null;
         }
     },
 
@@ -93,15 +109,19 @@ export const TgSseBehavior = {
         const source = self._source;
 
         source.addEventListener('message', function (e) {
-            // Ensures that if there is a pending data handling request then new requests are ignored
-            if (self._timerIdForDataHandling) {
-                return;
+            if (self.useTimerBasedScheduling) {
+                // Ensures that if there is a pending data handling request then new requests are ignored
+                if (self._timerIdForDataHandling) {
+                    return;
+                }
+                const msg = JSON.parse(e.data);
+                const minDelay = msg.minDelay ? msg.minDelay : 0;
+                const rndDelay = msg.delay ? random(msg.delay) + 1 : 1;
+                console.log("min delay: ", minDelay, " rnd delay: ", rndDelay);
+                self._execDataHandlerWithDelay(msg, minDelay + rndDelay);
+            } else {
+                self.dataHandler(JSON.parse(e.data));
             }
-            const msg = JSON.parse(e.data);
-            const minDelay = msg.minDelay ? msg.minDelay : 0;
-            const rndDelay = msg.delay ? random(msg.delay) + 1 : 1;
-            console.log("min delay: ", minDelay, " rnd delay: ", rndDelay);
-            self._execDataHandlerWithDelay(msg, minDelay + rndDelay);
         }, false);
 
         source.addEventListener('completed', function (e) {
@@ -127,7 +147,11 @@ export const TgSseBehavior = {
             // only after custom error handling should we attempt to reconnect
             // this is because the decision to reconnect can be made in the custom error handler
             if (self.shouldReconnectWhenError === true && e.eventPhase === EventSource.CLOSED) {
-                // Connection was closed by the server
+                // connection was closed by the server;
+                // ensure client-side EventSource to be closed and _initialised flag to be false;
+                // ensure also that previous reconnection timeout is cancelled and made null;
+                // previous reconnection timeout should not be possible here because SSE EventSource (and server side resource) will be closed prior to this;
+                // however it is not harmful to check -- see closeEventSource() method
                 self.closeEventSource();
                 // Let's kick a timer for reconnection...
                 self._timerIdForReconnection = setTimeout(() => {
@@ -136,7 +160,7 @@ export const TgSseBehavior = {
                     } finally {
                         self._timerIdForReconnection = null;
                     }
-                }, 15000);
+                }, self.errorReconnectionDelay);
             }
 
         }, false);
@@ -152,6 +176,6 @@ export const TgSseBehavior = {
                 self._timerIdForDataHandling = null;
             }
         }, delay);
-    },
+    }
 
 }; // end of behaviour declaration
