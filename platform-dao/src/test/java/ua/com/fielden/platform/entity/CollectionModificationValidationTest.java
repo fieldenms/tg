@@ -169,7 +169,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
     
     @Test
     public void collection_modification_is_not_applicable_to_persisted_but_dirty_entity() {
-        final User user = save(new_(User.class, newUsername));
+        final User user = save(new_(User.class, newUsername).setBase(true));
         user.setDesc("New description.");
         
         try {
@@ -182,7 +182,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
     
     @Test
     public void master_entity_removal_prevents_collection_modification() {
-        final User user = save(new_(User.class, newUsername));
+        final User user = save(new_(User.class, newUsername).setBase(true));
         createUpdater(user);
         
         co$(User.class).batchDelete(listOf(user.getId()));
@@ -197,7 +197,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
     
     @Test
     public void available_entity_removal_prevents_collection_modification_when_unselecting_it() {
-        final User user = save(new_(User.class, newUsername));
+        final User user = save(new_(User.class, newUsername).setBase(true));
         
         save(new_(UserRole.class, "ROLE1", "desc").setActive(true));
         final UserRole role2 = save(new_(UserRole.class, "ROLE2", "desc").setActive(true));
@@ -223,7 +223,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
     
     @Test
     public void available_entity_removal_prevents_collection_modification_when_selecting_it() {
-        final User user = save(new_(User.class, newUsername));
+        final User user = save(new_(User.class, newUsername).setBase(true));
         
         final UserRole role1 = save(new_(UserRole.class, "ROLE1", "desc").setActive(true));
         final UserRole role2 = save(new_(UserRole.class, "ROLE2", "desc").setActive(true));
@@ -249,7 +249,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
     
     @Test
     public void another_recorded_collection_modification_prevents_collection_modification() {
-        final User user = save(new_(User.class, newUsername));
+        final User user = save(new_(User.class, newUsername).setBase(true));
         
         final UserRole role1 = save(new_(UserRole.class, "ROLE1", "desc").setActive(true));
         final UserRole role2 = save(new_(UserRole.class, "ROLE2", "desc").setActive(true));
@@ -277,7 +277,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
     
     @Test
     public void collection_modification_succeeds_if_validation_has_been_succeeded() {
-        final User user = save(new_(User.class, newUsername));
+        final User user = save(new_(User.class, newUsername).setBase(true));
         
         final UserRole role1 = save(new_(UserRole.class, "ROLE1", "desc").setActive(true));
         final UserRole role2 = save(new_(UserRole.class, "ROLE2", "desc").setActive(true));
@@ -296,7 +296,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
     
     @Test
     public void available_entities_are_ordered_by_key_and_such_order_does_not_mutate_during_validation_cycles_in_user_roles_collectional_editor() {
-        final User user = save(new_(User.class, newUsername));
+        final User user = save(new_(User.class, newUsername).setBase(true));
         
         final UserRole unitTestRole = co$(UserRole.class).findByKey(UNIT_TEST_ROLE);
         final UserRole role1 = save(new_(UserRole.class, "ROLE1", "desc").setActive(true));
