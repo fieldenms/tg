@@ -2,7 +2,10 @@ package ua.com.fielden.platform.dao;
 
 import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static java.util.Optional.empty;
 import static ua.com.fielden.platform.reflection.Reflector.isMethodOverriddenOrDeclared;
+import static ua.com.fielden.platform.types.either.Either.left;
+import static ua.com.fielden.platform.types.either.Either.right;
 
 import java.io.IOException;
 import java.util.Collection;
@@ -43,6 +46,7 @@ import ua.com.fielden.platform.entity.query.EntityBatchDeleteByIdsOperation;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.QueryExecutionContext;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -50,6 +54,8 @@ import ua.com.fielden.platform.file_reports.WorkbookExporter;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.types.either.Either;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
@@ -242,7 +248,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         } else if (!entity.isPersistent()) {
             throw new EntityCompanionException(format("Quick save is not supported for non-persistent entity [%s].", entityType.getName()));
         } else {
-            final Long id = entitySaver.coreSave(entity, true)._1;
+            final Long id = entitySaver.coreSave(entity, true, empty())._1;
             if (id == null) {
                 throw new EntityCompanionException(format("Saving of entity [%s] did not return its ID.", entityType.getName()));
             }
@@ -260,6 +266,29 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
         } else {
             return entitySaver.save(entity);
         }
+    }
+
+    /**
+     * Experimental API with the potential to replace {@link #save(AbstractEntity)} if proven superior in practice.
+     * <p>
+     * This method could be used as an alternative to {@link #quickSave(AbstractEntity)} by passing in an empty instance of {@code Optional<fetch<T>>}.
+     * The right way to go about it, would be to override this method and place all the logic into this method instead of the potentially overridden {@link #save(AbstractEntity)},
+     * and simply call it from {@link #save(AbstractEntity)} with the appropriate fetch model.
+     * This way would guarantee a single path for validation and other related logic when saving entities.
+     * <p>
+     * The return type {@code Either<Long, T>} represents either an entity id (left) or an entity instance (right).
+     * Passing an empty instance of {@code Optional<fetch<T>>} should always skip refetching and return the left result (i.e. id) – this is analogous to {@link #quickSave(AbstractEntity)}.
+     *
+     * @param entity
+     * @param maybeFetch
+     * @return
+     */
+    @SessionRequired
+    protected Either<Long, T> save(final T entity, final Optional<fetch<T>> maybeFetch) {
+        // if maybeFetch is empty then we skip re-fetching
+        final boolean skipRefetching = !maybeFetch.isPresent();
+        final T2<Long, T> result = entitySaver.coreSave(entity, skipRefetching, maybeFetch);
+        return skipRefetching ? left(result._1) : right(result._2);
     }
 
     @Override

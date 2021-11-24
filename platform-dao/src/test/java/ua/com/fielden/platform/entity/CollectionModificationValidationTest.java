@@ -64,6 +64,8 @@ import ua.com.fielden.platform.security.tokens.persistent._CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.persistent._CanRead_Token;
 import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanRead_Token;
+import ua.com.fielden.platform.security.tokens.user.ReUser_CanReadModel_Token;
+import ua.com.fielden.platform.security.tokens.user.ReUser_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.user.UserAndRoleAssociation_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.user.UserRoleTokensUpdater_CanExecute_Token;
@@ -77,10 +79,10 @@ import ua.com.fielden.platform.security.tokens.user.User_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.user.User_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.user.User_CanSave_Token;
 import ua.com.fielden.platform.security.tokens.web_api.GraphiQL_CanExecute_Token;
-import ua.com.fielden.platform.security.user.UserAndRoleAssociationCo;
 import ua.com.fielden.platform.security.user.SecurityTokenInfo;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
+import ua.com.fielden.platform.security.user.UserAndRoleAssociationCo;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.security.user.UserRoleTokensUpdater;
 import ua.com.fielden.platform.security.user.UserRoleTokensUpdaterProducer;
@@ -167,7 +169,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
     
     @Test
     public void collection_modification_is_not_applicable_to_persisted_but_dirty_entity() {
-        final User user = save(new_(User.class, newUsername));
+        final User user = save(new_(User.class, newUsername).setBase(true));
         user.setDesc("New description.");
         
         try {
@@ -180,7 +182,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
     
     @Test
     public void master_entity_removal_prevents_collection_modification() {
-        final User user = save(new_(User.class, newUsername));
+        final User user = save(new_(User.class, newUsername).setBase(true));
         createUpdater(user);
         
         co$(User.class).batchDelete(listOf(user.getId()));
@@ -195,7 +197,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
     
     @Test
     public void available_entity_removal_prevents_collection_modification_when_unselecting_it() {
-        final User user = save(new_(User.class, newUsername));
+        final User user = save(new_(User.class, newUsername).setBase(true));
         
         save(new_(UserRole.class, "ROLE1", "desc").setActive(true));
         final UserRole role2 = save(new_(UserRole.class, "ROLE2", "desc").setActive(true));
@@ -221,7 +223,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
     
     @Test
     public void available_entity_removal_prevents_collection_modification_when_selecting_it() {
-        final User user = save(new_(User.class, newUsername));
+        final User user = save(new_(User.class, newUsername).setBase(true));
         
         final UserRole role1 = save(new_(UserRole.class, "ROLE1", "desc").setActive(true));
         final UserRole role2 = save(new_(UserRole.class, "ROLE2", "desc").setActive(true));
@@ -247,7 +249,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
     
     @Test
     public void another_recorded_collection_modification_prevents_collection_modification() {
-        final User user = save(new_(User.class, newUsername));
+        final User user = save(new_(User.class, newUsername).setBase(true));
         
         final UserRole role1 = save(new_(UserRole.class, "ROLE1", "desc").setActive(true));
         final UserRole role2 = save(new_(UserRole.class, "ROLE2", "desc").setActive(true));
@@ -275,7 +277,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
     
     @Test
     public void collection_modification_succeeds_if_validation_has_been_succeeded() {
-        final User user = save(new_(User.class, newUsername));
+        final User user = save(new_(User.class, newUsername).setBase(true));
         
         final UserRole role1 = save(new_(UserRole.class, "ROLE1", "desc").setActive(true));
         final UserRole role2 = save(new_(UserRole.class, "ROLE2", "desc").setActive(true));
@@ -294,7 +296,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
     
     @Test
     public void available_entities_are_ordered_by_key_and_such_order_does_not_mutate_during_validation_cycles_in_user_roles_collectional_editor() {
-        final User user = save(new_(User.class, newUsername));
+        final User user = save(new_(User.class, newUsername).setBase(true));
         
         final UserRole unitTestRole = co$(UserRole.class).findByKey(UNIT_TEST_ROLE);
         final UserRole role1 = save(new_(UserRole.class, "ROLE1", "desc").setActive(true));
@@ -331,6 +333,8 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         final SecurityTokenInfo user_CanSave = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(User_CanSave_Token.class.getName());
         final SecurityTokenInfo user_CanRead = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(User_CanRead_Token.class.getName());
         final SecurityTokenInfo user_CanReadModel = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(User_CanReadModel_Token.class.getName());
+        final SecurityTokenInfo reUser_CanRead = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(ReUser_CanRead_Token.class.getName());
+        final SecurityTokenInfo reUser_CanReadModel = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(ReUser_CanReadModel_Token.class.getName());
         final SecurityTokenInfo userRole_CanDelete = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(UserRole_CanDelete_Token.class.getName());
         final SecurityTokenInfo userRole_CanSave = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(UserRole_CanSave_Token.class.getName());
         final SecurityTokenInfo userRole_CanRead = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(UserRole_CanRead_Token.class.getName());
@@ -368,7 +372,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
             domainExplorer_CanRead, domainExplorer_CanReadModel,
             graphiQL_CanExecute,
             keyNumber_CanRead, keyNumber_CanReadModel,
-            user_CanDelete, user_CanSave, user_CanRead, user_CanReadModel, createTokenInfo.apply(UserMaster_CanOpen_Token.class),
+            user_CanDelete, user_CanSave, user_CanRead, user_CanReadModel, reUser_CanRead, reUser_CanReadModel, createTokenInfo.apply(UserMaster_CanOpen_Token.class),
             userRole_CanDelete, userRole_CanSave, userRole_CanRead, userRole_CanReadModel, createTokenInfo.apply(UserRoleMaster_CanOpen_Token.class),
             userRoleAssociation_CanRead, userRoleAssociation_CanReadModel,
             userRolesUpdater_CanExecute, userRoleTokensUpdater_CanExecute,

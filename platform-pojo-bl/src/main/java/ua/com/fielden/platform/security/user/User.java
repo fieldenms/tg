@@ -5,8 +5,8 @@ import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.property.validator.StringValidator.regexProp;
 
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
 
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -45,6 +45,8 @@ import ua.com.fielden.platform.security.user.validators.UserBaseValidator;
 @CompanionObject(IUser.class)
 public class User extends ActivatableAbstractEntity<String> {
 
+    public static final String ROLES = "roles";
+    public static final String BASED_ON_USER = "basedOnUser";
     public static final String EMAIL = "email";
     public static final String USER_NAME_REGEX = "^\\w+$"; // permits only letters and digits, must not permit SECRET_RESET_UUID_SEPERATOR
 
@@ -84,18 +86,18 @@ public class User extends ActivatableAbstractEntity<String> {
     
     @IsProperty(value = UserAndRoleAssociation.class, linkProperty = "user")
     @Title(value = "Roles", desc = "The associated with this user roles.")
-    private final Set<UserAndRoleAssociation> roles = new HashSet<>();
+    private final Set<UserAndRoleAssociation> roles = new TreeSet<>();
 
     @IsProperty
     @Title(value = "Is base user?", desc = "Indicates whether this is a base user, which is used for application configuration and creation of other application users.")
     @MapTo
     @BeforeChange(@Handler(UserBaseValidator.class))
     @AfterChange(UserBaseDefiner.class)
-    @Dependent("email")
+    @Dependent({"email", "active"})
     private boolean base = false;
 
     @IsProperty
-    @Title(value = "Base user", desc = "A user on which the current user is based. This mainly relates to the application configuration and security user roles.")
+    @Title(value = "Base User", desc = "A user on which the current user is based (aka a profile user). This relates to the application configurations such as visibility of menu items and entity centre configurations.")
     @MapTo
     @BeforeChange(@Handler(UserBaseOnUserValidator.class))
     @AfterChange(UserBasedOnUserDefiner.class)
