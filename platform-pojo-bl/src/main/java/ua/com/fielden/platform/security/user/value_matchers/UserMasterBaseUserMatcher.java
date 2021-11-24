@@ -5,6 +5,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithContext;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionCompoundCondition;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
@@ -26,7 +28,8 @@ public class UserMasterBaseUserMatcher extends FallbackValueMatcherWithContext<U
     @Override
     protected ConditionModel makeSearchCriteriaModel(final User contextUser, final String searchString) {
         final ConditionModel originalSearchCriteria = super.makeSearchCriteriaModel(contextUser, searchString);
-        return cond().prop("base").eq().val(true).and().prop("id").ne().val(contextUser).and().condition(originalSearchCriteria).model();
+        final IStandAloneConditionCompoundCondition<AbstractEntity<?>> cond = cond().prop("base").eq().val(true).and().condition(originalSearchCriteria);
+        return (contextUser.isPersisted() ? cond.and().prop("id").ne().val(contextUser) : cond) .model();
     }
 
 }
