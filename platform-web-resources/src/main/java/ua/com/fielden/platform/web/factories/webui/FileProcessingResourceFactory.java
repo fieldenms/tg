@@ -29,16 +29,16 @@ import ua.com.fielden.platform.web.resources.webui.FileProcessingResource;
  *
  */
 public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStream<?>> extends Restlet {
-    private final Injector injector;
-    private final Class<T> entityType;
-    private final Function<EntityFactory, T> entityCreator;
-    private final ICompanionObjectFinder companionFinder;
-    private final Router router;
+    protected final Injector injector;
+    protected final Class<T> entityType;
+    protected final Function<EntityFactory, T> entityCreator;
+    protected final ICompanionObjectFinder companionFinder;
+    protected final Router router;
     
-    private final long fileSizeLimitBytes;
-    private final Set<MediaType> types = new HashSet<>();
-    private final IDeviceProvider deviceProvider;
-    private final IDates dates;
+    protected final long fileSizeLimitBytes;
+    protected final Set<MediaType> types = new HashSet<>();
+    protected final IDeviceProvider deviceProvider;
+    protected final IDates dates;
 
     public FileProcessingResourceFactory(
             final Router router,

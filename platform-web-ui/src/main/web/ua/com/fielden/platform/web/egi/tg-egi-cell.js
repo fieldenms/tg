@@ -12,13 +12,16 @@ import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js'
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgAppConfig } from '/app/tg-app-config.js';
 
+export const EGI_CELL_PADDING = "0.6rem";
+export const EGI_CELL_PADDING_TEMPLATE = html`0.6rem`;
+
 const template = html`
     <style>
         :host {
             @apply --layout-horizontal;
             @apply --layout-center;
             @apply --layout-relative;
-            padding: 0 var(--egi-cell-padding, 0.6rem);
+            padding: 0 ${EGI_CELL_PADDING_TEMPLATE};
         }
         .value-container {
             @apply --layout-relative;

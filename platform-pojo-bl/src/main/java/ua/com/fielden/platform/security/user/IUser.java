@@ -148,6 +148,6 @@ public interface IUser extends IEntityDao<User> {
 
     static final IFetchProvider<User> FETCH_PROVIDER = EntityUtils.fetch(User.class)
             .with("key", EMAIL, ACTIVE)
-            .with("base", "basedOnUser.base");
+            .with("base", "basedOnUser.base", "roles");
 
 }

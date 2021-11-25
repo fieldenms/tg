@@ -387,18 +387,18 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
         if (name === '') { // empty property name means 'entity itself'
             return this;
         }
-        var dotIndex = name.indexOf(".");
+        const dotIndex = name.indexOf(".");
         if (dotIndex > -1) {
-            var first = name.slice(0, dotIndex);
-            var rest = name.slice(dotIndex + 1);
-            var firstVal = this.get(first);
+            const first = name.slice(0, dotIndex);
+            const rest = name.slice(dotIndex + 1);
+            const firstVal = this.get(first);
             if (firstVal === null) {
                 return null;
             } else if (_isEntity(firstVal)) {
                 return firstVal.get(rest);
             } else if (firstVal instanceof Array) {
-                var internalList = [];
-                for (var index = 0; index < firstVal.length; index++) {
+                const internalList = [];
+                for (let index = 0; index < firstVal.length; index++) {
                     internalList.push(firstVal[index].get(rest));
                 }
                 return internalList;
@@ -406,14 +406,15 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
                 throw 'Unsupported dot-notation [' + name + '] in type [' + this.constructor.prototype.type.call(this).fullClassName() + '].';
             }
         } else {
-            if ('key' === name && this.constructor.prototype.type.call(this).isCompositeEntity()) {
+            const type = this.constructor.prototype.type.call(this);
+            if ('key' === name && type.isCompositeEntity()) {
                 const dynamicKey = new DynamicEntityKey();
                 dynamicKey._entity = this;
                 return dynamicKey;
-            } else if ((this.constructor.prototype.type.call(this)).isUnionEntity() && ['id', 'key', 'desc'].indexOf(name) !== -1) {
-                // In case of union entity, its [key / desc / id] should return the [key / desc / id] of corresponding 'active entity'.
+            } else if (type.isUnionEntity() && type.unionCommonProps().concat(['key', 'desc', 'id']).includes(name)) { // common property (perhaps with KEY / DESC) or non-common KEY, DESC and ID for which the value can still be taken; this is to be in sync with Finder.getAbstractUnionEntityFieldValue
+                // In case of union entity, its [key / desc / id / common_prop] should return the [key / desc / id / common_prop] of corresponding 'active entity'.
                 // This slightly deviates from Java 'AbstractUnionEntity' logic in two aspects:
-                // 1) Here the key is exactly equal to key of active entity, but in Java the key is equal to String representation of the key of active entity.
+                // 1) Here the key is exactly equal to key of active entity, but in Java the key is equal to String representation of the key of active entity -- see AbstractUnionEntity.getKey(); however in AbstractEntity.get() in Java there is no conversion to String (see Finder.getAbstractUnionEntityFieldValue)
                 // 2) In case where [key / desc / id] is accessed from empty union entity -- here empty values (aka nulls) are returned, but in Java -- exception is thrown. 
                 const activeEntity = this._activeEntity();
                 return activeEntity === null ? null : activeEntity.get(name);
@@ -421,10 +422,10 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
                 if ('desc' === name) { // undefined 'desc' most likely means that it is not a real property and null value can be returned
                     return null;
                 } else { // otherwise, need to raise a strict proxy exception
-                    throw new StrictProxyException(name, (this.constructor.prototype.type.call(this))._simpleClassName());
+                    throw new StrictProxyException(name, type._simpleClassName());
                 }
             } else if (this._isIdOnlyProxy(name)) {
-                throw new StrictProxyException(name, this.constructor.prototype.type.call(this)._simpleClassName(), true);
+                throw new StrictProxyException(name, type._simpleClassName(), true);
             }
             return this[name];
         }
@@ -439,7 +440,7 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
         const self = this;
         let activeEntity = null;
         this.traverseProperties(function (name) {
-            if (['key', 'desc', 'referencesCount', 'referenced'].indexOf(name) /*AbstractEntity.COMMON_PROPS*/ === -1 && self.get(name) !== null) {
+            if (self.get(name) !== null) {
                 activeEntity = self.get(name);
             }
         });
@@ -812,7 +813,14 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
      *
      */
     EntityType.prototype.isUnionEntity = function () {
-        return typeof this['_union'] === 'undefined' ? false : this['_union'];
+        return typeof this['_unionCommonProps'] !== 'undefined';
+    }
+
+    /** 
+     * Returns the property names for common properties (can be empty) in case of union entity; not defined otherwise.
+     */
+    EntityType.prototype.unionCommonProps = function () {
+        return this._unionCommonProps;
     }
 
     /**
@@ -936,7 +944,7 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
      * Returns 'null' if there is no entity master for this type.
      */
     EntityType.prototype.entityMaster = function () {
-        return this._entityMaster;
+        return _typeTable[this.notEnhancedFullClassName()]._entityMaster;
     }
     
     /**
@@ -944,7 +952,7 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
      * Returns 'null' if there is no entity master for this type.
      */
     EntityType.prototype.newEntityMaster = function () {
-        return this._newEntityMaster;
+        return _typeTable[this.notEnhancedFullClassName()]._newEntityMaster;
     }
 
     return EntityType;

@@ -10,11 +10,11 @@ export const TgEgiDataRetrievalBehavior = {
     },
 
     isHyperlinkProp: function (entity, column) {
-        return column.type === 'Hyperlink' && this.getValueFromEntity(entity, column) !== null
+        return column.type === 'Hyperlink' && this.getValueFromEntity(entity, column) !== null;
     },
 
     isBooleanProp: function (entity, column) {
-        return column.type === 'Boolean' && this.getValueFromEntity(entity, column) !== null
+        return column.type === 'Boolean' && ['false', 'true'].includes(this.getBindedValue(entity, column)); // getBindedValue always returns 'true' or 'false' even if actual boolean value is null; this situation is possible for properties like 'lastUpdatedBy.base' where 'lastUpdatedBy' is null itself
     },
 
     isNotBooleanOrHyperlinkProp: function (entity, column) {
