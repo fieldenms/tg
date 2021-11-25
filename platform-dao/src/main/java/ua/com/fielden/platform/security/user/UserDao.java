@@ -29,6 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -132,12 +133,14 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             coUserSecrete.batchDelete(listOf(user.getId()));
         }
 
-        //If the non user is new or became active or changed it's base user then remove it's previous invisible menu items and create new one
-        //for menu items those are invisible for all non base users based on user that is also base for specified user.
+        // User becomes a based-on user or has its base user changed -- need to handle menu invisibility.
+        // If a based-on user is new or became active or changed its base user then we need remove any previous invisible menu items and create new ones
+        // for menu items, which are invisible for all based-on users for the current base user (and whish is now also a base user for the user instance being saved).
         final List<String> menuItemsToSave = new ArrayList<>();
-        if (!user.isBase() && user.isActive() &&
-                (!user.isPersisted() ||
-                (user.isPersisted() && (user.getProperty("basedOnUser").isDirty() || user.getProperty(ACTIVE).isDirty())))) {
+        // the use is new or it either has base user or active flag changed
+        final boolean newOrHasBaseUserOrActivePropsChanged = !user.isPersisted() ||
+                                                             (user.isPersisted() && (user.getProperty("basedOnUser").isDirty() || user.getProperty(ACTIVE).isDirty()));
+        if (!user.isBase() && user.isActive() && newOrHasBaseUserOrActivePropsChanged) {
             final IWebMenuItemInvisibility coMenuItemInvisibility = co(WebMenuItemInvisibility.class);
             coMenuItemInvisibility.batchDelete(select(WebMenuItemInvisibility.class).where().prop("owner").eq().val(user).model());
             menuItemsToSave.addAll(invisibleMenuItems(user));
@@ -146,31 +149,35 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         // if a new active user is being created then need to send an activation email
         // this is possible only if an email address is associated with the user, which is required for active users
         // there could also be a situation where an inactive existing user, which did not have their password set in the first place, is being activated... this also warrants an activation email
-        final User savedUser;
+        final Either<Long, User> savedUser;
         if ((!user.isPersisted() && user.isActive()) ||
             (user.isPersisted() && user.isActive() && user.getProperty(ACTIVE).isDirty() && passwordNotAssigned(user))) {
-            final Either<Long, User> savedUser = super.save(user, maybeFetch);
+            savedUser = super.save(user, maybeFetch);
             final Function<Long, EntityCompanionException> error = (Long id) -> new EntityCompanionException(format("Unexpected error: user ID [%s] was returned instead of an instance after saving user [%s].", id, user));
             newUserNotifier.notify(assignPasswordResetUuid(savedUser.orElseThrow(error).getKey()).orElseThrow(() -> new SecurityException("Could not initiate password reset.")));
         } else {
-            savedUser = super.save(user);
-            return super.save(user, maybeFetch);
+            savedUser = super.save(user, maybeFetch);
         }
 
-        saveMenuItemInvisibility(menuItemsToSave, savedUser);
+        // save menu item invisibility for a user, this may require fetching the user in case savedUser is only an ID (i.e. left).
+        final User menuOwner = savedUser.isLeft() ? co(User.class).findById(savedUser.asLeft().value, IWebMenuItemInvisibility.FETCH_PROVIDER.<User>fetchFor("owner").fetchModel()) : savedUser.asRight().value;
+        saveMenuItemInvisibility(menuItemsToSave, menuOwner);
+
         return savedUser;
     }
 
     /**
      * Saves new {@link WebMenuItemInvisibility} for menu item URIs specified in menuItems, and specified non base user.
+     * 
+     * TODO once issue https://github.com/fieldenms/tg/issues/1032 is merged, this saving should be optimised
      *
      * @param menuItems
-     * @param savedUser
+     * @param menuOwner
      */
-    private void saveMenuItemInvisibility(final List<String> menuItems, final User savedUser) {
+    private void saveMenuItemInvisibility(final List<String> menuItems, final User menuOwner) {
         final IWebMenuItemInvisibility co$MenuItemInvisibility = co$(WebMenuItemInvisibility.class);
         menuItems.forEach(menuItem -> {
-            co$MenuItemInvisibility.save(co$MenuItemInvisibility.new_().setOwner(savedUser).setMenuItemUri(menuItem));
+            co$MenuItemInvisibility.save(co$MenuItemInvisibility.new_().setOwner(menuOwner).setMenuItemUri(menuItem));
         });
     }
 
