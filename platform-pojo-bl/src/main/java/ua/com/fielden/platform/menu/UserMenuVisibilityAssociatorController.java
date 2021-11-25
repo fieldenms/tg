@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.menu;
 
 import java.util.Collection;
-import java.util.LinkedHashSet;
+import java.util.Collections;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.ICollectionModificationController;
@@ -18,13 +18,10 @@ import ua.com.fielden.platform.web.centre.CentreContext;
  *
  */
 public class UserMenuVisibilityAssociatorController implements ICollectionModificationController<WebMenuItemInvisibility, UserMenuVisibilityAssociator, Long, User> {
-
     private IUser coUser;
     private final IUserProvider userProvider;
-    private final IWebMenuItemInvisibility coMenuItemInvisibility;
 
-    public UserMenuVisibilityAssociatorController(final IUser coUser, final IUserProvider userProvider, final IWebMenuItemInvisibility coMenuItemInvisibility) {
-        this.coMenuItemInvisibility = coMenuItemInvisibility;
+    public UserMenuVisibilityAssociatorController(final IUser coUser, final IUserProvider userProvider) {
         this.userProvider = userProvider;
         this.coUser = coUser;
     }
@@ -43,8 +40,9 @@ public class UserMenuVisibilityAssociatorController implements ICollectionModifi
     public Collection<User> refetchAvailableItems(final WebMenuItemInvisibility masterEntity) {
         final User user = userProvider.getUser();
         if (user.isBase()) {
-            return coUser.findNonBaseUsers(user, coMenuItemInvisibility.getFetchProvider().<User>fetchFor("owner").fetchModel());
+            return coUser.findNonBaseUsers(user, IWebMenuItemInvisibility.FETCH_PROVIDER.<User>fetchFor("owner").fetchModel());
         }
-        return new LinkedHashSet<User>();
+        return Collections.emptySet();
     }
+
 }

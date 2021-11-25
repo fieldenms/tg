@@ -35,7 +35,7 @@ public class UserMenuVisibilityAssociatorProducer extends AbstractFunctionalEnti
         super(factory, UserMenuVisibilityAssociator.class, companionFinder);
         this.coUser = co(User.class);
         this.userProvider = userProvider;
-        this.controller = new UserMenuVisibilityAssociatorController(this.coUser, this.userProvider, co(WebMenuItemInvisibility.class));
+        this.controller = new UserMenuVisibilityAssociatorController(this.coUser, this.userProvider);
     }
 
     @Override

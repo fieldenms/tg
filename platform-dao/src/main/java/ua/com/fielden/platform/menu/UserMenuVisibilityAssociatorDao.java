@@ -38,7 +38,7 @@ public class UserMenuVisibilityAssociatorDao extends CommonEntityDao<UserMenuVis
     @SessionRequired
     public UserMenuVisibilityAssociator save(final UserMenuVisibilityAssociator entity) {
         if (userProvider.getUser().isBase()) {
-            final T2<UserMenuVisibilityAssociator, WebMenuItemInvisibility> actionAndUserBeingUpdated = validateAction(entity, this, Long.class, new UserMenuVisibilityAssociatorController(co(User.class), userProvider, co(WebMenuItemInvisibility.class)));
+            final T2<UserMenuVisibilityAssociator, WebMenuItemInvisibility> actionAndUserBeingUpdated = validateAction(entity, this, Long.class, new UserMenuVisibilityAssociatorController(co(User.class), userProvider));
             final UserMenuVisibilityAssociator actionToSave = actionAndUserBeingUpdated._1;
             final Map<Object, User> availableUsers = toMapById(actionToSave.getUsers());
 
