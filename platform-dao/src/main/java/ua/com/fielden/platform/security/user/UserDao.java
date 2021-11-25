@@ -25,6 +25,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumentedWith
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -201,11 +202,12 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     @Override
     public Set<User> findNonBaseUsers(final User baseUser, final fetch<User> userFetch) {
-        return new HashSet<>(co(User.class).getAllEntities(from(
+        return new LinkedHashSet<>(co(User.class).getAllEntities(from(
                 select(User.class).where()
                 .prop("active").eq().val(true).and()
                 .prop("base").eq().val(false).and()
-                .prop("basedOnUser").eq().val(baseUser).model()).with(userFetch).model()));
+                .prop("basedOnUser").eq().val(baseUser).model())
+                .with(userFetch).with(orderBy().prop("key").asc().model()).model()));
     }
 
     /**
