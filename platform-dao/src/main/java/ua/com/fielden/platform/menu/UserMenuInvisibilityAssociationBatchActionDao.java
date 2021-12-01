@@ -18,10 +18,10 @@ import ua.com.fielden.platform.entity.query.IFilter;
 @EntityType(UserMenuInvisibilityAssociationBatchAction.class)
 public class UserMenuInvisibilityAssociationBatchActionDao extends CommonEntityDao<UserMenuInvisibilityAssociationBatchAction> implements UserMenuInvisibilityAssociationBatchActionCo {
 
-    private final IWebMenuItemInvisibility coMenuItemInvisibility;
+    private final WebMenuItemInvisibilityCo coMenuItemInvisibility;
 
     @Inject
-    protected UserMenuInvisibilityAssociationBatchActionDao(final IFilter filter, final IWebMenuItemInvisibility coMenuItemInvisibility) {
+    protected UserMenuInvisibilityAssociationBatchActionDao(final IFilter filter, final WebMenuItemInvisibilityCo coMenuItemInvisibility) {
         super(filter);
         this.coMenuItemInvisibility = coMenuItemInvisibility;
     }
@@ -33,7 +33,7 @@ public class UserMenuInvisibilityAssociationBatchActionDao extends CommonEntityD
     @SessionRequired
     public UserMenuInvisibilityAssociationBatchAction save(final UserMenuInvisibilityAssociationBatchAction entity) {
         processSaveAction(entity.getSaveEntities());
-        coMenuItemInvisibility.removeAssociation(entity.getRemoveEntities());
+        coMenuItemInvisibility.deleteAssociation(entity.getRemoveEntities());
         return entity;
     }
 

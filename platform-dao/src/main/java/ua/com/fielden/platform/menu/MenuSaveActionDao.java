@@ -46,7 +46,7 @@ public class MenuSaveActionDao extends CommonEntityDao<MenuSaveAction> implement
     public MenuSaveAction save(final MenuSaveAction action) {
         final User currUser = userProvider.getUser();
         if (currUser.isBase()) {
-            final IWebMenuItemInvisibility coMenuInvisibility = co$(WebMenuItemInvisibility.class);
+            final WebMenuItemInvisibilityCo coMenuInvisibility = co$(WebMenuItemInvisibility.class);
             // save new WebMenuItemInvisibility entities
             if (!action.getInvisibleMenuItems().isEmpty()) {
                 //Get all non base users and their invisible menu item entries to check entity existence before save
@@ -83,7 +83,7 @@ public class MenuSaveActionDao extends CommonEntityDao<MenuSaveAction> implement
             throw new SecurityException(String.format("A bse user is expected. User [%s] is not a base user.", baseUser));
         }
         final IUser coUser = co(User.class);
-        return coUser.findBasedOnUsers(baseUser, IWebMenuItemInvisibility.FETCH_PROVIDER.<User>fetchFor("owner").fetchModel());
+        return coUser.findBasedOnUsers(baseUser, WebMenuItemInvisibilityCo.FETCH_PROVIDER.<User>fetchFor("owner").fetchModel());
     }
 
     /**

@@ -53,7 +53,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.menu.IWebMenuItemInvisibility;
+import ua.com.fielden.platform.menu.WebMenuItemInvisibilityCo;
 import ua.com.fielden.platform.menu.WebMenuItemInvisibility;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.security.Authorise;
@@ -142,7 +142,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         final boolean newOrHasBaseUserOrActivePropsChanged = !user.isPersisted() ||
                                                              (user.isPersisted() && (user.getProperty("basedOnUser").isDirty() || user.getProperty(ACTIVE).isDirty()));
         if (!user.isBase() && user.isActive() && newOrHasBaseUserOrActivePropsChanged) {
-            final IWebMenuItemInvisibility coMenuItemInvisibility = co(WebMenuItemInvisibility.class);
+            final WebMenuItemInvisibilityCo coMenuItemInvisibility = co(WebMenuItemInvisibility.class);
             coMenuItemInvisibility.batchDelete(select(WebMenuItemInvisibility.class).where().prop("owner").eq().val(user).model());
             menuItemsToSave.addAll(invisibleMenuItems(user));
         }
@@ -161,7 +161,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         }
 
         // save menu item invisibility for a user, this may require fetching the user in case savedUser is only an ID (i.e. left).
-        final User menuOwner = savedUser.isLeft() ? co(User.class).findById(savedUser.asLeft().value, IWebMenuItemInvisibility.FETCH_PROVIDER.<User>fetchFor("owner").fetchModel()) : savedUser.asRight().value;
+        final User menuOwner = savedUser.isLeft() ? co(User.class).findById(savedUser.asLeft().value, WebMenuItemInvisibilityCo.FETCH_PROVIDER.<User>fetchFor("owner").fetchModel()) : savedUser.asRight().value;
         saveMenuItemInvisibility(menuItemsToSave, menuOwner);
 
         return savedUser;
@@ -176,7 +176,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
      * @param menuOwner
      */
     private void saveMenuItemInvisibility(final List<String> menuItems, final User menuOwner) {
-        final IWebMenuItemInvisibility co$MenuItemInvisibility = co$(WebMenuItemInvisibility.class);
+        final WebMenuItemInvisibilityCo co$MenuItemInvisibility = co$(WebMenuItemInvisibility.class);
         menuItems.forEach(menuItem -> {
             co$MenuItemInvisibility.save(co$MenuItemInvisibility.new_().setOwner(menuOwner).setMenuItemUri(menuItem));
         });
@@ -217,7 +217,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
      * @return
      */
     private Map<String, Set<User>> getInvisibleMenuItemsForBaseUser(final User baseUser) {
-        final IWebMenuItemInvisibility coMenuItemInvisibility = co(WebMenuItemInvisibility.class);
+        final WebMenuItemInvisibilityCo coMenuItemInvisibility = co(WebMenuItemInvisibility.class);
         final EntityResultQueryModel<WebMenuItemInvisibility> query = select(WebMenuItemInvisibility.class).where()
                 .prop("owner.basedOnUser").eq().val(baseUser).and()
                 .prop("owner.active").eq().val(true).model();

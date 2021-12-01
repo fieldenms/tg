@@ -58,7 +58,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
     @Test
     public void menu_restored_with_base_user_has_all_menu_items_with_appropriate_visible_property() {
         final IUserProvider up = getInstance(IUserProvider.class);
-        final IWebMenuItemInvisibility mii = co(WebMenuItemInvisibility.class);
+        final WebMenuItemInvisibilityCo mii = co(WebMenuItemInvisibility.class);
 
         up.setUser(co(User.class).findByKey("BUSER_1"));
         save(new_(MenuSaveAction.class)
@@ -125,7 +125,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
     @Test
     public void menu_restored_with_non_base_user_has_no_invisible_menu_items() {
         final IUserProvider up = getInstance(IUserProvider.class);
-        final IWebMenuItemInvisibility mii = co(WebMenuItemInvisibility.class);
+        final WebMenuItemInvisibilityCo mii = co(WebMenuItemInvisibility.class);
 
         up.setUser(co(User.class).findByKey("BUSER_1"));
         save(new_(MenuSaveAction.class)
@@ -141,7 +141,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
         checkMenuVisibilityForUser("USER_2", up, mii);
     }
 
-    private void checkMenuVisibilityForUser(final String user, final IUserProvider up, final IWebMenuItemInvisibility mii) {
+    private void checkMenuVisibilityForUser(final String user, final IUserProvider up, final WebMenuItemInvisibilityCo mii) {
         up.setUser(co(User.class).findByKey(user));
         final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
         final CentreContext context = new CentreContext();
@@ -173,7 +173,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
     @Test
     public void menu_configured_for_one_non_base_user_has_no_effect_for_another_non_base_user() {
         final IUserProvider up = getInstance(IUserProvider.class);
-        final IWebMenuItemInvisibility mii = co(WebMenuItemInvisibility.class);
+        final WebMenuItemInvisibilityCo mii = co(WebMenuItemInvisibility.class);
 
         up.setUser(co(User.class).findByKey("BUSER_1"));
         makeInvisibleMenuItemsForUser(new HashSet<>(Arrays.asList(
@@ -245,7 +245,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
     @Test
     public void rebased_new_activated_non_base_users_should_not_see_invisible_menu_item() {
         final IUserProvider up = getInstance(IUserProvider.class);
-        final IWebMenuItemInvisibility mii = co(WebMenuItemInvisibility.class);
+        final WebMenuItemInvisibilityCo mii = co(WebMenuItemInvisibility.class);
         final IUser coUser = co(User.class);
 
         final User baseUser = coUser.findByKey("BUSER_2");
@@ -269,7 +269,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
         testMenuInvisibilityForUser("USER_5", up, mii);
     }
 
-    private void testMenuInvisibilityForUser(final String userName, final IUserProvider up, final IWebMenuItemInvisibility mii) {
+    private void testMenuInvisibilityForUser(final String userName, final IUserProvider up, final WebMenuItemInvisibilityCo mii) {
         up.setUser(co(User.class).findByKey("USER_1"));
         final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
         final CentreContext context = new CentreContext();
@@ -286,7 +286,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
     @Test
     public void rebased_new_activated_non_base_user_should_see_menu_item_that_is_semi_visible() {
         final IUserProvider up = getInstance(IUserProvider.class);
-        final IWebMenuItemInvisibility mii = co(WebMenuItemInvisibility.class);
+        final WebMenuItemInvisibilityCo mii = co(WebMenuItemInvisibility.class);
         final IUser coUser = co(User.class);
 
         final User baseUser = coUser.findByKey("BUSER_2");
@@ -305,7 +305,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
         testMenuVisibilityForUser("USER_5", up, mii);
     }
 
-    private void testMenuVisibilityForUser(final String userName, final IUserProvider up, final IWebMenuItemInvisibility mii) {
+    private void testMenuVisibilityForUser(final String userName, final IUserProvider up, final WebMenuItemInvisibilityCo mii) {
         up.setUser(co(User.class).findByKey(userName));
         final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
         final CentreContext context = new CentreContext();

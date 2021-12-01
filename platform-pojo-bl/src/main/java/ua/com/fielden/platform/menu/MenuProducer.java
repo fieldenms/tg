@@ -39,12 +39,12 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
 
     private final IMenuRetriever menuRetriever;
     private final IUserProvider userProvider;
-    private final IWebMenuItemInvisibility miInvisible;
+    private final WebMenuItemInvisibilityCo miInvisible;
 
     @Inject
     public MenuProducer(
             final IMenuRetriever menuRetriever,
-            final IWebMenuItemInvisibility miInvisible,
+            final WebMenuItemInvisibilityCo miInvisible,
             final IUserProvider userProvider,
             final ICompanionObjectFinder coFinder,
             final EntityFactory entityFactory) {

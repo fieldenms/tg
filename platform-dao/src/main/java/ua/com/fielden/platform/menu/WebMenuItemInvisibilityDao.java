@@ -15,13 +15,13 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 /**
- * DAO implementation for companion object {@link IWebMenuItemInvisibility}.
+ * DAO implementation for companion object {@link WebMenuItemInvisibilityCo}.
  *
  * @author Developers
  *
  */
 @EntityType(WebMenuItemInvisibility.class)
-public class WebMenuItemInvisibilityDao extends CommonEntityDao<WebMenuItemInvisibility> implements IWebMenuItemInvisibility {
+public class WebMenuItemInvisibilityDao extends CommonEntityDao<WebMenuItemInvisibility> implements WebMenuItemInvisibilityCo {
 
     @Inject
     public WebMenuItemInvisibilityDao(final IFilter filter) {
@@ -42,7 +42,7 @@ public class WebMenuItemInvisibilityDao extends CommonEntityDao<WebMenuItemInvis
 
     @Override
     public IFetchProvider<WebMenuItemInvisibility> createFetchProvider() {
-        return IWebMenuItemInvisibility.FETCH_PROVIDER;
+        return WebMenuItemInvisibilityCo.FETCH_PROVIDER;
     }
 
     @Override
@@ -52,7 +52,7 @@ public class WebMenuItemInvisibilityDao extends CommonEntityDao<WebMenuItemInvis
     }
 
     @Override
-    public void removeAssociation(final Set<WebMenuItemInvisibility> associations) {
+    public void deleteAssociation(final Set<WebMenuItemInvisibility> associations) {
         createQueryByKeyFor(getDbVersion(), getEntityType(), getKeyType(), associations).map(this::batchDelete);
     }
 }

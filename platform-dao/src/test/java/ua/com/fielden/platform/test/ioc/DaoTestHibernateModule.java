@@ -20,7 +20,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.ioc.CommonFactoryModule;
 import ua.com.fielden.platform.keygen.IKeyNumber;
 import ua.com.fielden.platform.keygen.KeyNumberDao;
-import ua.com.fielden.platform.menu.IWebMenuItemInvisibility;
+import ua.com.fielden.platform.menu.WebMenuItemInvisibilityCo;
 import ua.com.fielden.platform.menu.WebMenuItemInvisibilityDao;
 import ua.com.fielden.platform.migration.MigrationErrorCo;
 import ua.com.fielden.platform.migration.MigrationHistoryCo;
@@ -139,7 +139,7 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
         bind(EntityLocatorConfigCo.class).to(EntityLocatorConfigDao.class);
         bind(MainMenuItemCo.class).to(MainMenuItemDao.class);
 
-        bind(IWebMenuItemInvisibility.class).to(WebMenuItemInvisibilityDao.class);
+        bind(WebMenuItemInvisibilityCo.class).to(WebMenuItemInvisibilityDao.class);
 
         bind(ITgPublishedYearly.class).to(TgPublishedYearlyDao.class);
 
