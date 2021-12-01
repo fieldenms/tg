@@ -574,7 +574,7 @@ Polymer({
     },
 
     _calcLongDescForMenuItem: function (menuItem) {
-        return `Edit ${menuItem.key} menu item visibility`; 
+        return `Edit visibility of menu item ${menuItem.key} for individual users`; 
     },
 
     /**
