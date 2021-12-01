@@ -152,7 +152,7 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
         final User user = userProvider.getUser();
         if (user.isBase()) {
             final IUser coUser = co(User.class);
-            availableUsers.addAll(coUser.findNonBaseUsers(user, fetchKeyAndDescOnly(User.class)));
+            availableUsers.addAll(coUser.findBasedOnUsers(user, fetchKeyAndDescOnly(User.class)));
         } else {
             availableUsers.add(user);
         }

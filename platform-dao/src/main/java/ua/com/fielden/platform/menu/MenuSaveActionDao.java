@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.Set;
 
 import com.google.inject.Inject;
@@ -20,11 +21,10 @@ import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 
-
 /**
  * DAO implementation for companion object {@link IMenuSaveAction}.
  *
- * @author Developers
+ * @author TG Team
  *
  */
 @EntityType(MenuSaveAction.class)
@@ -33,62 +33,57 @@ public class MenuSaveActionDao extends CommonEntityDao<MenuSaveAction> implement
     private final IUserProvider userProvider;
 
     @Inject
-    public MenuSaveActionDao(final IFilter filter, final IUserProvider userProvider) {
+    protected MenuSaveActionDao(final IFilter filter, final IUserProvider userProvider) {
         super(filter);
         this.userProvider = userProvider;
     }
 
     /**
-     * Saves user action of clicking on menu item checkbox. This should save or remove {@link WebMenuItemInvisibility} entries for each non base
-     * user based on current base user. However such save behaviour may encounter situation when such {@link WebMenuItemInvisibility} entity already exists.
-     * Therefore one should check whether created {@link WebMenuItemInvisibility} exists before save.
+     * Saves or deletes {@link WebMenuItemInvisibility} entries for each user who is based on the current base user.
      */
     @Override
     @SessionRequired
-    public MenuSaveAction save(final MenuSaveAction entity) {
-        if (userProvider.getUser().isBase()) {
+    public MenuSaveAction save(final MenuSaveAction action) {
+        final User currUser = userProvider.getUser();
+        if (currUser.isBase()) {
             final IWebMenuItemInvisibility coMenuInvisibility = co$(WebMenuItemInvisibility.class);
-            //Save new WebMenuItemInvisibility entities
-            if (!entity.getInvisibleMenuItems().isEmpty()) {
+            // save new WebMenuItemInvisibility entities
+            if (!action.getInvisibleMenuItems().isEmpty()) {
                 //Get all non base users and their invisible menu item entries to check entity existence before save
-                final Set<User> availableUsers = getAvailableNonBaseUsers();
-                final Set<WebMenuItemInvisibility> nonVisibleItems = getAvailableInvisibleMenuItems(availableUsers, entity.getInvisibleMenuItems());
-                entity.getInvisibleMenuItems().stream()
-                      .map(menuItemUri -> availableUsers
+                final Set<User> users = findActiveUsersBasedOn(currUser);
+                final Set<WebMenuItemInvisibility> invisibleItems = findInvisibleMenuItems(users, action.getInvisibleMenuItems());
+                action.getInvisibleMenuItems().stream()
+                      .flatMap(menuItemUri -> users
                               .stream()
-                              .map(user -> getEntityFactory().newByKey(WebMenuItemInvisibility.class, user, menuItemUri)).collect(toList()))
-                      .flatMap(Collection::stream)
-                      .filter(newMenuItem -> !nonVisibleItems.contains(newMenuItem))
+                              .map(user -> coMenuInvisibility.new_().setOwner(user).setMenuItemUri(menuItemUri)))
+                      .filter(newMenuItem -> !invisibleItems.contains(newMenuItem))
                       .forEach(webMenuItemInvisibility -> coMenuInvisibility.save(webMenuItemInvisibility));
             }
-            //Remove WebMenuItemInvisibility entities for active non base users based on current base user and menu item URIs specified in menuSaveAction
-            if (!entity.getVisibleMenuItems().isEmpty()) {
-                final EntityResultQueryModel<WebMenuItemInvisibility> model = select(WebMenuItemInvisibility.class).where()//
-                .prop("owner.base").eq().val(false).and()
-                .prop("owner.active").eq().val(true).and()
-                .prop("owner.basedOnUser").eq().val(userProvider.getUser()).and()//
-                .prop("menuItemUri").in().values(entity.getVisibleMenuItems().toArray(new String[0])).model();
+            // delete WebMenuItemInvisibility entities for active users based on the current base user and menu item URIs specified in the action
+            if (!action.getVisibleMenuItems().isEmpty()) {
+                final EntityResultQueryModel<WebMenuItemInvisibility> model = select(WebMenuItemInvisibility.class).where()
+                    .prop("owner.base").eq().val(false).and()
+                    .prop("owner.active").eq().val(true).and()
+                    .prop("owner.basedOnUser").eq().val(currUser).and()
+                    .prop("menuItemUri").in().values(action.getVisibleMenuItems().toArray()).model();
                 coMenuInvisibility.batchDelete(model);
             }
         }
-        return entity;
+        return action;
     }
 
     /**
-     * Returns all non base active users those are based on current base user.
+     * Returns all active users that are based on the specified user.
      *
-     * @return
+     * @param baseUser - a base user; an exception is thrown if this is not a base user.
+     * @return a set of users based on the specified user.
      */
-    private Set<User> getAvailableNonBaseUsers() {
-        final Set<User> availableUsers = new HashSet<>();
-        final User user = userProvider.getUser();
-        if (user.isBase()) {
-            final IUser coUser = co(User.class);//findNonBaseUser
-            availableUsers.addAll(coUser.findNonBaseUsers(user, co(WebMenuItemInvisibility.class).getFetchProvider().<User>fetchFor("owner").fetchModel()));
-        } else {
-            availableUsers.add(user);
+    private Set<User> findActiveUsersBasedOn(final User baseUser) {
+        if (!baseUser.isBase()) {
+            throw new SecurityException(String.format("A bse user is expected. User [%s] is not a base user.", baseUser));
         }
-        return availableUsers;
+        final IUser coUser = co(User.class);
+        return coUser.findBasedOnUsers(baseUser, IWebMenuItemInvisibility.FETCH_PROVIDER.<User>fetchFor("owner").fetchModel());
     }
 
     /**
@@ -98,14 +93,15 @@ public class MenuSaveActionDao extends CommonEntityDao<MenuSaveAction> implement
      * @param menuItemUris
      * @return
      */
-    private Set<WebMenuItemInvisibility> getAvailableInvisibleMenuItems(final Set<User> users, final Set<String> menuItemUris) {
-        if (!users.isEmpty()) {
-            return new HashSet<>(co(WebMenuItemInvisibility.class).getAllEntities(from(
-                    select(WebMenuItemInvisibility.class).where()
-                    .prop("owner").in().values(users.toArray()).and()
-                    .prop("menuItemUri").in().values(menuItemUris.toArray())
-                    .model()).with(fetchKeyAndDescOnly(WebMenuItemInvisibility.class)).model()));
+    private Set<WebMenuItemInvisibility> findInvisibleMenuItems(final Set<User> users, final Set<String> menuItemUris) {
+        if (users.isEmpty()) {
+            return new HashSet<>();
         }
-        return new HashSet<>();
+        return new HashSet<>(co(WebMenuItemInvisibility.class).getAllEntities(from(
+                select(WebMenuItemInvisibility.class).where()
+                .prop("owner").in().values(users.toArray()).and()
+                .prop("menuItemUri").in().values(menuItemUris.toArray())
+                .model()).with(fetchKeyAndDescOnly(WebMenuItemInvisibility.class)).model()));
     }
+
 }

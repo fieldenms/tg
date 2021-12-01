@@ -40,7 +40,7 @@ public class UserMenuVisibilityAssociatorController implements ICollectionModifi
     public Collection<User> refetchAvailableItems(final WebMenuItemInvisibility masterEntity) {
         final User user = userProvider.getUser();
         if (user.isBase()) {
-            return coUser.findNonBaseUsers(user, IWebMenuItemInvisibility.FETCH_PROVIDER.<User>fetchFor("owner").fetchModel());
+            return coUser.findBasedOnUsers(user, IWebMenuItemInvisibility.FETCH_PROVIDER.<User>fetchFor("owner").fetchModel());
         }
         return Collections.emptySet();
     }

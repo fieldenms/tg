@@ -191,7 +191,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
      */
     private List<String> invisibleMenuItems(final User user) {
         //First find all active non base users for specified non base user.
-        final Set<User> availableUsers = findNonBaseUsers(user.getBasedOnUser(), fetchKeyAndDescOnly(User.class));
+        final Set<User> availableUsers = findBasedOnUsers(user.getBasedOnUser(), fetchKeyAndDescOnly(User.class));
         //Then find all invisible menu items for non base users based on the same user as base user of given user.
         final Map<String, Set<User>> invisibleMenuItems = getInvisibleMenuItemsForBaseUser(user.getBasedOnUser());
         //Find all menu items those are invisible for all non base user of specified user's base user.
@@ -201,7 +201,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     }
 
     @Override
-    public Set<User> findNonBaseUsers(final User baseUser, final fetch<User> userFetch) {
+    public Set<User> findBasedOnUsers(final User baseUser, final fetch<User> userFetch) {
         return new LinkedHashSet<>(co(User.class).getAllEntities(from(
                 select(User.class).where()
                 .prop("active").eq().val(true).and()
