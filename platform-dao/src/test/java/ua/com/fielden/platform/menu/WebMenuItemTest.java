@@ -14,16 +14,17 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 public class WebMenuItemTest extends AbstractDaoTestCase {
 
     @Test
-    public void only_based_on_users_can_be_an_owner_of_web_menu_item_invisibility_configuration() {
+    public void only_base_users_can_be_owners_of_web_menu_item_invisibility_configuration() {
         final User owner = co$(User.class).findByKey("USER_1");
-        final User nonBaseOwner = co$(User.class).findByKey("USER_2");
+        final User basedOnUser = co$(User.class).findByKey("USER_2");
+        assertFalse(basedOnUser.isBase());
 
         final WebMenuItemInvisibility menuItem = new_(WebMenuItemInvisibility.class).setMenuItemUri("item1");
         menuItem.setOwner(owner);
         assertFalse(menuItem.isValid().isSuccessful());
         assertEquals(format(UserAsConfigurationOwnerValidator.ERR_USER_IS_A_BASE_USER, owner), menuItem.isValid().getMessage());
 
-        menuItem.setOwner(nonBaseOwner);
+        menuItem.setOwner(basedOnUser);
         assertTrue(menuItem.isValid().isSuccessful());
 
         co$(WebMenuItemInvisibility.class).save(menuItem);
