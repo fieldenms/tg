@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
@@ -11,6 +12,7 @@ import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBu
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkActionLayoutForMaster;
 
 import java.util.Optional;
 
@@ -25,6 +27,7 @@ import ua.com.fielden.platform.security.user.UserRoleProducer;
 import ua.com.fielden.platform.security.user.UserRoleTokensUpdater;
 import ua.com.fielden.platform.security.user.UserRoleTokensUpdaterProducer;
 import ua.com.fielden.platform.ui.menu.sample.MiUserRole;
+import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -44,8 +47,6 @@ import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
  *
  */
 public class UserRoleWebUiConfig {
-    private static final String actionButton = MASTER_ACTION_SPECIFICATION;
-    private static final String bottomButtonPanel = "['horizontal', 'padding: 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
 
     public final EntityMaster<UserRoleTokensUpdater> tokensUpdater;
     public final EntityCentre<UserRole> centre;
@@ -123,7 +124,7 @@ public class UserRoleWebUiConfig {
                 .addProp(DESC).asMultilineText().also()
                 .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel changes")
                 .addAction(MasterActions.SAVE).longDesc("Save changes")
-                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), format(bottomButtonPanel, actionButton, actionButton))
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), mkActionLayoutForMaster())
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .withDimensions(mkDim(480, 320))
                 .done();
@@ -142,23 +143,14 @@ public class UserRoleWebUiConfig {
     private static EntityMaster<UserRoleTokensUpdater> createTokensUpdater(final Injector injector) {
         final IMaster<UserRoleTokensUpdater> masterConfig = new SimpleMasterBuilder<UserRoleTokensUpdater>()
                 .forEntity(UserRoleTokensUpdater.class)
-                .addProp("tokens").asCollectionalEditor().withHeader("title")
-                .also()
-                .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
-                .addAction(MasterActions.SAVE)
-
-                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), format(bottomButtonPanel, actionButton, actionButton))
-                .setLayoutFor(Device.DESKTOP, Optional.empty(), (
-                        "      ['padding:20px', 'height: 100%', 'box-sizing: border-box', "
-                        + format("['flex', ['flex']]")
-                        + "    ]"))
-                .withDimensions(mkDim("'30%'", "'50%'"))
+                .addProp("tokens").asCollectionalEditor().withHeader("title").also()
+                .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancel changes, if any, and close the dialog.")
+                .addAction(MasterActions.SAVE).shortDesc("Save").longDesc("Save changes.")
+                .setActionBarLayoutFor(Device.DESKTOP, empty(), mkActionLayoutForMaster())
+                .setLayoutFor(Device.DESKTOP, empty(), "['padding:20px', 'height: 100%', 'box-sizing: border-box', ['flex', ['flex']] ]")
+                .withDimensions(mkDim(30, 75, Unit.PRC))
                 .done();
-        return new EntityMaster<>(
-                UserRoleTokensUpdater.class,
-                UserRoleTokensUpdaterProducer.class,
-                masterConfig,
-                injector);
+        return new EntityMaster<>(UserRoleTokensUpdater.class, UserRoleTokensUpdaterProducer.class, masterConfig, injector);
     }
 
     private static enum UserRoleActions {

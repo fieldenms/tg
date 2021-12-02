@@ -1,25 +1,27 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static java.lang.String.format;
+import static java.util.Optional.empty;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
-import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_SPECIFICATION;
-
-import java.util.Optional;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkActionLayoutForMaster;
 
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.menu.UserMenuVisibilityAssociator;
 import ua.com.fielden.platform.menu.UserMenuVisibilityAssociatorProducer;
+import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
+/**
+ * Web UI configuration for {@link UserMenuVisibilityAssociator}.
+ * 
+ * @author TG Team
+ *
+ */
 public class UserMenuVisibilityAssociatorWebUiConfig {
-
-    private static final String actionButton = MASTER_ACTION_SPECIFICATION;
-    private static final String bottomButtonPanel = "['horizontal', 'padding: 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
 
     public final EntityMaster<UserMenuVisibilityAssociator> master;
 
@@ -30,22 +32,14 @@ public class UserMenuVisibilityAssociatorWebUiConfig {
     private EntityMaster<UserMenuVisibilityAssociator> createMaster(final Injector injector) {
         final IMaster<UserMenuVisibilityAssociator> masterConfig = new SimpleMasterBuilder<UserMenuVisibilityAssociator>()
                 .forEntity(UserMenuVisibilityAssociator.class)
-                .addProp("users").asCollectionalEditor().withStaticOrder()
-                .also()
-                .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
-                .addAction(MasterActions.SAVE)
-
-                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), format(bottomButtonPanel, actionButton, actionButton))
-                .setLayoutFor(Device.DESKTOP, Optional.empty(), (
-                        "      ['padding:20px', 'height: 100%', 'box-sizing: border-box', "
-                        + format("['flex', ['flex']]")
-                        + "    ]"))
-                .withDimensions(mkDim("'30%'", "'50%'"))
+                .addProp("users").asCollectionalEditor().withStaticOrder().also()
+                .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancel changes, if any, and close the dialog.")
+                .addAction(MasterActions.SAVE).shortDesc("Save").longDesc("Save changes.")
+                .setActionBarLayoutFor(Device.DESKTOP, empty(), mkActionLayoutForMaster())
+                .setLayoutFor(Device.DESKTOP, empty(), "['padding:20px', 'height: 100%', 'box-sizing: border-box', ['flex', ['flex']] ]")
+                .withDimensions(mkDim(30, 75, Unit.PRC))
                 .done();
-        return new EntityMaster<UserMenuVisibilityAssociator>(
-                UserMenuVisibilityAssociator.class,
-                UserMenuVisibilityAssociatorProducer.class,
-                masterConfig,
-                injector);
+        return new EntityMaster<>(UserMenuVisibilityAssociator.class, UserMenuVisibilityAssociatorProducer.class, masterConfig, injector);
     }
+
 }
