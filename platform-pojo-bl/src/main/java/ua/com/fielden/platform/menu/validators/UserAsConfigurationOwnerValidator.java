@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.menu.validators;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
 
 import java.lang.annotation.Annotation;
 import java.util.Set;
@@ -23,7 +25,7 @@ public class UserAsConfigurationOwnerValidator implements IBeforeChangeEventHand
 
     @Override
     public Result handle(final MetaProperty<User> property, final User newValue, final Set<Annotation> mutatorAnnotations) {
-        return newValue.isBase() ? Result.failure(format(ERR_USER_IS_A_BASE_USER, newValue)) : Result.successful(newValue);
+        return newValue.isBase() ? failure(format(ERR_USER_IS_A_BASE_USER, newValue)) : successful(newValue);
     }
 
 }

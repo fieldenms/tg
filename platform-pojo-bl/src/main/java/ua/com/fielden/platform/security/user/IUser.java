@@ -25,6 +25,10 @@ import ua.com.fielden.platform.utils.EntityUtils;
  */
 public interface IUser extends IEntityDao<User> {
 
+    static final IFetchProvider<User> FETCH_PROVIDER = EntityUtils.fetch(User.class)
+            .with("key", EMAIL, ACTIVE)
+            .with("base", "basedOnUser.base", "roles");
+
     /**
      * Returns users with roles.
      *
@@ -139,15 +143,11 @@ public interface IUser extends IEntityDao<User> {
     User findUser(String username);
 
     /**
-     * Returns all active based-on users
+     * Returns all active based-on users.
      *
      * @param baseUser
      * @return
      */
     Set<User> findBasedOnUsers(final User baseUser, final fetch<User> userFetch);
-
-    static final IFetchProvider<User> FETCH_PROVIDER = EntityUtils.fetch(User.class)
-            .with("key", EMAIL, ACTIVE)
-            .with("base", "basedOnUser.base", "roles");
 
 }
