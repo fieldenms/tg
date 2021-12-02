@@ -12,7 +12,7 @@ import static ua.com.fielden.platform.web.interfaces.DeviceProfile.MOBILE;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,7 +35,7 @@ import ua.com.fielden.platform.security.user.User;
 
 public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
 
-    private static final Logger logger = Logger.getLogger(MenuProducer.class);
+    private static final Logger LOGGER = Logger.getLogger(MenuProducer.class);
 
     private final IMenuRetriever menuRetriever;
     private final IUserProvider userProvider;
@@ -112,7 +112,7 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
                 //Compute visibility of the leaf menu item
                 computeVisibility(menuPath.get(menuPath.size() - 2), menuPath.get(menuPath.size() - 1).getTitle(), excludedUsers, availableUsers);
                 //Compute visibility of all group menu items
-                for (int itemIndex = menuPath.size() - 2; itemIndex > 1; itemIndex --) {
+                for (int itemIndex = menuPath.size() - 2; itemIndex > 1; itemIndex--) {
                     computeVisibilityForGroup(menuPath.get(itemIndex - 1), menuPath.get(itemIndex));
                 }
             }
@@ -121,7 +121,7 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
     }
 
     /**
-     * Returns the list of menu items those corresponds to menu item titles specified with menuParts parameter.
+     * Returns a list of menu items that correspond to menu item titles specified in {@code menuParts}.
      *
      * @param menu
      * @param menuParts
@@ -130,7 +130,7 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
     private List<IMenuManager> findMenuPath(final IMenuManager menu, final List<String> menuParts) {
         final List<IMenuManager> menuPath = new  ArrayList<>();
         menuPath.add(menu);
-        for(final String menuPart : menuParts) {
+        for (final String menuPart : menuParts) {
             final IMenuManager lastItem = menuPath.get(menuPath.size() - 1);
             final Optional<IMenuManager> nextItem = lastItem.getMenuItem(menuPart);
             if (nextItem.isPresent()) {
@@ -143,12 +143,12 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
     }
 
     /**
-     * Returns all active non base users if current user is base else returns list with only one non base current user.
+     * Returns all active based-on users if current user is base. Otherwise, returns a list with only the current user.
      *
      * @return
      */
     private Set<User> getAvailableUsers() {
-        final Set<User> availableUsers = new HashSet<>();
+        final Set<User> availableUsers = new LinkedHashSet<>();
         final User user = userProvider.getUser();
         if (user.isBase()) {
             final IUser coUser = co(User.class);
@@ -160,19 +160,19 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
     }
 
     /**
-     * Creates query to retrieve all invisible menu items for current user whether base or not.
+     * Creates query to retrieve all invisible menu items for current user, regardless of whether it is base or not.
      *
      * @return
      */
     private QueryExecutionModel<WebMenuItemInvisibility, EntityResultQueryModel<WebMenuItemInvisibility>> createMenuInvisibilityQuery() {
         return from(buildQueryPartForUserType(select(WebMenuItemInvisibility.class).where())
                 .prop("owner.active").eq().val(true)
-                .model()).
-                with(fetchNotInstrumentedWithKeyAndDesc(WebMenuItemInvisibility.class).fetchModel()).model();
+                .model())
+                .with(fetchNotInstrumentedWithKeyAndDesc(WebMenuItemInvisibility.class).fetchModel()).model();
     }
 
     /**
-     * Creates query condition for invisibility menu item owner whether base or not.
+     * Creates query condition for invisibility menu item owner, regardless of whether it is base or not.
      *
      * @param queryPart
      * @return
@@ -187,7 +187,7 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
     }
 
     /**
-     * Compute visible and semiVisible properties for group menu item specified with menuItem parameter.
+     * Computes {@code visible} and {@code semiVisible} properties for a group menu item specified in {@code menuItem}.
      *
      * @param parentItem
      * @param menuItem
@@ -208,7 +208,7 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
     }
 
     /**
-     * Computes visible and semiVisible property for menu with menuItemTitle
+     * Computes {@code visible} and {@code semiVisible} property for menu with title {@code menuItemTitle}.
      *
      * @param parentItem
      * @param menuItemTitle
@@ -226,11 +226,11 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
             }
         } else {
             parentItem.removeMenuItem(menuItemTitle);
-        };
+        }
     }
 
     /**
-     * Decodes menu item URI
+     * Decodes menu item URI.
      *
      * @param menuParts
      * @return
@@ -242,8 +242,9 @@ public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
                 decodedParts.add(URLDecoder.decode(menuParts[partIndex], "UTF-8"));
             }
         } catch (final UnsupportedEncodingException e) {
-            logger.error(e.getMessage());
+            LOGGER.error(e.getMessage());
         }
         return decodedParts;
     }
+
 }
