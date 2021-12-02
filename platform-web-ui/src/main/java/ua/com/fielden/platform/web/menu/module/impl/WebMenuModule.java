@@ -6,7 +6,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import ua.com.fielden.platform.menu.Action;
-import ua.com.fielden.platform.menu.Module;
+import ua.com.fielden.platform.menu.ModuleMenu;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
@@ -78,8 +78,8 @@ public class WebMenuModule {
      * @param tileActionIndexSupplier – a supplier of sequential indexes for tile actions.
      * @return
      */
-    public Module buildModule(final Supplier<Integer> tileActionIndexSupplier) {
-        final Module module = new Module().
+    public ModuleMenu buildModule(final Supplier<Integer> tileActionIndexSupplier) {
+        final ModuleMenu module = new ModuleMenu().
                 setBgColor(bgColor).
                 setCaptionBgColor(captionBgColor).
                 setIcon(icon).

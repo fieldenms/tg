@@ -6,7 +6,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import ua.com.fielden.platform.menu.Module;
+import ua.com.fielden.platform.menu.ModuleMenu;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.menu.module.impl.WebMenuModule;
@@ -27,7 +27,7 @@ public class WebMainMenu {
      *
      * @return
      */
-    public List<Module> buildModules() {
+    public List<ModuleMenu> buildModules() {
         // all tile actions must have a unique index across all modules
         // hence the use of the same atomic integer instance to supply sequential indexes for all tile actions
         final AtomicInteger seqIndex = new AtomicInteger(0);
