@@ -38,7 +38,7 @@ import ua.com.fielden.platform.menu.EntityCentreView;
 import ua.com.fielden.platform.menu.EntityMasterView;
 import ua.com.fielden.platform.menu.Menu;
 import ua.com.fielden.platform.menu.MenuSaveAction;
-import ua.com.fielden.platform.menu.Module;
+import ua.com.fielden.platform.menu.ModuleMenu;
 import ua.com.fielden.platform.menu.ModuleMenuItem;
 import ua.com.fielden.platform.menu.UserMenuVisibilityAssociator;
 import ua.com.fielden.platform.menu.View;
@@ -141,7 +141,7 @@ public class PlatformDomainTypes {
         types.add(EntityCentreView.class);
         types.add(View.class);
         types.add(CustomView.class);
-        types.add(Module.class);
+        types.add(ModuleMenu.class);
         types.add(Menu.class);
         types.add(EntityMasterView.class);
         types.add(MenuSaveAction.class);

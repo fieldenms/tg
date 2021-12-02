@@ -39,7 +39,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
                     new ModuleMenuItem().setKey("module1item3"),
                     new ModuleMenuItem().setKey("module1item4"),
                     new ModuleMenuItem().setKey("module1item5"));
-            final Module module1 = new Module().setKey("module1").setMenu(moduleMenu1);
+            final ModuleMenu module1 = new ModuleMenu().setKey("module1").setMenu(moduleMenu1);
 
             final List<ModuleMenuItem> module2group1 = Arrays.asList(
                     new ModuleMenuItem().setKey("module2group1item1"),
@@ -53,9 +53,9 @@ public class MenuProducerTest extends AbstractDaoTestCase {
                     new ModuleMenuItem().setKey("module2item1"),
                     new ModuleMenuItem().setKey("module2item2"),
                     new ModuleMenuItem().setKey("module2group2").setMenu(module2group2));
-            final Module module2 = new Module().setKey("module2").setMenu(moduleMenu2);
+            final ModuleMenu module2 = new ModuleMenu().setKey("module2").setMenu(moduleMenu2);
 
-            final List<Module> modules = Arrays.asList(module1, module2);
+            final List<ModuleMenu> modules = Arrays.asList(module1, module2);
             final Menu menu = new Menu().setMenu(modules);
             return menu;
         }
@@ -84,7 +84,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
 
         assertEquals("The menu has incorrect number of modules", 2, menu.getMenu().size());
 
-        final List<Module> modules = menu.getMenu();
+        final List<ModuleMenu> modules = menu.getMenu();
         for (int moduleIndex = 0; moduleIndex < 2; moduleIndex++) {
             assertEquals("The module key is incorrect", "module" + (moduleIndex + 1), modules.get(moduleIndex).getKey());
         }
@@ -157,7 +157,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
 
         assertEquals("The menu has incorrect number of modules", 2, menu.getMenu().size());
 
-        final List<Module> modules = menu.getMenu();
+        final List<ModuleMenu> modules = menu.getMenu();
         for (int moduleIndex = 0; moduleIndex < 2; moduleIndex++) {
             assertEquals("The module key is incorrect", "module" + (moduleIndex + 1), modules.get(moduleIndex).getKey());
         }
@@ -202,7 +202,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
 
         assertEquals("The menu has incorrect number of modules", 2, menu.getMenu().size());
 
-        final List<Module> modules = menu.getMenu();
+        final List<ModuleMenu> modules = menu.getMenu();
         for (int moduleIndex = 0; moduleIndex < 2; moduleIndex++) {
             assertEquals("The module key is incorrect", "module" + (moduleIndex + 1), modules.get(moduleIndex).getKey());
         }

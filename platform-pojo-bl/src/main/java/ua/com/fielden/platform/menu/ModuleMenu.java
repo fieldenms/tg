@@ -19,14 +19,14 @@ import ua.com.fielden.platform.entity.annotation.Title;
 /**
  * Represents application's module.
  *
- * @author Developers
+ * @author TG Team
  *
  */
 @KeyType(String.class)
 @KeyTitle(value = "Title", desc = "Module title")
-@CompanionObject(IModule.class)
+@CompanionObject(ModuleMenuCo.class)
 @DescTitle(value = "Description", desc = "Short explanation of module purpose")
-public class Module extends AbstractEntity<String> implements IMenuManager {
+public class ModuleMenu extends AbstractEntity<String> implements IMenuManager {
     @IsProperty
     @Title("Background color")
     private String bgColor;
@@ -56,7 +56,7 @@ public class Module extends AbstractEntity<String> implements IMenuManager {
     private List<Action> actions = new ArrayList<>();
 
     @Observable
-    public Module setActions(final List<Action> actions) {
+    public ModuleMenu setActions(final List<Action> actions) {
         this.actions.clear();
         this.actions.addAll(actions);
         return this;
@@ -67,7 +67,7 @@ public class Module extends AbstractEntity<String> implements IMenuManager {
     }
 
     @Observable
-    public Module setView(final View view) {
+    public ModuleMenu setView(final View view) {
         this.view = view;
         return this;
     }
@@ -77,7 +77,7 @@ public class Module extends AbstractEntity<String> implements IMenuManager {
     }
 
     @Observable
-    public Module setMenu(final List<ModuleMenuItem> menu) {
+    public ModuleMenu setMenu(final List<ModuleMenuItem> menu) {
         this.menu.clear();
         this.menu.addAll(menu);
         return this;
@@ -89,7 +89,7 @@ public class Module extends AbstractEntity<String> implements IMenuManager {
     }
 
     @Observable
-    public Module setDetailIcon(final String detailIcon) {
+    public ModuleMenu setDetailIcon(final String detailIcon) {
         this.detailIcon = detailIcon;
         return this;
     }
@@ -99,7 +99,7 @@ public class Module extends AbstractEntity<String> implements IMenuManager {
     }
 
     @Observable
-    public Module setIcon(final String icon) {
+    public ModuleMenu setIcon(final String icon) {
         this.icon = icon;
         return this;
     }
@@ -109,7 +109,7 @@ public class Module extends AbstractEntity<String> implements IMenuManager {
     }
 
     @Observable
-    public Module setCaptionBgColor(final String captionBgColor) {
+    public ModuleMenu setCaptionBgColor(final String captionBgColor) {
         this.captionBgColor = captionBgColor;
         return this;
     }
@@ -119,7 +119,7 @@ public class Module extends AbstractEntity<String> implements IMenuManager {
     }
 
     @Observable
-    public Module setBgColor(final String bgColor) {
+    public ModuleMenu setBgColor(final String bgColor) {
         this.bgColor = bgColor;
         return this;
     }
@@ -149,13 +149,13 @@ public class Module extends AbstractEntity<String> implements IMenuManager {
     }
 
     @Override
-    public Module setKey(final String key) {
-        return (Module) super.setKey(key);
+    public ModuleMenu setKey(final String key) {
+        return (ModuleMenu) super.setKey(key);
     }
 
     @Override
-    public Module setDesc(final String desc) {
-        return (Module) super.setDesc(desc);
+    public ModuleMenu setDesc(final String desc) {
+        return (ModuleMenu) super.setDesc(desc);
     }
 
     @Override
