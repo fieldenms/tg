@@ -1,5 +1,11 @@
 package ua.com.fielden.platform.web.view.master;
 
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
+import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 import static ua.com.fielden.platform.web.centre.EntityCentre.createFetchModelForAutocompleterFrom;
 
@@ -8,6 +14,7 @@ import java.util.Optional;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
+import ua.com.fielden.platform.basic.autocompleter.FallbackPropertyDescriptorMatcherWithContext;
 import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dom.DomElement;
@@ -19,12 +26,11 @@ import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.DefaultEntityProducerForCompoundMenuItem;
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.entity.IEntityProducer;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
@@ -32,8 +38,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKin
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
-import ua.com.fielden.platform.web.view.master.api.helpers.impl.WidgetSelector;
-import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityAutocompletionWidget;
+import ua.com.fielden.platform.web.view.master.api.with_centre.impl.MasterWithCentre;
 
 /**
  * Represents entity master.
@@ -203,15 +208,17 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
             final ICompanionObjectFinder coFinder) {
         
         final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
-        final Class<V> propertyType = (Class<V>) (isEntityItself ? entityType : PropertyTypeDeterminator.determinePropertyType(entityType, propertyName));
-        final IEntityDao<V> co = coFinder.find(propertyType);
-
-        // filtering out of inactive should only happen for activatable properties without SkipEntityExistsValidation present
-        final boolean activeOnly = 
-                ActivatableAbstractEntity.class.isAssignableFrom(propertyType) &&
-                !Finder.findFieldByName(entityType, propertyName).isAnnotationPresent(SkipEntityExistsValidation.class);
-        
-        return new FallbackValueMatcherWithContext<>(co, activeOnly);
+        final Class<V> propertyType = (Class<V>) (isEntityItself ? entityType : determinePropertyType(entityType, propertyName));
+        if (isPropertyDescriptor(propertyType)) {
+            return (IValueMatcherWithContext<T, V>) new FallbackPropertyDescriptorMatcherWithContext<>((Class<AbstractEntity<?>>) getPropertyAnnotation(IsProperty.class, entityType, propertyName).value());
+        } else {
+            final IEntityDao<V> co = coFinder.find(propertyType);
+            // filtering out of inactive should only happen for activatable properties without SkipEntityExistsValidation present
+            final boolean activeOnly = 
+                    ActivatableAbstractEntity.class.isAssignableFrom(propertyType) &&
+                    !findFieldByName(entityType, propertyName).isAnnotationPresent(SkipEntityExistsValidation.class);
+            return new FallbackValueMatcherWithContext<>(co, activeOnly);
+        }
     }
 
     @Override
@@ -278,6 +285,16 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
      */
     public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
         return masterConfig.actionConfig(actionKind, actionNumber);
+    }
+    
+    /**
+     * Returns embedded {@link EntityCentre} for this entity master, if any.
+     */
+    public Optional<EntityCentre<?>> getEmbeddedCentre() {
+        if (masterConfig instanceof MasterWithCentre) {
+            return of(((MasterWithCentre<?>) masterConfig).embeddedCentre);
+        }
+        return empty();
     }
     
 }

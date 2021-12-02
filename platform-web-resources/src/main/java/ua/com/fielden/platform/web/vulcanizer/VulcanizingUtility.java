@@ -161,7 +161,38 @@ public class VulcanizingUtility {
                 "/resources/login-startup-resources-vulcanized.js",
                 "/resources/icons/tg-icon.png",
                 "/app/login-initiate-reset.html",
-                "/resources/login-initiated-reset.html"
+                "/resources/login-initiated-reset.html",
+                "/resources/graphiql/graphiql.min.css",
+                "/resources/graphiql/react.production.min.js",
+                "/resources/graphiql/react-dom.production.min.js",
+                "/resources/graphiql/graphiql.min.js",
+                "/resources/graphiql/images/lint-mark-error.png",
+                "/resources/graphiql/images/lint-mark-warning.png",
+                "/resources/graphiql/images/lint-marker-multiple.png",
+                "/resources/graphiql/images/lint-message-error.png",
+                "/resources/graphiql/images/lint-message-warning.png",
+                "/resources/gis/images/arrow-blue.png",
+                "/resources/gis/images/arrow-green.png",
+                "/resources/gis/images/circle-orange.png",
+                "/resources/gis/images/circle-purple.png",
+                "/resources/gis/images/circle-red.png",
+                "/resources/gis/images/circle-black.png",
+                "/resources/gis/images/triangle.png",
+                "/resources/gis/leaflet/images/empty-image.gif",
+                "/resources/gis/leaflet/images/layers-2x.png",
+                "/resources/gis/leaflet/images/layers.png",
+                "/resources/gis/leaflet/images/marker-icon-2x.png",
+                "/resources/gis/leaflet/images/marker-icon.png",
+                "/resources/gis/leaflet/images/marker-shadow.png",
+                "/resources/gis/leaflet/controlloading/images/control-loading.gif",
+                "/resources/gis/leaflet/draw/images/spritesheet-2x.png",
+                "/resources/gis/leaflet/draw/images/spritesheet-2x.png",
+                "/resources/gis/leaflet/draw/images/spritesheet.svg",
+                "/resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.eot",
+                "/resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.svg",
+                "/resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.ttf",
+                "/resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.woff",
+                "/resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.woff2"
             );
             try {
                 final ObjectMapper objectMapper = new ObjectMapper();
@@ -173,6 +204,9 @@ public class VulcanizingUtility {
             }
             
             LOGGER.info(format("\tGenerated checksums... [%s]", checksums));
+        } catch (final Exception ex) {
+            LOGGER.fatal(ex.getMessage(), ex);
+            throw ex;
         } finally {
             clearObsoleteResources();
         }
@@ -346,7 +380,7 @@ public class VulcanizingUtility {
                 final String addPaths = stream(additionalPaths).collect(joining(pathSeparator));
                 final String path = getenv().get("PATH");
                 final String newPathVal = format("%s%s%s", path, pathSeparator, addPaths);
-                LOGGER.info(format("Setting environment variable PATH=%s", newPathVal));
+                LOGGER.info(format("\t\t\tSetting environment variable PATH=%s", newPathVal));
                 pb.environment().put("PATH", newPathVal);
             }
             Stream.of(envVarPairs).forEach(pair -> {
@@ -354,7 +388,7 @@ public class VulcanizingUtility {
                 if (p.length != 2) {
                     throw new VulcanisationException(format("Pair name/value [%s] for an environment variable is not formatted correctly.", p));
                 }
-                LOGGER.info(format("Setting environment variable %s=%s", p[0], p[1]));
+                LOGGER.info(format("\t\t\tSetting environment variable %s=%s", p[0], p[1]));
                 pb.environment().put(p[0], p[1]);
             });
 
@@ -366,7 +400,7 @@ public class VulcanizingUtility {
             // should would include errors and any other output produced by the process
             try (final BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));) {
                 final String output = reader.lines().collect(joining("\n"));
-                LOGGER.info(format("OUTPUT: %n%s%n", output));
+                LOGGER.info(format("\t\t\tOUTPUT: %n%s%n", output));
             }
             // wait for the process to complete before doing anything else...
             process.waitFor();
@@ -424,7 +458,7 @@ public class VulcanizingUtility {
         final String pathAndName = "/" + dir + "/" + name;
 
         try(final PrintStream ps = new PrintStream("vulcan" + pathAndName)) {
-            ps.println(webResourceLoader.loadSource(pathAndName));
+            ps.println(webResourceLoader.loadSource(pathAndName).orElseThrow(() -> new VulcanisationException("Cound not load " + pathAndName)));
         } catch (final FileNotFoundException ex) {
             final String msg = "Exception occurred while downloading web resources.";
             LOGGER.error(msg, ex);

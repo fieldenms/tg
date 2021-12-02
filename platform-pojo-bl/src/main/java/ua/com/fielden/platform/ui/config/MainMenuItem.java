@@ -8,6 +8,7 @@ import java.util.List;
 import ua.com.fielden.platform.algorithm.search.ITreeNode;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
@@ -17,7 +18,6 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 
 /**
  * A type for persisting an individual main menu item. Existence of an instance of this type simply indicates the existence of a corresponding main menu item.
@@ -34,8 +34,9 @@ import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 @KeyType(String.class)
 @KeyTitle("Menu item type")
 @DescTitle("Description")
-@CompanionObject(IMainMenuItem.class)
+@CompanionObject(MainMenuItemCo.class)
 @MapEntityTo("MAIN_MENU")
+@DenyIntrospection
 public class MainMenuItem extends AbstractEntity<String> implements ITreeNode<MainMenuItem> {
 
     @IsProperty

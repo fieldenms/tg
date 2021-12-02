@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
+import static org.apache.commons.lang3.RegExUtils.replaceAll;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
 
 import java.lang.reflect.Field;
@@ -38,6 +39,8 @@ public class AdvancedModifyPropertyAdapter extends ClassVisitor implements Opcod
      */
     private String owner;
     private String enhancedName;
+    private Pattern patternQuotedOwner;
+    private String quotedEnhancedName;
 
     public AdvancedModifyPropertyAdapter(final ClassVisitor cv, final Map<String, NewProperty> propertiesToAdapt) {
         super(Opcodes.ASM5, cv);
@@ -52,7 +55,9 @@ public class AdvancedModifyPropertyAdapter extends ClassVisitor implements Opcod
     @Override
     public void visit(final int version, final int access, final String name, final String signature, final String superName, final String[] interfaces) {
         owner = name;
+        patternQuotedOwner = Pattern.compile(Pattern.quote(owner + ";"));
         enhancedName = nextTypeName(name);
+        quotedEnhancedName = Matcher.quoteReplacement(enhancedName + ";");
         super.visit(version, access, enhancedName, signature, superName, interfaces);
     }
 
@@ -135,15 +140,13 @@ public class AdvancedModifyPropertyAdapter extends ClassVisitor implements Opcod
     /**
      * Changes all the occurrences of <code>owner<code> with <code>enhancedName</code>.
      */
-    private String fix(String signiture) {
-
-        if (signiture != null) {
-            if (signiture.indexOf(owner + ";") != -1) {
-                signiture = signiture.replaceAll(Pattern.quote(owner + ";"), Matcher.quoteReplacement(enhancedName + ";"));
+    private String fix(String signature) {
+        if (signature != null) {
+            if (signature.indexOf(owner + ";") != -1) {
+                signature = replaceAll(signature, patternQuotedOwner, quotedEnhancedName);
             }
         }
-
-        return signiture;
+        return signature;
     }
 
     /**

@@ -95,9 +95,7 @@ template.setAttribute('strip-whitespace', '');
             col += 1;
         }
         if (!width) {
-            throw {
-                msg: "The compoent at: " + componentIndex + " index has width equal to 0"
-            };
+            throw new Error(`The component at: ${componentIndex} index has width equal to 0.`);
         }
         return width;
     };
@@ -109,9 +107,7 @@ template.setAttribute('strip-whitespace', '');
             row += 1;
         }
         if (!height) {
-            throw {
-                msg: "The compoent at: " + componentIndex + " index has height equal to 0"
-            }
+            throw new Error(`The component at ${componentIndex} index has height equal to 0.`);
         }
         return height;
     };
@@ -130,9 +126,7 @@ template.setAttribute('strip-whitespace', '');
         }
         // Throw exception if the specified layout spec doesn't have rows.
         if (rows === 0) {
-            throw {
-                msg: "The layout " + JSON.stringify(layoutSpec) + " must have at least one row!"
-            };
+            throw new Error(`The layout ${JSON.stringify(layoutSpec)} must have at least one row.`);
         }
         // Calculate the number of columns.
         layoutSpec[0].forEach(function (colElement) {
@@ -144,9 +138,7 @@ template.setAttribute('strip-whitespace', '');
         });
         // Throw exception if the specified layout spec doesn't have columns.
         if (cols === 0) {
-            throw {
-                msg: "The layout " + JSON.stringify(layoutSpec) + " must have at least one column!"
-            };
+            throw new Error(`The layout ${JSON.stringify(layoutSpec)} must have at least one column.`);
         }
         // Create the two dimensional array that represents the layout and fill it with object that has only one property named index equal to -1.
         // That indicates the free grid cell.
@@ -174,9 +166,7 @@ template.setAttribute('strip-whitespace', '');
                 if (elementPos) {
                     placeElementAt(componentIndex, layoutGrid, elementPos[0], elementPos[1], colSpan, rowSpan);
                 } else {
-                    throw {
-                        msg: "There is no free pace for element at index: " + componentIndex
-                    };
+                    throw new Error(`There is no free space for element at index: ${componentIndex}.`);
                 }
                 componentIndex += 1;
             });
@@ -184,26 +174,27 @@ template.setAttribute('strip-whitespace', '');
 
         return layoutGrid;
     };
-    // Place the element specifed with componentIdex into layoutGrid at row and col with specifed widht and height
-    // Element is place in the layout grid when layout grid has cell or cells with the specified component index.
+    // Place the element specified with componentIndex into layoutGrid at row and col with specified width and height.
+    // Element is placed in the layout grid when layout grid has cell or cells with the specified component index.
     const placeElementAt = function (componentIndex, layoutGrid, row, col, width, height) {
         var rowIndex,
             colIndex;
         for (rowIndex = row; rowIndex < row + height; rowIndex++) {
             for (colIndex = col; colIndex < col + width; colIndex++) {
+                if (!layoutGrid[rowIndex][colIndex]) {
+                    throw new Error(`The component at index ${componentIndex} doesn't have enough space to be placed into layout.`);
+                }
                 if (layoutGrid[rowIndex][colIndex].index !== -1) {
-                    throw {
-                        msg: "The compoents with index " + componentIndex + " and " + layoutGrid[rowIndex][colIndex].index + " are overlapping"
-                    }
+                    throw new Error(`The components at indices ${componentIndex} and ${layoutGrid[rowIndex][colIndex].index} are overlapping.`);
                 } else {
                     layoutGrid[rowIndex][colIndex].index = componentIndex;
                 }
             }
         }
     };
-    // Finds first free place in the layout grid. Free place - it is a cell in the two dimensional array that has object with index property equal to -1;
+    // Finds first free place in the layout grid. Free place - it is a cell in the two dimensional array that has object with index property equal to -1.
     // Returns the array of two elements. The first element - is a row index of the first free cell. The second element - is a column index of the first free cell.
-    // If the layoutGrid doesn't have free place that it retirns null;
+    // If the layoutGrid doesn't have free place then it returns null.
     const findFreePlace = function (layoutGrid) {
         var rowIndex = 0,
             colIndex = 0;

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.utils;
 
 import static java.math.RoundingMode.HALF_EVEN;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -9,10 +10,12 @@ import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.coalesce;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.utils.EntityUtils.getCollectionalProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.isIntrospectionDenied;
 import static ua.com.fielden.platform.utils.EntityUtils.isNaturalOrderDescending;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
@@ -28,9 +31,11 @@ import java.math.MathContext;
 import java.math.RoundingMode;
 import java.sql.Timestamp;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.joda.time.DateTime;
@@ -40,6 +45,11 @@ import org.junit.Test;
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.attachment.Attachment;
+import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
+import ua.com.fielden.platform.dashboard.DashboardRefreshFrequencyUnit;
+import ua.com.fielden.platform.domain.PlatformDomainTypes;
+import ua.com.fielden.platform.domain.metadata.DomainExplorer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ChildEntity;
 import ua.com.fielden.platform.entity.Entity;
@@ -47,6 +57,7 @@ import ua.com.fielden.platform.entity.EntityExt;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.keygen.KeyNumber;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
@@ -58,8 +69,11 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgReVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
+import ua.com.fielden.platform.security.user.ReUser;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
+import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
@@ -265,6 +279,16 @@ public class EntityUtilsTest {
     }
 
     @Test
+    public void isIntrospectionDenied_returns_true_for_entity_types_annotated_with_DenyIntrospection() {
+        assertTrue(isIntrospectionDenied(UnionEntity.class));
+    }
+
+    @Test
+    public void isIntrospectionDenied_returns_false_for_entity_types_not_annotated_with_DenyIntrospection() {
+        assertFalse(isIntrospectionDenied(Entity.class));
+    }
+
+    @Test
     public void coalesce_returns_first_value_if_it_is_non_null() {
         assertEquals("first", coalesce("first", "second"));
     }
@@ -357,17 +381,20 @@ public class EntityUtilsTest {
         entity1.setEntity(entity2.setEntity(entity3));
 
         final List<T2<String, Optional<? extends AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, "entity.entity.date").collect(toList());
-        assertEquals(2, trace.size());
+        assertEquals(3, trace.size());
         final T2<String, Optional<? extends AbstractEntity<?>>> t2_1 = trace.get(0);
-        assertEquals("entity", t2_1._1);
+        assertEquals("entity.entity", t2_1._1);
         assertEquals(entity3, t2_1._2.get());
         final T2<String, Optional<? extends AbstractEntity<?>>> t2_2 = trace.get(1);
         assertEquals("entity", t2_2._1);
         assertEquals(entity2, t2_2._2.get());
+        final T2<String, Optional<? extends AbstractEntity<?>>> t2_3 = trace.get(2);
+        assertEquals("", t2_3._1);
+        assertEquals(entity1, t2_3._2.get());
     }
 
     @Test
-    public void traversing_valid_property_path_ending_with_entity_typed_property_produces_a_stream_of_prop_value_pairs_of_the_same_length_as_the_path() {
+    public void traversing_valid_property_path_ending_with_entity_typed_property_produces_a_stream_of_prop_value_pairs_of_the_length_one_greater_than_the_path() {
         final Entity entity1 = factory.newEntity(Entity.class);
         entity1.setKey("E1");
         final Entity entity2 = factory.newEntity(Entity.class);
@@ -378,13 +405,16 @@ public class EntityUtilsTest {
         entity1.setEntity(entity2.setEntity(entity3));
 
         final List<T2<String, Optional<? extends AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, "entity.entity").collect(toList());
-        assertEquals(2, trace.size());
+        assertEquals(3, trace.size());
         final T2<String, Optional<? extends AbstractEntity<?>>> t2_1 = trace.get(0);
-        assertEquals("entity", t2_1._1);
+        assertEquals("entity.entity", t2_1._1);
         assertEquals(entity3, t2_1._2.get());
         final T2<String, Optional<? extends AbstractEntity<?>>> t2_2 = trace.get(1);
         assertEquals("entity", t2_2._1);
         assertEquals(entity2, t2_2._2.get());
+        final T2<String, Optional<? extends AbstractEntity<?>>> t2_3 = trace.get(2);
+        assertEquals("", t2_3._1);
+        assertEquals(entity1, t2_3._2.get());
     }
 
     @Test
@@ -399,16 +429,19 @@ public class EntityUtilsTest {
         entity1.setEntity(entity2.setEntity(entity3));
 
         final List<T2<String, Optional<? extends AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, "entity.entity.entity.date").collect(toList());
-        assertEquals(3, trace.size());
+        assertEquals(4, trace.size());
         final T2<String, Optional<? extends AbstractEntity<?>>> t2_1 = trace.get(0);
-        assertEquals("entity", t2_1._1);
+        assertEquals("entity.entity.entity", t2_1._1);
         assertFalse(t2_1._2.isPresent());
         final T2<String, Optional<? extends AbstractEntity<?>>> t2_2 = trace.get(1);
-        assertEquals("entity", t2_2._1);
+        assertEquals("entity.entity", t2_2._1);
         assertEquals(entity3, t2_2._2.get());
         final T2<String, Optional<? extends AbstractEntity<?>>> t2_3 = trace.get(2);
         assertEquals("entity", t2_3._1);
         assertEquals(entity2, t2_3._2.get());
+        final T2<String, Optional<? extends AbstractEntity<?>>> t2_4 = trace.get(3);
+        assertEquals("", t2_4._1);
+        assertEquals(entity1, t2_4._2.get());
     }
 
     @Test
@@ -429,50 +462,87 @@ public class EntityUtilsTest {
     }
 
     @Test
-    public void traversing_path_with_one_non_entity_typed_property_produces_empty_stream() {
+    public void traversing_path_with_one_non_entity_typed_property_produces_stream_with_root_property_and_value_pair() {
         final Entity entity1 = factory.newEntity(Entity.class);
         entity1.setKey("E1");
 
         final List<T2<String, Optional<? extends AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, "date").collect(toList());
-        assertEquals(0, trace.size());
+        assertEquals(1, trace.size());
+        final T2<String, Optional<? extends AbstractEntity<?>>> t2_1 = trace.get(0);
+        assertEquals("", t2_1._1);
+        assertEquals(entity1, t2_1._2.get());
     }
 
     @Test
-    public void traversing_path_with_one_entity_typed_property_produces_stream_with_one_element() {
+    public void traversing_empty_property_path_produces_stream_with_root_property_and_value_pair() {
+        final Entity entity1 = factory.newEntity(Entity.class);
+        entity1.setKey("E1");
+
+        final List<T2<String, Optional<? extends AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, "").collect(toList());
+        assertEquals(1, trace.size());
+        final T2<String, Optional<? extends AbstractEntity<?>>> t2_1 = trace.get(0);
+        assertEquals("", t2_1._1);
+        assertEquals(entity1, t2_1._2.get());
+    }
+
+    @Test
+    public void traversing_undefined_property_path_produces_stream_with_root_property_and_value_pair() {
+        final Entity entity1 = factory.newEntity(Entity.class);
+        entity1.setKey("E1");
+
+        final List<T2<String, Optional<? extends AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, null).collect(toList());
+        assertEquals(1, trace.size());
+        final T2<String, Optional<? extends AbstractEntity<?>>> t2_1 = trace.get(0);
+        assertEquals("", t2_1._1);
+        assertEquals(entity1, t2_1._2.get());
+    }
+
+    @Test
+    public void traversing_path_with_one_entity_typed_property_produces_stream_with_two_elements() {
         final Entity entity1 = factory.newEntity(Entity.class);
         entity1.setKey("E1");
 
         final List<T2<String, Optional<? extends AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(entity1, "entity").collect(toList());
-        assertEquals(1, trace.size());
+        assertEquals(2, trace.size());
 
         final T2<String, Optional<? extends AbstractEntity<?>>> t2_1 = trace.get(0);
         assertEquals("entity", t2_1._1);
+        assertFalse(t2_1._2.isPresent());
+        final T2<String, Optional<? extends AbstractEntity<?>>> t2_2 = trace.get(1);
+        assertEquals("", t2_2._1);
+        assertEquals(entity1, t2_2._2.get());
+    }
+
+    @Test
+    public void traversing_any_property_path_with_empty_root_produces_empty_stream() {
+        final List<T2<String, Optional<? extends AbstractEntity<?>>>> trace = EntityUtils.traversePropPath(null, "any").collect(toList());
+        assertEquals(0, trace.size());
     }
 
     @Test
     public void key_paths_works_for_simple_key() {
-        assertEquals(listOf("key"), 
+        assertEquals(listOf("key"),
                 keyPaths(TgVehicle.class));
     }
-    
+
     @Test
     public void key_paths_works_for_composite_key_without_further_nesting() {
-        assertEquals(listOf("vehicle.key", "readingDate"), 
+        assertEquals(listOf("vehicle.key", "readingDate"),
                 keyPaths(TgMeterReading.class));
     }
-    
+
     @Test
     public void key_paths_works_for_composite_key_without_further_nesting_and_with_parent_context_path() {
         assertEquals(listOf("mr.vehicle.key", "mr.readingDate"),
                 keyPaths(TgMeterReading.class, "mr"));
     }
-    
+
     @Test
     public void key_paths_works_for_composite_key_with_one_level_nesting() {
         assertEquals(listOf("parent.key", "name"),
                 keyPaths(TgOrgUnit2.class));
     }
-    
+
     @Test
     public void key_paths_works_for_composite_key_with_one_level_nesting_and_with_parent_context_path() {
         assertEquals(listOf("parent.parent.parent.key", "parent.parent.name"),
@@ -481,7 +551,7 @@ public class EntityUtilsTest {
 
     @Test
     public void key_paths_works_for_composite_key_with_two_levels_nesting() {
-        assertEquals(listOf("parent.parent.key", "parent.name", "name"), 
+        assertEquals(listOf("parent.parent.key", "parent.name", "name"),
                 keyPaths(TgOrgUnit3.class));
     }
 
@@ -496,11 +566,47 @@ public class EntityUtilsTest {
         assertEquals(listOf("parent.parent.parent.parent.key", "parent.parent.parent.name", "parent.parent.name", "parent.name", "name"),
                 keyPaths(TgOrgUnit5.class));
     }
-    
+
     @Test
     public void isNaturalOrderDescending_correctly_identifies_natural_ordering_for_entities() {
         assertTrue(isNaturalOrderDescending(Entity.class));
         assertTrue(isNaturalOrderDescending(EntityExt.class));
         assertFalse(isNaturalOrderDescending(ChildEntity.class));
     }
+
+    @Test
+    public void toString_converts_lists_to_CSV_in_square_brackets() {
+        assertEquals("[]", EntityUtils.toString(listOf()));
+
+        final List<AbstractEntity<?>> moreThanOne = listOf(factory.newEntity(Entity.class).setKey("E1"), factory.newEntity(Entity.class).setKey("E2"), factory.newEntity(Entity.class).setKey("E3"));
+        assertEquals("[E1, E2, E3]", EntityUtils.toString(moreThanOne));
+
+        final List<AbstractEntity<?>> one = listOf(factory.newEntity(Entity.class).setKey("E1"));
+        assertEquals("[E1]", EntityUtils.toString(one));
+
+        final List<AbstractEntity<?>> someAndNull = listOf(factory.newEntity(Entity.class).setKey("E1"), null, factory.newEntity(Entity.class).setKey("E3"));
+        assertEquals("[E1, null, E3]", EntityUtils.toString(someAndNull));
+    }
+
+    @Test
+    public void toString_converts_sets_to_CSV_in_square_brackets() {
+        assertEquals("[]", EntityUtils.toString(linkedSetOf()));
+
+        final Set<AbstractEntity<?>> moreThanOne = linkedSetOf(factory.newEntity(Entity.class).setKey("E1"), factory.newEntity(Entity.class).setKey("E2"), factory.newEntity(Entity.class).setKey("E3"));
+        assertEquals("[E1, E2, E3]", EntityUtils.toString(moreThanOne));
+
+        final Set<AbstractEntity<?>> one = linkedSetOf(factory.newEntity(Entity.class).setKey("E1"));
+        assertEquals("[E1]", EntityUtils.toString(one));
+
+        final Set<AbstractEntity<?>> someAndNull = linkedSetOf(factory.newEntity(Entity.class).setKey("E1"), null, factory.newEntity(Entity.class).setKey("E3"));
+        assertEquals("[E1, null, E3]", EntityUtils.toString(someAndNull));
+    }
+
+    @Test
+    public void only_a_specific_subset_of_platform_level_entities_have_introspection_allowed() {
+        final LinkedHashSet<Class<? extends AbstractEntity<?>>> expected = linkedSetOf(Attachment.class, DomainExplorer.class, DashboardRefreshFrequency.class, DashboardRefreshFrequencyUnit.class, KeyNumber.class, User.class, ReUser.class, UserRole.class, UserAndRoleAssociation.class, SecurityRoleAssociation.class);
+        final LinkedHashSet<Class<? extends AbstractEntity<?>>> filtered = PlatformDomainTypes.types.stream().filter(EntityUtils::isIntrospectionAllowed).collect(toCollection(LinkedHashSet::new));
+        assertEquals(expected, filtered);
+    }
+
 }

@@ -15,6 +15,10 @@ styleElement.innerHTML = `
             paper-icon-button.revers {
                 transform: scale(-1, 1);
             }
+            .pagination-text {
+                @apply --layout-horizontal;
+                @apply --layout-center;
+            }
             .selection-criteria {
                 background-color: white;
             }

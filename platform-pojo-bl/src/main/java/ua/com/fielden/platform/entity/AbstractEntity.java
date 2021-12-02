@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LENGTH;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_PRECISION;
@@ -23,7 +24,6 @@ import static ua.com.fielden.platform.reflection.EntityMetadata.entityExistsAnno
 import static ua.com.fielden.platform.reflection.EntityMetadata.isEntityExistsValidationApplicable;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNumeric;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
-import static ua.com.fielden.platform.utils.CollectionUtil.unmodifiableSetOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 
 import java.lang.annotation.Annotation;
@@ -36,6 +36,7 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -91,6 +92,7 @@ import ua.com.fielden.platform.reflection.EntityMetadata;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
@@ -288,7 +290,6 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     public static final String GETKEY = "getKey()";
     public static final String DESC = "desc";
     public static final String KEY_NOT_ASSIGNED = "[key is not assigned]";
-    public static final Set<String> COMMON_PROPS = unmodifiableSetOf(KEY, DESC, "referencesCount", "referenced");
     
     /**
      * A flag that provides a way to enforce more strict model verification, which is the default approach.
@@ -609,13 +610,11 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             logger.error("Property factory can be assigned only once.");
             throw new EntityException("Property factory can be assigned only once.");
         }
-
         this.metaPropertyFactory = of(metaPropertyFactory);
-        final List<Field> keyMembers = Finder.getKeyMembers(getType());
 
-        // obtain field annotated as properties
-        final List<Field> fields = Finder.findRealProperties(getClass());
-        for (final Field field : fields) { // for each property field
+        final List<Field> keyMembers = Finder.getKeyMembers(getType());
+        final Set<Field> fieldsForProperties = fieldsForProperties();
+        for (final Field field : fieldsForProperties) { // for each field that represents a property
             final String propName = field.getName();
 
             if (STRICT_MODEL_VERIFICATION) {
@@ -629,7 +628,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             final boolean isKey = keyMembers.contains(field);
 
             if (Reflector.isPropertyProxied(this, propName)) {
-                properties.put(propName, new MetaProperty(this, field, type, isKey, true, extractDependentProperties(field, fields)));
+                properties.put(propName, new MetaProperty(this, field, type, isKey, true, extractDependentProperties(field, fieldsForProperties)));
             } else {
                 try {
                     final boolean isCollectional = Collection.class.isAssignableFrom(type);
@@ -664,7 +663,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                             declatedValidationAnnotations,
                             validators,
                             definer,
-                            extractDependentProperties(field, fields));
+                            extractDependentProperties(field, fieldsForProperties));
                     // define meta-property properties used most commonly for UI construction: required, editable, title and desc //
                     initProperty(keyMembers, field, metaProperty);
                     // put meta-property in the map associating it with a corresponding property name
@@ -676,6 +675,25 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             }
         }
         endInitialising();
+    }
+
+    /**
+     * Returns a set of fields that represent "real" properties, but also "key" and "desc", which should have meta-properties constructed for them irrespectively of whether they belong to "real" properties.
+     * Refer to issue <a href='https://github.com/fieldenms/tg/issues/1729'>1729</a> for more details.
+     *
+     * @return
+     */
+    private Set<Field> fieldsForProperties() {
+        final Set<Field> fields = Finder.streamRealProperties((Class<? extends AbstractEntity<?>>) getClass()).collect(toCollection(LinkedHashSet::new));
+        try {
+            fields.add(Finder.getFieldByName(this.getClass(), KEY));
+            fields.add(Finder.getFieldByName(this.getClass(), DESC));
+        } catch (final Exception ex) {
+            final String error = "Could not get fields for KEY or DESC.";
+            logger.error(error, ex);
+            throw new ReflectionException(error, ex);
+        }
+        return fields;
     }
 
     /**
@@ -870,7 +888,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * @param allFields
      * @return
      */
-    private String[] extractDependentProperties(final Field field, final List<Field> allFields) {
+    private String[] extractDependentProperties(final Field field, final Set<Field> allFields) {
         if (AnnotationReflector.isAnnotationPresent(field, Dependent.class)) {
             final List<String> allFieldsNames = new ArrayList<>();
             for (final Field f : allFields) {
@@ -1341,7 +1359,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * @param preferredProperty
      */
     public void setPreferredProperty(final String preferredProperty) {
-        if (!EntityUtils.isProperty(getType(), preferredProperty)) {
+        if (preferredProperty != null && !EntityUtils.isProperty(getType(), preferredProperty)) { // null 'preferredProperty' can be used to reset existing preferred property that was set previously
             throw new EntityException(format("The specified property name [%s] does not represent a valid property for type [%s].", preferredProperty, getType().getName()));
         }
         this.preferredProperty = preferredProperty;

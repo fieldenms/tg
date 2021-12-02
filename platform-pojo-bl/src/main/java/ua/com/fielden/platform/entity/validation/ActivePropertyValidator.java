@@ -75,9 +75,7 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
     @SuppressWarnings({ "rawtypes", "unchecked" })
     public Result handle(final MetaProperty<Boolean> property, final Boolean newValue, final Set<Annotation> mutatorAnnotations) {
         final ActivatableAbstractEntity<?> entity = property.getEntity();
-        if (!entity.isPersisted()) { // a brand new entity is being created
-            return successful(newValue);
-        } else if (!newValue) { // entity is being deactivated, but could still be referenced
+        if (!newValue && entity.isPersisted()) { // a persisted entity is being deactivated, but it may still be referenced
             // let's check refCount... it could potentially be stale...
             final IEntityDao<?> co = coFinder.find(entity.getType());
             final int count;
@@ -106,7 +104,7 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
                     return failure(count, mkErrorMsg(entity, count, co(EntityAggregates.class).getAllEntities(from(query).with(orderBy).with(mapOf(t2(PARAM, entity))).model())));
                 }
             }
-        } else { 
+        } else if (newValue) { // either existing or new entity is being activated...
             // entity is being activated, but could be referencing inactive activatables
             // we could not rely on the fact that all activatable are fetched
             // so, we should only perform so-called soft validation
@@ -124,9 +122,9 @@ public class ActivePropertyValidator extends AbstractBeforeChangeEventHandler<Bo
                     return failure(format("Property [%s] in %s [%s] references inactive %s [%s].", propTitle, entityTitle, entity, valueEntityTitle, value));
                 }
             }
-
-            return successful(null);
         }
+        // otherwise...
+        return successful(newValue);
     }
 
     private String mkErrorMsg(final ActivatableAbstractEntity<?> entity, final int count, final List<EntityAggregates> dependencies) {

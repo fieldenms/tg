@@ -1,13 +1,16 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
+import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 
 //Actions those can be applied to entity centre.
-const RunActions = {
+export const RunActions = {
     run: "run",
     navigate: "navigate",
     refresh: "refresh"
 };
+
+const CRITERIA_NOT_LOADED_MSG = "Cannot activate result-set view (not initialised criteria).";
 
 const TgSelectionCriteriaBehaviorImpl = {
 
@@ -62,11 +65,32 @@ const TgSelectionCriteriaBehaviorImpl = {
         },
 
         /**
+         * UUID for currently loaded centre configuration.
+         * 
+         * Returns '' for default configurations.
+         * Returns non-empty value (e.g. '4920dbe0-af69-4f57-a93a-cdd7157b75d8') for link, own save-as and inherited [from base / shared] configurations.
+         */
+        configUuid: {
+            type: String,
+            value: '',
+            notify: true,
+            observer: '_configUuidChanged'
+        },
+
+        /**
          * Description of currently loaded 'saveAs' configuration.
          */
         saveAsDesc: {
             type: String,
             observer: '_saveAsDescChanged'
+        },
+
+        /**
+         * Indicates whether current centre configuration should load data immediately upon loading.
+         */
+        autoRun: {
+            type: Boolean,
+            notify: true
         },
 
         /**
@@ -94,6 +118,14 @@ const TgSelectionCriteriaBehaviorImpl = {
             type: Number
         },
 
+        /**
+         * Preferred view retrieved with selection criteria.
+         */
+        preferredView: {
+            type: Number,
+            notify: true
+        },
+
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
         //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -102,9 +134,20 @@ const TgSelectionCriteriaBehaviorImpl = {
         //   alternatively, computing function needs to be specified). 									       //
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        _centreChanged: {
+        /**
+         * Indicates whether currently loaded centre configuration is [default, link or inherited] or changed [own save-as].
+         */
+        _centreDirty: {
             type: Boolean,
-            value: false,
+            value: false
+        },
+
+        /**
+         * Indicates whether currently loaded centre configuration is [default, link or inherited] or changed [own save-as] or criteria editors are being edited at the moment.
+         */
+        _centreDirtyOrEdited: {
+            type: Boolean,
+            computed: '_calculateCentreDirtyOrEdited(_centreDirty, _editedPropsExist)',
             notify: true
         },
 
@@ -179,6 +222,15 @@ const TgSelectionCriteriaBehaviorImpl = {
         },
 
         /**
+         * Indicates the reason why data for this selection criteria's centre changed. This should have a type of RunActions.
+         */
+        dataChangeReason: {
+            type: String,
+            notify: true,
+            value: null,
+        },
+
+        /**
          * Default implementation for postRun callback.
          */
         _postRunDefault: {
@@ -220,19 +272,23 @@ const TgSelectionCriteriaBehaviorImpl = {
                 const criteriaEntity = entityAndCustomObject[0];
                 self._provideExceptionOccured(criteriaEntity, exceptionOccured);
                 const customObject = self._reflector().customObject(entityAndCustomObject);
-                const resultEntities = customObject.resultEntities || [];
-                const pageCount = customObject.pageCount;
-                const pageNumber = customObject.pageNumber;
-                const metaValues = customObject.metaValues;
-                const centreChanged = customObject.isCentreChanged;
-                const renderingHints = customObject.renderingHints || [];
-                const dynamicColumns = customObject.dynamicColumns || {};
-                const summary = customObject.summary;
-                const staleCriteriaMessage = customObject.staleCriteriaMessage;
-                const columnWidths = customObject.columnWidths;
-                const resultConfig = customObject.resultConfig;
+                const result = {
+                    resultEntities: customObject.resultEntities || [],
+                    pageCount: customObject.pageCount,
+                    pageNumber: customObject.pageNumber,
+                    metaValues: customObject.metaValues,
+                    centreDirty: customObject.centreDirty,
+                    renderingHints: customObject.renderingHints || [],
+                    dynamicColumns: customObject.dynamicColumns || {},
+                    summary: customObject.summary,
+                    staleCriteriaMessage: customObject.staleCriteriaMessage,
+                    columnWidths: customObject.columnWidths,
+                    resultConfig: customObject.resultConfig,
+                    primaryActionIndices: customObject.primaryActionIndices,
+                    secondaryActionIndices: customObject.secondaryActionIndices
+                };
 
-                self._postRunDefault(criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, dynamicColumns, summary, staleCriteriaMessage, columnWidths, resultConfig);
+                self._postRunDefault(criteriaEntity, result);
             });
         };
 
@@ -243,17 +299,17 @@ const TgSelectionCriteriaBehaviorImpl = {
         };
 
         // calbacks, that will potentially be augmented by tg-action child elements: 
-        self._postRunDefault = (function (criteriaEntity, resultEntities, pageNumber, pageCount, metaValues, centreChanged, renderingHints, dynamicColumns, summary, staleCriteriaMessage, columnWidths, resultConfig) {
-            this.fire('egi-entities-appeared', resultEntities);
+        self._postRunDefault = (function (criteriaEntity, result) {
+            this.fire('egi-entities-appeared', result.resultEntities);
 
-            if (typeof staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
-                this.staleCriteriaMessage = staleCriteriaMessage;
+            if (typeof result.staleCriteriaMessage !== 'undefined') { // if staleCriteriaMessage is defined (i.e. it can be 'null' or 'Selection criteria have been changed, but ...' message) -- then populate it into config button tooltip / colour
+                this.staleCriteriaMessage = result.staleCriteriaMessage;
             }
-            if (typeof pageCount !== 'undefined') {
-                this.pageCount = pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
+            if (typeof result.pageCount !== 'undefined') {
+                this.pageCount = result.pageCount; // at this stage -- update pageCount not only on run(), but also on firstPage(), nextPage() etc.
             }
-            if (typeof pageNumber !== 'undefined') {
-                this.pageNumber = pageNumber;
+            if (typeof result.pageNumber !== 'undefined') {
+                this.pageNumber = result.pageNumber;
             }
             this.pageNumberUpdated = this.pageNumber;
             this.pageCountUpdated = this.pageCount;
@@ -261,16 +317,16 @@ const TgSelectionCriteriaBehaviorImpl = {
                 const msg = "Running completed successfully.";
                 this._openToastWithoutEntity(msg, false, msg, false);
 
-                this.postRun(null, null, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig);
+                this.postRun(null, null, result);
             } else {
-                this._setPropertyModel(metaValues);
-                this._centreChanged = centreChanged;
+                this._setPropertyModel(result.metaValues);
+                this._centreDirty = result.centreDirty;
 
                 const msg = this._toastMsg("Running", criteriaEntity);
                 this._openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg, false);
 
                 const newBindingEntity = this._postEntityReceived(criteriaEntity, false);
-                this.postRun(criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig);
+                this.postRun(criteriaEntity, newBindingEntity, result);
             }
         }).bind(self);
 
@@ -347,16 +403,34 @@ const TgSelectionCriteriaBehaviorImpl = {
             this.staleCriteriaMessage = customObject.staleCriteriaMessage;
         }
         this._setPropertyModel(customObject.metaValues);
-        this._centreChanged = customObject.isCentreChanged;
+        this._centreDirty = customObject.centreDirty;
         if (typeof customObject.saveAsDesc !== 'undefined') {
             this.saveAsDesc = customObject.saveAsDesc;
         }
         if (typeof customObject.saveAsName !== 'undefined') {
             this.saveAsName = customObject.saveAsName;
         }
-        if (typeof customObject.wasRun !== 'undefined') {
-            this._wasRun = customObject.wasRun;
+        if (typeof customObject.autoRun !== 'undefined') {
+            this.autoRun = customObject.autoRun;
         }
+        if (typeof customObject.configUuid !== 'undefined') {
+            const newConfigUuid = customObject.configUuid;
+            const configUuid = this.configUuid;
+            this.loadCentreFreezed = true;
+            this.fire('tg-config-uuid-before-change', { newConfigUuid: newConfigUuid, configUuid: configUuid });
+            delete this.loadCentreFreezed;
+            this.configUuid = customObject.configUuid;
+        }
+        if (typeof customObject.preferredView !== 'undefined') {
+            this.preferredView = customObject.preferredView;
+        }
+    },
+
+    _configUuidChanged: function (newConfigUuid, oldConfigUuid) {
+        if (typeof oldConfigUuid === 'string' && this._wasRun === 'yes') {
+            this._wasRun = null; // reset _wasRun if configuration has been changed
+        }
+        this.fire('tg-config-uuid-changed', newConfigUuid);
     },
 
     _saveAsDescChanged: function (newSaveAsDesc) {
@@ -510,8 +584,38 @@ const TgSelectionCriteriaBehaviorImpl = {
         return !(pageCount <= 0);
     },
 
-    canManageCentreConfig: function (centreChanged, _editedPropsExist) {
-        return _editedPropsExist || (centreChanged === true);
+    _calculateCentreDirtyOrEdited: function (centreDirty, _editedPropsExist) {
+        return _editedPropsExist || (centreDirty === true);
+    },
+
+    /**
+     * A function to cancel active autocompletion search request.
+     */
+    _cancelAutocompletion: function () {
+        this._dom().querySelectorAll('tg-entity-editor').forEach((currentValue, currentIndex, list) => {
+            if (currentValue.searching) {
+                currentValue._cancelSearch();
+            }
+        });
+    },
+
+    /**
+     * @returns object that explains the reason why this selection criteria can not be left or undefined.
+     */
+    canLeave: function () {
+        if (this._criteriaLoaded === false) {
+            return {
+                msg: CRITERIA_NOT_LOADED_MSG
+            };
+        }
+    },
+
+    //Performs custom tasks before leaving this selection criteria.
+    leave: function () {
+        // cancel any autocompleter searches
+        this._cancelAutocompletion();
+        //Persist active element
+        this.persistActiveElement();
     },
 
     /**
@@ -564,6 +668,7 @@ const TgSelectionCriteriaBehaviorImpl = {
 
             // cancel previous validation before starting saving process -- it includes validation process internally!
             self._validator().abortValidationIfAny();
+            self.dataChangeReason = action;
             resolve(
                 self._runModifiedProperties(
                     self._createContextHolderForRunning(function () {
@@ -716,6 +821,7 @@ const TgSelectionCriteriaBehaviorImpl = {
 
 export const TgSelectionCriteriaBehavior = [
     TgEntityBinderBehavior,
+    TgFocusRestorationBehavior,
     TgSelectionCriteriaBehaviorImpl,
     TgElementSelectorBehavior
 ];

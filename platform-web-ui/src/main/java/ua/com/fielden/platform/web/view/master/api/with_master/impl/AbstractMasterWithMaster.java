@@ -38,7 +38,7 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                 .replace("//@ready-callback",
                         "this.masterWithMaster = true;\n" +
                         "this._focusEmbededView = function () {\n" +
-                        "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusView) {\n" +
+                        "    if (this.wasLoaded() && this.$.loader.loadedElement.focusView) {\n" +
                         "        this.$.loader.loadedElement.focusView();\n" +
                         "    }\n" +
                         "}.bind(this);\n" +
@@ -52,12 +52,12 @@ public abstract class AbstractMasterWithMaster<T extends AbstractEntity<?>> impl
                         "    return false;\n" +
                         "}.bind(self);\n" +
                         "this._focusNextEmbededView = function (e) {\n" +
-                        "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusNextView) {\n" +
+                        "    if (this.wasLoaded() && this.$.loader.loadedElement.focusNextView) {\n" +
                         "        this.$.loader.loadedElement.focusNextView(e);\n" +
                         "    }\n" +
                         "}.bind(this);\n" +
                         "this._focusPreviousEmbededView = function (e) {\n" +
-                        "    if (this.$.loader.loadedElement && this.$.loader.loadedElement.focusPreviousView) {\n" +
+                        "    if (this.wasLoaded() && this.$.loader.loadedElement.focusPreviousView) {\n" +
                         "        this.$.loader.loadedElement.focusPreviousView(e);\n" +
                         "    }\n" +
                         "}.bind(this);\n" +

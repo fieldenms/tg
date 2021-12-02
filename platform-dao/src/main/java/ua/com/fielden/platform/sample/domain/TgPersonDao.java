@@ -5,6 +5,9 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
+import java.util.regex.Pattern;
+
+import org.apache.commons.lang3.RegExUtils;
 import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
@@ -152,8 +155,9 @@ public class TgPersonDao extends CommonEntityDao<TgPerson> implements ITgPerson 
      * @param givenName
      * @return
      */
+    private static final Pattern letters = Pattern.compile("[^a-zA-Z0-9]");
     private static String letters(final String str, final int n) {
-        final String cleanUpperCase = str.replaceAll("[^a-zA-Z0-9]", "").toUpperCase();
+        final String cleanUpperCase = RegExUtils.removeAll(str, letters).toUpperCase();
         return cleanUpperCase.substring(0, n);
     }
 

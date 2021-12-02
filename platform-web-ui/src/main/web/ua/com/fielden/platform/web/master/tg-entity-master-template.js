@@ -1,4 +1,7 @@
 <!--@imports-->
+
+import '/resources/actions/tg-ui-action.js';
+
 import { TgEntityMasterTemplateBehavior, Polymer, html } from '/resources/master/tg-entity-master-template-behavior.js';
 import { TgReflector } from '/app/tg-reflector.js';
 
@@ -7,6 +10,19 @@ import { TgReflector } from '/app/tg-reflector.js';
 const template = html`<!-- TODO layout vertical -->
     <style include="tg-entity-master-styles"></style> <!-- imported as part of tg-entity-master-template-behavior to reduce the size of resultant generated file -->
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    <tg-ui-action
+        id="tgOpenMasterAction"
+        ui-role='ICON'
+        show-dialog='[[_showDialog]]'
+        toaster='[[toaster]]'
+        create-context-holder='[[_createContextHolder]]'
+        dynamic-action
+        attrs='[[_tgOpenMasterActionAttrs]]'
+        require-selection-criteria='false'
+        require-selected-entities='ONE'
+        require-master-entity='true'
+        hidden>
+    </tg-ui-action>
     <tg-entity-master
         id="masterDom"
         entity-type="[[entityType]]"

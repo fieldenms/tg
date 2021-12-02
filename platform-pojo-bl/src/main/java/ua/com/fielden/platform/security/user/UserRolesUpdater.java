@@ -6,6 +6,7 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
+import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
@@ -18,9 +19,10 @@ import ua.com.fielden.platform.entity.annotation.Title;
  * @author Developers
  *
  */
-@CompanionObject(IUserRolesUpdater.class)
-@MapEntityTo
+@CompanionObject(UserRolesUpdaterCo.class)
+@MapEntityTo // TODO check is this is necessary.
 @KeyTitle(value = "User Id", desc = "Id of user, whose 'roles' collection modifies by this functional action.")
+@DenyIntrospection
 public class UserRolesUpdater extends AbstractFunctionalEntityForCollectionModification<Long> {
     
     @IsProperty(UserRole.class)

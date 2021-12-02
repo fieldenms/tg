@@ -63,6 +63,7 @@ export const MarkerCluster = function (_map, _markerFactory, progressDiv, progre
         },
         chunkInterval: 5,
         chunkDelay: 5,
+        removeOutsideVisibleBounds: false, // true by default for performance reasons; but this leads to not very pleasant experience (especially on mobile) when dragging something from outside -- markers appear only after dragging is finished
 
         disableClusteringAtZoom: self.disableClusteringAtZoom(),
         maxClusterRadius: function (zoom) {

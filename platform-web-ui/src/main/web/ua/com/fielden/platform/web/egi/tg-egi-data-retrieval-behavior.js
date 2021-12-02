@@ -10,11 +10,11 @@ export const TgEgiDataRetrievalBehavior = {
     },
 
     isHyperlinkProp: function (entity, column) {
-        return column.type === 'Hyperlink' && this.getValueFromEntity(entity, column) !== null
+        return column.type === 'Hyperlink' && this.getValueFromEntity(entity, column) !== null;
     },
 
     isBooleanProp: function (entity, column) {
-        return column.type === 'Boolean' && this.getValueFromEntity(entity, column) !== null
+        return column.type === 'Boolean' && ['false', 'true'].includes(this.getBindedValue(entity, column)); // getBindedValue always returns 'true' or 'false' even if actual boolean value is null; this situation is possible for properties like 'lastUpdatedBy.base' where 'lastUpdatedBy' is null itself
     },
 
     isNotBooleanOrHyperlinkProp: function (entity, column) {
@@ -23,18 +23,22 @@ export const TgEgiDataRetrievalBehavior = {
 
     getAttachmentIfPossible: function (entity, column) {
         const valueFromEntity = this.getValueFromEntity(entity, column);
-        if (entity.type && entity.constructor.prototype.type.call(entity).notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
+        const isAttachmentType = entityObj => {
+            const entityTypeFunction = entityObj && entityObj.constructor.prototype.type;
+            return entityTypeFunction
+                && entityTypeFunction.call(entityObj)
+                && entityTypeFunction.call(entityObj).notEnhancedFullClassName
+                && entityTypeFunction.call(entityObj).notEnhancedFullClassName() === 'ua.com.fielden.platform.attachment.Attachment';
+        };
+        if (isAttachmentType(entity)) {
             return entity;
-        } else if (valueFromEntity && valueFromEntity.type &&
-            valueFromEntity.constructor.prototype.type.call(valueFromEntity).notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
+        } else if (isAttachmentType(valueFromEntity)) {
             return valueFromEntity;
-        } else if (this._reflector.entityPropOwner(this.getRealEntity(entity, column), this.getRealProperty(column))) {
+        } else {
             const owner = this._reflector.entityPropOwner(this.getRealEntity(entity, column), this.getRealProperty(column));
-            if (owner.type().notEnhancedFullClassName() === "ua.com.fielden.platform.attachment.Attachment") {
+            if (isAttachmentType(owner)) {
                 return owner;
             }
-            return null;
-        } else {
             return null;
         }
     },
@@ -69,7 +73,7 @@ export const TgEgiDataRetrievalBehavior = {
         if (entity === null || property === null || type === null) {
             return '';
         } else {
-            return this._reflector.tg_toString(entity.get(property), entity.type(), property, { display: true, locale: this._appConfig.locale });
+            return this._reflector.tg_toString(entity.get(property), entity.constructor.prototype.type.call(entity), property, { display: true, locale: this._appConfig.locale });
         }
     }
 

@@ -15,8 +15,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @DescTitle(value = "desc", desc = "desc description")
 public class SecondReferencedClass extends AbstractEntity<String> {
 
-    private static final long serialVersionUID = 6506434952610985044L;
-
     @IsProperty
     @Title(value = "value", desc = "description")
     private Reference<String> referenceProperty;

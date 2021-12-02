@@ -1,7 +1,8 @@
 package ua.com.fielden.platform.menu;
 
+import static java.util.Collections.unmodifiableList;
+
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -13,19 +14,18 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
 /**
- * Represents application's menu.
+ * Represents device-profile-specific application menu with tiles and actions on them.
  *
- * @author Developers
+ * @author TG Team
  *
  */
 @KeyType(String.class)
-@CompanionObject(IMenu.class)
+@CompanionObject(MenuCo.class)
 public class Menu extends AbstractEntity<String> implements IMenuManager {
-    private static final long serialVersionUID = 1L;
 
-    @IsProperty(Module.class)
+    @IsProperty(ModuleMenu.class)
     @Title("Menu")
-    private List<Module> menu = new ArrayList<Module>();
+    private List<ModuleMenu> menu = new ArrayList<>();
 
     @IsProperty
     @Title("Edit menu items")
@@ -126,18 +126,19 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
     }
 
     @Observable
-    public Menu setMenu(final List<Module> menu) {
+    public Menu setMenu(final List<ModuleMenu> menu) {
         this.menu.clear();
         this.menu.addAll(menu);
         return this;
     }
 
-    public List<Module> getMenu() {
-        return Collections.unmodifiableList(menu);
+    @Override
+    public List<ModuleMenu> getMenu() {
+        return unmodifiableList(menu);
     }
 
     @Override
-    public Optional<Module> getMenuItem(final String title) {
+    public Optional<ModuleMenu> getMenuItem(final String title) {
         return menu.stream().filter(menuItem -> menuItem.getKey().equals(title)).findFirst();
     }
 
@@ -148,6 +149,25 @@ public class Menu extends AbstractEntity<String> implements IMenuManager {
 
     @Override
     public void makeMenuItemInvisible(final String title) {
+    }
+
+    @Override
+    public void makeMenuItemSemiVisible(final String title) {
+    }
+
+    @Override
+    public String getTitle() {
+        return getKey();
+    }
+
+    @Override
+    public boolean isVisible() {
+        return true;
+    }
+
+    @Override
+    public boolean isSemiVisible() {
+        return false;
     }
 
 }

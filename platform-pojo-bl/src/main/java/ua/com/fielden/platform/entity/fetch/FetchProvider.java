@@ -1,10 +1,13 @@
 package ua.com.fielden.platform.entity.fetch;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.commonProperties;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnlyAndInstrument;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
@@ -15,6 +18,7 @@ import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.ID
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.KEY_AND_DESC;
 import static ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory.NONE;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
+import static ua.com.fielden.platform.reflection.Finder.streamProperties;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.firstAndRest;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
@@ -22,25 +26,26 @@ import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
-import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -361,6 +366,11 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
                 }
             }
         }
+        // enhance fetch provider with common property for each union type; if dotNotationProperty === "" then it is not present in common properties
+        if (isUnionEntityType(entityType) && commonProperties((Class<AbstractUnionEntity>) entityType).contains(isDotNotation(dotNotationProperty) ? firstAndRest(dotNotationProperty).getKey() : dotNotationProperty)) {
+            unionProperties((Class<AbstractUnionEntity>) entityType).stream()
+                .forEach(unionPropField -> enhanceWith0(unionPropField.getName() + "." + dotNotationProperty, propertyProvider));
+        }
         return this;
     }
     
@@ -439,8 +449,8 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
      * @return
      */
     private fetch<T> createFetchModel() {
-        // need to exclude all crit-only properties from fetch model!
-        final FetchProvider<T> providerWithoutCritOnlyProps = excludeCritOnlyProps(this);
+        // need to exclude all crit-only / common properties from fetch model
+        final FetchProvider<T> providerWithoutCritOnlyProps = excludeCritOnlyAndCommonProps(this);
         final Class<T> entityType = providerWithoutCritOnlyProps.entityType;
         fetch<T> fetchModel = instrumented ?
                 (KEY_AND_DESC == fetchCategory ? fetchKeyAndDescOnlyAndInstrument(entityType) : (ID_AND_VERSION == fetchCategory ? fetchOnlyAndInstrument(entityType) : fetchNoneAndInstrument(entityType))) :
@@ -457,15 +467,17 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
     }
 
     /**
-     * Excludes all crit-only properties from fetch provider, if any. Returns new instance.
+     * Excludes all crit-only / common properties from fetch provider, if any. Returns new instance.
      *
      * @param fetchProvider
      * @return
      */
-    private FetchProvider<T> excludeCritOnlyProps(final FetchProvider<T> fetchProvider) {
-        final List<Field> critOnlyFields = Finder.findProperties(entityType, CritOnly.class);
-        final List<String> critOnlyProps = critOnlyFields.stream().map(field -> field.getName()).collect(Collectors.toList());
-        return critOnlyProps.size() > 0 ? (FetchProvider<T>) fetchProvider.without(critOnlyProps.get(0), critOnlyProps.subList(1, critOnlyProps.size()).toArray(new String[0])) : fetchProvider;
+    private FetchProvider<T> excludeCritOnlyAndCommonProps(final FetchProvider<T> fetchProvider) {
+        final List<String> critOnlyAndCommonProps = streamProperties(entityType, CritOnly.class).map(field -> field.getName()).collect(toCollection(ArrayList::new));
+        if (isUnionEntityType(entityType)) {
+            critOnlyAndCommonProps.addAll(commonProperties((Class<? extends AbstractUnionEntity>) entityType));
+        }
+        return critOnlyAndCommonProps.size() > 0 ? (FetchProvider<T>) fetchProvider.without(critOnlyAndCommonProps.get(0), critOnlyAndCommonProps.subList(1, critOnlyAndCommonProps.size()).toArray(new String[0])) : fetchProvider;
     }
 
     @Override
@@ -589,6 +601,11 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
                 } else {
                     extendWithIdAndVersion(provider);
                     provider.addKeysTo0(restDotNotation, withDesc); // delegate 'withDesc' parameter further down to dot-notated child
+                    // enhance fetch provider with common property for each union type
+                    if (isUnionEntityType(entityType) && commonProperties((Class<AbstractUnionEntity>) entityType).contains(firstName)) {
+                        unionProperties((Class<AbstractUnionEntity>) entityType).stream()
+                            .forEach(unionPropField -> addKeysTo0(unionPropField.getName() + "." + dotNotationProperty, withDesc));
+                    }
                     return this;
                 }
             } else {
@@ -611,6 +628,7 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
             if (withDesc && hasDescProperty(entityType)) { // fetch description only if the API call requires that (withDesc == true) and entity type has description property in it
                 enhanceWith(DESC);
             }
+            // no need to enhance fetch provider with common property -- "" is never common
             return this;
         }
     }

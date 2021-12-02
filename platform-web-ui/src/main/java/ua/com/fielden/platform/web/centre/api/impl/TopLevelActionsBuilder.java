@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
+import static java.lang.String.format;
+
 import java.util.Optional;
 import java.util.function.BiConsumer;
 
@@ -13,8 +15,11 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCritKindSelector;
 import ua.com.fielden.platform.web.centre.api.resultset.IDynamicColumnBuilder;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aEgiIconStyle;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bCheckbox;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cToolbar;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dScroll;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eDraggable;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1fPageCapacity;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1gMaxPageCapacity;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1hHeaderWrap;
@@ -22,7 +27,6 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1iVisib
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1jFitBehaviour;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1kRowHeight;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eDraggable;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3Ordering;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4aWidth;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderAlsoDynamicProps;
@@ -34,6 +38,7 @@ import ua.com.fielden.platform.web.centre.api.top_level_actions.IAlsoCentreTopLe
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActions;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsInGroup;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsInGroup0;
+import ua.com.fielden.platform.web.centre.exceptions.EntityCentreConfigurationException;
 
 /**
  * A package private helper class to decompose the task of implementing the Entity Centre DSL. It has direct access to protected fields in {@link EntityCentreBuilder}.
@@ -84,15 +89,15 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     @Override
     public ISelectionCritKindSelector<T> addCrit(final String propName) {
         if (StringUtils.isEmpty(propName)) {
-            throw new IllegalArgumentException("Property name should not be empty.");
+            throw new EntityCentreConfigurationException("Property name should not be empty.");
         }
 
         if (!"this".equals(propName) && !EntityUtils.isProperty(this.builder.getEntityType(), propName)) {
-            throw new IllegalArgumentException(String.format("Provided value '%s' is not a valid property expression for entity '%s'", propName, builder.getEntityType().getSimpleName()));
+            throw new EntityCentreConfigurationException(format("Property expression [%s] is not valid for entity [%s].", propName, builder.getEntityType().getSimpleName()));
         }
 
         if (builder.selectionCriteria.contains(propName)) {
-            throw new IllegalArgumentException(String.format("Provided value '%s' has been already added as a selection criterion for entity '%s'", propName, builder.getEntityType().getSimpleName()));
+            throw new EntityCentreConfigurationException(format("Property [%s] has been already added to the selection critera for entity [%s].", propName, builder.getEntityType().getSimpleName()));
         }
 
         builder.currSelectionCrit = Optional.of(propName);
@@ -183,5 +188,15 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     @Override
     public IResultSetBuilder1iVisibleRowsCount<T> wrapHeader(final int headerLineNumber) {
         return new ResultSetBuilder<>(builder).wrapHeader(headerLineNumber);
+    }
+
+    @Override
+    public IResultSetBuilder1bCheckbox<T> hideEgi() {
+        return new ResultSetBuilder<>(builder).hideEgi();
+    }
+
+    @Override
+    public IResultSetBuilder1aEgiIconStyle<T> withGridViewIcon(final String icon) {
+        return new ResultSetBuilder<>(builder).withGridViewIcon(icon);
     }
 }

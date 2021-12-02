@@ -8,6 +8,7 @@ import '/resources/polymer/@polymer/iron-selector/iron-selector.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
 import { afterNextRender } from "/resources/polymer/@polymer/polymer/lib/utils/render-status.js";
+import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 /* Paper elements */
 import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/polymer/@polymer/app-layout/app-drawer-layout/app-drawer-layout.js';
@@ -19,7 +20,7 @@ import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
 import '/resources/polymer/@polymer/paper-toolbar/paper-toolbar.js';
 /* TG ELEMENTS */
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
-import { isInHierarchy, deepestActiveElement, tearDownEvent, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
+import { getKeyEventTarget, isInHierarchy, deepestActiveElement, tearDownEvent, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import '/app/tg-app-config.js';
 import '/resources/components/postal-lib.js';
@@ -86,7 +87,7 @@ const template = html`
     <tg-app-config id="appConfig"></tg-app-config>
     <slot id="menuItemActions" name="menu-item-action"></slot>
 
-    <app-drawer-layout id="drawerPanel" fullbleed>
+    <app-drawer-layout id="drawerPanel" fullbleed on-app-drawer-transitioned="_appDrawerTransitioned">
         <app-drawer id="drawer" disable-swipe="[[!mobile]]" slot="drawer">
             <paper-listbox id="menu" attr-for-selected="data-route" selected="{{route}}" style="height: 100%; overflow: auto;">
                 <slot id="menuItems" name="menu-item"></slot>
@@ -99,14 +100,6 @@ const template = html`
         </div>
     </app-drawer-layout>
 `;
-
-const getKeyEventTarget = function (startFrom) {
-    let parent = startFrom;
-    while (parent && parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG') {
-        parent = parent.parentElement || parent.getRootNode().host;
-    }
-    return parent || startFrom;
-};
 
 const findMenuItemSection = function (path) {
     return path.find(element => element.tagName === "TG-MASTER-MENU-ITEM-SECTION");
@@ -147,8 +140,17 @@ Polymer({
             type: Object
         },
 
-        /* A menu route that should be activated when the master gets shoe*/
+        /**
+         * A menu route that should be activated when the master gets shown. This can be changed (comparing to '_originalDefaultRoute') after compound opener retrieval (producer domain-specific logic) or on 'modifyFunctionalEntity' callback (see tg-app-template._tgOpenMasterAction).
+         */
         defaultRoute: {
+            type: String
+        },
+
+        /**
+         * Original immutable default menu route used in compound master definition. In most cases it is Main menu item entity type (simple name) e.g. 'PersonMaster_OpenMain_MenuItem'.
+         */
+        _originalDefaultRoute: {
             type: String
         },
 
@@ -241,7 +243,7 @@ Polymer({
         }
     },
 
-    behaviors: [ IronA11yKeysBehavior, TgFocusRestorationBehavior ],
+    behaviors: [ IronA11yKeysBehavior, TgFocusRestorationBehavior, IronResizableBehavior ],
 
     listeners: {
         transitionend: '_onTransitionEnd'
@@ -256,6 +258,7 @@ Polymer({
     },
 
     ready: function () {
+        this._originalDefaultRoute = this.defaultRoute; // at this stage 'defaultRoute' is present; it generates in MasterWithMenu like this: [default-route='PersonMaster_OpenMain_MenuItem']
         const self = this;
         self._createContextHolderForMenu = (function () {
             const contextHolder = this._reflector.createContextHolder(
@@ -386,18 +389,23 @@ Polymer({
         });
         //Configure key event target for menu triggering.
         self.async(function () {
-            self.keyEventTarget = getKeyEventTarget(self);
+            self.keyEventTarget = getKeyEventTarget(self, self);
         }, 1);
         //Reset narrow state to remove no-transition attribute
         afterNextRender(this, () => {
             this.$.drawerPanel._narrowChanged();
         });
+        this._cachedParentNode = this.parentNode;
+        this.fire('tg-master-menu-attached', this, { node: this._cachedParentNode }); // as in 'detached', start bubbling on parent node
     },
 
     detached: function () {
         while (this._subscriptions.length !== 0) {
             this._subscriptions.pop().unsubscribe();
         }
+        this.defaultRoute = this._originalDefaultRoute; // return original value after detaching; this is necessary in case where the same instance of 'tg-master-menu' (and the same instance of parent master) is used for different actions
+        this.fire('tg-master-menu-detached', this, { node: this._cachedParentNode }); // start event bubbling on previous parent node from which this entity master has already been detached
+        delete this._cachedParentNode; // remove reference on previous _cachedParentNode to facilitate possible releasing of parentNode from memory
     },
 
     _entityChanged: function (newBindingEntity, oldOne) {
@@ -525,6 +533,12 @@ Polymer({
                 }
             }
         }
+    },
+
+    _appDrawerTransitioned: function () {
+        // need to notify tg-master-menu's content about possible resizing after drawer transition ended;
+        // this should facilitate proper resizing of, e.g., 'tg-responsive-toolbar' containing in embedded centre
+        this.notifyResize();
     },
 
     _sectionTitleChanged: function (newValue, oldValue) {

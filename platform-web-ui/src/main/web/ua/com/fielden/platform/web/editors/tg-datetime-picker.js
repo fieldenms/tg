@@ -17,6 +17,9 @@ import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js'
 import { _momentTz, timeZoneFormats } from '/resources/reflection/tg-date-utils.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js'
 
+const AFTER = 'AFTER';
+const BEFORE = 'BEFORE';
+
 const pickerStyle = html`
     <custom-style>
         <style>
@@ -120,77 +123,20 @@ export class TgDatetimePicker extends TgEditor {
             /**
              * The formats for approximation. The order of this array is important -- it defines the order in which formats are tried during approximation.
              */
-            _formats: {
-                type: Array,
-                value: function () {
-                    return [
-                        'L LTS',
-                        'D/M/YYYY h:m:ss.SSSa',
-                        'D/M/YY h:m:ss.SSSa',
-                        'D/M/Y h:m:ss.SSSa',
-                        'D/M/YYYY H:m:ss.SSS',
-                        'D/M/YY H:m:ss.SSS',
-                        'D/M/Y H:m:ss.SSS',
-                        'L LT',
-                        'D/M/YYYY hmma',
-                        'D/M/YY hmma',
-                        'D/M/Y hmma',
-                        'D/M/YYYY Hmm',
-                        'D/M/YY Hmm',
-                        'D/M/Y Hmm',
-                        'D/M/YYYY h:ma',
-                        'D/M/YY h:ma',
-                        'D/M/Y h:ma',
-                        'D/M/YYYY H:m',
-                        'D/M/YY H:m',
-                        'D/M/Y H:m',
-                        'D/M/YYYY ha',
-                        'D/M/YY ha',
-                        'D/M/Y ha',
-                        'D/M/YYYY H',
-                        'D/M/YY H',
-                        'D/M/Y H',
-                        'D/M/YYYY',
-                        'D/M/YY',
-                        'D/M/Y'
-                    ];
-                }
-            },
-    
-            /**
-             * The formats for approximation. The order of this array is important -- it defines the order in which formats are tried during approximation.
-             */
             _timePortionFormats: {
                 type: Array,
                 value: function () {
                     return [
-                        'LTS',
                         'h:m:ss.SSSa',
                         'H:m:ss.SSS',
-                        'LT',
+                        'LTS', // e.g. HH:mm:ss.SSS
+                        'LT', // e.g. HH:mm
                         'hmma',
                         'Hmm',
                         'h:ma',
                         'H:m',
                         'ha',
-                        'H',
-                        'T', //Means today,
-                        't', //Means today
-                        'N',  //Means now
-                        'n' //Means now
-                    ];
-                }
-            },
-    
-            /**
-             * The date picker literals for date approximaton.
-             */
-            _literals: {
-                type: Array,
-                value: function () {
-                    return [
-                        'T',
-                        'N'
+                        'H'
                     ];
                 }
             },
@@ -209,7 +155,6 @@ export class TgDatetimePicker extends TgEditor {
         super();
         moment.parseTwoDigitYear = function (input) {
             var currYear = moment().year();
-            console.debug('parseTwoDigitYear: [', input, '] currYear ', currYear);
             return parseInt(input, 10) + ((parseInt(input, 10) < currYear - 2000 + 30) ? 2000 : 1900);
         };
     }
@@ -218,7 +163,6 @@ export class TgDatetimePicker extends TgEditor {
      * Converts the value from string representation (which is used in editing / comm values) into concrete type of this editor component (Number).
      */
     convertFromString (strValue) {
-        // console.log(moment.localeData().longDateFormat("LT").toLowerCase().indexOf("a"));
         if (strValue) {
             if (this._validMoment !== null) {
                 return this._validMoment.valueOf();
@@ -324,7 +268,7 @@ export class TgDatetimePicker extends TgEditor {
 
         const dialogTemplate = document.createElement('template');
         dialogTemplate.innerHTML =
-            '<paper-dialog id="dateDialog" class="date-picker layout vertical" modal entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind" on-iron-overlay-opened="_dialogOpened">' +
+            '<paper-dialog id="dateDialog" class="date-picker layout vertical" modal always-on-top entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-closed="_closedBind" on-iron-overlay-opened="_dialogOpened">' +
             '<tg-calendar id="datePicker" pick-time time-zone="[[timeZone]]"></tg-calendar>' +
             '<div class="buttons">' +
             '<paper-button dialog-dismiss affirmative>Cancel</paper-button>' +
@@ -359,59 +303,106 @@ export class TgDatetimePicker extends TgEditor {
     }
 
     /**
-     * Approximates the 'dateEditingValue' using registered '_formats' to the standard form like [09/09/2002 11:03 AM].
+     * Approximates the 'dateEditingValue' using formats, generated according to current datePortionFormat, to the standard form like [09/09/2002 11:03:03.003].
      * If approximation is failed -- returns the same 'dateEditingValue'.
      */
     _approximate (dateEditingValue) {
         this._validMoment = null;
         if (dateEditingValue) {
-            const firstSlashIndex = dateEditingValue.indexOf('/');
-            if (firstSlashIndex > -1) {
-                // remove all spaces and insert one after year digits (or [ /2017] or other current year in case of one slash)
-                const numberOfDigitsAfterLastSlash = this._calculateNumberOfDigitsAfterLastSlash(dateEditingValue);
-                const numberOfDigits = numberOfDigitsAfterLastSlash.number;
-                let aproximated = undefined;
-                if (numberOfDigitsAfterLastSlash.secondSlashExists === true) { // exactly two slashes
-                    // If numberOfDigitsAfterSecondSlash equals 3, 5 or more -- the string could be potentially valid in formats like '../../Y ...'
-                    // But they should not be valid. Only 1, 2 and 4 digits for years should be valid.
-                    if (numberOfDigits === 1 || numberOfDigits === 2 || numberOfDigits === 4) {
-                        aproximated = this._approximateWithNumberOfDigits(dateEditingValue, numberOfDigits);
-                    }
-                } else { // exactly one slash
-                    // If numberOfDigitsAfterFirstSlash equals 1 or 2 -- it could be represented as valid digits for month.
-                    if (numberOfDigits === 1 || numberOfDigits === 2) {
-                        aproximated = this._approximateWithNumberOfDigits(dateEditingValue, numberOfDigits);
-                    }
-                }
-                if (aproximated !== undefined) {
-                    return aproximated;
-                }
-            } else if (this._isLiteral(dateEditingValue)) {
-                this._validMoment = this._tryLiterals(dateEditingValue);
+            const valueWithoutSpaces = dateEditingValue.replace(new RegExp(' ', 'g'), '').trim();
+            if (valueWithoutSpaces) {
+                // at first, check literals:
+                this._validMoment = this._tryLiterals(valueWithoutSpaces);
                 if (this._validMoment !== null) {
                     return this.convertToString(this._validMoment.valueOf());
                 }
-            } else if (this.timeZone === 'UTC' && dateEditingValue.indexOf('-') >= 0) { //As the last resort try utc formatting
-                this._validMoment = this._tryUTCFormats(dateEditingValue);
+                // determine current date portion format for this editor ...
+                const datePortionFormat = this.timeZone ? timeZoneFormats[this.timeZone]['L'] : moment.localeData().longDateFormat('L');
+                // ... and its separator;
+                const separator = datePortionFormat.includes('/') ? '/' : datePortionFormat.includes('-') ? '-' : null;
+                // validate separator and ...
+                if (!separator) {
+                    throw new Error(`Date format [${datePortionFormat}] separator is not supported.`);
+                }
+                const yearsOnEnding = datePortionFormat[0] !== 'Y';
+                // ... placing of the years portion;
+                if (yearsOnEnding && datePortionFormat[datePortionFormat.length - 1] !== 'Y') {
+                    throw new Error(`Placing of years in date format [${datePortionFormat}] is not supported. Years are only supported on beginning and ending of date format (not in the middle).`);
+                }
+                const firstSeparatorIndex = dateEditingValue.indexOf(separator);
+                if (firstSeparatorIndex > -1) {
+                    // if there is at least one separator then date portion is present;
+                    //  (please be careful when adding '.' as date portion separator -- it is used to separate seconds from millis in 'ss.SSS')
+                    const { secondSeparatorExists, numberOfDigits } = this._calculateNumberOfDigitsAfterLastSeparator(dateEditingValue, separator);
+                    if (
+                        secondSeparatorExists === true && [1, 2, 4].includes(yearsOnEnding ? numberOfDigits : this._calculateNumberOfDigits(dateEditingValue, BEFORE, firstSeparatorIndex)) // exactly two separators; only 1, 2 and 4 digits for years should be valid
+                        || secondSeparatorExists === false && [1, 2].includes(numberOfDigits) // exactly one separator; only 1 and 2 digits for months / days should be valid (numberOfDigitsAfterFirstSeparator)
+                    ) {
+                        // remove all spaces and insert one after year digits (or [ /2017] or other current year in case of one separator);
+                        const valueWithOneSpaceAndYear = this._insertOneSpaceAndYear(valueWithoutSpaces, numberOfDigits, separator, yearsOnEnding).trim(); // never empty -- at least one separator exists
+                        // try combined date & time formats for approximation:
+                        const datePortionFormats = this._datePortionApproximationFormatsFor(datePortionFormat, separator);
+                        this._validMoment = this._tryFormats(valueWithOneSpaceAndYear, this._approximationFormatsFor(datePortionFormat, separator), (stringValue, validMoment, format) => {
+                            const indexOfY = format.indexOf('Y');
+                            let adjustedMoment = validMoment;
+                            if (indexOfY > -1 && format.indexOf('Y', indexOfY + 1) === -1) { // only one Y in the format
+                                const strWithDoubleDigitYear = this._convertToDoubleDigitYear(stringValue, indexOfY === 0 ? 0 : this._findSecondSeparatorIndex(stringValue, separator) + 1);
+                                adjustedMoment = _momentTz(strWithDoubleDigitYear, format.replace('Y', 'YY'), true, this.timeZone);
+                            }
+                            if (datePortionFormats.indexOf(format) !== -1 && this.timePortionToBecomeEndOfDay === true) {
+                                adjustedMoment.add(1, 'days').subtract(1, 'milliseconds'); // even though original validMoment can be mutated here, it will not be used anywhere else; so it is safe to do this mutation
+                            }
+                            return adjustedMoment;
+                        });
+                    }
+                } else {
+                    // if there is no separator then only time portion is present;
+                    // try time formats only for approximation:
+                    this._validMoment = this._tryFormats(valueWithoutSpaces, this._timePortionFormats.slice() /* the copy is made  */);
+                }
                 if (this._validMoment !== null) {
                     return this.convertToString(this._validMoment.valueOf());
-                }
-            } else {
-                const value = dateEditingValue.replace(new RegExp(' ', 'g'), '').trim();
-                if (value) {
-                    this._validMoment = this._tryTimePortionFormats(value, this._timePortionFormats.slice() /* the copy is made  */);
-                    if (this._validMoment !== null) {
-                        return this.convertToString(this._validMoment.valueOf());
-                    }
                 }
             }
         }
         return dateEditingValue;
     }
 
-    _isLiteral (value) {
-        const upperCasedValue = value[0].toUpperCase();
-        return this._literals.indexOf(upperCasedValue) >= 0;
+    /**
+     * Generates approximation formats for date portion from default date portion format and its separator.
+     * Only 'MM', 'DD' and 'YYYY' parts are supported. Only '/' and '-' separators are supported.
+     */
+    _datePortionApproximationFormatsFor (datePortionFormat, separator) {
+        const parts = datePortionFormat.split(separator);
+        const partFormats = part => part.length === 2 ? part[0].toUpperCase() : ['YYYY', 'YY', 'Y']; // converts from 'MM' to 'M'; from 'DD' to 'D'; and from 'YYYY' to ['YYYY', 'YY', 'Y']
+        const first = partFormats(parts[0]);
+        const second = partFormats(parts[1]);
+        const third = partFormats(parts[2]);
+        
+        const datePortionFormats = [
+            'L'
+        ];
+        if (Array.isArray(first)) {
+            first.forEach(f => datePortionFormats.push(f + separator + second + separator + third));
+        } else if (Array.isArray(second)) {
+            second.forEach(s => datePortionFormats.push(first + separator + s + separator + third));
+        } else {
+            third.forEach(t => datePortionFormats.push(first + separator + second + separator + t));
+        }
+        return datePortionFormats;
+    }
+
+    /**
+     * Generates full date & time approximation formats from default date portion format and its separator.
+     * Only 'MM', 'DD' and 'YYYY' parts are supported. Only '/' and '-' separators are supported.
+     * _timePortionFormats are not included.
+     */
+     _approximationFormatsFor (datePortionFormat, separator) {
+        const resultFormats = [];
+        const datePortionFormats = this._datePortionApproximationFormatsFor(datePortionFormat, separator);
+        this._timePortionFormats.forEach(tpFormat => datePortionFormats.forEach(dpFormat => resultFormats.push(dpFormat + ' ' + tpFormat))); // date and time combined
+        datePortionFormats.forEach(dpFormat => resultFormats.push(dpFormat));  // date only
+        return resultFormats;
     }
 
     _tryLiterals (editingValue) {
@@ -434,144 +425,91 @@ export class TgDatetimePicker extends TgEditor {
         return null;
     }
 
-    _approximateWithNumberOfDigits (dateEditingValue, numberOfDigits) {
-        const value = this._insertOneSpace(dateEditingValue.replace(new RegExp(' ', 'g'), ''), numberOfDigits).trim();
-        if (value) {
-            this._validMoment = this._tryFormats(value, this._formats.slice() /* the copy is made  */);
-            if (this._validMoment !== null) {
-                return this.convertToString(this._validMoment.valueOf());
-            }
-        }
-        return undefined;
-    }
-
-    /**
-     * Tries UTC formats one by one and returns valid moment or null if there are no appropriate format.
-     */
-    _tryUTCFormats (stringValue) {
-        const timeZone = this.timeZone;
-        const tryingMoment = Object.values(timeZoneFormats['UTC'])
-            .map(f => _momentTz(stringValue, f, true, timeZone))
-            .find(m => m.isValid());
-        return tryingMoment ? tryingMoment : null;
-    }
-
     /**
      * Tries the formats one-by-one and returns the valid 'moment' object in case where some format has been successed.
      * In case of all formats failure -- returns 'null'.
+     * 
+     * @param adjustValidMoment -- function with parameters (stringValue, validMoment, format) to adjust 'validMoment', that is valid in 'format', to some other custom valid moment
      */
-    _tryFormats (stringValue, formats) {
+    _tryFormats (stringValue, formats, adjustValidMoment) {
         if (formats.length === 0) {
             return null;
         } else {
-            console.debug('formats', formats);
             const firstFormat = formats[0];
             let tryingMoment = _momentTz(stringValue, firstFormat, true, this.timeZone);
             if (tryingMoment.isValid()) {
-                if (['D/M/Y H:m:ss.SSS', 'D/M/Y h:m:ss.SSSa', 'D/M/Y hmma', 'D/M/Y Hmm', 'D/M/Y h:ma', 'D/M/Y H:m', 'D/M/Y ha', 'D/M/Y H', 'D/M/Y'].indexOf(firstFormat) !== -1) {
-                    tryingMoment = _momentTz(this._convertToDoubleDigitYear(stringValue), firstFormat.replace('D/M/Y', 'D/M/YY'), true, this.timeZone);
-                }
-                if (['D/M/YYYY', 'D/M/YY', 'D/M/Y'].indexOf(firstFormat) !== -1 && this.timePortionToBecomeEndOfDay === true) {
-                    tryingMoment.add(1, 'days').subtract(1, 'milliseconds');
+                if (adjustValidMoment) {
+                    return adjustValidMoment(stringValue, tryingMoment, firstFormat);
                 }
                 return tryingMoment;
             } else {
                 formats.shift(); // first element is removed
-                return this._tryFormats(stringValue, formats);
+                return this._tryFormats(stringValue, formats, adjustValidMoment);
             }
         }
     }
 
-    /**
-     * Tries time portion formats one-by-one and returns the valid 'moment' object in case where some format has been successed.
-     * In case of all formats failure -- returns 'null'.
-     */
-    _tryTimePortionFormats (stringValue, formats) {
-        if (formats.length === 0) {
-            return null;
-        } else {
-            console.debug('time portion formats', formats);
-            var firstFormat = formats[0];
-            var tryingMoment = _momentTz(stringValue, firstFormat, true, this.timeZone);
-            if (tryingMoment.isValid()) {
-                return tryingMoment;
-            } else {
-                formats.shift(); // first element is removed
-                return this._tryFormats(stringValue, formats);
-            }
-        }
+    _convertToDoubleDigitYear (oneDigitYearString, indexOfY) {
+        return oneDigitYearString.slice(0, indexOfY) + '0' + oneDigitYearString.slice(indexOfY);
     }
 
-    _convertToDoubleDigitYear (oneDigitYearString) {
-        var insertionPoint = this._findSecondSlashIndex(oneDigitYearString) + 1;
-        return oneDigitYearString.slice(0, insertionPoint) + "0" + oneDigitYearString.slice(insertionPoint);
-    }
-
-    _findSecondSlashIndex (str) {
-        var firstSlashIndex = str.indexOf('/');
-        if (firstSlashIndex === -1) {
+    _findSecondSeparatorIndex (str, separator) {
+        const firstSeparatorIndex = str.indexOf(separator);
+        if (firstSeparatorIndex === -1) {
             return -1;
         } else {
-            var secondSlashIndex = str.indexOf('/', firstSlashIndex + 1);
-            if (secondSlashIndex === -1) {
-                return -1;
-            }
-            return secondSlashIndex;
+            return str.indexOf(separator, firstSeparatorIndex + 1);
         }
     }
 
-    _calculateNumberOfDigitsAfterLastSlash (str) {
-        var secondSlashIndex = this._findSecondSlashIndex(str);
-        var numberOfDigits = null;
-        if (secondSlashIndex === -1) {
-            var firstSlashIndex = str.indexOf('/');
-            numberOfDigits = this._calculateNumberOfDigitsAfterIndex(str, firstSlashIndex);
+    _calculateNumberOfDigitsAfterLastSeparator (str, separator) {
+        const secondSeparatorIndex = this._findSecondSeparatorIndex(str, separator);
+        let numberOfDigits;
+        if (secondSeparatorIndex === -1) {
+            numberOfDigits = this._calculateNumberOfDigits(str, AFTER, str.indexOf(separator));
         } else {
-            numberOfDigits = this._calculateNumberOfDigitsAfterIndex(str, secondSlashIndex);
+            numberOfDigits = this._calculateNumberOfDigits(str, AFTER, secondSeparatorIndex);
         }
         return {
-            secondSlashExists: secondSlashIndex > -1,
-            number: numberOfDigits
+            secondSeparatorExists: secondSeparatorIndex > -1,
+            numberOfDigits: numberOfDigits
         };
     }
 
-    _calculateNumberOfDigitsAfterIndex (str, slashIndex) {
-        if (slashIndex === -1) {
-            throw '_calculateNumberOfDigitsAfterIndex: index of slash should not be -1.';
+    /**
+     * Calculates number of digits before / after separator meaning that we count from first / last separator in appropriate direction until the space or end of string.
+     */
+    _calculateNumberOfDigits (str, afterOrBefore, separatorIndex) {
+        if (separatorIndex === -1) {
+            throw `_calculateNumberOfDigits[${afterOrBefore} separator index]: index of separator should not be -1.`;
         }
-        var numberOfDigits = 0;
-        for (var index = slashIndex + 1; index < str.length; index++) {
-            if (' ' === str[index]) {
-                if (numberOfDigits > 0) {
-                    return numberOfDigits;
-                }
-            } else {
-                // assuming that not ' ' is a digit
-                numberOfDigits++;
-            }
-        }
-        return numberOfDigits;
+        const strWithSpaces = (afterOrBefore === AFTER ? str.substring(separatorIndex + 1) : str.substring(0, separatorIndex)).trim();
+        const split = strWithSpaces.split(' ');
+        const strWithoutSpaces = split[afterOrBefore === AFTER ? 0 : split.length - 1];
+        return strWithoutSpaces.length;
     }
 
     /**
-     * Inserts one space after year digits (two slashes exist) or '/currYear ' after month digits (one slash exists).
+     * Inserts one space after last digits after last separator; inserts 'currYear' with space if years are not present (one separator).
      */
-    _insertOneSpace (strWithoutSpaces, numberOfDigitsAfterLastSlash) {
-        if (numberOfDigitsAfterLastSlash === 0) {
+    _insertOneSpaceAndYear (strWithoutSpaces, numberOfDigitsAfterLastSeparator, separator, yearsOnEnding) {
+        if (numberOfDigitsAfterLastSeparator === 0) {
             return strWithoutSpaces;
         } else {
-            var secondSlashIndex = this._findSecondSlashIndex(strWithoutSpaces);
-            if (secondSlashIndex === -1) { // in this case, one slash could exist. Then need to insert current year after it.
-                var firstSlashIndex = strWithoutSpaces.indexOf('/');
-                if (firstSlashIndex === -1) {
+            const secondSeparatorIndex = this._findSecondSeparatorIndex(strWithoutSpaces, separator);
+            if (secondSeparatorIndex === -1) { // in this case, one separator could exist. Then need to insert current year.
+                const firstSeparatorIndex = strWithoutSpaces.indexOf(separator);
+                if (firstSeparatorIndex === -1) {
                     return strWithoutSpaces;
                 } else {
-                    var insertionPoint = firstSlashIndex + numberOfDigitsAfterLastSlash + 1;
-                    var currYearStr = _momentTz(this.timeZone).format('YYYY');
-                    return strWithoutSpaces.slice(0, insertionPoint) + '/' + currYearStr + ' ' + strWithoutSpaces.slice(insertionPoint);
+                    const insertionPoint = firstSeparatorIndex + numberOfDigitsAfterLastSeparator + 1;
+                    const currYearStr = _momentTz(this.timeZone).format('YYYY');
+                    return yearsOnEnding // years are only supported on beginning and ending of datePortionFormat (not in the middle, like MM-YYYY-DD)
+                        ? strWithoutSpaces.slice(0, insertionPoint) + separator + currYearStr + ' ' + strWithoutSpaces.slice(insertionPoint)
+                        : currYearStr + separator + strWithoutSpaces.slice(0, insertionPoint) + ' ' + strWithoutSpaces.slice(insertionPoint)
                 }
             }
-            var insertionPoint = secondSlashIndex + numberOfDigitsAfterLastSlash + 1;
+            const insertionPoint = secondSeparatorIndex + numberOfDigitsAfterLastSeparator + 1;
             return strWithoutSpaces.slice(0, insertionPoint) + ' ' + strWithoutSpaces.slice(insertionPoint);
         }
     }

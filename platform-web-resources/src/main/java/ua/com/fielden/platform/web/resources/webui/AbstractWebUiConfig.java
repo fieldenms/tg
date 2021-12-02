@@ -1,7 +1,15 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.ResourceLoader.getStream;
+import static ua.com.fielden.platform.web.action.CentreConfigShareActionProducer.createPostAction;
+import static ua.com.fielden.platform.web.action.CentreConfigShareActionProducer.createPreAction;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.getDefaultCentre;
+import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
+import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
 
 import java.util.ArrayList;
@@ -12,6 +20,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Logger;
 
@@ -20,32 +30,32 @@ import com.google.inject.Injector;
 
 import ua.com.fielden.platform.attachment.AttachmentPreviewEntityAction;
 import ua.com.fielden.platform.basic.config.Workflows;
-import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityDeleteActionProducer;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityExportAction;
-import ua.com.fielden.platform.entity.EntityNavigationAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.menu.Menu;
 import ua.com.fielden.platform.menu.MenuSaveAction;
 import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchy;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
-import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig;
 import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.app.config.WebUiBuilder;
+import ua.com.fielden.platform.web.centre.CentreConfigShareAction;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.exceptions.EntityCentreConfigurationException;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.ioc.exceptions.MissingWebResourceException;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
-import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
@@ -74,6 +84,10 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private final Workflows workflow;
     private final Map<String, String> checksums;
     private final boolean independentTimeZone;
+    /**
+     * Holds the map between embedded entity centre's menu item type and [entity centre; entity master] pair.
+     */
+    private Map<Class<? extends MiWithConfigurationSupport<?>>, T2<EntityCentre<?>, EntityMaster<? extends AbstractEntity<?>>>> embeddedCentreMap;
 
     /**
      * Creates abstract {@link IWebUiConfig}.
@@ -119,12 +133,12 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     public void initConfiguration() {
         final EntityMaster<EntityNewAction> genericEntityNewActionMaster = StandardMastersWebUiConfig.createEntityNewMaster(injector());
         final EntityMaster<EntityEditAction> genericEntityEditActionMaster = StandardMastersWebUiConfig.createEntityEditMaster(injector());
-        final EntityMaster<EntityNavigationAction> genericEntityNavigationActionMaster = StandardMastersWebUiConfig.createEntityNavigationMaster(injector());
         final EntityMaster<ReferenceHierarchy> genericReferenceHierarchyMaster = ReferenceHierarchyWebUiConfig.createReferenceHierarchyMaster(injector());
         final EntityMaster<EntityExportAction> genericEntityExportActionMaster = StandardMastersWebUiConfig.createExportMaster(injector());
         final EntityMaster<AttachmentPreviewEntityAction> attachmentPreviewMaster = StandardMastersWebUiConfig.createAttachmentPreviewMaster(injector());
         final EntityMaster<EntityDeleteAction> genericEntityDeleteActionMaster = EntityMaster.noUiFunctionalMaster(EntityDeleteAction.class, EntityDeleteActionProducer.class, injector());
         final EntityMaster<MenuSaveAction> genericMenuSaveMaster = EntityMaster.noUiFunctionalMaster(MenuSaveAction.class, injector());
+        final UserMenuVisibilityAssociatorWebUiConfig userMenuAssociatorWebUiConfig = new UserMenuVisibilityAssociatorWebUiConfig(injector);
         final CentreConfigurationWebUiConfig centreConfigurationWebUiConfig = new CentreConfigurationWebUiConfig(injector());
 
         AcknowledgeWarningsWebUiConfig.register(injector(), configApp()); // generic TG functionality for warnings acknowledgement
@@ -133,21 +147,24 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         // register generic actions
         .addMaster(genericEntityNewActionMaster)
         .addMaster(genericEntityEditActionMaster)
-        .addMaster(genericEntityNavigationActionMaster)
         .addMaster(genericReferenceHierarchyMaster)
         .addMaster(attachmentPreviewMaster)
         .addMaster(genericEntityDeleteActionMaster)
         .addMaster(genericEntityExportActionMaster)
         .addMaster(genericMenuSaveMaster)
         .addMaster(new MenuWebUiConfig(injector(), desktopMainMenuConfig, mobileMainMenuConfig).master)
+        .addMaster(userMenuAssociatorWebUiConfig.master)
         // centre configuration management
-        .addMaster(centreConfigurationWebUiConfig.centreConfigUpdater)
-        .addMaster(centreConfigurationWebUiConfig.centreColumnWidthConfigUpdater)
+        .addMaster(centreConfigurationWebUiConfig.centreConfigUpdaterMaster)
+        .addMaster(centreConfigurationWebUiConfig.centreColumnWidthConfigUpdaterMaster)
+        .addMaster(centreConfigurationWebUiConfig.centrePreferredViewUpdaterMaster)
         // centre config actions
+        .addMaster(centreConfigurationWebUiConfig.centreConfigShareActionMaster)
         .addMaster(centreConfigurationWebUiConfig.centreConfigNewActionMaster)
         .addMaster(centreConfigurationWebUiConfig.centreConfigDuplicateActionMaster)
         .addMaster(centreConfigurationWebUiConfig.centreConfigLoadActionMaster)
         .addMaster(centreConfigurationWebUiConfig.centreConfigEditActionMaster)
+        .addMaster(centreConfigurationWebUiConfig.centreConfigConfigureActionMaster)
         .addMaster(centreConfigurationWebUiConfig.centreConfigDeleteActionMaster)
         .addMaster(centreConfigurationWebUiConfig.centreConfigSaveActionMaster)
         .addMaster(centreConfigurationWebUiConfig.overrideCentreConfigMaster);
@@ -175,10 +192,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     @Override
     public final String genMainWebUIComponent() {
-        final Pair<DomElement, JsCode> generatedMenu = desktopMainMenuConfig.generateMenuActions();
-        final String mainWebUiComponent = ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-app-template.js").
-                replace("<!--menu action dom-->", generatedMenu.getKey().toString()).
-                replace("//actionsObject", generatedMenu.getValue().toString());
+        final String mainWebUiComponent = ResourceLoader.getText("ua/com/fielden/platform/web/app/tg-app-template.js");
         if (Workflows.deployment == workflow || Workflows.vulcanizing == workflow) {
             return mainWebUiComponent.replace("//@use-empty-console.log", "console.log = () => {};\n");
         } else {
@@ -250,6 +264,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         this.webUiBuilder = new WebUiBuilder(this);
         this.desktopMainMenuConfig = new MainMenuBuilder(this);
         this.mobileMainMenuConfig = new MainMenuBuilder(this);
+        this.embeddedCentreMap = null;
         logger.error("Clearing configurations...done");
     }
 
@@ -266,6 +281,59 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     @Override
     public boolean independentTimeZone() {
         return independentTimeZone;
+    }
+
+    @Override
+    public List<EntityActionConfig> centreConfigShareActions() {
+        return asList(
+            action(CentreConfigShareAction.class)
+            .withContext(context().withSelectionCrit().build())
+            .preAction(createPreAction())
+            .postActionSuccess(createPostAction("errorMessage"))
+            .icon("tg-icons:share")
+            .shortDesc("Share")
+            .longDesc("Share centre configuration")
+            .withNoParentCentreRefresh()
+            .build()
+        );
+    }
+
+    @Override
+    public void createDefaultConfigurationsForAllCentres() {
+        final Set<Class<? extends MiWithConfigurationSupport<?>>> miTypes = getCentres().keySet();
+        final int size = miTypes.size();
+        final String log = format("Creating default configurations for [%s] centres (caching)...", size);
+        logger.info(log);
+        for (final Class<? extends MiWithConfigurationSupport<?>> miType: miTypes) {
+            getDefaultCentre(miType, this);
+        }
+        logger.info(log + "done");
+    }
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Iterates through all registered {@link EntityMaster}s, determines whether they have embedded centres, and calculates map between {@code miType} of embedded centre and [{@link EntityCentre}; {@link EntityMaster}] pair.
+     */
+    @Override
+    public Map<Class<? extends MiWithConfigurationSupport<?>>, T2<EntityCentre<?>, EntityMaster<? extends AbstractEntity<?>>>> getEmbeddedCentres() {
+        if (embeddedCentreMap == null) {
+            final String log = "Calculating embedded centres...";
+            logger.info(log);
+            embeddedCentreMap = new ConcurrentHashMap<>();
+            for (final EntityMaster<? extends AbstractEntity<?>> master: getMasters().values()) {
+                final Optional<EntityCentre<?>> embeddedCentreOpt = master.getEmbeddedCentre();
+                if (embeddedCentreOpt.isPresent()) {
+                    final Class<? extends MiWithConfigurationSupport<?>> miType = embeddedCentreOpt.get().getMenuItemType();
+                    if (embeddedCentreMap.containsKey(miType)) {
+                        throw new EntityCentreConfigurationException(format("Centre [%s] has been added as embedded for both [%s] and [%s] masters.", miType.getSimpleName(), embeddedCentreMap.get(miType)._2.getEntityType().getSimpleName(), master.getEntityType().getSimpleName()));
+                    }
+                    embeddedCentreMap.put(miType, t2(embeddedCentreOpt.get(), master));
+                }
+            }
+            logger.info(format(log + "done [%s]", embeddedCentreMap.size()));
+        }
+        return embeddedCentreMap;
     }
 
 }

@@ -5,20 +5,21 @@ import static java.lang.System.out;
 
 import java.util.Properties;
 
-import javax.mail.AuthenticationFailedException;
-import javax.mail.Flags.Flag;
-import javax.mail.Folder;
-import javax.mail.FolderClosedException;
-import javax.mail.FolderNotFoundException;
-import javax.mail.Message;
-import javax.mail.Multipart;
-import javax.mail.NoSuchProviderException;
-import javax.mail.Part;
-import javax.mail.ReadOnlyFolderException;
-import javax.mail.Session;
-import javax.mail.Store;
-import javax.mail.StoreClosedException;
-import javax.mail.internet.InternetAddress;
+import jakarta.mail.AuthenticationFailedException;
+import jakarta.mail.Flags.Flag;
+import jakarta.mail.Folder;
+import jakarta.mail.FolderClosedException;
+import jakarta.mail.FolderNotFoundException;
+import jakarta.mail.Message;
+import jakarta.mail.Multipart;
+import jakarta.mail.NoSuchProviderException;
+import jakarta.mail.Part;
+import jakarta.mail.ReadOnlyFolderException;
+import jakarta.mail.Session;
+import jakarta.mail.Store;
+import jakarta.mail.StoreClosedException;
+import jakarta.mail.internet.InternetAddress;
+
 
 public class ReadEmails {
 

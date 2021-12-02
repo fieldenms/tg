@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.attachment.matcher;
 
+import static org.apache.commons.lang3.RegExUtils.removeAll;
+
 import java.util.List;
+import java.util.regex.Pattern;
 
 import com.google.inject.Inject;
 
@@ -32,14 +35,16 @@ public abstract class AbstractAttachmentForMasterMatcher<C extends AbstractEntit
         return findMatchesWithModel(searchString, 1);
     }
     
+    private static final Pattern WILD_CHAR_AT_THE_END = Pattern.compile("%$");
     @Override
     public List<Attachment> findMatchesWithModel(final String searchString, final int dataPage) {
         final List<Attachment> matched = super.findMatchesWithModel(searchString, dataPage);
         // if no matches found then let's check if an ad-hoc hyperlink-as-attachment needs to be created
         if (matched.isEmpty()) {
-            final String potentialUri = searchString.replaceAll("%$", ""); // remove the last % if present
+            final String potentialUri = removeAll(searchString, WILD_CHAR_AT_THE_END); // remove the last % if present
             coAttachment.newAsHyperlink(potentialUri).ifPresent(matched::add);
         }
         return matched;
     }
+
 }

@@ -131,6 +131,13 @@ const additionalTemplate = html`
         .secondary {
             font-size: 8pt;
         }
+        .shared {
+            text-align: right;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+        }
         .inherited-primary {
             font-weight: bolder;
         }
@@ -174,6 +181,7 @@ const customInputTemplate = html`
                             <div class$="[[_computedHeaderClass(item)]]" inner-h-t-m-l="[[_calcItemTextHighlighted(item, headerPropertyName, _phraseForSearchingCommited)]]"></div>
                             <div class$="[[_computedDescriptionClass(item)]]" inner-h-t-m-l="[[_calcItemTextHighlighted(item, descriptionPropertyName, _phraseForSearchingCommited)]]"></div>
                         </div>
+                        <div class="primary shared" inner-h-t-m-l="[[_calcSharedByText(item)]]" hidden$="[[_sharedByTextHidden(item)]]"></div>
                         <div class$="[[_computeSortingClass(item)]]" hidden$="[[_sortingIconHidden(_forReview, item)]]">
                             <iron-icon icon$="[[_sortingIconForItem(item.sorting)]]" style$="[[_computeSortingIconStyle(item.sorting)]]" on-tap="_changeOrdering"></iron-icon>
                             <span class="ordering-number self-center">[[_calculateOrder(item.sortingNumber)]]</span>
@@ -212,6 +220,14 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
              * Indicates whether items can be rordered.
              */
             canReorderItems: {
+                type: Boolean,
+                value: false
+            },
+
+            /**
+             * Indicates whether order of arrived entities remains the same even if some of items are selected.
+             */
+            staticOrder: {
                 type: Boolean,
                 value: false
             },
@@ -354,7 +370,7 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         const suffix = this.decorator().$$(".suffix");
         suffix.style.alignSelf = "flex-start";
 
-        this.decorator().noLabelFloat = true;
+        this.noLabelFloat = true;
 
         const oldListRender = this.$.input._render.bind(this.$.input);
         this.$.input._render = function () {
@@ -375,6 +391,12 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         var tooltip = header ? "<b>" + header + "</b>" : "";
         tooltip += desc ? (tooltip ? "<br>" + desc : desc) : "";
         return tooltip;
+    }
+    
+    _calcSharedByText (item) {
+        const sharedByMessage = typeof item.sharedByMessage !== 'undefined' && item.get('sharedByMessage');
+        const orphanedSharingMessage = typeof item.orphanedSharingMessage !== 'undefined' && item.get('orphanedSharingMessage');
+        return sharedByMessage ? sharedByMessage : (orphanedSharingMessage ? orphanedSharingMessage : '');
     }
     
     /**
@@ -454,9 +476,14 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         }
         
         this._disableSelectionListeners = true; // _disableSelectionListeners even before _entities initialisation; this is needed due to clearSelection() call inside iron-list when '_entities' change
-        this._entities = this._isCentreConfigEntity(entity)
-            ? this._placeSelectedOnTop(arrivedEntities, selEntities, chosenIds) // checked items should be ordered as in chosenIds (only for CentreConfigUpdater)
-            : this._placeSelectedOnTopPreservingOriginalOrder(arrivedEntities, chosenIds);
+        
+        if (this._isCentreConfigEntity(entity)) {
+            this._entities = this._placeSelectedOnTop(arrivedEntities, selEntities, chosenIds); // checked items should be ordered as in chosenIds (only for CentreConfigUpdater)
+        } else if (this.staticOrder) {
+            this._entities = arrivedEntities.slice();
+        } else {
+            this._entities = this._placeSelectedOnTopPreservingOriginalOrder(arrivedEntities, chosenIds);
+        }
         
         this.$.input.clearSelection();
         
@@ -571,6 +598,10 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
     
     _selectingIconHidden (_forReview) {
         return _forReview;
+    }
+    
+    _sharedByTextHidden (item) {
+        return !item.sharedByMessage && !item.orphanedSharingMessage
     }
     
     _sortingIconHidden (_forReview, item) {

@@ -5,14 +5,15 @@ import com.google.inject.Inject;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.annotation.EntityType;
+
 /** 
- * DAO implementation for companion object {@link IMenu}.
+ * DAO implementation for companion object {@link MenuCo}.
  * 
- * @author Developers
+ * @author TG Team
  *
  */
 @EntityType(Menu.class)
-public class MenuDao extends CommonEntityDao<Menu> implements IMenu {
+public class MenuDao extends CommonEntityDao<Menu> implements MenuCo {
 
     @Inject
     public MenuDao(final IFilter filter) {

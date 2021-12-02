@@ -46,7 +46,7 @@ public class ServiceWorkerResource extends AbstractWebResource {
     @Get
     @Override
     public Representation get() {
-        return encodedRepresentation(new ByteArrayInputStream(webResourceLoader.loadSource("/resources/service-worker.js").getBytes(UTF_8)), TEXT_JAVASCRIPT);
+        return encodedRepresentation(new ByteArrayInputStream(webResourceLoader.loadSource("/resources/service-worker.js").get().getBytes(UTF_8)), TEXT_JAVASCRIPT);
     }
     
 }

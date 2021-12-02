@@ -269,6 +269,11 @@ Polymer({
       value: 'aria-checked'
     }
   },
+  ready: function () {
+    // TG: override default paper-checkbox behaviour of changing value by Enter key; this should not happen; standard checkboxes don't change state on Enter key
+    delete this.keyBindings["enter:keydown"];
+    this.removeOwnKeyBindings();
+  },
   attached: function () {
     // Wait until styles have resolved to check for the default sentinel.
     // See polymer#4009 for more details.

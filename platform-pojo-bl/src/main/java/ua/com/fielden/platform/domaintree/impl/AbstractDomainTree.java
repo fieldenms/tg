@@ -1,11 +1,13 @@
 package ua.com.fielden.platform.domaintree.impl;
 
+import static ua.com.fielden.platform.entity.AbstractEntity.STRICT_MODEL_VERIFICATION;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 import static ua.com.fielden.platform.utils.EntityUtils.isRangeType;
 
 import java.util.Set;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
@@ -18,7 +20,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -147,7 +148,7 @@ public abstract class AbstractDomainTree {
      * @return
      */
     public static String reflectionProperty(final String property) {
-        return property.replaceAll(DUMMY_SUFFIX, "").replaceAll(COMMON_SUFFIX, "");
+        return StringUtils.remove(StringUtils.remove(property, DUMMY_SUFFIX), COMMON_SUFFIX);
     }
 
     /**
@@ -162,10 +163,10 @@ public abstract class AbstractDomainTree {
         // The check below is important to maintain the integrity of domain trees.
         // However, it also causes performance bottlenecks when invoking multiple times.
         // In current Web UI logic, that uses centre domain trees, this check does not add any significant value due to other checks implemented as part of Centre DSL.
-        // Reintroducing of this check may be significant when management of domain trees from UI will be implemented.
-        // if (!tm.isChecked(root, property)) {
-        //     throw new DomainTreeException(message);
-        // }
+        // This check is currently performed only in STRICT_MODEL_VERIFICATION mode (and thus skipped in deployment mode).
+        if (STRICT_MODEL_VERIFICATION && !tm.isChecked(root, property)) {
+            throw new DomainTreeException(message);
+        }
     }
 
     /**

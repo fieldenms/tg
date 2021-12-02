@@ -77,12 +77,10 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
         final int prefixLength = prefix.length();
         for (int actionIdx = 0; actionIdx < this.actions.size(); actionIdx++) {
             final EntityActionConfig action = this.actions.get(actionIdx);
-            if (!action.isNoAction()) {
-                final FunctionalActionElement el = FunctionalActionElement.newEntityActionForMaster(action, actionIdx);
-                importPaths.add(el.importPath());
-                referenceHierarchyDom.add(el.render().attr("hidden", null).clazz("primary-action").attr("slot", "reference-hierarchy-action"));
-                customActionObjects.append(prefix + el.createActionObject());
-            }
+            final FunctionalActionElement el = FunctionalActionElement.newEntityActionForMaster(action, actionIdx);
+            importPaths.add(el.importPath());
+            referenceHierarchyDom.add(el.render().attr("hidden", null).clazz("primary-action").attr("slot", "reference-hierarchy-action"));
+            customActionObjects.append(prefix + el.createActionObject());
         }
         final String customActionObjectsString = customActionObjects.toString();
 
@@ -112,9 +110,7 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
     private String readyCallback() {
         return "self.classList.add('layout');\n"
                 + "self.classList.add('vertical');\n"
-                + "self.canLeave = function () {\n"
-                + "    return null;\n"
-                + "}.bind(self);\n"
+                + "self.classList.remove('canLeave');\n"
                 + "self._showDataLoadingPromt = function (msg) {\n"
                 + "    this.$.refrenceHierarchy.lock = true;\n"
                 + "    this._toastGreeting().text = msg;\n"

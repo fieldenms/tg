@@ -14,8 +14,8 @@ import java.util.function.BiFunction;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
+import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityExportAction;
-import ua.com.fielden.platform.entity.EntityNavigationAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.web.PrefDim;
@@ -177,7 +177,7 @@ public enum StandardActions {
 
             final IEntityCentreContextSelectorDone<AbstractEntity<?>> contextConfig = context().withCurrentEntity().withSelectionCrit().withComputation(computation.orElse((entity, context) -> entityType));
 
-            return action(EntityNavigationAction.class)
+            return action(EntityEditAction.class)
                     .withContext(contextConfig.build())
                     .preAction(new EntityNavigationPreAction(entityTitle))
                     .icon(iconName.orElse("editor:mode-edit"))
@@ -236,7 +236,7 @@ public enum StandardActions {
 
             final IEntityCentreContextSelectorDone<AbstractEntity<?>> contextConfig = context().withCurrentEntity().withSelectionCrit().withComputation(computation.orElse((entity, context) -> entityType));
 
-            return action(EntityNavigationAction.class)
+            return action(EntityEditAction.class)
                     .withContext(contextConfig.build())
                     .preAction(new SequentialEditPreAction())
                     .icon(iconName.orElse("editor:mode-edit"))

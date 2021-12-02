@@ -1,3 +1,5 @@
+import { TgReflector } from '/app/tg-reflector.js';
+
 /**
  * Generates the unique identifier.
  */
@@ -12,23 +14,41 @@ export function generateUUID () {
 };
 
 /**
- * Removes all Light DOM children from Polymer 'element'.
- *
- * The need for such utility method arose from the fact that Polymer (currently 1.4 version) returns
- * from Polymer.dom(element).childNodes, Polymer.dom(element).firstChild, Polymer.dom(element).firstElementChild methods
- * not only Light DOM children, but also Local DOM children, including the elements in the template and whitespace
- * nodes in the template.
- *
- * Please, note that Polymer.dom().flush() call is needed to be done manually after this method has been used.
- * The intention was made for the cases, where some additional DOM manipulation is needed, and in such cases
- * flush() call could be efficiently done after all DOM manipulation once.
+ * Returns the first entity type and it's property path that lies on path of property name and entity
  */
-export function _removeAllLightDOMChildrenFrom (element) {
-    const childNodes = element.childNodes;
-    while (element.firstChild) {
-        element.removeChild(element.firstChild);
+export function getFirstEntityTypeAndProperty (entity, propertyName) {
+    if (entity && propertyName) {
+        const reflector = new TgReflector();
+        const entityType = entity.constructor.prototype.type.call(entity);
+        let currentProperty = propertyName;
+        let currentType = entityType.prop(propertyName).type();
+        while (!(currentType instanceof reflector._getEntityTypePrototype())) {
+            const lastDotIndex = currentProperty.lastIndexOf(".");
+            currentProperty = lastDotIndex >= 0 ? currentProperty.substring(0, lastDotIndex) : "";
+            currentType = currentProperty ? entityType.prop(currentProperty).type() : entityType;
+        }
+        return [currentType, currentProperty]; 
+    } else if (entity) {
+        return [entity.constructor.prototype.type.call(entity), propertyName];
     }
 };
+
+/**
+ * Returns the first entity type that lies on path of property name and entity.
+ */
+export function getFirstEntityType (entity, propertyName) {
+    return getFirstEntityTypeAndProperty(entity, propertyName)[0];
+};
+
+/**
+ * Removes all Light DOM children from Polymer 'element'.
+ */
+export function _removeAllLightDOMChildrenFrom (element) {
+    while (element.firstChild) {
+        element.removeChild(element.lastChild);
+    }
+};
+
 /**
  * Returns the x and y coordinates relatively to specified container
  */
@@ -81,7 +101,7 @@ export function shadeColor (hex, lum) {
 };
 
 /**
- * Returns true if the descendant is has parent as ancestor, otherwise returns false.
+ * Returns true if the descendant has the parent as an ancestor, otherwise returns false.
  */
 export function isInHierarchy (parent, descendant) {
     let current = descendant;
@@ -193,6 +213,25 @@ export class EntityStub {
         }
     }
 };
+
+/**
+ * Finds the closest parent to startFrom element which can be focused.
+ * 
+ * @param {HTMLElement} startFrom - the element to start search from.
+ * @param {HTMLElement} orElse - the element to which is returned if key event target wasn't found.
+ * @param {Function} doDuringSearch - custom function that allows to perform some tasks during search it receives currently inspected HTMLElement. 
+ * @returns The closest parent to startFrom element with tabindex equal to 0. 
+ */
+export const getKeyEventTarget = function (startFrom, orElse, doDuringSearch) {
+    let parent = startFrom;
+    while (parent && parent.getAttribute('tabindex') !== '0') {
+        if (typeof doDuringSearch === 'function') {
+            doDuringSearch(parent);
+        }
+        parent = parent.parentElement || parent.getRootNode().host;
+    }
+    return parent || orElse;
+}
 
 /**
  * Returns true if specified text contains html tags which are not allowed to be inserted as html text. 

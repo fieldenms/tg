@@ -13,6 +13,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNoneAndInstrument;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
 
 import org.junit.Test;
@@ -26,6 +27,12 @@ import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
 import ua.com.fielden.platform.sample.domain.TgReVehicleModel;
+import ua.com.fielden.platform.sample.domain.TgUnion;
+import ua.com.fielden.platform.sample.domain.TgUnionCommonType;
+import ua.com.fielden.platform.sample.domain.TgUnionHolder;
+import ua.com.fielden.platform.sample.domain.TgUnionType1;
+import ua.com.fielden.platform.sample.domain.TgUnionType2;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class FetchProviderTest {
@@ -479,6 +486,162 @@ public class FetchProviderTest {
                                 .with(DESC))),
             fp.fetchModel()
         );
+    }
+    
+    /////////////////////////////////////////////////////////// union common properties: ///////////////////////////////////////////////////////////
+    
+    @Test
+    public void fetch_provider_with_common_property_indicates_that_common_property_should_be_fetched() {
+        final IFetchProvider<TgUnionHolder> fp = fetchWithKeyAndDesc(TgUnionHolder.class).with("union.common");
+        
+        assertTrue(fp.shouldFetch("union.common"));
+        assertFalse(fp.fetchFor("union.common").instrumented());
+        assertEquals(setOf(), fp.fetchFor("union.common").allProperties());
+    }
+    
+    @Test
+    public void fetch_provider_with_common_property_includes_that_property_in_every_type_of_the_union() {
+        final IFetchProvider<TgUnionHolder> fp = fetchWithKeyAndDesc(TgUnionHolder.class).with("union.common");
+        
+        assertTrue(fp.shouldFetch("union.union1"));
+        assertTrue(fp.shouldFetch("union.union1.common"));
+        assertFalse(fp.fetchFor("union.union1").instrumented());
+        assertEquals(setOf("common"), fp.fetchFor("union.union1").allProperties());
+        
+        assertTrue(fp.shouldFetch("union.union2"));
+        assertTrue(fp.shouldFetch("union.union2.common"));
+        assertFalse(fp.fetchFor("union.union2").instrumented());
+        assertEquals(setOf("common"), fp.fetchFor("union.union2").allProperties());
+        
+        assertEquals(setOf(
+            "union", "union.common",
+            "union.union1", "union.union1.common",
+            "union.union2", "union.union2.common"
+        ), fp.allProperties());
+    }
+    
+    @Test
+    public void common_property_fetch_provider_merges_with_fetch_providers_in_every_type_of_the_union() {
+        final IFetchProvider<TgUnionHolder> fp = fetchWithKeyAndDesc(TgUnionHolder.class)
+            .with("union.union1.common.desc")
+            .with("union.common", fetchWithKeyAndDesc(TgUnionCommonType.class).with("lastUpdatedBy"));
+        
+        assertEquals(fetchWithKeyAndDesc(TgUnionCommonType.class).with("desc").with("lastUpdatedBy"), fp.fetchFor("union.union1.common"));
+        assertEquals(setOf(
+            "union", "union.common", "union.common.lastUpdatedBy",
+            "union.union1", "union.union1.common", "union.union1.common.desc", "union.union1.common.lastUpdatedBy",
+            "union.union2", "union.union2.common", "union.union2.common.lastUpdatedBy"
+        ), fp.allProperties());
+    }
+    
+    @Test
+    public void fetch_provider_with_common_property_can_be_merged_with_fetch_providers_in_every_type_of_the_union() {
+        final IFetchProvider<TgUnionHolder> fp = fetchWithKeyAndDesc(TgUnionHolder.class)
+            .with("union.union1.common.desc")
+            .with(fetchWithKeyAndDesc(TgUnionHolder.class).with("union.common", fetchWithKeyAndDesc(TgUnionCommonType.class).with("lastUpdatedBy")));
+        
+        assertEquals(fetchWithKeyAndDesc(TgUnionCommonType.class).with("desc").with("lastUpdatedBy"), fp.fetchFor("union.union1.common"));
+        assertEquals(setOf(
+            "union", "union.common", "union.common.lastUpdatedBy",
+            "union.union1", "union.union1.common", "union.union1.common.desc", "union.union1.common.lastUpdatedBy",
+            "union.union2", "union.union2.common", "union.union2.common.lastUpdatedBy"
+        ), fp.allProperties());
+    }
+    
+    @Test
+    public void common_property_removal_does_not_affect_fetch_providers_in_types_of_the_union() {
+        // at least now; we do not support automatic removal of properties from union types because it is not known whether they were added manually or automatically through common property addition
+        final IFetchProvider<TgUnionHolder> fp = fetchWithKeyAndDesc(TgUnionHolder.class)
+            .with("union.union1.common.desc")
+            .with("union.common", fetchWithKeyAndDesc(TgUnionCommonType.class).with("lastUpdatedBy"))
+            .without("union.common");
+        
+        assertEquals(fetchWithKeyAndDesc(TgUnionCommonType.class).with("desc").with("lastUpdatedBy"), fp.fetchFor("union.union1.common"));
+        assertEquals(setOf(
+            "union",
+            "union.union1", "union.union1.common", "union.union1.common.desc", "union.union1.common.lastUpdatedBy",
+            "union.union2", "union.union2.common", "union.union2.common.lastUpdatedBy"
+        ), fp.allProperties());
+    }
+    
+    @Test
+    public void fetch_provider_with_common_property_generates_fetch_model_with_that_property_in_every_type_of_the_union() {
+        final IFetchProvider<TgUnionHolder> fp = fetchWithKeyAndDesc(TgUnionHolder.class).with("union.common");
+        
+        assertEquals(
+            fetchKeyAndDescOnly(TgUnion.class)
+            .with("union1", fetchKeyAndDescOnly(TgUnionType1.class)
+                .with("common", fetchKeyAndDescOnly(TgUnionCommonType.class)))
+            .with("union2", fetchKeyAndDescOnly(TgUnionType2.class)
+                .with("common", fetchKeyAndDescOnly(TgUnionCommonType.class))),
+            
+            fp.fetchFor("union").fetchModel()
+        );
+    }
+    
+    @Test
+    public void fetch_provider_with_common_subproperty_indicates_that_common_subproperty_should_be_fetched() {
+        final IFetchProvider<TgUnionHolder> fp = fetchWithKeyAndDesc(TgUnionHolder.class).with("union.common.createdBy");
+        
+        assertTrue(fp.shouldFetch("union.common"));
+        assertTrue(fp.shouldFetch("union.common.createdBy"));
+        assertFalse(fp.fetchFor("union.common").instrumented());
+        assertEquals(setOf("createdBy"), fp.fetchFor("union.common").allProperties());
+    }
+    
+    @Test
+    public void fetch_provider_with_common_subproperty_includes_that_subproperty_in_every_type_of_the_union() {
+        final IFetchProvider<TgUnionHolder> fp = fetchWithKeyAndDesc(TgUnionHolder.class).with("union.common.createdBy");
+        
+        assertTrue(fp.shouldFetch("union.union1"));
+        assertTrue(fp.shouldFetch("union.union1.common"));
+        assertTrue(fp.shouldFetch("union.union1.common.createdBy"));
+        assertFalse(fp.fetchFor("union.union1").instrumented());
+        assertFalse(fp.fetchFor("union.union1.common").instrumented());
+        assertEquals(setOf("common", "common.createdBy"), fp.fetchFor("union.union1").allProperties());
+        assertEquals(setOf("createdBy"), fp.fetchFor("union.union1.common").allProperties());
+        
+        assertTrue(fp.shouldFetch("union.union2"));
+        assertTrue(fp.shouldFetch("union.union2.common"));
+        assertTrue(fp.shouldFetch("union.union2.common.createdBy"));
+        assertFalse(fp.fetchFor("union.union2").instrumented());
+        assertFalse(fp.fetchFor("union.union2.common").instrumented());
+        assertEquals(setOf("common", "common.createdBy"), fp.fetchFor("union.union2").allProperties());
+        assertEquals(setOf("createdBy"), fp.fetchFor("union.union2.common").allProperties());
+        
+        assertEquals(setOf(
+            "union", "union.common", "union.common.createdBy",
+            "union.union1", "union.union1.common", "union.union1.common.createdBy",
+            "union.union2", "union.union2.common", "union.union2.common.createdBy"
+        ), fp.allProperties());
+    }
+    
+    @Test
+    public void fetch_provider_with_common_subproperty_generates_fetch_model_with_that_subproperty_in_every_type_of_the_union() {
+        final IFetchProvider<TgUnionHolder> fp = fetchWithKeyAndDesc(TgUnionHolder.class).with("union.common.createdBy");
+        
+        assertEquals(
+            fetchKeyAndDescOnly(TgUnion.class)
+            .with("union1", fetchKeyAndDescOnly(TgUnionType1.class)
+                .with("common", fetchKeyAndDescOnly(TgUnionCommonType.class).with("createdBy", fetchKeyAndDescOnly(User.class))))
+            .with("union2", fetchKeyAndDescOnly(TgUnionType2.class)
+                .with("common", fetchKeyAndDescOnly(TgUnionCommonType.class).with("createdBy", fetchKeyAndDescOnly(User.class)))),
+            
+            fp.fetchFor("union").fetchModel()
+        );
+    }
+    
+    @Test
+    public void key_is_added_into_common_property_fetch_provider_and_into_that_property_fetch_provider_in_every_type_of_the_union() {
+        final IFetchProvider<TgUnionHolder> fp = EntityUtils.fetchNone(TgUnionHolder.class)
+            .with("union.common");
+        fp.addKeysTo("union.common", false);
+        
+        assertEquals(setOf(
+            "union", "union.common", "union.common." + KEY, "union.common." + ID, "union.common." + VERSION,
+            "union.union1", "union.union1." + ID, "union.union1." + VERSION, "union.union1.common", "union.union1.common." + KEY, "union.union1.common." + ID, "union.union1.common." + VERSION,
+            "union.union2", "union.union2." + ID, "union.union2." + VERSION, "union.union2.common", "union.union2.common." + KEY, "union.union2.common." + ID, "union.union2.common." + VERSION
+        ), fp.allProperties());
     }
     
 }

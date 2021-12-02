@@ -74,10 +74,12 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
                 .attr("centre-selection", "[[centreSelection]]")
                 .attr("custom-event-target", "[[customEventTarget]]")
                 .attr("retrieved-entities", "{{retrievedEntities}}")
-                .attr("is-centre-running", "[[isCentreRunning]]")
                 .attr("uuid", "[[centreUuid]]")
                 .attr("lock", "[[lock]]")
                 .add(tokenFilter, roleFilter, reloadAction);
+
+        final StringBuilder prefDimBuilder = new StringBuilder();
+        prefDimBuilder.append("{'width': function() {return '100%'}, 'height': function() {return '100%'}, 'widthUnit': '', 'heightUnit': ''}");
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
                 .replace(IMPORTS, createImports(linkedSetOf("components/tg-security-matrix", "editors/tg-singleline-text-editor"))
@@ -86,7 +88,7 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
                 .replace("<!--@tg-entity-master-content-->", securityMatrix.toString())
                 .replace("//generatedPrimaryActions", "")
                 .replace("//@ready-callback", readyCallback())
-                .replace("@prefDim", "null")
+                .replace("@prefDim", prefDimBuilder.toString())
                 .replace("@noUiValue", "false")
                 .replace("@saveOnActivationValue", "true");
 

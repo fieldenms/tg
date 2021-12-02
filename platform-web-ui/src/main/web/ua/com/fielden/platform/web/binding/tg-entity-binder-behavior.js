@@ -1,5 +1,6 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import {processResponseError, toastMsgForError} from '/resources/reflection/tg-ajax-utils.js';
+import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 export const TgEntityBinderBehavior = {
 
@@ -84,7 +85,7 @@ export const TgEntityBinderBehavior = {
         },
 
         /**
-         * Custom callback that will be invoked after successfull validation.
+         * Custom callback that will be invoked after successful validation.
          *
          * arguments: validatedEntity, bindingEntity, customObject
          */
@@ -148,7 +149,7 @@ export const TgEntityBinderBehavior = {
          * Client-side logic handles this gracefully in method _extractBindingView(entity, previousModifiedPropertiesHolder, prevCurrBindingEntity).
          *
          * This property can not be used in tg-selection-criteria-behavior due to the fact that it will be isModified from previous, not from original version of centre.
-         * Currently _centreChanged property is used (see tg-entity-centre-behavior and tg-selection-criteria-behavior).
+         * Currently _centreDirty property is used (see tg-selection-criteria-behavior).
          */
         _bindingEntityModified: {
             type: Boolean,
@@ -306,6 +307,16 @@ export const TgEntityBinderBehavior = {
         },
 
         /**
+         * Promise that starts on validate() call and fullfils iff this validation attempt gets successfully resolved.
+         * 
+         * If this attempt gets superseded by other attempt then the promise instance will never be resolved.
+         * However, 'lastValidationAttemptPromise' property gets replaced in this case.
+         */
+        lastValidationAttemptPromise: {
+            type: Object
+        },
+
+        /**
          * Current number of initiated requests as per validate() method.
          * 
          * This property counts only validation requests, not saving / running (other requests that apply values).
@@ -405,78 +416,79 @@ export const TgEntityBinderBehavior = {
     /* Returns a function that accepts an instance of Attachment to start the download of the associated file. The passed in attachment must not be null.*/
     mkDownloadAttachmentFunction: function () {
         return attachment => {
-            const openAsHyperLink = attachment.title.startsWith('https://') || attachment.title.startsWith('http://') ||
-                attachment.title.startsWith('ftp://') || attachment.title.startsWith('ftps://') ||
-                attachment.title.startsWith('mailto:')
-            if (openAsHyperLink === true) {
-                const win = window.open(attachment.title, '_blank');
-                win.focus();
-            } else {
-                const self = this;
-                const url = '/download-attachment/' + attachment.id + '/' + attachment.sha1;
-                // AJAX approach to the file download
-                const xhr = new XMLHttpRequest();
-                xhr.open("GET", url, true);
-                xhr.responseType = 'blob';
-                xhr.onload = function (e) {
-                    if (xhr.status === 200) {
-                        console.log('File received', xhr.getResponseHeader('Content-Disposition'));
-                        const bySemicolon = xhr.getResponseHeader('Content-Disposition').split(';');
-                        const filename = bySemicolon.filter(part => part.includes('filename=')).map(part => part.split('=')[1])[0];
-                        if (filename) {
-                            // create a Blob object from the response and a URL for it
-                            const blob = new Blob([xhr.response]);
-                            const blobUrl = window.URL.createObjectURL(blob);
-                            // the blob URL can be used for the <a> element for the user to download/open the file
-                            const a = document.createElement("a");
-                            a.href = blobUrl;
-                            // let's perform decoding, followed by removal of leading and trailing double quotes if present
-                            // browsers replace double quotes with _ automatically, which may corrupt the file extension
-                            let trimmedFileName = decodeURIComponent(filename);
-                            if (trimmedFileName.startsWith('"')) {
-                                trimmedFileName = trimmedFileName.substring(1);
-                            }
-                            if (trimmedFileName.endsWith('"')) {
-                                trimmedFileName = trimmedFileName.substring(0, trimmedFileName.length - 1);
-                            }
-                            a.download = trimmedFileName;
-                            a.click();
-                            // release the reference to the file by revoking the Object URL
-                            window.URL.revokeObjectURL(blobUrl);
-                        }
-                    } else {
-                        console.error('Error occurred when trying to download the attachment.', 'Error code:', xhr.status);
-                        const reader = new FileReader();
-                        reader.onload = function () {
-                            const resultAsObj = JSON.parse(reader.result);
-                            const result = self._serialiser().deserialise(resultAsObj);
-                            self._openToastForError(result.message, toastMsgForError(self._reflector(), result), true);
-                        }
-                        reader.readAsText(xhr.response);
+            if (attachment.isPersisted()) {
+                const openAsHyperLink = attachment.title.startsWith('https://') || attachment.title.startsWith('http://') ||
+                                        attachment.title.startsWith('ftp://') || attachment.title.startsWith('ftps://') ||
+                                        attachment.title.startsWith('mailto:')
+                if (openAsHyperLink === true) {
+                    const win = window.open(attachment.title, '_blank');
+                    win.focus();
+                } else {
+                    const self = this;
+                    const url = '/download-attachment/' + attachment.id + '/' + attachment.sha1;
+                    // AJAX approach to the file download
+                    const xhr = new XMLHttpRequest();
+                    xhr.open("GET", url, true);
+                    xhr.responseType = 'blob';
+                    const tzHeader = _timeZoneHeader();
+                    for (const headerName in tzHeader) {
+                        xhr.setRequestHeader(headerName, tzHeader[headerName]);
                     }
-
-                }.bind(self);
-                xhr.onerror = function (e) {
-                    const msg = "Unknown error occured when sending request to download the attachment.";
-                    console.error(msg, e);
-                    self._openToastForError(msg, msg + ' Request status: ' + xhr.status, true);
-
-                }.bind(self);
-                xhr.send();
+                    xhr.onload = function (e) {
+                        if (xhr.status === 200) {
+                            console.log('File received', xhr.getResponseHeader('Content-Disposition'));
+                            const bySemicolon = xhr.getResponseHeader('Content-Disposition').split(';');
+                            const filename = bySemicolon.filter(part => part.includes('filename=')).map(part => part.split('=')[1])[0];
+                            if (filename) {
+                                // create a Blob object from the response and a URL for it
+                                const blob = new Blob([xhr.response]);
+                                const blobUrl = window.URL.createObjectURL(blob);
+                                // the blob URL can be used for the <a> element for the user to download/open the file
+                                const a = document.createElement("a");
+                                a.href = blobUrl;
+                                // let's perform decoding, followed by removal of leading and trailing double quotes if present
+                                // browsers replace double quotes with _ automatically, which may corrupt the file extension
+                                let trimmedFileName = decodeURIComponent(filename);
+                                if (trimmedFileName.startsWith('"')) {
+                                    trimmedFileName = trimmedFileName.substring(1);
+                                }
+                                if (trimmedFileName.endsWith('"')) {
+                                    trimmedFileName = trimmedFileName.substring(0, trimmedFileName.length - 1);
+                                }
+                                a.download = trimmedFileName;
+                                a.click();
+                                // release the reference to the file by revoking the Object URL
+                                window.URL.revokeObjectURL(blobUrl);
+                            }
+                        } else {
+                            console.error('Error occurred when trying to download the attachment.', 'Error code:', xhr.status);
+                            const reader = new FileReader();
+                            reader.onload = function () {
+                                const resultAsObj = JSON.parse(reader.result);
+                                const result = self._serialiser().deserialise(resultAsObj);
+                                self._openToastForError(result.message, toastMsgForError(self._reflector(), result), true);
+                            }
+                            reader.readAsText(xhr.response);
+                        }
+                    }.bind(self);
+                    xhr.onerror = function (e) {
+                        const msg = "Unknown error occured when sending request to download the attachment.";
+                        console.error(msg, e);
+                        self._openToastForError(msg, msg + ' Request status: ' + xhr.status, true);
+                    }.bind(self);
+                    xhr.send();
+                }
             }
         }
     },
 
     /**
-     * Initialisation block. It has all children web components already initialised.
+     * Initialisation block called as a constructor of element. It is invoked before any property value is set and before the DOM initialisation.
+     * All property functions are initialised here to make sure that other methods and observers that rely on this component's property-functions
+     * would not fail if they were invoked before the ready method.
      */
-    ready: function () {
-        var self = this;
-
-        self._bindingEntityModified = false;
-        self._bindingEntityNotPersistentOrNotPersistedOrModified = false;
-        self._editedPropsExist = false;
-        self._resetState();
+    created: function () {
+        const self = this;
 
         self._createModifiedPropertiesHolder = (function () {
             var mph = this._extractModifiedPropertiesHolder(this._currBindingEntity, this._originalBindingEntity);
@@ -505,20 +517,20 @@ export const TgEntityBinderBehavior = {
         self._processResponse = (function (e, name, customHandlerFor) {
             console.log("PROCESS RESPONSE");
             console.log(name, ": iron-response: status = ", e.detail.xhr.status, ", e.detail.response = ", e.detail.response);
-            if (e.detail.xhr.status === 200) { // successful execution of the request
+            if (e.detail.xhr.status === 200 && e.detail.response) { // successful execution of the request with written response; timeout errors can lead to status 200 and e.detail.response === null; also 504 error is possible, but this will be handled in _processError
                 e.detail.successful = true;
-                var deserialisedResult = this._serialiser().deserialise(e.detail.response);
-
+                const deserialisedResult = this._serialiser().deserialise(e.detail.response);
+                
                 if (this._reflector().isWarning(deserialisedResult)) {
                     console.warn(toastMsgForError(this._reflector(), deserialisedResult));
                     //this._openToastForError('Warning.', toastMsgForError(this._reflector(), deserialisedResult), false);
                 } else {
                     // continue with normal handling of the result's instance
-                    var deserialisedInstance = deserialisedResult.instance;
+                    const deserialisedInstance = deserialisedResult.instance;
                     deserialisedResult.instance = null;
                     // Need to open toast message in case where the top-level result is unsuccessful -- this message will be shown BEFORE
-                    //   other messages about validation errors of 'deserialisedInstance' or '... completed successfully'.
-                    // Current logic of tg-toast will discard all other messages after this message, until this message dissapear.
+                    // other messages about validation errors of 'deserialisedInstance' or '... completed successfully'.
+                    // The current logic of tg-toast will discard all other messages after this message, until this message disappears.
                     if (this._reflector().isError(deserialisedResult)) {
                         console.log('deserialisedResult: ', deserialisedResult);
                         this._openToastForError(deserialisedResult.message, toastMsgForError(this._reflector(), deserialisedResult), !this._reflector().isContinuationError(deserialisedResult) || this.showContinuationsAsErrors);
@@ -541,7 +553,7 @@ export const TgEntityBinderBehavior = {
                     }
                 }
             } else { // other codes
-                var error = 'Request could not be dispatched.';
+                const error = 'Request could not be dispatched.';
                 console.warn(error);
                 this._openToastForError(error, 'Most likely due to networking issues the request could not be dispatched to server. Please try again later.', true);
                 // this is equivalent to server side error
@@ -556,28 +568,31 @@ export const TgEntityBinderBehavior = {
 
         // calbacks, that will be bound by editor child elements:
         self.validate = (function () {
-            const slf = this;
-            slf._validationCounter += 1;
-            console.log('validate initiated (', slf._validationCounter, ')');
-            // it is extremely important to create 'holder' outside of the debouncing construction to create immutable data
-            //   and pass it to debouncing function. The main reason for that is the following:
-            //     'slf._currBindingEntity' instance inside the debounced function can be altered by the results
-            //     of previous validations!
-            const holder = slf._extractModifiedPropertiesHolder(slf._currBindingEntity, slf._originalBindingEntity);
-            holder['@validationCounter'] = slf._validationCounter;
-            // After the first 'validate' invocation arrives -- debouncer will wait 50 milliseconds
-            //   for the next 'validate' invocation, and if it arrives -- the recent one will become as active ( and
-            //   again will start waiting for 50 millis and so on).
-            this.debounce('invoke-validation', function () {
-                console.log('validate (', holder['@validationCounter'], ')');
-                // cancel the 'invoke-validation' debouncer if there is any active one:
-                this.cancelDebouncer('invoke-validation');
-                // cancel previous validation before starting new one! The results of previous validation are irrelevant!
-                slf._validator().abortValidationIfAny();
-                // IMPORTANT: no need to check whether the _hasModified(holder) === true -- because the error recovery should happen!
-                // (if the entity was not modified -- _validate(holder) will start the error recovery process)
-                slf._validationPromise = slf._validateForDescendants(slf._reset(holder));
-            }, 50);
+            this.lastValidationAttemptPromise =  new Promise((resolve, reject) => {
+                const slf = this;
+                slf._validationCounter += 1;
+                console.log('validate initiated (', slf._validationCounter, ')');
+                // it is extremely important to create 'holder' outside of the debouncing construction to create immutable data
+                //   and pass it to debouncing function. The main reason for that is the following:
+                //     'slf._currBindingEntity' instance inside the debounced function can be altered by the results
+                //     of previous validations!
+                const holder = slf._extractModifiedPropertiesHolder(slf._currBindingEntity, slf._originalBindingEntity);
+                holder['@validationCounter'] = slf._validationCounter;
+                // After the first 'validate' invocation arrives -- debouncer will wait 50 milliseconds
+                //   for the next 'validate' invocation, and if it arrives -- the recent one will become as active ( and
+                //   again will start waiting for 50 millis and so on).
+                this.debounce('invoke-validation', function () {
+                    console.log('validate (', holder['@validationCounter'], ')');
+                    // cancel the 'invoke-validation' debouncer if there is any active one:
+                    this.cancelDebouncer('invoke-validation');
+                    // cancel previous validation before starting new one! The results of previous validation are irrelevant!
+                    slf._validator().abortValidationIfAny();
+                    // IMPORTANT: no need to check whether the _hasModified(holder) === true -- because the error recovery should happen!
+                    // (if the entity was not modified -- _validate(holder) will start the error recovery process)
+                    slf._validationPromise = slf._validateForDescendants(slf._reset(holder));
+                    slf._validationPromise.then(res => resolve(res)).catch(e => {}); // _validationPromise can be aborted (see abortValidationIfAny) and this is okay; catch handler is used to prevent 'Uncaught (in promise)' errors
+                }, 50);
+            });
         }).bind(self);
 
         self.doNotValidate = (function () {
@@ -604,6 +619,11 @@ export const TgEntityBinderBehavior = {
                 slf._retrievalInitiated = true;
                 slf.disableView();
             }
+            // Abort all retrieval requests if they exist, because they may change the master's
+            // property entityId, which in turn may cause the failure of a subsequent retrieval request.
+            // Such situations may occur in compound masters during rapid switching between menu items, where one of the menu items 
+            // is an embedded entity master.
+            this._reflector().abortRequestsIfAny(this._ajaxRetriever(), 'retrieval');
 
             return new Promise(function (resolve, reject) {
                 slf.debounce('invoke-retrieval', function () {
@@ -693,6 +713,7 @@ export const TgEntityBinderBehavior = {
             if (this.postValidated) {
                 this.postValidated(validatedEntity, newBindingEntity, customObject);
             }
+            self.fire('binding-entity-validated', self._currBindingEntity); // this event can be used to react on validation events (see 'binding-entity-appeared' for refresh / cancel / save + continuous creation)
         }).bind(self);
 
         self._postValidatedDefaultError = (function (errorResult) {
@@ -707,6 +728,15 @@ export const TgEntityBinderBehavior = {
             // 'tg-action' will augment this function with its own '_afterExecution' logic (spinner stopping etc.).
             console.warn("SERVER ERROR: ", errorResult);
         }).bind(this);
+    },
+
+    ready: function () {
+        const self = this;
+
+        self._bindingEntityModified = false;
+        self._bindingEntityNotPersistentOrNotPersistedOrModified = false;
+        self._editedPropsExist = false;
+        self._resetState();
 
         //Toaster object Can be used in other components on binder to show toasts.
         self.toaster = {
@@ -947,6 +977,7 @@ export const TgEntityBinderBehavior = {
         }
         // New entity should be promoted to the local cache:
         self._currEntity = entity;
+        self.fire('tg-entity-received', self._currEntity);
         // before the next assignment -- the editors should be already prepared for "refresh cycle" (for Retrieve and Save actions)
         var oldCurrBindingEntity = self._currBindingEntity;
         self._previousModifiedPropertiesHolder = previousModifiedPropertiesHolder;
@@ -1058,7 +1089,7 @@ export const TgEntityBinderBehavior = {
      * Defines whether the property should be converted to binding entity representation regardless of existence of corresponding editor.
      */
     _isNecessaryForConversion: function (propertyName) {
-        return ['columnParameters', // adjust column width action
+        return [
             'entityType', 'importUri', 'elementName', 'entityId', // entity edit / new standard actions
             'pageCapacity', // export actions ('mime', 'fileName', 'data' props are not needed because post action success uses fully-fledged version of entity)
             'chosenIds', 'addedIds', 'removedIds', 'sortingVals', // collectional modification actions
@@ -1133,7 +1164,7 @@ export const TgEntityBinderBehavior = {
     },
     disableViewForDescendants: function () {
         this.currentState = 'VIEW';
-        if (this.$.loader && this.$.loader.loadedElement) {
+        if (this.$.loader && this.$.loader.loadedElement && this.$.loader.loadedElement.wasLoaded()) {
             this.$.loader.loadedElement.disableView();
         }
     },
@@ -1147,7 +1178,7 @@ export const TgEntityBinderBehavior = {
     },
     enableViewForDescendants: function () {
         this.currentState = 'EDIT';
-        if (this.$.loader && this.$.loader.loadedElement) {
+        if (this.$.loader && this.$.loader.loadedElement && this.$.loader.loadedElement.wasLoaded()) {
             this.$.loader.loadedElement.enableView();
         }
     }

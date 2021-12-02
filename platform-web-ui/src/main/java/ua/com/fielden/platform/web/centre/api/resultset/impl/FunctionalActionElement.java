@@ -1,18 +1,23 @@
 package ua.com.fielden.platform.web.centre.api.resultset.impl;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.impl.AbstractCriterionWidget;
 import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
+import ua.com.fielden.platform.web.view.master.api.actions.IAction;
+import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
 /**
- * The implementation for functional entity actions (dom element).
+ * The implementation for functional entity actions (DOM element).
  *
  * @author TG Team
  *
@@ -88,11 +93,11 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     }
 
     /**
-     * Creates an attributes that will be used for widget component generation (generic attributes).
+     * Creates attributes that are used for the widget component generation (generic attributes).
      *
      * @return
      */
-    private Map<String, Object> createAttributes() {
+    public Map<String, Object> createAttributes() {
         final LinkedHashMap<String, Object> attrs = new LinkedHashMap<>();
         if (isDebug()) {
             attrs.put("debug", "true");
@@ -106,6 +111,11 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             attrs.put("data-route", getDataRoute());
         } else if (FunctionalActionKind.FRONT == functionalActionKind) {
             attrs.put("slot", "custom-front-action");
+        } else if (FunctionalActionKind.SHARE == functionalActionKind) {
+            attrs.put("slot", "custom-share-action");
+            attrs.put("hidden", "[[embedded]]"); // let's completely hide the share action for embedded centres
+            attrs.put("disabled", "[[_shareButtonDisabled]]");
+            attrs.put(" style", "[[_computeButtonStyle(_shareButtonDisabled)]]"); // included a space before "style" due to restriction in DOM API that requires only value pairs with ':' separator
         }
 
         attrs.put("ui-role", conf().role.toString());
@@ -238,43 +248,90 @@ public class FunctionalActionElement implements IRenderable, IImportable {
      */
     public String createActionObject() {
         final StringBuilder attrs = new StringBuilder("{\n");
-
-        attrs.append("preAction: function (action) {\n");
-        attrs.append("    console.log('preAction: " + conf().shortDesc.orElse("noname") + "');\n");
-        if (conf().preAction.isPresent()) {
-            attrs.append(conf().preAction.get().build().toString());
-        } else {
-            attrs.append("    return Promise.resolve(true);\n");
-        }
-        attrs.append("},\n");
-
-        attrs.append("postActionSuccess: function (functionalEntity, action, master) {\n");
-        attrs.append("    console.log('postActionSuccess: " + conf().shortDesc.orElse("noname") + "', functionalEntity);\n");
-        if (conf().successPostAction.isPresent()) {
-            attrs.append(conf().successPostAction.get().build().toString());
-        }
-        attrs.append("},\n");
-
-        attrs.append("attrs: {\n");
-        conf().functionalEntity.ifPresent(entityType -> {
-            attrs.append("    entityType:'" + entityType.getName() + "',\n");
-        });
-        attrs.append("    currentState:'EDIT', centreUuid: self.uuid,\n");
-
-        conf().prefDimForView.ifPresent(prefDim -> {
-            attrs.append(format("    prefDim: {'width': function() {return %s}, 'height': function() {return %s}, 'widthUnit': '%s', 'heightUnit': '%s'},\n", prefDim.width, prefDim.height, prefDim.widthUnit.value, prefDim.heightUnit.value));
-        });
-
-        attrs.append("},\n");
-
-        attrs.append("postActionError: function (functionalEntity, action, master) {\n");
-        attrs.append("    console.log('postActionError: " + conf().shortDesc.orElse("noname") + "', functionalEntity);\n");
-        conf().errorPostAction.ifPresent(postAction -> {
-            attrs.append(postAction.build().toString());
-        });
-
-        attrs.append("}\n");
+        attrs.append("preAction: ").append(createPreAction()).append(",\n");
+        attrs.append("postActionSuccess: ").append(createPostActionSuccess()).append(",\n");
+        attrs.append("attrs: ").append(createElementAttributes(false)).append(",\n");
+        attrs.append("postActionError: ").append(createPostActionError()).append("\n");
         return attrs.append("}\n").toString();
+    }
+
+    /**
+     * Creates non-empty JS function string for {@code bodyOpt}. Generated function logs the {@code name} and {@code actionShortDescOpt} and executes the body.
+     * 
+     * @param params -- string of parameters for the generated function
+     * @param codeOptIfEmptyBody -- code to be executed if body is empty
+     * @return
+     */
+    private static String createFunctionBody(final Optional<? extends IAction> bodyOpt, final String name, final String params, final Optional<String> codeOptIfEmptyBody, final Optional<String> actionShortDescOpt) {
+        final StringBuilder code = new StringBuilder();
+        code.append(format("function (%s) {\n", params));
+        code.append(format("    console.log('%s: %s');\n", name, actionShortDescOpt.orElse("noname")));
+        if (bodyOpt.isPresent()) {
+            code.append(bodyOpt.get().build().toString());
+        } else {
+            codeOptIfEmptyBody.ifPresent((c) -> code.append(c));
+        }
+        code.append("}");
+        return code.toString();
+    }
+
+    /**
+     * Creates JS function for {@link IPreAction}.
+     */
+    public String createPreAction() {
+        return createFunctionBody(conf().preAction, "preAction", "action", of("    return Promise.resolve(true);\n"), conf().shortDesc);
+    }
+
+    /**
+     * Creates JS function for {@link IPostAction}.
+     */
+    public String createPostActionFunctionBody(final Optional<? extends IAction> actionFunction, final String name) {
+        return createFunctionBody(actionFunction, name, "functionalEntity, action, master", empty(), conf().shortDesc);
+    }
+
+    /**
+     * Creates JS function for successful {@link IPostAction}.
+     */
+    public String createPostActionSuccess() {
+        return createPostActionFunctionBody(conf().successPostAction, "postActionSuccess");
+    }
+
+    /**
+     * Creates JS function for erroneous {@link IPostAction}.
+     */
+    public String createPostActionError() {
+        return createPostActionFunctionBody(conf().errorPostAction, "postActionError");
+    }
+
+    /**
+     * Creates action 'attrs' for generation ({@code asString} === false) or for client-side parsing in 'tg-app-template.postRetrieved' method ({@code asString} === true).
+     * 
+     * @param asString
+     * @return
+     */
+    public String createElementAttributes(final boolean asString) {
+        final StringBuilder code = new StringBuilder();
+        final String keyQ = asString ? "\"" : "";
+        final String valueQ = asString ? "\"" : "'";
+        code.append("{\n");
+        conf().functionalEntity.ifPresent(entityType -> {
+            code.append("    " + keyQ + "entityType" + keyQ + ": " + valueQ + entityType.getName() + valueQ + ",\n");
+        });
+        code.append("    " + keyQ + "currentState" + keyQ + ": " + valueQ + "EDIT" + valueQ + ",\n");
+        code.append("    " + keyQ + "centreUuid" + keyQ + ": " + keyQ + "self.uuid" + keyQ); // value surrounded with "" -- will be interpreted in tg-app-template specifically
+        
+        conf().prefDimForView.ifPresent(prefDim -> {
+            code.append(format(",\n    " + 
+                keyQ + "prefDim" + keyQ + ": " + "{" + 
+                    keyQ + "width" + keyQ + ": " + keyQ + "function() {return %s}" + keyQ +", " + // value surrounded with "" -- will be interpreted in tg-app-template specifically
+                    keyQ + "height" + keyQ + ": " + keyQ + "function() {return %s}" + keyQ + ", " + // value surrounded with "" -- will be interpreted in tg-app-template specifically
+                    keyQ + "widthUnit" + keyQ + ": " + valueQ + "%s" + valueQ + ", " +
+                    keyQ + "heightUnit" + keyQ + ": " + valueQ + "%s" + valueQ + 
+                "}", prefDim.width, prefDim.height, prefDim.widthUnit.value, prefDim.heightUnit.value
+            ));
+        });
+        code.append("\n}");
+        return code.toString();
     }
 
     public boolean isForMaster() {

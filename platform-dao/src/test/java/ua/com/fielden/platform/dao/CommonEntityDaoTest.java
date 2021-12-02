@@ -24,12 +24,12 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.joda.time.DateTime;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
+import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.pagination.IPage;
@@ -891,12 +891,43 @@ public class CommonEntityDaoTest extends AbstractDaoTestCase {
         co.save(entity);
     }
 
+    @Test
+    public void composite_entities_can_by_queried_by_passing_composite_key_values_as_EQL_parameters() {
+        final IEntityDao<EntityWithDynamicCompositeKey> co = co(EntityWithDynamicCompositeKey.class);
+        final String compositeKeyAsString = "key-1-1" + " " + "KEY1";
+        final EntityResultQueryModel<EntityWithDynamicCompositeKey> qByKeyAsString = select(EntityWithDynamicCompositeKey.class).where()
+                .prop("key").eq().val(compositeKeyAsString).model();
+        final fetch<EntityWithDynamicCompositeKey> fetch = fetchAll(EntityWithDynamicCompositeKey.class);
+        final EntityWithDynamicCompositeKey entityByKeyAsString = co.getEntity(from(qByKeyAsString).with(fetch).model());
+        assertNotNull(entityByKeyAsString);
+
+        final EntityResultQueryModel<EntityWithDynamicCompositeKey> qByKey = select(EntityWithDynamicCompositeKey.class).where()
+                .prop("key").eq().val(entityByKeyAsString.getKey()).model();
+        final EntityWithDynamicCompositeKey entityByKey = co.getEntity(from(qByKey).with(fetch).model());
+        assertNotNull(entityByKey);
+        assertEquals(entityByKeyAsString, entityByKey);
+    }
+
+    @Override
+    public boolean saveDataPopulationScriptToFile() {
+        return false;
+    }
+
+    @Override
+    public boolean useSavedDataPopulationScript() {
+        return false;
+    }
+
     @Override
     protected void populateDomain() {
         super.populateDomain();
 
         final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
         constants.setNow(dateTime("2016-02-19 02:47:00"));
+
+        if (useSavedDataPopulationScript()) {
+            return;
+        }
 
         final EntityWithMoney keyPartTwo = save(new_(EntityWithMoney.class, "KEY1", "desc").setMoney(new Money("20.00")).setDateTimeProperty(date("2009-03-01 11:00:55")));
         save(new_composite(EntityWithDynamicCompositeKey.class, "key-1-1", keyPartTwo));

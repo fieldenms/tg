@@ -23,11 +23,12 @@ import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
+import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
+import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
@@ -49,6 +50,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
     private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
     private final IUserProvider userProvider;
+    private final ICentreConfigSharingModel sharingModel;
     private final Logger logger = Logger.getLogger(getClass());
 
     public EntityValidationResource(
@@ -62,6 +64,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
             final IUserProvider userProvider,
             final IDeviceProvider deviceProvider,
             final IDates dates,
+            final ICentreConfigSharingModel sharingModel,
             final Context context,
             final Request request,
             final Response response) {
@@ -75,6 +78,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
         this.domainTreeEnhancerCache = domainTreeEnhancerCache;
         this.webUiConfig = webUiConfig;
         this.userProvider = userProvider;
+        this.sharingModel = sharingModel;
     }
 
     /**
@@ -89,11 +93,11 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
             final SavingInfoHolder savingInfoHolder = restoreSavingInfoHolder(envelope, restUtil);
             
             final User user = userProvider.getUser();
-            final IEntityCentreConfig eccCompanion = companionFinder.find(EntityCentreConfig.class);
-            final IMainMenuItem mmiCompanion = companionFinder.find(MainMenuItem.class);
+            final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
+            final MainMenuItemCo mmiCompanion = companionFinder.find(MainMenuItem.class);
             final IUser userCompanion = companionFinder.find(User.class);
             
-            final T applied = restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, user, userProvider, critGenerator, 0, device(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion);
+            final T applied = restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, user, critGenerator, 0, device(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel);
             
             logger.debug("ENTITY_VALIDATION_RESOURCE: validate finished.");
             return restUtil.rawListJsonRepresentation(applied, linkedMapOf(t2(VALIDATION_COUNTER, savingInfoHolder.getModifHolder().get(VALIDATION_COUNTER)))); // savingInfoHolder and its modifHolder are never empty

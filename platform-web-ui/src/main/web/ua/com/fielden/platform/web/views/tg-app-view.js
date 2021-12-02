@@ -32,7 +32,9 @@ const template = html`
         </div>
     </div>
     <div class="flex layout vertical">
-        <tg-view-with-menu class="fit" id="view" menu="[[menu]]" menu-item="[[menuItem]]" can-edit="[[canEdit]]" menu-save-callback="[[menuSaveCallback]]" selected-module="[[selectedModule]]" submodule="{{submodule}}"></tg-view-with-menu>
+        <tg-view-with-menu class="fit" id="view" menu="[[menu]]" menu-item="[[menuItem]]" can-edit="[[canEdit]]" menu-save-callback="[[menuSaveCallback]]" selected-module="[[selectedModule]]" selected-submodule="{{selectedSubmodule}}">
+            <slot slot="menuItemAction" name="menuItemAction"></slot>
+        </tg-view-with-menu>
     </div>`;
 
 template.setAttribute('strip-whitespace', '');
@@ -47,7 +49,7 @@ Polymer({
         menu: Array,
         menuItem: Object,
         selectedModule: String,
-        submodule: {
+        selectedSubmodule: {
             type: Object,
             notify: true
         },

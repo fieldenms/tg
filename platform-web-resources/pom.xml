@@ -11,12 +11,19 @@
 	<name>Trident Genesis Platform Web Resources</name>
 
 	<properties>
-		<restlet.version>2.4.0</restlet.version>
-		<jetty.version>9.4.18.v20190429</jetty.version>
+		<restlet.version>2.4.3</restlet.version>
+		<jetty.version>9.4.41.v20210516</jetty.version>
 	</properties>
 
 	<dependencies>
 		<!-- inner module dependencies -->
+		<dependency>
+			<groupId>fielden</groupId>
+			<artifactId>platform-pojo-bl</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
 		<dependency>
 			<groupId>fielden</groupId>
 			<artifactId>platform-dao</artifactId>
@@ -34,6 +41,14 @@
 			<artifactId>platform-web-ui</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>fielden</groupId>
+			<artifactId>platform-web-ui</artifactId>
+			<version>${project.version}</version>
+			<type>test-jar</type>
+			<scope>test</scope>
+		</dependency>
+
 		<!-- other dependencies, including third party libs -->
 		<!-- Restlet and Jetty libraries -->
 		<dependency>
