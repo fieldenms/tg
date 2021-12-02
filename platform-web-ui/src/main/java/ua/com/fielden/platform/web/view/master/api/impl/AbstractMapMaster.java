@@ -43,9 +43,6 @@ public abstract class AbstractMapMaster<T extends AbstractFunctionalEntityWithCe
                 .attr("retrieved-totals", "{{retrievedTotals}}");
 
         final String primaryActionObjectsString = primaryActionObjects.toString();
-        
-        final StringBuilder prefDimBuilder = new StringBuilder();
-        prefDimBuilder.append("{'width': function() {return '100%'}, 'height': function() {return '100%'}, 'widthUnit': '', 'heightUnit': ''}");
 
         final StringBuilder prefDimBuilder = new StringBuilder();
         prefDimBuilder.append("{'width': function() {return '100%'}, 'height': function() {return '100%'}, 'widthUnit': '', 'heightUnit': ''}");
