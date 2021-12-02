@@ -20,7 +20,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  *
  */
 @KeyType(String.class)
-@CompanionObject(IMenu.class)
+@CompanionObject(MenuCo.class)
 public class Menu extends AbstractEntity<String> implements IMenuManager {
 
     @IsProperty(Module.class)
