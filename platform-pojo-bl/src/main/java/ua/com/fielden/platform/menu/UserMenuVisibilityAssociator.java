@@ -8,7 +8,6 @@ import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModif
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DenyIntrospection;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.security.user.User;
@@ -20,7 +19,6 @@ import ua.com.fielden.platform.security.user.User;
  *
  */
 @CompanionObject(UserMenuVisibilityAssociatorCo.class)
-@KeyTitle(value = "Stub")
 @DenyIntrospection
 public class UserMenuVisibilityAssociator extends AbstractFunctionalEntityForCollectionModification<Long> {
 
@@ -38,7 +36,5 @@ public class UserMenuVisibilityAssociator extends AbstractFunctionalEntityForCol
     public Set<User> getUsers() {
         return Collections.unmodifiableSet(users);
     }
-
-
 
 }

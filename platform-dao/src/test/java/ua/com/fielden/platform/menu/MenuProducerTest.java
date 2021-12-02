@@ -3,10 +3,10 @@ package ua.com.fielden.platform.menu;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -33,7 +33,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
 
         @Override
         public Menu getMenuEntity(final DeviceProfile deviceProfile) {
-            final List<ModuleMenuItem> moduleMenu1 = Arrays.asList(
+            final List<ModuleMenuItem> moduleMenu1 = listOf(
                     new ModuleMenuItem().setKey("module1item1"),
                     new ModuleMenuItem().setKey("module1item2"),
                     new ModuleMenuItem().setKey("module1item3"),
@@ -41,23 +41,21 @@ public class MenuProducerTest extends AbstractDaoTestCase {
                     new ModuleMenuItem().setKey("module1item5"));
             final ModuleMenu module1 = new ModuleMenu().setKey("module1").setMenu(moduleMenu1);
 
-            final List<ModuleMenuItem> module2group1 = Arrays.asList(
+            final List<ModuleMenuItem> module2group1 = listOf(
                     new ModuleMenuItem().setKey("module2group1item1"),
                     new ModuleMenuItem().setKey("module2group1item2"));
-            final List<ModuleMenuItem> module2group2 = Arrays.asList(
+            final List<ModuleMenuItem> module2group2 = listOf(
                     new ModuleMenuItem().setKey("module2group2item1"),
                     new ModuleMenuItem().setKey("module2group2item2"),
                     new ModuleMenuItem().setKey("module2group2item3"));
-            final List<ModuleMenuItem> moduleMenu2 = Arrays.asList(
+            final List<ModuleMenuItem> moduleMenu2 = listOf(
                     new ModuleMenuItem().setKey("module2group1").setMenu(module2group1),
                     new ModuleMenuItem().setKey("module2item1"),
                     new ModuleMenuItem().setKey("module2item2"),
                     new ModuleMenuItem().setKey("module2group2").setMenu(module2group2));
             final ModuleMenu module2 = new ModuleMenu().setKey("module2").setMenu(moduleMenu2);
 
-            final List<ModuleMenu> modules = Arrays.asList(module1, module2);
-            final Menu menu = new Menu().setMenu(modules);
-            return menu;
+            return new Menu().setMenu(listOf(module1, module2));
         }
     };
 
@@ -68,13 +66,13 @@ public class MenuProducerTest extends AbstractDaoTestCase {
 
         up.setUser(co(User.class).findByKey("BUSER_1"));
         save(new_(MenuSaveAction.class)
-                .setInvisibleMenuItems(new HashSet<>(Arrays.asList(
+                .setInvisibleMenuItems(setOf(
                         "module1/module1item3",
                         "module2/module2group1/module2group1item1",
                         "module2/module2group1/module2group1item2",
                         "module2/module2item2",
                         "module2/module2group2/module2group2item2",
-                        "module2/module2group2/module2group2item3"))));
+                        "module2/module2group2/module2group2item3")));
 
         final MenuProducer menuProducer = new MenuProducer(menuRetriever, mii, up, getInstance(ICompanionObjectFinder.class), getInstance(EntityFactory.class));
         final CentreContext context = new CentreContext();
@@ -135,13 +133,13 @@ public class MenuProducerTest extends AbstractDaoTestCase {
 
         up.setUser(co(User.class).findByKey("BUSER_1"));
         save(new_(MenuSaveAction.class)
-                .setInvisibleMenuItems(new HashSet<>(Arrays.asList(
+                .setInvisibleMenuItems(setOf(
                         "module1/module1item3",
                         "module2/module2group1/module2group1item1",
                         "module2/module2group1/module2group1item2",
                         "module2/module2item2",
                         "module2/module2group2/module2group2item2",
-                        "module2/module2group2/module2group2item3"))));
+                        "module2/module2group2/module2group2item3")));
 
         checkMenuVisibilityForUser("USER_1", up, mii);
         checkMenuVisibilityForUser("USER_2", up, mii);
@@ -182,13 +180,13 @@ public class MenuProducerTest extends AbstractDaoTestCase {
         final WebMenuItemInvisibilityCo mii = co(WebMenuItemInvisibility.class);
 
         up.setUser(co(User.class).findByKey("BUSER_1"));
-        makeInvisibleMenuItemsForUser(new HashSet<>(Arrays.asList(
+        makeInvisibleMenuItemsForUser(setOf(
                 "module1/module1item3",
                 "module2/module2group1/module2group1item1",
                 "module2/module2group1/module2group1item2",
                 "module2/module2item2",
                 "module2/module2group2/module2group2item2",
-                "module2/module2group2/module2group2item3")), "USER_1");
+                "module2/module2group2/module2group2item3"), "USER_1");
 
         checkMenuVisibilityForUser("USER_1", up, mii);
 
@@ -240,10 +238,10 @@ public class MenuProducerTest extends AbstractDaoTestCase {
 
         menuItems.forEach(menuItem -> {
             final CentreContext context = new CentreContext();
-            context.setSelectedEntities(Arrays.asList(new WebMenuItemInvisibility().setMenuItemUri(menuItem)));
+            context.setSelectedEntities(listOf(new WebMenuItemInvisibility().setMenuItemUri(menuItem)));
             umvProducer.setContext(context);
             final UserMenuVisibilityAssociator newEntity = umvProducer.newEntity();
-            newEntity.setRemovedIds(new LinkedHashSet<>(Arrays.asList(userToExclude.getId())));
+            newEntity.setRemovedIds(linkedSetOf(userToExclude.getId()));
             umiaCo.save(newEntity);
         });
     }
@@ -256,13 +254,10 @@ public class MenuProducerTest extends AbstractDaoTestCase {
 
         final User baseUser = coUser.findByKey("BUSER_2");
         up.setUser(baseUser);
-        save(new_(MenuSaveAction.class)
-                .setInvisibleMenuItems(new HashSet<>(Arrays.asList(
-                        "module2/module2group1/module2group1item1"))));
+        save(new_(MenuSaveAction.class).setInvisibleMenuItems(setOf("module2/module2group1/module2group1item1")));
 
         up.setUser(coUser.findByKey("BUSER_1"));
-        makeInvisibleMenuItemsForUser(new HashSet<>(Arrays.asList(
-                "module2/module2group1/module2group1item2")), "USER_1");
+        makeInvisibleMenuItemsForUser(setOf("module2/module2group1/module2group1item2"), "USER_1");
 
         up.setUser(coUser.findByKey(UNIT_TEST_USER));
         final IUser co$User = co$(User.class);
@@ -297,8 +292,7 @@ public class MenuProducerTest extends AbstractDaoTestCase {
 
         final User baseUser = coUser.findByKey("BUSER_2");
         up.setUser(baseUser);
-        makeInvisibleMenuItemsForUser(new HashSet<>(Arrays.asList(
-                "module2/module2group1/module2group1item1")), "USER_3");
+        makeInvisibleMenuItemsForUser(setOf("module2/module2group1/module2group1item1"), "USER_3");
 
         up.setUser(coUser.findByKey(UNIT_TEST_USER));
         final IUser co$User = co$(User.class);
