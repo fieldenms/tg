@@ -10,6 +10,7 @@ import java.util.Set;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
@@ -52,11 +53,10 @@ public class UserMenuVisibilityAssociatorDao extends CommonEntityDao<UserMenuVis
                 removedAssociations.add(co$(WebMenuItemInvisibility.class).new_().setOwner(availableUsers.get(removedId)).setMenuItemUri(actionAndUserBeingUpdated._2.getMenuItemUri()));
             }
 
-            final UserMenuInvisibilityAssociationBatchAction batchAction = new UserMenuInvisibilityAssociationBatchAction();
-            batchAction.setSaveEntities(removedAssociations);
-            batchAction.setRemoveEntities(addedAssociations);
-            co$(UserMenuInvisibilityAssociationBatchAction.class).save(batchAction);
+            final UserMenuInvisibilityAssociationBatchActionCo co$ = co$(UserMenuInvisibilityAssociationBatchAction.class);
+            co$.save(co$.new_().setSaveEntities(removedAssociations).setRemoveEntities(addedAssociations));
         }
         return super.save(entity);
     }
+
 }
