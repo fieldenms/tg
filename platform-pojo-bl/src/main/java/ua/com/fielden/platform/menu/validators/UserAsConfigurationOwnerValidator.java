@@ -19,11 +19,11 @@ import ua.com.fielden.platform.security.user.User;
  */
 public class UserAsConfigurationOwnerValidator implements IBeforeChangeEventHandler<User> {
 
-    public static final String USER_S_IS_A_BASE_USER_ERROR = "User [%s] is a base user.";
+    public static final String ERR_USER_IS_A_BASE_USER = "User [%s] is a base user.";
 
     @Override
     public Result handle(final MetaProperty<User> property, final User newValue, final Set<Annotation> mutatorAnnotations) {
-        return newValue.isBase() ? Result.failure(format(USER_S_IS_A_BASE_USER_ERROR, newValue)) : Result.successful(newValue);
+        return newValue.isBase() ? Result.failure(format(ERR_USER_IS_A_BASE_USER, newValue)) : Result.successful(newValue);
     }
 
 }
