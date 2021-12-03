@@ -223,6 +223,14 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
                 type: Boolean,
                 value: false
             },
+
+            /**
+             * Indicates whether order of arrived entities remains the same even if some of items are selected.
+             */
+            staticOrder: {
+                type: Boolean,
+                value: false
+            },
             
             /**
              * Indicates the item that is currently dragging. It might be null if there is no dragging item.
@@ -468,9 +476,14 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
         }
         
         this._disableSelectionListeners = true; // _disableSelectionListeners even before _entities initialisation; this is needed due to clearSelection() call inside iron-list when '_entities' change
-        this._entities = this._isCentreConfigEntity(entity)
-            ? this._placeSelectedOnTop(arrivedEntities, selEntities, chosenIds) // checked items should be ordered as in chosenIds (only for CentreConfigUpdater)
-            : this._placeSelectedOnTopPreservingOriginalOrder(arrivedEntities, chosenIds);
+        
+        if (this._isCentreConfigEntity(entity)) {
+            this._entities = this._placeSelectedOnTop(arrivedEntities, selEntities, chosenIds); // checked items should be ordered as in chosenIds (only for CentreConfigUpdater)
+        } else if (this.staticOrder) {
+            this._entities = arrivedEntities.slice();
+        } else {
+            this._entities = this._placeSelectedOnTopPreservingOriginalOrder(arrivedEntities, chosenIds);
+        }
         
         this.$.input.clearSelection();
         
