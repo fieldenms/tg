@@ -10,6 +10,7 @@ import { MarkerCluster, leafletMarkerClusterStylesName, tgMarkerClusterStylesNam
 import { Select } from '/resources/gis/tg-select.js';
 import { Controls, leafletDrawStylesName, leafletControlloadingStylesName, leafletEasybuttonStylesName } from '/resources/gis/tg-controls.js';
 import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
+import '/resources/gis/leaflet/subgroup/leaflet-subgroup-lib.js';
 import { TgReflector, _isEntity } from '/app/tg-reflector.js';
 import { TgAppConfig } from '/app/tg-app-config.js';
 import { RunActions } from '/resources/centre/tg-selection-criteria-behavior.js';
@@ -71,7 +72,9 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
 
         self.promoteEntities(newRetrievedEntitiesCopy);
 
-        self._markerCluster.getGisMarkerClusterGroup().addLayer(self._geoJsonOverlay);
+        // we add checked overlays to marker cluster again: this is because we need to trigger tg-progress-bar-updater's chunked loading and fitToBounds logic
+        Object.values(self._overlays).filter(overlay => overlay._checkedByDefault).forEach(overlay => self._markerCluster.getGisMarkerClusterGroup().addLayer(overlay));
+
         self.finishReload();
         if (_isEntity(prevEntity)) { // if there was previously selected layer (with or without popup) and corresponding entity was found
             const foundEntity = self._entities.find(entity => self._reflector.equalsEx(entity, prevEntity)); // find new entity that is equal to previous entity (if present)
@@ -135,6 +138,32 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     // create a factory for markers
     self._markerFactory = self.createMarkerFactory();
 
+    self._createLayer = function (checkedByDefault = false, parentGroup) {
+        const geoJson = new L.GeoJSON.SubGroup(parentGroup, [], {
+            style: function (feature) {
+                return self._entityStyling.getStyle(feature);
+            },
+            pointToLayer: function (feature, latlng) {
+                return self._markerFactory.createFeatureMarker(feature, latlng);
+            },
+            onEachFeature: function (feature, layer) {
+                const layerId = geoJson.getLayerId(layer);
+                feature.properties.layerId = layerId;
+                layer.on('mouseover', function () {
+                    if (!feature.properties.popupContentInitialised) { // initialise popupContent (text or even heavyweight HTMLElement) only once when mouseOver occurs
+                        layer.bindPopup(self.createPopupContent(feature));
+                        feature.properties.popupContentInitialised = true;
+                    }
+                });
+                layer.on('click', function () { // dblclick
+                    self._select.select(layerId);
+                });
+            }
+        });
+        geoJson._checkedByDefault = checkedByDefault;
+        return geoJson;
+    };
+
     self._createEsriLayer = function (url, _featureType, checkedByDefault = false) {
         const esriOverlay = esri.featureLayer({
             url: url,
@@ -165,33 +194,13 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
         return esriOverlay;
     };
 
-    const overlays = self.createOverlays();
-    self._markerCluster = self.createMarkerCluster(self._map, self._markerFactory, progressDiv, progressBarDiv, overlays);
+    self._markerCluster = self.createMarkerCluster(self._map, self._markerFactory, progressDiv, progressBarDiv);
+    const overlays = self.createOverlays(self._markerCluster.getGisMarkerClusterGroup());
+    self._overlays = overlays;
 
     self._entityStyling = self.createEntityStyling();
-    self._geoJsonOverlay = L.geoJson([], {
-        style: function (feature) {
-            return self._entityStyling.getStyle(feature);
-        },
-        pointToLayer: function (feature, latlng) {
-            return self._markerFactory.createFeatureMarker(feature, latlng);
-        },
-        onEachFeature: function (feature, layer) {
-            const layerId = self._geoJsonOverlay.getLayerId(layer);
-            feature.properties.layerId = layerId;
-            layer.on('mouseover', function () {
-                if (!feature.properties.popupContentInitialised) { // initialise popupContent (text or even heavyweight HTMLElement) only once when mouseOver occurs
-                    layer.bindPopup(self.createPopupContent(feature));
-                    feature.properties.popupContentInitialised = true;
-                }
-            });
-            layer.on('click', function () { // dblclick
-                self._select.select(layerId);
-            });
-        }
-    });
 
-    self._controls = new Controls(self._map, self._markerCluster.getGisMarkerClusterGroup(), self._baseLayers, overlays, Object.values(overlays)[0]);
+    self._controls = new Controls(self._map, self._markerCluster.getGisMarkerClusterGroup(), self._baseLayers, overlays, /*Object.values(overlays)[0]*/ null);
 
     const findLayerByPredicate = function (overlay, predicate) {
         if (overlay._layers) {
@@ -218,11 +227,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     };
 
     const getLayerById = function (layerId) {
-        const found = findLayerByPredicateIn(Object.values(overlays), value => value._leaflet_id === layerId);
-        if (found) {
-            return found;
-        }
-        return self._geoJsonOverlay.getLayer(layerId);
+        return findLayerByPredicateIn(Object.values(overlays), value => value._leaflet_id === layerId);
     };
     const getLayerByGlobalId = function (globalId) {
         return findLayerByPredicateIn(Object.values(overlays), value => value.feature.properties.GlobalID === globalId);
@@ -230,7 +235,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     self._select = new Select(self._map, getLayerById, self._markerFactory, tgMap, self.findEntityBy.bind(self), getLayerByGlobalId);
     self._map.fire('dataloading');
     self.initialise();
-    self._markerCluster.getGisMarkerClusterGroup().addLayer(self._geoJsonOverlay);
+
     self._map.fire('dataload');
 };
 
@@ -244,7 +249,7 @@ GisComponent.prototype.appendStyles = function (tgMap, ...styleModuleNames) {
     tgMap.shadowRoot.appendChild(styleWrapper);
 };
 
-GisComponent.prototype.createOverlays = function () {
+GisComponent.prototype.createOverlays = function (parentGroup) {
     return {};
 };
 
@@ -280,15 +285,17 @@ GisComponent.prototype.getTopEntityFor = function (feature) {
 }
 
 GisComponent.prototype.initialise = function () {
-    this._geoJsonOverlay.addData([]);
+    Object.values(this._overlays).forEach(function (overlay) {
+        overlay.addData([]);
+    });
 };
 
 GisComponent.prototype.createMarkerFactory = function () {
     return new MarkerFactory();
 };
 
-GisComponent.prototype.createMarkerCluster = function (map, markerFactory, progressDiv, progressBarDiv, overlays) {
-    return new MarkerCluster(map, markerFactory, progressDiv, progressBarDiv, overlays);
+GisComponent.prototype.createMarkerCluster = function (map, markerFactory, progressDiv, progressBarDiv) {
+    return new MarkerCluster(map, markerFactory, progressDiv, progressBarDiv);
 };
 
 GisComponent.prototype.createEntityStyling = function () {
@@ -306,7 +313,9 @@ GisComponent.prototype.finishReload = function () {
 };
 
 GisComponent.prototype.clearAll = function () {
-    this._geoJsonOverlay.clearLayers();
+    Object.values(this._overlays).forEach(function (overlay) {
+        overlay.clearLayers();
+    });
     this._markerCluster.getGisMarkerClusterGroup().clearLayers();
 };
 
@@ -314,17 +323,14 @@ GisComponent.prototype.promoteEntities = function (newEntities) {
     const self = this;
     this._entities = newEntities;
 
-    this.traverseEntities(this._entities, null /* the parent for top-level entities is null! */, function (entity) {
-        if (entity.type) {
-            console.warn('Entity already has "type" object. Cannot continue with conversion into feature.');
-        }
+    this.traverseEntities(this._entities, null /* the parent for top-level entities is null! */, function (entity, parentFeature) {
         entity.type = "Feature";
 
          if (entity.properties) {
             console.warn('Entity already has "properties" object. Cannot continue with conversion into feature.');
         }
         entity.properties = entity.properties || {};
-        entity.properties._parentFeature = null;
+        entity.properties._parentFeature = parentFeature;
 
          if (entity.geometry) {
             throw 'Entity already has "geometry" object. Cannot continue with conversion into feature.';
@@ -336,12 +342,13 @@ GisComponent.prototype.promoteEntities = function (newEntities) {
         // console.debug('entity.geometry:');
         // console.debug(entity.geometry);
 
-         if (entity.geometry) {
-            self._geoJsonOverlay.addData(entity);
+        if (entity.geometry) {
+            self._overlays[self.overlayNameFor(entity)].addData(entity);
+            //console.debug('added', entity);
         } else {
             // TODO do nothing in case when the entity has no visual representation
-            console.debug("entity with no visual representation: ");
-            console.debug(entity);
+            // console.debug("entity with no visual representation: ");
+            // console.debug(entity);
         }
     }, function (entities) {
         return self.createSummaryFeature(entities);
@@ -407,22 +414,18 @@ GisComponent.prototype.createGeometry = function (feature) {
 GisComponent.prototype.traverseEntities = function (entities, parentFeature, entityAction, createSummaryFeatureAction) {
     for (let i = 0; i < entities.length; i++) {
         const entity = entities[i];
-        this.traverseEntity(entity, entityAction, createSummaryFeatureAction); // entityAction converts entity to a feature form
-
-        entity.properties._parentFeature = parentFeature;
+        this.traverseEntity(entity, parentFeature, entityAction, createSummaryFeatureAction); // entityAction converts entity to a feature form
     }
     const summaryFeature = createSummaryFeatureAction(entities);
     if (summaryFeature) {
         entities.push(summaryFeature); // the last sibling item to the entities will be summaryFeature (if any)
-        entityAction(summaryFeature); // entityAction converts entity to a feature form if it is not feature already
-
-        summaryFeature.properties._parentFeature = parentFeature;
+        entityAction(summaryFeature, parentFeature); // entityAction converts entity to a feature form if it is not feature already
     }
 }
 
-GisComponent.prototype.traverseEntity = function (entity, entityAction, createSummaryFeatureAction) {
+GisComponent.prototype.traverseEntity = function (entity, parentFeature, entityAction, createSummaryFeatureAction) {
     const self = this;
-    entityAction(entity); // entityAction converts entity to a feature form
+    entityAction(entity, parentFeature); // entityAction converts entity to a feature form
 
     /* if (entity.properties) {
         for (let prop in entity.properties) {
