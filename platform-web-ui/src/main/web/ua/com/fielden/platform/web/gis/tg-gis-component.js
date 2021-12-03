@@ -93,6 +93,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
                 }
             }
         }
+        self._markerCluster.setShouldFitToBounds(false); // reset shouldFitToBounds to avoid fitting to bounds on overlay's tick
     };
     self.tgMap = tgMap;
 

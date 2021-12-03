@@ -5,7 +5,7 @@ export const ProgressBarUpdater = function (_map, _getMarkers, progressDiv, prog
     this._getMarkers = _getMarkers;
     this._progress = progressDiv;
     this._progressBar = progressBarDiv;
-    this._shouldFitToBounds = true;
+    this._shouldFitToBounds = false;
 };
 
 ProgressBarUpdater.prototype.updateProgressBar = function (processed, total, elapsed) {
