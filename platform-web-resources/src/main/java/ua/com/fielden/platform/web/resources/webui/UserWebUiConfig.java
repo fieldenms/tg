@@ -1,13 +1,13 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static java.lang.String.format;
+import static java.util.Optional.empty;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.security.user.User.EMAIL;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
-import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_SPECIFICATION;
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkActionLayoutForMaster;
 import static ua.com.fielden.platform.web.test.server.config.LocatorFactory.mkLocator;
 
 import java.util.Optional;
@@ -25,6 +25,7 @@ import ua.com.fielden.platform.security.user.UserRolesUpdaterProducer;
 import ua.com.fielden.platform.security.user.locator.UserLocator;
 import ua.com.fielden.platform.security.user.value_matchers.UserMasterBaseUserMatcher;
 import ua.com.fielden.platform.ui.menu.sample.MiUser;
+import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -44,8 +45,6 @@ import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
  *
  */
 public class UserWebUiConfig {
-    private static final String actionButton = MASTER_ACTION_SPECIFICATION;
-    private static final String bottomButtonPanel = "['horizontal', 'padding: 20px', 'justify-content: center', 'wrap', [%s], [%s]]";
 
     public final EntityMaster<UserRolesUpdater> rolesUpdater;
     public final EntityCentre<ReUser> centre;
@@ -121,7 +120,7 @@ public class UserWebUiConfig {
                 .addProp("roles").asCollectionalRepresentor().withAction(UserActions.MANAGE_ROLES_MASTER_PROP_ACTION.mkAction()).also()
                 .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancel changes if any and refresh.")
                 .addAction(MasterActions.SAVE).shortDesc("Save").longDesc("Save changes.")
-                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), format(bottomButtonPanel, actionButton, actionButton))
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), mkActionLayoutForMaster())
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .withDimensions(mkDim(580, 390))
                 .done();
@@ -136,23 +135,14 @@ public class UserWebUiConfig {
     private static EntityMaster<UserRolesUpdater> createRolesUpdater(final Injector injector) {
         final IMaster<UserRolesUpdater> masterConfig = new SimpleMasterBuilder<UserRolesUpdater>()
                 .forEntity(UserRolesUpdater.class)
-                .addProp("roles").asCollectionalEditor()
-                .also()
-                .addAction(MasterActions.REFRESH).shortDesc("CANCEL").longDesc("Cancel action")
-                .addAction(MasterActions.SAVE)
-
-                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), format(bottomButtonPanel, actionButton, actionButton))
-                .setLayoutFor(Device.DESKTOP, Optional.empty(), (
-                        "      ['padding:20px', 'height: 100%', 'box-sizing: border-box', "
-                        + format("['flex', ['flex']]")
-                        + "    ]"))
-                .withDimensions(mkDim("'30%'", "'50%'"))
+                .addProp("roles").asCollectionalEditor().also()
+                .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancel changes, if any, and close the dialog.")
+                .addAction(MasterActions.SAVE).shortDesc("Save").longDesc("Save changes.")
+                .setActionBarLayoutFor(Device.DESKTOP, empty(), mkActionLayoutForMaster())
+                .setLayoutFor(Device.DESKTOP, empty(), "['padding:20px', 'height: 100%', 'box-sizing: border-box', ['flex', ['flex']] ]")
+                .withDimensions(mkDim(30, 75, Unit.PRC))
                 .done();
-        return new EntityMaster<>(
-                UserRolesUpdater.class,
-                UserRolesUpdaterProducer.class,
-                masterConfig,
-                injector);
+        return new EntityMaster<>(UserRolesUpdater.class, UserRolesUpdaterProducer.class, masterConfig, injector);
     }
 
     private static enum UserActions {
