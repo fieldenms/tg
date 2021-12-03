@@ -1,16 +1,16 @@
 import { fitToBounds } from '/resources/gis/tg-gis-utils.js';
 
-export const ProgressBarUpdater = function (_map, _getMarkers, progressDiv, progressBarDiv, overlays) {
+export const ProgressBarUpdater = function (_map, _getMarkers, progressDiv, progressBarDiv) {
     this._map = _map;
     this._getMarkers = _getMarkers;
     this._progress = progressDiv;
     this._progressBar = progressBarDiv;
     this._shouldFitToBounds = true;
-    this._overlays = overlays;
 };
 
 ProgressBarUpdater.prototype.updateProgressBar = function (processed, total, elapsed) {
-    console.debug("updateProgressBar(processed = " + processed + ", total = " + total + ", elapsed = " + elapsed + ");");
+    const self = this;
+    console.debug("updateProgressBar(processed = " + processed + ", total = " + total + ", elapsed = " + elapsed + "); shouldFitToBounds = " + this._shouldFitToBounds);
 
     if (elapsed > 0) { // 1000
         // if it takes more than a second to load, display the progress bar:
@@ -32,7 +32,7 @@ ProgressBarUpdater.prototype.updateProgressBar = function (processed, total, ela
         this._progress.style.display = 'none';
 
         if (this._shouldFitToBounds) {
-            fitToBounds(this._map, this._getMarkers(), this._overlays);
+            fitToBounds(this._map, this._getMarkers());
         }
 
         // iteration = 1;

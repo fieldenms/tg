@@ -31,7 +31,7 @@ export const Controls = function (_map, _markersClusterGroup, _baseLayers, _addi
     const fitToBoundsControl = easyButton(
         'fa-compress',
         function () {
-            fitToBounds(self._map, self._markersClusterGroup, _additionalOverlays);
+            fitToBounds(self._map, self._markersClusterGroup);
         },
         'Fit to bounds',
         self._map
@@ -167,8 +167,7 @@ export const Controls = function (_map, _markersClusterGroup, _baseLayers, _addi
         });
     }
     
-    _additionalOverlays['GEO-json'] = self._markersClusterGroup;
-    _additionalOverlays['GEO-json']._checkedByDefault = true;
+    self._map.addLayer(self._markersClusterGroup);
     Object.values(_additionalOverlays).filter(overlay => overlay._checkedByDefault).forEach(overlay => self._map.addLayer(overlay));
 
     const overlaysControl = L.control.layers(self._baseLayers.getBaseLayers(), _additionalOverlays);
