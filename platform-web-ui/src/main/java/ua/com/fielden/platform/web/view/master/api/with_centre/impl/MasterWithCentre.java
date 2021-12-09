@@ -26,11 +26,12 @@ import ua.com.fielden.platform.web.view.master.api.IMaster;
  *
  * @param <T>
  */
-class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
-
+public class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
+    public final EntityCentre<?> embeddedCentre;
     private final IRenderable renderable;
 
     MasterWithCentre(final Class<T> entityType, final boolean saveOnActivate, final EntityCentre<?> entityCentre, final Optional<JsCode> customCode, final Optional<JsCode> customCodeOnAttach) {
+        embeddedCentre = entityCentre;
         final StringBuilder attrs = new StringBuilder();
 
         //////////////////////////////////////////////////////////////////////////////////////
@@ -38,9 +39,7 @@ class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T> {
         //// this suffix is used to remove the last comma, which prevents JSON conversion ////
         //////////////////////////////////////////////////////////////////////////////////////
         attrs.append("{");
-        if (entityCentre.isRunAutomatically()) {
-            attrs.append("\"autoRun\": true, ");
-        }
+        attrs.append("\"embedded\": true, ");
         if (entityCentre.shouldEnforcePostSaveRefresh()) {
             attrs.append("\"enforcePostSaveRefresh\": true, ");
         }

@@ -1,12 +1,14 @@
 package ua.com.fielden.platform.web.ioc;
 
+import static ua.com.fielden.platform.reflection.CompanionObjectAutobinder.bindCo;
+import static ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector.INSTANCE;
+
 import com.google.inject.Binder;
 import com.google.inject.Injector;
 import com.google.inject.Scopes;
 import com.google.inject.binder.AnnotatedBindingBuilder;
 
-import ua.com.fielden.platform.entity.EntityExportActionDao;
-import ua.com.fielden.platform.entity.IEntityExportAction;
+import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.proxy.IIdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.menu.IMenuRetriever;
 import ua.com.fielden.platform.serialisation.api.ISerialisationTypeEncoder;
@@ -15,16 +17,7 @@ import ua.com.fielden.platform.web.app.IWebResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.SerialisationTypeEncoder;
 import ua.com.fielden.platform.web.app.ThreadLocalDeviceProvider;
-import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdaterDao;
-import ua.com.fielden.platform.web.centre.CentreConfigEditActionDao;
-import ua.com.fielden.platform.web.centre.CentreConfigLoadActionDao;
-import ua.com.fielden.platform.web.centre.CentreConfigSaveActionDao;
-import ua.com.fielden.platform.web.centre.CentreConfigUpdaterDao;
-import ua.com.fielden.platform.web.centre.ICentreColumnWidthConfigUpdater;
-import ua.com.fielden.platform.web.centre.ICentreConfigEditAction;
-import ua.com.fielden.platform.web.centre.ICentreConfigLoadAction;
-import ua.com.fielden.platform.web.centre.ICentreConfigSaveAction;
-import ua.com.fielden.platform.web.centre.ICentreConfigUpdater;
+import ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebUiConfig;
 import ua.com.fielden.platform.web.test.server.TgTestWebApplicationServerModule;
@@ -67,14 +60,12 @@ public interface IBasicWebApplicationServerModule {
 
         // bind ICriteriaEntityRestorer to its implementation as singleton -- it is dependent on IWebUiConfig, IServerGlobalDomainTreeManager, IUserProvider and other Web UI infrastructure
         bindType(ICriteriaEntityRestorer.class).to(CriteriaEntityRestorer.class).in(Scopes.SINGLETON);
-        // bind companion object implementations that are dependent on ICriteriaEntityRestorer
-        bindType(IEntityExportAction.class).to(EntityExportActionDao.class);
-        bindType(ICentreConfigUpdater.class).to(CentreConfigUpdaterDao.class);
-        bindType(ICentreColumnWidthConfigUpdater.class).to(CentreColumnWidthConfigUpdaterDao.class);
 
-        bindType(ICentreConfigLoadAction.class).to(CentreConfigLoadActionDao.class);
-        bindType(ICentreConfigEditAction.class).to(CentreConfigEditActionDao.class);
-        bindType(ICentreConfigSaveAction.class).to(CentreConfigSaveActionDao.class);
+        // bind companion object implementations that are dependent on ICriteriaEntityRestorer
+        PlatformDomainTypes.typesDependentOnWebUI.stream().forEach(type -> bindCo(type, (co, t) -> bindType(co).to(t)));
+
+        // bind SingleActionSelector to its singleton
+        bindType(SingleActionSelector.class).toInstance(INSTANCE); // singleton
     }
 
     /**
@@ -83,7 +74,7 @@ public interface IBasicWebApplicationServerModule {
      *
      * @param injector
      */
-    default void initWebApp(final Injector injector) {
+    default void initWebAppWithoutCaching(final Injector injector) {
         final AbstractWebUiConfig webApp = (AbstractWebUiConfig) injector.getInstance(IWebUiConfig.class);
         webApp.setInjector(injector);
 
@@ -94,6 +85,24 @@ public interface IBasicWebApplicationServerModule {
 
         // initialise IWebApp with its masters / centres
         webApp.initConfiguration();
+    }
+
+    /**
+     * Initialises an already bound {@link IWebUiConfig} instance.
+     * The default implementation assumes that is has a concrete type {@link AbstractWebUiConfig}.
+     * <p>
+     * This implementation creates default configurations for all registered centres to perform early
+     * caching of DomainTreeEnhancers (to avoid heavy computations later).
+     * 
+     * @param injector
+     */
+    default void initWebApp(final Injector injector) {
+        initWebAppWithoutCaching(injector);
+        final IWebUiConfig webUiConfig = injector.getInstance(IWebUiConfig.class);
+        // trigger caching of DomainTreeEnhancers to avoid heavy computations later
+        webUiConfig.createDefaultConfigurationsForAllCentres();
+        // trigger calculation of embedded centres to avoid these computations later
+        webUiConfig.getEmbeddedCentres();
     }
 
     /**

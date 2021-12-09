@@ -8,7 +8,6 @@ export const PolygonMarkerFactory = function () {
     self.CoordMarker = L.Marker.extend({
         options: {
             icon: self._iconFactory.getTriangleIcon(),
-            title: "BlaBla",
             riseOnHover: true,
             riseOffset: 1000,
             zIndexOffset: 750 // high value to make the circles always on top	

@@ -1,39 +1,31 @@
 package ua.com.fielden.platform.migration;
 
-import java.util.HashSet;
+import static java.util.stream.Collectors.joining;
+
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
-import ua.com.fielden.platform.reflection.Finder;
 
 public class RetrieverSqlProducer {
-    private final DomainMetadataAnalyser dma;
 
-    public RetrieverSqlProducer(final DomainMetadataAnalyser dma) {
-        this.dma = dma;
-    }
-
-    public String getSql(final IRetriever<? extends AbstractEntity<?>> retriever) {
+    public static String getSql(final IRetriever<? extends AbstractEntity<?>> retriever, final boolean withOrdering) {
         final StringBuffer sb = new StringBuffer();
         sb.append(getAllYieldsSql(retriever.resultFields()));
         sb.append(getCoreSql(retriever));
-        sb.append(getOrderBySql(retriever));
+        if (withOrdering) {
+            sb.append(getOrderBySql(retriever));    
+        }
         return sb.toString();
     }
 
-    public Set<String> getKeyProps(final Class<? extends AbstractEntity<?>> entityType, final DomainMetadataAnalyser dma) {
-        return dma.getLeafPropsFromFirstLevelProps(null, entityType, new HashSet<String>(Finder.getFieldNames(Finder.getKeyMembers(entityType))));
-    }
-
-    public String getKeyUniquenessViolationSql(final IRetriever<? extends AbstractEntity<?>> retriever) {
-        final Set<String> keyProps = getKeyProps(retriever.type(), dma);
+    public static String getKeyUniquenessViolationSql(final IRetriever<? extends AbstractEntity<?>> retriever, final DomainMetadataAnalyser dma) {
+        final List<String> keyProps = MigrationUtils.keyPaths(retriever.type());
 
         final StringBuffer sb = new StringBuffer();
         final String baseSql = getKeyResultsOnlySql(retriever, keyProps);
@@ -46,7 +38,7 @@ public class RetrieverSqlProducer {
         return sb.toString();
     }
 
-    public String getCoreSql(final IRetriever<? extends AbstractEntity<?>> retriever) {
+    public static String getCoreSql(final IRetriever<? extends AbstractEntity<?>> retriever) {
         final StringBuffer sb = new StringBuffer();
         sb.append(getFromSql(retriever));
         sb.append(getWhereSql(retriever));
@@ -54,7 +46,7 @@ public class RetrieverSqlProducer {
         return sb.toString();
     }
 
-    public String getCoreSqlWithCriteria(final IRetriever<? extends AbstractEntity<?>> retriever, final Map<String, String> criteria) {
+    public static String getCoreSqlWithCriteria(final IRetriever<? extends AbstractEntity<?>> retriever, final Map<String, String> criteria) {
         final StringBuffer sb = new StringBuffer();
         sb.append(getFromSql(retriever));
         sb.append(getWhereWithAdditionalCriteriaSql(retriever, criteria));
@@ -62,14 +54,14 @@ public class RetrieverSqlProducer {
         return sb.toString();
     }
 
-    private String getKeyResultsOnlySql(final IRetriever<? extends AbstractEntity<?>> retriever, final Set<String> keyProps) {
+    private static String getKeyResultsOnlySql(final IRetriever<? extends AbstractEntity<?>> retriever, final List<String> keyProps) {
         final StringBuffer sb = new StringBuffer();
         sb.append(getAllYieldsSql(getSpecifiedPropsYields(retriever, keyProps)));
         sb.append(getCoreSql(retriever));
         return sb.toString();
     }
 
-    public SortedMap<String, String> getSpecifiedPropsYields(final IRetriever<? extends AbstractEntity<?>> retriever, final Set<String> specifiedProps) {
+    public static SortedMap<String, String> getSpecifiedPropsYields(final IRetriever<? extends AbstractEntity<?>> retriever, final List<String> specifiedProps) {
         final SortedMap<String, String> result = new TreeMap<String, String>();
         for (final Map.Entry<String, String> resultField : retriever.resultFields().entrySet()) {
             if (specifiedProps.contains(resultField.getKey())) {
@@ -79,14 +71,14 @@ public class RetrieverSqlProducer {
         return result;
     }
 
-    public String getAllYieldsSql(final SortedMap<String, String> resultProps) {
+    public static String getAllYieldsSql(final SortedMap<String, String> resultProps) {
         final StringBuffer sb = new StringBuffer();
         sb.append("\nSELECT ALL ");
         sb.append(getYieldsSql(resultProps));
         return sb.toString();
     }
 
-    private String getYieldsSql(final SortedMap<String, String> resultProps) {
+    private static String getYieldsSql(final SortedMap<String, String> resultProps) {
         final StringBuffer sb = new StringBuffer();
         for (final Iterator<Entry<String, String>> iterator = resultProps.entrySet().iterator(); iterator.hasNext();) {
             final Map.Entry<String, String> keyPropName = iterator.next();
@@ -95,14 +87,14 @@ public class RetrieverSqlProducer {
         return sb.toString();
     }
 
-    public String getDistinctYieldsSql(final SortedMap<String, String> resultProps) {
+    public static String getDistinctYieldsSql(final SortedMap<String, String> resultProps) {
         final StringBuffer sb = new StringBuffer();
         sb.append("\nSELECT DISTINCT ");
         sb.append(getYieldsSql(resultProps));
         return sb.toString();
     }
 
-    private StringBuffer getWhereSql(final IRetriever<? extends AbstractEntity<?>> retriever) {
+    private static StringBuffer getWhereSql(final IRetriever<? extends AbstractEntity<?>> retriever) {
         final StringBuffer sb = new StringBuffer();
         if (retriever.whereSql() != null) {
             sb.append("\nWHERE ");
@@ -111,7 +103,7 @@ public class RetrieverSqlProducer {
         return sb;
     }
 
-    private StringBuffer getWhereWithAdditionalCriteriaSql(final IRetriever<? extends AbstractEntity<?>> retriever, final Map<String, String> criteria) {
+    private static StringBuffer getWhereWithAdditionalCriteriaSql(final IRetriever<? extends AbstractEntity<?>> retriever, final Map<String, String> criteria) {
         final StringBuffer sb = new StringBuffer();
         sb.append("\nWHERE ");
         if (retriever.whereSql() != null) {
@@ -127,33 +119,32 @@ public class RetrieverSqlProducer {
         return sb;
     }
 
-    private StringBuffer getOrderBySql(final IRetriever<? extends AbstractEntity<?>> retriever) {
+    private static StringBuffer getOrderBySql(final IRetriever<? extends AbstractEntity<?>> retriever) {
         final StringBuffer sb = new StringBuffer();
 
         if (retriever.orderSql() != null) {
             sb.append("\nORDER BY ");
-            sb.append(retriever.orderSql().stream().collect(Collectors.joining(", ")));
+            sb.append(retriever.orderSql().stream().collect(joining(", ")));
         }
 
         return sb;
     }
 
-    private StringBuffer getFromSql(final IRetriever<? extends AbstractEntity<?>> retriever) {
+    private static StringBuffer getFromSql(final IRetriever<? extends AbstractEntity<?>> retriever) {
         final StringBuffer sb = new StringBuffer();
         sb.append("\nFROM ");
         sb.append(retriever.fromSql());
         return sb;
     }
 
-    private StringBuffer getGroupBySql(final IRetriever<? extends AbstractEntity<?>> retriever) {
+    private static StringBuffer getGroupBySql(final IRetriever<? extends AbstractEntity<?>> retriever) {
         final StringBuffer sb = new StringBuffer();
 
         if (retriever.groupSql() != null) {
             sb.append("\nGROUP BY ");
-            sb.append(retriever.groupSql().stream().collect(Collectors.joining(", ")));
+            sb.append(retriever.groupSql().stream().collect(joining(", ")));
         }
 
         return sb;
     }
 }
-

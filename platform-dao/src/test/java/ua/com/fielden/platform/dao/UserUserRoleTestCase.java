@@ -14,34 +14,37 @@ import java.util.Set;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.security.dao.SecurityRoleAssociationDao;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
 import ua.com.fielden.platform.security.user.IUser;
+import ua.com.fielden.platform.security.user.UserAndRoleAssociationCo;
+import ua.com.fielden.platform.security.user.UserRoleCo;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociationDao;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 /**
- * Test case for the {@link IUserRole}, {@link IUserAndRoleAssociation}, and {@link SecurityRoleAssociationDao} classes
+ * Test case for the {@link UserRoleCo}, {@link UserAndRoleAssociationCo}, and {@link SecurityRoleAssociationDao} classes
  * 
  * @author TG Team
  * 
  */
 public class UserUserRoleTestCase extends AbstractDaoTestCase {
-    private final IUserRole coUserRole = getInstance(IUserRole.class);
-    private final IUserAndRoleAssociation coUserAndRoleAssociation = getInstance(IUserAndRoleAssociation.class);
-    private final ISecurityRoleAssociation coSecurityRoleAssociation = getInstance(ISecurityRoleAssociation.class);
+    private final UserRoleCo coUserRole = getInstance(UserRoleCo.class);
+    private final UserAndRoleAssociationCo coUserAndRoleAssociation = getInstance(UserAndRoleAssociationCo.class);
+    private final SecurityRoleAssociationCo coSecurityRoleAssociation = getInstance(SecurityRoleAssociationCo.class);
     private final IUser coUser = getInstance(IUser.class);
 
     @Test
-    public void test_retrieval_of_user_role_associations() {
+    public void user_role_associations_can_be_retrieved() {
         final EntityResultQueryModel<UserAndRoleAssociation> associationModel = select(UserAndRoleAssociation.class).model();
         assertEquals("Incorrect number of user role associations.", 9, coUserAndRoleAssociation.firstPage(from(associationModel).with(fetch(UserAndRoleAssociation.class).with("user", fetch(User.class))).model(), 10).data().size());
     }
 
     @Test
-    public void test_retrieval_of_users() {
+    public void users_can_be_retrived_together_with_their_roles() {
         final List<User> users = coUser.findAllUsersWithRoles();
         assertEquals("the number of retrieved persons is incorrect. Please check the testThatTheUsersWereRetrievedCorrectly", 5, users.size());
 
@@ -69,7 +72,7 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
     }
 
     @Test
-    public void test_user_role_retrieval() {
+    public void all_user_roles_can_be_identified() {
         final List<UserRole> userRoles = coUserRole.findAll();
         assertEquals("the number of retrieved user roles is incorrect. Please check the testThatUserRolesWereRetrievedCorrectly", 9, userRoles.size());
 
@@ -83,12 +86,12 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
     }
 
     @Test
-    public void test_that_save_for_users() {
+    public void various_manipulations_with_user_and_roles_works_as_expected() {
         // retrieving the user, modifying it's password and saving changes
         User user = coUser.findUserByKeyWithRoles("user1");
         user.setEmail("new_email@gmail.com");
         UserAndRoleAssociation userAssociation = new_composite(UserAndRoleAssociation.class, user, new_(UserRole.class, "role1", ""));
-        final Set<UserAndRoleAssociation> associations = new HashSet<UserAndRoleAssociation>();
+        final Set<UserAndRoleAssociation> associations = new HashSet<>();
         for (final UserAndRoleAssociation roleAssociation : user.getRoles()) {
             if (roleAssociation.equals(userAssociation)) {
                 associations.add(roleAssociation);
@@ -111,16 +114,16 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
     }
 
     @Test
-    public void test_whether_the_created_user_were_correctly_saved() {
+    public void created_user_are_saved_together_with_their_roles() {
         // creating new person and user roles for it. Saving person
         final UserRole userRole1 = save(new_(UserRole.class, "nrole1", "nrole desc 1"));
         final UserRole userRole2 = save(new_(UserRole.class, "nrole2", "nrole desc 2"));
         final UserRole userRole3 = save(new_(UserRole.class, "nrole3", "nrole desc 3"));
 
         final String newUserName = "new_user";
-        User user = save(new_(User.class, newUserName, "new user desc").setEmail("new_email@gmail.com"));
+        User user = save(new_(User.class, newUserName, "new user desc").setBase(true).setEmail("new_email@gmail.com"));
 
-        Set<UserAndRoleAssociation> userRolesAssociation = new HashSet<UserAndRoleAssociation>();
+        Set<UserAndRoleAssociation> userRolesAssociation = new HashSet<>();
         userRolesAssociation.add(new_composite(UserAndRoleAssociation.class, user, userRole1));
         userRolesAssociation.add(new_composite(UserAndRoleAssociation.class, user, userRole2));
         userRolesAssociation.add(new_composite(UserAndRoleAssociation.class, user, userRole3));
@@ -144,10 +147,10 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
     }
 
     @Test
-    public void test_that_security_associations_can_be_retrieved() {
+    public void security_associations_can_be_retrieved() {
         final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).model();
         final List<SecurityRoleAssociation> associations = coSecurityRoleAssociation.firstPage(from(model).with(fetch(SecurityRoleAssociation.class).with("role")).model(), Integer.MAX_VALUE).data();
-        assertEquals("incorrect number of security token - role associations", 31, associations.size());
+        assertEquals("incorrect number of security token - role associations", 72, associations.size());
         final List<SecurityRoleAssociation> roles = coSecurityRoleAssociation.findAssociationsFor(FirstLevelSecurityToken1.class);
         assertEquals("Incorrect number of user roles for the " + FirstLevelSecurityToken1.class.getName() + " security token", 2, roles.size());
         UserRole role = new_(UserRole.class, "role1");
@@ -157,7 +160,7 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
     }
 
     @Test
-    public void test_that_new_security_role_association_can_be_saved() {
+    public void new_security_role_association_can_be_saved() {
         final UserRole role = save(new_(UserRole.class, "role56", "role56 desc").setActive(true));
         final SecurityRoleAssociation association = save(new_composite(SecurityRoleAssociation.class, FirstLevelSecurityToken1.class, role));
         final List<SecurityRoleAssociation> roles = coSecurityRoleAssociation.findAssociationsFor(FirstLevelSecurityToken1.class);
@@ -166,7 +169,7 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
     }
 
     @Test
-    public void test_count_association_between_user_and_token() {
+    public void count_associations_between_users_and_tokens_takes_into_account_active_association() {
         final IUser coUser = co$(User.class);
         assertEquals("Incorrect number of associations between user and token.", 2, coSecurityRoleAssociation.countActiveAssociations(coUser.findByKey("user1"), FirstLevelSecurityToken1.class));
         assertEquals("Incorrect number of associations between user and token.", 2, coSecurityRoleAssociation.countActiveAssociations(coUser.findByKey("user1"), ThirdLevelSecurityToken1.class));

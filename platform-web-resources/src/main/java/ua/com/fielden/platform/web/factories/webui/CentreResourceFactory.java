@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.factories.webui;
 
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.getEntityCentre;
-import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.saveAsName;
+import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.extractSaveAsName;
 
 import org.restlet.Request;
 import org.restlet.Response;
@@ -16,6 +16,7 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
+import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.CentreResource;
@@ -37,6 +38,7 @@ public class CentreResourceFactory extends Restlet {
     private final IUserProvider userProvider;
     private final IDeviceProvider deviceProvider;
     private final IDates dates;
+    private final ICentreConfigSharingModel sharingModel;
     
     /**
      * Instantiates a factory for centre resources.
@@ -51,6 +53,7 @@ public class CentreResourceFactory extends Restlet {
         this.userProvider = injector.getInstance(IUserProvider.class);
         this.deviceProvider = injector.getInstance(IDeviceProvider.class);
         this.dates = injector.getInstance(IDates.class);
+        this.sharingModel = injector.getInstance(ICentreConfigSharingModel.class);
     }
     
     @Override
@@ -61,7 +64,7 @@ public class CentreResourceFactory extends Restlet {
             new CentreResource<>(
                     restUtil,
                     getEntityCentre(request, webUiConfig),
-                    saveAsName(request),
+                    extractSaveAsName(request),
                     userProvider,
                     deviceProvider,
                     dates,
@@ -69,6 +72,7 @@ public class CentreResourceFactory extends Restlet {
                     critGenerator,
                     domainTreeEnhancerCache,
                     webUiConfig,
+                    sharingModel,
                     getContext(),
                     request,
                     response //

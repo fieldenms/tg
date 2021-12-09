@@ -19,6 +19,7 @@ import '/resources/polymer/@polymer/neon-animation/animations/slide-from-bottom-
 import '/resources/polymer/@polymer/neon-animation/animations/slide-up-animation.js';
 import '/resources/polymer/@polymer/neon-animation/animations/slide-down-animation.js';
 
+import '/resources/actions/tg-ui-action.js';
 import '/resources/components/tg-menu-search-input.js';
 import '/resources/views/tg-menu-item-view.js';
 import '/resources/components/tg-sublistbox.js'
@@ -26,6 +27,7 @@ import '/resources/components/tg-sublistbox.js'
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
+import { TgReflector } from '/app/tg-reflector.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import {TgBackButtonBehavior} from '/resources/views/tg-back-button-behavior.js';
 import { tearDownEvent, allDefined, isMobileApp, isIPhoneOs } from '/resources/reflection/tg-polymer-utils.js';
@@ -76,8 +78,11 @@ const template = html`
         .main-content {
             @apply --layout-vertical;
         }
+        tg-ui-action {
+            padding-right: 8px;
+        }
         paper-checkbox {
-            padding-right: 16px;
+            padding-right: 8px;
             --paper-checkbox-size: 16px;
             --paper-checkbox-unchecked-color: var(--paper-listbox-color);
             --paper-checkbox-unchecked-ink-color: var(--paper-listbox-color);
@@ -88,6 +93,10 @@ const template = html`
             }
         }
         paper-checkbox.undone {
+            --paper-checkbox-checked-color: var(--checkbox-undone-color);
+            --paper-checkbox-checked-ink-color: var(--checkbox-undone-color);
+        }
+        paper-checkbox[undone] {
             --paper-checkbox-checked-color: var(--checkbox-undone-color);
             --paper-checkbox-checked-ink-color: var(--checkbox-undone-color);
         }
@@ -112,9 +121,9 @@ const template = html`
             padding: 0 16px;
         }
         iron-icon.submenu-trigger-icon {
+            padding-left: 8px;
             padding-right: 16px; 
         }
-        iron-icon[without-menu],
         iron-icon[has-no-icon] {
             visibility: hidden;
         }
@@ -165,9 +174,10 @@ const template = html`
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+    <slot id="menuItemAction" name="menuItemAction"></slot>
     <app-drawer-layout id="drawerPanel" fullbleed force-narrow>
 
-        <app-drawer disable-swipe="[[!mobile]]" slot="drawer">
+        <app-drawer disable-swipe="[[!mobile]]" slot="drawer" on-app-drawer-transitioned="_appDrawerTransitioned">
             <div id="menuToolBar" class="tool-bar layout horizontal center">
                 <div class="flex">[[menuItem.key]]</div>
             </div>
@@ -177,8 +187,28 @@ const template = html`
                         <paper-item tooltip-text$="[[firstLevelItem.desc]]" slot="trigger">
                             <iron-icon class="menu-icon" icon="[[firstLevelItem.icon]]" has-no-any-icon$="[[!_hasSomeIcon]]" has-no-icon$="[[_calcHasNoIcon(firstLevelItem.icon)]]"></iron-icon>
                             <span class="flex menu-item-title">[[firstLevelItem.key]]</span>
-                            <paper-checkbox class$="[[_calcGroupStyle(firstLevelItem)]]" group-item$="[[groupIndex]]" hidden$="[[!canEdit]]" checked="[[firstLevelItem.visible]]" on-change="_changeGroupVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(firstLevelItem.menu, firstLevelItem.visible)]]"></paper-checkbox>
-                            <iron-icon class="submenu-trigger-icon" icon="[[_calcExpandCollapseIcon(firstLevelItem.opened)]]" opened$="[[firstLevelItem.opened]]" has-no-any-icon$="[[!_hasSomeMenu]]" without-menu$="[[!_isMenuPresent(firstLevelItem.menu)]]"></iron-icon>
+                            <paper-checkbox undone$="[[firstLevelItem.semiVisible]]" group-item$="[[groupIndex]]" hidden$="[[!canEdit]]" checked="[[firstLevelItem.visible]]" on-change="_changeGroupVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(firstLevelItem.menu, firstLevelItem.visible)]]"></paper-checkbox>
+                            <tg-ui-action
+                                hidden$="[[!_menuItemActionVisible(canEdit, firstLevelItem.menu)]]"
+                                ui-role="ICON"
+                                group-item-index="[[groupIndex]]"
+                                menu-item-index="[[groupIndex]]"
+                                short-desc="[[_calcShortDescForMenuItem(firstLevelItem)]]"
+                                long-desc="[[_calcLongDescForMenuItem(firstLevelItem)]]" 
+                                icon="icons:list"
+                                component-uri="[[_menuItemAction.componentUri]]"
+                                element-name="[[_menuItemAction.elementName]]"
+                                show-dialog="[[_menuItemAction.showDialog]]"
+                                toaster="[[_menuItemAction.toaster]]"
+                                create-context-holder="[[_menuItemAction.createContextHolder]]"
+                                attrs="[[_menuItemAction.attrs]]"
+                                require-selection-criteria="[[_menuItemAction.requireSelectionCriteria]]"
+                                require-selected-entities="[[_menuItemAction.requireSelectedEntities]]"
+                                require-master-entity="[[_menuItemAction.requireMasterEntity]]"
+                                current-entity="[[_visibilityMenuItem(firstLevelItem)]]"
+                                post-action-success="[[_menuVisibilitySaved]]">
+                            </tg-ui-action>
+                            <iron-icon class="submenu-trigger-icon" icon="[[_calcExpandCollapseIcon(firstLevelItem.opened)]]" opened$="[[firstLevelItem.opened]]" has-no-any-icon$="[[!_hasSomeMenu]]" hidden$="[[!_isMenuPresent(firstLevelItem.menu)]]"></iron-icon>
                         </paper-item>
                         <template is="dom-if" if="[[_isMenuPresent(firstLevelItem.menu)]]">
                             <paper-listbox slot="content" name$="[[_calcItemPath(firstLevelItem)]]" attr-for-selected="name">
@@ -186,8 +216,27 @@ const template = html`
                                     <paper-item class="submenu-item" name$="[[_calcItemPath(firstLevelItem, item, groupIndex)]]" tooltip-text$="[[item.desc]]">
                                         <iron-icon class="menu-icon" icon="[[item.icon]]" has-no-icon$="[[_calcHasNoIcon(item.icon)]]"></iron-icon>
                                         <span class="flex menu-item-title">[[item.key]]</span>
-                                        <paper-checkbox hidden$="[[!canEdit]]" checked="[[item.visible]]" on-change="_changeVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(item.menu, item.visible)]]"></paper-checkbox>
-                                        <iron-icon class="submenu-trigger-icon" without-menu></iron-icon>
+                                        <paper-checkbox hidden$="[[!canEdit]]" undone$="[[item.semiVisible]]" checked="[[item.visible]]" on-change="_changeVisibility" on-tap="_tapCheckbox" tooltip-text$="[[_calcCheckboxTooltip(item.menu, item.visible)]]"></paper-checkbox>
+                                        <tg-ui-action
+                                            hidden$="[[!_menuItemActionVisible(canEdit, item.menu)]]"
+                                            ui-role="ICON"
+                                            group-item-index="[[groupIndex]]"
+                                            menu-item-index="[[index]]"
+                                            short-desc="[[_calcShortDescForMenuItem(item)]]"
+                                            long-desc="[[_calcLongDescForMenuItem(item)]]" 
+                                            icon="icons:list"
+                                            component-uri="[[_menuItemAction.componentUri]]"
+                                            element-name="[[_menuItemAction.elementName]]"
+                                            show-dialog="[[_menuItemAction.showDialog]]"
+                                            toaster="[[_menuItemAction.toaster]]"
+                                            create-context-holder="[[_menuItemAction.createContextHolder]]"
+                                            attrs="[[_menuItemAction.attrs]]"
+                                            require-selection-criteria="[[_menuItemAction.requireSelectionCriteria]]"
+                                            require-selected-entities="[[_menuItemAction.requireSelectedEntities]]"
+                                            require-master-entity="[[_menuItemAction.requireMasterEntity]]"
+                                            current-entity="[[_visibilityMenuItem(firstLevelItem, item)]]"
+                                            post-action-success="[[_menuVisibilitySaved]]">
+                                        </tg-ui-action>
                                     </paper-item>
                                 </template>
                             </paper-listbox>
@@ -213,11 +262,11 @@ const template = html`
                 <div class="menu-item-view" page-name="_"></div>
                 <template is="dom-repeat" items="[[menuItem.menu]]" as="firstLevelItem">
                     <template is="dom-if" if="[[!_isMenuPresent(firstLevelItem.menu)]]">
-                        <tg-menu-item-view class="menu-item-view" page-name$="[[_calcItemPath(firstLevelItem)]]" menu-item="[[firstLevelItem]]" submodule-id="[[_calcSubmoduleId(firstLevelItem)]]" module-id="[[menuItem.key]]" selected-module="[[selectedModule]]" submodule="[[submodule]]"></tg-menu-item-view>
+                        <tg-menu-item-view class="menu-item-view" page-name$="[[_calcItemPath(firstLevelItem)]]" menu-item="[[firstLevelItem]]" submodule-id="[[_calcSubmoduleId(firstLevelItem)]]" module-id="[[menuItem.key]]" selected-module="[[selectedModule]]"></tg-menu-item-view>
                     </template>
                     <template is="dom-if" if="[[_isMenuPresent(firstLevelItem.menu)]]">
                         <template is="dom-repeat" items="[[firstLevelItem.menu]]">
-                            <tg-menu-item-view class="menu-item-view" page-name$="[[_calcItemPath(firstLevelItem, item)]]" tooltip-text$="[[item.desc]]" menu-item="[[item]]" submodule-id="[[_calcSubmoduleId(firstLevelItem, item)]]" module-id="[[menuItem.key]]" selected-module="[[selectedModule]]" submodule="[[submodule]]"></tg-menu-item-view>
+                            <tg-menu-item-view class="menu-item-view" page-name$="[[_calcItemPath(firstLevelItem, item)]]" tooltip-text$="[[item.desc]]" menu-item="[[item]]" submodule-id="[[_calcSubmoduleId(firstLevelItem, item)]]" module-id="[[menuItem.key]]" selected-module="[[selectedModule]]"></tg-menu-item-view>
                         </template>
                     </template>
                 </template>
@@ -232,19 +281,63 @@ function findMenuItem (itemName, menuItem) {
     });
 };
 function findNestedMenuItem (itemPath, menuItem) {
-    var pathIndex;
-    var path = itemPath.split('/');
-    var currentItem = menuItem;
+    let pathIndex;
+    let path = itemPath.split('/');
+    let currentItem = menuItem;
+    let lastNonEmptyItem = menuItem;
 
     for (pathIndex = 0;
         (pathIndex < path.length) && !!currentItem; pathIndex++) {
+        lastNonEmptyItem = currentItem;
         currentItem = findMenuItem(path[pathIndex], currentItem);
     }
     return {
-        menuItem: currentItem,
-        path: path.slice(0, pathIndex).join('/')
+        menuItem: itemPath === '_' ? undefined : (currentItem || lastNonEmptyItem),
+        path: path.slice(0, currentItem ? pathIndex : pathIndex - 1).join('/'),
+        unknownSubpath: path.slice(currentItem ? pathIndex : pathIndex - 1).join('/')
     };
 };
+
+/**
+ * Calculates menu item visible and ssemiVisible properties
+ * 
+ * @param {Entity} entity - saved entity for edit menu item visibility master
+ * @param {Number} groupIndex - index of the hroup menu item that contains menu item on itemIndex.
+ * @param {Number} itemIndex - index of the menu item in group. It might be undefined if the grpup doesn't have sub menu.
+ */
+function _changeVisibilityForMenuItem(entity, groupIndex, itemIndex) {
+    let menuItem = this.menuItem.menu[groupIndex];
+    let basePropName = 'menuItem.menu.' + groupIndex;
+    //If menu item has submenu
+    if (this._isMenuPresent(menuItem.menu)) {
+        menuItem = menuItem.menu[itemIndex];
+        basePropName += '.menu.' + itemIndex;
+    }
+    //If all items were selected or unselected then it is visible
+    if (entity.chosenIds.length === entity.users.length || entity.chosenIds.length === 0) {
+        this.set(basePropName + '.visible', entity.chosenIds.length === entity.users.length);
+        this.set(basePropName + '.semiVisible', false);
+    } else { //Otherwise it is semi-visible
+        this.set(basePropName + '.visible', true);
+        this.set(basePropName + '.semiVisible', true);
+    }
+};
+
+/**
+ * Calculates visible and semiVisible proeprties for group menu item with sub menu.
+ * 
+ * @param {Number} groupIndex The index of group menu item that has submenu
+ */
+function _changeVisibilityForGroupItem(groupIndex) {
+    if (this._isMenuPresent(this.menuItem.menu[groupIndex].menu)) {
+        const groupMenuItemVisible = this.menuItem.menu[groupIndex].menu.some(item => item.visible);
+        const groupMenuItemSemiVisible = groupMenuItemVisible && 
+            (this.menuItem.menu[groupIndex].menu.some(item => !item.visible) || this.menuItem.menu[groupIndex].menu.some(item => item.semiVisible));
+        const basePropName = 'menuItem.menu.' + groupIndex;
+        this.set(basePropName + '.visible', groupMenuItemVisible);
+        this.set(basePropName + '.semiVisible', groupMenuItemSemiVisible);
+    }
+}
 
 Polymer({
     _template: template, 
@@ -259,7 +352,7 @@ Polymer({
         menu: Array,
         menuItem: Object,
         selectedModule: String,
-        submodule: {
+        selectedSubmodule: {
             type: String,
             notify: true
         },
@@ -284,7 +377,9 @@ Polymer({
         saveAsDesc: {
             type: String,
             value: ''
-        }
+        },
+        //Action to open user to menu item visibility associator 
+        _menuItemAction: Object,
     },
 
     behaviors: [
@@ -294,23 +389,31 @@ Polymer({
     ],
 
     observers: [
-        '_updatePage(menuItem, submodule)'
+        '_updatePage(menuItem, selectedSubmodule)'
     ],
     
     listeners: {
         'tg-save-as-name-changed': '_updateSaveAsName',
-        'tg-save-as-desc-changed': '_updateSaveAsDesc'
+        'tg-save-as-desc-changed': '_updateSaveAsDesc',
+        'tg-config-uuid-changed': '_updateConfigUuid',
+        'tg-config-uuid-before-change': '_updateURI'
+    },
+    
+    created: function () {
+        this._reflector = new TgReflector();
     },
     
     ready: function () {
         this._watermark = window.TG_APP.watermark;
         this._focusNextMenuItem = this._focusNextMenuItem.bind(this.$.menu);
         this._focusPreviousMenuItem = this._focusPreviousMenuItem.bind(this.$.menu);
+        this._menuVisibilitySaved = this._menuVisibilitySaved.bind(this);
         this._menuEscKey = this._menuEscKey.bind(this);
         this.$.menu._focusNext = this._focusNextMenuItem;
         this.$.menu._focusPrevious = this._focusPreviousMenuItem;
         this._oldMenuEscKey = this.$.menu._onEscKey;
         this.$.menu._onEscKey = this._menuEscKey;
+        this._menuItemAction = this.$.menuItemAction.assignedNodes({ flatten: true })[0];
 
         this.animationConfig = {
             'entry': [
@@ -441,16 +544,47 @@ Polymer({
         return "Toggle to make this " + (this._isMenuPresent(menu) ? "group of menu items " : "menu item ") + (visible ? "invisible" : "visible");
     },
 
-    _calcGroupStyle: function (firstLevelItem) {
-        var clazz = "";
-        if (firstLevelItem.visible && firstLevelItem.menu && !firstLevelItem.menu.every(function (element) {
-            return element.visible === true
-        }) && !firstLevelItem.menu.every(function (element) {
-            return element.visible === false
-        })) {
-            clazz += " undone";
-        }
-        return clazz;
+    /**
+     * Calculates the value that controls access to menu item action.
+     * 
+     * @param {Boolean} canEdit Indicates whether current user can edit menu item or not
+     * @param {Object} menu - the sub menu 
+     * @returns Boolean value that indicates whether menu item action is visible or not
+     */
+    _menuItemActionVisible: function (canEdit, menu) {
+        return canEdit && !this._isMenuPresent(menu);
+    },
+
+    /**
+     * Creates menu item invisibility entity and returns as current entity.
+     * 
+     * @param {Object} firstLevelItem - group menu item
+     * @param {Object} item  - menu item
+     * @returns current entity function.
+     */
+    _visibilityMenuItem: function (firstLevelItem, item) {
+        const menuItemUri = this._createUriFromModel(this.menuItem.key, firstLevelItem.key, item && item.key);
+        const entity = this._reflector.newEntity('ua.com.fielden.platform.menu.WebMenuItemInvisibility');
+        entity['menuItemUri'] = menuItemUri;
+        return () => entity;
+    },
+
+    _calcShortDescForMenuItem: function (menuItem) {
+        return `${menuItem.key} menu item visibility`;
+    },
+
+    _calcLongDescForMenuItem: function (menuItem) {
+        return `Edit visibility of menu item ${menuItem.key} for individual users`; 
+    },
+
+    /**
+     * Post save success method for menu item actions that calculates visible and semi visible properties for menu item and griup menu item.
+     */
+    _menuVisibilitySaved: function (entity, action, master) {
+        //First change the visibility and visible for all users property for menu item
+        _changeVisibilityForMenuItem.bind(this)(entity, action.groupItemIndex, action.menuItemIndex);
+        _changeVisibilityForGroupItem.bind(this)(action.groupItemIndex);
+        this.updateStyles();
     },
 
     _changeGroupVisibility: function (e) {
@@ -459,51 +593,38 @@ Polymer({
         var visisbleItems = [];
         var invisibleItems = [];
         var arrayToBeUsed = modelVisibility ? visisbleItems : invisibleItems;
+        if (e.model.firstLevelItem.view) {
+            arrayToBeUsed.push(groupUri);
+        }
         this.set("menuItem.menu." + e.model.groupIndex + ".visible", modelVisibility);
-        arrayToBeUsed.push(groupUri);
         if (e.model.firstLevelItem.menu) {
             e.model.firstLevelItem.menu.forEach(function (menuItem, menuItemIndex) {
                 if (menuItem.visible !== modelVisibility) {
                     arrayToBeUsed.push(this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key, menuItem.key));
                     this.set("menuItem.menu." + e.model.groupIndex + ".menu." + menuItemIndex + ".visible", modelVisibility);
+                    this.set("menuItem.menu." + e.model.groupIndex + ".menu." + menuItemIndex + ".semiVisible", false);
                 }
             }.bind(this));
         }
-        var checkbox = this.$.menu.querySelector("paper-checkbox[group-item='" + e.model.groupIndex + "']");
-        checkbox.classList.toggle("undone", false);
+        this.set('menuItem.menu.' + e.model.groupIndex + '.semiVisible', false);
         this.updateStyles();
         this.menuSaveCallback(visisbleItems, invisibleItems);
     },
 
     _changeVisibility: function (e) {
-        var menuItemUri = this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key, e.model.item.key);
-        var groupUri = this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key);
-        var modelVisibility = e.target.checked;
-        var visisbleItems = [];
-        var invisibleItems = [];
+        const menuItemUri = this._createUriFromModel(this.menuItem.key, e.model.firstLevelItem.key, e.model.item.key);
+        const modelVisibility = e.target.checked;
+        const visisbleItems = [];
+        const invisibleItems = [];
         // Changing model in order to find out whether group item should be changed or not.
         this.set("menuItem.menu." + e.model.groupIndex + ".menu." + e.model.index + ".visible", modelVisibility);
-        var shouldChangeGroupVisibility = e.model.firstLevelItem.menu.every(function (element) {
-                return element.visible === modelVisibility
-            }) ||
-            (modelVisibility && e.model.firstLevelItem.visible === false);
+        this.set("menuItem.menu." + e.model.groupIndex + ".menu." + e.model.index + ".semiVisible", false);
+        
         // Find out what action should be performed hiding menu items or to make them visible.
-        var arrayToBeUsed = modelVisibility ? visisbleItems : invisibleItems;
+        const arrayToBeUsed = modelVisibility ? visisbleItems : invisibleItems;
         arrayToBeUsed.push(menuItemUri);
-        if (shouldChangeGroupVisibility) {
-            arrayToBeUsed.push(groupUri);
-            this.set("menuItem.menu." + e.model.groupIndex + ".visible", modelVisibility);
-        }
-        var checkbox = this.$.menu.querySelector("paper-checkbox[group-item='" + e.model.groupIndex + "']");
-        if (this.menuItem.menu[e.model.groupIndex].visible && !e.model.firstLevelItem.menu.every(function (element) {
-            return element.visible === true
-        }) && !e.model.firstLevelItem.menu.every(function (element) {
-            return element.visible === false
-        })) {
-            checkbox.classList.toggle("undone", true);
-        } else {
-            checkbox.classList.toggle("undone", false);
-        }
+        
+        _changeVisibilityForGroupItem.bind(this)(e.model.groupIndex);
         this.updateStyles();
         this.menuSaveCallback(visisbleItems, invisibleItems);
     },
@@ -520,21 +641,26 @@ Polymer({
         return encodeURIComponent(groupItem.key) + (item ? "/" + encodeURIComponent(item.key) : '');
     },
 
-    _updatePage(menuItem, submodule) {
+    _updatePage(menuItem, selectedSubmodule) {
         if (!allDefined(arguments)) {
             return;
         }
-        const submodulePart = submodule.substring(1).split("?")[0];
         if (menuItem.key === decodeURIComponent(this.selectedModule)) {
-            this._selectMenu(submodulePart);
-            this._selectPage(submodulePart);
+            const parts = selectedSubmodule.substring(1).split('?');
+            const selectedSubmodulePart = parts[0];
+            this._selectMenu(selectedSubmodulePart);
+            this._selectPage(selectedSubmodulePart, parts[1]);
         }
     },
 
-    _selectPage: function (pagePath) {
-        var menuPath = findNestedMenuItem(pagePath, this.menuItem);
+    _selectPage: function (pagePath, paramsStr) {
+        const menuPath = findNestedMenuItem(pagePath, this.menuItem);
         if (menuPath.menuItem && !this._isMenuPresent(menuPath.menuItem.menu)) {
             this.set("_selectedPage", menuPath.path);
+            const currMenuItemView = this.shadowRoot.querySelector(`tg-menu-item-view[page-name="${this._selectedPage}"]`); // find active tg-menu-item-view
+            if (currMenuItemView && currMenuItemView.menuItem.view && currMenuItemView._isCentre(currMenuItemView.menuItem)) { // if it is present and contains centre
+                currMenuItemView._retrieveCentreWithParams(paramsStr, menuPath.unknownSubpath); // initiate retrieval
+            }
         }
     },
 
@@ -548,13 +674,15 @@ Polymer({
             pathParts = path.split('/');
             topMenu = this.shadowRoot.querySelector("tg-sublistbox[name='" + pathParts[0] + "']");
             previousTopMenu = this.$.menu.selected && this.shadowRoot.querySelector("tg-sublistbox[name='" + this.$.menu.selected + "']");
-            submenu = this.shadowRoot.querySelector("paper-sublist[name='" + pathParts[0] + "']");
+            submenu = this.shadowRoot.querySelector("paper-listbox[name='" + pathParts[0] + "']");
             if (this.$.menu.selected !== pathParts[0]) {
                 if (previousTopMenu) {
                     previousTopMenu.close();
                 }
                 this.$.menu.select(pathParts[0]);
-                topMenu.open();
+                if (topMenu) {
+                    topMenu.open();
+                }
                 if (submenu) {
                     submenu.select(path);
                 }
@@ -579,11 +707,11 @@ Polymer({
         this.$.drawerPanel.drawer.toggle();
     },
     
-    _saveAsNamesAndDescs: function () {
-        if (!this.saveAsNamesAndDescs) {
-            this.saveAsNamesAndDescs = {};
+    _centreConfigInfo: function () {
+        if (!this.centreConfigInfo) {
+            this.centreConfigInfo = {};
         }
-        return this.saveAsNamesAndDescs;
+        return this.centreConfigInfo;
     },
     
     _calcSelectedPageTitle: function (page, saveAsName) {
@@ -615,13 +743,21 @@ Polymer({
      * The listener that listens the menu item activation on tap.
      */
     _itemActivated: function (e, detail) {
-        this.submodule = "/" + detail.selected
+        this._updateSelectedModuleWith(detail.selected);
+    },
+
+    /**
+     * Updates URI 'selectedSubmodule' part with 'selectedPage' including 'configUuid' sub-part if 'selectedPage' has been loaded before and had that sub-part.
+     */
+    _updateSelectedModuleWith: function (selectedPage) {
+        const uuidPart = this._centreConfigInfo() && this._centreConfigInfo()[selectedPage] && this._centreConfigInfo()[selectedPage].configUuid; // configUuid of previously loaded centre configuration (selectedPage), if any
+        this.selectedSubmodule = '/' + selectedPage + (uuidPart ? '/' + uuidPart : '');
     },
 
     _selectedPageChanged: function (newValue, oldValue) {
-        if (this._saveAsNamesAndDescs()[newValue]) {
-            this.saveAsName = this._saveAsNamesAndDescs()[newValue].saveAsName;
-            this.saveAsDesc = this._saveAsNamesAndDescs()[newValue].saveAsDesc;
+        if (this._centreConfigInfo()[newValue]) {
+            this.saveAsName = this._centreConfigInfo()[newValue].saveAsName;
+            this.saveAsDesc = this._centreConfigInfo()[newValue].saveAsDesc;
         } else {
             this.saveAsName = '';
             this.saveAsDesc = '';
@@ -641,9 +777,7 @@ Polymer({
             const viewToLoad = detail.toPage;
             if (viewToLoad) {
                 if (!viewToLoad.wasLoaded()) {
-                    viewToLoad.load(decodeURIComponent(this.submodule.substring(1)).split("?")[1]);
-                    const currentState = window.history.state;
-                    window.history.replaceState(currentState, "", window.location.href.split("?")[0]);
+                    viewToLoad.load(decodeURIComponent(this.selectedSubmodule.substring(1)).split("?")[1]);
                 } else {
                     viewToLoad.focusLoadedView();
                 }
@@ -668,26 +802,67 @@ Polymer({
      * Updates saveAsName from its 'change' event. It controls the title change.
      */
     _updateSaveAsName: function (event) {
-        this._initSaveAsNamesAndDescsEntry();
-        this._saveAsNamesAndDescs()[this._selectedPage].saveAsName = event.detail;
-        this.saveAsName = event.detail;
+        this._initCentreConfigInfoEntry();
+        const saveAsNameForDisplay = this._reflector.LINK_CONFIG_TITLE !== event.detail ? event.detail : '';
+        this._centreConfigInfo()[this._selectedPage].saveAsName = saveAsNameForDisplay;
+        this.saveAsName = saveAsNameForDisplay;
     },
     
     /**
      * Updates saveAsDesc from its 'change' event. It controls the tooltip change of configuration title.
      */
     _updateSaveAsDesc: function (event) {
-        this._initSaveAsNamesAndDescsEntry();
-        this._saveAsNamesAndDescs()[this._selectedPage].saveAsDesc = event.detail;
+        this._initCentreConfigInfoEntry();
+        this._centreConfigInfo()[this._selectedPage].saveAsDesc = event.detail;
         this.saveAsDesc = event.detail;
     },
     
     /**
-     * Initialises current entry of 'saveAs' object (name and desc) if not present.
+     * Updates browser URI (uuid part) from configUuid 'before-change' event.
      */
-    _initSaveAsNamesAndDescsEntry: function () {
-        if (!this._saveAsNamesAndDescs()[this._selectedPage]) {
-            this._saveAsNamesAndDescs()[this._selectedPage] = {};
+    _updateURI: function (event) {
+        const configUuid = event.detail.configUuid;
+        const newConfigUuid = event.detail.newConfigUuid;
+        const hrefNoParams = window.location.href.split('?')[0];
+        const hrefNoParamsNoSlash = hrefNoParams.endsWith('/') ? hrefNoParams.substring(0, hrefNoParams.length - 1) : hrefNoParams;
+        const hrefNoParamsNoSlashNoUuid = configUuid === '' ? hrefNoParamsNoSlash : hrefNoParamsNoSlash.substring(0, hrefNoParamsNoSlash.lastIndexOf(configUuid) - 1 /* slash also needs removal */);
+        const hrefReplacedUuid = hrefNoParamsNoSlashNoUuid + (newConfigUuid === '' ? '' : '/' + newConfigUuid);
+        if (hrefReplacedUuid !== window.location.href) { // when configuration is loaded through some action then potentially new URI will be formed matching new loaded configuration;
+            window.history.replaceState(window.history.state, '', hrefReplacedUuid); // in that case need to replace current history entry with new URI;
+            window.dispatchEvent(new CustomEvent('location-changed', {
+                detail: {
+                    avoidStateAdjusting: true
+                }
+            })); // in tg-app-template 'location-changed' listener no state changes should occur (everything was done here); however 'location-changed' event must be dispatched for 'app-location' to process it; it ensures ability to manually edit URI to the value before rewriting so that this editing triggers page change
+        } // if the URI hasn't been changed then URI is already matching to new loaded configuration and history transition has been recorded earlier (e.g. when manually changing URI in address bar)
+    },
+    
+    /**
+     * Updates configUuid from its 'change' event.
+     */
+    _updateConfigUuid: function (event) {
+        this._initCentreConfigInfoEntry();
+        this._centreConfigInfo()[this._selectedPage].configUuid = event.detail;
+    },
+    
+    /**
+     * Initialises current entry of centre configuration object (name, desc and configUuid) if not present.
+     */
+    _initCentreConfigInfoEntry: function () {
+        if (!this._centreConfigInfo()[this._selectedPage]) {
+            this._centreConfigInfo()[this._selectedPage] = {};
+        }
+    },
+    
+    /**
+     * Event listener on completion of drawer transition.
+     * It handles drawer closing to adjust browser address bar's URI to conform to loaded centre (if it was loaded before).
+     */
+    _appDrawerTransitioned: function (event) {
+        if (event.target && !event.target.opened) { // if drawer has just been fully closed ...
+            if (this.selectedSubmodule && !this.selectedSubmodule.startsWith('/' + this._selectedPage)) { // ... look for situation where selectedSubmodule (URI part) does not conform to selected page; this is the case, for example, if some centre was loaded (in module X), then went to main menu, then tapped on module X tile, and then tapped outside the module menu
+                this._updateSelectedModuleWith(this._selectedPage); // ... and then load new URI conforming to previously loaded page (in most cases, centre)
+            }
         }
     }
 });

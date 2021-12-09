@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.query.generation;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.eql.meta.EqlDomainMetadata.typeResolver;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -44,6 +45,7 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.persistence.types.ColourType;
 import ua.com.fielden.platform.persistence.types.DateTimeType;

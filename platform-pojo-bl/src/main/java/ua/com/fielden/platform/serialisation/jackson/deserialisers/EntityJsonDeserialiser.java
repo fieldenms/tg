@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.serialisation.jackson.deserialisers;
 
 import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.fromString;
 import static ua.com.fielden.platform.entity.proxy.EntityProxyContainer.proxy;
@@ -147,7 +148,12 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                     throw new EntityDeserialisationException("The field [" + versionField + "] is not declared in entity with type [" + type.getName() + "]. Fatal error during deserialisation process for entity [" + entity + "].", ex);
                 }
             }
-
+            
+            ofNullable(node.get("@_pp")) // for undefined node, leave preferred property 'null' (default value after creation)
+                .filter(JsonNode::isTextual) // for non-textual value, also leave preferred property 'null' (e.g. in case of client-side erroneous entity's preferred property manipulation)
+                .map(JsonNode::asText) // for defined node, set its textual representation
+                .ifPresent(preferredProperty -> entity.setPreferredProperty(preferredProperty));
+            
             final List<CachedProperty> nonProxiedProps = properties.stream().filter(prop -> node.get(prop.field().getName()) != null).collect(Collectors.toList()); 
             for (final CachedProperty prop : nonProxiedProps) {
                 final String propertyName = prop.field().getName();
@@ -290,17 +296,26 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             } else {
                 metaProperty.setEditable(getEditableDefault());
             }
+            // before we deal with setting requiredness, it is necessary to identify if there is a custom error message for requiredness
+            final JsonNode customErrorMsgForRequirednessNode = metaPropNode.get("_" + MetaProperty.CUSTOM_ERR_MSG_FOR_REQUREDNESS_PROPERTY_NAME);
+            final String customErrorMsgForRequiredness;
+            if (customErrorMsgForRequirednessNode != null) {
+                assertNonEmptyNode(customErrorMsgForRequirednessNode);
+                customErrorMsgForRequiredness = customErrorMsgForRequirednessNode.asText();
+            } else {
+                customErrorMsgForRequiredness = null;
+            }
             final JsonNode requiredNode = metaPropNode.get("_" + MetaProperty.REQUIRED_PROPERTY_NAME);
             if (requiredNode != null) {
                 assertNonEmptyNode(requiredNode);
                 // Important: generally there is no need to hold 'entity' in isInitialising state during deserialisation.
                 // However in specific case of requiredness setting the setter can be invoked, that's why validation should be avoided -- isInitialising == true helps with that.
                 metaProperty.getEntity().beginInitialising();
-                metaProperty.setRequired(requiredNode.asBoolean());
+                metaProperty.setRequired(requiredNode.asBoolean(), customErrorMsgForRequiredness);
                 metaProperty.getEntity().endInitialising();
             } else {
                 metaProperty.getEntity().beginInitialising();
-                metaProperty.setRequired(getRequiredDefault());
+                metaProperty.setRequired(getRequiredDefault(), customErrorMsgForRequiredness);
                 metaProperty.getEntity().endInitialising();
             }
             final JsonNode visibleNode = metaPropNode.get("_visible");

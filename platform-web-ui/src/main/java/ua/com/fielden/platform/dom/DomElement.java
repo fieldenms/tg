@@ -320,4 +320,8 @@ public class DomElement {
                 + (children.isEmpty() ? "" : "\n" + StringUtils.join(children, "\n") + "\n")
                 + "</" + tagName + ">";
     };
+
+    public List<DomElement> children() {
+        return Collections.unmodifiableList(children);
+    }
 }

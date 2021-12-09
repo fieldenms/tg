@@ -12,24 +12,25 @@ import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Stream;
 
-import javax.activation.DataHandler;
-import javax.activation.DataSource;
-import javax.activation.FileDataSource;
-import javax.mail.BodyPart;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Multipart;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMessage;
-import javax.mail.internet.MimeMultipart;
-
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.Logger;
 
+import jakarta.activation.DataHandler;
+import jakarta.activation.DataSource;
+import jakarta.activation.FileDataSource;
+import jakarta.mail.Authenticator;
+import jakarta.mail.BodyPart;
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Multipart;
+import jakarta.mail.PasswordAuthentication;
+import jakarta.mail.Session;
+import jakarta.mail.Transport;
+import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeBodyPart;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.mail.exceptions.EmailException;
@@ -126,9 +127,24 @@ public class SmtpEmailSender {
 
     private Session newEmailSession() {
         final Properties props = new Properties();
+        final String username = System.getProperty("email.smtp.username", System.getenv("email.smtp.username"));
+        final String password = System.getProperty("email.smtp.password", System.getenv("email.smtp.password"));
+        final Authenticator auth;
+        if (!StringUtils.isEmpty(username) &&
+            !StringUtils.isEmpty(password)) {
+            auth = new Authenticator() {
+                protected PasswordAuthentication getPasswordAuthentication() {
+                    return new PasswordAuthentication(username, password);
+                }
+            };
+            props.put("mail.smtp.auth", "true");
+            props.put("mail.smtp.port", "587");
+            props.put("mail.smtp.starttls.enable", "true");
+        } else {
+            auth = null;
+        }
         props.put("mail.smtp.host", host);
-        final Session session = Session.getDefaultInstance(props, null);
-        return session;
+        return Session.getDefaultInstance(props, auth);
     }
 
     /**
@@ -307,13 +323,6 @@ public class SmtpEmailSender {
             final String body,
             final Path[] imagePaths,
             final Path... filePaths) {
-        if (imagePaths.length == 0) {
-            throw new EmailException("At least one image is expected.");
-        }
-        if (filePaths.length == 0) {
-            throw new EmailException("At least one attachment is expected.");
-        }
-
         final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.HTML, body, filePaths);
         sendHtmlMessageWithImagesAndAttachments(fromAddress, csvToAddresses, subject, t2._1, imagePaths, t2._2);
     }
@@ -526,7 +535,7 @@ public class SmtpEmailSender {
     }
 
     public static void main(final String[] args) {
-        final SmtpEmailSender sender = new SmtpEmailSender("192.168.1.8");
+        final SmtpEmailSender sender = new SmtpEmailSender(System.getProperty("email.smtp"));
         final Path path1 = Paths.get(".classpath");
         final Path path2 = Paths.get(".project");
         final Path path3 = Paths.get("desktop-script.sh");
@@ -542,9 +551,9 @@ public class SmtpEmailSender {
         final String htmlBodyWithoutImage = String.format(htmlBodyTemplate, "");
         final Path[] imagePaths = new Path[1];
         imagePaths[0] = pathImage;
-        sender.sendHtmlMessageWithAttachments("oles@fielden.com.au", "oles@fielden.com.au", "HtmlMessageWithAttachments", htmlBodyWithoutImage, path1, path2, path3, path4);
+//        sender.sendHtmlMessageWithAttachments("oles@fielden.com.au", "oles@fielden.com.au", "HtmlMessageWithAttachments", htmlBodyWithoutImage, path1, path2, path3, path4);
         sender.sendHtmlMessageWithImagesAndAttachments("oles@fielden.com.au", "oles@fielden.com.au", "HtmlMessageWithImagesAndAttachments", htmlBodyWithImage, imagePaths, path1, path2, path3, path4);
-        sender.sendPlainMessageWithAttachments("oles@fielden.com.au", "oles@fielden.com.au", "PlainMessageWithAttachments", plainBody, path1, path2, path3, path4);
+//        sender.sendPlainMessageWithAttachments("oles@fielden.com.au", "oles@fielden.com.au", "PlainMessageWithAttachments", plainBody, path1, path2, path3, path4);
 //        sender.sendPlainMessageWithAttachments("oles@fielden.com.au", "oles.hodych@gmail.com", "Plain text with text mime type", "Plain text, but HTML mime type", path1, path2);
 //        sender.sendHtmlMessageWithAttachments("oles@fielden.com.au", "oles.hodych@gmail.com ", "Html text with HTML mime type", "Html text, but HTML mime type</br></br>", path1, path2);
 //        sender.sendHtmlMessage("oles@fielden.com.au", "oles@fielden.com.au  ", "Plain text with HTML mime type", "Plain text, but HTML mime type");

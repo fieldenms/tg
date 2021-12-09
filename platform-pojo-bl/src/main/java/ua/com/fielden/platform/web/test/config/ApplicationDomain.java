@@ -20,6 +20,7 @@ import ua.com.fielden.platform.sample.domain.EntityOne;
 import ua.com.fielden.platform.sample.domain.EntityTwo;
 import ua.com.fielden.platform.sample.domain.ExportAction;
 import ua.com.fielden.platform.sample.domain.TgBogie;
+import ua.com.fielden.platform.sample.domain.TgBogieClass;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
@@ -41,10 +42,12 @@ import ua.com.fielden.platform.sample.domain.TgEntityStringKey;
 import ua.com.fielden.platform.sample.domain.TgEntityTwoEntityKeys;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptor;
+import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptorExt;
 import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
+import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntity;
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnalysis;
@@ -58,6 +61,11 @@ import ua.com.fielden.platform.sample.domain.TgMessageMap;
 import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgOpenTrippleDecDetails;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 import ua.com.fielden.platform.sample.domain.TgPersistentCompositeEntity;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithPropertiesAttachment;
@@ -70,9 +78,24 @@ import ua.com.fielden.platform.sample.domain.TgSelectedEntitiesExampleAction;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgStop;
 import ua.com.fielden.platform.sample.domain.TgStopMap;
+import ua.com.fielden.platform.sample.domain.TgSynBogie;
+import ua.com.fielden.platform.sample.domain.TgUnion;
+import ua.com.fielden.platform.sample.domain.TgUnionCommonType;
+import ua.com.fielden.platform.sample.domain.TgUnionHolder;
+import ua.com.fielden.platform.sample.domain.TgUnionType1;
+import ua.com.fielden.platform.sample.domain.TgUnionType2;
+import ua.com.fielden.platform.sample.domain.TgVehicle;
+import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
+import ua.com.fielden.platform.sample.domain.TgVehicleFuelUsage;
+import ua.com.fielden.platform.sample.domain.TgVehicleMake;
+import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWagon;
 import ua.com.fielden.platform.sample.domain.TgWagonClass;
+import ua.com.fielden.platform.sample.domain.TgWagonClassCompatibility;
 import ua.com.fielden.platform.sample.domain.TgWagonSlot;
+import ua.com.fielden.platform.sample.domain.TgWebApiEntity;
+import ua.com.fielden.platform.sample.domain.TgWebApiEntitySyntheticMulti;
+import ua.com.fielden.platform.sample.domain.TgWebApiEntitySyntheticSingle;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
@@ -125,6 +148,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgDummyAction.class);
         add(TgEntityWithPropertyDependency.class);
         add(TgEntityWithPropertyDescriptor.class);
+        add(TgEntityWithPropertyDescriptorExt.class);
         add(DumpCsvTxtProcessor.class);
         add(NewEntityAction.class);
         add(ExportAction.class);
@@ -150,6 +174,17 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgCoordinate.class);
         add(TgPolygonMap.class);
 
+        add(TgVehicle.class);
+        add(TgVehicleFinDetails.class);
+        add(TgVehicleModel.class);
+        add(TgVehicleMake.class);
+        add(TgVehicleFuelUsage.class);
+        add(TgOrgUnit1.class);
+        add(TgOrgUnit2.class);
+        add(TgOrgUnit3.class);
+        add(TgOrgUnit4.class);
+        add(TgOrgUnit5.class);
+        add(TgFuelType.class);
         add(UnionEntity.class);
         add(EntityOne.class);
         add(EntityTwo.class);
@@ -160,6 +195,9 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgWagon.class);
         add(TgBogie.class);
         add(TgWagonClass.class);
+        add(TgWagonClassCompatibility.class);
+        add(TgBogieClass.class);
+        add(TgFuelUsage.class);
         add(TgSelectedEntitiesExampleAction.class);
         add(TgCloseLeaveExample.class);
         add(OpenTgCloseLeaveExampleMasterAction.class);
@@ -188,6 +226,18 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgEntityCompositeBooleanKey.class);
         add(TgEntityTwoEntityKeys.class);
         add(TgEntityBigDecimalKey.class);
+        
+        add(TgWebApiEntity.class);
+        add(TgWebApiEntitySyntheticSingle.class);
+        add(TgWebApiEntitySyntheticMulti.class);
+        
+        add(TgUnionHolder.class);
+        add(TgUnion.class);
+        add(TgUnionType1.class);
+        add(TgUnionType2.class);
+        add(TgUnionCommonType.class);
+        
+        add(TgSynBogie.class);
     }
 
     @Override
@@ -195,7 +245,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         return Collections.unmodifiableList(entityTypes.stream().collect(Collectors.toList()));
     }
 
-    public List<Class<? extends AbstractEntity<?>>> domainTypes() {
+    public static List<Class<? extends AbstractEntity<?>>> domainTypes() {
         return Collections.unmodifiableList(domainTypes.stream().collect(Collectors.toList()));
     }
 }

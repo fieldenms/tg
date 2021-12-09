@@ -187,6 +187,10 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
 
     private void with(final String propName, final boolean skipEntities) {
         final PropertyMetadata ppi = getPropMetadata(propName);
+        if (ppi == null) {
+            addPrimProp(propName); // for situations, where PropertyMetadata is missing, but this is considered legal -- just add it as primitive property
+            return;
+        }
         final Class propType = ppi.getJavaType();
 
         if (ppi.isCompositeKeyExpression()) {

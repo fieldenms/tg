@@ -67,6 +67,13 @@ Polymer({
             type: Array,
             notify: true
         },
+        
+        /**
+         * The reason retrievedEntities were changed i.e. because of running, refreshing or navigating.
+         */
+        dataChangeReason: {
+            type: String
+        },
 
         /**
          * Last entity centre selection.

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.test.ioc;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
@@ -15,113 +16,29 @@ import com.google.inject.TypeLiteral;
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolderDao;
 import ua.com.fielden.platform.entity.functional.centre.ICentreContextHolder;
 import ua.com.fielden.platform.entity.functional.centre.ISavingInfoHolder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolderDao;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamicRequirednessCo;
+import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamicRequirednessDao;
 import ua.com.fielden.platform.ioc.BasicWebServerModule;
-import ua.com.fielden.platform.migration.controller.IMigrationError;
-import ua.com.fielden.platform.migration.controller.IMigrationHistory;
-import ua.com.fielden.platform.migration.controller.IMigrationRun;
-import ua.com.fielden.platform.migration.dao.MigrationErrorDao;
-import ua.com.fielden.platform.migration.dao.MigrationHistoryDao;
-import ua.com.fielden.platform.migration.dao.MigrationRunDao;
+import ua.com.fielden.platform.migration.MigrationErrorCo;
+import ua.com.fielden.platform.migration.MigrationErrorDao;
+import ua.com.fielden.platform.migration.MigrationHistoryCo;
+import ua.com.fielden.platform.migration.MigrationHistoryDao;
+import ua.com.fielden.platform.migration.MigrationRunCo;
+import ua.com.fielden.platform.migration.MigrationRunDao;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
-import ua.com.fielden.platform.sample.domain.ITgAuthor;
-import ua.com.fielden.platform.sample.domain.ITgAuthorRoyalty;
-import ua.com.fielden.platform.sample.domain.ITgAuthoriser;
-import ua.com.fielden.platform.sample.domain.ITgAuthorship;
-import ua.com.fielden.platform.sample.domain.ITgAverageFuelUsage;
-import ua.com.fielden.platform.sample.domain.ITgBogie;
-import ua.com.fielden.platform.sample.domain.ITgBogieClass;
-import ua.com.fielden.platform.sample.domain.ITgBogieLocation;
-import ua.com.fielden.platform.sample.domain.ITgCategory;
-import ua.com.fielden.platform.sample.domain.ITgCategoryAttachment;
-import ua.com.fielden.platform.sample.domain.ITgCentreDiffSerialisation;
-import ua.com.fielden.platform.sample.domain.ITgCentreDiffSerialisationNonPersistentChild;
-import ua.com.fielden.platform.sample.domain.ITgCentreDiffSerialisationNonPersistentCompositeChild;
-import ua.com.fielden.platform.sample.domain.ITgCentreDiffSerialisationPersistentChild;
-import ua.com.fielden.platform.sample.domain.ITgCollectionalSerialisationChild;
-import ua.com.fielden.platform.sample.domain.ITgCollectionalSerialisationParent;
-import ua.com.fielden.platform.sample.domain.ITgEntityWithComplexSummaries;
-import ua.com.fielden.platform.sample.domain.ITgEntityWithLoopedCalcProps;
-import ua.com.fielden.platform.sample.domain.ITgFuelType;
-import ua.com.fielden.platform.sample.domain.ITgFuelUsage;
-import ua.com.fielden.platform.sample.domain.ITgMakeCount;
-import ua.com.fielden.platform.sample.domain.ITgMeterReading;
-import ua.com.fielden.platform.sample.domain.ITgModelCount;
-import ua.com.fielden.platform.sample.domain.ITgModelYearCount;
-import ua.com.fielden.platform.sample.domain.ITgOrgUnit1;
-import ua.com.fielden.platform.sample.domain.ITgOrgUnit2;
-import ua.com.fielden.platform.sample.domain.ITgOrgUnit3;
-import ua.com.fielden.platform.sample.domain.ITgOrgUnit4;
-import ua.com.fielden.platform.sample.domain.ITgOrgUnit5;
-import ua.com.fielden.platform.sample.domain.ITgOriginator;
-import ua.com.fielden.platform.sample.domain.ITgPerson;
-import ua.com.fielden.platform.sample.domain.ITgPersonName;
-import ua.com.fielden.platform.sample.domain.ITgPublishedYearly;
-import ua.com.fielden.platform.sample.domain.ITgSubSystem;
-import ua.com.fielden.platform.sample.domain.ITgSystem;
-import ua.com.fielden.platform.sample.domain.ITgTimesheet;
-import ua.com.fielden.platform.sample.domain.ITgVehicle;
-import ua.com.fielden.platform.sample.domain.ITgVehicleFinDetails;
-import ua.com.fielden.platform.sample.domain.ITgVehicleFuelUsage;
-import ua.com.fielden.platform.sample.domain.ITgVehicleMake;
-import ua.com.fielden.platform.sample.domain.ITgVehicleModel;
-import ua.com.fielden.platform.sample.domain.ITgWagon;
-import ua.com.fielden.platform.sample.domain.ITgWagonClass;
-import ua.com.fielden.platform.sample.domain.ITgWagonClassCompatibility;
-import ua.com.fielden.platform.sample.domain.ITgWagonSlot;
-import ua.com.fielden.platform.sample.domain.ITgWorkOrder;
-import ua.com.fielden.platform.sample.domain.ITgWorkshop;
-import ua.com.fielden.platform.sample.domain.TgAuthorDao;
-import ua.com.fielden.platform.sample.domain.TgAuthorRoyaltyDao;
-import ua.com.fielden.platform.sample.domain.TgAuthoriserDao;
-import ua.com.fielden.platform.sample.domain.TgAuthorshipDao;
-import ua.com.fielden.platform.sample.domain.TgAverageFuelUsageDao;
-import ua.com.fielden.platform.sample.domain.TgBogieClassDao;
-import ua.com.fielden.platform.sample.domain.TgBogieDao;
-import ua.com.fielden.platform.sample.domain.TgBogieLocationDao;
-import ua.com.fielden.platform.sample.domain.TgCategoryAttachmentDao;
-import ua.com.fielden.platform.sample.domain.TgCategoryDao;
-import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationDao;
-import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersistentChildDao;
-import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersistentCompositeChildDao;
-import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationPersistentChildDao;
-import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChildDao;
-import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParentDao;
-import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummariesDao;
-import ua.com.fielden.platform.sample.domain.TgEntityWithLoopedCalcPropsDao;
-import ua.com.fielden.platform.sample.domain.TgFuelTypeDao;
-import ua.com.fielden.platform.sample.domain.TgFuelUsageDao;
-import ua.com.fielden.platform.sample.domain.TgMakeCountDao;
-import ua.com.fielden.platform.sample.domain.TgMeterReadingDao;
-import ua.com.fielden.platform.sample.domain.TgModelCountDao;
-import ua.com.fielden.platform.sample.domain.TgModelYearCountDao;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit1Dao;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit2Dao;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit3Dao;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit4Dao;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit5Dao;
-import ua.com.fielden.platform.sample.domain.TgOriginatorDao;
-import ua.com.fielden.platform.sample.domain.TgPersonDao;
-import ua.com.fielden.platform.sample.domain.TgPersonNameDao;
-import ua.com.fielden.platform.sample.domain.TgPublishedYearlyDao;
-import ua.com.fielden.platform.sample.domain.TgSubSystemDao;
-import ua.com.fielden.platform.sample.domain.TgSystemDao;
-import ua.com.fielden.platform.sample.domain.TgTimesheetDao;
-import ua.com.fielden.platform.sample.domain.TgVehicleDao;
-import ua.com.fielden.platform.sample.domain.TgVehicleFinDetailsDao;
-import ua.com.fielden.platform.sample.domain.TgVehicleFuelUsageDao;
-import ua.com.fielden.platform.sample.domain.TgVehicleMakeDao;
-import ua.com.fielden.platform.sample.domain.TgVehicleModelDao;
-import ua.com.fielden.platform.sample.domain.TgWagonClassCompatibilityDao;
-import ua.com.fielden.platform.sample.domain.TgWagonClassDao;
-import ua.com.fielden.platform.sample.domain.TgWagonDao;
-import ua.com.fielden.platform.sample.domain.TgWagonSlotDao;
-import ua.com.fielden.platform.sample.domain.TgWorkOrderDao;
-import ua.com.fielden.platform.sample.domain.TgWorkshopDao;
+import ua.com.fielden.platform.sample.domain.*;
+import ua.com.fielden.platform.sample.domain.compound.ITgCompoundEntity;
+import ua.com.fielden.platform.sample.domain.compound.ITgCompoundEntityChild;
+import ua.com.fielden.platform.sample.domain.compound.ITgCompoundEntityDetail;
+import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityChildDao;
+import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityDao;
+import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityDetailDao;
 import ua.com.fielden.platform.security.annotations.SessionCache;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
@@ -148,6 +65,8 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
  */
 public class PlatformTestServerModule extends BasicWebServerModule {
 
+    private final List<Class<? extends AbstractEntity<?>>> domainTypes;
+    
     public PlatformTestServerModule(final Map<Class, Class> defaultHibernateTypes, //
             final IApplicationDomainProvider applicationDomainProvider,//
             final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
@@ -155,6 +74,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
             final SecurityTokenProvider tokenProvider,//
             final Properties props) throws Exception {
         super(defaultHibernateTypes, applicationDomainProvider, serialisationClassProviderType, automaticDataFilterType, tokenProvider, props);
+        domainTypes = applicationDomainProvider.entityTypes();
     }
 
     public PlatformTestServerModule(final Map<Class, Class> defaultHibernateTypes, //
@@ -163,6 +83,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
             final Class<? extends IFilter> automaticDataFilterType, //
             final Properties props) throws Exception {
         super(defaultHibernateTypes, applicationDomainProvider, serialisationClassProviderType, automaticDataFilterType, null, props);
+        domainTypes = applicationDomainProvider.entityTypes();
     }
 
     @Override
@@ -195,6 +116,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
 
         bind(ITgBogieLocation.class).to(TgBogieLocationDao.class);
         bind(ITgBogie.class).to(TgBogieDao.class);
+        bind(TgSynBogieCo.class).to(TgSynBogieDao.class);
         bind(ITgBogieClass.class).to(TgBogieClassDao.class);
         bind(ITgWagon.class).to(TgWagonDao.class);
         bind(ITgWagonSlot.class).to(TgWagonSlotDao.class);
@@ -207,50 +129,73 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(ITgCategory.class).to(TgCategoryDao.class);
         bind(ITgCategoryAttachment.class).to(TgCategoryAttachmentDao.class);
         bind(ITgVehicle.class).to(TgVehicleDao.class);
+        bind(ITeVehicle.class).to(TeVehicleDao.class);
+        bind(ITgWebApiEntity.class).to(TgWebApiEntityDao.class);
+        bind(ITgWebApiEntitySyntheticSingle.class).to(TgWebApiEntitySyntheticSingleDao.class);
+        bind(ITgWebApiEntitySyntheticMulti.class).to(TgWebApiEntitySyntheticMultiDao.class);
+        bind(ITgCompoundEntity.class).to(TgCompoundEntityDao.class);
+        bind(ITgCompoundEntityDetail.class).to(TgCompoundEntityDetailDao.class);
+        bind(ITgCompoundEntityChild.class).to(TgCompoundEntityChildDao.class);
         bind(ITgVehicleFinDetails.class).to(TgVehicleFinDetailsDao.class);
+        bind(ITeVehicleFinDetails.class).to(TeVehicleFinDetailsDao.class);
         bind(ITgPersonName.class).to(TgPersonNameDao.class);
         bind(ITgAuthor.class).to(TgAuthorDao.class);
         bind(ITgFuelUsage.class).to(TgFuelUsageDao.class);
+        bind(ITeVehicleFuelUsage.class).to(TeVehicleFuelUsageDao.class);
         bind(ITgWorkOrder.class).to(TgWorkOrderDao.class);
+        bind(ITeWorkOrder.class).to(TeWorkOrderDao.class);
         bind(ITgModelCount.class).to(TgModelCountDao.class);
         bind(ITgModelYearCount.class).to(TgModelYearCountDao.class);
         bind(ITgFuelType.class).to(TgFuelTypeDao.class);
         bind(ITgVehicleModel.class).to(TgVehicleModelDao.class);
+        bind(ITeVehicleModel.class).to(TeVehicleModelDao.class);
         bind(ITgVehicleMake.class).to(TgVehicleMakeDao.class);
+        bind(ITeVehicleMake.class).to(TeVehicleMakeDao.class);
         bind(ITgMeterReading.class).to(TgMeterReadingDao.class);
-        bind(IMigrationError.class).to(MigrationErrorDao.class);
-        bind(IMigrationRun.class).to(MigrationRunDao.class);
-        bind(IMigrationHistory.class).to(MigrationHistoryDao.class);
+        bind(MigrationErrorCo.class).to(MigrationErrorDao.class);
+        bind(MigrationRunCo.class).to(MigrationRunDao.class);
+        bind(MigrationHistoryCo.class).to(MigrationHistoryDao.class);
         bind(ICentreContextHolder.class).to(CentreContextHolderDao.class);
         bind(ISavingInfoHolder.class).to(SavingInfoHolderDao.class);
         bind(ITgPerson.class).to(TgPersonDao.class);
         bind(ITgAuthoriser.class).to(TgAuthoriserDao.class);
         bind(ITgOriginator.class).to(TgOriginatorDao.class);
+        bind(ITgDateTestEntity.class).to(TgDateTestEntityDao.class);
 
         bind(ITgMakeCount.class).to(TgMakeCountDao.class);
         bind(ITgAverageFuelUsage.class).to(TgAverageFuelUsageDao.class);
+        bind(ITeAverageFuelUsage.class).to(TeAverageFuelUsageDao.class);
         bind(ITgVehicleFuelUsage.class).to(TgVehicleFuelUsageDao.class);
         bind(ITgEntityWithComplexSummaries.class).to(TgEntityWithComplexSummariesDao.class);
-        
+
         bind(ITgAuthorship.class).to(TgAuthorshipDao.class);
         bind(ITgAuthorRoyalty.class).to(TgAuthorRoyaltyDao.class);
-        bind(ITgEntityWithLoopedCalcProps.class).to(TgEntityWithLoopedCalcPropsDao.class);
         bind(ITgPublishedYearly.class).to(TgPublishedYearlyDao.class);
-        
+
 
         bind(ICompositeEntity.class).to(CompositeEntityDao.class);
         bind(ICompositeEntityKey.class).to(CompositeEntityKeyDao.class);
         bind(IComplexKeyEntity.class).to(ComplexKeyEntityDao.class);
-        
+
         bind(new TypeLiteral<IEntityDao<EntityWithMoney>>() {
         }).to(EntityWithMoneyDao.class);
-        
+
         bind(ITgCollectionalSerialisationParent.class).to(TgCollectionalSerialisationParentDao.class);
         bind(ITgCollectionalSerialisationChild.class).to(TgCollectionalSerialisationChildDao.class);
         bind(ITgCentreDiffSerialisation.class).to(TgCentreDiffSerialisationDao.class);
         bind(ITgCentreDiffSerialisationPersistentChild.class).to(TgCentreDiffSerialisationPersistentChildDao.class);
         bind(ITgCentreDiffSerialisationNonPersistentChild.class).to(TgCentreDiffSerialisationNonPersistentChildDao.class);
         bind(ITgCentreDiffSerialisationNonPersistentCompositeChild.class).to(TgCentreDiffSerialisationNonPersistentCompositeChildDao.class);
+        bind(EntityWithDynamicRequirednessCo.class).to(EntityWithDynamicRequirednessDao.class);
+
+        // FIXME the following approach should have been the correct one for binding companion objects,
+        //       however, not all test domain entities actually have companions, hence manual binding...
+        //       this should really be corrected at some stage
+        // dynamically bind DAO implementations for all companion objects
+        // for (final Class<? extends AbstractEntity<?>> entityType : domainTypes) {
+        //     CompanionObjectAutobinder.bindCo(entityType, binder());
+        // }
+
     }
 
     public static class TestSessionCacheBuilder implements Provider<Cache<String, UserSession>> {

@@ -3,24 +3,38 @@ package ua.com.fielden.platform.ioc;
 import java.util.HashSet;
 import java.util.Set;
 
-import ua.com.fielden.platform.entity.ioc.IModuleWithInjector;
-
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
+import com.google.inject.Stage;
+
+import ua.com.fielden.platform.basic.config.Workflows;
+import ua.com.fielden.platform.entity.ioc.IModuleWithInjector;
 
 /**
  * A factory for instantiation of Guice injector with correctly initialised TG applications modules, which support contract {@link IModuleWithInjector}.
- * 
+ * <p>
+ * Guice instantiation stage is determined by the constructor argument {@code workflow}.
+ * This governs how Guice instantiates singletons (refer <a href="https://github.com/google/guice/wiki/Scopes#eager-singletons">Eager Singletons</a> for more details).
+ * The default value is {@code Workflows#development}, mapping to {@link Stage#DEVELOPMENT}.
+ *
  * @author TG Team
- * 
+ *
  */
 public final class ApplicationInjectorFactory {
 
+    private final Workflows workflow;
     private Injector injector;
-
     private final Set<Module> modules = new HashSet<>();
 
+    public ApplicationInjectorFactory(final Workflows workflow) {
+        this.workflow = workflow;
+    }
+    
+    public ApplicationInjectorFactory() {
+        this(Workflows.development);
+    }
+    
     public ApplicationInjectorFactory add(final Module... otherModules) {
         if (injector != null) {
             throw new IllegalStateException("Injector has already been created. No module modification is permitted.");
@@ -38,7 +52,8 @@ public final class ApplicationInjectorFactory {
             return injector;
         }
 
-        injector = Guice.createInjector(modules.toArray(new Module[] {}));
+        final Stage stage = Workflows.deployment == workflow || Workflows.vulcanizing == workflow ? Stage.PRODUCTION : Stage.DEVELOPMENT;
+        injector = Guice.createInjector(stage, modules.toArray(new Module[] {}));
 
         for (final Module module : modules) {
             if (module instanceof IModuleWithInjector) {

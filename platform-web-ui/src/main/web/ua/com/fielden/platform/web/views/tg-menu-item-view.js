@@ -6,6 +6,7 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js
 import "/resources/polymer/@polymer/paper-styles/shadow.js";
 
 import '/resources/element_loader/tg-element-loader.js';
+import { TgReflector } from '/app/tg-reflector.js';
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
@@ -94,6 +95,10 @@ Polymer({
         "tabindex": "0"
     },
 
+    created: function () {
+        this._reflector = new TgReflector();
+    },
+
     // ready: function () {
     //     This setting could be helpful in case where master / centre views will need to be supported.
     //     this._afterInitLoading = true;
@@ -116,28 +121,101 @@ Polymer({
         }
     },
 
+    /**
+     * Indicates whether this tg-menu-item-view contains centre inside.
+     */
     _isCentre: function (menuItem) {
         return menuItem.view.viewType === 'centre';
     },
 
+    /**
+     * Retrieves loaded centre criteria if centre element has been loaded previously (except situation where exactly same config without link parameters is tried to be loaded).
+     * Provides parameters for tg-element-loader if centre element has not been loaded previously.
+     */
+    _retrieveCentreWithParams: function (queryPart, unknownSubpath) {
+        const elementLoader = this.shadowRoot.querySelector("#elementToLoad")
+        const centre = elementLoader.loadedElement;
+        if (centre) {
+            const loadCentreFreezed = centre.$ && centre.$.selection_criteria && centre.$.selection_criteria.loadCentreFreezed;
+            if (!loadCentreFreezed && (queryPart // perform reloading in case where new ?crit=val params appear ...
+             || unknownSubpath !== centre.configUuid // ... or new configUuid is different from already loaded ...
+             || !centre._criteriaLoaded // ... or where criteria was not loaded (e.g. errors during previous loading attempts)
+            )) {
+                const initiateCentreLoading = () => this.async(() => { // load new centre config only after current loading completed; this can be achieved by putting next loading in the end of queue; this is useful for link-configurations
+                    centre._selectedView = 0;
+                    centre.queryPart = queryPart;
+                    centre.configUuid = unknownSubpath;
+                    this._loadCentre.bind(this)(centre, false);
+                });
+                if (centre._criteriaLoaded && centre.configUuid === '') { // for fully loaded default configuration we intercept loading with special invisible CentreConfigLoadAction
+                    if (!centre.loadActionFromUri) { // create it if not yet created
+                        const originalLoadAction = centre.$.dom.$.selectionView.$.loadAction; // copy from standard CentreConfigLoadAction
+                        centre.loadActionFromUri = document.createElement('tg-ui-action');
+                        centre.loadActionFromUri.componentUri = originalLoadAction.componentUri;
+                        centre.loadActionFromUri.elementName = originalLoadAction.elementName;
+                        centre.loadActionFromUri.showDialog = originalLoadAction.showDialog;
+                        centre.loadActionFromUri.createContextHolder = originalLoadAction.createContextHolder;
+                        centre.loadActionFromUri.attrs = originalLoadAction.attrs;
+                        centre.loadActionFromUri.requireSelectionCriteria = originalLoadAction.requireSelectionCriteria;
+                        centre.loadActionFromUri.requireSelectedEntities = originalLoadAction.requireSelectedEntities;
+                        centre.loadActionFromUri.requireMasterEntity = originalLoadAction.requireMasterEntity;
+                        centre.loadActionFromUri.chosenProperty = 'load-from-uri'; // this will be used to distinguish from standard action
+                        centre.loadActionFromUri._masterReferenceForTestingChanged = function (master) {
+                            master.addEventListener('continuaton-completed-without-success', event => { // listen for CANCEL AcknowledgeWarnings action completion
+                                history.back(); // move back from already recorded history transition (made explicitly by user by pasting URI into address bar)
+                            });
+                        };
+                        centre.appendChild(centre.loadActionFromUri); // must be attached to DOM tree to trigger observers and other stuff
+                    }
+                    centre.loadActionFromUri.postActionSuccess = initiateCentreLoading; // completely override postActionSuccess to provide different behavior
+                    centre.loadActionFromUri._run();
+                } else {
+                    initiateCentreLoading();
+                }
+            }
+        } else {
+            if (elementLoader.attrs) {
+                elementLoader.attrs.configUuid = unknownSubpath;
+            }
+        }
+    },
+
+    /**
+     * Loads criteria entity for the centre and initiates running for autoRun / link centres.
+     */
+    _loadCentre: function (centre, isFirstTime) {
+        const self = this;
+        const oldPostRetrieved = centre.postRetrieved;
+        centre.postRetrieved = function (entity, bindingEntity, customObject) {
+            if (oldPostRetrieved) {
+                oldPostRetrieved(entity, bindingEntity, customObject);
+            }
+            centre._setQueryParams();
+            if (centre.autoRun || centre.queryPart) {
+                if (centre._selectedView === 0) {
+                    centre.async(() => {
+                        centre._selectedView = centre.preferredView;
+                    }, 100);
+                }
+                centre.run(!centre.queryPart); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)
+                delete centre.queryPart;
+            }
+            if (isFirstTime) {
+                self.fire("menu-item-view-loaded", self.menuItem);
+            }
+            centre.postRetrieved = oldPostRetrieved;
+        };
+        return centre.retrieve().catch(error => {});
+    },
+
+    /**
+     * Listener for tg-element-loader after successful loading of menu-item view.
+     */
     _afterLoadListener: function (e, detail, view) {
-        var self = this;
+        const self = this;
         if (e.target === this.shadowRoot.querySelector("#elementToLoad")) {
-            if (this.menuItem.view.viewType === 'centre') {
-                const oldPostRetrieved = detail.postRetrieved;
-                detail.postRetrieved = function (entity, bindingEntity, customObject) {
-                    if (oldPostRetrieved) {
-                        oldPostRetrieved(entity, bindingEntity, customObject);
-                    }
-                    detail._setQueryParams();
-                    if (detail.autoRun || detail.queryPart) {
-                        detail.run(!detail.queryPart); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)
-                        delete detail.queryPart;
-                    }
-                    self.fire("menu-item-view-loaded", self.menuItem);
-                    detail.postRetrieved = oldPostRetrieved;
-                };
-                detail.retrieve().catch(error => {});
+            if (this._isCentre(this.menuItem)) {
+                self._loadCentre.bind(this)(detail, true);
             } else if (this.menuItem.view.viewType === 'master') {
                 detail.postRetrieved = function (entity, bindingEntity, customObject) {
                     self.fire("menu-item-view-loaded", self.menuItem);

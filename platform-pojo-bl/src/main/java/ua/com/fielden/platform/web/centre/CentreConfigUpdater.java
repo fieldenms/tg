@@ -22,6 +22,7 @@ import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.validation.GreaterOrEqualValidator;
 import ua.com.fielden.platform.entity.validation.GreaterValidator;
 import ua.com.fielden.platform.entity.validation.MaxValueValidator;
+import ua.com.fielden.platform.web.centre.definers.CentreConfigUpdaterSortingValsDefiner;
 
 /**
  * Functional entity for updating centre configuration: centre's column visibility / order and centre's sorting.
@@ -29,7 +30,7 @@ import ua.com.fielden.platform.entity.validation.MaxValueValidator;
  * @author TG Team
  *
  */
-@CompanionObject(ICentreConfigUpdater.class)
+@CompanionObject(CentreConfigUpdaterCo.class)
 // !@MapEntityTo -- here the entity is not persistent intentionally
 public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionModification<String> {
 
@@ -51,8 +52,8 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
     private CentreContextHolder masterEntityHolder;
 
     @IsProperty
-    @Title(value = "Centre Changed", desc = "Indicates whether successful saving of this entity actually changed centre. Only populated when centre sorting wasn't changed.")
-    private boolean centreChanged;
+    @Title(value = "Centre Dirty", desc = "Indicates whether successful saving of this entity actually changed centre configuration or it is New (aka default, link or inherited). Only populated when centre sorting wasn't changed.")
+    private boolean centreDirty;
 
     @IsProperty
     @Title(value = "Page Capacity", desc = "The maximum number of entities retrieved.")
@@ -123,13 +124,13 @@ public class CentreConfigUpdater extends AbstractFunctionalEntityForCollectionMo
     }
 
     @Observable
-    public CentreConfigUpdater setCentreChanged(final boolean centreChanged) {
-        this.centreChanged = centreChanged;
+    public CentreConfigUpdater setCentreDirty(final boolean centreDirty) {
+        this.centreDirty = centreDirty;
         return this;
     }
 
-    public boolean isCentreChanged() {
-        return centreChanged;
+    public boolean isCentreDirty() {
+        return centreDirty;
     }
 
     @Observable

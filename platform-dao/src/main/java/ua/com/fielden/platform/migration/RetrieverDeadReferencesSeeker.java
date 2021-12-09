@@ -25,11 +25,9 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class RetrieverDeadReferencesSeeker {
     private final DomainMetadataAnalyser dma;
-    private RetrieverSqlProducer rsp;
 
     public RetrieverDeadReferencesSeeker(final DomainMetadataAnalyser dma) {
         this.dma = dma;
-        this.rsp = new RetrieverSqlProducer(dma);
     }
 
     public Map<Class<? extends AbstractEntity<?>>, String> determineUsers(final List<IRetriever<? extends AbstractEntity<?>>> allRetrievers) {
@@ -57,7 +55,7 @@ public class RetrieverDeadReferencesSeeker {
         sb.append(") AS TTT WHERE NOT ("); //NOT EXISTS (SELECT * FROM " + referencedType.getSimpleName() + " WHERE ...)");
 
         final Map<String, String> criteria = new HashMap<String, String>();
-        for (final Iterator<String> iterator = rsp.getKeyProps(referencedType, dma).iterator(); iterator.hasNext();) {
+        for (final Iterator<String> iterator = MigrationUtils.keyPaths(referencedType).iterator(); iterator.hasNext();) {
             final String keyProp = iterator.next();
             sb.append("TTT.\"" + keyProp + "\" IS NULL");
             sb.append(iterator.hasNext() ? " AND " : "");
@@ -68,7 +66,7 @@ public class RetrieverDeadReferencesSeeker {
         sb.append(")");
         for (final RetrieverProps retrieverProps : referenceSources) {
             if (!AnnotationReflector.isAnnotationPresentForClass(Updater.class, retrieverProps.retriever.getClass())) {
-                sb.append(" AND NOT EXISTS (SELECT * " + rsp.getCoreSqlWithCriteria(retrieverProps.retriever, criteria) + ")");
+                sb.append(" AND NOT EXISTS (SELECT * " + RetrieverSqlProducer.getCoreSqlWithCriteria(retrieverProps.retriever, criteria) + ")");
             }
         }
         return sb.toString();
@@ -76,8 +74,8 @@ public class RetrieverDeadReferencesSeeker {
 
     private String getSelectFieldsOnlySql(final EntityTypeReference entityTypeReference) {
         final StringBuffer sb = new StringBuffer();
-        sb.append(rsp.getDistinctYieldsSql(getSpecifiedPropsYields2(entityTypeReference)));
-        sb.append(rsp.getCoreSql(entityTypeReference.retriever));
+        sb.append(RetrieverSqlProducer.getDistinctYieldsSql(getSpecifiedPropsYields2(entityTypeReference)));
+        sb.append(RetrieverSqlProducer.getCoreSql(entityTypeReference.retriever));
         return sb.toString();
     }
 

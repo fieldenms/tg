@@ -2,7 +2,7 @@ package ua.com.fielden.platform.web.centre.api.calc;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCriteriaBuilder;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bCheckbox;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aEgiAppearance;
 
 /**
  *
@@ -14,6 +14,6 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bCheck
  *
  * @param <T>
  */
-public interface IEnhanceEntityWithCalcProps<T extends AbstractEntity<?>> extends ISelectionCriteriaBuilder<T>, IResultSetBuilder1bCheckbox<T> {
+public interface IEnhanceEntityWithCalcProps<T extends AbstractEntity<?>> extends ISelectionCriteriaBuilder<T>, IResultSetBuilder1aEgiAppearance<T> {
 
 }

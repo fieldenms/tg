@@ -20,14 +20,15 @@ import org.restlet.ext.json.JsonRepresentation;
 import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Post;
-import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 /**
  * A web resource handling user login reset requests.
@@ -35,7 +36,7 @@ import ua.com.fielden.platform.utils.ResourceLoader;
  * @author TG Team
  *
  */
-public class LoginCompleteResetResource extends ServerResource {
+public class LoginCompleteResetResource extends AbstractWebResource {
     
     public static final String BINDING_PATH = "/reset_password/{uuid}";
 
@@ -57,10 +58,12 @@ public class LoginCompleteResetResource extends ServerResource {
             final String demoSecret,
             final ICompanionObjectFinder coFinder,
             final IUserProvider up,
+            final IDeviceProvider deviceProvider,
+            final IDates dates,
             final Context context,
             final Request request,
             final Response response) {
-        init(context, request, response);
+        super(context, request, response, deviceProvider, dates);
         this.demoSecret = demoSecret;
         this.coFinder = coFinder;
         this.up = up;

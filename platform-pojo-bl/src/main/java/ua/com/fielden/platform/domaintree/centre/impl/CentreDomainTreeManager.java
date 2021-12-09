@@ -44,8 +44,7 @@ import ua.com.fielden.snappy.MnemonicEnum;
  *
  */
 public class CentreDomainTreeManager extends AbstractDomainTreeManager implements ICentreDomainTreeManager {
-    private Boolean runAutomatically;
-
+    private Integer preferredView;
     /**
      * A <i>manager</i> constructor for the first time instantiation.
      *
@@ -53,7 +52,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
      * @param rootTypes
      */
     public CentreDomainTreeManager(final EntityFactory entityFactory, final Set<Class<?>> rootTypes) {
-        this(entityFactory, new CentreDomainTreeRepresentation(entityFactory, rootTypes), new AddToCriteriaTickManager(entityFactory, rootTypes), new AddToResultTickManager(), null);
+        this(entityFactory, new CentreDomainTreeRepresentation(entityFactory, rootTypes), new AddToCriteriaTickManager(entityFactory, rootTypes), new AddToResultTickManager());
     }
 
     /**
@@ -64,9 +63,8 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
      * @param firstTick
      * @param secondTick
      */
-    public CentreDomainTreeManager(final EntityFactory entityFactory, final CentreDomainTreeRepresentation dtr, final AddToCriteriaTickManager firstTick, final AddToResultTickManager secondTick, final Boolean runAutomatically) {
+    public CentreDomainTreeManager(final EntityFactory entityFactory, final CentreDomainTreeRepresentation dtr, final AddToCriteriaTickManager firstTick, final AddToResultTickManager secondTick) {
         super(entityFactory, dtr, firstTick, secondTick);
-        this.runAutomatically = runAutomatically;
     }
 
     @Override
@@ -845,18 +843,14 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         }
     }
 
-    protected Boolean isRunAutomatically1() {
-        return runAutomatically;
+    @Override
+    public Integer getPreferredView() {
+        return preferredView;
     }
 
     @Override
-    public boolean isRunAutomatically() {
-        return runAutomatically != null ? runAutomatically : false; // should be disabled by default
-    }
-
-    @Override
-    public ICentreDomainTreeManager setRunAutomatically(final boolean runAutomatically) {
-        this.runAutomatically = runAutomatically;
+    public ICentreDomainTreeManager setPreferredView(final Integer preferredView) {
+        this.preferredView = preferredView;
         return this;
     }
 
@@ -864,7 +858,7 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
-        result = prime * result + ((runAutomatically == null) ? 0 : runAutomatically.hashCode());
+        result = prime * result + ((preferredView == null) ? 0 : preferredView.hashCode());
         return result;
     }
 
@@ -873,24 +867,12 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
         if (this == obj) {
             return true;
         }
-        if (!super.equals(obj)) {
+        if (!super.equals(obj) || getClass() != obj.getClass()) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
+
         final CentreDomainTreeManager other = (CentreDomainTreeManager) obj;
-        if (runAutomatically == null) {
-            if (other.runAutomatically != null) {
-                return false;
-            }
-        } else if (!runAutomatically.equals(other.runAutomatically)) {
-            return false;
-        }
-        return true;
+        return Objects.equals(preferredView, other.preferredView);
     }
 
-    protected Boolean runAutomatically() {
-        return runAutomatically;
-    }
 }

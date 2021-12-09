@@ -1,17 +1,20 @@
 package ua.com.fielden.platform.dao;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toList;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
 import java.util.List;
 import java.util.Random;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.domain.metadata.DomainPropertyTreeEntity;
+import ua.com.fielden.platform.domain.metadata.DomainTreeEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.menu.Action;
@@ -22,14 +25,13 @@ import ua.com.fielden.platform.ref_hierarchy.ReferencedByLevelHierarchyEntry;
 import ua.com.fielden.platform.ref_hierarchy.TypeLevelHierarchyEntry;
 import ua.com.fielden.platform.test.PlatformTestDomainTypes;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
-import ua.com.fielden.platform.utils.CollectionUtil;
 
 public class CommonEntityDaoCompanionInstantiationTest extends AbstractDaoTestCase {
 
-    private static final Set<Class<? extends AbstractEntity<?>>> types = CollectionUtil.setOf(ReferenceHierarchy.class, ReferenceHierarchyEntry.class, TypeLevelHierarchyEntry.class, ReferencedByLevelHierarchyEntry.class, ReferenceLevelHierarchyEntry.class,
-                                                                                              Action.class);
-    private static final List<Class<? extends AbstractEntity<?>>> entityTypes = PlatformTestDomainTypes.entityTypes.stream().filter(type -> !types.contains(type)).collect(Collectors.toList());
-    
+    private static final Set<Class<? extends AbstractEntity<?>>> types = setOf(ReferenceHierarchy.class, ReferenceHierarchyEntry.class, TypeLevelHierarchyEntry.class, ReferencedByLevelHierarchyEntry.class, ReferenceLevelHierarchyEntry.class,
+                                                                               DomainTreeEntity.class, DomainPropertyTreeEntity.class, Action.class);
+    private static final List<Class<? extends AbstractEntity<?>>> entityTypes = PlatformTestDomainTypes.entityTypes.stream().filter(type -> !types.contains(type)).collect(toList());
+
     @Test
     public void companion_objects_for_any_registered_domain_entity_can_be_instantiated_through_co_API_of_random_companion() {
         final Random rnd = new Random();
@@ -45,7 +47,7 @@ public class CommonEntityDaoCompanionInstantiationTest extends AbstractDaoTestCa
     public void companion_objects_for_any_registered_domain_entity_are_cached_if_created_through_co_API_of_random_companion() {
         final Random rnd = new Random();
         final IEntityDao<?> randomCo = co$(entityTypes.get(rnd.nextInt(entityTypes.size())));
-        
+
         entityTypes.stream().forEach(type -> {
             final IEntityDao<?> co1 = randomCo.co$(type);
             final IEntityDao<?> co2 = randomCo.co$(type);
@@ -60,9 +62,9 @@ public class CommonEntityDaoCompanionInstantiationTest extends AbstractDaoTestCa
         final ICompanionObjectFinder coFinder = getInstance(ICompanionObjectFinder.class);
         final IEntityDao<?> randomCo1 = coFinder.find(rndType);
         final IEntityDao<?> randomCo2 = coFinder.find(rndType);
-        
+
         assertFalse(randomCo1 == randomCo2);
-        
+
         entityTypes.stream().forEach(type -> {
             final IEntityDao<?> co1 = randomCo1.co$(type);
             final IEntityDao<?> co2 = randomCo2.co$(type);

@@ -12,7 +12,6 @@ export const MarkerFactory = function () {
     self.CircleMarker = L.Marker.extend({
         options: {
             icon: self._iconFactory.getCircleIcon(false),
-            title: "BlaBla",
             riseOnHover: true,
             riseOffset: 1000,
             zIndexOffset: 750 // high value to make the circles always on top
@@ -31,7 +30,6 @@ export const MarkerFactory = function () {
     self.ArrowMarker = L.Marker.extend({
         options: {
             icon: self._iconFactory.getArrowIcon(false),
-            title: "BlaBla",
             riseOffset: 1000,
             riseOnHover: true
         },
@@ -53,19 +51,20 @@ MarkerFactory.prototype.createClusterIcon = function (htmlString) {
     return this._iconFactory.createClusterIcon(htmlString);
 }
 
+/**
+ * Creates default marker for GeoJSON Point features.
+ * Creates arrow for features with 'vectorSpeed' > 0 (and possibly with specific angle, if present).
+ * Otherwise creates standard red circle.
+ */
 MarkerFactory.prototype.createFeatureMarker = function (feature, latlng) {
     if (feature) {
         const featureType = this.featureType(feature);
-        if (featureType === 'TgMessage') {
-            if (feature.get('vectorSpeed')) { // TODO featureType.get('vectorSpeed') !== 0?
-                return new this.ArrowMarker(latlng, {
-                    rotationAngle: (feature.get('vectorAngle') ? (feature.get('vectorAngle') - 180) : 0)
-                });
-            } else {
-                return new this.CircleMarker(latlng);
-            }
+        if (typeof feature.vectorSpeed === 'number' && feature.get('vectorSpeed') > 0) {
+            return new this.ArrowMarker(latlng, {
+                rotationAngle: typeof feature.vectorAngle === 'number' ? feature.get('vectorAngle') - 180 : 0
+            });
         } else {
-            throw "MarkerFactory.prototype.createFeatureMarker: [" + feature + "] has unknown type == [" + featureType + "]. Should be 'TgMessage' only.";
+            return new this.CircleMarker(latlng);
         }
     } else {
         throw "MarkerFactory.prototype.createFeatureMarker: [" + feature + "] is empty.";

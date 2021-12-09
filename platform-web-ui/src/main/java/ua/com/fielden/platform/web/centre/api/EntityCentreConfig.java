@@ -1,10 +1,19 @@
 package ua.com.fielden.platform.web.centre.api;
 
 import static java.lang.String.format;
+import static java.util.Collections.unmodifiableList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.FRONT;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.INSERTION_POINT;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.PRIMARY_RESULT_SET;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.PROP;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.SECONDARY_RESULT_SET;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.SHARE;
+import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.TOP_LEVEL;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -34,6 +43,7 @@ import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritBooleanValueMnemonic;
@@ -64,6 +74,8 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     private final boolean egiHidden;
+    private final String gridViewIcon;
+    private final String gridViewIconStyle;
     private final boolean draggable;
     private final boolean hideCheckboxes;
     private final IToolbarConfig toolbarConfig;
@@ -284,7 +296,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             this.contextConfig = contextConfig;
             this.entityPreProcessor = entityPreProcessor;
         }
-        
+
         /**
          * Returns the property name for specified {@link ResultSetProp} instance. The returned property name can be used for retrieving and altering data in
          * {@link ICentreDomainTreeManager}.
@@ -350,13 +362,13 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      * A primary entity action configuration that is associated with every retrieved and present in the result set entity. It can be <code>null</code> if no primary entity action
      * is needed.
      */
-    private final EntityActionConfig resultSetPrimaryEntityAction;
+    private final EntityMultiActionConfig resultSetPrimaryEntityAction;
 
     /**
      * A list of secondary action configurations that are associated with every retrieved and present in the result set entity. It can be empty if no secondary action are
      * necessary.
      */
-    private final List<EntityActionConfig> resultSetSecondaryEntityActions = new ArrayList<>();
+    private final List<EntityMultiActionConfig> resultSetSecondaryEntityActions = new ArrayList<>();
 
     /**
      * Represents a type of a contract that is responsible for customisation of rendering for entities and their properties.
@@ -381,6 +393,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     ///////////////////////////////////
     public EntityCentreConfig(
             final boolean egiHidden,
+            final String gridViewIcon,
+            final String gridViewIconStyle,
             final boolean draggable,
             final boolean hideCheckboxes,
             final IToolbarConfig toolbarConfig,
@@ -443,14 +457,16 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final List<ResultSetProp<T>> resultSetProperties,
             final ListMultimap<String, SummaryPropDef> summaryExpressions,
             final LinkedHashMap<String, OrderDirection> resultSetOrdering,
-            final EntityActionConfig resultSetPrimaryEntityAction,
-            final List<EntityActionConfig> resultSetSecondaryEntityActions,
+            final EntityMultiActionConfig resultSetPrimaryEntityAction,
+            final List<EntityMultiActionConfig> resultSetSecondaryEntityActions,
             final Class<? extends IRenderingCustomiser<?>> resultSetRenderingCustomiserType,
             final Class<? extends ICustomPropsAssignmentHandler> resultSetCustomPropAssignmentHandlerType,
             final Pair<Class<? extends IQueryEnhancer<T>>, Optional<CentreContextConfig>> queryEnhancerConfig,
             final Pair<Class<?>, Class<?>> generatorTypes,
             final IFetchProvider<T> fetchProvider) {
         this.egiHidden = egiHidden;
+        this.gridViewIcon = gridViewIcon;
+        this.gridViewIconStyle = gridViewIconStyle;
         this.draggable = draggable;
         this.hideCheckboxes = hideCheckboxes;
         this.toolbarConfig = toolbarConfig;
@@ -576,15 +592,12 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return Optional.ofNullable(fetchProvider);
     }
 
-    public Optional<EntityActionConfig> getResultSetPrimaryEntityAction() {
-        return Optional.ofNullable(resultSetPrimaryEntityAction);
+    public Optional<EntityMultiActionConfig> getResultSetPrimaryEntityAction() {
+        return ofNullable(resultSetPrimaryEntityAction);
     }
 
-    public Optional<List<EntityActionConfig>> getResultSetSecondaryEntityActions() {
-        if (resultSetSecondaryEntityActions.isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.of(Collections.unmodifiableList(resultSetSecondaryEntityActions));
+    public List<EntityMultiActionConfig> getResultSetSecondaryEntityActions() {
+        return unmodifiableList(resultSetSecondaryEntityActions);
     }
 
     public Optional<List<ResultSetProp<T>>> getResultSetProperties() {
@@ -798,22 +811,19 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      * @return
      */
     public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
-        if (FunctionalActionKind.TOP_LEVEL == actionKind) {
+        if (TOP_LEVEL == actionKind) {
             if (!getTopLevelActions().isPresent()) {
                 throw new IllegalArgumentException("No top-level action exists.");
             }
             return getTopLevelActions().get().get(actionNumber).getKey();
-        } else if (FunctionalActionKind.PRIMARY_RESULT_SET == actionKind) {
+        } else if (PRIMARY_RESULT_SET == actionKind) {
             if (!getResultSetPrimaryEntityAction().isPresent()) {
                 throw new IllegalArgumentException("No primary result-set action exists.");
             }
-            return getResultSetPrimaryEntityAction().get();
-        } else if (FunctionalActionKind.SECONDARY_RESULT_SET == actionKind) {
-            if (!getResultSetSecondaryEntityActions().isPresent()) {
-                throw new IllegalArgumentException("No secondary result-set action exists.");
-            }
-            return getResultSetSecondaryEntityActions().get().get(actionNumber);
-        } else if (FunctionalActionKind.PROP == actionKind) {
+            return getResultSetPrimaryEntityAction().get().actions().get(actionNumber);
+        } else if (SECONDARY_RESULT_SET == actionKind) {
+            return getSecondaryActionFor(actionNumber).orElseThrow(() -> new IllegalArgumentException("No secondary result-set action exists."));
+        } else if (PROP == actionKind) {
             if (!getResultSetProperties().isPresent()) {
                 throw new IllegalArgumentException("No result-set property exists.");
             }
@@ -822,19 +832,41 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
                     .map(resultSetProp -> resultSetProp.propAction.get().get())
                     .collect(Collectors.toList())
                     .get(actionNumber);
-        } else if (FunctionalActionKind.INSERTION_POINT == actionKind) {
-            if (!getInsertionPointConfigs().isPresent()) {
+        } else if (INSERTION_POINT == actionKind) {
+            if (getInsertionPointConfigs().isEmpty()) {
                 throw new IllegalArgumentException("No insertion point exists.");
             }
-            return getInsertionPointConfigs().get().get(actionNumber).getInsertionPointAction();
-        } else if (FunctionalActionKind.FRONT == actionKind) {
+            return getInsertionPointConfigs().get(actionNumber).getInsertionPointAction();
+        } else if (FRONT == actionKind) {
             if (getFrontActions().isEmpty()) {
                 throw new IllegalArgumentException("No front action exists.");
             }
             return getFrontActions().get(actionNumber);
+        } else if (SHARE == actionKind) {
+            return null; // computation is not neccessary so identification of action config too
         }
         // TODO implement other types
         throw new UnsupportedOperationException(actionKind + " is not supported yet.");
+    }
+
+    /**
+     * Finds action configuration with {@code actionNumber} in the list of secondary actions/multi-actions, if it exists.
+     * The value of {@code actionNumber} represents an absolute index across all actions as if they were linear (i.e. regardless of how actions might be grouped by multi-actions).
+     *
+     * @param actionNumber
+     * @return
+     */
+    private Optional<EntityActionConfig> getSecondaryActionFor(final int actionNumber) {
+        int currentActionNumber = actionNumber;
+        for (final EntityMultiActionConfig config: getResultSetSecondaryEntityActions()) {
+            final List<EntityActionConfig> configActions = config.actions();
+            if (currentActionNumber < configActions.size()) {
+                return of(configActions.get(currentActionNumber));
+            } else {
+                currentActionNumber -= configActions.size();
+            }
+        }
+        return empty();
     }
 
     public Optional<List<Pair<EntityActionConfig, Optional<String>>>> getTopLevelActions() {
@@ -848,11 +880,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return Collections.unmodifiableList(frontActions);
     }
 
-    public Optional<List<InsertionPointConfig>> getInsertionPointConfigs() {
-        if (insertionPointConfigs.isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.of(Collections.unmodifiableList(insertionPointConfigs));
+    public List<InsertionPointConfig> getInsertionPointConfigs() {
+        return Collections.unmodifiableList(insertionPointConfigs);
     }
 
     public Optional<String> getSseUri() {
@@ -861,6 +890,14 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public boolean isEgiHidden() {
         return egiHidden;
+    }
+
+    public String getGridViewIcon() {
+        return gridViewIcon;
+    }
+
+    public String getGridViewIconStyle() {
+        return gridViewIconStyle;
     }
 
     public boolean shouldHideCheckboxes() {

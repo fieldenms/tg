@@ -20,7 +20,7 @@ const template = html`
         }
     </style>
     <template is="dom-if" if="[[isSingle]]">
-        <tg-ui-action class="action" show-dialog="[[actions.0.showDialog]]" toaster="[[actions.0.toaster]]" current-entity="[[currentEntity]]" short-desc="[[actions.0.shortDesc]]" long-desc="[[actions.0.longDesc]]" icon="[[actions.0.icon]]" component-uri="[[actions.0.componentUri]]" element-name="[[actions.0.elementName]]" action-kind="[[actions.0.actionKind]]" number-of-action="[[actions.0.numberOfAction]]" dynamic-action="[[actions.0.dynamicAction]]"attrs="[[actions.0.attrs]]" create-context-holder="[[actions.0.createContextHolder]]" require-selection-criteria="[[actions.0.requireSelectionCriteria]]" require-selected-entities="[[actions.0.requireSelectedEntities]]" require-master-entity="[[actions.0.requireMasterEntity]]" pre-action="[[actions.0.preAction]]" post-action-success="[[actions.0.postActionSuccess]]" post-action-error="[[actions.0.postActionError]]" should-refresh-parent-centre-after-save="[[actions.0.shouldRefreshParentCentreAfterSave]]" ui-role="[[actions.0.uiRole]]" icon-style="[[actions.0.iconStyle]]"></tg-ui-action>
+        <tg-egi-multi-action class="action" actions="[[actions.0.actions]]" current-entity="[[currentEntity]]" current-index="[[currentIndices.0]]"></tg-egi-multi-action>
     </template>
     <template is="dom-if" if="[[!isSingle]]">
         <paper-icon-button id="dropDownButton" icon="more-vert" on-tap="_showDropdown" tooltip-text="Opens list of available actions"></paper-icon-button>
@@ -38,13 +38,21 @@ Polymer({
         actions: Array,
         /**
          * The 'currentEntity' function contains the entity on which secondary action was tapped
-         * or the entity navigated to (EntityNavigationAction).
+         * or the entity navigated to (EntityEditAction with EntityNavigationPreAction).
          */
         currentEntity: {
             type: Function,
             value: function () {
                 return () => null;
             }
+        },
+
+        /**
+         * Current indices of secondary actions. If it is single secondary action then this array has only one index, otherwise there will
+         * be as many indices as numbere of secondary actions.
+         */ 
+        currentIndices: {
+            type: Array
         },
 
         isSingle: {
@@ -54,8 +62,12 @@ Polymer({
         dropdownTrigger: Function
     },
 
+    ready: function() {
+        this.currentIndices = this.currentIndices || this.actions.map(action => 0);
+    },
+
     _showDropdown: function (e, detail) {
         this.persistActiveElement();
-        this.dropdownTrigger(this.currentEntity, this);
+        this.dropdownTrigger(this.currentEntity, this.currentIndices, this);
     }
 });

@@ -11,7 +11,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.utils.EntityUtils.getRealProperties;
+import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
 
 import java.lang.reflect.Field;
 import java.util.HashMap;
@@ -81,7 +81,7 @@ public class DataDependencyQueriesGenerator {
 
                 final Map<Class<? extends AbstractEntity<?>>, Set<String>> pmd = new HashMap<>();
 
-                for (final Field ep : getRealProperties(entityType)) {
+                for (final Field ep : findRealProperties(entityType)) {
                     if (ep.isAnnotationPresent(MapTo.class) && !KEY.equals(ep.getName()) && (AbstractPersistentEntity.class.isAssignableFrom(ep.getType()) || AbstractUnionEntity.class.isAssignableFrom(ep.getType()))) {
                         final boolean isUnionEntityProp = AbstractUnionEntity.class.isAssignableFrom(ep.getType());
                         final List<Field> props = isUnionEntityProp ? unionProperties((Class<? extends AbstractUnionEntity>) ep.getType()) : asList(ep);

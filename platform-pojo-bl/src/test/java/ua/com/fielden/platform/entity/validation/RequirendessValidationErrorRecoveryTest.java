@@ -1,16 +1,21 @@
 package ua.com.fielden.platform.entity.validation;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 import org.junit.Test;
 
+import com.google.inject.Injector;
+
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithDynamicRequiredness;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
-
-import com.google.inject.Injector;
 
 /**
  * A test case for entity validation and error recovery related to requiredness of properties, including property dependency handling.
@@ -128,5 +133,54 @@ public class RequirendessValidationErrorRecoveryTest {
         assertFalse("Entity precondition failed.", entity.isValid().isSuccessful());
     }
 
+    @Test
+    public void required_boolean_property_is_valid_when_true_and_invalid_when_false_with_appropriate_error_msg() {
+        final EntityWithDynamicRequiredness entity = factory.newByKey(EntityWithDynamicRequiredness.class, "KEY VALUE");
+        final MetaProperty<Boolean> mp = entity.getProperty("prop5");
+        assertFalse(mp.getValue());
+        assertTrue(mp.isValidWithRequiredCheck(true));
+
+        final String errorMsg = "Must be set to true!";
+        mp.setRequired(true, errorMsg); // let's use a custom error message
+        assertFalse(mp.getValue());
+        assertFalse(mp.isValidWithRequiredCheck(true));
+        assertEquals(errorMsg, mp.getFirstFailure().getMessage());
+
+        mp.setValue(true);
+        assertTrue(mp.getValue());
+        assertTrue(mp.isValidWithRequiredCheck(true));
+
+        mp.setRequired(true, ""); // let's empty the custom error message to check the defaut one
+        mp.setValue(false);
+        assertTrue(mp.getValue());
+        assertFalse(mp.isValid());
+        assertEquals("Required property [Prop 5] must be true for entity [Entity With Dynamic Requiredness].", mp.getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void relaxing_requiredness_for_boolean_property_after_unsuccessful_attempt_to_assings_false() {
+        final EntityWithDynamicRequiredness entity = factory.newByKey(EntityWithDynamicRequiredness.class, "KEY VALUE");
+        final MetaProperty<Boolean> mp = entity.getProperty("prop5");
+        assertFalse(mp.getValue());
+        assertTrue(mp.isValidWithRequiredCheck(true));
+
+        mp.setRequired(true);
+        assertFalse(mp.getValue());
+        assertFalse(mp.isValidWithRequiredCheck(true));
+
+        mp.setValue(true);
+        assertTrue(mp.getValue());
+        assertTrue(mp.isValidWithRequiredCheck(true));
+        
+        mp.setValue(false);
+        assertFalse(mp.getLastInvalidValue());
+        assertFalse(mp.getLastAttemptedValue());
+        assertTrue(mp.getValue());
+        assertFalse(mp.isValid());
+
+        mp.setRequired(false);
+        assertFalse(mp.getValue());
+        assertTrue(mp.isValid());
+    }
 
 }

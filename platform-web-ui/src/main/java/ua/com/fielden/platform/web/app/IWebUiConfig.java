@@ -7,9 +7,11 @@ import java.util.Optional;
 import ua.com.fielden.platform.basic.config.Workflows;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.menu.IMenuRetriever;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
@@ -113,6 +115,26 @@ public interface IWebUiConfig extends IMenuRetriever {
     void initConfiguration();
 
     /**
+     * Iterates through all registered {@link EntityCentre}s and creates default configurations for each one.
+     */
+    void createDefaultConfigurationsForAllCentres();
+
+    /**
+     * Returns the map of embedded entity centres (and masters containing them) for this web application.
+     */
+    Map<Class<? extends MiWithConfigurationSupport<?>>, T2<EntityCentre<?>, EntityMaster<? extends AbstractEntity<?>>>> getEmbeddedCentres();
+
+    /**
+     * Determines whether the centre, represented by {@code miType}, is embedded.
+     * 
+     * @param miType
+     * @return
+     */
+    default boolean isEmbeddedCentre(final Class<? extends MiWithConfigurationSupport<?>> miType) {
+        return getEmbeddedCentres().containsKey(miType);
+    }
+
+    /**
      * Clears all centre, master and menu configurations that were initialised before.
      */
     void clearConfiguration();
@@ -150,4 +172,12 @@ public interface IWebUiConfig extends IMenuRetriever {
      * @return
      */
     boolean independentTimeZone();
+    
+    /**
+     * A set of domain-specific actions for centre configurations sharing.
+     * 
+     * @return
+     */
+    List<EntityActionConfig> centreConfigShareActions();
+    
 }

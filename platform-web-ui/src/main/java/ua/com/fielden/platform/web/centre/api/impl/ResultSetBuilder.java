@@ -13,11 +13,9 @@ import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
 import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp.dynamicProps;
-import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.mkInsertionPoint;
-import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig.configInsertionPoint;
-import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig.configInsertionPointWithPagination;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -45,10 +43,12 @@ import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.OrderDirection;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.SummaryPropDef;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
+import ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
-import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPoints;
-import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointsFlexible;
+import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointPreferred;
+import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
 import ua.com.fielden.platform.web.centre.api.resultset.IAlsoProp;
@@ -57,7 +57,8 @@ import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHa
 import ua.com.fielden.platform.web.centre.api.resultset.IDynamicColumnBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetAutocompleterConfig;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aHideEgi;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aEgiAppearance;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aEgiIconStyle;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bCheckbox;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cToolbar;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dScroll;
@@ -107,7 +108,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerW
  *
  * @param <T>
  */
-class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderAlsoDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder1aHideEgi<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T>, IInsertionPointsFlexible<T> {
+class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderAlsoDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder1aEgiAppearance<T>, IResultSetBuilder1aEgiIconStyle<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T>{
 
     private static final String ERR_EDITABLE_SUB_PROP_DISALLOWED = "Dot-notated property [%s] cannot be added as editable. Only first-level properties are supported.";
 
@@ -330,6 +331,15 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             throw new IllegalArgumentException("Primary action configuration should not be null.");
         }
 
+        return addPrimaryAction(new EntityMultiActionConfig(SingleActionSelector.class, Arrays.asList(actionConfig)));
+    }
+
+    @Override
+    public IAlsoSecondaryAction<T> addPrimaryAction(final EntityMultiActionConfig actionConfig) {
+        if (actionConfig == null) {
+            throw new IllegalArgumentException("Primary action configuration should not be null.");
+        }
+
         completePropIfNeeded();
         this.builder.resultSetPrimaryEntityAction = actionConfig;
         return secondaryActionBuilder;
@@ -337,6 +347,15 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     @Override
     public IAlsoSecondaryAction<T> addSecondaryAction(final EntityActionConfig actionConfig) {
+        if (actionConfig == null) {
+            throw new IllegalArgumentException("Secondary action configuration should not be null.");
+        }
+
+        return addSecondaryAction(new EntityMultiActionConfig(SingleActionSelector.class, Arrays.asList(actionConfig)));
+    }
+
+    @Override
+    public IAlsoSecondaryAction<T> addSecondaryAction(final EntityMultiActionConfig actionConfig) {
         if (actionConfig == null) {
             throw new IllegalArgumentException("Secondary action configuration should not be null.");
         }
@@ -492,38 +511,31 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
 
         @Override
-        public IInsertionPointsFlexible<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
+        public IInsertionPointPreferred<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
             return ResultSetBuilder.this.addInsertionPoint(actionConfig, whereToInsertView);
         }
-
-        @Override
-        public IInsertionPointsFlexible<T> addInsertionPointWithPagination(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
-            return ResultSetBuilder.this.addInsertionPointWithPagination(actionConfig, whereToInsertView);
-        }
-
     }
 
     @Override
-    public IInsertionPointsFlexible<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
-        this.builder.insertionPointConfigs.add(configInsertionPoint(mkInsertionPoint(actionConfig, whereToInsertView)));
-        return this;
-    }
-
-    @Override
-    public IInsertionPointsFlexible<T> addInsertionPointWithPagination(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
-        this.builder.insertionPointConfigs.add(configInsertionPointWithPagination(mkInsertionPoint(actionConfig, whereToInsertView)));
-        return this;
-    }
-
-    @Override
-    public IInsertionPoints<T> flex() {
-        this.builder.insertionPointConfigs.get(this.builder.insertionPointConfigs.size() - 1).setFlex(true);
-        return this;
+    public IInsertionPointPreferred<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
+        return new InsertionPointConfigBuilder<>(this, actionConfig, whereToInsertView);
     }
 
     @Override
     public IResultSetBuilder1bCheckbox<T> hideEgi() {
         this.builder.egiHidden = true;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder1aEgiIconStyle<T> withGridViewIcon(final String icon) {
+        this.builder.gridViewIcon = icon;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder1bCheckbox<T> style(final String iconStyle) {
+        this.builder.gridViewIconStyle = iconStyle;
         return this;
     }
 
@@ -636,6 +648,11 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public IResultSetBuilder1iVisibleRowsCount<T> wrapHeader(final int headerLineNumber) {
         this.builder.setHeaderLineNumber(headerLineNumber);
+        return this;
+    }
+
+    public ResultSetBuilder<T> addInsertionPoint(final InsertionPointConfig insertionPoint) {
+        this.builder.insertionPointConfigs.add(insertionPoint);
         return this;
     }
 }

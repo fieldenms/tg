@@ -238,11 +238,11 @@ public class WorkbookExporter {
                     final Class<?> elementType = firstElem.getClass();
                     final boolean isShortCollection = EntityUtils.isEntityType(elementType) &&
                             EntityUtils.isCompositeEntity((Class<AbstractEntity<?>>) elementType) &&
-                            Finder.getKeyMembers(elementType).size() == 2 &&
-                            Finder.getKeyMembers(elementType).stream().allMatch(field -> EntityUtils.isEntityType(field.getType()));
+                            Finder.getKeyMembers((Class<? extends AbstractEntity<?>>) elementType).size() == 2 &&
+                            Finder.getKeyMembers((Class<? extends AbstractEntity<?>>)elementType).stream().allMatch(field -> EntityUtils.isEntityType(field.getType()));
                     if (isShortCollection) {
                         final AbstractEntity<?> firstEntity = (AbstractEntity<?>) firstElem;
-                        final List<String> keyProps = Finder.getKeyMembers(elementType).stream().map(field -> field.getName()).collect(Collectors.toList());
+                        final List<String> keyProps = Finder.getKeyMembers((Class<? extends AbstractEntity<?>>) elementType).stream().map(field -> field.getName()).collect(Collectors.toList());
                         final Object key1 = firstEntity.get(keyProps.get(0));
                         final Object key2 = firstEntity.get(keyProps.get(1));
                         if (collection.stream().filter(element -> element != null).allMatch(elem -> EntityUtils.equalsEx(((AbstractEntity<?>) elem).get(keyProps.get(0)), key1))) {

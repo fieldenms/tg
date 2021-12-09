@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.util.Date;
 import java.util.List;
 
-import javax.activation.UnsupportedDataTypeException;
-
 import ua.com.fielden.platform.serialisation.jackson.deserialisers.CriteriaDeserialiser.CritProp;
 import ua.com.fielden.platform.types.Money;
 
@@ -16,6 +14,8 @@ import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
+import jakarta.activation.UnsupportedDataTypeException;
 
 public class CriteriaDeserialiser extends JsonDeserializer<CritProp> {
 

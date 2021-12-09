@@ -46,6 +46,7 @@ import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
 import ua.com.fielden.platform.snappy.SnappyQuery;
 import ua.com.fielden.platform.utils.StreamCouldNotBeResolvedException;
+import ua.com.fielden.platform.web_api.IWebApi;
 
 /**
  * This is a convenience class providing some common routines used in the implementation of web-resources.
@@ -287,6 +288,13 @@ public class RestServerUtil {
         final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
         // logger.debug("SIZE: " + bytes.length);
         return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON);
+    }
+    
+    /**
+     * Composes representation of {@link IWebApi} execution results.
+     */
+    public Representation webApiResultRepresentation(final Map<String, Object> result) {
+        return encodedRepresentation(new ByteArrayInputStream(serialiser.serialise(result, JACKSON)), APPLICATION_JSON);
     }
 
     /**

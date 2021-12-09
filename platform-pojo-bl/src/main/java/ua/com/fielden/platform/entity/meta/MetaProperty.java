@@ -11,7 +11,6 @@ import java.util.Set;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
@@ -23,6 +22,13 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
+ * A base class for a concept of meta-data about an entity property. Hence, meta-property.
+ * Meta-property instances are created for all properties of instrumented entity instances to capture all the information about entity properties to track their mutation and validation.
+ * <p>
+ * Instances of this class – {@code MetaPropery} – are created for proxied properties (cannot be mutated), providing only the most essential meta-data.
+ * This is why many methods in this class throw {@link StrictProxyException} upon their invocation.
+ * <p>
+ * Instances of {@link MetaPropertyFull}, which is a descendant of {@code MetaPropery}, are created for full, not proxied, properties.
  *
  * @author TG Team
  *
@@ -30,9 +36,11 @@ import ua.com.fielden.platform.utils.Pair;
 public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
 
     public static final String ERR_REQUIRED = "Required property [%s] is not specified for entity [%s].";
+    public static final String ERR_REQUIRED_BOOLEAN = "Required property [%s] must be true for entity [%s].";
     public static final String EDITABLE_PROPERTY_NAME = "editable";
     public static final String REQUIRED_PROPERTY_NAME = "required";
     public static final String VALIDATION_RESULTS_PROPERTY_NAME = "validationResults";
+    public static final String CUSTOM_ERR_MSG_FOR_REQUREDNESS_PROPERTY_NAME = "customErrorMsgForRequiredness";
 
     protected final AbstractEntity<?> entity;
     protected final String name;
@@ -315,6 +323,10 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
         throw new StrictProxyException(format("Invalid call [setVisible] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 
+    public String getCustomErrorMsgForRequiredness() {
+        throw new StrictProxyException(format("Invalid call [getCustomErrorMsgForRequiredness] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
+    }
+
     public T getLastInvalidValue() {
         throw new StrictProxyException(format("Invalid call [getLastInvalidValue] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
@@ -352,6 +364,10 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
     }
 
     public MetaProperty<T> setRequired(final boolean required) {
+        throw new StrictProxyException(format("Invalid call [setRequired] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
+    }
+
+    public MetaProperty<T> setRequired(final boolean required, final String errorMsg) {
         throw new StrictProxyException(format("Invalid call [setRequired] for meta-property of proxied property [%s] in entity [%s].", getName(), getEntity().getType().getName()));
     }
 

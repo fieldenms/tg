@@ -3,6 +3,8 @@ package ua.com.fielden.platform.entity.meta;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isRequiredByDefinition;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
@@ -10,7 +12,9 @@ import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDe
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.processReqErrorMsg;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
+import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 import static ua.com.fielden.platform.utils.EntityUtils.isCriteriaEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isString;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -43,7 +47,7 @@ import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
- * Implements the concept of a meta-property.
+ * Implements the concept of a meta-property for full, not proxied, properties of instrumented entity instances.
  * <p>
  * Currently it provides validation support and validation change listeners, which can be specified whenever it is necessary to handle validation state changes.
  * <p>
@@ -63,7 +67,8 @@ import ua.com.fielden.platform.utils.EntityUtils;
  * <b>Date: 2010-03-18</b><br>
  * Implemented support for restoring to original value with validation error cancellation.<br>
  * <b>Date: 2011-09-26</b><br>
- * Significant modification due to introduction of BCE and ACE event lifecycle. <b>Date: 2014-10-21</b><br>
+ * Significant modification due to introduction of BCE and ACE event lifecycle.
+ * <b>Date: 2014-10-21</b><br>
  * Modified handling of requiredness to fully replace NotNull. Corrected type parameterization.
  *
  * @author TG Team
@@ -121,6 +126,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     private boolean editable = true;
     private boolean visible = true;
     private boolean required = false;
+    private String customErrorMsgForRequiredness;
     public final boolean isRequiredByDefinition;
     private final boolean calculated;
     private final boolean upperCase;
@@ -197,10 +203,15 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         setLastInvalidValue(null);
         // Validation for requiredness needs to be skipped for criteria entities.
         // According to #979 issue requiredness needs to be processed as part of 'crit-only-single prototype' validation logic similar to all other validators.
-        if (!ignoreRequiredness && isRequired() && isNull(newValue, getValue()) && !isCriteriaEntityType(entity.getType())) {
+        if (!ignoreRequiredness && isRequired() && isNullOrEmptyOrFalse(newValue) && !isCriteriaEntityType(entity.getType())) {
             final Map<IBeforeChangeEventHandler<T>, Result> requiredHandler = getValidators().get(ValidationAnnotation.REQUIRED);
             if (requiredHandler == null || requiredHandler.size() > 1) {
                 throw new IllegalArgumentException("There are no or there is more than one REQUIRED validation handler for required property!");
+            }
+
+            // for boolean properties the last invalid value would not be null, so it needs to be assigned here
+            if (isBoolean(type)) {
+                setLastInvalidValue(newValue);
             }
 
             final Result result = mkRequiredError();
@@ -220,35 +231,35 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
 
     private Result mkRequiredError() {
         // obtain custom error message in case it has been provided at the domain level
-        final String reqErrorMsg = processReqErrorMsg(name, getEntity().getType());
+        final String reqErrorMsg = !isEmpty(customErrorMsgForRequiredness) ? customErrorMsgForRequiredness : processReqErrorMsg(name, getEntity().getType());
 
         final Result result;
-        if (!StringUtils.isEmpty(reqErrorMsg)) {
-            result = Result.failure(getEntity(), reqErrorMsg);
+        if (!isEmpty(reqErrorMsg)) {
+            result = failure(getEntity(), reqErrorMsg);
         } else {
-            final String msg = format(ERR_REQUIRED,
+            final String msg = format(isBoolean(type) ? ERR_REQUIRED_BOOLEAN : ERR_REQUIRED,
                     getTitleAndDesc(name, getEntity().getType()).getKey(),
                     getEntityTitleAndDesc(getEntity().getType()).getKey());
 
-            result = Result.failure(getEntity(), msg);
+            result = failure(getEntity(), msg);
         }
         return result;
     }
 
     /**
-     * Convenient method to determine if the newValue is "null" or is empty in terms of value.
+     * A helper method that identify whether {@code newValue} is {@code null}, blank (if string) or {@code false} (if boolean).
      *
      * @param newValue
-     * @param oldValue
      * @return
      */
-    private boolean isNull(final T newValue, final T oldValue) {
+    private boolean isNullOrEmptyOrFalse(final T newValue /*, final T oldValue */) {
         // IMPORTANT : need to check NotNullValidator usage on existing logic. There is the case, when
         // should not to pass the validation : setRotable(null) in AdvicePosition when getRotable() == null!!!
         // that is why - - "&& (oldValue != null)" - - was removed!!!!!
         // The current condition is essential for UI binding logic.
         return (newValue == null) || /* && (oldValue != null) */
-                (newValue instanceof String && StringUtils.isBlank(newValue.toString()));
+               (isString(type) && StringUtils.isBlank(newValue.toString())) ||
+               (isBoolean(type) && !Boolean.parseBoolean(newValue.toString()));
     }
 
     /**
@@ -464,14 +475,14 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         final boolean result = isValid();
         if (result && (!ignoreRequirednessForCritOnly || !isCritOnly())) {
             // if valid check whether it's requiredness sound
-            final Object value = getEntity().get(getName());
+            final T value = getEntity().get(getName());
             // this is a potential alternative approach to validating requiredness for proxied properties
             // leaving it here for future reference
 //            if (isRequired() && isProxy()) {
 //                throw new StrictProxyException(format("Required property [%s] in entity [%s] is proxied and thus cannot be checked.", getName(), getEntity().getType().getName()));
 //            }
             
-            if (isRequired() && !isProxy() && (value == null || isEmpty(value))) {
+            if (isRequired() && !isProxy() && isNullOrEmptyOrFalse(value)) {
                 if (!getValidators().containsKey(ValidationAnnotation.REQUIRED)) {
                     throw new IllegalArgumentException("There are no REQUIRED validation annotation pair for required property!");
                 }
@@ -483,17 +494,6 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
             }
         }
         return result;
-    }
-
-    /**
-     * A convenient method, which ensures that only string values are tested for empty when required. This prevents accidental and redundant lazy loading when invoking
-     * values.toString() on entity instances.
-     *
-     * @param value
-     * @return
-     */
-    private boolean isEmpty(final Object value) {
-        return value instanceof String ? StringUtils.isEmpty(value.toString()) : false;
     }
 
     /**
@@ -776,6 +776,11 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     }
 
     @Override
+    public String getCustomErrorMsgForRequiredness() {
+        return customErrorMsgForRequiredness;
+    }
+
+    @Override
     public final T getLastInvalidValue() {
         return lastInvalidValue;
     }
@@ -833,9 +838,11 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         // if requirement changed from true to false, then update REQUIRED validation result to be successful
         if (!required && oldRequired) {
             if (containsRequiredValidator()) {
-                // if both current and last attempted values are null then it can be safely assumed that the requiredness validation can be considered successful 
+                // if both current and last attempted values are null then it can be safely assumed that the requiredness validation can be considered successful
                 // the same holds if the assigned requiredness validation result already successful
-                if ((getValue() == null && getLastAttemptedValue() == null) || 
+                // a special case if the boolean properties where current values cannot be null by definition
+                // in this case we only need to rely on the last attempted value -- if it null then there was no attempt to assign any boolean value
+                if ((((getValue() == null || isBoolean(type)) && getLastAttemptedValue() == null)) ||
                     ofNullable(getValidationResult(ValidationAnnotation.REQUIRED)).map(res -> res.isSuccessful()).orElse(true)) {
                     setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton(), new Result(this.getEntity(), "'Required' became false. The validation result cleared."));
                 } else { // otherwise, it is necessary to enforce reassignment of the last attempted value to trigger revalidation
@@ -850,6 +857,19 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
                 throw new IllegalStateException("The metaProperty was required but RequiredValidator didn't exist.");
             }
         }
+        return this;
+    }
+    
+    /**
+     * Similar as {@link #setRequired(boolean)}, but with a custom error message that would be used in case of validation failure due to requiredness.
+     *
+     * @param required
+     * @param errorMsg -- a custom error message is meaningful only if {@code required} is {@code true}; otherwise it is ignored.
+     */
+    @Override
+    public MetaProperty<T> setRequired(final boolean required, final String errorMsg) {
+        setRequired(required);
+        this.customErrorMsgForRequiredness = errorMsg;
         return this;
     }
 

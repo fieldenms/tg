@@ -79,15 +79,13 @@ const createColumnAction = function (entityCentre) {
     actionModel.showDialog = entityCentre._showCentreConfigDialog;
     actionModel.toaster = entityCentre.toaster;
     actionModel.createContextHolder = entityCentre._createContextHolder;
-    actionModel.preAction = function (action) {
-        action.modifyFunctionalEntity = (function (bindingEntity, master) {
-            action.modifyValue4Property('columnParameters', bindingEntity, actionModel.columnParameters);
-        });
-        return true;
-    };
+    const contextCreator = actionModel._createContextHolderForAction.bind(actionModel);
+    actionModel._createContextHolderForAction = function () {
+        return this._reflector.setCustomProperty(contextCreator(), 'columnParameters', actionModel.columnParameters);
+    }.bind(actionModel);
     actionModel.postActionSuccess = function (functionalEntity) {
-        // update disablement of save / discard buttons after changing column widths
-        entityCentre._centreChanged = functionalEntity.get('centreChanged');
+        // update disablement of save button after changing column widths
+        entityCentre.$.selection_criteria._centreDirty = functionalEntity.get('centreDirty');
     };
     actionModel.postActionError = function (functionalEntity) { };
     actionModel.attrs = {
@@ -101,7 +99,43 @@ const createColumnAction = function (entityCentre) {
     return actionModel;
 };
 
+const createPreferredViewUpdaterAction = function (entityCentre) {
+    const actionModel = document.createElement('tg-ui-action');
+    actionModel.uiRole = 'ICON';
+    actionModel.componentUri = '/master_ui/ua.com.fielden.platform.web.centre.CentrePreferredViewUpdater';
+    actionModel.elementName = 'tg-CentrePreferredViewUpdater-master';
+    actionModel.showDialog = entityCentre._showCentreConfigDialog;
+    actionModel.toaster = entityCentre.toaster;
+    actionModel.createContextHolder = entityCentre._createContextHolder;
+    const contextCreator = actionModel._createContextHolderForAction.bind(actionModel);
+    actionModel._createContextHolderForAction = function () {
+        return this._reflector.setCustomProperty(contextCreator(), 'preferredView', entityCentre.preferredView);
+    }.bind(actionModel);
+    actionModel.postActionSuccess = function (functionalEntity) {
+        // update disablement of save button after changing column widths
+        entityCentre.$.selection_criteria._centreDirty = functionalEntity.get('centreDirty');
+        if (functionalEntity.get('preferredView') !== entityCentre.preferredView) {
+            entityCentre.async(actionModel._run, 100);
+        }
+    };
+    actionModel.postActionError = function (functionalEntity) { };
+    actionModel.attrs = {
+        entityType: 'ua.com.fielden.platform.web.centre.CentrePreferredViewUpdater',
+        currentState: 'EDIT',
+        centreUuid: entityCentre.uuid
+    };
+    actionModel.requireSelectionCriteria = 'true';
+    actionModel.requireSelectedEntities = 'NONE';
+    actionModel.requireMasterEntity = 'false';
+    return actionModel;
+};
+
+const createViewsFromInsPoints = function (altViews) {
+    return altViews.map((insPoint, index) => {return {index: 2 + index, title: insPoint.shortDesc, desc: insPoint.longDesc, icon: insPoint.icon, iconStyle: insPoint.iconStyle}});
+};
+
 const MSG_SAVE_OR_CANCEL = "Please save or cancel changes.";
+const NOT_ENOUGH_RESULT_VIEWS = "At least one result view should be available";
 
 const TgEntityCentreBehaviorImpl = {
     properties: {
@@ -171,6 +205,17 @@ const TgEntityCentreBehaviorImpl = {
             observer: '_saveAsNameChanged'
         },
 
+        /**
+         * UUID for currently loaded centre configuration.
+         * 
+         * Returns '' for default configurations.
+         * Returns non-empty value (e.g. '4920dbe0-af69-4f57-a93a-cdd7157b75d8') for link, own save-as and inherited [from base / shared] configurations.
+         */
+        configUuid: {
+            type: String,
+            value: ''
+        },
+
         dynamicColumns: {
             type: Object
         },
@@ -193,11 +238,40 @@ const TgEntityCentreBehaviorImpl = {
         },
 
         /**
+         * Indicates whether this entity centre is embedded into some entity master.
+         */
+        embedded: {
+            type: Boolean,
+            value: false
+        },
+
+        /**
          * Returns the context for insertion point
          */
         insertionPointContextRetriever: {
             type: Function,
         },
+
+        /**
+         * Container of all views (selection criteria, egi, alternative views) to switch between them. 
+         */
+        allViews: {
+            type: Array,
+            value: () => []
+        },
+
+        /**
+         * The preferred result view index to show after run.
+         */
+        preferredView: {
+            type: Number,
+            observer: "_preferredViewChanged"
+        },
+
+        /**
+         * The previous view index.
+         */
+        _previousView: Number,
 
         /**
          * Custom callback that will be invoked after successfull retrieval of selection criteria entity.
@@ -244,7 +318,7 @@ const TgEntityCentreBehaviorImpl = {
         },
 
         /**
-         * Indcates whether the centre should load data immediately after it was loaded.
+         * Indicates whether current centre configuration should load data immediately upon loading.
          */
         autoRun: {
             type: Boolean,
@@ -274,21 +348,6 @@ const TgEntityCentreBehaviorImpl = {
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         /**
-         * The property which indicates whether the centre has been changed (should be bound from tg-selection-criteria).
-         */
-        _centreChanged: {
-            type: Boolean
-        },
-
-        /**
-         * The property is bound from respective property from tg-selection-criteria-behavior (which incorporates tg-entity-binder-behavior).
-         * This property and '_centreChanged' are needed for correct enabling / disabling of Save / Discard buttons.
-         */
-        _editedPropsExist: {
-            type: Boolean
-        },
-
-        /**
          * The property which indicates whether the centre has been fully loaded with its criteria entity (should be bound from tg-selection-criteria).
          */
         _criteriaLoaded: {
@@ -304,24 +363,19 @@ const TgEntityCentreBehaviorImpl = {
             observer: '_actionInProgressChanged'
         },
 
-        _saverDisabled: {
+        _buttonDisabled: {
             type: Boolean,
-            computed: '_computeSaverDisabled(saveAsName, _centreChanged, _editedPropsExist, _actionInProgress)'
+            computed: '_computeDisabled(_criteriaLoaded, _actionInProgress)'
         },
 
-        _discarderDisabled: {
+        _shareButtonDisabled: {
             type: Boolean,
-            computed: '_computeDiscarderDisabled(saveAsName, _centreChanged, _editedPropsExist, _actionInProgress)'
-        },
-
-        _runnerDisabled: {
-            type: Boolean,
-            computed: '_computeRunnerDisabled(_criteriaLoaded, _actionInProgress)'
+            computed: '_computeShareButtonDisabled(_buttonDisabled, embedded)'
         },
 
         _viewerDisabled: {
             type: Boolean,
-            computed: '_computeViewerDisabled(_criteriaLoaded, _wasRun, _actionInProgress)'
+            computed: '_computeViewerDisabled(_buttonDisabled, _wasRun)'
         },
 
         _url: {
@@ -387,6 +441,15 @@ const TgEntityCentreBehaviorImpl = {
         },
 
         /**
+         * Indicates the reason why data for this selection criteria's centre changed. This should have a type of RunActions.
+         */
+         dataChangeReason: {
+            type: String,
+            notify: true,
+            value: null,
+        },
+
+        /**
          * Shows the dialog relative to this centre's EGI ('tg-ui-action's).
          */
         _showDialog: {
@@ -429,36 +492,46 @@ const TgEntityCentreBehaviorImpl = {
         currentState: {
             type: String,
             value: 'EDIT'
-        }
+        },
+        
+        initiateAutoRun: Function
     },
 
     listeners: {
         'tg-egi-column-change': '_saveColumnWidth'
     },
 
-    _abortPreviousAndInitiateNewRun: function () {
+    _abortPreviousAndInitiateNewRunForEmbeddedCentre: function () {
         // cancel previous running before starting new one; the results of previous running are irrelevant
         this._reflector.abortRequestsIfAny(this.$.selection_criteria._ajaxRunner(), 'running');
-
-        this._setQueryParams();
-        if (this.autoRun || this.queryPart) {
-            this.run(!this.queryPart); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)
-            delete this.queryPart;
+        if (this.queryPart) {
+            console.warn(`Embedded centre of type ${this.is} has queryPart=${this.queryPart} assigned and it will be ignored. URI query parameters are only applicable to standalone centres.`);
         }
+        // entity masters with their embedded centres can be cached and loaded save-as configurations will be used up until application will be refreshed;
+        // this will not affect other places with the same masters -- e.g. Work Activity standalone centre has its own master cache with [WA => Details] embedded centre cached and [WA => Details] on other standalone centres will not be affected;
+        // that's why resetting information about loaded configuration to default configuration is needed in these cached masters every time auto-running of embedded centre occurs
+        this.$.selection_criteria.saveAsName = '';
+        this.$.selection_criteria.configUuid = '';
+        if (this._selectedView === 0) {
+            this.async(() => {
+                this._selectedView = this.preferredView;
+            }, 100);
+        }
+        this.run(true); // embedded centre always autoruns on getMasterEntity assignment (activating of compound menu item with embedded centre or opening of details master with embedded centre)
     },
 
     _getMasterEntityAssigned: function (newValue, oldValue) {
         if (this._reflector.isEntity(this.$.selection_criteria._currBindingEntity)) {
-            this._abortPreviousAndInitiateNewRun();
+            this._abortPreviousAndInitiateNewRunForEmbeddedCentre();
         } else {
             // cancel previous retrieval requests except the last one -- if it exists then run process will be chained on top of that last retrieval process,
             // otherwise -- run process will simply start immediately
             const lastRetrievalPromise = this._reflector.abortRequestsExceptLastOne(this.$.selection_criteria._ajaxRetriever(), 'retrieval');
             if (lastRetrievalPromise !== null) {
                 console.warn('Running is chained to the last retrieval promise...');
-                lastRetrievalPromise.then(() => this._abortPreviousAndInitiateNewRun());
+                lastRetrievalPromise.then(() => this._abortPreviousAndInitiateNewRunForEmbeddedCentre());
             } else {
-                this.retrieve().then(() => this._abortPreviousAndInitiateNewRun());
+                this.retrieve().then(() => this._abortPreviousAndInitiateNewRunForEmbeddedCentre());
             }
         }
     },
@@ -469,35 +542,16 @@ const TgEntityCentreBehaviorImpl = {
         }
     },
 
-    /**
-     * Computes SAVE button disablement: always enabled for default configurations, always disabled for link configurations and when action is in progress. Otherwise enabled when centre is changed from last saved version.
-     */
-    _computeSaverDisabled: function (saveAsName, _centreChanged, _editedPropsExist, _actionInProgress) {
-        return _actionInProgress === true /* disabled when some action is in progress */ ||
-            (saveAsName !== '' /* always enabled for default configuration */ &&
-            (this._isLinkConfig(saveAsName) || !this.canSave(_centreChanged, _editedPropsExist)));
-    },
-
-    /**
-     * Returns 'true' in case where current saveAsName represent link configuration, 'false' otherwise.
-     */
-    _isLinkConfig: function (saveAsName) {
-        return saveAsName === this._reflector.LINK_CONFIG_TITLE;
-    },
-
-    /**
-     * Computes DISCARD button disablement: always disabled for link configurations and when action is in progress. Otherwise enabled when centre is changed from last saved version.
-     */
-    _computeDiscarderDisabled: function (saveAsName, _centreChanged, _editedPropsExist, _actionInProgress) {
-        return this._isLinkConfig(saveAsName) || _actionInProgress === true || !this.canDiscard(_centreChanged, _editedPropsExist);
-    },
-
-    _computeRunnerDisabled: function (_criteriaLoaded, _actionInProgress) {
+    _computeDisabled: function (_criteriaLoaded, _actionInProgress) {
         return _actionInProgress === true || _criteriaLoaded === false;
     },
 
-    _computeViewerDisabled: function (_criteriaLoaded, _wasRun, _actionInProgress) {
-        return _actionInProgress === true || _criteriaLoaded === false || _wasRun !== "yes";
+    _computeShareButtonDisabled: function (_buttonDisabled, embedded) {
+        return _buttonDisabled || embedded;
+    },
+
+    _computeViewerDisabled: function (_buttonDisabled, _wasRun) {
+        return _buttonDisabled || _wasRun !== "yes";
     },
 
     _retrievedEntitiesChanged: function (retrievedEntities, oldValue) {
@@ -525,29 +579,51 @@ const TgEntityCentreBehaviorImpl = {
         self.saveAsName = self._reflector.UNDEFINED_CONFIG_TITLE; // this default value means that preferred configuration is not yet known and will be loaded during first 'retrieve' request
         self._selectedView = 0;
         self._showProgress = false;
-        //Configures the egi's margin.
-        const insertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point');
-        if (insertionPoints.length === 1 && insertionPoints[0].flexible) {
-            insertionPoints[0].hideMargins = true;
+        // Configures the egi's margin.
+        const egiInsertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point:not([alternative-view])');
+        this.$.egi.showMarginAround = egiInsertionPoints.length > 0;
+        // Configure all views to be able to switch between them
+        const altViews = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point[alternative-view]');
+        this.allViews = [this.$.selection_criteria, this.$.egi, ...altViews];
+        // Create result views to create centre view switch button
+        this.resultViews = [{index: 1, icon: this.$.egi.icon, iconStyle: this.$.egi.iconStyle, title: "Grid", desc: "Standard grid representation."}, ...createViewsFromInsPoints([...altViews])];
+        if (this.allViews.length === 2 && this.$.egi.isHidden() && egiInsertionPoints.length === 0) {
+            throw new Error(NOT_ENOUGH_RESULT_VIEWS);
+        } else {
+            this.preferredView = this.preferredView === undefined ? 
+                    (this.$.egi.isHidden() && egiInsertionPoints.length === 0 ? 2 /* first alternative result view */ : 1 /* EGI view */) : this.preferredView;
         }
-        this.$.egi.showMarginAround = insertionPoints.length > 0;
-
-        self._postRun = (function (criteriaEntity, newBindingEntity, resultEntities, pageCount, renderingHints, dynamicColumns, summary, columnWidths, resultConfig) {
-            if (criteriaEntity === null || criteriaEntity.isValidWithoutException()) {
-                if (typeof summary !== 'undefined') {
-                    this.retrievedTotals = summary;
+        
+        this.initiateAutoRun = () => {
+            const centre = this;
+            if (centre.autoRun) {
+                if (centre._selectedView === 0) {
+                    centre.async(() => {
+                        centre._selectedView = this.preferredView;
+                    }, 100);
                 }
-                this.retrievedEntities = resultEntities;
-                this.dynamicColumns = dynamicColumns;
-                this.selectionCriteriaEntity = criteriaEntity;
-                this.$.egi.renderingHints = renderingHints;
-                this.$.egi.adjustColumnWidths(columnWidths);
-                const pageCapacity = resultConfig.pageCapacity;
+                centre.run(true); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)
+            }
+        };
+        
+        self._postRun = (function (criteriaEntity, newBindingEntity, result) {
+            if (criteriaEntity === null || criteriaEntity.isValidWithoutException()) {
+                if (typeof result.summary !== 'undefined') {
+                    this.retrievedTotals = result.summary;
+                }
+                this.retrievedEntities = result.resultEntities;
+                this.dynamicColumns = result.dynamicColumns;
+                this.selectionCriteriaEntity = result.criteriaEntity;
+                this.$.egi.renderingHints = result.renderingHints;
+                this.$.egi.primaryActionIndices = result.primaryActionIndices;
+                this.$.egi.secondaryActionIndices = result.secondaryActionIndices;
+                this.$.egi.adjustColumnWidths(result.columnWidths);
+                const pageCapacity = result.resultConfig.pageCapacity;
                 this.$.selection_criteria.pageCapacity = pageCapacity;
-                this.$.egi.visibleRowsCount = resultConfig.visibleRowsCount;
-                this.$.egi.numberOfHeaderLines = resultConfig.numberOfHeaderLines;
-                this.$.egi.adjustColumnsVisibility(resultConfig.visibleColumnsWithOrder.map(column => column === "this" ? "" : column));
-                this.$.egi.adjustColumnsSorting(resultConfig.orderingConfig.map(propOrder => {
+                this.$.egi.visibleRowsCount = result.resultConfig.visibleRowsCount;
+                this.$.egi.numberOfHeaderLines = result.resultConfig.numberOfHeaderLines;
+                this.$.egi.adjustColumnsVisibility(result.resultConfig.visibleColumnsWithOrder.map(column => column === "this" ? "" : column));
+                this.$.egi.adjustColumnsSorting(result.resultConfig.orderingConfig.map(propOrder => {
                    if (propOrder.property === "this") {
                        propOrder.property = "";
                    }
@@ -556,7 +632,7 @@ const TgEntityCentreBehaviorImpl = {
                 if (this._triggerRun) {
                     if (this._selectedView === 0) {
                         this.async(function () {
-                            this._selectedView = 1;
+                            this._selectedView = this.preferredView;
                         }, 100);
                     }
                     this._triggerRun = false;
@@ -565,7 +641,7 @@ const TgEntityCentreBehaviorImpl = {
                     this.$.selection_criteria._wasRun = 'yes';
                     console.debug('_wasRun has been changed to: ', this.$.selection_criteria._wasRun);
                 }
-                self.fire("tg-entity-centre-refreshed", { entities: resultEntities, pageCount: pageCount, pageNumber: this.$.selection_criteria.pageNumber, pageCapacity: pageCapacity });
+                self.fire("tg-entity-centre-refreshed", { entities: result.resultEntities, pageCount: result.pageCount, pageNumber: this.$.selection_criteria.pageNumber, pageCapacity: pageCapacity });
             }
         }).bind(self);
 
@@ -667,11 +743,6 @@ const TgEntityCentreBehaviorImpl = {
         }).bind(self);
 
         /**
-         * A function to cancel active autocompletion search request.
-         */
-        self._cancelAutocompletion = () => this.$.selection_criteria._dom().querySelectorAll('tg-entity-editor').forEach((currentValue, currentIndex, list) => {if (currentValue.searching) currentValue._cancelSearch();});
-
-        /**
          * A function to run the entity centre.
          */
         self.run = (function (isAutoRunning, isSortingAction, forceRegeneration) {
@@ -681,7 +752,7 @@ const TgEntityCentreBehaviorImpl = {
 
             const self = this;
             // cancel any autocompleter searches
-            self._cancelAutocompletion();
+            this.$.selection_criteria._cancelAutocompletion();
 
             self._actionInProgress = true;
             self.$.egi.clearSelection();
@@ -728,7 +799,7 @@ const TgEntityCentreBehaviorImpl = {
                     this.actionDialog.showDialog(action, closeEventChannel, closeEventTopics);
                 }.bind(self), 1);
             } else {
-                this._showSaveOrCancelToast();
+                this._showToastWithMessage(MSG_SAVE_OR_CANCEL);
                 if (action) {
                     action.restoreActionState();
                 }
@@ -756,16 +827,7 @@ const TgEntityCentreBehaviorImpl = {
          * A function to activate the view with the result set (EGI and insertion points).
          */
         self._activateResultSetView = (function () {
-            self.async(function () {
-                if (self._criteriaLoaded === false) {
-                    throw "Cannot activate result-set view (not initialised criteria).";
-                }
-                // cancel any autocompleter searches
-                self._cancelAutocompletion();
-
-                self.$.dom.persistActiveElement();
-                self._selectedView = 1;
-            }, 100);
+            this._activateView(this.preferredView);
         }).bind(self);
         /**
          * Updates the progress bar state.
@@ -781,6 +843,14 @@ const TgEntityCentreBehaviorImpl = {
         }).bind(self);
 
         /**
+         * Adds event listener updates centre's view on dropdown switch custom event.
+         */
+         self.addEventListener("tg-centre-view-change", function (e) {
+            this._activateView(e.detail);
+            tearDownEvent(e);
+        }.bind(self));
+
+        /**
          * Adds event listener that will update egi when some entity was changed
          */
         self.addEventListener("tg-entity-changed", function (e) {
@@ -794,7 +864,7 @@ const TgEntityCentreBehaviorImpl = {
             this.centreSelection = e.detail;
         }.bind(self));
 
-        //Add event listener that indicates whne the layout has finished
+        //Add event listener that indicates when the layout has finished
         self.addEventListener("layout-finished", e => {
             const target = e.composedPath()[0];
             if (target === self.$.selection_criteria.$.masterDom.firstElementChild) {
@@ -811,6 +881,7 @@ const TgEntityCentreBehaviorImpl = {
         });
 
         self._columnAction = createColumnAction(self);
+        self._preferredViewUpdaterAction = createPreferredViewUpdaterAction(self);
 
         //Toaster object Can be used in other components on binder to show toasts.
         self.toaster = self.$.selection_criteria.toaster;
@@ -849,9 +920,9 @@ const TgEntityCentreBehaviorImpl = {
             }
         }));
 
-        //Select the result view if autoRun is true
-        if (self.autoRun || self.queryPart) {
-            self._selectedView = 1;
+        // select result view if link centre gets attached
+        if (self.queryPart) {
+            self._selectedView = self.preferredView;
         }
     },
 
@@ -883,12 +954,12 @@ const TgEntityCentreBehaviorImpl = {
         this._focusView(e, false);
     },
 
-    _showSaveOrCancelToast: function () {
-        this.$.selection_criteria._openToastWithoutEntity(MSG_SAVE_OR_CANCEL, false, MSG_SAVE_OR_CANCEL, false);
+    _showToastWithMessage: function (msg) {
+        this.$.selection_criteria._openToastWithoutEntity(msg, false, msg, false);
     },
 
     _saveOrCancelPromise: function () {
-        this._showSaveOrCancelToast();
+        this._showToastWithMessage(MSG_SAVE_OR_CANCEL);
         return Promise.reject(MSG_SAVE_OR_CANCEL);
     },
 
@@ -966,17 +1037,34 @@ const TgEntityCentreBehaviorImpl = {
     },
 
     /**
+     * Activates view (selection crit, grid or alternative) by 'index'. Saves preferred view by initiating 'CentrePreferredViewUpdater' action.
+     */
+    _activateView: function (index) {
+        this.async(() => {
+            if (index < 0 || index >= this.allViews.length) {
+                this._showToastWithMessage(`There is no view with ${index}`);
+            } else {
+                const canNotLeave = this.allViews[this._selectedView].canLeave();
+                if (canNotLeave) {
+                    this._showToastWithMessage(canNotLeave.msg);
+                } else {
+                    this.allViews[this._selectedView].leave();
+                    this._previousView = this._selectedView;
+                    this._selectedView = index;
+                    if (this._selectedView !== 0 && this.preferredView !== this._selectedView) {
+                        this.preferredView = this._selectedView;
+                        this._preferredViewUpdaterAction._run();
+                    }
+                }
+            }   
+        }, 100);
+    },
+
+    /**
      * Activate the view with selection criteria.
      */
     _activateSelectionCriteriaView: function () {
-        const self = this;
-        if (!this.$.egi.isEditing()) { 
-           self.async(function () {
-                self._selectedView = 0;
-            }, 100);
-        } else {
-            this._showSaveOrCancelToast();
-        }
+        this._activateView(0);
     },
 
     /**
@@ -1075,7 +1163,7 @@ const TgEntityCentreBehaviorImpl = {
      *     from the result-set if they became unmatchable to the selection criteria after modification).
      */
     refreshEntities: function (entities) {
-        if (this._selectedView === 1 && (// only if the selectedView is the resultset do we need to refresh entitites and...
+        if (this._selectedView !== 0 && (// only if the selectedView is the one of resultant views, we need to refresh entitites and...
             // there is no data or refresh is enforeced or...
             this.enforcePostSaveRefresh === true || this.$.egi.egiModel.length === 0 ||
             // there are no entities specified or the currrent result contains any of them then...
@@ -1112,19 +1200,6 @@ const TgEntityCentreBehaviorImpl = {
         return ('' + (pageNumberUpdated !== null ? (pageNumberUpdated + 1) : 1)) + ' / ' + ('' + (pageCountUpdated !== null ? pageCountUpdated : 1));
     },
 
-    canSave: function (centreChanged, _editedPropsExist) {
-        return this.canManageCentreConfig(centreChanged, _editedPropsExist);
-    },
-
-    canDiscard: function (centreChanged, _editedPropsExist) {
-        return this.canManageCentreConfig(centreChanged, _editedPropsExist);
-    },
-
-    canManageCentreConfig: function (centreChanged, _editedPropsExist) {
-        return (typeof this.$ === 'undefined' || typeof this.$.selection_criteria === 'undefined') ? false :
-            this.$.selection_criteria.canManageCentreConfig(centreChanged, _editedPropsExist);
-    },
-
     /**
      * Contract that allows one to determine whether this component can be closed/left or not.
      *
@@ -1146,8 +1221,7 @@ const TgEntityCentreBehaviorImpl = {
         // Check whether all insertion points can be left.
         const insertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point');
         for (let insPoIndex = 0; insPoIndex < insertionPoints.length; insPoIndex++) {
-            const elementWithCanLeave = insertionPoints[insPoIndex].querySelector('.canLeave');
-            const canLeaveChild = elementWithCanLeave && elementWithCanLeave.canLeave();
+            const canLeaveChild = insertionPoints[insPoIndex].canLeave();
             if (canLeaveChild) {
                 return canLeaveChild;
             }
@@ -1171,9 +1245,7 @@ const TgEntityCentreBehaviorImpl = {
     },
 
     _fireSaveAsNameChanged: function (newSaveAsName, self) {
-        if (self._reflector.LINK_CONFIG_TITLE !== newSaveAsName) {
-            self.fire('tg-save-as-name-changed', newSaveAsName);
-        }
+        self.fire('tg-save-as-name-changed', newSaveAsName);
     },
 
     runInsertionPointActions: function () {
@@ -1211,6 +1283,24 @@ const TgEntityCentreBehaviorImpl = {
         this.currentState = 'EDIT';
         this.$.selection_criteria.enableView();
         this.$.egi.lock = false;
+    },
+
+    /**
+     * Overrides standard hand cursor for disabled button to simple pointer.
+     */
+    _computeButtonStyle: function (_buttonDisabled) {
+        return _buttonDisabled ? 'cursor:initial' : '';
+    },
+
+    /**
+     * In case if 'newPreferredView' is not in available view boundaries, activates last available view and initiates save. It is possible in case
+     * where some previously available view was deleted from Centre DSL configuration during application evolution.
+     */
+    _preferredViewChanged: function (newPreferredView) {
+        if (newPreferredView < 0 || newPreferredView >= this.allViews.length) {
+            this.preferredView = this.allViews.length - 1;
+            this.async(this._preferredViewUpdaterAction._run, 100);
+        }
     }
 };
 

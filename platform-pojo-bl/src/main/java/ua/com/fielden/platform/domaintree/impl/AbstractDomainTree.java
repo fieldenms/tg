@@ -1,14 +1,15 @@
 package ua.com.fielden.platform.domaintree.impl;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.AbstractEntity.isStrictModelVerification;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 import static ua.com.fielden.platform.utils.EntityUtils.isRangeType;
 
 import java.util.Set;
 
-import org.apache.logging.log4j.Logger;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
 import ua.com.fielden.platform.domaintree.IUsageManager;
@@ -163,10 +164,10 @@ public abstract class AbstractDomainTree {
         // The check below is important to maintain the integrity of domain trees.
         // However, it also causes performance bottlenecks when invoking multiple times.
         // In current Web UI logic, that uses centre domain trees, this check does not add any significant value due to other checks implemented as part of Centre DSL.
-        // Reintroducing of this check may be significant when management of domain trees from UI will be implemented.
-        // if (!tm.isChecked(root, property)) {
-        //     throw new DomainTreeException(message);
-        // }
+        // This check is currently performed only in STRICT_MODEL_VERIFICATION mode (and thus skipped in deployment mode).
+        if (isStrictModelVerification() && !tm.isChecked(root, property)) {
+            throw new DomainTreeException(message);
+        }
     }
 
     /**

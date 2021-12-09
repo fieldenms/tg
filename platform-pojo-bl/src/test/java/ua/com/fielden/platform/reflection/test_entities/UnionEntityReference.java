@@ -7,8 +7,6 @@ import ua.com.fielden.platform.entity.annotation.Title;
 
 public class UnionEntityReference extends AbstractUnionEntity {
 
-    private static final long serialVersionUID = 3836447714349644197L;
-
     @IsProperty
     @Title(value = "first reference", desc = "first reference description")
     private FirstReferencedClass firstReference;

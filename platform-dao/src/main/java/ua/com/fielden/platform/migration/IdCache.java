@@ -5,26 +5,19 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.SortedSet;
-import java.util.TreeSet;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
-import ua.com.fielden.platform.reflection.Finder;
 
 public class IdCache {
     private final Map<Class<?>, Map<Object, Long>> cache = new HashMap<>();
-    private final DomainMetadataAnalyser dma;
     private final ICompanionObjectFinder coFinder;
 
-    public IdCache(final ICompanionObjectFinder coFinder, final DomainMetadataAnalyser dma) {
+    public IdCache(final ICompanionObjectFinder coFinder) {
         this.coFinder = coFinder;
-        this.dma = dma;
     }
 
     protected void registerCacheForType(final Class<? extends AbstractEntity<?>> entityType) {
@@ -41,28 +34,23 @@ public class IdCache {
         return cache.get(entityType);
     }
 
-    private SortedSet<String> getKeyFields(final Class<? extends AbstractEntity<?>> entityType) {
-        final List<String> keyMembersFirstLevelProps = Finder.getFieldNames(Finder.getKeyMembers(entityType));
-        return new TreeSet<>(dma.getLeafPropsFromFirstLevelProps(null, entityType, new HashSet<>(keyMembersFirstLevelProps)));
-    }
-
-    private Object prepareValueForCache(final AbstractEntity<?> entity, final SortedSet<String> fields) {
+    private Object prepareValueForCache(final AbstractEntity<?> entity, final List<String> fields) {
         if (fields.size() == 1) {
-            return entity.getKey();
+            return entity.get(fields.get(0));
         } else {
             final List<Object> result = new ArrayList<>();
             for (final String field : fields) {
-                result.add(entity.get(field).toString());
+                result.add(entity.get(field));
             }
             return result;
         }
     }
 
-    private Map<Object, Long> retrieveData(final Class<? extends AbstractEntity<?>> entityType) {
-        final IEntityDao co = coFinder.find(entityType);
+    private <ET extends AbstractEntity<?>> Map<Object, Long> retrieveData(final Class<ET> entityType) {
+        final IEntityDao<ET> co = coFinder.find(entityType);
 
         final Map<Object, Long> result = new HashMap<>();
-        final List<AbstractEntity<?>> entities;
+        final List<ET> entities;
         try {
             entities = co.getAllEntities(from(select(entityType).model()).model());
         } catch (final Exception ex) {
@@ -70,7 +58,8 @@ public class IdCache {
             throw ex;
         }
 
-        final SortedSet<String> keyFields = getKeyFields(entityType);
+        final List<String> keyFields = MigrationUtils.keyPaths(entityType);
+
         for (final AbstractEntity<?> abstractEntity : entities) {
             result.put(prepareValueForCache(abstractEntity, keyFields), abstractEntity.getId());
         }

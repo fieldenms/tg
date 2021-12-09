@@ -1,7 +1,10 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 
-import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
-import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
+import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
+
+import { getFirstEntityTypeAndProperty } from '/resources/reflection/tg-polymer-utils.js';
+import { TgPropertyColumnBehavior } from '/resources/egi/tg-property-column-behavior.js';
 
 const template = html`
     <slot id="action_selector" name="property-action" hidden></slot>
@@ -14,17 +17,9 @@ Polymer({
     is: "tg-property-column",
 
     properties: {
-        property: String,
         collectionalProperty: String,
         keyProperty: String,
         valueProperty: String,
-        tooltipProperty: String,
-        type: String,
-        width: Number,
-        minWidth: Number,
-        growFactor: Number,
-        columnTitle: String,
-        columnDesc: String,
         customAction: Object,
         sortable: {
             type: Boolean,
@@ -36,9 +31,7 @@ Polymer({
         }
     },
 
-    hostAttributes: {
-        hidden: true
-    },
+    behaviors: [TgPropertyColumnBehavior],
 
     ready: function () {
         const tempSummary = this.$.summary_selection.assignedNodes();
@@ -59,6 +52,14 @@ Polymer({
             this.customAction._run();
             return true;
         }
+        return false;
+    },
+
+    runDefaultAction: function (currentEntity, defaultPropertyAction) {
+        if (defaultPropertyAction) {
+            defaultPropertyAction._runDynamicAction(currentEntity, getFirstEntityTypeAndProperty(currentEntity.bind(defaultPropertyAction)(), this.collectionalProperty || this.property)[1]);
+            return true;
+        } 
         return false;
     }
 });

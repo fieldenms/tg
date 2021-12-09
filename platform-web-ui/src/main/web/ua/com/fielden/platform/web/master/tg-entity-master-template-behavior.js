@@ -6,10 +6,25 @@ import '/resources/master/tg-entity-master.js';
 import { TgEntityMasterBehavior } from '/resources/master/tg-entity-master-behavior.js';
 import '/resources/master/tg-entity-master-styles.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
-import { generateUUID } from '/resources/reflection/tg-polymer-utils.js';
+import { getKeyEventTarget, generateUUID } from '/resources/reflection/tg-polymer-utils.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
 const TgEntityMasterTemplateBehaviorImpl = {
+
+    properties: {
+        /**
+         * Represents the action that allows to open entity master for specified entity-typed property.
+         */
+        tgOpenMasterAction: {
+            type: Object,
+            value: null
+        },
+        
+        /**
+         * Attributes for the action that allows to open entity master for specified entity-typed property.
+         */
+        _tgOpenMasterActionAttrs: Object
+    },
 
     ready: function () {
         const self = this;
@@ -21,6 +36,13 @@ const TgEntityMasterTemplateBehaviorImpl = {
         if (self.uuid === undefined) {
             self.uuid = self.is + '/' + generateUUID();
         }
+
+        // initialise tgOpenMasterAction properties
+        self._tgOpenMasterActionAttrs = {
+            currentState: 'EDIT',
+            centreUuid: self.uuid
+        };
+        self.tgOpenMasterAction = self.$.tgOpenMasterAction;
     },
 
     attached: function () {
@@ -112,18 +134,16 @@ const TgEntityMasterTemplateBehaviorImpl = {
      * Also it configures key bindings if the master is not a part of compound master.
      */
     _getKeyEventTarget: function () {
-        let parent = this;
         let automaticAddKeyBindings = true;
-        while (parent && (parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG' && parent.tagName !== 'TG-MENU-ITEM-VIEW')) {
-            if (parent.tagName === 'TG-MASTER-MENU-ITEM-SECTION') {
+        const keyEventTarget = getKeyEventTarget(this, this, (nextParent) => {
+            if (nextParent.tagName === 'TG-MASTER-MENU-ITEM-SECTION') {
                 automaticAddKeyBindings = false;
             }
-            parent = parent.parentElement || parent.getRootNode().host;
-        }
+        });
         if (automaticAddKeyBindings) {
             this.addOwnKeyBindings();
         }
-        return parent || this;
+        return keyEventTarget;
     },
 
     _masterDom: function () {

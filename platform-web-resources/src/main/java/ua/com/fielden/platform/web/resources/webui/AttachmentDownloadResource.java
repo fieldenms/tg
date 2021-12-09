@@ -19,11 +19,12 @@ import org.restlet.data.MediaType;
 import org.restlet.representation.FileRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
-import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.attachment.IAttachment;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.utils.IDates;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -32,7 +33,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @author TG Team
  * 
  */
-public class AttachmentDownloadResource extends ServerResource {
+public class AttachmentDownloadResource extends AbstractWebResource {
     private static final Logger LOGGER = LogManager.getLogger(AttachmentDownloadResource.class);
 
     private final RestServerUtil restUtil;
@@ -42,11 +43,13 @@ public class AttachmentDownloadResource extends ServerResource {
 
     public AttachmentDownloadResource(
             final RestServerUtil restUtil,
-            final IAttachment coAttachment, 
-            final Context context, 
-            final Request request, 
+            final IAttachment coAttachment,
+            final IDeviceProvider deviceProvider,
+            final IDates dates,
+            final Context context,
+            final Request request,
             final Response response) {
-        init(context, request, response);
+        super(context, request, response, deviceProvider, dates);
         this.restUtil = restUtil;
         this.coAttachment = coAttachment;
         this.attachmentId = Long.parseLong(request.getAttributes().get("attachment-id").toString());

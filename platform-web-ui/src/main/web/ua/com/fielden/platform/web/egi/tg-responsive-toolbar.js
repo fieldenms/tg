@@ -1,5 +1,7 @@
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 
+import { isInHierarchy } from '/resources/reflection/tg-polymer-utils.js';
+
 import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
@@ -17,13 +19,6 @@ const template = html`
         .grid-toolbar-content {
             min-width:fit-content;
             @apply --layout-horizontal;
-            @apply --layout-center;
-        }
-        .pagintaion-text:first-child {
-            padding-left:8px;
-        }
-        .grid-toolbar-content ::slotted(*) {
-            margin-top: 8px;
         }
         .grid-toolbar-content ::slotted(.first-group) {
             @apply --layout-horizontal;
@@ -31,9 +26,6 @@ const template = html`
         .grid-toolbar-content ::slotted(.group) {
             margin-left: 30px;
             @apply --layout-horizontal;
-        }
-        #expandToolbarButton {
-            margin-top: 8px;
         }
         #expandToolbarButton.invisible {
             display: none;
@@ -66,7 +58,7 @@ const template = html`
             <paper-icon-button id="expandToolbarButton" tooltip-text="Show other actions." icon="more-vert" on-tap="_showMoreActions" class="invisible"></paper-icon-button>
         </div>
     </div>
-    <iron-dropdown id="dropdown" horizontal-align="right" vertical-offset="8">
+    <iron-dropdown id="dropdown" horizontal-align="right" vertical-offset="8" always-on-top>
         <div id="hiddenToolbar" class="dropdown-content" slot="dropdown-content">
             <div id="specificActionContainer"></div>
             <div id="standartActionContainer"></div>
@@ -75,7 +67,7 @@ const template = html`
 
 /**
  * Represents the element of linked list it has links to next and previous elements. 
- * The element has indicators for group index and whether element is standrat action or not. 
+ * The element has indicators for group index and whether element is standart action or not. 
  */
 class ToolbarElement {
 
@@ -83,6 +75,7 @@ class ToolbarElement {
         this.element = element;
         this.standartAction = standartAction;
         this.groupIndex = groupIndex;
+        this.parent = element && (element.parentElement || element.getRootNode().host); // the host element that contains action which were slotted into this responsive toolbar
     }
 
     get width() {
@@ -97,12 +90,6 @@ class ToolbarElement {
         this.next.previous = this;
         return this.next;
     }
-
-    addPrevious(element, standartAction, groupIndex) {
-        this.previous = new ToolbarElement(element, standartAction, groupIndex);
-        this.previous.next = this;
-        return this.previous;
-    }
 }
 
 export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior], PolymerElement) {
@@ -114,9 +101,7 @@ export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior],
     static get properties () {
         return {
             //Points to last visible action on toolbar.
-            _lastVisibleToolbarElement: Object,
-            //The host element that contains action which were slotted into this responsive toolbar. 
-            _slottedElementParent: Object,
+            _lastVisibleToolbarElement: Object
         };
     }
 
@@ -139,16 +124,12 @@ export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior],
                 groupIndex += 1;
             }
         });
-        //Now add actions those are in the right side of the egi that is standrat action (i.e. config, navigation and refresh actions)
+        //Now add actions those are in the right side of the egi that is standart action (i.e. config, navigation and refresh actions)
         //This actions shouldn't be group so add them as separate items.
         this.$.standard_action_selector.assignedNodes({ flatten: true }).forEach(node => {
             const standartActionSelector = "[slot=standart-action]";
-            //Define the host element (i.e. element from which actions were slotted into this responsive toolbar)
-            if (!this._slottedElementParent) {
-                this._slottedElementParent = node.parentElement;
-            }
             if (node.matches(standartActionSelector)) {
-                this._addToolbarStandratAction(node)
+                this._addToolbarStandartAction(node);
             }
         });
         //Add last one empty toolbar element as an end list indicator.
@@ -184,7 +165,7 @@ export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior],
     }
 
     /**
-     * Adds new action to the list of actions that can be hidden that should be within group woth specified index.
+     * Adds new action to the list of actions that can be hidden that should be within group with specified index.
      * 
      */
     _addToolbarActions (nodes, groupIndex) {
@@ -192,17 +173,17 @@ export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior],
     }
 
     /**
-     * Adds the standrat action to the list of actions those can be hidden.
+     * Adds the standart action to the list of actions those can be hidden.
      *  
      */
-    _addToolbarStandratAction (standratAction) {
-        this._addToolbarAction(standratAction, true);
+    _addToolbarStandartAction (standartAction) {
+        this._addToolbarAction(standartAction, true);
     }
 
     _resizeEventListener (e) {
         const thisComponentWidth = this.offsetWidth;
         const widthOfToolbar = this.$.leftToolbarContainer.offsetWidth + this.$.rightToolbarContainer.offsetWidth;
-        if (e.composedPath()[0] !== this.$.dropdown) {
+        if (e.composedPath()[0] !== this.$.dropdown && !isInHierarchy(this.$.dropdown, e.composedPath()[0])) {
             if (this.$.dropdown.opened) {
                 this.$.dropdown.close();
             }
@@ -231,28 +212,14 @@ export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior],
             this._lastVisibleToolbarElement = this._lastVisibleToolbarElement.previous;
         }
         //Iterate over the the elements  to hide and hide them (i.e. move to the dropdown list) This elements should be moved as:
-        //Standrat action
+        //Standart action
         //specific action (the one that was added in the centre configurtion)
         //As action in group. The group are also defined by end application developer.
         elementsToHide.forEach(element => {
             if (element.standartAction) {
-                this.$.standartActionContainer.prepend(element.element);                
-            } else if (typeof element.groupIndex !== 'undefined'){
-                this.$.specificActionContainer.prepend(element.element);
+                this.$.standartActionContainer.prepend(element.element);
             } else {
-                const groupContainer = this.$.specificActionContainer.querySelector("[group-index=" + element.groupIndex + "]");
-                if (groupContainer) {
-                    groupContainer.prepend(element.element);
-                } else {
-                    const newGroup = document.createElement("div");
-                    newGroup.setAttribute("group-index", element.groupIndex);
-                    newGroup.appendChild(element.element);
-                    this.$.specificActionContainer.prepend(newGroup);
-                }
-                const removedFromGroup = this.querySelector("[group-index=" + element.groupIndex + "]");
-                if (removedFromGroup && removedFromGroup.childElementCount === 0) {
-                    removedFromGroup.parentElement.removeChild(removedFromGroup);
-                }
+                this.$.specificActionContainer.prepend(element.element);
             }
         });
     }
@@ -281,28 +248,9 @@ export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior],
             //The element should be added as:
             //1. Single specific element
             //2. Specific element (the one that is defined by end application user in the centre configuration) in the group.
-            //3. Standrat action (navigation and confg actions)
+            //3. Standart action (navigation and confg actions)
             elementsToShow.forEach(element => {
-                if (element.standartAction || typeof element.groupIndex !== 'undefined') {
-                    this._slottedElementParent.append(element.element);                
-                } else {
-                    const groupContainer = this.querySelector("[group-index=" + element.groupIndex + "]");
-                    if (groupContainer) {
-                        groupContainer.append(element.element);
-                    } else {
-                        const newGroup = document.createElement("div");
-                        newGroup.setAttribute("group-index", element.groupIndex);
-                        newGroup.setAttribute("slot", "entity-specific-action");
-                        newGroup.classList.toggle("entity-specific-action", true);
-                        newGroup.classList.toggle(element.groupIndex === 0 ? "first-group": "group", true);
-                        newGroup.append(element.element);
-                        this._slottedElementParent.append(newGroup);
-                    }
-                    const removedFromGroup = this.$.specificActionContainer.querySelector("[group-index=" + element.groupIndex + "]");
-                    if (removedFromGroup && removedFromGroup.childElementCount === 0) {
-                        removedFromGroup.parentElement.removeChild(removedFromGroup);
-                    }
-                }
+                element.parent.append(element.element);
             });
         }
     }

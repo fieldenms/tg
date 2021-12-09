@@ -34,11 +34,11 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotati
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotationPresent;
+import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
 import static ua.com.fielden.platform.reflection.Finder.hasLinkProperty;
 import static ua.com.fielden.platform.reflection.Finder.isOne2One_association;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.CollectionUtil.unmodifiableListOf;
-import static ua.com.fielden.platform.utils.EntityUtils.getRealProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
@@ -48,6 +48,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -87,10 +88,12 @@ import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.dbschema.ColumnDefinitionExtractor;
 import ua.com.fielden.platform.eql.dbschema.TableDdl;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.utils.StreamUtils;
 
 public class DomainMetadata {
     private static final Logger LOGGER = getLogger(DomainMetadata.class);
+    public final EqlDomainMetadata eqlDomainMetadata;
 
     private static final TypeResolver typeResolver = new TypeConfiguration().getTypeResolver();
     private static final Type H_LONG = typeResolver.basic("long");
@@ -107,6 +110,7 @@ public class DomainMetadata {
     //    private final static PropertyMetadata idProperty(final Class<? extends AbstractEntity<?>> entityType) { return new PropertyMetadata.Builder(AbstractEntity.ID, entityType, /*Long.class,*/ false).column(id).hibType(TypeFactory.basic("long")).type(ID).build();}
 
     public final DbVersion dbVersion;
+    public final boolean eql2;
     /**
      * Map between java type and hibernate persistence type (implementers of Type, IUserTypeInstantiate, ICompositeUserTypeInstantiate).
      */
@@ -115,16 +119,27 @@ public class DomainMetadata {
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, ModelledEntityMetadata> modelledEntityMetadataMap;
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, PureEntityMetadata> pureEntityMetadataMap;
 
-    private final List<Class<? extends AbstractEntity<?>>> entityTypes;
+    public final List<Class<? extends AbstractEntity<?>>> entityTypes;
+    public final Map<Class<?>, Class<?>> htd = new HashMap<>(); 
     
-    private Injector hibTypesInjector;
+    public Injector hibTypesInjector;
 
     public DomainMetadata(//
             final Map<Class, Class> hibTypesDefaults, //
             final Injector hibTypesInjector, //
             final List<Class<? extends AbstractEntity<?>>> entityTypes, //
             final DbVersion dbVersion) {
+        this(hibTypesDefaults, hibTypesInjector, entityTypes, dbVersion, false);
+    }
+    
+    public DomainMetadata(//
+            final Map<Class, Class> hibTypesDefaults, //
+            final Injector hibTypesInjector, //
+            final List<Class<? extends AbstractEntity<?>>> entityTypes, //
+            final DbVersion dbVersion,
+            final boolean eql2) {
         this.dbVersion = dbVersion;
+        this.eql2 = eql2;
 
         this.hibTypesDefaults = new ConcurrentHashMap<>(entityTypes.size());
         this.persistedEntityMetadataMap = new ConcurrentHashMap<>(entityTypes.size());
@@ -132,7 +147,7 @@ public class DomainMetadata {
         this.pureEntityMetadataMap = new ConcurrentHashMap<>(entityTypes.size());
         
         this.entityTypes = new ArrayList<>(entityTypes);
-        
+
         // initialise meta-data for basic entity properties, which is RDBMS dependent
         if (dbVersion != DbVersion.ORACLE) {
             id = new PropertyColumn("_ID");
@@ -141,10 +156,17 @@ public class DomainMetadata {
             id = new PropertyColumn("TG_ID");
             version = new PropertyColumn("TG_VERSION");
         }
-
+        
+        final Map<Class<?>, Class<?>> htd = new HashMap<>(); 
+        
         // carry on with other stuff
         if (hibTypesDefaults != null) {
+            for (final Entry<Class, Class> el : hibTypesDefaults.entrySet()) {
+                htd.put(el.getKey(), el.getValue());
+            }
+
             for (final Entry<Class, Class> entry : hibTypesDefaults.entrySet()) {
+                htd.put(entry.getKey(), entry.getValue());
                 try {
                     this.hibTypesDefaults.put(entry.getKey(), entry.getValue().newInstance());
                 } catch (final Exception e) {
@@ -156,11 +178,13 @@ public class DomainMetadata {
         this.hibTypesDefaults.put(boolean.class, H_BOOLEAN);
 
         this.hibTypesInjector = hibTypesInjector;
+        
+        this.eqlDomainMetadata = new EqlDomainMetadata(htd, hibTypesInjector, entityTypes, dbVersion);
 
         // the following operations are a bit heave and benefit from parallel processing
         entityTypes.parallelStream().forEach(entityType -> {
             try {
-                EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = new EntityTypeInfo<>(entityType);
+                final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = new EntityTypeInfo<>(entityType);
                 switch (parentInfo.category) {
                 case PERSISTED:
                     persistedEntityMetadataMap.put(entityType, generatePersistedEntityMetadata(parentInfo));
@@ -351,7 +375,7 @@ public class DomainMetadata {
         safeMapAdd(result, generateVersionPropertyMetadata(parentInfo));
         safeMapAdd(result, generateKeyPropertyMetadata(parentInfo));
 
-        for (final Field field : getRealProperties(parentInfo.entityType)) {
+        for (final Field field : findRealProperties(parentInfo.entityType)) {
             if (!result.containsKey(field.getName())) {
                 if (Collection.class.isAssignableFrom(field.getType()) && hasLinkProperty(parentInfo.entityType, field.getName())) {
                     safeMapAdd(result, getCollectionalPropInfo(field, parentInfo));
