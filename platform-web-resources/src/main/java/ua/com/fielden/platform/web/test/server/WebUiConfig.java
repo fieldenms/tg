@@ -33,6 +33,7 @@ import static ua.com.fielden.platform.web.test.server.config.LocatorFactory.mkLo
 import static ua.com.fielden.platform.web.test.server.config.StandardActions.EDIT_ACTION;
 import static ua.com.fielden.platform.web.test.server.config.StandardActions.SEQUENTIAL_EDIT_ACTION;
 import static ua.com.fielden.platform.web.test.server.config.StandardMessages.DELETE_CONFIRMATION;
+import static ua.com.fielden.platform.web.view.master.EntityMaster.noUiFunctionalMaster;
 
 import java.lang.reflect.Field;
 import java.math.BigDecimal;
@@ -105,6 +106,8 @@ import ua.com.fielden.platform.sample.domain.TgSelectedEntitiesExampleActionProd
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityLocator;
+import ua.com.fielden.platform.sample.domain.ui_actions.MakeCompletedAction;
+import ua.com.fielden.platform.sample.domain.ui_actions.producers.MakeCompletedActionProducer;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger;
@@ -462,6 +465,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final CustomTestView customView = new CustomTestView();
         configApp().addCustomView(customView);
 
+        builder.register(noUiFunctionalMaster(MakeCompletedAction.class, MakeCompletedActionProducer.class, injector()));
+
         //        app.addCentre(new EntityCentre(MiTimesheet.class, "Timesheet"));
         // Add custom views.
         //        app.addCustomView(new MyProfile(), true);
@@ -481,7 +486,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .cell(cell(CELL_LAYOUT).repeat(4).withGapBetweenCells(MARGIN))
                 .subheaderOpen("Other components 2")
                 .cell(cell(CELL_LAYOUT).repeat(4).withGapBetweenCells(MARGIN))
-                .cell(cell(CELL_LAYOUT).repeat(5).withGapBetweenCells(MARGIN))
+                .cell(cell(CELL_LAYOUT).repeat(6).withGapBetweenCells(MARGIN))
                 .html("<span>This is binded text for String prop: </span><span id='stringProp_bind' style='color:blue'>{{stringProp}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end())
                 .html("<span>This is binded text for Status.desc: </span><span id='status_Desc_bind' style='color:blue'>{{status.desc}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end()),
                 layoutConfig).toString();
@@ -490,7 +495,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .cell(cell(CELL_LAYOUT).repeat(2).withGapBetweenCells(MARGIN))
                 .cell(cell(CELL_LAYOUT), layout().flexAuto().end())
                 .cell(cell(CELL_LAYOUT).repeat(3).withGapBetweenCells(MARGIN))
-                .cell(cell(CELL_LAYOUT).repeat(3).withGapBetweenCells(MARGIN))
+                .cell(cell(CELL_LAYOUT).repeat(4).withGapBetweenCells(MARGIN))
                 .html("<span>This is binded text for String prop: </span><span id='stringProp_bind' style='color:blue'>{{stringProp}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end())
                 .html("<span>This is binded text for Status.desc: </span><span id='status_Desc_bind' style='color:blue'>{{status.desc}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end()),
                 layoutConfig).toString();
@@ -501,10 +506,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .cell(cell(CELL_LAYOUT), layout().flexAuto().end())
                 .cell(cell(CELL_LAYOUT).repeat(2).withGapBetweenCells(MARGIN))
                 .cell(cell(CELL_LAYOUT).repeat(2).withGapBetweenCells(MARGIN))
-                .cell(cell(CELL_LAYOUT).repeat(2).withGapBetweenCells(MARGIN))
+                .cell(cell(CELL_LAYOUT).repeat(3).withGapBetweenCells(MARGIN))
                 .html("<span>This is binded text for String prop: </span><span id='stringProp_bind' style='color:blue'>{{stringProp}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end())
                 .html("<span>This is binded text for Status.desc: </span><span id='status_Desc_bind' style='color:blue'>{{status.desc}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end()),
                 layoutConfig).toString();
+        
         // Add entity masters.
         final SimpleMasterBuilder<TgPersistentEntityWithProperties> smb = new SimpleMasterBuilder<>();
         @SuppressWarnings("unchecked")
@@ -667,6 +673,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .also()
                 .addProp("domainInitProp").asSinglelineText()
                 .also()
+                .addProp("completed").asCheckbox()
+                .also()
 
                 .addAction(MasterActions.REFRESH)
                     .icon("highlight-off")
@@ -711,9 +719,16 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     // .shortcut("ctrl+shift+s") // -- overridden from default ctrl+s
                 .addAction(MasterActions.EDIT)
                 .addAction(MasterActions.VIEW)
+                .addAction(action(MakeCompletedAction.class)
+                        .withContext(context().withMasterEntity().build())
+                        .postActionSuccess(() -> new JsCode("")) // use self.publishCloseForcibly(); here to close master if necessary
+                        .shortDesc("Complete")
+                        .longDesc("Complete this entity.")
+                        .build()
+                )
 
                 .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(),
-                        format("['horizontal', 'center-justified', 'padding: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr, actionMr, actionMr))
+                        format("['horizontal', 'center-justified', 'padding: 20px', 'wrap', [%s],[%s],[%s],[%s],[%s],[%s],[%s],[%s],[%s]]", actionMr, actionMr, actionMr, actionMr, actionMr, actionMr, actionMr, actionMr, actionMr))
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), desktopLayout)
                 .setLayoutFor(Device.TABLET, Optional.empty(), tabletLayout)
                 .setLayoutFor(Device.MOBILE, Optional.empty(), mobileLayout)

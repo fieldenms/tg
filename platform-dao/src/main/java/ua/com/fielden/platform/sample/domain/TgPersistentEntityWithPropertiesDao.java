@@ -152,6 +152,7 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
                 // .with("producerInitProp", EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("key")
                 .with("producerInitProp", "status.key", "status.desc")
                 .with("colourProp", "hyperlinkProp")
+                .with("completed")
                 .with("idOnlyProxyProp"); //
     }
 
@@ -163,6 +164,12 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
                 .setAttachment(attachment);
         
         return co$.findByEntityAndFetchOptional(co$.getFetchProvider().fetchModel(), entityAttachment)
-                  .orElseGet(() -> co$.save(entityAttachment));        
+                  .orElseGet(() -> co$.save(entityAttachment));
     }
+
+    @Override
+    public TgPersistentEntityWithProperties new_() {
+        return super.new_().setCompleted(false);
+    }
+
 }
