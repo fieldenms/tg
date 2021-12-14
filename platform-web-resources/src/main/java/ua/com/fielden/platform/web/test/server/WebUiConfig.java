@@ -721,7 +721,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(MasterActions.VIEW)
                 .addAction(action(MakeCompletedAction.class)
                         .withContext(context().withMasterEntity().build())
-                        .postActionSuccess(() -> new JsCode("")) // use self.publishCloseForcibly(); here to close master if necessary
+                        .postActionSuccess(() -> new JsCode("getParentAnd(self, parent => parent.matches('tg-TgPersistentEntityWithProperties-master'))._postSavedDefault(functionalEntity.get('masterEntity'));")) // use self.publishCloseForcibly(); here to close master if necessary
                         .shortDesc("Complete")
                         .longDesc("Complete this entity.")
                         .build()
