@@ -37,7 +37,7 @@ public class MakeCompletedActionDao extends CommonEntityDao<MakeCompletedAction>
         masterEntity.setCompleted(true);
         
         final TgPersistentEntityWithProperties savedMasterEntity = co$(TgPersistentEntityWithProperties.class).save(masterEntity);
-        entity.getProperty("masterEntity").setValue(savedMasterEntity, true);
+        entity.getProperty("masterEntity").setValue(savedMasterEntity, true); // it is important to set the same entity with enforcement; otherwise previous unsaved version will be preserved and it would not be suitable for parent entity master binding
         
         return super.save(entity);
     }
