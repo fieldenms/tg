@@ -102,6 +102,7 @@ Polymer({
         } else {
             this.classList.remove('with-action');
         }
+        this._propertyChangeHandler();
     },
 
     _calcBackgroundRenderingHintsStyle: function(_renderingHints, column) {
@@ -154,11 +155,11 @@ Polymer({
     /**
      * Returns icon that represents the boolean value.
      */
-    _getBooleanIcon: function (_hostComponent, _entity, column) {
+    _getBooleanIcon: function (_hostComponent, _entity, column, withAction) {
         if (this._getValueFromEntity(_hostComponent, _entity, column) === true) {
             return "icons:check";
         } else {
-            return "noicon";
+            return withAction ? "icons:check-box-outline-blank" : "noicon";
         }
     },
 
@@ -216,7 +217,7 @@ Polymer({
     _propertyChangeHandler: function () {
         this._modified = this.egiEntity && this.egiEntity.entityModification && this.egiEntity.entityModification[this.column.property];
         if (this._isBooleanProp(this._hostComponent, this._entity, this.column)) {
-            this._value = this._getBooleanIcon(this._hostComponent, this._entity, this.column);
+            this._value = this._getBooleanIcon(this._hostComponent, this._entity, this.column, this.withAction);
         } else {
             this._value = this._getBindedValue(this._hostComponent, this._entity, this.column);
         }
