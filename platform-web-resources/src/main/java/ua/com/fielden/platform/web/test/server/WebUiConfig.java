@@ -486,7 +486,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .cell(cell(CELL_LAYOUT).repeat(4).withGapBetweenCells(MARGIN))
                 .subheaderOpen("Other components 2")
                 .cell(cell(CELL_LAYOUT).repeat(4).withGapBetweenCells(MARGIN))
-                .cell(cell(CELL_LAYOUT).repeat(6).withGapBetweenCells(MARGIN))
+                    .repeat(2)
+                .cell(cell(CELL_LAYOUT).repeat(2).withGapBetweenCells(MARGIN))
                 .html("<span>This is binded text for String prop: </span><span id='stringProp_bind' style='color:blue'>{{stringProp}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end())
                 .html("<span>This is binded text for Status.desc: </span><span id='status_Desc_bind' style='color:blue'>{{status.desc}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end()),
                 layoutConfig).toString();
@@ -495,7 +496,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .cell(cell(CELL_LAYOUT).repeat(2).withGapBetweenCells(MARGIN))
                 .cell(cell(CELL_LAYOUT), layout().flexAuto().end())
                 .cell(cell(CELL_LAYOUT).repeat(3).withGapBetweenCells(MARGIN))
-                .cell(cell(CELL_LAYOUT).repeat(4).withGapBetweenCells(MARGIN))
+                    .repeat(4)
+                .cell(cell(CELL_LAYOUT).repeat(2).withGapBetweenCells(MARGIN))
                 .html("<span>This is binded text for String prop: </span><span id='stringProp_bind' style='color:blue'>{{stringProp}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end())
                 .html("<span>This is binded text for Status.desc: </span><span id='status_Desc_bind' style='color:blue'>{{status.desc}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end()),
                 layoutConfig).toString();
@@ -505,8 +507,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .cell(cell(CELL_LAYOUT))
                 .cell(cell(CELL_LAYOUT), layout().flexAuto().end())
                 .cell(cell(CELL_LAYOUT).repeat(2).withGapBetweenCells(MARGIN))
-                .cell(cell(CELL_LAYOUT).repeat(2).withGapBetweenCells(MARGIN))
-                .cell(cell(CELL_LAYOUT).repeat(3).withGapBetweenCells(MARGIN))
+                    .repeat(7)
                 .html("<span>This is binded text for String prop: </span><span id='stringProp_bind' style='color:blue'>{{stringProp}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end())
                 .html("<span>This is binded text for Status.desc: </span><span id='status_Desc_bind' style='color:blue'>{{status.desc}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end()),
                 layoutConfig).toString();

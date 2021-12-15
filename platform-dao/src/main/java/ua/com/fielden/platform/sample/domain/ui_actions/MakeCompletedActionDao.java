@@ -33,14 +33,13 @@ public class MakeCompletedActionDao extends CommonEntityDao<MakeCompletedAction>
         final TgPersistentEntityWithProperties masterEntity = entity.getMasterEntity();
         masterEntity.isValid(validateWithoutCritOnly).ifFailure(Result::throwRuntime); // make sure that masterEntity is valid before continuing
         
-        masterEntity.setDateProp(new Date());
-        masterEntity.setCompleted(true);
+        masterEntity.setDateProp(new Date()); // record date to easily observe updated instance in parent masters / centres
+        masterEntity.setCompleted(true); // make completed
         
         final TgPersistentEntityWithProperties savedMasterEntity = co$(TgPersistentEntityWithProperties.class).save(masterEntity);
         entity.getProperty("masterEntity").setValue(savedMasterEntity, true); // it is important to set the same entity with enforcement; otherwise previous unsaved version will be preserved and it would not be suitable for parent entity master binding
         
         return super.save(entity);
     }
-    
 
 }

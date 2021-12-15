@@ -3,6 +3,8 @@ package ua.com.fielden.platform.sample.domain;
 import static ua.com.fielden.platform.entity.annotation.CritOnly.Type.SINGLE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -847,14 +849,15 @@ public class TgPersistentEntityWithProperties extends AbstractFunctionalEntityWi
 
     @Override
     public Result isEditable() {
+        // fallback to original implementation (i.e. comment following lines) if there is a need to make completed instance not completed again
         final Result defaultResult = super.isEditable();
         if (!defaultResult.isSuccessful()) {
             return defaultResult;
         }
         if (!isCompleted() || isDirty()) {
-            return Result.successful(this);
+            return successful(this);
         } else {
-            return Result.failure(this, "Completed instance is not editable.");
+            return failure(this, "Completed instance is not editable.");
         }
     }
 

@@ -14,7 +14,10 @@ import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
- * Master entity object.
+ * Functional entity to make {@link TgPersistentEntityWithProperties} entity completed and save.
+ * It applies all user modifications, sets 'completed' property and 'dateProp' and saves the instance.
+ * Completed instance is not editable. {@link MakeCompletedAction} demonstrates how saved
+ * {@link TgPersistentEntityWithProperties} instance should be bound into parent entity master.
  *
  * @author TG Team
  *
