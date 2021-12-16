@@ -63,7 +63,11 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
                 prevEntity = _select.findEntityBy(prevLayer.feature); // get the entity (that will be removed from map soon) from which that layer was formed
             }
         }
-        self.clearAll();
+        const overlaysAndChecked = self.clearAll(); // returns map of previously checked states for overlays
+
+        Object.values(self._overlays).filter(overlay => {
+            return isRunAction ? overlay._checkedByDefault : overlaysAndChecked.get(overlay); // add checkedByDefault overlays for Run action; add previously checked overlays for Refresh action and others
+        }).forEach(overlay => self._map.addLayer(overlay));
 
         // Shallow copy of this array is needed to be done: not to alter original array, that is bound to EGI.
         // Any added features to the shallow copy of the array will not be added to EGI's array of entities.
@@ -73,7 +77,9 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
         self.promoteEntities(newRetrievedEntitiesCopy);
 
         // we add checked overlays to marker cluster again: this is because we need to trigger tg-progress-bar-updater's chunked loading and fitToBounds logic
-        Object.values(self._overlays).filter(overlay => overlay._checkedByDefault).forEach(overlay => self._markerCluster.getGisMarkerClusterGroup().addLayer(overlay));
+        Object.values(self._overlays).filter(overlay => {
+            return isRunAction ? overlay._checkedByDefault : self._map.hasLayer(overlay); // add checkedByDefault overlays for Run action; add previously checked overlays for Refresh action and others
+        }).forEach(overlay => self._markerCluster.getGisMarkerClusterGroup().addLayer(overlay));
 
         self.finishReload();
         if (_isEntity(prevEntity)) { // if there was previously selected layer (with or without popup) and corresponding entity was found
@@ -314,10 +320,15 @@ GisComponent.prototype.finishReload = function () {
 };
 
 GisComponent.prototype.clearAll = function () {
+    const self = this;
+    const overlaysAndChecked = new Map(); // Map of overlay and its checked state
     Object.values(this._overlays).forEach(function (overlay) {
-        overlay.clearLayers();
+        overlay.clearLayers(); // remove all layers from overlay; this is important because new markers will be created through addData call even if retrieved data is the same
+        overlaysAndChecked.set(overlay, self._map.hasLayer(overlay)); // add checked state to Map
+        self._map.removeLayer(overlay); // remove overlay from map, which triggers removal from parent group, that is a marker cluster group
     });
-    this._markerCluster.getGisMarkerClusterGroup().clearLayers();
+    this._markerCluster.getGisMarkerClusterGroup().clearLayers(); // at this stage marker cluster group should already be clean; we do clearing to reassure it is empty and to trigger marker cluster plugin clearing specifics
+    return overlaysAndChecked;
 };
 
 GisComponent.prototype.promoteEntities = function (newEntities) {
