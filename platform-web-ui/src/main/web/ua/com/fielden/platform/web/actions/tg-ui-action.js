@@ -598,9 +598,7 @@ Polymer({
                         }
                     });
                 }
-
                 restoreStateAfterSave();
-                
             };
 
             master.postSavedError = function (errorResult) {

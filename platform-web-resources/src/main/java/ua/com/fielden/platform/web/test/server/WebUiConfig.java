@@ -724,7 +724,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(MasterActions.VIEW)
                 .addAction(action(MakeCompletedAction.class)
                         .withContext(context().withMasterEntity().build())
-                        .postActionSuccess(new BindSavedPropertyPostActionSuccess("masterEntity"))
+                        .postActionSuccess(() -> new JsCode(new BindSavedPropertyPostActionSuccess("masterEntity").build().toString() + "self.publishCloseForcibly();"))
                         .postActionError(new BindSavedPropertyPostActionError("masterEntity"))
                         .shortDesc("Complete")
                         .longDesc("Complete this entity.")
