@@ -1,13 +1,10 @@
 package ua.com.fielden.platform.sample.domain.ui_actions.producers;
 
-import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
-
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.entity.DefaultEntityProducerWithContext;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.ui_actions.MakeCompletedAction;
 
@@ -27,9 +24,7 @@ public class MakeCompletedActionProducer extends DefaultEntityProducerWithContex
     @Override
     protected MakeCompletedAction provideDefaultValues(final MakeCompletedAction entity) {
         if (contextNotEmpty() && masterEntityNotEmpty()) {
-            final TgPersistentEntityWithProperties masterEntity = masterEntity(TgPersistentEntityWithProperties.class);
-            masterEntity.isValid(validateWithoutCritOnly).ifFailure(Result::throwRuntime); // make sure that masterEntity is valid before continuing
-            entity.setMasterEntity(masterEntity);
+            entity.setMasterEntity(masterEntity(TgPersistentEntityWithProperties.class)); // defer masterEntity validation to companion's save method; this is to ensure proper entity binding in postActionSuccess/postActionError callbacks
         }
         return super.provideDefaultValues(entity);
     }

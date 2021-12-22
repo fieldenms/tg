@@ -2,6 +2,7 @@ package ua.com.fielden.platform.sample.domain;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
+import static ua.com.fielden.platform.error.Result.failure;
 
 import java.util.Collection;
 import java.util.Date;
@@ -71,6 +72,9 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
             final Result res = entity.isValid();
             if (!res.isSuccessful()) { // throw precise exception about the validation error
                 throw new IllegalArgumentException(format("Modification failed: %s", res.getMessage()));
+            }
+            if (entity.getRequiredValidatedProp() == 55) {
+                throw failure("Saving failed with exception.");
             }
         }
         

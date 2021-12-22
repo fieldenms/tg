@@ -722,7 +722,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(MasterActions.VIEW)
                 .addAction(action(MakeCompletedAction.class)
                         .withContext(context().withMasterEntity().build())
-                        .postActionSuccess(() -> new JsCode("getParentAnd(self, parent => parent.matches('tg-TgPersistentEntityWithProperties-master'))._postSavedDefault(functionalEntity.get('masterEntity'));")) // use self.publishCloseForcibly(); here to close master if necessary
+                        .postActionSuccess(() -> new JsCode("getParentAnd(self, parent => parent.matches('tg-TgPersistentEntityWithProperties-master'))._postSavedDefault(functionalEntity.get('masterEntity'));"))
+                        .postActionError(() -> new JsCode(""
+                            + "const parentMaster = getParentAnd(self, parent => parent.matches('tg-TgPersistentEntityWithProperties-master'));\n"
+                            + "const masterEntity = functionalEntity.get('masterEntity');\n"
+                            + "parentMaster._provideExceptionOccured(masterEntity, functionalEntity.exceptionOccured());\n"
+                            + "parentMaster._postSavedDefault(masterEntity);\n"
+                        ))
                         .shortDesc("Complete")
                         .longDesc("Complete this entity.")
                         .build()
