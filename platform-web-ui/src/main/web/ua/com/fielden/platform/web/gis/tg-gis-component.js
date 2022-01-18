@@ -24,6 +24,8 @@ const tgGisComponentStyles = `
 const tgGisComponentStylesName = 'tg-gis-component-styles';
 createStyleModule(tgGisComponentStylesName, tgGisComponentStyles);
 
+const GEOJSON = 'GEO-json'; // default overlay's name
+
 export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap, ...otherStyles) {
     // IMPORTANT: use the following reference in cases when you need some properties of the 
     // GisComponent inside the functions or nested classes
@@ -256,8 +258,24 @@ GisComponent.prototype.appendStyles = function (tgMap, ...styleModuleNames) {
     tgMap.shadowRoot.appendChild(styleWrapper);
 };
 
+/**
+ * Creates overlays of domain-specific objects to be displayed on map.
+ * User can tick/untick overlays by their names in right top corner's button.
+ * Override this default implementation to provide custom map of overlays.
+ */
 GisComponent.prototype.createOverlays = function (parentGroup) {
-    return {};
+    const geoJsonLayer = this._createLayer(true, parentGroup);
+    const overlays = {};
+    overlays[GEOJSON] = geoJsonLayer;
+    return overlays;
+};
+
+/**
+ * Distributes 'entity' into specific overlay by its name.
+ * Override this default implementation to support distribution into custom map of overlays.
+ */
+GisComponent.prototype.overlayNameFor = function (entity) {
+    return GEOJSON;
 };
 
 /**
