@@ -8,7 +8,7 @@ import { fitToBounds } from '/resources/gis/tg-gis-utils.js';
 
 export { leafletStylesName, leafletDrawStylesName, leafletControlloadingStylesName, leafletEasybuttonStylesName };
 
-export const Controls = function (_map, _markersClusterGroup, _baseLayers, _additionalOverlays, _editableArcGisOverlay, ... customControls) {
+export const Controls = function (_map, _markersClusterGroup, _baseLayers, _overlays, _editableArcGisOverlay, ... customControls) {
     const self = this;
 
     self._map = _map;
@@ -168,8 +168,8 @@ export const Controls = function (_map, _markersClusterGroup, _baseLayers, _addi
     }
     
     self._map.addLayer(self._markersClusterGroup);
-    Object.values(_additionalOverlays).filter(overlay => overlay._checkedByDefault).forEach(overlay => self._map.addLayer(overlay));
+    Object.values(_overlays).filter(overlay => overlay._checkedByDefault).forEach(overlay => self._map.addLayer(overlay));
 
-    const overlaysControl = L.control.layers(self._baseLayers.getBaseLayers(), _additionalOverlays);
+    const overlaysControl = L.control.layers(self._baseLayers.getBaseLayers(), _overlays);
     self._map.addControl(overlaysControl);
 };

@@ -209,7 +209,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
 
     self._entityStyling = self.createEntityStyling();
 
-    self._controls = new Controls(self._map, self._markerCluster.getGisMarkerClusterGroup(), self._baseLayers, overlays, /*Object.values(overlays)[0]*/ null);
+    self._controls = new Controls(self._map, self._markerCluster.getGisMarkerClusterGroup(), self._baseLayers, self._overlays);
 
     const findLayerByPredicate = function (overlay, predicate) {
         if (overlay._layers) {
@@ -353,33 +353,20 @@ GisComponent.prototype.promoteEntities = function (newEntities) {
     const self = this;
     this._entities = newEntities;
 
-    this.traverseEntities(this._entities, null /* the parent for top-level entities is null! */, function (entity, parentFeature) {
-        entity.type = "Feature";
-
-         if (entity.properties) {
-            console.warn('Entity already has "properties" object. Cannot continue with conversion into feature.');
+    this.traverseEntities(this._entities, null /* the parent for top-level entities is null */, function (entity, parentFeature) {
+        entity.type = 'Feature';
+        if (entity.properties) {
+            console.warn('Entity already has "properties" object.');
         }
         entity.properties = entity.properties || {};
         entity.properties._parentFeature = parentFeature;
-
-         if (entity.geometry) {
+        if (entity.geometry) {
             throw 'Entity already has "geometry" object. Cannot continue with conversion into feature.';
         }
         entity.geometry = self.createGeometry(entity);
-
-         // console.debug('entity:');
-        // console.debug(entity);
-        // console.debug('entity.geometry:');
-        // console.debug(entity.geometry);
-
         if (entity.geometry) {
             self._overlays[self.overlayNameFor(entity)].addData(entity);
-            //console.debug('added', entity);
-        } else {
-            // TODO do nothing in case when the entity has no visual representation
-            // console.debug("entity with no visual representation: ");
-            // console.debug(entity);
-        }
+        } // do nothing in case when the entity has no visual representation
     }, function (entities) {
         return self.createSummaryFeature(entities);
     });
