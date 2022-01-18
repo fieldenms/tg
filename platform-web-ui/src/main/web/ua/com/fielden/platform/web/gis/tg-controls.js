@@ -38,16 +38,16 @@ export const Controls = function (_map, _markersClusterGroup, _baseLayers, _over
     );
     self._map.addControl(fitToBoundsControl);
 
-    // Add our zoom control manually where we want to
+    // add zoom control manually in top-left position
     const zoomControl = L.control.zoom({
         position: 'topleft'
     });
     self._map.addControl(zoomControl);
 
-    // Add our loading control in the same position and pass the
-    // zoom control to attach to it
+    // add loading control slightly below and pass zoom control to attach to it
     const loadingControl = controlLoading({
         position: 'topleft',
+        separate: true, // make loading control separate to avoid Forced Reflow that is triggered by Control.Loading.js._getLastControlButton method during layers removal; this problem manifests itself on Refresh button
         zoomControl: zoomControl
     });
     self._map.addControl(loadingControl);
