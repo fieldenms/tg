@@ -3,6 +3,8 @@ package ua.com.fielden.platform.sample.domain;
 import static ua.com.fielden.platform.entity.annotation.CritOnly.Type.SINGLE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.successful;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -31,6 +33,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.sample.domain.definers.CosWithACEDefiner;
 import ua.com.fielden.platform.sample.domain.definers.RequirednessDefiner;
 import ua.com.fielden.platform.sample.domain.validators.CosConcreteValueProhibitedValidator;
@@ -329,6 +332,21 @@ public class TgPersistentEntityWithProperties extends AbstractFunctionalEntityWi
     @IsProperty(TgPersistentEntityWithProperties.class)
     @MapTo
     private PropertyDescriptor<TgPersistentEntityWithProperties> propertyDescriptorProp;
+
+    @IsProperty
+    @MapTo
+    @Title("Completed?")
+    private boolean completed = false;
+
+    @Observable
+    public TgPersistentEntityWithProperties setCompleted(final boolean completed) {
+        this.completed = completed;
+        return this;
+    }
+
+    public boolean isCompleted() {
+        return completed;
+    }
 
     @Observable
     public TgPersistentEntityWithProperties setPropertyDescriptorProp(final PropertyDescriptor<TgPersistentEntityWithProperties> propertyDescriptorProp) {
@@ -827,6 +845,20 @@ public class TgPersistentEntityWithProperties extends AbstractFunctionalEntityWi
 
     public Integer getNumberOfAttachments() {
         return numberOfAttachments;
+    }
+
+    @Override
+    public Result isEditable() {
+        // fallback to original implementation (i.e. comment following lines) if there is a need to make completed instance not completed again
+        final Result defaultResult = super.isEditable();
+        if (!defaultResult.isSuccessful()) {
+            return defaultResult;
+        }
+        if (!isCompleted() || isDirty()) {
+            return successful(this);
+        } else {
+            return failure(this, "Completed instance is not editable.");
+        }
     }
 
 }
