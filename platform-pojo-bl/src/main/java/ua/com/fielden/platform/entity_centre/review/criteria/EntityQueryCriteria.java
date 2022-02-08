@@ -11,6 +11,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.entity_centre.review.DynamicParamBuilder.buildParametersMap;
 import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.queryPropertyParamName;
 import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.createParamValuesMap;
+import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.separateFetchAndTotalProperties;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.transform;
@@ -556,6 +557,24 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
                 .with(DynamicOrderingBuilder.createOrderingModel(getManagedType(), resultTickManager.orderedProperties(root)))//
                 .with(fetchProvider.fetchModel())//
                 .with(getParameters()).model();
+    }
+
+    /**
+     * Creates {@link IFetchProvider} for result-set of the entity centre.
+     * The result includes all properties in result-set columns and properties from additional fetch provider, that is set in Centre DSL.
+     * Also it includes properties those are used as tooltips for other properties, if there are any.
+     */
+    public IFetchProvider<T> createResultSetFetchProvider() {
+        return createFetchModelFrom(
+            getManagedType(),
+            separateFetchAndTotalProperties(
+                getEntityClass(),
+                getCentreDomainTreeMangerAndEnhancer().getSecondTick(),
+                getCentreDomainTreeMangerAndEnhancer().getEnhancer()
+            ).getKey(),
+            additionalFetchProvider,
+            additionalFetchProviderForTooltipProperties
+        );
     }
 
     public Pair<String[], String[]> generatePropTitlesToExport() {
