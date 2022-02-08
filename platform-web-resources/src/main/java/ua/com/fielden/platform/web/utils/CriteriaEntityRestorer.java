@@ -73,8 +73,15 @@ public class CriteriaEntityRestorer implements ICriteriaEntityRestorer {
         final IUser userCompanion = companionFinder.find(User.class);
         
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity = createCriteriaEntityForContext(centreContextHolder, companionFinder, user, critGenerator, webUiConfig, entityFactory, deviceProvider.getDeviceProfile(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel);
-        
         final EntityCentre<AbstractEntity<?>> centre = (EntityCentre<AbstractEntity<?>>) webUiConfig.getCentres().get(criteriaEntity.miType());
+        
+        if (centre.getAdditionalFetchProvider().isPresent()) {
+            criteriaEntity.setAdditionalFetchProvider(centre.getAdditionalFetchProvider().get());
+        }
+        if (centre.getAdditionalFetchProviderForTooltipProperties().isPresent()) {
+            criteriaEntity.setAdditionalFetchProviderForTooltipProperties(centre.getAdditionalFetchProviderForTooltipProperties().get());
+        }
+        
         final Optional<Pair<IQueryEnhancer<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> queryEnhancerAndContext = createQueryEnhancerAndContext(
             webUiConfig,
             companionFinder,
@@ -91,7 +98,6 @@ public class CriteriaEntityRestorer implements ICriteriaEntityRestorer {
             userCompanion,
             sharingModel
         );
-        
         if (queryEnhancerAndContext.isPresent()) {
             criteriaEntity.setAdditionalQueryEnhancerAndContext(queryEnhancerAndContext.get().getKey(), queryEnhancerAndContext.get().getValue());
         }
