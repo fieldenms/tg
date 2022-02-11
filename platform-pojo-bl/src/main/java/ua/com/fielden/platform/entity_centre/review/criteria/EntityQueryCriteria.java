@@ -561,7 +561,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
 
     /**
      * Creates {@link IFetchProvider} for result-set of the entity centre.
-     * The result includes all properties in result-set columns and properties from additional fetch provider, that is set in Centre DSL.
+     * The result includes all properties in result-set columns and properties from additional fetch provider, if there is one.
      * Also it includes properties those are used as tooltips for other properties, if there are any.
      */
     public IFetchProvider<T> createResultSetFetchProvider() {
