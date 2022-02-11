@@ -688,10 +688,10 @@ const TgEntityCentreBehaviorImpl = {
             return null;
         }).bind(self);
 
-        self._postFunctionalEntitySaved = (function (savingException, potentiallySavedOrNewEntity, shouldRefreshParentCentreAfterSave, selectedEntitiesInContext) {
+        self._postFunctionalEntitySaved = (function (savingException, potentiallySavedOrNewEntity, shouldRefreshParentCentreAfterSave, selectedEntitiesInContext, excludeInsertionPoints) {
             if (shouldRefreshParentCentreAfterSave === true && potentiallySavedOrNewEntity.isValidWithoutException()) {
                 // old implementation was this.currentPage(); -- for now only selectedEntitiesInContext will be refreshed, not the whole current page
-                this.refreshEntities(selectedEntitiesInContext);
+                this.refreshEntities(selectedEntitiesInContext, excludeInsertionPoints);
             }
         }).bind(self);
 
@@ -906,7 +906,7 @@ const TgEntityCentreBehaviorImpl = {
             channel: "centre_" + self.$.selection_criteria.uuid,
             topic: "detail.saved",
             callback: function (data, envelope) {
-                self._postFunctionalEntitySaved(data.savingException, data.entity, data.shouldRefreshParentCentreAfterSave, data.selectedEntitiesInContext);
+                self._postFunctionalEntitySaved(data.savingException, data.entity, data.shouldRefreshParentCentreAfterSave, data.selectedEntitiesInContext, data.excludeInsertionPoints);
             }
         }));
 
@@ -1081,12 +1081,12 @@ const TgEntityCentreBehaviorImpl = {
     /**
      * Starts the process of refreshing the current page (only after run() has been already performed).
      */
-    currentPage: function () {
+    currentPage: function (excludeInsertionPoints) {
         const self = this;
         if (!this.$.egi.isEditing()) {
             return this.$.selection_criteria.currentPage()
                 .then(function () {
-                    self.runInsertionPointActions();
+                    self.runInsertionPointActions(excludeInsertionPoints);
                 });
         }
         return this._saveOrCancelPromise();
@@ -1162,14 +1162,14 @@ const TgEntityCentreBehaviorImpl = {
      *     EGI grid (a subset of current page entities). Those matched entities get replaced with refreshed instances (or removed
      *     from the result-set if they became unmatchable to the selection criteria after modification).
      */
-    refreshEntities: function (entities) {
+    refreshEntities: function (entities, excludeInsertionPoints) {
         if (this._selectedView !== 0 && (// only if the selectedView is the one of resultant views, we need to refresh entitites and...
             // there is no data or refresh is enforeced or...
             this.enforcePostSaveRefresh === true || this.$.egi.egiModel.length === 0 ||
             // there are no entities specified or the currrent result contains any of them then...
             entities === null || entities.length === 0 || this.$.egi.containsAnyEntity(entities))) {
             // refresh the current page
-            this.currentPage();
+            this.currentPage(excludeInsertionPoints);
         }
     },
 
@@ -1248,14 +1248,16 @@ const TgEntityCentreBehaviorImpl = {
         self.fire('tg-save-as-name-changed', newSaveAsName);
     },
 
-    runInsertionPointActions: function () {
+    runInsertionPointActions: function (excludeInsertionPoints) {
         const self = this;
         const actions = self.$.egi.querySelectorAll('.insertion-point-action');
         if (actions) {
             actions.forEach(function (action) {
-                self.async(function () {
-                    action._run();
-                }, 1);
+                if (!Array.isArray(excludeInsertionPoints) || !excludeInsertionPoints.includes(action.elementName)) {
+                    self.async(function () {
+                        action._run();
+                    }, 1);
+                }
             });
         }
     },

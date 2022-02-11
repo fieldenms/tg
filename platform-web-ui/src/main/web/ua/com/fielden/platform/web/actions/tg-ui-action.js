@@ -273,6 +273,14 @@ Polymer({
         },
 
         /**
+         * Holds the element-name of entity master for insertion point that should be excluded when refreshing parent entity center after action execution.
+         */
+        excludeInsertionPoints: {
+            type: Array,
+            value: null
+        },
+
+        /**
          * Shows the dialog relative to this 'tg-ui-action'.
          */
         showDialog: {
@@ -591,6 +599,7 @@ Polymer({
                         topic: "detail.saved",
                         data: {
                             shouldRefreshParentCentreAfterSave: this.shouldRefreshParentCentreAfterSave,
+                            excludeInsertionPoints: self.excludeInsertionPoints,
                             entity: potentiallySavedOrNewEntity,
                             entityPath: [ potentiallySavedOrNewEntity ], // the starting point of the path of entities from masters that are on a chain of refresh cycle
                             // send selectedEntitiesInContext further to be able to update only them on EGI
