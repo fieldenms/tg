@@ -1,9 +1,7 @@
 package ua.com.fielden.platform.web.utils;
 
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityForContext;
-import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.createQueryEnhancerAndContext;
-
-import java.util.Optional;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.complementCriteriaEntityBeforeRunning;
 
 import com.google.inject.Inject;
 
@@ -21,12 +19,8 @@ import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
 import ua.com.fielden.platform.ui.config.MainMenuItemCo;
-import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
-import ua.com.fielden.platform.web.centre.CentreContext;
-import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
-import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 /**
@@ -44,7 +38,7 @@ public class CriteriaEntityRestorer implements ICriteriaEntityRestorer {
     private final IWebUiConfig webUiConfig;
     private final EntityFactory entityFactory;
     private final ICentreConfigSharingModel sharingModel;
-    
+
     @Inject
     public CriteriaEntityRestorer(
             final ICompanionObjectFinder companionFinder,
@@ -71,37 +65,8 @@ public class CriteriaEntityRestorer implements ICriteriaEntityRestorer {
         final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
         final MainMenuItemCo mmiCompanion = companionFinder.find(MainMenuItem.class);
         final IUser userCompanion = companionFinder.find(User.class);
-        
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> criteriaEntity = createCriteriaEntityForContext(centreContextHolder, companionFinder, user, critGenerator, webUiConfig, entityFactory, deviceProvider.getDeviceProfile(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel);
-        final EntityCentre<AbstractEntity<?>> centre = (EntityCentre<AbstractEntity<?>>) webUiConfig.getCentres().get(criteriaEntity.miType());
-        
-        if (centre.getAdditionalFetchProvider().isPresent()) {
-            criteriaEntity.setAdditionalFetchProvider(centre.getAdditionalFetchProvider().get());
-        }
-        if (centre.getAdditionalFetchProviderForTooltipProperties().isPresent()) {
-            criteriaEntity.setAdditionalFetchProviderForTooltipProperties(centre.getAdditionalFetchProviderForTooltipProperties().get());
-        }
-        
-        final Optional<Pair<IQueryEnhancer<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> queryEnhancerAndContext = createQueryEnhancerAndContext(
-            webUiConfig,
-            companionFinder,
-            user,
-            critGenerator,
-            entityFactory,
-            centreContextHolder,
-            centre.getQueryEnhancerConfig(),
-            criteriaEntity,
-            deviceProvider.getDeviceProfile(),
-            domainTreeEnhancerCache,
-            eccCompanion,
-            mmiCompanion,
-            userCompanion,
-            sharingModel
-        );
-        if (queryEnhancerAndContext.isPresent()) {
-            criteriaEntity.setAdditionalQueryEnhancerAndContext(queryEnhancerAndContext.get().getKey(), queryEnhancerAndContext.get().getValue());
-        }
-        
-        return criteriaEntity;
+        return complementCriteriaEntityBeforeRunning(criteriaEntity, webUiConfig, companionFinder, user, critGenerator, entityFactory, centreContextHolder, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel);
     }
+
 }
