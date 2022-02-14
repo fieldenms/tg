@@ -119,6 +119,11 @@ Polymer({
         'entity-type': '@full_entity_type',
         'mi-type': '@full_mi_type'
     },
+    
+    created: function () {
+        const self = this;
+        self.retrieveAll = @retrieveAll;
+    },
 
     ready: function () {
         const self = this;

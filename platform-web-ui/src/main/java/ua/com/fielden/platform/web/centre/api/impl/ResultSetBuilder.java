@@ -63,6 +63,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bCheck
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cToolbar;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dScroll;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eDraggable;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1efRetrieveAll;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1fPageCapacity;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1gMaxPageCapacity;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1hHeaderWrap;
@@ -569,6 +570,12 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
+    public IResultSetBuilder1fPageCapacity<T> retrieveAll() {
+        this.builder.retrieveAll = true;
+        return this;
+    }
+
+    @Override
     public IResultSetBuilder1hHeaderWrap<T> setMaxPageCapacity(final int maxPageCapacity) {
         this.builder.maxPageCapacity = maxPageCapacity;
         return this;
@@ -593,7 +600,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder1fPageCapacity<T> draggable() {
+    public IResultSetBuilder1efRetrieveAll<T> draggable() {
         builder.draggable = true;
         return this;
     }

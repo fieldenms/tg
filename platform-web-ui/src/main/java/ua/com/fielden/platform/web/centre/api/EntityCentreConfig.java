@@ -81,6 +81,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     private final IToolbarConfig toolbarConfig;
     private final boolean hideToolbar;
     private final IScrollConfig scrollConfig;
+    private final boolean retrieveAll;
     private final int pageCapacity;
     private final int maxPageCapacity;
     private final int visibleRowsCount;
@@ -400,6 +401,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final IToolbarConfig toolbarConfig,
             final boolean hideToolbar,
             final IScrollConfig scrollConfig,
+            final boolean retrieveAll,
             final int pageCapacity,
             final int maxPageCapacity,
             final int visibleRowsCount,
@@ -472,6 +474,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.toolbarConfig = toolbarConfig;
         this.hideToolbar = hideToolbar;
         this.scrollConfig = scrollConfig;
+        this.retrieveAll = retrieveAll;
         this.pageCapacity = pageCapacity;
         this.maxPageCapacity = maxPageCapacity;
         this.visibleRowsCount = visibleRowsCount;
@@ -918,6 +921,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public IScrollConfig getScrollConfig() {
         return scrollConfig;
+    }
+
+    public boolean shouldRetrieveAll() {
+        return retrieveAll;
     }
 
     public int getPageCapacity() {

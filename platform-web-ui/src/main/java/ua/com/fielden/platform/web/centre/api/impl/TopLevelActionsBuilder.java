@@ -20,6 +20,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bCheck
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cToolbar;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dScroll;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eDraggable;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1efRetrieveAll;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1fPageCapacity;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1gMaxPageCapacity;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1hHeaderWrap;
@@ -131,8 +132,13 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     }
 
     @Override
-    public IResultSetBuilder1fPageCapacity<T> draggable() {
+    public IResultSetBuilder1efRetrieveAll<T> draggable() {
         return new ResultSetBuilder<>(builder).draggable();
+    }
+
+    @Override
+    public IResultSetBuilder1fPageCapacity<T> retrieveAll() {
+        return new ResultSetBuilder<>(builder).retrieveAll();
     }
 
     @Override
