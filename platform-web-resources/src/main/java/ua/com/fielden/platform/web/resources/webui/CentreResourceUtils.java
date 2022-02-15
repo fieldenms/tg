@@ -17,6 +17,8 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isNotDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isOrGroupDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isOrNullDefault;
+import static ua.com.fielden.platform.types.either.Either.left;
+import static ua.com.fielden.platform.types.either.Either.right;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPLIED_CRITERIA_ENTITY_NAME;
@@ -79,6 +81,7 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
+import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.MainMenuItemCo;
@@ -110,7 +113,7 @@ import ua.com.fielden.snappy.MnemonicEnum;
  */
 public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtils<T> {
     private static final Logger logger = Logger.getLogger(CentreResourceUtils.class);
-    
+
     /**
      * The key for customObject's value containing save-as name.
      */
@@ -311,20 +314,33 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         // For refresh / navigate action this instance was not changed from previous run / refresh / navigate action.
         // For run action this instance was already updated from FRESH surrogate centre and includes "fresh" pageCapacity for the purposes of running
         //  (the only way to make FRESH pageCapacity different from PREVIOUSLY_RUN is to change it using Customise Columns and press DISCARD on selection criteria).
-        final Integer pageCapacity = updatedPreviouslyRunCriteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().getPageCapacity();
         final String action = (String) customObject.get("@@action");
         if (isRunning(customObject)) {
-            page = updatedPreviouslyRunCriteriaEntity.run(pageCapacity);
-            resultantCustomObject.put("summary", page.summary());
-            data = page.data();
+            final Either<IPage<T>, Pair<List<T>, T>> resultData = run(customObject, updatedPreviouslyRunCriteriaEntity);
+            if (resultData.isLeft()) {
+                page = resultData.asLeft().value;
+                resultantCustomObject.put("summary", page.summary());
+                data = page.data();
+            } else {
+                final Pair<List<T>, T> runData = resultData.asRight().value;
+                data = runData.getKey();
+                resultantCustomObject.put("summary", runData.getValue());
+            }
         } else if (RunActions.REFRESH.toString().equals(action)) {
-            final Integer pageNumber = (Integer) customObject.get("@@pageNumber");
-            final Pair<IPage<T>, T> refreshedData = updatedPreviouslyRunCriteriaEntity.getPageWithSummaries(pageNumber, pageCapacity);
-            page = refreshedData.getKey();
-            data = page.data();
-            resultantCustomObject.put("summary", refreshedData.getValue());
+            final Either<Pair<IPage<T>, T>, Pair<List<T>, T>> resultData = refresh(customObject, updatedPreviouslyRunCriteriaEntity);
+            if (resultData.isLeft()) {
+                final Pair<IPage<T>, T> refreshedData = resultData.asLeft().value;
+                page = refreshedData.getKey();
+                data = page.data();
+                resultantCustomObject.put("summary", refreshedData.getValue());
+            } else {
+                final Pair<List<T>, T> refreshedData = resultData.asRight().value;
+                data = refreshedData.getKey();
+                resultantCustomObject.put("summary", refreshedData.getValue());
+            }
         } else if (RunActions.NAVIGATE.toString().equals(action)) {
             final Integer pageNumber = (Integer) customObject.get("@@pageNumber");
+            final Integer pageCapacity = updatedPreviouslyRunCriteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().getPageCapacity();
             try {
                 page = updatedPreviouslyRunCriteriaEntity.getPage(pageNumber, pageCapacity);
             } catch (final Exception e) {
@@ -345,9 +361,30 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         return new Pair<>(resultantCustomObject, data);
     }
 
+    private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Either<IPage<T>, Pair<List<T>, T>> run(final Map<String, Object> customObject, final M criteria) {
+        final Boolean shouldRetrieveAll = (Boolean) customObject.get("@@retrieveAll");
+        if (shouldRetrieveAll) {
+            return right(criteria.getAllEntitiesWithSummary());
+        } else {
+            final Integer pageCapacity = criteria.getCentreDomainTreeMangerAndEnhancer().getSecondTick().getPageCapacity();
+            return left(criteria.run(pageCapacity));
+        }
+    }
+
+    private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Either<Pair<IPage<T>, T>, Pair<List<T>, T>> refresh(final Map<String, Object> customObject, final M criteria) {
+        final Boolean shouldRetrieveAll = (Boolean) customObject.get("@@retrieveAll");
+        if (shouldRetrieveAll) {
+            return right(criteria.getAllEntitiesWithSummary());
+        } else {
+            final Integer pageNumber = (Integer) customObject.get("@@pageNumber");
+            final Integer pageCapacity = criteria.getCentreDomainTreeMangerAndEnhancer().getSecondTick().getPageCapacity();
+            return left(criteria.getPageWithSummaries(pageNumber, pageCapacity));
+        }
+    }
+
     /**
      * Creates custom resultant object containing running configuration (e.g. pageCapacity, visibleRowsCount, visibleColumnsWithOrder etc.) to be sent to the client-side application.
-     * 
+     *
      * @param updatedPreviouslyRunCriteriaEntity -- criteria entity created from PREVIOUSLY_RUN surrogate centre, which was potentially updated from FRESH (in case of "running" action)
      * @return
      */
@@ -568,7 +605,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         validationPrototype.setFreshCentreSupplier(() -> updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder));
         validationPrototype.setSavedCentreSupplier(() -> updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder));
         validationPrototype.setPreviouslyRunCentreSupplier(() -> updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder));
-        
+
         // returns whether centre (defined by 'specificSaveAsName, freshCentreSupplier' arguments) is changed from previously saved (or the very original) configuration version or it is New (aka default, link or inherited)
         validationPrototype.setCentreDirtyCalculator(specificSaveAsName -> freshCentreSupplier ->
             isDefaultOrLink(specificSaveAsName) // this is very cheap operation
@@ -578,7 +615,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             )
             || isInherited(specificSaveAsName, validationPrototype)
         );
-        
+
         // returns whether centre is changed from previously saved (or the very original) configuration version or it is New (aka default, link or inherited)
         validationPrototype.setCentreDirtyGetter(() -> validationPrototype.centreDirtyCalculator().apply(saveAsName).apply(() -> updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)));
         // creates criteria validation prototype for concrete saveAsName
@@ -760,7 +797,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             };
             createAndOverrideUuid.apply(newDesc).accept(FRESH_CENTRE_NAME);
             createAndOverrideUuid.apply(null).accept(SAVED_CENTRE_NAME);
-            
+
             // when switching to new configuration we need to make it preferred
             makePreferred(user, miType, newSaveAsName, device, companionFinder, webUiConfig); // it is of 'own save-as' kind -- can be preferred; only 'link / inherited from shared' can not be preferred
             return validationPrototype.centreCustomObject(
@@ -1273,7 +1310,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * <p>
      * IMPORTANT: In this method saveAsName of inherited configuration may be changed to the one from upstream configuration.<br>
      *   In this case this new saveAsName must be taken from returning argument and used for further calculations and for returning to the client application.
-     * 
+     *
      * @param checkChanges -- optional function to check whether there are local changes; if they are -- not update FRESH from upstream; if no such check is needed i.e. empty function is passed (e.g. when discarding) -- force FRESH centre updating
      */
     public static Optional<EntityCentreConfig> updateInheritedFromShared(
@@ -1300,7 +1337,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * <p>
      * IMPORTANT: In this method saveAsName of inherited configuration may be changed to the one from upstream configuration.<br>
      *   In this case this new saveAsName must be taken from returning argument and used for further calculations and for returning to the client application.
-     * 
+     *
      * @param checkChanges -- optional function to check whether there are local changes; if they are -- not update FRESH from upstream; if no such check is needed i.e. empty function is passed (e.g. when discarding) -- force FRESH centre updating
      */
     public static EntityCentreConfig updateInheritedFromShared(final EntityCentreConfig upstreamConfig, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final Optional<String> saveAsName, final User user, final EntityCentreConfigCo eccCompanion, final Optional<Supplier<Boolean>> checkChanges) {
@@ -1330,7 +1367,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             overrideConfigBodyFor.apply(FRESH_CENTRE_NAME)
                 // upstreamConfig exists; its FRESH counterpart too -- no need to provide webUiConfig (first 'null') for getting default runAutomatically values;
                 // also no need to provide selectionCrit (second 'null') for checking whether upstreamConfig is inherited - it can never be inherited transitively
-                .apply(() -> of(updateCentreRunAutomatically(upstreamConfig.getOwner(), miType, of(upstreamTitle), device, eccCompanion, null, null))) 
+                .apply(() -> of(updateCentreRunAutomatically(upstreamConfig.getOwner(), miType, of(upstreamTitle), device, eccCompanion, null, null)))
                 .accept(() -> updateCentreDesc(upstreamConfig.getOwner(), miType, of(upstreamTitle), device, eccCompanion));
         } else {
             // update FRESH surrogate configuration; only if upstream title has been changed

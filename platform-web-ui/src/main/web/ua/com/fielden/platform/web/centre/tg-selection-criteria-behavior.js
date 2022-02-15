@@ -188,6 +188,14 @@ const TgSelectionCriteriaBehaviorImpl = {
         },
 
         /**
+         * Indictes whether all data should be retrived at once or only separate page of data. 
+         */
+        retrieveAll: {
+            type: Boolean,
+            value: false
+        },
+
+        /**
          * The current number of pages after the data has been retrieved from the server.
          * This updating occurs not only during Run, but also during Refresh and Page Navigate actions.
          */
@@ -813,7 +821,7 @@ const TgSelectionCriteriaBehaviorImpl = {
         } else {
             self._reflector().removeCustomProperty(contextHolder, "@@pageNumber");
         }
-
+        self._reflector().setCustomProperty(contextHolder, "@@retrieveAll", self.retrieveAll);
         return contextHolder;
     }
 
