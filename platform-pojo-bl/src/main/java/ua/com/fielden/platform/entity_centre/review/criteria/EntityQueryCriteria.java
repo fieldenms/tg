@@ -98,7 +98,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         this.serialiser = serialiser;
         this.controllerProvider = controllerProvider;
         this.dates = dates;
-        
+
         //This values should be initialized through reflection.
         this.dao = null;
         this.cdtme = null;
@@ -659,12 +659,22 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     /**
-     * Returns all entities those satisfies conditions of the specified {@link QueryExecutionModel}.
+     * Returns all entities those satisfies conditions of this entity query criteria.
      *
      * @return
      */
     public final List<T> getAllEntities() {
         return getAllEntities(generateQuery());
+    }
+
+    /**
+     * Returns all entities those satisfies conditions of this entity query criteria with summary.
+     *
+     * @return
+     */
+    public final Pair<List<T>, T> getAllEntitiesWithSummary() {
+        final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> queries = generateQueryWithSummaries();
+        return Pair.pair(getAllEntities(queries.getKey()), getSummary(queries.getValue()));
     }
 
     /**
@@ -746,7 +756,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
             return dao.firstPage(queryModel, pageSize);
         } else {
             generatedEntityController.setEntityType(getManagedType());
-            return generatedEntityController.firstPage(queryModel, totalsModel, pageSize, getByteArrayForManagedType());
+            return generatedEntityController. firstPage(queryModel, totalsModel, pageSize, getByteArrayForManagedType());
         }
     }
 
