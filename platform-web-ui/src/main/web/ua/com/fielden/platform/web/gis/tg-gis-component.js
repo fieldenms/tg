@@ -49,11 +49,11 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
         ...otherStyles
     );
 
-    tgMap.retrivedEntitiesHandler = function (newRetrievedEntities) {
-        const isRunAction = tgMap.dataChangeReason === RunActions.run;
-        self._markerCluster.setShouldFitToBounds(isRunAction); // only fitToBounds on Run action, not on Navigate / Refresh
-        self.initReload();
-        const _select = self._select; // tg-select component (can be not initialised yet)
+    /**
+     * Captures selected entity and whether that entity has popup open.
+     */
+    self.capturePrevEntityAndWasPopupOpen = (isRunAction) => {
+        const _select = this._select; // tg-select component (can be not initialised yet)
         const prevId = _select ? _select._prevId : null; // leaflet id of previously selected layer
         let prevEntity = null;
         let wasPopupOpen = false;
@@ -65,6 +65,38 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
                 prevEntity = _select.findEntityBy(prevLayer.feature); // get the entity (that will be removed from map soon) from which that layer was formed
             }
         }
+        return [prevEntity, wasPopupOpen];
+    };
+
+    /**
+     * Restores selection for previously selected entity and its popup in case where it was open.
+     */
+    self.restorePrevEntityAndWasPopupOpen = (prevEntity, wasPopupOpen) => {
+        if (_isEntity(prevEntity)) { // if there was previously selected layer (with or without popup) and corresponding entity was found
+            const foundEntity = this._entities.find(entity => this._reflector.equalsEx(entity, prevEntity)); // find new entity that is equal to previous entity (if present)
+            if (foundEntity) {
+                const _select = this._select;
+                const foundLayerId = _select.getLayerIdByEntity(foundEntity); // find leaflet layer id of the new corresponding layer (if present)
+                if (foundLayerId) {
+                    _select._silentlySelectById(foundLayerId); // perform selection of new leaflet layer to preserve selected state of the same entity on map after refreshing
+                    const foundLayer = _select._getLayerById(foundLayerId);
+                    if (foundLayer && wasPopupOpen) { // if popup was open previously
+                        if (!foundEntity.properties.popupContentInitialised) { // initialise popupContent on new entity
+                            foundLayer.bindPopup(this.createPopupContent(foundEntity)); // and bind updated popup
+                            foundEntity.properties.popupContentInitialised = true;
+                        }
+                        foundLayer.openPopup(); // and then open updated popup to preserve it on the same entity on map after refreshing
+                    }
+                }
+            }
+        }
+    };
+
+    tgMap.retrivedEntitiesHandler = function (newRetrievedEntities) {
+        const isRunAction = tgMap.dataChangeReason === RunActions.run;
+        self._markerCluster.setShouldFitToBounds(isRunAction); // only fitToBounds on Run action, not on Navigate / Refresh
+        self.initReload();
+        const [prevEntity, wasPopupOpen] = self.capturePrevEntityAndWasPopupOpen(isRunAction);
         const overlaysAndChecked = self.clearAll(); // returns map of previously checked states for overlays
 
         Object.values(self._overlays).filter(overlay => {
@@ -83,27 +115,29 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
             return isRunAction ? overlay._checkedByDefault : self._map.hasLayer(overlay); // add checkedByDefault overlays for Run action; add previously checked overlays for Refresh action and others
         }).forEach(overlay => self._markerCluster.getGisMarkerClusterGroup().addLayer(overlay));
 
+        self.restorePrevEntityAndWasPopupOpen(prevEntity, wasPopupOpen);
         self.finishReload();
-        if (_isEntity(prevEntity)) { // if there was previously selected layer (with or without popup) and corresponding entity was found
-            const foundEntity = self._entities.find(entity => self._reflector.equalsEx(entity, prevEntity)); // find new entity that is equal to previous entity (if present)
-            if (foundEntity) {
-                const foundLayerId = _select.getLayerIdByEntity(foundEntity); // find leaflet layer id of the new corresponding layer (if present)
-                if (foundLayerId) {
-                    _select._silentlySelectById(foundLayerId); // perform selection of new leaflet layer to preserve selected state of the same entity on map after refreshing
-                    const foundLayer = _select._getLayerById(foundLayerId);
-                    if (foundLayer && wasPopupOpen) { // if popup was open previously
-                        if (!foundEntity.properties.popupContentInitialised) { // initialise popupContent on new entity
-                            foundLayer.bindPopup(self.createPopupContent(foundEntity)); // and bind updated popup
-                            foundEntity.properties.popupContentInitialised = true;
-                        }
-                        foundLayer.openPopup(); // and then open updated popup to preserve it on the same entity on map after refreshing
-                    }
-                }
-            }
-        }
         self._markerCluster.setShouldFitToBounds(false); // reset shouldFitToBounds to avoid fitting to bounds on overlay's tick
     };
     self.tgMap = tgMap;
+
+    /**
+     * Handles changes to local _entities in a map component using array of new / updated ones.
+     * This method will have no effect on 'retrievedEntities' of parent insertion point / centres.
+     *
+     * New entities are added to the end of _entities list (and after summary feature, if such exists).
+     * The centre-based ordering is not respected here.
+     * Summary features for root (and deeper level) entities are not supported too.
+     *
+     * This method also handles marker selection and popups; and events that trigger loading indicator.
+     */
+    self.handleNewOrUpdatedEntities = newOrUpdatedEntities => {
+        this.initReload();
+        const [prevEntity, wasPopupOpen] = this.capturePrevEntityAndWasPopupOpen(false /* isRunAction */);
+        this.promoteNewOrUpdatedEntities(newOrUpdatedEntities);
+        this.restorePrevEntityAndWasPopupOpen(prevEntity, wasPopupOpen);
+        this.finishReload();
+    };
 
     tgMap.columnPropertiesMapperHandler = function (newColumnPropertiesMapper) {
         self.columnPropertiesMapper = newColumnPropertiesMapper;
@@ -349,27 +383,63 @@ GisComponent.prototype.clearAll = function () {
     return overlaysAndChecked;
 };
 
-GisComponent.prototype.promoteEntities = function (newEntities) {
-    const self = this;
-    this._entities = newEntities;
+/**
+ * Promotes changes to local _entities in a map component using array of new / updated ones.
+ * This method will have no effect on 'retrievedEntities' of parent insertion point / centres.
+ *
+ * New entities are added to the end of _entities list (and after summary feature, if such exists).
+ * The centre-based ordering is not respected here.
+ * Summary features for root (and deeper level) entities are not supported too.
+ */
+GisComponent.prototype.promoteNewOrUpdatedEntities = function (newOrUpdatedEntities) {
+    this.traverseEntities(newOrUpdatedEntities, null /* the parent for top-level entities is null */, (entity, parentFeature) => {
+        const indexToUpdate = this._entities.findIndex(prevEntity => this._reflector.equalsEx(entity, prevEntity));
+        if (indexToUpdate >= 0) {
+            const prevLayerId = this._entities[indexToUpdate].properties.layerId;
+            // found prev entity could probably have no corresponding leaflet layer -- need to check this
+            if (typeof prevLayerId === 'number') {
+                const prevLayer = this._select._getLayerById(prevLayerId);
+                if (prevLayer) {
+                    this._map.removeLayer(prevLayer);
+                }
+            }
+            this._entities[indexToUpdate] = entity;
+        } else {
+            this._entities.push(entity);
+        }
+        this.promoteEntity(entity, parentFeature);
+    }, entities => null); // summary features are not supported
+};
 
-    this.traverseEntities(this._entities, null /* the parent for top-level entities is null */, function (entity, parentFeature) {
-        entity.type = 'Feature';
-        if (entity.properties) {
-            console.warn('Entity already has "properties" object.');
-        }
-        entity.properties = entity.properties || {};
-        entity.properties._parentFeature = parentFeature;
-        if (entity.geometry) {
-            throw 'Entity already has "geometry" object. Cannot continue with conversion into feature.';
-        }
-        entity.geometry = self.createGeometry(entity);
-        if (entity.geometry) {
-            self._overlays[self.overlayNameFor(entity)].addData(entity);
-        } // do nothing in case when the entity has no visual representation
-    }, function (entities) {
-        return self.createSummaryFeature(entities);
-    });
+/**
+ * Promotes changes to local _entities in a map component using new entities to be replacing old ones.
+ * This method will have no effect on 'retrievedEntities' of parent insertion point / centres.
+ *
+ * Summary features for root (and deeper level) entities are supported.
+ * The order of newEntities is respected too.
+ */
+GisComponent.prototype.promoteEntities = function (newEntities) {
+    this._entities = newEntities;
+    this.traverseEntities(this._entities, null /* the parent for top-level entities is null */, this.promoteEntity.bind(this), this.createSummaryFeature.bind(this));
+};
+
+/**
+ * Converts entity into GEOJson feature parentFeature relationships. Promotes converted feature into corresponding overlay.
+ */
+GisComponent.prototype.promoteEntity = function (entity, parentFeature) {
+    entity.type = 'Feature';
+    if (entity.properties) {
+        console.warn('Entity already has "properties" object.');
+    }
+    entity.properties = entity.properties || {};
+    entity.properties._parentFeature = parentFeature;
+    if (entity.geometry) {
+        throw 'Entity already has "geometry" object. Cannot continue with conversion into feature.';
+    }
+    entity.geometry = this.createGeometry(entity);
+    if (entity.geometry) {
+        this._overlays[this.overlayNameFor(entity)].addData(entity);
+    } // do nothing in case when the entity has no visual representation
 };
 
 /** 
