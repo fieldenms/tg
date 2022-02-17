@@ -26,6 +26,7 @@ import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isInherited;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.FETCH_CONFIG_AND_INSTRUMENT;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOpt;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOptByUuid;
+import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.createQueryEnhancerAndContext;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.enhanceResultEntitiesWithCustomPropertyValues;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.enhanceResultEntitiesWithDynamicPropertyValues;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.restoreMasterFunctionalEntity;
@@ -55,6 +56,7 @@ import org.apache.log4j.Logger;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.data.generator.IGenerator;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
@@ -66,7 +68,6 @@ import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.MetaPropertyFull;
@@ -97,6 +98,10 @@ import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
+import ua.com.fielden.platform.web.centre.api.crit.layout.ILayoutConfigWithResultsetSupport;
+import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
+import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
+import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
@@ -276,34 +281,12 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      *
      * @param customObject
      * @param updatedPreviouslyRunCriteriaEntity -- criteria entity created from PREVIOUSLY_RUN surrogate centre, which was potentially updated from FRESH (in case of "running" action), but not yet actually used for running
-     * @param additionalFetchProvider
-     * @param additionalFetchProviderForTooltipProperties
-     * @param createdByUserConstraint -- if exists then constraints the query by equality to the property 'createdBy'
      * @return
      */
     static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Pair<Map<String, Object>, List<?>> createCriteriaMetaValuesCustomObjectWithResult(
             final Map<String, Object> customObject,
-            final M updatedPreviouslyRunCriteriaEntity,
-            final Optional<IFetchProvider<T>> additionalFetchProvider,
-            final Optional<IFetchProvider<T>> additionalFetchProviderForTooltipProperties,
-            final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> queryEnhancerAndContext,
-            final Optional<User> createdByUserConstraint) {
+            final M updatedPreviouslyRunCriteriaEntity) {
         final Map<String, Object> resultantCustomObject = new LinkedHashMap<>();
-
-        updatedPreviouslyRunCriteriaEntity.getGeneratedEntityController().setEntityType(updatedPreviouslyRunCriteriaEntity.getEntityClass());
-        if (additionalFetchProvider.isPresent()) {
-            updatedPreviouslyRunCriteriaEntity.setAdditionalFetchProvider(additionalFetchProvider.get());
-        }
-        if (additionalFetchProviderForTooltipProperties.isPresent()) {
-            updatedPreviouslyRunCriteriaEntity.setAdditionalFetchProviderForTooltipProperties(additionalFetchProviderForTooltipProperties.get());
-        }
-        if (queryEnhancerAndContext.isPresent()) {
-            final IQueryEnhancer<T> queryEnhancer = queryEnhancerAndContext.get().getKey();
-            updatedPreviouslyRunCriteriaEntity.setAdditionalQueryEnhancerAndContext(queryEnhancer, queryEnhancerAndContext.get().getValue());
-        }
-        if (createdByUserConstraint.isPresent()) {
-            updatedPreviouslyRunCriteriaEntity.setCreatedByUserConstraint(createdByUserConstraint.get());
-        }
         IPage<T> page = null;
         final List<T> data;
         // At this stage all the necessary validations have succeeded and actual running is about to be performed.
@@ -376,36 +359,14 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      *
      * @param adhocParams
      * @param criteriaEntity
-     * @param additionalFetchProvider
-     * @param additionalFetchProviderForTooltipProperties
-     * @param queryEnhancerAndContext
-     * @param createdByUserConstraint
+     * @param dynamicProperties
      * @return
      */
     static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Stream<T> createCriteriaMetaValuesCustomObjectWithStream(
             final Map<String, Object> adhocParams,
             final M criteriaEntity,
-            final Optional<IFetchProvider<T>> additionalFetchProvider,
-            final Optional<IFetchProvider<T>> additionalFetchProviderForTooltipProperties,
-            final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> queryEnhancerAndContext,
-            final List<List<DynamicColumnForExport>> dynamicProperties,
-            final Optional<User> createdByUserConstraint) {
-        criteriaEntity.getGeneratedEntityController().setEntityType(criteriaEntity.getEntityClass());
-        if (additionalFetchProvider.isPresent()) {
-            criteriaEntity.setAdditionalFetchProvider(additionalFetchProvider.get());
-        }
-        if (additionalFetchProviderForTooltipProperties.isPresent()) {
-            criteriaEntity.setAdditionalFetchProviderForTooltipProperties(additionalFetchProviderForTooltipProperties.get());
-        }
-        if (queryEnhancerAndContext.isPresent()) {
-            final IQueryEnhancer<T> queryEnhancer = queryEnhancerAndContext.get().getKey();
-            criteriaEntity.setAdditionalQueryEnhancerAndContext(queryEnhancer, queryEnhancerAndContext.get().getValue());
-        }
-        if (createdByUserConstraint.isPresent()) {
-            criteriaEntity.setCreatedByUserConstraint(createdByUserConstraint.get());
-        }
+            final List<List<DynamicColumnForExport>> dynamicProperties) {
         criteriaEntity.setDynamicProperties(dynamicProperties);
-
         final int fetchSize = min(ofNullable((Integer) adhocParams.get("fetchSize")).orElse(100), 100);
         final Long[] ids = adhocParams.get("ids") != null ? (Long[]) adhocParams.get("ids") : new Long[]{};
         return criteriaEntity.streamEntities(fetchSize, ids);
@@ -1048,11 +1009,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         adhocParams.putAll(centreContextHolder.getCustomObject());
         // at this stage (during exporting of centre data) appliedCriteriaEntity is valid, because it represents 'previouslyRun' centre criteria which is getting updated only if Run was initiated and selection criteria validation succeeded
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>) criteriaEntity;
-        // if the export() invocation occurs on the centre that warrants data generation
-        // then for an entity centre configuration check if a generator was provided
-        final boolean createdByConstraintShouldOccur = centre.getGeneratorTypes().isPresent();
 
-      //Build dynamic properties object
+        // Build dynamic properties object
         final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext = CriteriaResource.getDynamicResultProperties(
                 centre,
                 webUiConfig,
@@ -1069,35 +1027,24 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 userCompanion,
                 sharingModel);
 
-        final Stream<AbstractEntity<?>> stream =
-                CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithStream(
-                        adhocParams,
-                        appliedCriteriaEntity,
-                        centre.getAdditionalFetchProvider(),
-                        centre.getAdditionalFetchProviderForTooltipProperties(),
-                        CriteriaResource.createQueryEnhancerAndContext(
-                                webUiConfig,
-                                companionFinder,
-                                user,
-                                critGenerator,
-                                entityFactory,
-                                centreContextHolder,
-                                centre.getQueryEnhancerConfig(),
-                                appliedCriteriaEntity,
-                                device,
-                                domainTreeEnhancerCache,
-                                eccCompanion,
-                                mmiCompanion,
-                                userCompanion,
-                                sharingModel),
-                        createDynamicPropertiesForExport(centre, resPropsWithContext),
-                        // There could be cases where the generated data and the queried data would have different types.
-                        // For example, the queried data could be modelled by a synthesized entity that includes a subquery based on some generated data.
-                        // In such cases, it is unpossible to enhance the final query with a user related condition automatically.
-                        // This should be the responsibility of the application developer to properly construct a subquery that is based on the generated data.
-                        // The query will be enhanced with condition createdBy=currentUser if createdByConstraintShouldOccur and generatorEntityType equal to the type of queried data (otherwise end-developer should do that itself by using queryEnhancer or synthesized model).
-                        createdByConstraintShouldOccur && centre.getGeneratorTypes().get().getKey().equals(getEntityType(miType)) ? of(user) : empty());
-
+        final Stream<AbstractEntity<?>> stream = createCriteriaMetaValuesCustomObjectWithStream(
+            adhocParams,
+            complementCriteriaEntityBeforeRunning( // complements appliedCriteriaEntity instance
+                appliedCriteriaEntity,
+                webUiConfig,
+                companionFinder,
+                user,
+                critGenerator,
+                entityFactory,
+                centreContextHolder,
+                domainTreeEnhancerCache,
+                eccCompanion,
+                mmiCompanion,
+                userCompanion,
+                sharingModel
+            ),
+            createDynamicPropertiesForExport(centre, resPropsWithContext)
+        );
         final Stream<AbstractEntity<?>> entities = enhanceResultEntitiesWithCustomPropertyValues(
                 centre,
                 centre.getCustomPropertiesDefinitions(),
@@ -1107,6 +1054,67 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         return enhanceResultEntitiesWithDynamicPropertyValues(entities, resPropsWithContext);
     }
 
+    /**
+     * Complements {@code criteriaEntity} with some items those are necessary for fully fledged running / exporting.
+     * <p>
+     * The main and most important item is {@link IQueryEnhancer} with its {@link CentreContext}. This item impacts the number of returned instances.
+     * The context restoration will only occur iff there is {@link IQueryEnhancer} assigned to Centre DSL configuration with some context defined (see {@link IQueryEnhancerSetter#setQueryEnhancer(Class, CentreContextConfig)}).
+     * <p>
+     * There is also a similar item impacting returned instances count - {@code createdByUserConstraint}.
+     * This is only applicable iff there is {@link IGenerator} configuration assigned to Centre DSL configuration (see {@link ILayoutConfigWithResultsetSupport#withGenerator(Class, Class)}).
+     * <p>
+     * It is also important to use full fetch model to get proper entities' graph on running / exporting. This should include not only all Centre DSL columns,
+     * but also fetch parts from {@link IExtraFetchProviderSetter#setFetchProvider(ua.com.fielden.platform.entity.fetch.IFetchProvider)} and {@link IWithTooltip#withTooltip(String)} APIs.
+     */
+    public static EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> complementCriteriaEntityBeforeRunning(
+        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> criteriaEntity,
+        final IWebUiConfig webUiConfig,
+        final ICompanionObjectFinder companionFinder,
+        final User user,
+        final ICriteriaGenerator critGenerator,
+        final EntityFactory entityFactory,
+        final CentreContextHolder centreContextHolder,
+        final IDomainTreeEnhancerCache domainTreeEnhancerCache,
+        final EntityCentreConfigCo eccCompanion,
+        final MainMenuItemCo mmiCompanion,
+        final IUser userCompanion,
+        final ICentreConfigSharingModel sharingModel
+    ) {
+        final EntityCentre<AbstractEntity<?>> centre = (EntityCentre<AbstractEntity<?>>) webUiConfig.getCentres().get(criteriaEntity.miType()); // get Centre DSL configuration for 'criteriaEntity'
+        criteriaEntity.getGeneratedEntityController().setEntityType(criteriaEntity.getEntityClass()); // provide entity type to be able to run generated centres (with calculated properties, like totals)
+        
+        centre.getAdditionalFetchProvider().ifPresent(fp -> criteriaEntity.setAdditionalFetchProvider(fp)); // additional fetch provider should be set if present in Centre DSL
+        centre.getAdditionalFetchProviderForTooltipProperties().ifPresent(fp -> criteriaEntity.setAdditionalFetchProviderForTooltipProperties(fp)); // tooltip props fetch provider should be set if there are such properties in Centre DSL
+        
+        createQueryEnhancerAndContext(
+            webUiConfig,
+            companionFinder,
+            user,
+            critGenerator,
+            entityFactory,
+            centreContextHolder,
+            centre.getQueryEnhancerConfig(),
+            criteriaEntity,
+            criteriaEntity.device(),
+            domainTreeEnhancerCache,
+            eccCompanion,
+            mmiCompanion,
+            userCompanion,
+            sharingModel
+        ).ifPresent(qeac -> criteriaEntity.setAdditionalQueryEnhancerAndContext(qeac.getKey(), qeac.getValue())); // query enhancer and its optional context should be set if present in Centre DSL
+        
+        // If exporting / running occurs on the centre that warrants data generation, then check if a generator was provided for an entity centre configuration.
+        
+        // There could be cases where the generated data and the queried data would have different types.
+        // For example, the queried data could be modelled by a synthesized entity that includes a subquery based on some generated data.
+        // In such cases, it is not possible to enhance the final query with a user related condition automatically.
+        // This should be the responsibility of the application developer to properly construct a subquery that is based on the generated data.
+        // The query will be enhanced with condition createdBy=currentUser if GeneratorTypes().isPresent() and generatorEntityType equal to the type of queried data (otherwise end-developer should do that manually using queryEnhancer or synthesized model).
+        if (centre.getGeneratorTypes().isPresent() && centre.getGeneratorTypes().get().getKey().equals(getEntityType(criteriaEntity.miType()))) {
+            criteriaEntity.setCreatedByUserConstraint(user);
+        }
+        return criteriaEntity;
+    }
 
     private static List<List<DynamicColumnForExport>> createDynamicPropertiesForExport(final EntityCentre<AbstractEntity<?>> centre, final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext) {
         final List<List<DynamicColumnForExport>> dynamicColumns = new ArrayList<>();
