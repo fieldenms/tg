@@ -11,6 +11,10 @@ export const Select = function (_map, _getLayerById, _markerFactory, tgMap, find
 
     self._featureToLeafletIds = {};
     self._prevId = null;
+    /**
+     * Indicates whether previously selected EGI entity should be deselected in case where some different map marker gets selected.
+     */
+    self.deselectPrevEgiEntityOnLayerSelection = false;
     self._tgMap = tgMap;
     self.getLayerIdByEntity = entity => 
         entity.properties && entity.properties.layerId 
@@ -48,6 +52,15 @@ Select.prototype.select = function (layerId) {
         
         if (prevId !== null) {
             this._silentlyDeselect(prevId);
+            if (this.deselectPrevEgiEntityOnLayerSelection) {
+                const prevEntity = this.findEntityBy(this._getLayerById(prevId).feature);
+                if (_isEntity(prevEntity)) {
+                    details.push({
+                        entity: prevEntity,
+                        select: false
+                    });
+                }
+            }
         }
         if (details.length > 0) {
             const event = new CustomEvent('tg-entity-selected', {
