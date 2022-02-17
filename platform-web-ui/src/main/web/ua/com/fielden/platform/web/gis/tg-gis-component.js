@@ -57,12 +57,14 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
         const prevId = _select ? _select._prevId : null; // leaflet id of previously selected layer
         let prevEntity = null;
         let wasPopupOpen = false;
-        if (!isRunAction && prevId !== null) { // if there was some selected layer; (note for navigation: potentially selected entity can be moved to e.g. the next page when going forward and it would be nice to preserve selection and popup for this entity too)
+        if (prevId !== null) { // if there was some selected layer;
             _select._prevId = null; // clear that selected layer information
-            const prevLayer = _select._getLayerById(prevId); // capture selected layer (that will be removed from map soon)
-            if (prevLayer) {
-                wasPopupOpen = prevLayer.isPopupOpen(); // capture indicator whether the popup was opened on it
-                prevEntity = _select.findEntityBy(prevLayer.feature); // get the entity (that will be removed from map soon) from which that layer was formed
+            if (!isRunAction) { // note for navigation: potentially selected entity can be moved to e.g. the next page when going forward and it would be nice to preserve selection and popup for this entity too
+                const prevLayer = _select._getLayerById(prevId); // capture selected layer (that will be removed from map soon)
+                if (prevLayer) {
+                    wasPopupOpen = prevLayer.isPopupOpen(); // capture indicator whether the popup was opened on it
+                    prevEntity = _select.findEntityBy(prevLayer.feature); // get the entity (that will be removed from map soon) from which that layer was formed
+                }
             }
         }
         return [prevEntity, wasPopupOpen];
