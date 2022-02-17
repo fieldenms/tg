@@ -153,6 +153,36 @@ const TgEntityCentreBehaviorImpl = {
             type: String
         },
         /**
+         * Indictes whether all data should be retrived at once or only separate page of data. 
+         */
+        retrieveAll: {
+            type: Boolean,
+            value: false
+        },
+        /**
+         * The entities retrieved when running this centre. It might be either all entities which should pagintaed locally or only one page. It depends on retrieveAll property 
+         */
+        allRetrievedEntities: {
+            type: Array,
+            observer: '_allRetrievedEntitiesChanged'
+        },
+
+        /**
+         * Rendering hints for all retrieved entities
+         */
+        allRenderingHints: Array,
+
+        /**
+         * Indices for primary actions associated with all retrieved entities
+         */
+        allPrimaryActionIndices: Array,
+
+        /**
+         * Indices for secondary actions associated with all retrieved entities
+         */
+        allSecondaryActionIndices: Array,
+
+        /**
          * The entities retrieved when running this centre
          */
         retrievedEntities: {
@@ -554,6 +584,33 @@ const TgEntityCentreBehaviorImpl = {
         return _buttonDisabled || _wasRun !== "yes";
     },
 
+    _allRetrievedEntitiesChanged: function (allRetrievedEntities, oldValue) {
+        if (!this.retrieveAll) {
+            this._setPageData();
+        } else {
+            if (this.$.selection_criteria.pageNumber) {
+                const startIdx = this.$.selection_criteria.pageNumber * this.pageCapacity;
+                this._setPageData(startIdx, startIdx + this.pageCapacity);
+            } else {
+                this._setPageData(0, this.pageCapacity);
+            }
+        }
+    },
+
+    _setPageData: function (startIdx, endIdx) {
+        if (typeof startIdx === 'undefined') {
+            this.retrievedEntities = this.allRetrievedEntities;
+            this.$.egi.renderingHints = this.allRenderingHints;
+            this.$.egi.primaryActionIndices = this.allPrimaryActionIndices;
+            this.$.egi.secondaryActionIndices = this.allSecondaryActionIndices;
+        } else {
+            this.retrievedEntities = this.allRetrievedEntities.slice(startIdx, endIdx);
+            this.$.egi.renderingHints = this.allRenderingHints.slice(startIdx, endIdx);
+            this.$.egi.primaryActionIndices = this.allPrimaryActionIndices.slice(startIdx, endIdx);
+            this.$.egi.secondaryActionIndices = this.allSecondaryActionIndices.slice(startIdx, endIdx);
+        }
+    },
+
     _retrievedEntitiesChanged: function (retrievedEntities, oldValue) {
         this.$.egi.entities = retrievedEntities;
     },
@@ -611,7 +668,10 @@ const TgEntityCentreBehaviorImpl = {
                 if (typeof result.summary !== 'undefined') {
                     this.retrievedTotals = result.summary;
                 }
-                this.retrievedEntities = result.resultEntities;
+                this.allRenderingHints = result.renderingHints;
+                this.allPrimaryActionIndices = result.primaryActionIndices;
+                this.allSecondaryActionIndices = result.secondaryActionIndices;
+                this.allRetrievedEntities = result.resultEntities;
                 this.dynamicColumns = result.dynamicColumns;
                 this.selectionCriteriaEntity = result.criteriaEntity;
                 this.$.egi.renderingHints = result.renderingHints;
