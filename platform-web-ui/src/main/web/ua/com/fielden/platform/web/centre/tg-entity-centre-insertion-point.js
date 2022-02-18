@@ -213,6 +213,15 @@ Polymer({
             observer: '_updateElementWithRetrievedEntities',
             notify: true
         },
+
+        /**
+         * The entities retrieved when running centre that has this insertion point. It might be either all entities which should be paginated locally or only one page. It depends on retrieveAll property of entity centre 
+         */
+         allRetrievedEntities: {
+            type: Array,
+            observer: '_updateElementWithAllRetrievedEntities',
+            notify: true
+        },
         /**
          * Summary entity retrieved when running centre that has this insertion point.
          */
@@ -337,6 +346,12 @@ Polymer({
         }
     },
 
+    _updateElementWithAllRetrievedEntities: function (newValue, oldValue) {
+        if (this._element) {
+            this._element.allRetrievedEntities = newValue;
+        }
+    },
+
     _updateElementWithRetrievedEntities: function (newValue, oldValue) {
         if (this._element) {
             this._element.retrievedEntities = newValue;
@@ -406,6 +421,10 @@ Polymer({
                         self.retrievedEntities = this.retrievedEntities;
                     });
                     self._element.retrievedEntities = self.retrievedEntities;
+                    self._element.addEventListener('all-retrieved-entities-changed', function (ev) {
+                        self.allRetrievedEntities = this.allRetrievedEntities;
+                    });
+                    self._element.allRetrievedEntities = self.allRetrievedEntities;
                     self._element.addEventListener('retrieved-totals-changed', function (ev) {
                         self.retrievedTotals = this.retrievedTotals;
                     });

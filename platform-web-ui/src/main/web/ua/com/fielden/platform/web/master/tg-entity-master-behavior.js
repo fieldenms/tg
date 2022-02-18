@@ -294,9 +294,16 @@ const TgEntityMasterBehaviorImpl = {
         },
 
         /**
-         * The entities retrieved when running centre that has this insertion point
+         * The entities retrieved when running centre that has this entity master
          */
         retrievedEntities: {
+            type: Array,
+            notify: true
+        },
+        /**
+         * The entities retrieved when running centre. It might be either all entities which should be paginated locally or only one page. It depends on retrieveAll property of entity centre 
+         */
+         allRetrievedEntities: {
             type: Array,
             notify: true
         },

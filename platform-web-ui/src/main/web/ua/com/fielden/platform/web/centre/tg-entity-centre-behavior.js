@@ -160,7 +160,7 @@ const TgEntityCentreBehaviorImpl = {
             value: false
         },
         /**
-         * The entities retrieved when running this centre. It might be either all entities which should pagintaed locally or only one page. It depends on retrieveAll property 
+         * The entities retrieved when running this centre. It might be either all entities which should be paginated locally or only one page. It depends on retrieveAll property 
          */
         allRetrievedEntities: {
             type: Array,
@@ -589,10 +589,10 @@ const TgEntityCentreBehaviorImpl = {
             this._setPageData();
         } else {
             if (this.$.selection_criteria.pageNumber) {
-                const startIdx = this.$.selection_criteria.pageNumber * this.pageCapacity;
-                this._setPageData(startIdx, startIdx + this.pageCapacity);
+                const startIdx = this.$.selection_criteria.pageNumber * this.$.selection_criteria.pageCapacity;
+                this._setPageData(startIdx, startIdx + this.$.selection_criteria.pageCapacity);
             } else {
-                this._setPageData(0, this.pageCapacity);
+                this._setPageData(0, this.$.selection_criteria.pageCapacity);
             }
         }
     },
@@ -609,6 +609,11 @@ const TgEntityCentreBehaviorImpl = {
             this.$.egi.primaryActionIndices = this.allPrimaryActionIndices.slice(startIdx, endIdx);
             this.$.egi.secondaryActionIndices = this.allSecondaryActionIndices.slice(startIdx, endIdx);
         }
+    },
+
+    _setPageNumber: function (number) {
+        this.$.selection_criteria.pageNumber = number;
+        this.$.selection_criteria.pageNumberUpdated = number;
     },
 
     _retrievedEntitiesChanged: function (retrievedEntities, oldValue) {
@@ -668,18 +673,15 @@ const TgEntityCentreBehaviorImpl = {
                 if (typeof result.summary !== 'undefined') {
                     this.retrievedTotals = result.summary;
                 }
+                const pageCapacity = result.resultConfig.pageCapacity;
+                this.$.selection_criteria.pageCapacity = pageCapacity;
                 this.allRenderingHints = result.renderingHints;
                 this.allPrimaryActionIndices = result.primaryActionIndices;
                 this.allSecondaryActionIndices = result.secondaryActionIndices;
                 this.allRetrievedEntities = result.resultEntities;
                 this.dynamicColumns = result.dynamicColumns;
                 this.selectionCriteriaEntity = result.criteriaEntity;
-                this.$.egi.renderingHints = result.renderingHints;
-                this.$.egi.primaryActionIndices = result.primaryActionIndices;
-                this.$.egi.secondaryActionIndices = result.secondaryActionIndices;
                 this.$.egi.adjustColumnWidths(result.columnWidths);
-                const pageCapacity = result.resultConfig.pageCapacity;
-                this.$.selection_criteria.pageCapacity = pageCapacity;
                 this.$.egi.visibleRowsCount = result.resultConfig.visibleRowsCount;
                 this.$.egi.numberOfHeaderLines = result.resultConfig.numberOfHeaderLines;
                 this.$.egi.adjustColumnsVisibility(result.resultConfig.visibleColumnsWithOrder.map(column => column === "this" ? "" : column));
@@ -1165,10 +1167,16 @@ const TgEntityCentreBehaviorImpl = {
     firstPage: function () {
         const self = this;
         if (!this.$.egi.isEditing()) {
-            self.persistActiveElement();
-            return this.$.selection_criteria.firstPage().then(function () {
-                self.restoreActiveElement();
-            });
+            if (self.retrieveAll) {
+                this._setPageData(0, self.$.selection_criteria.pageCapacity);
+                this._setPageNumber(0);
+                return Promise.resolve(0);
+            } else {
+                self.persistActiveElement();
+                return this.$.selection_criteria.firstPage().then(function () {
+                    self.restoreActiveElement();
+                });
+            }
         }
         return this._saveOrCancelPromise();
     },
@@ -1178,13 +1186,20 @@ const TgEntityCentreBehaviorImpl = {
      */
     lastPage: function () {
         const self = this;
-        if (!this.$.egi.isEditing()) {
-            self.persistActiveElement();
-            return this.$.selection_criteria.lastPage().then(function () {
-                self.restoreActiveElement();
-            });
+        if (!self.$.egi.isEditing()) {
+                if (self.retrieveAll) {
+                    const startIdx = (self.$.selection_criteria.pageCount - 1) * self.$.selection_criteria.pageCapacity;
+                    self._setPageData(startIdx, startIdx + self.$.selection_criteria.pageCapacity);
+                    this._setPageNumber(self.$.selection_criteria.pageCount - 1);
+                    return Promise.resolve(0);
+                } else {
+                    self.persistActiveElement();
+                    return self.$.selection_criteria.lastPage().then(function () {
+                        self.restoreActiveElement();
+                    });
+                }
         }
-        return this._saveOrCancelPromise();
+        return self._saveOrCancelPromise();
     },
 
     /**
@@ -1193,10 +1208,17 @@ const TgEntityCentreBehaviorImpl = {
     nextPage: function () {
         const self = this;
         if (!this.$.egi.isEditing()) {
-            self.persistActiveElement();
-            return this.$.selection_criteria.nextPage().then(function () {
-                self.restoreActiveElement();
-            });
+            if (self.retrieveAll) {
+                const startIdx = (self.$.selection_criteria.pageNumber + 1) * self.$.selection_criteria.pageCapacity;
+                self._setPageData(startIdx, startIdx + self.$.selection_criteria.pageCapacity);
+                this._setPageNumber(self.$.selection_criteria.pageNumber + 1);
+                return Promise.resolve(0);
+            } else {
+                self.persistActiveElement();
+                return this.$.selection_criteria.nextPage().then(function () {
+                    self.restoreActiveElement();
+                });
+            }
         }
         return this._saveOrCancelPromise();
     },
@@ -1207,10 +1229,17 @@ const TgEntityCentreBehaviorImpl = {
     prevPage: function () {
         const self = this;
         if (!this.$.egi.isEditing()) {
-            self.persistActiveElement();
-            return this.$.selection_criteria.prevPage().then(function () {
-                self.restoreActiveElement();
-            });
+            if (self.retrieveAll) {
+                const startIdx = (self.$.selection_criteria.pageNumber - 1) * self.$.selection_criteria.pageCapacity;
+                self._setPageData(startIdx, startIdx + self.$.selection_criteria.pageCapacity);
+                this._setPageNumber(self.$.selection_criteria.pageNumber - 1);
+                return Promise.resolve(0);
+            } else {
+                self.persistActiveElement();
+                return this.$.selection_criteria.prevPage().then(function () {
+                    self.restoreActiveElement();
+                });
+            }
         }
         return this._saveOrCancelPromise();
     },

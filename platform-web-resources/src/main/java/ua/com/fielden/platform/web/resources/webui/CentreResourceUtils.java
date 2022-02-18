@@ -366,8 +366,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         resultantCustomObject.put("resultEntities", data);
         resultantCustomObject.put("columnWidths", createColumnWidths(updatedPreviouslyRunCriteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick(), updatedPreviouslyRunCriteriaEntity.getEntityClass()));
         resultantCustomObject.put("resultConfig", createResultConfigObject(updatedPreviouslyRunCriteriaEntity));
-        resultantCustomObject.put("pageNumber", page == null ? getPageNo(updatedPreviouslyRunCriteriaEntity, pageNumber, data, customObject): page.no());
-        resultantCustomObject.put("pageCount", page == null ? getPageCount(updatedPreviouslyRunCriteriaEntity, data, customObject): page.numberOfPages());
+        resultantCustomObject.put("pageNumber", page == null ? getPageNo(updatedPreviouslyRunCriteriaEntity, pageNumber, data, customObject) : page.no());
+        resultantCustomObject.put("pageCount", page == null ? getPageCount(updatedPreviouslyRunCriteriaEntity, data, customObject) : page.numberOfPages());
         return new Pair<>(resultantCustomObject, data);
     }
 
@@ -376,7 +376,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         return Double.valueOf(Math.ceil(Double.valueOf(data.size()) / pageCapacity)).intValue();
     }
 
-    private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> int getPageNo(final M criteria, final int previousPageNumber, final List<T> data, final Map<String, Object> customObject) {
+    private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> int getPageNo(final M criteria, final Integer previousPageNumber, final List<T> data, final Map<String, Object> customObject) {
         final int pageCapacity = criteria.getCentreDomainTreeMangerAndEnhancer().getSecondTick().getPageCapacity();
         if (isRunning(customObject)) {
             return 0;
