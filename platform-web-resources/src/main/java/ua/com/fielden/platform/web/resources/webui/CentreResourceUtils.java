@@ -373,15 +373,15 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
     private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> int getPageCount(final M criteria, final List<T> data, final Map<String, Object> customObject) {
         final int pageCapacity = criteria.getCentreDomainTreeMangerAndEnhancer().getSecondTick().getPageCapacity();
-        return Double.valueOf(Math.ceil(Double.valueOf(data.size()) / pageCapacity)).intValue();
+        final int pageCount = Double.valueOf(Math.ceil(Double.valueOf(data.size()) / pageCapacity)).intValue();
+        return pageCount == 0 ? 1 : pageCount;
     }
 
     private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> int getPageNo(final M criteria, final Integer previousPageNumber, final List<T> data, final Map<String, Object> customObject) {
-        final int pageCapacity = criteria.getCentreDomainTreeMangerAndEnhancer().getSecondTick().getPageCapacity();
         if (isRunning(customObject)) {
             return 0;
         } else if (isRefreshing(customObject)){
-            final int pageCount = Double.valueOf(Math.ceil(Double.valueOf(data.size()) / pageCapacity)).intValue();
+            final int pageCount = getPageCount(criteria, data, customObject);
             if (pageCount <= previousPageNumber) {
                 return pageCount - 1;
             } else {
