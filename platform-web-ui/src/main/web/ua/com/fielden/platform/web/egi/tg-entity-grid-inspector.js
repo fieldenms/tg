@@ -1047,6 +1047,7 @@ Polymer({
         const entityIndex = this._findEntity(entity, this.filteredEntities);
         if (entityIndex >= 0) {
             const egiEntity = this.egiModel[entityIndex];
+            egiEntity.entity.set(propPath, entity.get(propPath));
             egiEntity._propertyChangedHandlers && egiEntity._propertyChangedHandlers[propPath] && egiEntity._propertyChangedHandlers[propPath]();
         }
     },
