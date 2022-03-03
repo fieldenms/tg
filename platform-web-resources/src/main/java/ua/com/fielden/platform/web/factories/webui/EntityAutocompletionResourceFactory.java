@@ -109,11 +109,12 @@ public class EntityAutocompletionResourceFactory extends Restlet {
                         response //
                 ).handle();
             } else {
-                final Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) type;
+                final EntityMaster<? extends AbstractEntity<?>> master = ResourceFactoryUtils.getEntityMaster((Class<? extends AbstractEntity<?>>) type, webUiConfig); 
+
+                // entity type needs to be taken from the master as it can be a superclass of type if type had no master
+                final Class<? extends AbstractEntity<?>> entityType = master.getEntityType();
                 final IEntityProducer<? extends AbstractEntity<?>> entityProducer;
                 final IValueMatcherWithContext<?, ?> valueMatcher;
-
-                final EntityMaster<? extends AbstractEntity<?>> master = this.webUiConfig.getMasters().get(entityType);
                 if (master != null) {
                     valueMatcher = master.createValueMatcher(propertyName);
                     entityProducer = master.createEntityProducer();
