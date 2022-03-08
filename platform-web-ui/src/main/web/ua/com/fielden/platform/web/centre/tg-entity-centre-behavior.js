@@ -745,7 +745,7 @@ const TgEntityCentreBehaviorImpl = {
         /**
          * A function to run the entity centre.
          */
-        self.run = (function (isAutoRunning, isSortingAction, forceRegeneration) {
+        self.run = (function (isAutoRunning, isSortingAction, forceRegeneration, excludeInsertionPoints) {
             if (this._criteriaLoaded === false) {
                 throw new Error(`Cannot run ${this.is} centre (not initialised criteria).`);
             }
@@ -780,7 +780,7 @@ const TgEntityCentreBehaviorImpl = {
                     const sc = self.$.selection_criteria;
                     const deserialisedResult = sc._serialiser().deserialise(detail.response);
                     if (!self._reflector.isError(deserialisedResult) && (!self._reflector.isEntity(deserialisedResult.instance[0]) || deserialisedResult.instance[0].isValidWithoutException())) {
-                        self.runInsertionPointActions();
+                        self.runInsertionPointActions(excludeInsertionPoints);
                     }
                     self._actionInProgress = false;
                 }, function (error) {
