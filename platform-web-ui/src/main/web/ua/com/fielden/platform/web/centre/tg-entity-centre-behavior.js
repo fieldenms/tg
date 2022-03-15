@@ -168,19 +168,39 @@ const TgEntityCentreBehaviorImpl = {
         },
 
         /**
+         * allRetrievedEntities those were filtered when running this centre.
+         */
+         allFilteredEntities: {
+            type: Array,
+            observer: '_allFilteredEntitiesChanged'
+        },
+
+        /**
          * Rendering hints for all retrieved entities
          */
         allRenderingHints: Array,
+        /**
+         * Rendering hints for all filtered entities
+         */
+        allFilteredRenderingHints: Array,
 
         /**
          * Indices for primary actions associated with all retrieved entities
          */
         allPrimaryActionIndices: Array,
+        /**
+         * Indices for primary actions associated with all filtered entities
+         */
+        allFilteredPrimaryActionIndices: Array,
 
         /**
          * Indices for secondary actions associated with all retrieved entities
          */
         allSecondaryActionIndices: Array,
+        /**
+         * Indices for secondary actions associated with all filtered entities
+         */
+        allFilteredSecondaryActionIndices: Array,
 
         /**
          * The entities retrieved when running this centre
@@ -584,7 +604,40 @@ const TgEntityCentreBehaviorImpl = {
         return _buttonDisabled || _wasRun !== "yes";
     },
 
-    _allRetrievedEntitiesChanged: function (allRetrievedEntities, oldValue) {
+    _allRetrievedEntitiesChanged: function () {
+        const entities = [];
+        const renderingHints = [];
+        const primaryActionIndices = [];
+        const secondaryActionIndices = [];
+        this.allRetrievedEntities.forEach((entity, idx) => {
+            if (this.satisfies(entity)) {
+                entities.push(entity);
+                renderingHints.push(this.allRenderingHints[idx]);
+                primaryActionIndices.push(this.allPrimaryActionIndices[idx]);
+                secondaryActionIndices.push(this.allSecondaryActionIndices[idx]);
+            }
+        });
+        this.allFilteredRenderingHints = renderingHints;
+        this.allFilteredPrimaryActionIndices = primaryActionIndices;
+        this.allFilteredSecondaryActionIndices = secondaryActionIndices;
+        if (this.retrieveAll) {
+            const pageCount = Math.ceil(entities.length / this.$.selection_criteria.pageCapacity) || 1;
+            const pageNumber = pageCount <= this.$.selection_criteria.pageNumber ? pageCount - 1 : this.$.selection_criteria.pageNumber;
+            this._setPageCount(pageCount);
+            this._setPageNumber(pageNumber);
+        }
+        this.allFilteredEntities = entities;
+    },
+
+    filter: function () {
+        this._allRetrievedEntitiesChanged();
+    },
+
+    satisfies: function(entity) {
+        return true;
+    },
+
+    _allFilteredEntitiesChanged: function (allFilteredEntites, oldValue) {
         if (!this.retrieveAll) {
             this._setPageData();
         } else {
@@ -599,21 +652,26 @@ const TgEntityCentreBehaviorImpl = {
 
     _setPageData: function (startIdx, endIdx) {
         if (typeof startIdx === 'undefined') {
-            this.retrievedEntities = this.allRetrievedEntities;
-            this.$.egi.renderingHints = this.allRenderingHints;
-            this.$.egi.primaryActionIndices = this.allPrimaryActionIndices;
-            this.$.egi.secondaryActionIndices = this.allSecondaryActionIndices;
+            this.retrievedEntities = this.allFilteredEntities;
+            this.$.egi.renderingHints = this.allFilteredRenderingHints;
+            this.$.egi.primaryActionIndices = this.allFilteredPrimaryActionIndices;
+            this.$.egi.secondaryActionIndices = this.allFilteredSecondaryActionIndices;
         } else {
-            this.retrievedEntities = this.allRetrievedEntities.slice(startIdx, endIdx);
-            this.$.egi.renderingHints = this.allRenderingHints.slice(startIdx, endIdx);
-            this.$.egi.primaryActionIndices = this.allPrimaryActionIndices.slice(startIdx, endIdx);
-            this.$.egi.secondaryActionIndices = this.allSecondaryActionIndices.slice(startIdx, endIdx);
+            this.retrievedEntities = this.allFilteredEntities.slice(startIdx, endIdx);
+            this.$.egi.renderingHints = this.allFilteredRenderingHints.slice(startIdx, endIdx);
+            this.$.egi.primaryActionIndices = this.allFilteredPrimaryActionIndices.slice(startIdx, endIdx);
+            this.$.egi.secondaryActionIndices = this.allFilteredSecondaryActionIndices.slice(startIdx, endIdx);
         }
     },
 
     _setPageNumber: function (number) {
         this.$.selection_criteria.pageNumber = number;
         this.$.selection_criteria.pageNumberUpdated = number;
+    },
+
+    _setPageCount: function(pageCount) {
+        this.$.selection_criteria.pageCount = pageCount;
+        this.$.selection_criteria.pageCountUpdated = pageCount;
     },
 
     _retrievedEntitiesChanged: function (retrievedEntities, oldValue) {
