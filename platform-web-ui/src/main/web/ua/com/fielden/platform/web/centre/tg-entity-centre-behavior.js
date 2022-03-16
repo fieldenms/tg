@@ -1314,7 +1314,9 @@ const TgEntityCentreBehaviorImpl = {
             // there is no data or refresh is enforeced or...
             this.enforcePostSaveRefresh === true || this.$.egi.egiModel.length === 0 ||
             // there are no entities specified or the currrent result contains any of them then...
-            entities === null || entities.length === 0 || this.$.egi.containsAnyEntity(entities))) {
+            entities === null || entities.length === 0 || this.$.egi.containsAnyEntity(entities)) ||
+            //Or centre uses local pagination
+            this.retrieveAll) {
             // refresh the current page
             this.currentPage(excludeInsertionPoints);
         }
