@@ -417,9 +417,11 @@ export const TgEntityBinderBehavior = {
     mkDownloadAttachmentFunction: function () {
         return attachment => {
             if (attachment.isPersisted()) {
-                const openAsHyperLink = attachment.title.startsWith('https://') || attachment.title.startsWith('http://') ||
-                                        attachment.title.startsWith('ftp://') || attachment.title.startsWith('ftps://') ||
-                                        attachment.title.startsWith('mailto:')
+                const openAsHyperLink = attachment.title.toLowerCase().startsWith('https://') ||
+                                        attachment.title.toLowerCase().startsWith('http://') ||
+                                        attachment.title.toLowerCase().startsWith('ftp://') ||
+                                        attachment.title.toLowerCase().startsWith('ftps://') ||
+                                        attachment.title.toLowerCase().startsWith('mailto:');
                 if (openAsHyperLink === true) {
                     const win = window.open(attachment.title, '_blank');
                     win.focus();
