@@ -132,16 +132,19 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
                 final byte[] digest = md.digest();
                 final String sha1 = HexString.bufferToHex(digest, 0, digest.length);
 
-                return Optional.of(new_()
-                        .setTitle(potentialUri)
-                        .setSha1(sha1)
-                        .setOrigFileName(HYPERLINK));
-
+                final Attachment newAttachment = new_()
+                                                .setTitle(potentialUri)
+                                                .setSha1(sha1)
+                                                .setOrigFileName(HYPERLINK);
+                // a new hyperlink attachment may become invalid if the length of potentialUri exceed the declared length
+                // in this case it is better to throw exception in order for that error to bubble up
+                newAttachment.isValid().ifFailure(Result::throwRuntime);
+                return of(newAttachment);
             } catch (final NoSuchAlgorithmException e) {
-                return Optional.empty();
+                return empty();
             }
         }
-        return Optional.empty();
+        return empty();
     }
 
     /**
