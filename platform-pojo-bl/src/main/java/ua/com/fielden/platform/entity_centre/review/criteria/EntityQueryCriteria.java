@@ -756,7 +756,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
             return dao.firstPage(queryModel, pageSize);
         } else {
             generatedEntityController.setEntityType(getManagedType());
-            return generatedEntityController. firstPage(queryModel, totalsModel, pageSize, getByteArrayForManagedType());
+            return generatedEntityController.firstPage(queryModel, totalsModel, pageSize, getByteArrayForManagedType());
         }
     }
 

@@ -3,7 +3,7 @@ package ua.com.fielden.platform.web.centre.api.resultset;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 /**
- * The result set configuration contract that indicates whether data all should be retrieved at once and then paginated on client side or not.
+ * The result set configuration contract that indicates whether all data should be retrieved at once or not.
  *
  * @author TG Team
  *

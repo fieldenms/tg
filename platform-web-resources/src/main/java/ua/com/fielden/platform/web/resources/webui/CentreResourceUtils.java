@@ -244,7 +244,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
 
     /**
-     * Returns <code>true</code> if 'Run' action is performed represented by specified <code>customObject</code>, otherwise <code>false</code>.
+     * Returns <code>true</code> if 'Run' action represented by specified <code>customObject</code> is performed, otherwise returns <code>false</code>.
      *
      * @param customObject
      * @return
@@ -254,7 +254,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
 
     /**
-     * Returns <code>true</code> if 'Run' action is performed represented by specified <code>customObject</code>, otherwise <code>false</code>.
+     * Returns <code>true</code> if 'Refresh' action represented by specified <code>customObject</code> is performed, otherwise returns <code>false</code>.
      *
      * @param customObject
      * @return
