@@ -26,10 +26,10 @@ import java.util.Optional;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.Logger;
-import org.hibernate.Transaction;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
@@ -41,21 +41,16 @@ import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.persistence.HibernateUtil;
-import ua.com.fielden.platform.types.tuples.T2;
 
 public class DataMigrator {
     private static final Integer BATCH_SIZE = 100; 
     
-    private static final String LONG_BREAK = "\n\n\n";
-
     private static final Logger LOGGER = getLogger(DataMigrator.class);
 
     private final HibernateUtil hiberUtil;
     private final List<IRetriever<? extends AbstractEntity<?>>> retrievers = new ArrayList<>();
     private final Injector injector;
-    private final DomainMetadataAnalyser dma;
     private final EqlDomainMetadata eqlDomainMetadata;
-    private final boolean includeDetails;
     private final IdCache cache;
 
     private final TimeZone utcTz = TimeZone.getTimeZone("UTC");
@@ -72,9 +67,7 @@ public class DataMigrator {
         this.hiberUtil = hiberUtil;
         final DomainMetadata eql2Md = injector.getInstance(DomainMetadata.class);
         this.eqlDomainMetadata = eql2Md.eqlDomainMetadata;
-        this.dma = new DomainMetadataAnalyser(eql2Md);
         this.retrievers.addAll(instantiateRetrievers(injector, retrieversClasses));
-        this.includeDetails = includeDetails;
         this.cache = new IdCache(injector.getInstance(ICompanionObjectFinder.class));
 
         for (final IRetriever<? extends AbstractEntity<?>> ret : retrievers) {
@@ -87,12 +80,8 @@ public class DataMigrator {
 
         final Connection conn = injector.getInstance(Connection.class);
         if (!skipValidations) {
-            checkEmptyStrings(dma, conn);
-            checkRequiredness(dma, conn);
-            checkDataIntegrity(dma, conn);
-            validateRetrievalSql(dma);
+        	new DataValidator(conn, includeDetails, retrieversJobs).performValidations();
         }
-
         final long finalId = batchInsert(retrieversJobs, conn, getNextId());
         final Period pd = new Period(start, new DateTime());
 
@@ -107,7 +96,7 @@ public class DataMigrator {
         final var result = new ArrayList<CompiledRetriever>();
         for (final var retriever : retrievers) {
             try {
-                final String legacySql = RetrieverSqlProducer.getSql(retriever, true);
+                final String legacySql = RetrieverSqlProducer.getSql(retriever);
                 final var retResultFieldsIndices = new HashMap<String, Integer>();
                 int index = 1;
                 for (final var propPath : retriever.resultFields().keySet()) {
@@ -115,11 +104,12 @@ public class DataMigrator {
                     index = index + 1;
                 }
                 final var emd = eqlDmd.entityPropsMetadata().get(retriever.type());
-                  
+                var md = generateEntityMd(emd.typeInfo.tableName, emd.props());
+
                 if (retriever.isUpdater()) {
-                    result.add(CompiledRetriever.forUpdate(retriever, legacySql, new TargetDataUpdate(retriever.type(), retResultFieldsIndices, generateEntityMd(emd.typeInfo.tableName, emd.props()))));    
+                    result.add(CompiledRetriever.forUpdate(retriever, legacySql, new TargetDataUpdate(retriever.type(), retResultFieldsIndices, md), md));    
                 } else {
-                    result.add(CompiledRetriever.forInsert(retriever, legacySql, new TargetDataInsert(retriever.type(), retResultFieldsIndices, generateEntityMd(emd.typeInfo.tableName, emd.props()))));    
+                    result.add(CompiledRetriever.forInsert(retriever, legacySql, new TargetDataInsert(retriever.type(), retResultFieldsIndices, md), md));    
                 }
             } catch (final Exception ex) {
                 throw new DataMigrationException("Errors while compiling retriever [" + retriever.getClass().getSimpleName() + "].", ex);
@@ -137,112 +127,6 @@ public class DataMigrator {
         return result;
     }
 
-    /**
-     * Checks the correctness of the legacy data retrieval sql syntax and column aliases.
-     *
-     * @return
-     * @throws Exception
-     */
-    private boolean validateRetrievalSqlForKeyFieldsUniqueness(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> retriever, final Connection conn) {
-        final var sql = RetrieverSqlProducer.getKeyUniquenessViolationSql(retriever, dma);
-        boolean result = false;
-        try (final var st = conn.createStatement()) {
-            LOGGER.debug("Checking uniqueness of key data for [" + retriever.getClass().getSimpleName() + "]");
-            try (final var rs = st.executeQuery(sql)) {
-                if (rs.next()) {
-                    LOGGER.error(format("There are duplicates in data of [%s].\n"
-                            + "%s", retriever.getClass().getSimpleName(), includeDetails ? sql + LONG_BREAK : ""));
-                    result = true;
-                }
-            }
-        } catch (final Exception ex) {
-            LOGGER.error(format("Exception while checking [%s]%s SQL:\n"
-                    + "%s", retriever.getClass().getSimpleName(), ex, sql));
-            result = true;
-        }
-
-        return result;
-    }
-
-    /**
-     * Checks the correctness of the legacy data retrieval sql syntax and column aliases.
-     *
-     * @return
-     * @throws Exception
-     */
-    private boolean checkRetrievalSqlForSyntaxErrors(final DomainMetadataAnalyser dma, final IRetriever<? extends AbstractEntity<?>> retriever, final Connection conn) {
-        final var sql = RetrieverSqlProducer.getSql(retriever, true);
-        boolean result = false;
-        LOGGER.debug("Checking sql syntax for [" + retriever.getClass().getSimpleName() + "]");
-        try (final var st = conn.createStatement(); final var rs = st.executeQuery(sql)) {
-            LOGGER.debug("SQL syntax is valid.");
-        } catch (final Exception ex) {
-            LOGGER.error("Exception while checking syntax for [" + retriever.getClass().getSimpleName() + "]" + ex + " SQL:\n" + sql);
-            result = true;
-        }
-        return result;
-    }
-
-    private boolean checkDataIntegrity(final DomainMetadataAnalyser dma, final Connection conn) {
-        final var stmts = new RetrieverDeadReferencesSeeker(dma).determineUsers(retrievers);
-        boolean result = false;
-        for (final var entry : stmts.entrySet()) {
-            try (final var st = conn.createStatement(); final var rs = st.executeQuery(entry.getValue())) {
-                if (rs.next() && rs.getInt(1) > 0) {
-                    LOGGER.error(format("Dead references count for entity type [%s] is [%s].\n"
-                            + "%s", entry.getKey().getSimpleName(), rs.getInt(1), includeDetails ? entry.getValue() + LONG_BREAK : ""));
-                }
-            } catch (final Exception ex) {
-                LOGGER.error(format("Exception while counting dead references for entity type [%s]%s SQL:\n"
-                        + "%s", entry.getKey().getSimpleName(), ex, entry.getValue()));
-                result = true;
-            }
-        }
-        return result;
-    }
-
-    private boolean checkEmptyStrings(final DomainMetadataAnalyser dma, final Connection conn) throws SQLException {
-        final var stmts = new RetrieverEmptyStringsChecker(dma).getSqls(retrievers);
-        boolean result = false;
-        for (final var sql : stmts) {
-            try (final var st = conn.createStatement(); final var rs = st.executeQuery(sql)) {
-                rs.next();
-                final var retriever = rs.getString(1);
-                final var prop = rs.getString(2);
-                final var count = rs.getInt(3);
-                if (count > 0) {
-                    LOGGER.error(format("Empty string reference count for property [%s] within retriever [%s] is [%s].\n"
-                            + "%s", prop, retriever, count, includeDetails ? sql + LONG_BREAK : ""));
-                }
-
-            } catch (final SQLException ex) {
-                LOGGER.error("Exception while counting empty strings with SQL:\n" + sql, ex);
-                result = true;
-            }
-        }
-        return result;
-    }
-
-    private boolean checkRequiredness(final DomainMetadataAnalyser dma, final Connection conn) throws SQLException {
-        final var stmts = new RetrieverPropsRequirednessChecker(dma).getSqls(retrievers);
-        boolean result = false;
-        for (final var sql : stmts) {
-            try (final var st = conn.createStatement(); final var rs = st.executeQuery(sql)) {
-                rs.next();
-                final var retriever = rs.getString(1);
-                final var prop = rs.getString(2);
-                final var count = rs.getInt(3);
-                if (count > 0) {
-                    LOGGER.error(format("Violated requiredness records count for property [%s] within retriever [%s] is [%s].\n"
-                            + "%s", prop, retriever, count, includeDetails ? sql + LONG_BREAK : ""));
-                }
-            } catch (final SQLException ex) {
-                LOGGER.error("Exception while counting records with violated requiredness with SQL:\n" + sql, ex);
-                result = true;
-            }
-        }
-        return result;
-    }
 
     private void runSql(final List<String> ddl) throws SQLException {
         final var tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
@@ -261,24 +145,6 @@ public class DataMigrator {
         final long result = nextIdValue(ID_SEQUENCE_NAME, hiberUtil.getSessionFactory().getCurrentSession());
         tr.commit();
         return result;
-    }
-
-    private void validateRetrievalSql(final DomainMetadataAnalyser dma) {
-        boolean foundErrors = false;
-        final var conn = injector.getInstance(Connection.class);
-        for (final var ret : retrievers) {
-            if (validateRetrievalSqlForKeyFieldsUniqueness(dma, ret, conn)) {
-                foundErrors = true;
-            }
-
-            if (checkRetrievalSqlForSyntaxErrors(dma, ret, conn)) {
-                foundErrors = true;
-            }
-        }
-
-        if (foundErrors) {
-            LOGGER.error("\n\n\n======== Validation detected errors. Pls consult the log file for details ==========\n\n\n");
-        }
     }
 
     private long batchInsert(final List<CompiledRetriever> compiledRetrievers, final Connection legacyConn, final long startingId) throws SQLException {
