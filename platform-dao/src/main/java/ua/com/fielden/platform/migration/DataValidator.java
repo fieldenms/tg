@@ -2,8 +2,9 @@ package ua.com.fielden.platform.migration;
 
 import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
-import static ua.com.fielden.platform.migration.DataValidatorUtils.getKeyUniquenessViolationSql;
-import static ua.com.fielden.platform.migration.DataValidatorUtils.produceValidationSql;
+import static ua.com.fielden.platform.migration.DataValidatorUtils.produceKeyUniquenessViolationSql;
+import static ua.com.fielden.platform.migration.DataValidatorUtils.produceRequirednessValidationSql;
+import static ua.com.fielden.platform.migration.DataValidatorUtils.produceDataIntegrityValidationSql;
 
 import java.sql.Connection;
 import java.sql.SQLException;
@@ -38,31 +39,11 @@ public class DataValidator {
     	checkKeyUniqueness();
         checkRequiredness();
     	checkDataIntegrity();
+    	System.exit(0);
     }
     
-    private boolean validateRetrievalSqlForKeyFieldsUniqueness(final Class<? extends AbstractEntity<?>> entityType, final List<CompiledRetriever> entityTypeRetrievers) {
-        final var sql = getKeyUniquenessViolationSql(entityType, entityTypeRetrievers);
-        boolean result = false;
-        try (final var st = conn.createStatement()) {
-            try (final var rs = st.executeQuery(sql)) {
-                if (rs.next()) {
-                    LOGGER.error(format("There are duplicates in data of [%s].\n"
-                            + "%s", entityType.getSimpleName(), includeDetails ? sql + LONG_BREAK : ""));
-                    result = true;
-                }
-            }
-        } catch (final Exception ex) {
-            LOGGER.error(format("Exception while checking key data uniqueness [%s]%s SQL:\n"
-                    + "%s", entityType.getSimpleName(), ex, sql));
-            result = true;
-        }
-
-        return result;
-    }
-
-    private boolean checkDataIntegrity() {
-    	var stmts = produceValidationSql(retrieversJobs, entityTypeRetrievers);
-    	boolean result = false;
+    private void checkDataIntegrity() {
+    	var stmts = produceDataIntegrityValidationSql(retrieversJobs, entityTypeRetrievers);
         
         LOGGER.debug("Checking data integrity ...");
 
@@ -75,15 +56,12 @@ public class DataValidator {
             } catch (final Exception ex) {
                 LOGGER.error(format("Exception while counting dead references for prop [%s] of retriever [%s]%s SQL:\n"
                         + "%s", entry._2, entry._1, ex, entry._3));
-                result = true;
             }
         }
-        return result;
     }
 
-    private boolean checkRequiredness() {
-        final var stmts = produceValidationSql(retrieversJobs);
-        boolean result = false;
+    private void checkRequiredness() {
+        final var stmts = produceRequirednessValidationSql(retrieversJobs);
         LOGGER.debug("Checking requiredness ...");
         for (final var sql : stmts) {
             try (final var st = conn.createStatement(); final var rs = st.executeQuery(sql._3)) {
@@ -95,10 +73,8 @@ public class DataValidator {
                 }
             } catch (final SQLException ex) {
                 LOGGER.error("Exception while counting records with violated requiredness with SQL:\n" + sql, ex);
-                result = true;
             }
         }
-        return result;
     }
 
     private void checkRetrievalSqlForSyntaxErrors() {
@@ -114,7 +90,19 @@ public class DataValidator {
     private void checkKeyUniqueness() {
     	LOGGER.debug("Checking key values uniqueness ... ");
     	for (final var ret : entityTypeRetrievers.entrySet()) {
-        	validateRetrievalSqlForKeyFieldsUniqueness(ret.getKey(), ret.getValue());
+            final var sql = produceKeyUniquenessViolationSql(ret.getKey(), ret.getValue());
+            try (final var st = conn.createStatement()) {
+                try (final var rs = st.executeQuery(sql)) {
+                    if (rs.next()) {
+                        LOGGER.error(format("There are duplicates in data of [%s].\n"
+                                + "%s", ret.getKey().getSimpleName(), includeDetails ? sql + LONG_BREAK : ""));
+                    }
+                }
+            } catch (final Exception ex) {
+                LOGGER.error(format("Exception while checking key data uniqueness [%s]%s SQL:\n"
+                        + "%s", ret.getKey().getSimpleName(), ex, sql));
+            }
+
         }
     }
 }

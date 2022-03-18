@@ -14,7 +14,7 @@ import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class DataValidatorUtils {
-    public static String getKeyUniquenessViolationSql(final Class<? extends AbstractEntity<?>> entityType, final List<CompiledRetriever> entityTypeRetrievers) {
+    public static String produceKeyUniquenessViolationSql(final Class<? extends AbstractEntity<?>> entityType, final List<CompiledRetriever> entityTypeRetrievers) {
         final List<String> keyProps = MigrationUtils.keyPaths(entityType);
         final StringBuffer sb = new StringBuffer();
         var from = entityTypeRetrievers.stream().map(r -> RetrieverSqlProducer.getKeyResultsOnlySql(r.retriever, keyProps)).collect(joining("\nUNION ALL"));
@@ -23,7 +23,7 @@ public class DataValidatorUtils {
         return sb.toString();
     }
     
-    public static List<T3<String, String, String>> produceValidationSql(final List<CompiledRetriever> retrieversJobs) {
+    public static List<T3<String, String, String>> produceRequirednessValidationSql(final List<CompiledRetriever> retrieversJobs) {
     	var result = new ArrayList<T3<String, String, String>>();
     	
     	for (final CompiledRetriever retriever : retrieversJobs) {
@@ -42,7 +42,7 @@ public class DataValidatorUtils {
     	return result;
     }
     
-    public static List<T3<String, String, String>> produceValidationSql(final List<CompiledRetriever> retrieversJobs, final Map<Class<? extends AbstractEntity<?>>, List<CompiledRetriever>> entityTypeRetrievers) {
+    public static List<T3<String, String, String>> produceDataIntegrityValidationSql(final List<CompiledRetriever> retrieversJobs, final Map<Class<? extends AbstractEntity<?>>, List<CompiledRetriever>> entityTypeRetrievers) {
     	var result = new ArrayList<T3<String, String, String>>();
     	
     	for (final CompiledRetriever retriever : retrieversJobs) {
