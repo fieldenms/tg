@@ -657,7 +657,7 @@ export class TgEntityEditor extends TgEditor {
         if (!inputText) {
             this._searchQuery = "";
         } else {
-            this._searchQuery = replaceAll('*', '%', inputText.toUpperCase());
+            this._searchQuery = replaceAll('*', '%', inputText);
         }
 
         if (this._searchQuery) {
