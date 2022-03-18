@@ -39,11 +39,10 @@ public class DataValidator {
     	checkKeyUniqueness();
         checkRequiredness();
     	checkDataIntegrity();
-    	System.exit(0);
     }
     
     private void checkDataIntegrity() {
-    	var stmts = produceDataIntegrityValidationSql(retrieversJobs, entityTypeRetrievers);
+    	final var stmts = produceDataIntegrityValidationSql(retrieversJobs, entityTypeRetrievers);
         
         LOGGER.debug("Checking data integrity ...");
 

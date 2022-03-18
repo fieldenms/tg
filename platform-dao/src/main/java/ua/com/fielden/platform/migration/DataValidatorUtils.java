@@ -17,23 +17,23 @@ public class DataValidatorUtils {
     public static String produceKeyUniquenessViolationSql(final Class<? extends AbstractEntity<?>> entityType, final List<CompiledRetriever> entityTypeRetrievers) {
         final List<String> keyProps = MigrationUtils.keyPaths(entityType);
         final StringBuffer sb = new StringBuffer();
-        var from = entityTypeRetrievers.stream().map(r -> RetrieverSqlProducer.getKeyResultsOnlySql(r.retriever, keyProps)).collect(joining("\nUNION ALL"));
-        var props = keyProps.stream().map(k ->  " \"" + k + "\"").collect(joining(", "));
+        final var from = entityTypeRetrievers.stream().map(r -> RetrieverSqlProducer.getKeyResultsOnlySql(r.retriever, keyProps)).collect(joining("\nUNION ALL"));
+        final var props = keyProps.stream().map(k ->  " \"" + k + "\"").collect(joining(", "));
         sb.append("SELECT 1 WHERE EXISTS (\nSELECT *, COUNT(*) FROM (" + from + ") T GROUP BY " + props + " HAVING COUNT(*) > 1\n)");
         return sb.toString();
     }
     
     public static List<T3<String, String, String>> produceRequirednessValidationSql(final List<CompiledRetriever> retrieversJobs) {
-    	var result = new ArrayList<T3<String, String, String>>();
+    	final var result = new ArrayList<T3<String, String, String>>();
     	
     	for (final CompiledRetriever retriever : retrieversJobs) {
-    		var retrieverSql = RetrieverSqlProducer.getSqlWithoutOrdering(retriever.retriever);
+    		final var retrieverSql = RetrieverSqlProducer.getSqlWithoutOrdering(retriever.retriever);
     		for (PropInfo pi : retriever.getContainers()) {
-				var pmd = retriever.md.props().stream().filter(p -> p.name().equals(pi.propName())).findFirst().get(); 
+				final var pmd = retriever.md.props().stream().filter(p -> p.name().equals(pi.propName())).findFirst().get(); 
 				if (pmd.required()) {
 						final List<String> leafProps = EntityUtils.isPersistedEntityType(pi.propType()) ? pmd.leafProps() : CollectionUtil.listOf(pmd.name());
-						var cond = leafProps.stream().map(s -> "R. \"" + s + "\" IS NULL").collect(Collectors.joining(" AND "));
-						var sql = "SELECT COUNT(*) FROM (" + retrieverSql + ") R WHERE " + cond;
+						final var cond = leafProps.stream().map(s -> "R. \"" + s + "\" IS NULL").collect(Collectors.joining(" AND "));
+						final var sql = "SELECT COUNT(*) FROM (" + retrieverSql + ") R WHERE " + cond;
 						result.add(T3.t3(retriever.retriever.getClass().getSimpleName(), pi.propName() + ":" + pi.propType().getSimpleName(), sql));
 				}
 			}
@@ -43,18 +43,18 @@ public class DataValidatorUtils {
     }
     
     public static List<T3<String, String, String>> produceDataIntegrityValidationSql(final List<CompiledRetriever> retrieversJobs, final Map<Class<? extends AbstractEntity<?>>, List<CompiledRetriever>> entityTypeRetrievers) {
-    	var result = new ArrayList<T3<String, String, String>>();
+    	final var result = new ArrayList<T3<String, String, String>>();
     	
     	for (final CompiledRetriever retriever : retrieversJobs) {
-    		var retrieverSql = RetrieverSqlProducer.getSqlWithoutOrdering(retriever.retriever);
+    		final var retrieverSql = RetrieverSqlProducer.getSqlWithoutOrdering(retriever.retriever);
     		for (PropInfo pi : retriever.getContainers()) {
 				if (EntityUtils.isPersistedEntityType(pi.propType())) {
 					final List<String> keyProps = MigrationUtils.keyPaths((Class<? extends AbstractEntity>) pi.propType());
 					final List<String> leafProps = retriever.md.props().stream().filter(p -> p.name().equals(pi.propName())).findFirst().get().leafProps();
-					var domainRets = entityTypeRetrievers.get(pi.propType());
-					var from = domainRets == null ? "NONE" : domainRets.stream().map(r -> RetrieverSqlProducer.getKeyResultsOnlySql(r.retriever, keyProps)).collect(joining("\nUNION ALL"));
-					var cond = "(" + leafProps.stream().map(s -> "R. \"" + s + "\" IS NOT NULL").collect(Collectors.joining(" OR ")) + ")";
-					var sql = "SELECT COUNT(*) FROM (" + retrieverSql + ") R WHERE " + cond + " AND NOT EXISTS (SELECT * FROM (" + from + ") D WHERE " + 
+					final var domainRets = entityTypeRetrievers.get(pi.propType());
+					final var from = domainRets == null ? "NONE" : domainRets.stream().map(r -> RetrieverSqlProducer.getKeyResultsOnlySql(r.retriever, keyProps)).collect(joining("\nUNION ALL"));
+					final var cond = "(" + leafProps.stream().map(s -> "R. \"" + s + "\" IS NOT NULL").collect(Collectors.joining(" OR ")) + ")";
+					final var sql = "SELECT COUNT(*) FROM (" + retrieverSql + ") R WHERE " + cond + " AND NOT EXISTS (SELECT * FROM (" + from + ") D WHERE " + 
 					composeCondition(leafProps, keyProps, "R", "D") + ")";
 					result.add(T3.t3(retriever.retriever.getClass().getSimpleName(), pi.propName() + ":" + pi.propType().getSimpleName(), sql));
 				}

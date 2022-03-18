@@ -26,7 +26,6 @@ import java.util.Optional;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.Logger;
@@ -38,7 +37,6 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 
@@ -49,7 +47,6 @@ public class DataMigrator {
 
     private final HibernateUtil hiberUtil;
     private final List<IRetriever<? extends AbstractEntity<?>>> retrievers = new ArrayList<>();
-    private final Injector injector;
     private final EqlDomainMetadata eqlDomainMetadata;
     private final IdCache cache;
 
@@ -63,7 +60,6 @@ public class DataMigrator {
             final boolean includeDetails,
             final Class... retrieversClasses) throws SQLException {
         final DateTime start = new DateTime();
-        this.injector = injector;
         this.hiberUtil = hiberUtil;
         final DomainMetadata eql2Md = injector.getInstance(DomainMetadata.class);
         this.eqlDomainMetadata = eql2Md.eqlDomainMetadata;
@@ -78,11 +74,11 @@ public class DataMigrator {
 
         final List<CompiledRetriever> retrieversJobs = generateRetrieversJobs(retrievers, eqlDomainMetadata);
 
-        final Connection conn = injector.getInstance(Connection.class);
+        final Connection legacyConn = injector.getInstance(Connection.class);
         if (!skipValidations) {
-        	new DataValidator(conn, includeDetails, retrieversJobs).performValidations();
+        	new DataValidator(legacyConn, includeDetails, retrieversJobs).performValidations();
         }
-        final long finalId = batchInsert(retrieversJobs, conn, getNextId());
+        final long finalId = batchInsert(retrieversJobs, legacyConn, getNextId());
         final Period pd = new Period(start, new DateTime());
 
         final List<String> sql = new ArrayList<>();
@@ -104,7 +100,7 @@ public class DataMigrator {
                     index = index + 1;
                 }
                 final var emd = eqlDmd.entityPropsMetadata().get(retriever.type());
-                var md = generateEntityMd(emd.typeInfo.tableName, emd.props());
+                final var md = generateEntityMd(emd.typeInfo.tableName, emd.props());
 
                 if (retriever.isUpdater()) {
                     result.add(CompiledRetriever.forUpdate(retriever, legacySql, new TargetDataUpdate(retriever.type(), retResultFieldsIndices, md), md));    
@@ -119,7 +115,7 @@ public class DataMigrator {
         return result;
     }
     
-    private static List<IRetriever<? extends AbstractEntity<?>>> instantiateRetrievers(final Injector injector, final Class... retrieversClasses) {
+    private static List<IRetriever<? extends AbstractEntity<?>>> instantiateRetrievers(final Injector injector, final Class<? extends IRetriever<? extends AbstractEntity<?>>> ... retrieversClasses) {
         final var result = new ArrayList<IRetriever<? extends AbstractEntity<?>>>();
         for (final Class<? extends IRetriever<? extends AbstractEntity<?>>> retrieverClass : retrieversClasses) {
             result.add(injector.getInstance(retrieverClass));
