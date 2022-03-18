@@ -47,22 +47,19 @@ public class DataMigrator {
 
     private final HibernateUtil hiberUtil;
     private final List<IRetriever<? extends AbstractEntity<?>>> retrievers = new ArrayList<>();
-    private final EqlDomainMetadata eqlDomainMetadata;
     private final IdCache cache;
 
-    private final TimeZone utcTz = TimeZone.getTimeZone("UTC");
-    private final Calendar utcCal = Calendar.getInstance(utcTz);
+    private static final TimeZone utcTz = TimeZone.getTimeZone("UTC");
+    private static final Calendar utcCal = Calendar.getInstance(utcTz);
 
     public DataMigrator(
             final Injector injector,
             final HibernateUtil hiberUtil,
             final boolean skipValidations,
             final boolean includeDetails,
-            final Class... retrieversClasses) throws SQLException {
+            final Class<? extends IRetriever<? extends AbstractEntity<?>>>... retrieversClasses) throws SQLException {
         final DateTime start = new DateTime();
         this.hiberUtil = hiberUtil;
-        final DomainMetadata eql2Md = injector.getInstance(DomainMetadata.class);
-        this.eqlDomainMetadata = eql2Md.eqlDomainMetadata;
         this.retrievers.addAll(instantiateRetrievers(injector, retrieversClasses));
         this.cache = new IdCache(injector.getInstance(ICompanionObjectFinder.class));
 
@@ -72,7 +69,7 @@ public class DataMigrator {
             }
         }
 
-        final List<CompiledRetriever> retrieversJobs = generateRetrieversJobs(retrievers, eqlDomainMetadata);
+        final List<CompiledRetriever> retrieversJobs = generateRetrieversJobs(retrievers, injector.getInstance(DomainMetadata.class).eqlDomainMetadata);
 
         final Connection legacyConn = injector.getInstance(Connection.class);
         if (!skipValidations) {
