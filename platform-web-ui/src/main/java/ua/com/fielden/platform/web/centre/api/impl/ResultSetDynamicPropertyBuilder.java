@@ -18,6 +18,7 @@ import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSette
 import ua.com.fielden.platform.web.centre.api.resultset.IAlsoSecondaryAction;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder5WithPropAction;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder9RenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderAlsoDynamicProps;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderDynamicProps;
@@ -27,6 +28,16 @@ import ua.com.fielden.platform.web.centre.api.resultset.summary.ISummaryCardLayo
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 
+/**
+ * This class was created to configure dynamic properties and their actions. It was created because {@link IResultSetBuilderDynamicPropsAction} and {@link IResultSetBuilderAlsoDynamicProps}
+ * can not be implemented in {@link ResultSetBuilder} class, because {@link IResultSetBuilderDynamicPropsAction#withAction(EntityActionConfig)} and {@link IResultSetBuilderDynamicPropsAction#withActionSupplier(Supplier)}
+ * methods have the same name as methods declared in {@link IResultSetBuilder5WithPropAction} interface and implemented in {@link ResultSetBuilder}.
+ * Thats why many methods implemented in this class delegates calls to instance of {@link ResultSetBuilder}.
+ *
+ * @author TG Team
+ *
+ * @param <T>
+ */
 public class ResultSetDynamicPropertyBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderDynamicPropsAction<T>, IResultSetBuilderAlsoDynamicProps<T> {
 
     private final ResultSetBuilder<T> builder;
