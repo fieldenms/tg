@@ -29,10 +29,10 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 
 /**
- * This class was created to configure dynamic properties and their actions. It was created because {@link IResultSetBuilderDynamicPropsAction} and {@link IResultSetBuilderAlsoDynamicProps}
- * can not be implemented in {@link ResultSetBuilder} class, because {@link IResultSetBuilderDynamicPropsAction#withAction(EntityActionConfig)} and {@link IResultSetBuilderDynamicPropsAction#withActionSupplier(Supplier)}
- * methods have the same name as methods declared in {@link IResultSetBuilder5WithPropAction} interface and implemented in {@link ResultSetBuilder}.
- * Thats why many methods implemented in this class delegates calls to instance of {@link ResultSetBuilder}.
+ * This class implements the DSL for configuring dynamic properties and their actions. It intersects with most of the functionality in {@link ResultSetBuilder}, but it had to be created, because {@link IResultSetBuilderDynamicPropsAction} and {@link IResultSetBuilderAlsoDynamicProps}
+ * can not be implemented by {@link ResultSetBuilder} due to the fact that methods {@link IResultSetBuilderDynamicPropsAction#withAction(EntityActionConfig)} and {@link IResultSetBuilderDynamicPropsAction#withActionSupplier(Supplier)} have the same signature as methods declared in {@link IResultSetBuilder5WithPropAction}, implemented by {@link ResultSetBuilder}.
+ * <p>
+ * However, to improve the reuse, all common with {@link ResultSetBuilder} methods are implemented by means of delegation to an instance of {@link ResultSetBuilder}.
  *
  * @author TG Team
  *
