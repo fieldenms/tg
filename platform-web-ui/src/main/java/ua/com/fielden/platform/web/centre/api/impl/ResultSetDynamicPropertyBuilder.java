@@ -11,6 +11,7 @@ import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
+import ua.com.fielden.platform.web.centre.api.exceptions.CentreConfigException;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
 import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointPreferred;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
@@ -111,7 +112,7 @@ public class ResultSetDynamicPropertyBuilder<T extends AbstractEntity<?>> implem
     @Override
     public IResultSetBuilderAlsoDynamicProps<T> withAction(final EntityActionConfig actionConfig) {
         if (actionConfig == null) {
-            throw new IllegalArgumentException("Property action configuration should not be null.");
+            throw new CentreConfigException("Property action configuration should not be null.");
         }
 
         resultSetProp.setPropAction(() -> Optional.of(actionConfig));
@@ -121,7 +122,7 @@ public class ResultSetDynamicPropertyBuilder<T extends AbstractEntity<?>> implem
     @Override
     public IResultSetBuilderAlsoDynamicProps<T> withActionSupplier(final Supplier<Optional<EntityActionConfig>> actionConfigSupplier) {
         if (actionConfigSupplier == null) {
-            throw new IllegalArgumentException("Property action configuration supplier should not be null.");
+            throw new CentreConfigException("Property action configuration supplier should not be null.");
         }
 
         resultSetProp.setPropAction(actionConfigSupplier);
