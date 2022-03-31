@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
@@ -177,7 +178,6 @@ public class MetaModelProcessor extends AbstractProcessor {
         }
         
         for (MetaModelElement element: metaModelElements) {
-
             writeMetaModel(element, metaModelElements);
         }
 
@@ -206,22 +206,14 @@ public class MetaModelProcessor extends AbstractProcessor {
             final String propName = prop.getSimpleName().toString();
             final TypeMirror propType = prop.asType();
 
-            /* static property holding the property's name
-             
-            private static final String [PROP_NAME]_ = "[PROP_NAME]";
-            */
+            // ### static property holding the property's name ###
+            // private static final String [PROP_NAME]_ = "[PROP_NAME]";
             fieldSpecs.add(FieldSpec.builder(String.class, propName + "_")
                     .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
                     .initializer("$S", propName)
                     .build());
             
-            /* instance property capturing both property's name and context
-            
-            if a property is entity type
-                public final [META_MODEL_NAME] [PROP_NAME];
-            else
-                public final PropertyMetaModel [PROP_NAME]; 
-            */
+            // ### instance property ###
             MetaModelElement propTypeMetaModelElement = null;
             ClassName propTypeMetaModelClassName = null;
             if (propType.getKind() == TypeKind.DECLARED) { 
@@ -233,44 +225,112 @@ public class MetaModelProcessor extends AbstractProcessor {
             }
             
             if (propTypeMetaModelElement != null) {
-                fieldSpecBuilder = FieldSpec.builder(propTypeMetaModelClassName, propName);
+                if (propTypeMetaModelElement.equals(metaModelElement)) {
+                    // property is of the same type as the owning entity
+                    // private Supplier<[META_MODEL_NAME]> [PROP_NAME];
+                    ParameterizedTypeName propTypeName = ParameterizedTypeName.get(ClassName.get(Supplier.class), propTypeMetaModelClassName);
+                    fieldSpecBuilder = FieldSpec.builder(propTypeName, propName)
+                            .addModifiers(Modifier.PRIVATE);
+                } else {
+                    // property is entity type
+                    // private final [META_MODEL_NAME] [PROP_NAME];
+                    fieldSpecBuilder = FieldSpec.builder(propTypeMetaModelClassName, propName)
+                            .addModifiers(Modifier.PRIVATE, Modifier.FINAL);
+                }
             } else {
-                fieldSpecBuilder = FieldSpec.builder(ClassName.get(PropertyMetaModel.class), propName);
+                // private final PropertyMetaModel [PROP_NAME]; 
+                fieldSpecBuilder = FieldSpec.builder(ClassName.get(PropertyMetaModel.class), propName)
+                        .addModifiers(Modifier.PRIVATE, Modifier.FINAL);
+            }
+
+            fieldSpecs.add(fieldSpecBuilder.build());
+        }
+            
+        // ######################## METHODS ###########################
+        List<MethodSpec> methodSpecs = new ArrayList<>();
+
+        for (VariableElement prop: properties) {
+            MethodSpec.Builder methodSpecBuilder = null;
+            final String propName = prop.getSimpleName().toString();
+            final TypeMirror propType = prop.asType();
+
+            // check if property is entity type
+            MetaModelElement propTypeMetaModelElement = null;
+            ClassName propTypeMetaModelClassName = null;
+            if (propType.getKind() == TypeKind.DECLARED) { 
+                final TypeElement propTypeAsElement = (TypeElement) ((DeclaredType) propType).asElement(); 
+                if (EntityFinder.isEntity(propTypeAsElement)) {
+                    propTypeMetaModelElement = new MetaModelElement(propTypeAsElement);
+                    propTypeMetaModelClassName = getMetaModelClassName(propTypeMetaModelElement);
+                }
             }
             
+            if (propTypeMetaModelElement != null) {
+                if (propTypeMetaModelElement.equals(metaModelElement)) {
+                    /* property is of the same type as the owning entity
+                     
+                    public [META_MODEL_NAME] [PROP_NAME]() {
+                        return [PROP_NAME].get();
+                    }
+                    */
+                    methodSpecBuilder = MethodSpec.methodBuilder(propName)
+                            .addModifiers(Modifier.PUBLIC)
+                            .returns(propTypeMetaModelClassName)
+                            .addStatement("return $L.get()", propName);
+                } else {
+                    /* property is entity type
+                     
+                    public [META_MODEL_NAME] [PROP_NAME]() {
+                        return [PROP_NAME];
+                    }
+                    */
+                    methodSpecBuilder = MethodSpec.methodBuilder(propName)
+                            .addModifiers(Modifier.PUBLIC)
+                            .returns(propTypeMetaModelClassName)
+                            .addStatement("return $L", propName);
+                }
+            } else {
+                /*
+                public PropertyMetaModel [PROP_NAME]() {
+                    return [PROP_NAME];
+                }
+                */
+                methodSpecBuilder = MethodSpec.methodBuilder(propName)
+                        .addModifiers(Modifier.PUBLIC)
+                        .returns(ClassName.get(PropertyMetaModel.class))
+                        .addStatement("return $L", propName);
+            }
+
             // javadoc: property title and description
             final Pair<String, String> propTitleAndDesc = EntityFinder.getPropTitleAndDesc(prop);
             if (propTitleAndDesc != null) {
                 final String propTitle = propTitleAndDesc.getKey();
                 if (propTitle.length() > 0) {
-                    fieldSpecBuilder = fieldSpecBuilder.addJavadoc("Title: $L\n<p>\n", propTitle);
+                    methodSpecBuilder = methodSpecBuilder.addJavadoc("Title: $L\n<p>\n", propTitle);
                 }
                 
                 final String propDesc = propTitleAndDesc.getValue();
                 if (propDesc.length() > 0) {
-                    fieldSpecBuilder = fieldSpecBuilder.addJavadoc("Description: $L\n<p>\n", propDesc);
+                    methodSpecBuilder = methodSpecBuilder.addJavadoc("Description: $L\n<p>\n", propDesc);
                 }
             }
             
             // javadoc: property type
-            fieldSpecBuilder = fieldSpecBuilder.addJavadoc("Type: {@link $T}\n<p>\n", propType);
+            methodSpecBuilder = methodSpecBuilder.addJavadoc("Type: {@link $T}\n<p>\n", propType);
             
             // (optional) javadoc: property type's meta-model
             if (propTypeMetaModelClassName != null) {
-                fieldSpecBuilder = fieldSpecBuilder.addJavadoc("Meta-model: {@link $T}\n<p>\n", propTypeMetaModelClassName);
+                methodSpecBuilder = methodSpecBuilder.addJavadoc("Meta-model: {@link $T}\n<p>\n", propTypeMetaModelClassName);
             }
             
             // javadoc: all annotations of a property (except ignored ones)
             final List<String> annotNames = ElementFinder.getFieldAnnotationsExcept(prop, getIgnoredPropertyAnnotations()).stream()
                     .map(a -> String.format("{@link %s}", ElementFinder.getAnnotationMirrorSimpleName(a)))
                     .toList();
-            fieldSpecBuilder = fieldSpecBuilder.addJavadoc("Annotations: $L\n<p>\n", String.join(", ", annotNames));
+            methodSpecBuilder = methodSpecBuilder.addJavadoc("Annotations: $L\n<p>\n", String.join(", ", annotNames));
             
-            fieldSpecs.add(fieldSpecBuilder.addModifiers(Modifier.PUBLIC, Modifier.FINAL).build());
+            methodSpecs.add(methodSpecBuilder.build());
         }
-        
-        // ######################## METHODS ###########################
-        List<MethodSpec> methodSpecs = new ArrayList<>();
 
         /*
         public static Class<?> getModelClass() {
@@ -286,30 +346,25 @@ public class MetaModelProcessor extends AbstractProcessor {
                 .build();
 
         methodSpecs.add(getModelMethod);
-
-        // ######################## CONSTRUCTORS ######################
         
-        /* 
-        public [ENTITY_NAME]MetaModel(String context) {
-            super(context);
-            for each property
-                if property is entity type
-                    this.[PROP_NAME] = new [PROP_TYPE_NAME]MetaModel(joinPath([PROP_NAME]_));
-                else
-                    this.[PROP_NAME] = new PropertyMetaModel(joinPath([PROP_NAME]_));
+        // ######################## CONSTRUCTORS ######################
+        /*
+        public [ENTITY_NAME]MetaModel(String path) {
+            super(path);
+            ...
         }
         */
-        MethodSpec.Builder constructorBuilder =  MethodSpec.constructorBuilder()
+        MethodSpec.Builder constructorBuilder = MethodSpec.constructorBuilder()
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(String.class, "path")
                 .addStatement("super(path)");
 
         CodeBlock.Builder constructorStatementsBuilder = CodeBlock.builder();
-        
         for (VariableElement prop: properties) {
             final String propName = prop.getSimpleName().toString();
             final TypeMirror propType = prop.asType();
 
+            // check if property is entity type
             MetaModelElement propTypeMetaModelElement = null;
             ClassName propTypeMetaModelClassName = null;
             if (propType.getKind() == TypeKind.DECLARED) { 
@@ -319,12 +374,41 @@ public class MetaModelProcessor extends AbstractProcessor {
                     propTypeMetaModelClassName = getMetaModelClassName(propTypeMetaModelElement);
                 }
             }
-
+            
             if (propTypeMetaModelElement != null) {
-                constructorStatementsBuilder = constructorStatementsBuilder.addStatement(
-                        "this.$L = new $T(joinPath($L_))", 
-                        propName, propTypeMetaModelClassName, propName);
+                if (propTypeMetaModelElement.equals(metaModelElement)) {
+                    /* property is of the same type as the owning entity
+                     
+                    this.[PROP_NAME] = () -> {
+                        [META_MODEL_NAME] value = new [META_MODEL_NAME](joinPath([PROP_NAME]_));
+                        [PROP_NAME] = () -> value;
+                        return value;
+                    };
+                    */
+                    CodeBlock lambda = CodeBlock.builder()
+                            .add("() -> {\n").indent()
+                            .addStatement(
+                                    "$T $L = new $T(joinPath($L_))", 
+                                    propTypeMetaModelClassName, "value", propTypeMetaModelClassName, propName)
+                            .addStatement(
+                                    "$L = () -> $L",
+                                    propName, "value")
+                            .addStatement("return $L", "value")
+                            .unindent().add("}")
+                            .build();
+                    CodeBlock code = CodeBlock.builder()
+                            .addStatement("this.$L = $L", propName, lambda.toString())
+                            .build();
+                    constructorStatementsBuilder = constructorStatementsBuilder.add(code);
+                } else {
+                    // property is entity type
+                    // this.[PROP_NAME] = new [PROP_TYPE_NAME]MetaModel(joinPath([PROP_NAME]_));
+                    constructorStatementsBuilder = constructorStatementsBuilder.addStatement(
+                            "this.$L = new $T(joinPath($L_))", 
+                            propName, propTypeMetaModelClassName, propName);
+                }
             } else {
+                // this.[PROP_NAME] = new PropertyMetaModel(joinPath([PROP_NAME]_));
                 constructorStatementsBuilder = constructorStatementsBuilder.addStatement(
                         "this.$L = new $T(joinPath($L_))", 
                         propName, ClassName.get(PropertyMetaModel.class), propName);
@@ -346,7 +430,6 @@ public class MetaModelProcessor extends AbstractProcessor {
                 .build();
         methodSpecs.add(emptyConstructor);
 
-
         // class declaration
         /*
         public final class [ENTITY_NAME]MetaModel extends EntityMetaModel {
@@ -357,13 +440,10 @@ public class MetaModelProcessor extends AbstractProcessor {
         final String metaModelName = metaModelElement.getMetaModelName();
         final String metaModelPkgName = metaModelElement.getMetaModelPkgName();
 
-//        AnnotationSpec entityMetaModelAnnotation = AnnotationSpec.builder(EntityMetaModel.class).addMember("value", "$T.class", modelClassName).build();
-
         TypeSpec metaModel = TypeSpec.classBuilder(metaModelName)
                 .addJavadoc("Auto-generated meta-model for {@link $T}\n<p>\n", modelClassName)
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                 .superclass(metaModelSuperclassClassName)
-//                .addAnnotation(entityMetaModelAnnotation)
                 .addFields(fieldSpecs)
                 .addMethods(methodSpecs)
                 .build();
@@ -424,7 +504,7 @@ public class MetaModelProcessor extends AbstractProcessor {
                             ElementFinder.getVariableTypeSimpleName(varEl).equals(element.getMetaModelName()))
                         .findAny()
                         .orElse(null);
-                if (elementField == null) {
+                if (elementField != null) {
                     continue;
                 }
             }
