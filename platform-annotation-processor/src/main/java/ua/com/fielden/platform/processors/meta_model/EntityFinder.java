@@ -10,19 +10,30 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntityFinder {
+    
+    public static Class<?> ROOT_ENTITY_CLASS = AbstractEntity.class;
 
     public static Set<VariableElement> findEntityProperties(TypeElement typeElement) {
         return ElementFinder.findFieldsAnnotatedWith(typeElement, IsProperty.class);
     }
 
     public static Set<VariableElement> findEntityInheritedProperties(TypeElement typeElement) {
+        Set<VariableElement> properties = new HashSet<>();
+
         TypeElement superclass = (TypeElement) ((DeclaredType) typeElement.getSuperclass()).asElement();
-        return ElementFinder.findFieldsAnnotatedWith(superclass, IsProperty.class);
+        while (!superclass.getQualifiedName().toString().equals(ROOT_ENTITY_CLASS.getCanonicalName())) {
+            properties.addAll(findEntityProperties(superclass));
+            superclass = (TypeElement) ((DeclaredType) superclass.getSuperclass()).asElement();
+        }
+        properties.addAll(findEntityProperties(superclass));
+
+        return properties;
     }
     
     public static AnnotationMirror getPropAnnotationMirror(VariableElement prop, Class<? extends Annotation> annotationClass) {

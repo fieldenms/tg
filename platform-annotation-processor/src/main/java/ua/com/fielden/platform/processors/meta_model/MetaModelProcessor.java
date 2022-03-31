@@ -77,7 +77,7 @@ public class MetaModelProcessor extends AbstractProcessor {
     }
     
     private static List<String> getIncludedInheritedPropertiesNames() {
-        return new ArrayList<>(List.of("active"));
+        return new ArrayList<>(List.of("active", "key", "desc"));
     }
     
     private class MetaModelClazz {
@@ -169,12 +169,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         /* ==========
          * Properties
          * ========== */
-        final List<VariableElement> properties = EntityFinder.findEntityProperties(entityTypeElement);
-        final List<VariableElement> inheritedProperties = EntityFinder.findEntityInheritedProperties(entityTypeElement).stream()
-                .filter(varEl -> 
-                        MetaModelProcessor.getIncludedInheritedPropertiesNames().contains(varEl.getSimpleName().toString()))
-                .toList();
-        properties.addAll(inheritedProperties);
+        final Set<VariableElement> properties = findEntityAllProperties(entityTypeElement);
 
         List<FieldSpec> fieldSpecs = new ArrayList<>();
         
@@ -431,6 +426,20 @@ public class MetaModelProcessor extends AbstractProcessor {
         javaFile.writeTo(filer);
 
         logger.info(String.format("Generated %s", metaModelsTypeSpec.name));
+    }
+    
+    private static Set<VariableElement> findEntityAllProperties(TypeElement typeElement) {
+        final Set<VariableElement> properties = EntityFinder.findEntityProperties(typeElement);
+        final List<String> propertiesNames = properties.stream().map(prop -> prop.getSimpleName().toString()).toList();
+        final List<VariableElement> inheritedProperties = EntityFinder.findEntityInheritedProperties(typeElement).stream()
+                .filter(inhProp -> {
+                    final String inhPropName = inhProp.getSimpleName().toString();
+                    return getIncludedInheritedPropertiesNames().contains(inhPropName) &&
+                            !(propertiesNames.contains(inhPropName));
+                })
+                .toList();
+        properties.addAll(inheritedProperties);
+        return properties;
     }
 
     private Configuration getConfig() {
