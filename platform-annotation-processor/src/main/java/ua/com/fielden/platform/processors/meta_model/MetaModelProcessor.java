@@ -220,17 +220,17 @@ public class MetaModelProcessor extends AbstractProcessor {
             else
                 public final PropertyMetaModel [PROP_NAME]; 
             */
+            MetaModelClazz propTypeMetaModelClazz = null;
             ClassName propTypeMetaModelClassName = null;
             if (propType.getKind() == TypeKind.DECLARED) { 
-                final Element propTypeAsElement = ((DeclaredType) propType).asElement(); 
-                if (propTypeAsElement.getAnnotation(GenerateMetaModel.class) != null) {
-                    final String propTypeSimpleName = propTypeAsElement.getSimpleName().toString();
-                    final String propTypePkgName = elementUtils.getPackageOf(propTypeAsElement).getQualifiedName().toString();
-                    propTypeMetaModelClassName = ClassName.get(propTypePkgName + META_MODEL_PKG_NAME_SUFFIX, propTypeSimpleName + META_MODEL_NAME_SUFFIX);
+                final TypeElement propTypeAsElement = (TypeElement) ((DeclaredType) propType).asElement(); 
+                if (EntityFinder.isEntity(propTypeAsElement)) {
+                    propTypeMetaModelClazz = new MetaModelClazz(propTypeAsElement);
+                    propTypeMetaModelClassName = getMetaModelClassName(propTypeMetaModelClazz);
                 }
             }
             
-            if (propTypeMetaModelClassName != null) {
+            if (propTypeMetaModelClazz != null) {
                 fieldSpecBuilder = FieldSpec.builder(propTypeMetaModelClassName, propName);
             } else {
                 fieldSpecBuilder = FieldSpec.builder(ClassName.get(PropertyMetaModel.class), propName);
@@ -278,7 +278,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             return [NAME].class;
         }
         */
-        final ClassName modelClassName = ClassName.get(metaModelClazz.getEntityPkgName(), metaModelClazz.getEntityName());
+        final ClassName modelClassName = getEntityClassName(metaModelClazz);
         final ParameterizedTypeName returnType = ParameterizedTypeName.get(ClassName.get(Class.class), WildcardTypeName.subtypeOf(Object.class));
         MethodSpec getModelMethod = MethodSpec.methodBuilder("getModelClass")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
@@ -313,17 +313,17 @@ public class MetaModelProcessor extends AbstractProcessor {
             final String propName = prop.getSimpleName().toString();
             final TypeMirror propType = prop.asType();
 
+            MetaModelClazz propTypeMetaModelClazz = null;
             ClassName propTypeMetaModelClassName = null;
             if (propType.getKind() == TypeKind.DECLARED) { 
-                final Element propTypeAsElement = ((DeclaredType) propType).asElement(); 
-                if (propTypeAsElement.getAnnotation(GenerateMetaModel.class) != null) {
-                    final String propTypeSimpleName = propTypeAsElement.getSimpleName().toString();
-                    final String propTypePackageName = elementUtils.getPackageOf(propTypeAsElement).getQualifiedName().toString();
-                    propTypeMetaModelClassName = ClassName.get(propTypePackageName + META_MODEL_PKG_NAME_SUFFIX, propTypeSimpleName + META_MODEL_NAME_SUFFIX);
+                final TypeElement propTypeAsElement = (TypeElement) ((DeclaredType) propType).asElement(); 
+                if (EntityFinder.isEntity(propTypeAsElement)) {
+                    propTypeMetaModelClazz = new MetaModelClazz(propTypeAsElement);
+                    propTypeMetaModelClassName = getMetaModelClassName(propTypeMetaModelClazz);
                 }
             }
 
-            if (propTypeMetaModelClassName != null) {
+            if (propTypeMetaModelClazz != null) {
                 constructorStatementsBuilder = constructorStatementsBuilder.addStatement(
                         "this.$L = new $T(joinPath($L_))", 
                         propName, propTypeMetaModelClassName, propName);
@@ -466,6 +466,14 @@ public class MetaModelProcessor extends AbstractProcessor {
                 .toList();
         properties.addAll(inheritedProperties);
         return properties;
+    }
+    
+    private static ClassName getMetaModelClassName(MetaModelClazz clazz) {
+        return ClassName.get(clazz.getMetaModelPkgName(), clazz.getMetaModelName());
+    }
+
+    private static ClassName getEntityClassName(MetaModelClazz clazz) {
+        return ClassName.get(clazz.getEntityPkgName(), clazz.getEntityName());
     }
 
     private Configuration getConfig() {
