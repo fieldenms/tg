@@ -5,6 +5,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import javax.annotation.processing.AbstractProcessor;
@@ -17,7 +18,6 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -25,7 +25,6 @@ import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
-import javax.tools.Diagnostic.Kind;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -80,38 +79,66 @@ public class MetaModelProcessor extends AbstractProcessor {
         return new ArrayList<>(List.of("active", "key", "desc"));
     }
     
+    /**
+     * A helper class for conversion of package and class names between an entity and its meta-model. 
+     */
     private class MetaModelClazz {
 
-        private String entityName;
-        private String entityPkgName;
+        private TypeElement typeElement;
         
-        MetaModelClazz(String entityName, String entityPkgName) {
-            this.entityName = entityName;
-            this.entityPkgName = entityPkgName;
+        MetaModelClazz(TypeElement typeElement) {
+            this.typeElement = typeElement;
+        }
+
+        public TypeElement getTypeElement() {
+            return typeElement;
+        }
+
+        public void setTypeElement(TypeElement typeElement) {
+            this.typeElement = typeElement;
         }
         
         public String getEntityName() {
-            return entityName;
-        }
-
-        public void setEntityName(String entityName) {
-            this.entityName = entityName;
+            return typeElement.getSimpleName().toString();
         }
 
         public String getEntityPkgName() {
-            return entityPkgName;
+            return elementUtils.getPackageOf(typeElement).getQualifiedName().toString();
         }
 
-        public void setEntityPkgName(String entityPkgName) {
-            this.entityPkgName = entityPkgName;
-        }
-        
         public String getMetaModelName() {
-            return entityName + META_MODEL_NAME_SUFFIX;
+            return getEntityName() + META_MODEL_NAME_SUFFIX;
         }
         
         public String getMetaModelPkgName() {
-            return entityPkgName + META_MODEL_PKG_NAME_SUFFIX;
+            return getEntityPkgName() + META_MODEL_PKG_NAME_SUFFIX;
+        }
+        
+        @Override
+        public int hashCode() {
+            final int prime = 31;
+            int result = 1;
+            result = prime * result + getEnclosingInstance().hashCode();
+            result = prime * result + Objects.hash(typeElement);
+            return result;
+        }
+
+        @Override
+        public boolean equals(Object obj) {
+            if (this == obj)
+                return true;
+            if (obj == null)
+                return false;
+            if (getClass() != obj.getClass())
+                return false;
+            MetaModelClazz other = (MetaModelClazz) obj;
+            if (!getEnclosingInstance().equals(other.getEnclosingInstance()))
+                return false;
+            return Objects.equals(typeElement, other.typeElement);
+        }
+
+        private MetaModelProcessor getEnclosingInstance() {
+            return MetaModelProcessor.this;
         }
     }
 
@@ -130,7 +157,7 @@ public class MetaModelProcessor extends AbstractProcessor {
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         logger.info("=== PROCESSING ROUND START ===");
 
-        List<MetaModelClazz> metaModelClazzes = new ArrayList<>();
+        Set<MetaModelClazz> metaModelClazzes = new HashSet<>();
 
         final Set<? extends Element> annotatedElements = roundEnv.getElementsAnnotatedWith(MapEntityTo.class);
         for (Element element: annotatedElements) {
@@ -143,10 +170,9 @@ public class MetaModelProcessor extends AbstractProcessor {
             }
 
             final TypeElement typeElement = (TypeElement) element;
-            final String simpleName = typeElement.getSimpleName().toString();
-            final String pkgName = elementUtils.getPackageOf(typeElement).getQualifiedName().toString();
+            final MetaModelClazz metaModelClazz = new MetaModelClazz(typeElement);
+            metaModelClazzes.add(metaModelClazz);
 
-            final MetaModelClazz metaModelClazz = new MetaModelClazz(simpleName, pkgName);
 
             writeMetaModel(typeElement, metaModelClazz);
 
