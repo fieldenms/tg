@@ -173,10 +173,20 @@ public class MetaModelProcessor extends AbstractProcessor {
             final MetaModelClazz metaModelClazz = new MetaModelClazz(typeElement);
             metaModelClazzes.add(metaModelClazz);
 
+            // filter properties of this entity to find entity type ones and include them for meta-model generation
+            // this helps find entities that are included from the platform, rather than defined by a domain model,
+            // such as User
+            final Set<VariableElement> properties = findEntityAllProperties(typeElement);
+            metaModelClazzes.addAll(
+                    properties.stream()
+                    .filter(prop -> EntityFinder.isPropertyEntityType(prop))
+                    .map(prop -> new MetaModelClazz((TypeElement) ((DeclaredType) prop.asType()).asElement()))
+                    .toList()); 
+        }
+        
+        for (MetaModelClazz clazz: metaModelClazzes) {
 
-            writeMetaModel(typeElement, metaModelClazz);
-
-            metaModelClazzes.add(metaModelClazz);
+            writeMetaModel(clazz, metaModelClazzes);
         }
 
         if (metaModelClazzes.size() > 0) {
@@ -191,16 +201,17 @@ public class MetaModelProcessor extends AbstractProcessor {
         return true;
     }
 
-    private void writeMetaModel(final TypeElement entityTypeElement, final MetaModelClazz metaModelClazz) {
         /* ==========
          * Properties
          * ========== */
-        final Set<VariableElement> properties = findEntityAllProperties(entityTypeElement);
+    private void writeMetaModel(final MetaModelClazz metaModelClazz, Set<MetaModelClazz> metaModelClazzes) {
+        final TypeElement entityTypeElement = metaModelClazz.getTypeElement();
 
+        final Set<VariableElement> properties = findEntityAllProperties(entityTypeElement);
         List<FieldSpec> fieldSpecs = new ArrayList<>();
         
-        FieldSpec.Builder fieldSpecBuilder = null;
         for (VariableElement prop: properties) {
+            FieldSpec.Builder fieldSpecBuilder = null;
             final String propName = prop.getSimpleName().toString();
             final TypeMirror propType = prop.asType();
 
@@ -386,7 +397,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         logger.info(String.format("Generated %s", metaModel.name));
     }
     
-    private void writeMetaModelsClass(List<MetaModelClazz> metaModelClazzes) throws IOException {
+    private void writeMetaModelsClass(Set<MetaModelClazz> metaModelClazzes) throws IOException {
         logger.debug(String.format("Generating %s", META_MODELS_CLASS_SIMPLE_NAME));
         
         /*
