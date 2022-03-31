@@ -3,6 +3,7 @@ package ua.com.fielden.platform.processors.meta_model;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -383,7 +384,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         if (typeElement != null) { 
             logger.debug("MetaModels exists");
 
-            List<VariableElement> fields = ElementFinder.findFields(typeElement);
+            Set<VariableElement> fields = ElementFinder.findFields(typeElement);
             List<FieldSpec> existingFieldSpecs = fields.stream().map(prop -> {
                 String propName = prop.getSimpleName().toString();
                 TypeElement propTypeElement = (TypeElement) ((DeclaredType) prop.asType()).asElement();

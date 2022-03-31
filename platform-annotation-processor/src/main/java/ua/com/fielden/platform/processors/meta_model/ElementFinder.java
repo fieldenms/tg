@@ -2,7 +2,9 @@ package ua.com.fielden.platform.processors.meta_model;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -17,8 +19,8 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class ElementFinder {
 
-    public static List<VariableElement> findFields(TypeElement typeElement) {
-        List<VariableElement> fields = new ArrayList<>();
+    public static Set<VariableElement> findFields(TypeElement typeElement) {
+        Set<VariableElement> fields = new HashSet<>();
 
         List<VariableElement> enclosedFields = typeElement.getEnclosedElements().stream()
                 .filter(el -> el.getKind() == ElementKind.FIELD)
@@ -29,15 +31,15 @@ public class ElementFinder {
         return fields;
     }
 
-    public static List<VariableElement> findInheritedFields(TypeElement typeElement) {
+    public static Set<VariableElement> findInheritedFields(TypeElement typeElement) {
         TypeElement superclass = (TypeElement) ((DeclaredType) typeElement.getSuperclass()).asElement();
         return ElementFinder.findFields(superclass);
     }
 
-    public static List<VariableElement> findFieldsAnnotatedWith(TypeElement typeElement, Class<? extends Annotation> annotationClass) {
+    public static Set<VariableElement> findFieldsAnnotatedWith(TypeElement typeElement, Class<? extends Annotation> annotationClass) {
         return findFields(typeElement).stream()
                 .filter(el -> el.getAnnotation(annotationClass) != null)
-                .collect(Collectors.toList());
+                .collect(Collectors.toSet());
     }
 
     public static List<? extends AnnotationMirror> getFieldAnnotations(VariableElement field) {

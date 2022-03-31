@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.processors.meta_model;
 
 import java.lang.annotation.Annotation;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.TypeElement;
@@ -14,11 +16,11 @@ import ua.com.fielden.platform.utils.Pair;
 
 public class EntityFinder {
 
-    public static List<VariableElement> findEntityProperties(TypeElement typeElement) {
+    public static Set<VariableElement> findEntityProperties(TypeElement typeElement) {
         return ElementFinder.findFieldsAnnotatedWith(typeElement, IsProperty.class);
     }
 
-    public static List<VariableElement> findEntityInheritedProperties(TypeElement typeElement) {
+    public static Set<VariableElement> findEntityInheritedProperties(TypeElement typeElement) {
         TypeElement superclass = (TypeElement) ((DeclaredType) typeElement.getSuperclass()).asElement();
         return ElementFinder.findFieldsAnnotatedWith(superclass, IsProperty.class);
     }
