@@ -9,9 +9,12 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -83,4 +86,18 @@ public class EntityFinder {
     public static Pair<String, String> getEntityDescTitleAndDesc() {
         return null;
     }
+    
+    public static boolean isPropertyEntityType(VariableElement prop) {
+        final TypeMirror propType = prop.asType();
+        if (propType.getKind() != TypeKind.DECLARED) { 
+            return false;
+        }
+        final TypeElement propTypeAsElement = (TypeElement) ((DeclaredType) propType).asElement(); 
+        return EntityFinder.isEntity(propTypeAsElement);
+    }
+
+    public static boolean isEntity(TypeElement element) {
+        return element.getAnnotation(MapEntityTo.class) != null;
+    }
+    
 }

@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
@@ -72,6 +73,10 @@ public class ElementFinder {
     
     public static String getVariableTypeSimpleName(VariableElement varElement) {
         return ((DeclaredType) varElement.asType()).asElement().getSimpleName().toString();
+    }
+    
+    public static Name getAnnotationMirrorSimpleName(AnnotationMirror annotMirror) {
+        return annotMirror.getAnnotationType().asElement().getSimpleName();
     }
 
 }

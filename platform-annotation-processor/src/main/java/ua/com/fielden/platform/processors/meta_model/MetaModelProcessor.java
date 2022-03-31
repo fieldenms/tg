@@ -49,13 +49,13 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.WildcardTypeName;
 
-import ua.com.fielden.platform.annotations.meta_model.GenerateMetaModel;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.utils.Pair;
 
 @AutoService(Processor.class)
-@SupportedAnnotationTypes("ua.com.fielden.platform.annotations.meta_model.GenerateMetaModel")
+@SupportedAnnotationTypes("ua.com.fielden.platform.entity.annotation.MapEntityTo")
 @SupportedSourceVersion(SourceVersion.RELEASE_16)
 public class MetaModelProcessor extends AbstractProcessor {
 
@@ -132,7 +132,7 @@ public class MetaModelProcessor extends AbstractProcessor {
 
         List<MetaModelClazz> metaModelClazzes = new ArrayList<>();
 
-        final Set<? extends Element> annotatedElements = roundEnv.getElementsAnnotatedWith(GenerateMetaModel.class);
+        final Set<? extends Element> annotatedElements = roundEnv.getElementsAnnotatedWith(MapEntityTo.class);
         for (Element element: annotatedElements) {
             if (element.getKind() != ElementKind.CLASS) {
                 messager.printMessage(
@@ -233,8 +233,8 @@ public class MetaModelProcessor extends AbstractProcessor {
             }
             
             // javadoc: all annotations of a property (except ignored ones)
-            final List<String> annotNames = ElementFinder.getFieldAnnotationsExcept(prop, MetaModelProcessor.getIgnoredPropertyAnnotations()).stream()
-                    .map(a -> String.format("{@link %s}", ((TypeElement) a.getAnnotationType().asElement()).getSimpleName().toString()))
+            final List<String> annotNames = ElementFinder.getFieldAnnotationsExcept(prop, getIgnoredPropertyAnnotations()).stream()
+                    .map(a -> String.format("{@link %s}", ElementFinder.getAnnotationMirrorSimpleName(a)))
                     .toList();
             fieldSpecBuilder = fieldSpecBuilder.addJavadoc("Annotations: $L\n<p>\n", String.join(", ", annotNames));
             
