@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
@@ -19,13 +20,13 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
+import javax.tools.Diagnostic.Kind;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -63,6 +64,7 @@ public class MetaModelProcessor extends AbstractProcessor {
     
     private static final String META_MODELS_CLASS_SIMPLE_NAME = "MetaModels";
     private static final String META_MODELS_CLASS_PACKAGE_NAME = "meta_models";
+    private static final String META_MODELS_CLASS_QUALIFIED_NAME = String.format("%s.%s", META_MODELS_CLASS_PACKAGE_NAME, META_MODELS_CLASS_SIMPLE_NAME);
     private static final String META_MODEL_PKG_NAME_SUFFIX = ".meta";
     private static final String META_MODEL_NAME_SUFFIX = "MetaModel";
     private static final String INDENT = "    ";
@@ -86,7 +88,7 @@ public class MetaModelProcessor extends AbstractProcessor {
     private class MetaModelElement {
 
         private TypeElement typeElement;
-        
+
         MetaModelElement(TypeElement typeElement) {
             this.typeElement = typeElement;
         }
@@ -95,10 +97,6 @@ public class MetaModelProcessor extends AbstractProcessor {
             return typeElement;
         }
 
-        public void setTypeElement(TypeElement typeElement) {
-            this.typeElement = typeElement;
-        }
-        
         public String getEntityName() {
             return typeElement.getSimpleName().toString();
         }
@@ -110,11 +108,27 @@ public class MetaModelProcessor extends AbstractProcessor {
         public String getMetaModelName() {
             return getEntityName() + META_MODEL_NAME_SUFFIX;
         }
-        
+
         public String getMetaModelPkgName() {
             return getEntityPkgName() + META_MODEL_PKG_NAME_SUFFIX;
         }
         
+        public Set<PropertyElement> getProperties() {
+            final Set<PropertyElement> properties = EntityFinder.findDeclaredProperties(typeElement);
+            final List<String> declaredPropertiesNames = properties.stream().map(prop -> prop.getName()).toList();
+
+            final List<PropertyElement> inheritedProperties = EntityFinder.findInheritedProperties(typeElement).stream()
+                    .filter(prop -> {
+                        String propName = prop.getName();
+                        return getIncludedInheritedPropertiesNames().contains(propName) &&
+                                !(declaredPropertiesNames.contains(propName));
+                    })
+                    .toList();
+            properties.addAll(inheritedProperties);
+
+            return properties;
+        }
+
         @Override
         public int hashCode() {
             final int prime = 31;
@@ -152,16 +166,23 @@ public class MetaModelProcessor extends AbstractProcessor {
         // log4j configuration
         Configurator.initialize(getConfig());
         this.logger = LogManager.getLogger(MetaModelProcessor.class);
+        logger.info("Initialized");
     }
     
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        logger.info("=== PROCESSING ROUND START ===");
+        logger.debug("=== PROCESSING ROUND START ===");
 
         Set<MetaModelElement> metaModelElements = new HashSet<>();
 
         final Set<? extends Element> annotatedElements = roundEnv.getElementsAnnotatedWith(MapEntityTo.class);
         for (Element element: annotatedElements) {
+            if (element.getKind() != ElementKind.CLASS) {
+                messager.printMessage(Kind.ERROR, String.format("Only classes can be annotated with %s", MapEntityTo.class.getSimpleName()), element);
+                logger.debug(String.format("Skipping a non-class element %s", element.toString()));
+                continue;
+            }
+
             final TypeElement typeElement = (TypeElement) element;
             final MetaModelElement metaModelElement = new MetaModelElement(typeElement);
             metaModelElements.add(metaModelElement);
@@ -169,12 +190,13 @@ public class MetaModelProcessor extends AbstractProcessor {
             // filter properties of this entity to find entity type ones and include them for meta-model generation
             // this helps find entities that are included from the platform, rather than defined by a domain model,
             // such as User
-            final Set<VariableElement> properties = findEntityAllProperties(typeElement);
+            final Set<PropertyElement> propertyElements = metaModelElement.getProperties();
             metaModelElements.addAll(
-                    properties.stream()
-                    .filter(prop -> EntityFinder.isPropertyEntityType(prop))
-                    .map(prop -> new MetaModelElement((TypeElement) ((DeclaredType) prop.asType()).asElement()))
-                    .toList()); 
+                    propertyElements.stream()
+                    .filter(EntityFinder::isPropertyEntityType)
+                    // it's safe to call getTypeAsTypeElementOrThrow() since elements were previously filtered
+                    .map(propEl -> new MetaModelElement(propEl.getTypeAsTypeElementOrThrow()))
+                    .toList());
         }
         
         for (MetaModelElement element: metaModelElements) {
@@ -195,16 +217,13 @@ public class MetaModelProcessor extends AbstractProcessor {
     }
 
     private void writeMetaModel(final MetaModelElement metaModelElement, Set<MetaModelElement> metaModelElements) {
-        final TypeElement entityTypeElement = metaModelElement.getTypeElement();
-
         // ######################## PROPERTIES ########################
-        final Set<VariableElement> properties = findEntityAllProperties(entityTypeElement);
+        final Set<PropertyElement> propertyElements = metaModelElement.getProperties();
         List<FieldSpec> fieldSpecs = new ArrayList<>();
         
-        for (VariableElement prop: properties) {
+        for (PropertyElement prop: propertyElements) {
             FieldSpec.Builder fieldSpecBuilder = null;
-            final String propName = prop.getSimpleName().toString();
-            final TypeMirror propType = prop.asType();
+            final String propName = prop.getName();
 
             // ### static property holding the property's name ###
             // private static final String [PROP_NAME]_ = "[PROP_NAME]";
@@ -214,17 +233,10 @@ public class MetaModelProcessor extends AbstractProcessor {
                     .build());
             
             // ### instance property ###
-            MetaModelElement propTypeMetaModelElement = null;
-            ClassName propTypeMetaModelClassName = null;
-            if (propType.getKind() == TypeKind.DECLARED) { 
-                final TypeElement propTypeAsElement = (TypeElement) ((DeclaredType) propType).asElement(); 
-                if (EntityFinder.isEntity(propTypeAsElement)) {
-                    propTypeMetaModelElement = new MetaModelElement(propTypeAsElement);
-                    propTypeMetaModelClassName = getMetaModelClassName(propTypeMetaModelElement);
-                }
-            }
-            
-            if (propTypeMetaModelElement != null) {
+            if (EntityFinder.isPropertyEntityType(prop)) {
+                MetaModelElement propTypeMetaModelElement = new MetaModelElement(prop.getTypeAsTypeElementOrThrow());
+                ClassName propTypeMetaModelClassName = getMetaModelClassName(propTypeMetaModelElement);
+
                 if (propTypeMetaModelElement.equals(metaModelElement)) {
                     // property is of the same type as the owning entity
                     // private Supplier<[META_MODEL_NAME]> [PROP_NAME];
@@ -249,41 +261,33 @@ public class MetaModelProcessor extends AbstractProcessor {
         // ######################## METHODS ###########################
         List<MethodSpec> methodSpecs = new ArrayList<>();
 
-        for (VariableElement prop: properties) {
+        for (PropertyElement prop: propertyElements) {
             MethodSpec.Builder methodSpecBuilder = null;
-            final String propName = prop.getSimpleName().toString();
-            final TypeMirror propType = prop.asType();
+            final String propName = prop.getName();
 
-            // check if property is entity type
-            MetaModelElement propTypeMetaModelElement = null;
             ClassName propTypeMetaModelClassName = null;
-            if (propType.getKind() == TypeKind.DECLARED) { 
-                final TypeElement propTypeAsElement = (TypeElement) ((DeclaredType) propType).asElement(); 
-                if (EntityFinder.isEntity(propTypeAsElement)) {
-                    propTypeMetaModelElement = new MetaModelElement(propTypeAsElement);
-                    propTypeMetaModelClassName = getMetaModelClassName(propTypeMetaModelElement);
-                }
-            }
+            if (EntityFinder.isPropertyEntityType(prop)) {
+                MetaModelElement propTypeMetaModelElement = new MetaModelElement(prop.getTypeAsTypeElementOrThrow());
+                propTypeMetaModelClassName = getMetaModelClassName(propTypeMetaModelElement);
             
-            if (propTypeMetaModelElement != null) {
                 if (propTypeMetaModelElement.equals(metaModelElement)) {
                     /* property is of the same type as the owning entity
-                     
+
                     public [META_MODEL_NAME] [PROP_NAME]() {
                         return [PROP_NAME].get();
                     }
-                    */
+                     */
                     methodSpecBuilder = MethodSpec.methodBuilder(propName)
                             .addModifiers(Modifier.PUBLIC)
                             .returns(propTypeMetaModelClassName)
                             .addStatement("return $L.get()", propName);
                 } else {
                     /* property is entity type
-                     
+
                     public [META_MODEL_NAME] [PROP_NAME]() {
                         return [PROP_NAME];
                     }
-                    */
+                     */
                     methodSpecBuilder = MethodSpec.methodBuilder(propName)
                             .addModifiers(Modifier.PUBLIC)
                             .returns(propTypeMetaModelClassName)
@@ -316,7 +320,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             }
             
             // javadoc: property type
-            methodSpecBuilder = methodSpecBuilder.addJavadoc("Type: {@link $T}\n<p>\n", propType);
+            methodSpecBuilder = methodSpecBuilder.addJavadoc("Type: {@link $T}\n<p>\n", prop.getType());
             
             // (optional) javadoc: property type's meta-model
             if (propTypeMetaModelClassName != null) {
@@ -324,7 +328,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             }
             
             // javadoc: all annotations of a property (except ignored ones)
-            final List<String> annotNames = ElementFinder.getFieldAnnotationsExcept(prop, getIgnoredPropertyAnnotations()).stream()
+            final List<String> annotNames = ElementFinder.getFieldAnnotationsExcept(prop.toVariableElement(), getIgnoredPropertyAnnotations()).stream()
                     .map(a -> String.format("{@link %s}", ElementFinder.getAnnotationMirrorSimpleName(a)))
                     .toList();
             methodSpecBuilder = methodSpecBuilder.addJavadoc("Annotations: $L\n<p>\n", String.join(", ", annotNames));
@@ -360,22 +364,13 @@ public class MetaModelProcessor extends AbstractProcessor {
                 .addStatement("super(path)");
 
         CodeBlock.Builder constructorStatementsBuilder = CodeBlock.builder();
-        for (VariableElement prop: properties) {
-            final String propName = prop.getSimpleName().toString();
-            final TypeMirror propType = prop.asType();
+        for (PropertyElement prop: propertyElements) {
+            final String propName = prop.getName();
 
-            // check if property is entity type
-            MetaModelElement propTypeMetaModelElement = null;
-            ClassName propTypeMetaModelClassName = null;
-            if (propType.getKind() == TypeKind.DECLARED) { 
-                final TypeElement propTypeAsElement = (TypeElement) ((DeclaredType) propType).asElement(); 
-                if (EntityFinder.isEntity(propTypeAsElement)) {
-                    propTypeMetaModelElement = new MetaModelElement(propTypeAsElement);
-                    propTypeMetaModelClassName = getMetaModelClassName(propTypeMetaModelElement);
-                }
-            }
+            if (EntityFinder.isPropertyEntityType(prop)) {
+                MetaModelElement propTypeMetaModelElement = new MetaModelElement(prop.getTypeAsTypeElementOrThrow());
+                ClassName propTypeMetaModelClassName = getMetaModelClassName(propTypeMetaModelElement);
             
-            if (propTypeMetaModelElement != null) {
                 if (propTypeMetaModelElement.equals(metaModelElement)) {
                     /* property is of the same type as the owning entity
                      
@@ -460,25 +455,21 @@ public class MetaModelProcessor extends AbstractProcessor {
     }
     
     private void writeMetaModelsClass(Set<MetaModelElement> metaModelElements) throws IOException {
-        logger.debug(String.format("Generating %s", META_MODELS_CLASS_SIMPLE_NAME));
-        
         /*
         public final class MetaModels {
             public static final [ENTITY_NAME]MetaModel [ENTITY_NAME] = new [ENTITY_NAME]MetaModel();
         }
         */
 
-
-        final String qualifiedName = String.format("%s.%s", META_MODELS_CLASS_PACKAGE_NAME, META_MODELS_CLASS_SIMPLE_NAME);
-        final TypeElement typeElement = elementUtils.getTypeElement(qualifiedName);
-
+        final TypeElement typeElement = elementUtils.getTypeElement(META_MODELS_CLASS_QUALIFIED_NAME);
         List<FieldSpec> fieldSpecs = new ArrayList<>();
         
         // if MetaModels class already exists
         if (typeElement != null) { 
-            logger.debug("MetaModels exists");
+            logger.debug("MetaModels class exists");
 
-            Set<VariableElement> fields = ElementFinder.findFields(typeElement);
+            Set<VariableElement> fields = ElementFinder.findDeclaredFields(typeElement);
+
             // collect existing fields by mapping them from VariableElement to FieldSpec
             List<FieldSpec> existingFieldSpecs = fields.stream().map(field -> {
                 String fieldName = field.getSimpleName().toString();
@@ -494,26 +485,23 @@ public class MetaModelProcessor extends AbstractProcessor {
             fieldSpecs.addAll(existingFieldSpecs);
         }
 
-        for (MetaModelElement element: metaModelElements) {
+        
+        for (MetaModelElement metaModelElement: metaModelElements) {
             // if a field for this meta-model already exists, then skip it
-            // since changes to a specific meta-model do not affect the MetaModels class
-            if (typeElement != null) {
-                VariableElement elementField = ElementFinder.findFields(typeElement).stream()
-                        .filter(varEl -> 
-                            varEl.getSimpleName().toString().equals(element.getEntityName()) &&
-                            ElementFinder.getVariableTypeSimpleName(varEl).equals(element.getMetaModelName()))
-                        .findAny()
-                        .orElse(null);
-                if (elementField != null) {
-                    continue;
-                }
+            // since changes to a particular meta-model do not affect the MetaModels class
+            FieldSpec fieldSpec = fieldSpecs.stream()
+                    .filter(fs -> fs.type.equals(getMetaModelClassName(metaModelElement)))
+                    .findAny()
+                    .orElse(null);
+            if (fieldSpec != null) {
+                continue;
             }
 
             // create a field for this meta-model
-            final ClassName fieldTypeClassName = getMetaModelClassName(element);
-            final String fieldName = element.getEntityName();
-            fieldSpecs.add(FieldSpec.builder(fieldTypeClassName, fieldName)
-                    .initializer("new $T()", fieldTypeClassName)
+            final ClassName fieldTypeName = getMetaModelClassName(metaModelElement);
+            final String fieldName = metaModelElement.getEntityName();
+            fieldSpecs.add(FieldSpec.builder(fieldTypeName, fieldName)
+                    .initializer("new $T()", fieldTypeName)
                     .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
                     .addJavadoc("Newly generated") // debug
                     .build());
@@ -531,20 +519,6 @@ public class MetaModelProcessor extends AbstractProcessor {
         logger.info(String.format("Generated %s", metaModelsTypeSpec.name));
     }
     
-    private static Set<VariableElement> findEntityAllProperties(TypeElement typeElement) {
-        final Set<VariableElement> properties = EntityFinder.findEntityProperties(typeElement);
-        final List<String> propertiesNames = properties.stream().map(prop -> prop.getSimpleName().toString()).toList();
-        final List<VariableElement> inheritedProperties = EntityFinder.findEntityInheritedProperties(typeElement).stream()
-                .filter(inhProp -> {
-                    final String inhPropName = inhProp.getSimpleName().toString();
-                    return getIncludedInheritedPropertiesNames().contains(inhPropName) &&
-                            !(propertiesNames.contains(inhPropName));
-                })
-                .toList();
-        properties.addAll(inheritedProperties);
-        return properties;
-    }
-    
     private static ClassName getMetaModelClassName(MetaModelElement element) {
         return ClassName.get(element.getMetaModelPkgName(), element.getMetaModelName());
     }
@@ -552,6 +526,7 @@ public class MetaModelProcessor extends AbstractProcessor {
     private static ClassName getEntityClassName(MetaModelElement element) {
         return ClassName.get(element.getEntityPkgName(), element.getEntityName());
     }
+
 
     private Configuration getConfig() {
         ConfigurationBuilder<BuiltConfiguration> builder = ConfigurationBuilderFactory.newConfigurationBuilder();

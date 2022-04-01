@@ -1,16 +1,12 @@
 package ua.com.fielden.platform.processors.meta_model;
 
-import java.lang.annotation.Annotation;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.type.TypeMirror;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -22,38 +18,35 @@ public class EntityFinder {
     
     public static Class<?> ROOT_ENTITY_CLASS = AbstractEntity.class;
 
-    public static Set<VariableElement> findEntityProperties(TypeElement typeElement) {
-        return ElementFinder.findFieldsAnnotatedWith(typeElement, IsProperty.class);
-    }
-
-    public static Set<VariableElement> findEntityInheritedProperties(TypeElement typeElement) {
-        Set<VariableElement> properties = new HashSet<>();
-
-        TypeElement superclass = (TypeElement) ((DeclaredType) typeElement.getSuperclass()).asElement();
-        while (!superclass.getQualifiedName().toString().equals(ROOT_ENTITY_CLASS.getCanonicalName())) {
-            properties.addAll(findEntityProperties(superclass));
-            superclass = (TypeElement) ((DeclaredType) superclass.getSuperclass()).asElement();
-        }
-        properties.addAll(findEntityProperties(superclass));
-
-        return properties;
+   /**
+     * The same as {@link ElementFinder#findDeclaredFields(TypeElement)}, but for properties of an {@link AbstractEntity entity}.
+    */
+    public static Set<PropertyElement> findDeclaredProperties(TypeElement typeElement) {
+        return ElementFinder.findDeclaredFields(typeElement).stream()
+                .filter(EntityFinder::isProperty)
+                .map(PropertyElement::new)
+                .collect(Collectors.toSet());
     }
     
-    public static AnnotationMirror getPropAnnotationMirror(VariableElement prop, Class<? extends Annotation> annotationClass) {
-        final String annotClassCanonicalName = annotationClass.getCanonicalName();
-        
-        for (AnnotationMirror annotMirror: prop.getAnnotationMirrors()) {
-            String qualifiedName = ((TypeElement) annotMirror.getAnnotationType().asElement()).getQualifiedName().toString();
-            if (qualifiedName.equals(annotClassCanonicalName)) {
-                return annotMirror;
-            }
-        }
-        
-        return null;
+    public static Set<PropertyElement> findInheritedProperties(TypeElement typeElement) {
+        return ElementFinder.findInheritedFields(typeElement).stream()
+                .filter(EntityFinder::isProperty)
+                .map(PropertyElement::new)
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * The same as {@link ElementFinder#findFields(TypeElement)}, but for properties of an {@link AbstractEntity entity}.
+     */
+    public static Set<PropertyElement> findProperties(TypeElement typeElement) {
+        return ElementFinder.findFields(typeElement, ROOT_ENTITY_CLASS).stream()
+                .filter(EntityFinder::isProperty)
+                .map(PropertyElement::new)
+                .collect(Collectors.toSet());
     }
     
-    public static Pair<String, String> getPropTitleAndDesc(VariableElement prop) {
-        AnnotationMirror titleAnnotationMirror = getPropAnnotationMirror(prop, Title.class);
+    public static Pair<String, String> getPropTitleAndDesc(PropertyElement propElement) {
+        AnnotationMirror titleAnnotationMirror = ElementFinder.getFieldAnnotationMirror(propElement.toVariableElement(), Title.class);
         
         if (titleAnnotationMirror == null) {
             return null;
@@ -87,17 +80,20 @@ public class EntityFinder {
         return null;
     }
     
-    public static boolean isPropertyEntityType(VariableElement prop) {
-        final TypeMirror propType = prop.asType();
-        if (propType.getKind() != TypeKind.DECLARED) { 
-            return false;
-        }
-        final TypeElement propTypeAsElement = (TypeElement) ((DeclaredType) propType).asElement(); 
-        return EntityFinder.isEntity(propTypeAsElement);
-    }
-
     public static boolean isEntity(TypeElement element) {
         return element.getAnnotation(MapEntityTo.class) != null;
+    }
+    
+    public static boolean isProperty(VariableElement element) {
+        return element.getAnnotation(IsProperty.class) != null;
+    }
+
+    public static boolean isPropertyEntityType(PropertyElement propElement) {
+        try {
+            return EntityFinder.isEntity(propElement.getTypeAsTypeElement());
+        } catch (Exception e) {
+            return false;
+        }
     }
     
 }
