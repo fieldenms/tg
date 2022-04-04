@@ -1,8 +1,6 @@
 package ua.com.fielden.platform.processors.meta_model;
 
-import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
@@ -27,27 +25,6 @@ public class EntityElement {
     
     public String getPackageName() {
         return packageName;
-    }
-
-    /**
-     * Get all properties of this entity.
-     * 
-     * @param includedInheritedPropertiesNames - names of inherited properties that need to be retrieved
-     */
-    public Set<PropertyElement> getProperties(List<String> includedInheritedPropertiesNames) {
-        final Set<PropertyElement> properties = EntityFinder.findDeclaredProperties(typeElement);
-        final List<String> declaredPropertiesNames = properties.stream().map(prop -> prop.getName()).toList();
-
-        final List<PropertyElement> inheritedProperties = EntityFinder.findInheritedProperties(typeElement).stream()
-                .filter(prop -> {
-                    String propName = prop.getName();
-                    return includedInheritedPropertiesNames.contains(propName) &&
-                            !(declaredPropertiesNames.contains(propName));
-                })
-                .toList();
-        properties.addAll(inheritedProperties);
-
-        return properties;
     }
 
     @Override

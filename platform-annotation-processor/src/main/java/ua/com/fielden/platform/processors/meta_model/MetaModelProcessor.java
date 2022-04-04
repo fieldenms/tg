@@ -86,6 +86,10 @@ public class MetaModelProcessor extends AbstractProcessor {
         return ClassName.get(element.getPackageName(), element.getSimpleName());
     }
     
+    private static Set<PropertyElement> findProperties(EntityElement entityElement) {
+        return EntityFinder.findProperties(entityElement, includedInheritedPropertiesNames());
+    }
+    
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
@@ -120,7 +124,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             // filter properties of this entity to find entity type ones and include them for meta-model generation
             // this helps find entities that are included from the platform, rather than defined by a domain model,
             // such as User
-            final Set<PropertyElement> propertyElements = entityElement.getProperties(includedInheritedPropertiesNames());
+            final Set<PropertyElement> propertyElements = findProperties(entityElement);
             metaModelElements.addAll(
                     propertyElements.stream()
                     .filter(EntityFinder::isPropertyEntityType)
@@ -149,7 +153,7 @@ public class MetaModelProcessor extends AbstractProcessor {
     private void writeMetaModel(final MetaModelElement metaModelElement, Set<MetaModelElement> metaModelElements) {
         // ######################## PROPERTIES ########################
         final EntityElement entityElement = metaModelElement.getEntityElement();
-        final Set<PropertyElement> propertyElements = entityElement.getProperties(includedInheritedPropertiesNames());
+        final Set<PropertyElement> propertyElements = findProperties(entityElement);
         List<FieldSpec> fieldSpecs = new ArrayList<>();
         
         for (PropertyElement prop: propertyElements) {
