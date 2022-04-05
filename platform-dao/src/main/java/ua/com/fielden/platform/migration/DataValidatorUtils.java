@@ -5,6 +5,7 @@ import static java.util.stream.Collectors.joining;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -60,6 +61,24 @@ public class DataValidatorUtils {
 					result.add(T3.t3(retriever.retriever.getClass().getSimpleName(), pi.propName() + ":" + pi.propType().getSimpleName(), sql));
 				}
 			}
+        }
+
+    	return result;
+    }
+
+    public static List<T3<String, String, String>> produceUpdatersKeysDataIntegrityValidationSql(final Map<CompiledRetriever, List<CompiledRetriever>> domainTypeRetrieversByUpdaters) {
+    	final var result = new ArrayList<T3<String, String, String>>();
+    	
+    	for (final Entry<CompiledRetriever, List<CompiledRetriever>> entry : domainTypeRetrieversByUpdaters.entrySet()) {
+    		final var retrieverSql = RetrieverSqlProducer.getSqlWithoutOrdering(entry.getKey().retriever);
+    		final List<String> keyProps = MigrationUtils.keyPaths((Class<? extends AbstractEntity>) entry.getKey().getType());
+    		final var domainRets = entry.getValue();
+					final var from = domainRets == null ? null : domainRets.stream().map(r -> RetrieverSqlProducer.getKeyResultsOnlySql(r.retriever, keyProps)).collect(joining("\nUNION ALL"));
+					final var cond = "(" + keyProps.stream().map(s -> "R. \"" + s + "\" IS NOT NULL").collect(Collectors.joining(" OR ")) + ")";
+					final var existCond = " AND NOT EXISTS (SELECT * FROM (" + from + ") D WHERE " + 
+							composeCondition(keyProps, keyProps, "R", "D") + ")";
+					final var sql = "SELECT COUNT(*) FROM (" + retrieverSql + ") R WHERE " + cond + (from == null ? "" : existCond); 
+					result.add(T3.t3(entry.getKey().retriever.getClass().getSimpleName(), "key", sql));
         }
 
     	return result;

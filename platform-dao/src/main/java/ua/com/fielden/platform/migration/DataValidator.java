@@ -5,14 +5,20 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.migration.DataValidatorUtils.produceKeyUniquenessViolationSql;
 import static ua.com.fielden.platform.migration.DataValidatorUtils.produceRequirednessValidationSql;
 import static ua.com.fielden.platform.migration.DataValidatorUtils.produceDataIntegrityValidationSql;
+import static ua.com.fielden.platform.migration.DataValidatorUtils.produceUpdatersKeysDataIntegrityValidationSql;
 
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 import org.apache.logging.log4j.Logger;
+
+import com.google.common.collect.Lists;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 
@@ -26,12 +32,14 @@ public class DataValidator {
     private final Connection conn;
     private final List<CompiledRetriever> retrieversJobs;
     private final Map<Class<? extends AbstractEntity<?>>, List<CompiledRetriever>> entityTypeRetrievers;
+    private final Map<CompiledRetriever, List<CompiledRetriever>> domainTypeRetrieversByUpdaters;
     
     public DataValidator(final Connection conn, final boolean includeDetails, final List<CompiledRetriever> retrieversJobs) {
     	this.conn = conn;
     	this.includeDetails = includeDetails;
     	this.retrieversJobs = retrieversJobs;
-    	this.entityTypeRetrievers = retrieversJobs.stream().filter(r -> !r.retriever.isUpdater()).collect(Collectors.groupingBy(CompiledRetriever::getType)); 
+    	this.entityTypeRetrievers = retrieversJobs.stream().filter(r -> !r.retriever.isUpdater()).collect(Collectors.groupingBy(CompiledRetriever::getType));
+    	this.domainTypeRetrieversByUpdaters = domainTypeRetrieversByUpdater(retrieversJobs);
     }
     
     public void performValidations() {
@@ -39,6 +47,7 @@ public class DataValidator {
     	checkKeyUniqueness();
         checkRequiredness();
     	checkDataIntegrity();
+    	checkDataIntegrityOfUpdatersKeys();
     }
     
     private void checkDataIntegrity() {
@@ -54,6 +63,24 @@ public class DataValidator {
                 }
             } catch (final Exception ex) {
                 LOGGER.error(format("Exception while counting dead references for prop [%s] of retriever [%s]%s SQL:\n"
+                        + "%s", entry._2, entry._1, ex, entry._3));
+            }
+        }
+    }
+    
+    private void checkDataIntegrityOfUpdatersKeys() {
+    	final var stmts = produceUpdatersKeysDataIntegrityValidationSql(domainTypeRetrieversByUpdaters);
+        
+        LOGGER.debug("Checking data integrity for updaters keys ...");
+
+        for (final var entry : stmts) {
+            try (final var st = conn.createStatement(); final var rs = st.executeQuery(entry._3)) {
+                if (rs.next() && rs.getInt(1) > 0) {
+                    LOGGER.error(format("Dead references count for prop [%s] of updater [%s] is [%s].\n"
+                            + "%s", entry._2, entry._1, rs.getInt(1), includeDetails ? entry._3 + LONG_BREAK : ""));
+                }
+            } catch (final Exception ex) {
+                LOGGER.error(format("Exception while counting dead references for prop [%s] of updater [%s]%s SQL:\n"
                         + "%s", entry._2, entry._1, ex, entry._3));
             }
         }
@@ -104,4 +131,26 @@ public class DataValidator {
 
         }
     }
+    
+	private static Map<CompiledRetriever, List<CompiledRetriever>> domainTypeRetrieversByUpdater(final List<CompiledRetriever> retrieversJobs) {
+		var allRetrieverByType = retrieversJobs.stream().collect(Collectors.groupingBy(CompiledRetriever::getType));
+
+		var result = new HashMap<CompiledRetriever, List<CompiledRetriever>>();
+
+		for (final Entry<? extends Class<? extends AbstractEntity<?>>, List<CompiledRetriever>> typeAndItsRetrievers : allRetrieverByType.entrySet()) {
+			var currentTypeResult = new HashMap<CompiledRetriever, List<CompiledRetriever>>();
+
+			for (CompiledRetriever rt : Lists.reverse(typeAndItsRetrievers.getValue())) {
+				if (rt.retriever.isUpdater()) {
+					currentTypeResult.put(rt, new ArrayList<>());
+				} else {
+					for (List<CompiledRetriever> updaterDomain : currentTypeResult.values()) {
+						updaterDomain.add(rt);
+					}
+				}
+			}
+			result.putAll(currentTypeResult);
+		}
+		return result;
+	}
 }

@@ -26,12 +26,14 @@ import java.util.Optional;
 import java.util.TimeZone;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
+import com.google.common.collect.Lists;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -85,6 +87,20 @@ public class DataMigrator {
         LOGGER.info("Migration duration: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
     }
 
+	private static void printRetrieversScheme(final List<CompiledRetriever> retrieversJobs) {
+		var allRetrieverByType = retrieversJobs.stream().collect(Collectors.groupingBy(CompiledRetriever::getType));
+
+		for (final Entry<? extends Class<? extends AbstractEntity<?>>, List<CompiledRetriever>> typeAndItsRetrievers : allRetrieverByType.entrySet()) {
+			if (typeAndItsRetrievers.getValue().size() > 1) {
+				System.out.println(" == " + typeAndItsRetrievers.getKey().getSimpleName());
+				for (CompiledRetriever compiledRetriever : typeAndItsRetrievers.getValue()) {
+					System.out.println("        " + (compiledRetriever.retriever.isUpdater() ? "U" : " ") + " "
+							+ compiledRetriever.retriever.getClass().getSimpleName());
+				}
+			}
+		}
+	}
+    
     private static List<CompiledRetriever> generateRetrieversJobs(final List<IRetriever<? extends AbstractEntity<?>>> retrievers, final EqlDomainMetadata eqlDmd) {
         final var result = new ArrayList<CompiledRetriever>();
         for (final var retriever : retrievers) {
