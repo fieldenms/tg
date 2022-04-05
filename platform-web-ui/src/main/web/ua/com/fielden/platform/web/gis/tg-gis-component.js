@@ -589,7 +589,7 @@ GisComponent.prototype.createPopupContent = function (feature) {
         const extendPopupText = entry => {
             if (entry.value) { // entry.value is already converted to string; if entry.value === '' it will be considered empty and such property will not be shown in a popup
                 const value = entry.value === 'true' ? '<iron-icon class="bool-true-icon" icon="icons:check"></iron-icon>' : (entry.value === 'false' ? '' : entry.value);
-                popupText = popupText + '<tr class="popup-row" title="' + entry.title + '"><td>' + entry.title + ':</td><td><div>' + value + '</div></td></tr>';
+                popupText = popupText + '<tr class="popup-row" dotnotation="' + entry.dotNotation + '"><td>' + entry.title + ':</td><td><div>' + value + '</div></td></tr>';
             }
         };
         
@@ -610,7 +610,7 @@ GisComponent.prototype.createPopupContent = function (feature) {
         const rows = element.children[0].querySelectorAll('.popup-row'); // ... find all popup 'rows' ... ('element' is a <table> and its first child is a <tbody> that contains all <tr>s)
         const columnPropertiesMapped = self.columnPropertiesMapper(entity);
         rows.forEach(row => {
-            const foundEntry = columnPropertiesMapped.find(entry => entry.column.columnTitle === row.title);
+            const foundEntry = columnPropertiesMapped.find(entry => entry.dotNotation === row.getAttribute('dotnotation'));
             if (foundEntry && foundEntry.column && foundEntry.column.parentNode /* EGI */ && foundEntry.column.parentNode.hasAction(entity, foundEntry.column)) {
                 const valueElement = row.children[1].children[0]; // ... 'row' is a <tr> element; second child of it represents <td> with a value; make the child of this <td> (<div> element) clickable ...
                 valueElement.className = 'popup-button';
