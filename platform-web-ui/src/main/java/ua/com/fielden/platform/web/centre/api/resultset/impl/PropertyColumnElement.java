@@ -236,7 +236,12 @@ public class PropertyColumnElement implements IRenderable, IImportable {
     private DomElement renderColumnElement () {
         final DomElement columnElement = new DomElement(widgetName).attrs(createAttributes()).attrs(createCustomAttributes());
         if (action.isPresent() && action.get().getFunctionalActionKind() == FunctionalActionKind.PROP) {
-            columnElement.add(action.get().render().attr("slot", "property-action"));
+            final DomElement actionElement = action.get().render();
+            actionElement.attr("slot", "property-action");
+            if (isDynamic) {
+                actionElement.attr("chosen-property", format("[[item.%s]]", DYN_COL_GROUP_PROP_VALUE));
+            }
+            columnElement.add(actionElement);
         }
         summary.forEach(summary -> columnElement.add(summary.render()));
         return columnElement;

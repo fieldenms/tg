@@ -30,26 +30,47 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 public class ResourceFactoryUtils {
 
     /**
-     * Finds the entity master using 'entityType' request attribute inside 'webUiConfig'.
+     * Finds the entity master in {@code webUiConfig} by the value of {@code request} attribute {code entityType}.
+     * Also, refer {@link #getEntityMaster(Class, IWebUiConfig)}.
      *
      * @param request
      * @param webUiConfig
-     * @return
+     * @return – entity master or null
      */
     static EntityMaster<? extends AbstractEntity<?>> getEntityMaster(final Request request, final IWebUiConfig webUiConfig) {
-        return getEntityMaster((String) request.getAttributes().get("entityType"), webUiConfig);
+        final String entityType = (String) request.getAttributes().get("entityType");
+        return getEntityMaster(entityType, webUiConfig);
     }
 
     /**
-     * Finds the entity master using 'entityTypeString' inside 'webUiConfig'.
+     * Finds the entity master in {@code webUiConfig} by {@code entityTypeString}.
+     * Also, refer {@link #getEntityMaster(Class, IWebUiConfig)}.
      *
      * @param entityTypeString
      * @param webUiConfig
-     * @return
+     * @return – entity master or null
      */
     public static EntityMaster<? extends AbstractEntity<?>> getEntityMaster(final String entityTypeString, final IWebUiConfig webUiConfig) {
         final Class<? extends AbstractEntity<?>> entityType = (Class<? extends AbstractEntity<?>>) ClassesRetriever.findClass(entityTypeString);
-        return webUiConfig.getMasters().get(entityType);
+        return getEntityMaster(entityType, webUiConfig);
+    }
+
+    /**
+     * Finds the entity master in {@code webUiConfig} by {@code entityType}.
+     * If {@code entityType} has no master then its superclass is checked.
+     * This is mainly useful in a context of entity centres for synthetic entities that are based on persistent entities, but have not master on their own.
+     *
+     * @param entityTypeString
+     * @param webUiConfig
+     * @return – entity master or null
+     */
+    public static EntityMaster<? extends AbstractEntity<?>> getEntityMaster(final Class<? extends AbstractEntity<?>> entityType, final IWebUiConfig webUiConfig) {
+        final EntityMaster<? extends AbstractEntity<?>> entityMaster = webUiConfig.getMasters().get(entityType);
+        if (entityMaster == null) {
+            final Class<? extends AbstractEntity<?>> superEntityType = (Class<? extends AbstractEntity<?>>) entityType.getSuperclass();
+            return webUiConfig.getMasters().get(superEntityType);
+        }
+        return entityMaster;
     }
 
     /**
