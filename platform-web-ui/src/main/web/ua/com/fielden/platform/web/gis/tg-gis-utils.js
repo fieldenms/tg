@@ -36,6 +36,8 @@ export const createStyleModule = function (moduleId, ...styleStrings) {
  */
 export const fitToBounds = function (map, markerClusterGroup) {
     window.setTimeout(function () {
-        map.fitBounds(markerClusterGroup.getBounds());
+        if (markerClusterGroup.getBounds().isValid()) { // marker cluster group can have no real objects and its bounds would be invalid -- do nothing in that case
+            map.fitBounds(markerClusterGroup.getBounds());
+        }
     }, 1);
 }
