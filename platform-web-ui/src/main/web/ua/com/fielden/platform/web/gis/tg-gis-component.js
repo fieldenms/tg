@@ -99,10 +99,10 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
         self._markerCluster.setShouldFitToBounds(isRunAction); // only fitToBounds on Run action, not on Navigate / Refresh
         self.initReload();
         const [prevEntity, wasPopupOpen] = self.capturePrevEntityAndWasPopupOpen(isRunAction);
-        const overlaysAndChecked = self.clearAll(); // returns map of previously checked states for overlays
+        const overlaysAndChecked = self.clearAll(); // returns map of previously checked states for overlays (for the very first time it returns the data according to overlay._checkedByDefault state)
 
         Object.values(self._overlays).filter(overlay => {
-            return isRunAction ? overlay._checkedByDefault : overlaysAndChecked.get(overlay); // add checkedByDefault overlays for Run action; add previously checked overlays for Refresh action and others
+            return overlaysAndChecked.get(overlay); // add previously checked overlays for Run / Refresh actions and others
         }).forEach(overlay => self._map.addLayer(overlay));
 
         // Shallow copy of this array is needed to be done: not to alter original array, that is bound to EGI.
@@ -114,7 +114,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
 
         // we add checked overlays to marker cluster again: this is because we need to trigger tg-progress-bar-updater's chunked loading and fitToBounds logic
         Object.values(self._overlays).filter(overlay => {
-            return isRunAction ? overlay._checkedByDefault : self._map.hasLayer(overlay); // add checkedByDefault overlays for Run action; add previously checked overlays for Refresh action and others
+            return self._map.hasLayer(overlay); // add previously checked overlays for Run / Refresh action and others
         }).forEach(overlay => self._markerCluster.getGisMarkerClusterGroup().addLayer(overlay));
 
         self.restorePrevEntityAndWasPopupOpen(prevEntity, wasPopupOpen);
