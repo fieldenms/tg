@@ -3,7 +3,6 @@ package ua.com.fielden.platform.processors.meta_model.test_entities;
 import java.math.BigDecimal;
 import java.util.Date;
 
-import ua.com.fielden.platform.annotations.meta_model.GenerateMetaModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -12,7 +11,6 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
 @KeyType(String.class)
-@GenerateMetaModel
 public class Insurance extends AbstractEntity<String> {
     @IsProperty
     @MapTo
