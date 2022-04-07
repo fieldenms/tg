@@ -37,6 +37,7 @@ import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFact
 import org.apache.logging.log4j.core.config.builder.api.LayoutComponentBuilder;
 import org.apache.logging.log4j.core.config.builder.api.RootLoggerComponentBuilder;
 import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
+import org.joda.time.DateTime;
 
 import com.google.auto.service.AutoService;
 import com.squareup.javapoet.ClassName;
@@ -50,7 +51,6 @@ import com.squareup.javapoet.WildcardTypeName;
 
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
-import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.utils.Pair;
 
 @AutoService(Processor.class)
@@ -71,7 +71,7 @@ public class MetaModelProcessor extends AbstractProcessor {
     private Messager messager;
     
     private static List<Class<? extends Annotation>> ignoredPropertyAnnotations() {
-        return new ArrayList<>(List.of(IsProperty.class, Title.class));
+        return new ArrayList<>(List.of(IsProperty.class));
     }
     
     private static List<String> includedInheritedPropertiesNames() {
@@ -121,6 +121,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             final MetaModelElement metaModelElement = new MetaModelElement(entityElement);
             metaModelElements.add(metaModelElement);
 
+            // TODO: optimize by annotating platform level entities with @DomainEntity
             // filter properties of this entity to find entity type ones and include them for meta-model generation
             // this helps find entities that are included from the platform, rather than defined by a domain model,
             // such as User
@@ -266,7 +267,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             final List<String> annotNames = ElementFinder.getFieldAnnotationsExcept(prop.toVariableElement(), ignoredPropertyAnnotations()).stream()
                     .map(a -> String.format("{@link %s}", ElementFinder.getAnnotationMirrorSimpleName(a)))
                     .toList();
-            methodSpecBuilder = methodSpecBuilder.addJavadoc("Annotations: $L\n<p>\n", String.join(", ", annotNames));
+            methodSpecBuilder = methodSpecBuilder.addJavadoc("Annotations: $L", String.join(", ", annotNames));
             
             methodSpecs.add(methodSpecBuilder.build());
         }
@@ -369,9 +370,11 @@ public class MetaModelProcessor extends AbstractProcessor {
         final ClassName metaModelSuperclassClassName = ClassName.get(META_MODEL_SUPERCLASS);
         final String metaModelName = metaModelElement.getSimpleName();
         final String metaModelPkgName = metaModelElement.getPackageName();
+        final String now = DateTime.now().toString("dd-MM-YYYY HH:mm:ss.SSS z");
 
         TypeSpec metaModel = TypeSpec.classBuilder(metaModelName)
-                .addJavadoc("Auto-generated meta-model for {@link $T}\n<p>\n", modelClassName)
+                .addJavadoc("Auto-generated meta-model for {@link $T}.\n<p>\n", modelClassName)
+                .addJavadoc(String.format("Generation datetime: %s", now))
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
                 .superclass(metaModelSuperclassClassName)
                 .addFields(fieldSpecs)
@@ -386,7 +389,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             logger.error(e.toString());
         }
         
-        logger.info(String.format("Generated %s", metaModel.name));
+        logger.info(String.format("Generated %s for entity %s.", metaModel.name, entityElement.getSimpleName()));
     }
     
     private void writeMetaModelsClass(Set<MetaModelElement> metaModelElements) throws IOException {
@@ -414,13 +417,11 @@ public class MetaModelProcessor extends AbstractProcessor {
                 return FieldSpec.builder(className, fieldName)
                         .initializer("new $T()", className)
                         .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
-                        .addJavadoc("Previously generated") // debug
                         .build();
             }).toList();
             fieldSpecs.addAll(existingFieldSpecs);
         }
 
-        
         for (MetaModelElement metaModelElement: metaModelElements) {
             // if a field for this meta-model already exists, then skip it
             // since changes to a particular meta-model do not affect the MetaModels class
@@ -440,7 +441,6 @@ public class MetaModelProcessor extends AbstractProcessor {
             fieldSpecs.add(FieldSpec.builder(fieldTypeName, fieldName)
                     .initializer("new $T()", fieldTypeName)
                     .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
-                    .addJavadoc("Newly generated") // debug
                     .build());
         }
 
@@ -453,7 +453,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         JavaFile javaFile = JavaFile.builder(META_MODELS_CLASS_PACKAGE_NAME, metaModelsTypeSpec).indent(INDENT).build();
         javaFile.writeTo(filer);
 
-        logger.info(String.format("Generated %s", metaModelsTypeSpec.name));
+        logger.info(String.format("Generated %s.", metaModelsTypeSpec.name));
     }
     
     private EntityElement newEntityElement(TypeElement typeElement) {
@@ -485,5 +485,3 @@ public class MetaModelProcessor extends AbstractProcessor {
         return builder.build();
     }
 }
-
-
