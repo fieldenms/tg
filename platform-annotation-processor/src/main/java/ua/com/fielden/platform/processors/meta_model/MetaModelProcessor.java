@@ -47,8 +47,10 @@ import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.TypeVariableName;
 import com.squareup.javapoet.WildcardTypeName;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.utils.Pair;
@@ -62,13 +64,17 @@ public class MetaModelProcessor extends AbstractProcessor {
     
     public static final String META_MODELS_CLASS_SIMPLE_NAME = "MetaModels";
     public static final String META_MODELS_CLASS_PACKAGE_NAME = "meta_models";
-    public static final String META_MODELS_CLASS_QUALIFIED_NAME = String.format("%s.%s", META_MODELS_CLASS_PACKAGE_NAME, META_MODELS_CLASS_SIMPLE_NAME);
-    private static final String INDENT = "    ";
+    public static final String INDENT = "    ";
     
     private Logger logger;
     private Filer filer;
     private Elements elementUtils;
     private Messager messager;
+    
+    private static String metaModelsClassQualifiedName() {
+        return String.format("%s.%s", 
+                META_MODELS_CLASS_PACKAGE_NAME, META_MODELS_CLASS_SIMPLE_NAME);
+    }
     
     public static List<Class<? extends Annotation>> ignoredPropertyAnnotations() {
         return new ArrayList<>(List.of(IsProperty.class));
@@ -111,7 +117,8 @@ public class MetaModelProcessor extends AbstractProcessor {
         final Set<? extends Element> annotatedElements = roundEnv.getElementsAnnotatedWith(MapEntityTo.class);
         for (Element element: annotatedElements) {
             if (element.getKind() != ElementKind.CLASS) {
-                messager.printMessage(Kind.ERROR, String.format("Only classes can be annotated with %s", MapEntityTo.class.getSimpleName()), element);
+                messager.printMessage(Kind.ERROR, String.format("Only classes can be annotated with %s", 
+                                                                MapEntityTo.class.getSimpleName()), element);
                 logger.debug(String.format("Skipping a non-class element %s", element.toString()));
                 continue;
             }
@@ -252,12 +259,17 @@ public class MetaModelProcessor extends AbstractProcessor {
 
 
         /*
-        public static Class<?> getModelClass() {
+        public static Class<? extends AbstractEntity> getModelClass() {
             return [ENTITY_NAME].class;
         }
         */
         final ClassName modelClassName = getEntityClassName(entityElement);
-        final ParameterizedTypeName returnType = ParameterizedTypeName.get(ClassName.get(Class.class), WildcardTypeName.subtypeOf(Object.class));
+        final ClassName abstractEntityClassName = ClassName.get(AbstractEntity.class);
+        final ParameterizedTypeName returnType = ParameterizedTypeName.get(
+                ClassName.get(Class.class),
+                WildcardTypeName.subtypeOf(abstractEntityClassName)
+                );
+
         MethodSpec getModelMethod = MethodSpec.methodBuilder("getModelClass")
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
                 .returns(returnType)
@@ -370,7 +382,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         }
         */
 
-        final TypeElement typeElement = elementUtils.getTypeElement(META_MODELS_CLASS_QUALIFIED_NAME);
+        final TypeElement typeElement = elementUtils.getTypeElement(metaModelsClassQualifiedName());
         List<FieldSpec> fieldSpecs = new ArrayList<>();
         
         // if MetaModels class already exists

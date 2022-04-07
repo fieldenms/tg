@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.processors.meta_model;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+
 public abstract class EntityMetaModel {
     private String path;
     
@@ -11,7 +13,7 @@ public abstract class EntityMetaModel {
         this("");
     }
     
-    public static Class<?> getModelClass() {
+    public static Class<? extends AbstractEntity> getModelClass() {
         return null;
     }
 
