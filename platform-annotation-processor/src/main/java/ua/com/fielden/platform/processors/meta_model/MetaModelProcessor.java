@@ -60,9 +60,9 @@ public class MetaModelProcessor extends AbstractProcessor {
 
     private static final Class<EntityMetaModel> META_MODEL_SUPERCLASS = EntityMetaModel.class;
     
-    private static final String META_MODELS_CLASS_SIMPLE_NAME = "MetaModels";
-    private static final String META_MODELS_CLASS_PACKAGE_NAME = "meta_models";
-    private static final String META_MODELS_CLASS_QUALIFIED_NAME = String.format("%s.%s", META_MODELS_CLASS_PACKAGE_NAME, META_MODELS_CLASS_SIMPLE_NAME);
+    public static final String META_MODELS_CLASS_SIMPLE_NAME = "MetaModels";
+    public static final String META_MODELS_CLASS_PACKAGE_NAME = "meta_models";
+    public static final String META_MODELS_CLASS_QUALIFIED_NAME = String.format("%s.%s", META_MODELS_CLASS_PACKAGE_NAME, META_MODELS_CLASS_SIMPLE_NAME);
     private static final String INDENT = "    ";
     
     private Logger logger;
@@ -70,11 +70,11 @@ public class MetaModelProcessor extends AbstractProcessor {
     private Elements elementUtils;
     private Messager messager;
     
-    private static List<Class<? extends Annotation>> ignoredPropertyAnnotations() {
+    public static List<Class<? extends Annotation>> ignoredPropertyAnnotations() {
         return new ArrayList<>(List.of(IsProperty.class));
     }
     
-    private static List<String> includedInheritedPropertiesNames() {
+    public static List<String> includedInheritedPropertiesNames() {
         return new ArrayList<>(List.of("active", "key", "desc"));
     }
 
@@ -172,19 +172,11 @@ public class MetaModelProcessor extends AbstractProcessor {
             if (EntityFinder.isPropertyEntityType(prop)) {
                 MetaModelElement propTypeMetaModelElement = new MetaModelElement(newEntityElement(prop.getTypeAsTypeElementOrThrow()));
                 ClassName propTypeMetaModelClassName = getMetaModelClassName(propTypeMetaModelElement);
-
-                if (propTypeMetaModelElement.equals(metaModelElement)) {
-                    // property is of the same type as the owning entity
-                    // private Supplier<[META_MODEL_NAME]> [PROP_NAME];
-                    ParameterizedTypeName propTypeName = ParameterizedTypeName.get(ClassName.get(Supplier.class), propTypeMetaModelClassName);
-                    fieldSpecBuilder = FieldSpec.builder(propTypeName, propName)
-                            .addModifiers(Modifier.PRIVATE);
-                } else {
-                    // property is entity type
-                    // private final [META_MODEL_NAME] [PROP_NAME];
-                    fieldSpecBuilder = FieldSpec.builder(propTypeMetaModelClassName, propName)
-                            .addModifiers(Modifier.PRIVATE, Modifier.FINAL);
-                }
+                // property is entity type
+                // private Supplier<[META_MODEL_NAME]> [PROP_NAME];
+                ParameterizedTypeName propTypeName = ParameterizedTypeName.get(ClassName.get(Supplier.class), propTypeMetaModelClassName);
+                fieldSpecBuilder = FieldSpec.builder(propTypeName, propName)
+                        .addModifiers(Modifier.PRIVATE);
             } else {
                 // private final PropertyMetaModel [PROP_NAME]; 
                 fieldSpecBuilder = FieldSpec.builder(ClassName.get(PropertyMetaModel.class), propName)
@@ -205,36 +197,22 @@ public class MetaModelProcessor extends AbstractProcessor {
             if (EntityFinder.isPropertyEntityType(prop)) {
                 MetaModelElement propTypeMetaModelElement = new MetaModelElement(newEntityElement(prop.getTypeAsTypeElementOrThrow()));
                 propTypeMetaModelClassName = getMetaModelClassName(propTypeMetaModelElement);
-            
-                if (propTypeMetaModelElement.equals(metaModelElement)) {
-                    /* property is of the same type as the owning entity
+                /* property is entity type
 
-                    public [META_MODEL_NAME] [PROP_NAME]() {
-                        return [PROP_NAME].get();
-                    }
-                     */
-                    methodSpecBuilder = MethodSpec.methodBuilder(propName)
-                            .addModifiers(Modifier.PUBLIC)
-                            .returns(propTypeMetaModelClassName)
-                            .addStatement("return $L.get()", propName);
-                } else {
-                    /* property is entity type
-
-                    public [META_MODEL_NAME] [PROP_NAME]() {
-                        return [PROP_NAME];
-                    }
-                     */
-                    methodSpecBuilder = MethodSpec.methodBuilder(propName)
-                            .addModifiers(Modifier.PUBLIC)
-                            .returns(propTypeMetaModelClassName)
-                            .addStatement("return $L", propName);
+                public [META_MODEL_NAME] [PROP_NAME]() {
+                    return [PROP_NAME].get();
                 }
+                 */
+                methodSpecBuilder = MethodSpec.methodBuilder(propName)
+                        .addModifiers(Modifier.PUBLIC)
+                        .returns(propTypeMetaModelClassName)
+                        .addStatement("return $L.get()", propName);
             } else {
                 /*
                 public PropertyMetaModel [PROP_NAME]() {
                     return [PROP_NAME];
                 }
-                */
+                 */
                 methodSpecBuilder = MethodSpec.methodBuilder(propName)
                         .addModifiers(Modifier.PUBLIC)
                         .returns(ClassName.get(PropertyMetaModel.class))
@@ -248,29 +226,30 @@ public class MetaModelProcessor extends AbstractProcessor {
                 if (propTitle.length() > 0) {
                     methodSpecBuilder = methodSpecBuilder.addJavadoc("Title: $L\n<p>\n", propTitle);
                 }
-                
+
                 final String propDesc = propTitleAndDesc.getValue();
                 if (propDesc.length() > 0) {
                     methodSpecBuilder = methodSpecBuilder.addJavadoc("Description: $L\n<p>\n", propDesc);
                 }
             }
-            
+
             // javadoc: property type
             methodSpecBuilder = methodSpecBuilder.addJavadoc("Type: {@link $T}\n<p>\n", prop.getType());
-            
+
             // (optional) javadoc: property type's meta-model
             if (propTypeMetaModelClassName != null) {
                 methodSpecBuilder = methodSpecBuilder.addJavadoc("Meta-model: {@link $T}\n<p>\n", propTypeMetaModelClassName);
             }
-            
+
             // javadoc: all annotations of a property (except ignored ones)
             final List<String> annotNames = ElementFinder.getFieldAnnotationsExcept(prop.toVariableElement(), ignoredPropertyAnnotations()).stream()
                     .map(a -> String.format("{@link %s}", ElementFinder.getAnnotationMirrorSimpleName(a)))
                     .toList();
             methodSpecBuilder = methodSpecBuilder.addJavadoc("Annotations: $L", String.join(", ", annotNames));
-            
+
             methodSpecs.add(methodSpecBuilder.build());
         }
+
 
         /*
         public static Class<?> getModelClass() {
@@ -306,38 +285,30 @@ public class MetaModelProcessor extends AbstractProcessor {
             if (EntityFinder.isPropertyEntityType(prop)) {
                 MetaModelElement propTypeMetaModelElement = new MetaModelElement(newEntityElement(prop.getTypeAsTypeElementOrThrow()));
                 ClassName propTypeMetaModelClassName = getMetaModelClassName(propTypeMetaModelElement);
-            
-                if (propTypeMetaModelElement.equals(metaModelElement)) {
-                    /* property is of the same type as the owning entity
-                     
-                    this.[PROP_NAME] = () -> {
-                        [META_MODEL_NAME] value = new [META_MODEL_NAME](joinPath([PROP_NAME]_));
-                        [PROP_NAME] = () -> value;
-                        return value;
-                    };
-                    */
-                    CodeBlock lambda = CodeBlock.builder()
-                            .add("() -> {\n").indent()
-                            .addStatement(
-                                    "$T $L = new $T(joinPath($L_))", 
-                                    propTypeMetaModelClassName, "value", propTypeMetaModelClassName, propName)
-                            .addStatement(
-                                    "$L = () -> $L",
-                                    propName, "value")
-                            .addStatement("return $L", "value")
-                            .unindent().add("}")
-                            .build();
-                    CodeBlock code = CodeBlock.builder()
-                            .addStatement("this.$L = $L", propName, lambda.toString())
-                            .build();
-                    constructorStatementsBuilder = constructorStatementsBuilder.add(code);
-                } else {
-                    // property is entity type
-                    // this.[PROP_NAME] = new [PROP_TYPE_NAME]MetaModel(joinPath([PROP_NAME]_));
-                    constructorStatementsBuilder = constructorStatementsBuilder.addStatement(
-                            "this.$L = new $T(joinPath($L_))", 
-                            propName, propTypeMetaModelClassName, propName);
-                }
+
+                /* property is entity type
+
+                this.[PROP_NAME] = () -> {
+                    [META_MODEL_NAME] value = new [META_MODEL_NAME](joinPath([PROP_NAME]_));
+                    [PROP_NAME] = () -> value;
+                    return value;
+                };
+                 */
+                CodeBlock lambda = CodeBlock.builder()
+                        .add("() -> {\n").indent()
+                        .addStatement(
+                                "$T $L = new $T(joinPath($L_))", 
+                                propTypeMetaModelClassName, "value", propTypeMetaModelClassName, propName)
+                        .addStatement(
+                                "$L = () -> $L",
+                                propName, "value")
+                        .addStatement("return $L", "value")
+                        .unindent().add("}")
+                        .build();
+                CodeBlock code = CodeBlock.builder()
+                        .addStatement("this.$L = $L", propName, lambda.toString())
+                        .build();
+                constructorStatementsBuilder = constructorStatementsBuilder.add(code);
             } else {
                 // this.[PROP_NAME] = new PropertyMetaModel(joinPath([PROP_NAME]_));
                 constructorStatementsBuilder = constructorStatementsBuilder.addStatement(
