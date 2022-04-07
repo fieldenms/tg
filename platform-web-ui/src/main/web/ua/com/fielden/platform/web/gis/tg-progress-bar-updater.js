@@ -9,12 +9,11 @@ export const ProgressBarUpdater = function (_map, _getMarkers, progressDiv, prog
 };
 
 ProgressBarUpdater.prototype.updateProgressBar = function (processed, total, elapsed) {
-    const self = this;
-    console.debug("updateProgressBar(processed = " + processed + ", total = " + total + ", elapsed = " + elapsed + "); shouldFitToBounds = " + this._shouldFitToBounds);
+    // console.debug("updateProgressBar(processed = " + processed + ", total = " + total + ", elapsed = " + elapsed + "); shouldFitToBounds = " + this._shouldFitToBounds);
 
     if (elapsed > 0) { // 1000
         // if it takes more than a second to load, display the progress bar:
-        this._progress.style.display = 'block';
+        // this._progress.style.display = 'block'; at this stage progress bar will be disabled; maybe new version of progress bar should be used -- the one that is used in Import Utilities
         this._progressBar.style.width = Math.round(processed / total * 100) + '%';
 
         // if (elapsed > 500) {
