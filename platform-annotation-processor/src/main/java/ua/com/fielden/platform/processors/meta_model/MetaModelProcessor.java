@@ -5,6 +5,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
@@ -17,6 +18,7 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
@@ -47,16 +49,17 @@ import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeSpec;
-import com.squareup.javapoet.TypeVariableName;
 import com.squareup.javapoet.WildcardTypeName;
 
+import ua.com.fielden.platform.annotations.meta_model.DomainEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.utils.Pair;
 
 @AutoService(Processor.class)
-@SupportedAnnotationTypes("ua.com.fielden.platform.entity.annotation.MapEntityTo")
+@SupportedAnnotationTypes({"ua.com.fielden.platform.entity.annotation.MapEntityTo",
+                            "ua.com.fielden.platform.annotations.meta_model.DomainEntity"})
 @SupportedSourceVersion(SourceVersion.RELEASE_16)
 public class MetaModelProcessor extends AbstractProcessor {
 
@@ -74,6 +77,10 @@ public class MetaModelProcessor extends AbstractProcessor {
     private static String metaModelsClassQualifiedName() {
         return String.format("%s.%s", 
                 META_MODELS_CLASS_PACKAGE_NAME, META_MODELS_CLASS_SIMPLE_NAME);
+    }
+    
+    public static Set<Class<? extends Annotation>> getSupportedAnnotations() {
+        return Set.of(MapEntityTo.class, DomainEntity.class);
     }
     
     public static List<Class<? extends Annotation>> ignoredPropertyAnnotations() {
@@ -114,11 +121,17 @@ public class MetaModelProcessor extends AbstractProcessor {
 
         Set<MetaModelElement> metaModelElements = new HashSet<>();
 
-        final Set<? extends Element> annotatedElements = roundEnv.getElementsAnnotatedWith(MapEntityTo.class);
+        final Set<? extends Element> annotatedElements = roundEnv.getElementsAnnotatedWithAny(getSupportedAnnotations());
         for (Element element: annotatedElements) {
             if (element.getKind() != ElementKind.CLASS) {
-                messager.printMessage(Kind.ERROR, String.format("Only classes can be annotated with %s", 
-                                                                MapEntityTo.class.getSimpleName()), element);
+                Optional<? extends AnnotationMirror> elementAnnotationMirror = element.getAnnotationMirrors().stream()
+                        .filter(annotMirror -> getSupportedAnnotations().stream()
+                            .map(annotClass -> annotClass.getCanonicalName())
+                            .toList()
+                            .contains(((TypeElement) annotMirror.getAnnotationType().asElement()).getQualifiedName().toString()))
+                        .findAny();
+                String annotationName = elementAnnotationMirror.get().getAnnotationType().asElement().getSimpleName().toString();
+                messager.printMessage(Kind.ERROR, String.format("Only classes can be annotated with %s", annotationName, element));
                 logger.debug(String.format("Skipping a non-class element %s", element.toString()));
                 continue;
             }
