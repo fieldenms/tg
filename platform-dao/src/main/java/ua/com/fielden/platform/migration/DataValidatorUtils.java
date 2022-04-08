@@ -3,6 +3,7 @@ package ua.com.fielden.platform.migration;
 import static java.util.stream.Collectors.joining;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -43,8 +44,9 @@ public class DataValidatorUtils {
     	return result;
     }
     
-    public static List<T3<String, String, String>> produceDataIntegrityValidationSql(final List<CompiledRetriever> retrieversJobs, final Map<Class<? extends AbstractEntity<?>>, List<CompiledRetriever>> entityTypeRetrievers) {
+    public static List<T3<String, String, String>> produceDataIntegrityValidationSql(final List<CompiledRetriever> retrieversJobs) {
     	final var result = new ArrayList<T3<String, String, String>>();
+    	final var entityTypeRetrievers = new HashMap<Class<? extends AbstractEntity<?>>, List<CompiledRetriever>>();
     	
     	for (final CompiledRetriever retriever : retrieversJobs) {
     		final var retrieverSql = RetrieverSqlProducer.getSqlWithoutOrdering(retriever.retriever);
@@ -61,7 +63,12 @@ public class DataValidatorUtils {
 					result.add(T3.t3(retriever.retriever.getClass().getSimpleName(), pi.propName() + ":" + pi.propType().getSimpleName(), sql));
 				}
 			}
-        }
+
+    		if (!retriever.retriever.isUpdater()) {
+    			var existingOrCreated = entityTypeRetrievers.computeIfAbsent(retriever.retriever.type(), (k) -> new ArrayList<CompiledRetriever>()); 
+    			existingOrCreated.add(retriever);
+    		}
+    	}
 
     	return result;
     }

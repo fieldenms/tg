@@ -33,7 +33,6 @@ import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
-import com.google.common.collect.Lists;
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.AbstractEntity;

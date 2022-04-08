@@ -2,9 +2,9 @@ package ua.com.fielden.platform.migration;
 
 import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.migration.DataValidatorUtils.produceDataIntegrityValidationSql;
 import static ua.com.fielden.platform.migration.DataValidatorUtils.produceKeyUniquenessViolationSql;
 import static ua.com.fielden.platform.migration.DataValidatorUtils.produceRequirednessValidationSql;
-import static ua.com.fielden.platform.migration.DataValidatorUtils.produceDataIntegrityValidationSql;
 import static ua.com.fielden.platform.migration.DataValidatorUtils.produceUpdatersKeysDataIntegrityValidationSql;
 
 import java.sql.Connection;
@@ -51,7 +51,7 @@ public class DataValidator {
     }
     
     private void checkDataIntegrity() {
-    	final var stmts = produceDataIntegrityValidationSql(retrieversJobs, entityTypeRetrievers);
+    	final var stmts = produceDataIntegrityValidationSql(retrieversJobs);
         
         LOGGER.debug("Checking data integrity ...");
 
