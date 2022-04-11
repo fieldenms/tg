@@ -18,6 +18,7 @@ import org.restlet.Response;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Post;
 
+import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -87,16 +88,28 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
             final CONTEXT context = EntityRestorationUtils.constructEntity(modifHolder, originallyProducedEntity, companion, producer, coFinder).getKey();
             // logger.debug("context = " + context);
 
-            final String searchStringVal = (String) centreContextHolder.getCustomObject().get("@@searchString"); // custom property inside paramsHolder
-            final String searchString = prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");
-            final int dataPage = centreContextHolder.getCustomObject().containsKey("@@dataPage") ? (Integer) centreContextHolder.getCustomObject().get("@@dataPage") : 1;
-            // logger.debug(format("SEARCH STRING %s, PAGE %s", searchString, dataPage));
-           
             valueMatcher.setContext(context);
             final Class<T> propType = (Class<T>) ("".equals(propertyName) ? entityType : determinePropertyType(entityType, propertyName));
             if (!isPropertyDescriptor(propType)) {
                 valueMatcher.setFetch(master.createFetchModelForAutocompleter(propertyName, propType));
             }
+
+            // The search string values used to be upper cased at the client side in tg-entity-editor.js.
+            // However, this is not suitable for values of type Attachment, where new hyperlink instances are created ad hoc for autocompletion and, if chosen, such values distort the typed in or copy/pasted URIs.
+            // This is why upper casing of the search strings was removed in tg-entity-editor.js and introduces in this web resource for ease of maintenance and customisation.
+            // There could be other cases where upper casing should not be applied, but for now the change is limited to entity Attachment only.
+            final boolean shouldUpperCase;
+            if (Attachment.class.isAssignableFrom(propType)) {
+                shouldUpperCase = false;
+            } else {
+                shouldUpperCase = true;
+            }
+
+            final String searchStringVal = (String) centreContextHolder.getCustomObject().get("@@searchString"); // custom property inside paramsHolder
+            final String prepSearchString = prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");
+            final String searchString = shouldUpperCase ? prepSearchString.toUpperCase() : prepSearchString;
+            final int dataPage = centreContextHolder.getCustomObject().containsKey("@@dataPage") ? (Integer) centreContextHolder.getCustomObject().get("@@dataPage") : 1;
+            // logger.debug(format("SEARCH STRING %s, PAGE %s", searchString, dataPage));
             final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%", dataPage);
 
             // logger.debug("ENTITY_AUTOCOMPLETION_RESOURCE: search finished.");
