@@ -103,6 +103,23 @@ public class MetaModelProcessor extends AbstractProcessor {
         return EntityFinder.findProperties(entityElement, includedInheritedPropertiesNames());
     }
     
+    private static boolean isPropertyTypeMetaModelTarget(PropertyElement element) {
+        TypeElement propType = null;
+        try {
+            propType = element.getTypeAsTypeElement();
+        } catch (Exception e) {
+            return false;
+        }
+
+        for (Class<? extends Annotation> annotClass: getSupportedAnnotations()) {
+            if (propType.getAnnotation(annotClass) != null) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+    
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
@@ -148,7 +165,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             final Set<PropertyElement> propertyElements = findProperties(entityElement);
             metaModelElements.addAll(
                     propertyElements.stream()
-                    .filter(EntityFinder::isPropertyEntityType)
+                    .filter(MetaModelProcessor::isPropertyTypeMetaModelTarget)
                     // it's safe to call getTypeAsTypeElementOrThrow() since elements were previously filtered
                     .map(propEl -> new MetaModelElement(newEntityElement(propEl.getTypeAsTypeElementOrThrow())))
                     .toList());
@@ -189,10 +206,10 @@ public class MetaModelProcessor extends AbstractProcessor {
                     .build());
             
             // ### instance property ###
-            if (EntityFinder.isPropertyEntityType(prop)) {
+            if (isPropertyTypeMetaModelTarget(prop)) {
                 MetaModelElement propTypeMetaModelElement = new MetaModelElement(newEntityElement(prop.getTypeAsTypeElementOrThrow()));
                 ClassName propTypeMetaModelClassName = getMetaModelClassName(propTypeMetaModelElement);
-                // property is entity type
+                // property type is target for meta-model generation
                 // private Supplier<[META_MODEL_NAME]> [PROP_NAME];
                 ParameterizedTypeName propTypeName = ParameterizedTypeName.get(ClassName.get(Supplier.class), propTypeMetaModelClassName);
                 fieldSpecBuilder = FieldSpec.builder(propTypeName, propName)
@@ -214,11 +231,11 @@ public class MetaModelProcessor extends AbstractProcessor {
             final String propName = prop.getName();
 
             ClassName propTypeMetaModelClassName = null;
-            if (EntityFinder.isPropertyEntityType(prop)) {
+            if (isPropertyTypeMetaModelTarget(prop)) {
                 MetaModelElement propTypeMetaModelElement = new MetaModelElement(newEntityElement(prop.getTypeAsTypeElementOrThrow()));
                 propTypeMetaModelClassName = getMetaModelClassName(propTypeMetaModelElement);
-                /* property is entity type
-
+                /* property type is target for meta-model generation
+                
                 public [META_MODEL_NAME] [PROP_NAME]() {
                     return [PROP_NAME].get();
                 }
@@ -307,11 +324,11 @@ public class MetaModelProcessor extends AbstractProcessor {
         for (PropertyElement prop: propertyElements) {
             final String propName = prop.getName();
 
-            if (EntityFinder.isPropertyEntityType(prop)) {
+            if (isPropertyTypeMetaModelTarget(prop)) {
                 MetaModelElement propTypeMetaModelElement = new MetaModelElement(newEntityElement(prop.getTypeAsTypeElementOrThrow()));
                 ClassName propTypeMetaModelClassName = getMetaModelClassName(propTypeMetaModelElement);
 
-                /* property is entity type
+                /* property type is target for meta-model generation
 
                 this.[PROP_NAME] = () -> {
                     [META_MODEL_NAME] value = new [META_MODEL_NAME](joinPath([PROP_NAME]_));
