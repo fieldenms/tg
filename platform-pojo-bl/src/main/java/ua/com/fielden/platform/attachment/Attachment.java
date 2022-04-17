@@ -30,6 +30,7 @@ import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.entity.validation.MaxLengthValidator;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -75,10 +76,11 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
     public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
 
-    @IsProperty
+    @IsProperty(length = 2048)
     @MapTo
     @Title(value = "Title or Link", desc = "A convenient document title or a link to an external resource")
     @CompositeKeyMember(1)
+    @BeforeChange(@Handler(MaxLengthValidator.class))
     private String title;
 
     @IsProperty
@@ -89,12 +91,13 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     @Final(persistentOnly = false)
     private String sha1;
 
-    @IsProperty
+    @IsProperty(length = 2048)
     @MapTo
     @Title(value = "File Name", desc = "The file name of the uploaded document or a link indication.")
     @Readonly
     @Required
     @Final(persistentOnly = false)
+    @BeforeChange(@Handler(MaxLengthValidator.class))
     @AfterChange(AssignAttachmentTitle.class)
     private String origFileName;
 
