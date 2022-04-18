@@ -99,8 +99,23 @@ public class MetaModelProcessor extends AbstractProcessor {
         return ClassName.get(element.getPackageName(), element.getSimpleName());
     }
     
-    private static Set<PropertyElement> findProperties(EntityElement entityElement) {
-        return EntityFinder.findProperties(entityElement, includedInheritedPropertiesNames());
+    /**
+     * Find unique-by-name properties of an entity.
+     */
+    private static Set<PropertyElement> findUniqueProperties(EntityElement entityElement) {
+        Set<PropertyElement> uniqueProperties = new HashSet<>();
+        Set<String> uniquePropNames = new HashSet<>();
+        Set<PropertyElement> properties = EntityFinder.findProperties(entityElement, includedInheritedPropertiesNames());
+
+        for (PropertyElement prop: properties) {
+            String name = prop.getName();
+            if (!uniquePropNames.contains(name)) {
+                uniqueProperties.add(prop);
+                uniquePropNames.add(name);
+            }
+        }
+        
+        return uniqueProperties;
     }
     
     private static boolean isPropertyTypeMetaModelTarget(PropertyElement element) {
@@ -162,7 +177,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             // filter properties of this entity to find entity type ones and include them for meta-model generation
             // this helps find entities that are included from the platform, rather than defined by a domain model,
             // such as User
-            final Set<PropertyElement> propertyElements = findProperties(entityElement);
+            final Set<PropertyElement> propertyElements = findUniqueProperties(entityElement);
             metaModelElements.addAll(
                     propertyElements.stream()
                     .filter(MetaModelProcessor::isPropertyTypeMetaModelTarget)
@@ -191,7 +206,7 @@ public class MetaModelProcessor extends AbstractProcessor {
     private void writeMetaModel(final MetaModelElement metaModelElement, Set<MetaModelElement> metaModelElements) {
         // ######################## PROPERTIES ########################
         final EntityElement entityElement = metaModelElement.getEntityElement();
-        final Set<PropertyElement> propertyElements = findProperties(entityElement);
+        final Set<PropertyElement> propertyElements = findUniqueProperties(entityElement);
         List<FieldSpec> fieldSpecs = new ArrayList<>();
         
         for (PropertyElement prop: propertyElements) {
