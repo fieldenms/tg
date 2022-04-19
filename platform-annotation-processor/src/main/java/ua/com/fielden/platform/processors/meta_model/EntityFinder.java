@@ -1,9 +1,8 @@
 package ua.com.fielden.platform.processors.meta_model;
 
-import java.lang.annotation.Annotation;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -20,10 +19,6 @@ public class EntityFinder {
     
     public static final Class<?> ROOT_ENTITY_CLASS = AbstractEntity.class;
 
-    public static final List<Class<? extends Annotation>> ignoredPropertyAnnotations() {
-        return new ArrayList<>(List.of(IsProperty.class));
-    }
-
    /**
      * The same as {@link ElementFinder#findDeclaredFields(TypeElement)}, but for properties of an {@link AbstractEntity entity}.
     */
@@ -37,7 +32,7 @@ public class EntityFinder {
     
     public static Set<PropertyElement> findInheritedProperties(EntityElement entityElement) {
         final TypeElement typeElement = entityElement.getTypeElement();
-        return ElementFinder.findInheritedFields(typeElement).stream()
+        return ElementFinder.findInheritedFields(typeElement, ROOT_ENTITY_CLASS).stream()
                 .filter(EntityFinder::isProperty)
                 .map(PropertyElement::new)
                 .collect(Collectors.toSet());
@@ -47,13 +42,40 @@ public class EntityFinder {
      * The same as {@link ElementFinder#findFields(TypeElement)}, but for properties of an {@link AbstractEntity entity}.
      */
     public static Set<PropertyElement> findProperties(EntityElement entityElement) {
-        final TypeElement typeElement = entityElement.getTypeElement();
-        return ElementFinder.findFields(typeElement, ROOT_ENTITY_CLASS).stream()
-                .filter(EntityFinder::isProperty)
-                .map(PropertyElement::new)
-                .collect(Collectors.toSet());
+        Set<PropertyElement> properties = findDeclaredProperties(entityElement);
+        properties.addAll(findInheritedProperties(entityElement));
+        return properties;
     }
 
+    /**
+     * Find all properties of an entity that are distinct by a specified condition.
+     * @param mapper - transformation applied to each property for determining its distinctness (e.g. {@link PropertyElement#getName})
+     * @return
+     */
+    public static Set<PropertyElement> findDistinctProperties(EntityElement entityElement, Function<PropertyElement, Object> mapper) {
+        Set<PropertyElement> properties = findDeclaredProperties(entityElement);
+        Set<Object> mappedProperties = properties.stream().map(mapper).collect(Collectors.toSet());
+        
+        TypeElement superclass = ElementFinder.getSuperclassOrNull(entityElement.getTypeElement(), ROOT_ENTITY_CLASS);
+        while (superclass != null) {
+            EntityElement superentity = EntityElement.wrapperFor(superclass);
+            Set<PropertyElement> superprops = findDeclaredProperties(superentity);
+
+            for (PropertyElement prop: superprops) {
+                Object mappedProp = mapper.apply(prop);
+
+                if (!mappedProperties.contains(mappedProp)) {
+                    mappedProperties.add(mappedProp);
+                    properties.add(prop);
+                }
+            }
+
+            superclass = ElementFinder.getSuperclassOrNull(superclass, ROOT_ENTITY_CLASS);
+        }
+        
+        return properties;
+    }
+    
     /**
      * Get all properties of this entity.
      * 
@@ -126,18 +148,7 @@ public class EntityFinder {
         }
     }
 
-    public static Set<? extends AnnotationMirror> getPropertyAnnotations(PropertyElement property) {
-        List<? extends AnnotationMirror> annotations = ElementFinder.getFieldAnnotations(property.toVariableElement());
-
-        List<String> ignoredAnnotationNames = ignoredPropertyAnnotations().stream()
-                .map(annotClass -> annotClass.getCanonicalName())
-                .toList();
-
-        return annotations.stream()
-                .filter(annotMirror -> {
-                    String annotQualifiedName = ((TypeElement) annotMirror.getAnnotationType().asElement()).getQualifiedName().toString();
-                    return !ignoredAnnotationNames.contains(annotQualifiedName);
-                })
-                .collect(Collectors.toSet());
+    public static List<? extends AnnotationMirror> getPropertyAnnotations(PropertyElement property) {
+        return ElementFinder.getFieldAnnotations(property.toVariableElement());
     }
 }

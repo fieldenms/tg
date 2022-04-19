@@ -14,6 +14,20 @@ public class EntityElement {
         this.typeElement = typeElement;
         this.packageName = elementUtils.getPackageOf(typeElement).getQualifiedName().toString();
     }
+    
+    private EntityElement(TypeElement typeElement) {
+        this.typeElement = typeElement;
+        this.packageName = null;
+    }
+    
+    /**
+     * Returns a wrapper for {@link TypeElement} and should only be used for this sole purpose.
+     * @return {@link EntityElement}
+     */
+    public static EntityElement wrapperFor(TypeElement typeElement) {
+        EntityElement obj = new EntityElement(typeElement);
+        return obj;
+    }
 
     public TypeElement getTypeElement() {
         return typeElement;

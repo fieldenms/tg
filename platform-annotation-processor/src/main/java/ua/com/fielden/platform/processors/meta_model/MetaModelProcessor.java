@@ -87,35 +87,12 @@ public class MetaModelProcessor extends AbstractProcessor {
         return new ArrayList<>(List.of(IsProperty.class));
     }
     
-    public static List<String> includedInheritedPropertiesNames() {
-        return new ArrayList<>(List.of("active", "key", "desc"));
-    }
-
     private static ClassName getMetaModelClassName(MetaModelElement element) {
         return ClassName.get(element.getPackageName(), element.getSimpleName());
     }
 
     private static ClassName getEntityClassName(EntityElement element) {
         return ClassName.get(element.getPackageName(), element.getSimpleName());
-    }
-    
-    /**
-     * Find unique-by-name properties of an entity.
-     */
-    private static Set<PropertyElement> findUniqueProperties(EntityElement entityElement) {
-        Set<PropertyElement> uniqueProperties = new HashSet<>();
-        Set<String> uniquePropNames = new HashSet<>();
-        Set<PropertyElement> properties = EntityFinder.findProperties(entityElement, includedInheritedPropertiesNames());
-
-        for (PropertyElement prop: properties) {
-            String name = prop.getName();
-            if (!uniquePropNames.contains(name)) {
-                uniqueProperties.add(prop);
-                uniquePropNames.add(name);
-            }
-        }
-        
-        return uniqueProperties;
     }
     
     private static boolean isPropertyTypeMetaModelTarget(PropertyElement element) {
@@ -177,9 +154,9 @@ public class MetaModelProcessor extends AbstractProcessor {
             // filter properties of this entity to find entity type ones and include them for meta-model generation
             // this helps find entities that are included from the platform, rather than defined by a domain model,
             // such as User
-            final Set<PropertyElement> propertyElements = findUniqueProperties(entityElement);
+            final Set<PropertyElement> properties = EntityFinder.findDistinctProperties(entityElement, PropertyElement::getName);
             metaModelElements.addAll(
-                    propertyElements.stream()
+                    properties.stream()
                     .filter(MetaModelProcessor::isPropertyTypeMetaModelTarget)
                     // it's safe to call getTypeAsTypeElementOrThrow() since elements were previously filtered
                     .map(propEl -> new MetaModelElement(newEntityElement(propEl.getTypeAsTypeElementOrThrow())))
@@ -206,10 +183,10 @@ public class MetaModelProcessor extends AbstractProcessor {
     private void writeMetaModel(final MetaModelElement metaModelElement, Set<MetaModelElement> metaModelElements) {
         // ######################## PROPERTIES ########################
         final EntityElement entityElement = metaModelElement.getEntityElement();
-        final Set<PropertyElement> propertyElements = findUniqueProperties(entityElement);
+        final Set<PropertyElement> properties = EntityFinder.findDistinctProperties(entityElement, PropertyElement::getName);
         List<FieldSpec> fieldSpecs = new ArrayList<>();
         
-        for (PropertyElement prop: propertyElements) {
+        for (PropertyElement prop: properties) {
             FieldSpec.Builder fieldSpecBuilder = null;
             final String propName = prop.getName();
 
@@ -241,7 +218,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         // ######################## METHODS ###########################
         List<MethodSpec> methodSpecs = new ArrayList<>();
 
-        for (PropertyElement prop: propertyElements) {
+        for (PropertyElement prop: properties) {
             MethodSpec.Builder methodSpecBuilder = null;
             final String propName = prop.getName();
 
@@ -336,7 +313,7 @@ public class MetaModelProcessor extends AbstractProcessor {
                 .addStatement("super(path)");
 
         CodeBlock.Builder constructorStatementsBuilder = CodeBlock.builder();
-        for (PropertyElement prop: propertyElements) {
+        for (PropertyElement prop: properties) {
             final String propName = prop.getName();
 
             if (isPropertyTypeMetaModelTarget(prop)) {
