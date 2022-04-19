@@ -17,6 +17,28 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
 public class ElementFinder {
+    
+    public static TypeElement getSuperclassOrNull(TypeElement typeElement) {
+        TypeMirror superclass = typeElement.getSuperclass();
+        if (superclass.getKind() == TypeKind.NONE)
+            return null;
+
+        return (TypeElement) ((DeclaredType) superclass).asElement();
+    }
+
+    public static TypeElement getSuperclassOrNull(TypeElement typeElement, Class<?> rootClass) {
+        // if this is root class return null
+        if (typeElement.getQualifiedName().toString().equals(rootClass.getCanonicalName()))
+            return null;
+
+        // with correct usage this code would never be reached
+        // but if supplied root class is not in the type hierarchy then this condition might be reached
+        TypeMirror superclass = typeElement.getSuperclass();
+        if (superclass.getKind() == TypeKind.NONE)
+            return null;
+
+        return (TypeElement) ((DeclaredType) superclass).asElement();
+    }
 
     /**
      * Find fields that are explicitly declared by this instance of {@link TypeElement}.
@@ -33,48 +55,73 @@ public class ElementFinder {
         return fields;
     }
 
+    public static Set<VariableElement> findInheritedFields(TypeElement typeElement) {
+        Set<VariableElement> fields = new HashSet<>();
+
+        TypeElement superclass = getSuperclassOrNull(typeElement);
+        while (superclass != null) {
+            fields.addAll(findDeclaredFields(superclass));
+            superclass = getSuperclassOrNull(superclass);;
+        }
+
+        return fields;
+    }
+
     /**
      * Find declared and inherited fields by this instance of {@link TypeElement}.
      */
     public static Set<VariableElement> findFields(TypeElement typeElement) {
         Set<VariableElement> fields = findDeclaredFields(typeElement);
-
-        TypeMirror superclass = typeElement.getSuperclass();
-        while (superclass.getKind() != TypeKind.NONE) {
-            TypeElement superclassTypeElement = (TypeElement) ((DeclaredType) superclass).asElement();
-            fields.addAll(findDeclaredFields(superclassTypeElement));
-            superclass = superclassTypeElement.getSuperclass();
-        }
+        fields.addAll(findInheritedFields(typeElement));
 
         return fields;
     }
     
-    public static Set<VariableElement> findInheritedFields(TypeElement typeElement) {
-        TypeElement superclassTypeElement = (TypeElement) ((DeclaredType) typeElement.getSuperclass()).asElement();
-        return findFields(superclassTypeElement);
+    /**
+     * The same as {@link #findInheritedFields(TypeElement)}, but with limited superclass traversal.
+     * 
+     * @param typeElement - target element which fields are to be found
+     * @param rootClass - upper limit (included) of a superclass of typeElement
+     */
+    public static Set<VariableElement> findInheritedFields(TypeElement typeElement, Class<?> rootClass) {
+        Set<VariableElement> fields = new HashSet<>();
+
+        TypeElement superclass = getSuperclassOrNull(typeElement, rootClass);
+        while (superclass != null) {
+            fields.addAll(findDeclaredFields(superclass));
+            superclass = getSuperclassOrNull(superclass, rootClass);;
+        }
+
+        return fields;
     }
 
     /**
      * The same as {@link #findFields(TypeElement)}, but with limited superclass traversal.
      * 
      * @param typeElement - target element which fields are to be found
-     * @param rootClass - upper limit (included) of superclasses to typeElement
+     * @param rootClass - upper limit (included) of a superclass of typeElement
      */
     public static Set<VariableElement> findFields(TypeElement typeElement, Class<?> rootClass) {
         Set<VariableElement> fields = findDeclaredFields(typeElement);
-
-        TypeElement superclassTypeElement = (TypeElement) ((DeclaredType) typeElement.getSuperclass()).asElement();
-        while (!superclassTypeElement.getQualifiedName().toString().equals(rootClass.getCanonicalName())) {
-            fields.addAll(findDeclaredFields(superclassTypeElement));
-            superclassTypeElement = (TypeElement) ((DeclaredType) superclassTypeElement.getSuperclass()).asElement();
-        }
-        fields.addAll(findDeclaredFields(superclassTypeElement));
+        fields.addAll(findInheritedFields(typeElement, rootClass));
 
         return fields;
     }
 
-    public static Set<VariableElement> findFieldsAnnotatedWith(TypeElement typeElement, Class<? extends Annotation> annotationClass) {
+    public static Set<VariableElement> findDeclaredFieldsAnnotatedWith(TypeElement typeElement, Class<? extends Annotation> annotationClass) {
         return findDeclaredFields(typeElement).stream()
+                .filter(el -> el.getAnnotation(annotationClass) != null)
+                .collect(Collectors.toSet());
+    }
+
+    public static Set<VariableElement> findInheritedFieldsAnnotatedWith(TypeElement typeElement, Class<? extends Annotation> annotationClass) {
+        return findInheritedFields(typeElement).stream()
+                .filter(el -> el.getAnnotation(annotationClass) != null)
+                .collect(Collectors.toSet());
+    }
+
+    public static Set<VariableElement> findFieldsAnnotatedWith(TypeElement typeElement, Class<? extends Annotation> annotationClass) {
+        return findFields(typeElement).stream()
                 .filter(el -> el.getAnnotation(annotationClass) != null)
                 .collect(Collectors.toSet());
     }
