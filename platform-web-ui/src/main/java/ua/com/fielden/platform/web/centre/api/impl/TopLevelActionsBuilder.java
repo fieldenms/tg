@@ -29,7 +29,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1kRowHe
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3Ordering;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4aWidth;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderAlsoDynamicProps;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderDynamicPropsAction;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderWidgetSelector;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
@@ -176,7 +176,7 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     }
 
     @Override
-    public <M extends AbstractEntity<?>> IResultSetBuilderAlsoDynamicProps<T> addProps(final String propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<M, Optional<CentreContext<T,?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
+    public <M extends AbstractEntity<?>> IResultSetBuilderDynamicPropsAction<T> addProps(final String propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<M, Optional<CentreContext<T,?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
         return new ResultSetBuilder<>(builder).addProps(propName, dynColBuilderType, entityPreProcessor, contextConfig);
     }
 

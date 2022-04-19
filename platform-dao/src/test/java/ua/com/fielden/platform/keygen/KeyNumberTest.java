@@ -1,7 +1,11 @@
 package ua.com.fielden.platform.keygen;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 import org.junit.Test;
 
@@ -15,7 +19,7 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
  * @author TG Team
  * 
  */
-public class KeyNumberDaoTest extends AbstractDaoTestCase {
+public class KeyNumberTest extends AbstractDaoTestCase {
     private final IKeyNumber coKeyNumber = getInstance(IKeyNumber.class);
 
     @Test
@@ -44,7 +48,36 @@ public class KeyNumberDaoTest extends AbstractDaoTestCase {
         assertEquals("Incorrectly generated next WO number.", nextNumber, coKeyNumber.nextNumber("WO"));
         assertEquals("Incorrect current WO number after generating the next number.", nextNumber, coKeyNumber.currNumber("WO"));
     }
-    
+
+    @Test
+    public void nextNumbers_with_count_1_is_equivalent_to_nextNumber() {
+        final Integer nextNumber = 501;
+        final SortedSet<Integer> numbers = coKeyNumber.nextNumbers("WO", 1);
+        assertEquals("Unexpected number of generated values.", 1, numbers.size());
+        assertEquals("Incorrectly generated next WO number.", nextNumber, numbers.first());
+        assertEquals("Incorrect current WO number after generating the next number.", nextNumber, coKeyNumber.currNumber("WO"));
+    }
+
+    @Test
+    public void nextNumbers_generated_the_requested_number_of_key_values_as_sorted_set_and_persists_the_last_one() {
+        final SortedSet<Integer> expectedNumbers = new TreeSet<Integer>();
+        expectedNumbers.add(501);
+        expectedNumbers.add(502);
+        expectedNumbers.add(503);
+        expectedNumbers.add(504);
+        expectedNumbers.add(505);
+        final SortedSet<Integer> numbers = coKeyNumber.nextNumbers("WO", 5);
+        assertEquals("Unexpected number of generated values.", 5, numbers.size());
+        assertEquals(expectedNumbers, numbers);
+        assertEquals("Incorrect current WO number after generating the next number.", numbers.last(), coKeyNumber.currNumber("WO"));
+    }
+
+    @Test
+    public void nextNumbers_for_the_count_of_less_than_1_returns_an_empty_set() {
+        assertTrue("Empty set is expected.", coKeyNumber.nextNumbers("WO", 0).isEmpty());
+        assertTrue("Empty set is expected.", coKeyNumber.nextNumbers("WO", -1).isEmpty());
+    }
+
     @Override
     protected void populateDomain() {
         super.populateDomain();
