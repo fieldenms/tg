@@ -49,12 +49,13 @@ public class EntityFinder {
 
     /**
      * Find all properties of an entity that are distinct by a specified condition.
+     * @param <T> - type of mapped property
      * @param mapper - transformation applied to each property for determining its distinctness (e.g. {@link PropertyElement#getName})
      * @return
      */
-    public static Set<PropertyElement> findDistinctProperties(EntityElement entityElement, Function<PropertyElement, Object> mapper) {
+    public static <T> Set<PropertyElement> findDistinctProperties(EntityElement entityElement, Function<PropertyElement, T> mapper) {
         Set<PropertyElement> properties = findDeclaredProperties(entityElement);
-        Set<Object> mappedProperties = properties.stream().map(mapper).collect(Collectors.toSet());
+        Set<T> mappedProperties = properties.stream().map(mapper).collect(Collectors.toSet());
         
         TypeElement superclass = ElementFinder.getSuperclassOrNull(entityElement.getTypeElement(), ROOT_ENTITY_CLASS);
         while (superclass != null) {
@@ -62,7 +63,7 @@ public class EntityFinder {
             Set<PropertyElement> superprops = findDeclaredProperties(superentity);
 
             for (PropertyElement prop: superprops) {
-                Object mappedProp = mapper.apply(prop);
+                T mappedProp = mapper.apply(prop);
 
                 if (!mappedProperties.contains(mappedProp)) {
                     mappedProperties.add(mappedProp);
