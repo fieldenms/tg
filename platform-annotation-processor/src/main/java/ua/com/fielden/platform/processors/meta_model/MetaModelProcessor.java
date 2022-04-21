@@ -181,11 +181,21 @@ public class MetaModelProcessor extends AbstractProcessor {
     }
 
     private void writeMetaModel(final MetaModelElement metaModelElement, Set<MetaModelElement> metaModelElements) {
+        final EntityElement entity = metaModelElement.getEntityElement();
+        final EntityElement entityParent = EntityFinder.getParentOrNull(entity, elementUtils);
         // ######################## PROPERTIES ########################
-        final EntityElement entityElement = metaModelElement.getEntityElement();
-        final Set<PropertyElement> properties = EntityFinder.findDistinctProperties(entityElement, PropertyElement::getName);
+        final Set<PropertyElement> properties = new HashSet<>();
+
+        // find all properties (declared + inherited from <? extends AbstractEntity))
+        if (entityParent == null) 
+            properties.addAll(EntityFinder.findDistinctProperties(entity, PropertyElement::getName));
+        // find only declared properties
+        else
+            properties.addAll(EntityFinder.findDeclaredProperties(entity));
+
+        procLogger.debug("Properties: " + String.join(", ", properties.stream().map(el -> el.getName()).toList()));
         List<FieldSpec> fieldSpecs = new ArrayList<>();
-        
+
         for (PropertyElement prop: properties) {
             FieldSpec.Builder fieldSpecBuilder = null;
             final String propName = prop.getName();
@@ -196,7 +206,7 @@ public class MetaModelProcessor extends AbstractProcessor {
                     .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
                     .initializer("$S", propName)
                     .build());
-            
+
             // ### instance property ###
             if (isPropertyTypeMetaModelTarget(prop)) {
                 MetaModelElement propTypeMetaModelElement = new MetaModelElement(newEntityElement(prop.getTypeAsTypeElementOrThrow()));
@@ -214,7 +224,7 @@ public class MetaModelProcessor extends AbstractProcessor {
 
             fieldSpecs.add(fieldSpecBuilder.build());
         }
-            
+
         // ######################## METHODS ###########################
         List<MethodSpec> methodSpecs = new ArrayList<>();
 
@@ -227,7 +237,7 @@ public class MetaModelProcessor extends AbstractProcessor {
                 MetaModelElement propTypeMetaModelElement = new MetaModelElement(newEntityElement(prop.getTypeAsTypeElementOrThrow()));
                 propTypeMetaModelClassName = getMetaModelClassName(propTypeMetaModelElement);
                 /* property type is target for meta-model generation
-                
+
                 public [META_MODEL_NAME] [PROP_NAME]() {
                     return [PROP_NAME].get();
                 }
@@ -282,10 +292,10 @@ public class MetaModelProcessor extends AbstractProcessor {
 
         /*
         public static Class<? extends AbstractEntity> getModelClass() {
-            return [ENTITY_NAME].class;
+            return [ENTITY].class;
         }
-        */
-        final ClassName modelClassName = getEntityClassName(entityElement);
+         */
+        final ClassName modelClassName = getEntityClassName(entity);
         final ClassName abstractEntityClassName = ClassName.get(AbstractEntity.class);
         final ParameterizedTypeName returnType = ParameterizedTypeName.get(
                 ClassName.get(Class.class),
@@ -299,14 +309,14 @@ public class MetaModelProcessor extends AbstractProcessor {
                 .build();
 
         methodSpecs.add(getModelMethod);
-        
+
         // ######################## CONSTRUCTORS ######################
         /*
-        public [ENTITY_NAME]MetaModel(String path) {
+        public [ENTITY]MetaModel(String path) {
             super(path);
             ...
         }
-        */
+         */
         MethodSpec.Builder constructorBuilder = MethodSpec.constructorBuilder()
                 .addModifiers(Modifier.PUBLIC)
                 .addParameter(String.class, "path")
@@ -353,13 +363,13 @@ public class MetaModelProcessor extends AbstractProcessor {
 
         MethodSpec constructor = constructorBuilder.addCode(constructorStatementsBuilder.build()).build();
         methodSpecs.add(constructor);
-                
+
         // the empty constructor
         /*
-        public [ENTITY_NAME]MetaModel() {
+        public [ENTITY]MetaModel() {
             this("");
         }
-        */
+         */
         MethodSpec emptyConstructor = MethodSpec.constructorBuilder()
                 .addModifiers(Modifier.PUBLIC)
                 .addStatement("this(\"\")")
@@ -368,11 +378,18 @@ public class MetaModelProcessor extends AbstractProcessor {
 
         // class declaration
         /*
-        public final class [ENTITY_NAME]MetaModel extends EntityMetaModel {
+        public class [ENTITY]MetaModel extends [EntityMetaModel | [PARENT]MetaModel] {
             ...
         }
-        */
-        final ClassName metaModelSuperclassClassName = ClassName.get(META_MODEL_SUPERCLASS);
+         */
+        ClassName metaModelSuperclassClassName;
+        if (entityParent == null)
+            metaModelSuperclassClassName = ClassName.get(META_MODEL_SUPERCLASS);
+        else {
+            MetaModelElement mme = new MetaModelElement(entityParent);
+            metaModelSuperclassClassName = ClassName.get(mme.getPackageName(), mme.getSimpleName());
+        }
+
         final String metaModelName = metaModelElement.getSimpleName();
         final String metaModelPkgName = metaModelElement.getPackageName();
         final String now = DateTime.now().toString("dd-MM-YYYY HH:mm:ss.SSS z");
@@ -380,7 +397,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         TypeSpec metaModel = TypeSpec.classBuilder(metaModelName)
                 .addJavadoc("Auto-generated meta-model for {@link $T}.\n<p>\n", modelClassName)
                 .addJavadoc(String.format("Generation datetime: %s", now))
-                .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                .addModifiers(Modifier.PUBLIC)
                 .superclass(metaModelSuperclassClassName)
                 .addFields(fieldSpecs)
                 .addMethods(methodSpecs)
@@ -396,17 +413,17 @@ public class MetaModelProcessor extends AbstractProcessor {
         
         logger.info(String.format("Generated %s for entity %s.", metaModel.name, entityElement.getSimpleName()));
     }
-    
+
     private void writeMetaModelsClass(Set<MetaModelElement> metaModelElements) throws IOException {
         /*
         public final class MetaModels {
-            public static final [ENTITY_NAME]MetaModel [ENTITY_NAME] = new [ENTITY_NAME]MetaModel();
+            public static final [ENTITY]MetaModel [ENTITY] = new [ENTITY]MetaModel();
         }
-        */
+         */
 
         final TypeElement typeElement = elementUtils.getTypeElement(metaModelsClassQualifiedName());
         List<FieldSpec> fieldSpecs = new ArrayList<>();
-        
+
         // if MetaModels class already exists
         if (typeElement != null) { 
             logger.debug("MetaModels class exists");
@@ -437,7 +454,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             if (fieldSpec != null) {
                 continue;
             }
-            
+
             final EntityElement entityElement = metaModelElement.getEntityElement();
 
             // create a field for this meta-model

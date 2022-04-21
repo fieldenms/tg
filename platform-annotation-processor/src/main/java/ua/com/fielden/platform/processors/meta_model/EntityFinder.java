@@ -8,6 +8,7 @@ import java.util.stream.Collectors;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.util.Elements;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -151,5 +152,15 @@ public class EntityFinder {
 
     public static List<? extends AnnotationMirror> getPropertyAnnotations(PropertyElement property) {
         return ElementFinder.getFieldAnnotations(property.toVariableElement());
+    }
+    
+    public static EntityElement getParentOrNull(EntityElement element, Elements elementUtils) {
+        // superclass can't be null, since every entity extends AbstractEntity
+        TypeElement superclass = ElementFinder.getSuperclassOrNull(element.getTypeElement(), ROOT_ENTITY_CLASS);
+        
+        if (!isEntity(superclass))
+            return null;
+
+        return new EntityElement(superclass, elementUtils);
     }
 }
