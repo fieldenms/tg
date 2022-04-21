@@ -5,6 +5,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
@@ -64,29 +65,36 @@ import ua.com.fielden.platform.utils.Pair;
 public class MetaModelProcessor extends AbstractProcessor {
 
     private static final Class<EntityMetaModel> META_MODEL_SUPERCLASS = EntityMetaModel.class;
-    
+
     public static final String META_MODELS_CLASS_SIMPLE_NAME = "MetaModels";
     public static final String META_MODELS_CLASS_PACKAGE_NAME = "meta_models";
-    public static final String INDENT = "    ";
-    
+
+    private static final String INDENT = "    ";
+    private static final String LOG_FILENAME = "proc.log";
+
+    private static final String ECLIPSE_OPTION_KEY = "projectdir";
+
     private Logger logger;
+    private ProcessorLogger procLogger;
     private Filer filer;
     private Elements elementUtils;
     private Messager messager;
-    
+    private Map<String, String> options;
+    private boolean fromMaven;
+
     private static String metaModelsClassQualifiedName() {
         return String.format("%s.%s", 
                 META_MODELS_CLASS_PACKAGE_NAME, META_MODELS_CLASS_SIMPLE_NAME);
     }
-    
+
     public static Set<Class<? extends Annotation>> getSupportedAnnotations() {
         return Set.of(MapEntityTo.class, DomainEntity.class);
     }
-    
+
     public static List<Class<? extends Annotation>> ignoredPropertyAnnotations() {
         return new ArrayList<>(List.of(IsProperty.class));
     }
-    
+
     private static ClassName getMetaModelClassName(MetaModelElement element) {
         return ClassName.get(element.getPackageName(), element.getSimpleName());
     }
@@ -94,7 +102,7 @@ public class MetaModelProcessor extends AbstractProcessor {
     private static ClassName getEntityClassName(EntityElement element) {
         return ClassName.get(element.getPackageName(), element.getSimpleName());
     }
-    
+
     private static boolean isPropertyTypeMetaModelTarget(PropertyElement element) {
         TypeElement propType = null;
         try {
@@ -108,25 +116,47 @@ public class MetaModelProcessor extends AbstractProcessor {
                 return true;
             }
         }
-        
+
         return false;
     }
-    
+
     @Override
     public synchronized void init(ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
         this.filer = processingEnv.getFiler();
         this.elementUtils = processingEnv.getElementUtils();
         this.messager = processingEnv.getMessager();
+        this.options = processingEnv.getOptions();
+
+        // debug 
+        procLogger.debug("Options: " + String.join(" | ", 
+                                                    options.keySet().stream()
+                                                        .map(k -> String.format("%s = %s", k, options.get(k)))
+                                                        .toList()));
+
+        // processor started from Eclipse?
+        final String projectDir = options.get(ECLIPSE_OPTION_KEY);
+        this.fromMaven = projectDir == null;
+
         // log4j configuration
-        Configurator.initialize(getConfig());
+        Configurator.initialize(getLog4jConfig());
         this.logger = LogManager.getLogger(MetaModelProcessor.class);
-        logger.info("Initialized");
+
+        // ProcessorLogger
+        String logFilename = this.fromMaven ? LOG_FILENAME : projectDir + "/" + LOG_FILENAME;
+        String source = this.fromMaven ? "mvn" : "Eclipse";
+        this.procLogger = new ProcessorLogger(logFilename, source, logger);
+        procLogger.ln();
+        procLogger.info("init");
     }
-    
+
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        logger.debug("=== PROCESSING ROUND START ===");
+        procLogger.debug("=== PROCESSING ROUND START ===");
+
+        // debug
+        String rootElements = String.join(", ", roundEnv.getRootElements().stream().map(el -> el.getSimpleName()).toList());
+        procLogger.debug("rootElements: " + rootElements);
 
         Set<MetaModelElement> metaModelElements = new HashSet<>();
 
@@ -135,13 +165,13 @@ public class MetaModelProcessor extends AbstractProcessor {
             if (element.getKind() != ElementKind.CLASS) {
                 Optional<? extends AnnotationMirror> elementAnnotationMirror = element.getAnnotationMirrors().stream()
                         .filter(annotMirror -> getSupportedAnnotations().stream()
-                            .map(annotClass -> annotClass.getCanonicalName())
-                            .toList()
-                            .contains(((TypeElement) annotMirror.getAnnotationType().asElement()).getQualifiedName().toString()))
+                                .map(annotClass -> annotClass.getCanonicalName())
+                                .toList()
+                                .contains(((TypeElement) annotMirror.getAnnotationType().asElement()).getQualifiedName().toString()))
                         .findAny();
                 String annotationName = elementAnnotationMirror.get().getAnnotationType().asElement().getSimpleName().toString();
                 messager.printMessage(Kind.ERROR, String.format("Only classes can be annotated with %s", annotationName, element));
-                logger.debug(String.format("Skipping a non-class element %s", element.toString()));
+                procLogger.debug(String.format("Skipping a non-class element %s", element.toString()));
                 continue;
             }
 
@@ -162,7 +192,7 @@ public class MetaModelProcessor extends AbstractProcessor {
                     .map(propEl -> new MetaModelElement(newEntityElement(propEl.getTypeAsTypeElementOrThrow())))
                     .toList());
         }
-        
+
         for (MetaModelElement element: metaModelElements) {
             writeMetaModel(element, metaModelElements);
         }
@@ -172,17 +202,20 @@ public class MetaModelProcessor extends AbstractProcessor {
             try {
                 writeMetaModelsClass(metaModelElements);
             } catch (IOException e) {
-                logger.error(e.toString());
+                procLogger.error(e.toString());
             }
         }
 
-        logger.debug("xxx PROCESSING ROUND END xxx");
+        procLogger.debug("xxx PROCESSING ROUND END xxx");
+        procLogger.end();
         return true;
     }
 
     private void writeMetaModel(final MetaModelElement metaModelElement, Set<MetaModelElement> metaModelElements) {
         final EntityElement entity = metaModelElement.getEntityElement();
         final EntityElement entityParent = EntityFinder.getParentOrNull(entity, elementUtils);
+        procLogger.debug(String.format("%s extends %s", entity.getSimpleName(), entityParent == null ? "" : entityParent.getSimpleName()));
+
         // ######################## PROPERTIES ########################
         final Set<PropertyElement> properties = new HashSet<>();
 
@@ -408,10 +441,10 @@ public class MetaModelProcessor extends AbstractProcessor {
         try {
             javaFile.writeTo(filer);
         } catch (IOException e) {
-            logger.error(e.toString());
+            procLogger.error(e.toString());
         }
-        
-        logger.info(String.format("Generated %s for entity %s.", metaModel.name, entityElement.getSimpleName()));
+
+        procLogger.info(String.format("Generated %s for entity %s.", metaModel.name, entity.getSimpleName()));
     }
 
     private void writeMetaModelsClass(Set<MetaModelElement> metaModelElements) throws IOException {
@@ -426,7 +459,7 @@ public class MetaModelProcessor extends AbstractProcessor {
 
         // if MetaModels class already exists
         if (typeElement != null) { 
-            logger.debug("MetaModels class exists");
+            procLogger.debug("MetaModels class exists");
 
             Set<VariableElement> fields = ElementFinder.findDeclaredFields(typeElement);
 
@@ -475,20 +508,23 @@ public class MetaModelProcessor extends AbstractProcessor {
         JavaFile javaFile = JavaFile.builder(META_MODELS_CLASS_PACKAGE_NAME, metaModelsTypeSpec).indent(INDENT).build();
         javaFile.writeTo(filer);
 
-        logger.info(String.format("Generated %s.", metaModelsTypeSpec.name));
+        procLogger.info(String.format("Generated %s.", metaModelsTypeSpec.name));
     }
-    
+
     private EntityElement newEntityElement(TypeElement typeElement) {
         return new EntityElement(typeElement, elementUtils);
     }
 
-    private Configuration getConfig() {
+    private Configuration getLog4jConfig() {
         ConfigurationBuilder<BuiltConfiguration> builder = ConfigurationBuilderFactory.newConfigurationBuilder();
 
         AppenderComponentBuilder console = builder.newAppender("ConsoleAppender", "Console"); 
 
+        String projectDir = options.get("projectdir");
+        String filename = "processor.log";
+        filename = projectDir == null ? filename : projectDir + '/' + filename;
         AppenderComponentBuilder file = builder.newAppender("FileAppender", "File"); 
-        file.addAttribute("fileName", "processor.log");
+        file.addAttribute("fileName", filename);
         file.addAttribute("append", "true");
 
         LayoutComponentBuilder layout = builder.newLayout("PatternLayout");
@@ -503,7 +539,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         rootLogger.add(builder.newAppenderRef("ConsoleAppender"));
         rootLogger.add(builder.newAppenderRef("FileAppender"));
         builder.add(rootLogger);
-        
+
         return builder.build();
     }
 }
