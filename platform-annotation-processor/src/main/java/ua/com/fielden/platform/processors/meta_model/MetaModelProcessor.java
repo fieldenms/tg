@@ -128,12 +128,6 @@ public class MetaModelProcessor extends AbstractProcessor {
         this.messager = processingEnv.getMessager();
         this.options = processingEnv.getOptions();
 
-        // debug 
-        procLogger.debug("Options: " + String.join(" | ", 
-                                                    options.keySet().stream()
-                                                        .map(k -> String.format("%s = %s", k, options.get(k)))
-                                                        .toList()));
-
         // processor started from Eclipse?
         final String projectDir = options.get(ECLIPSE_OPTION_KEY);
         this.fromMaven = projectDir == null;
@@ -148,6 +142,12 @@ public class MetaModelProcessor extends AbstractProcessor {
         this.procLogger = new ProcessorLogger(logFilename, source, logger);
         procLogger.ln();
         procLogger.info("init");
+
+        // debug 
+        procLogger.debug("Options: " + String.join(" | ", 
+                                                    options.keySet().stream()
+                                                        .map(k -> String.format("%s = %s", k, options.get(k)))
+                                                        .toList()));
     }
 
     @Override
