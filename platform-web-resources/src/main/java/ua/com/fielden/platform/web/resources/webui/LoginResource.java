@@ -56,6 +56,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
 public class LoginResource extends AbstractWebResource {
     
     public static final String BINDING_PATH = "/login";
+    public static final String SSO_BINDING_PATH = "/sso";
     public static final int BLOCK_TIME_SECONDS = 15;
     public static final int LOCKOUT_THRESHOLD = 6;
     private static final Cache<String, LoginAttempts> LOGIN_ATTEMPTS = CacheBuilder.newBuilder().initialCapacity(100).maximumSize(1000).concurrencyLevel(50).build();

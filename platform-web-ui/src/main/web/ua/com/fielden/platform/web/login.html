@@ -277,7 +277,7 @@
             const submitSso = document.getElementById('submitButtonSso');
             submitSso.onclick = function () {
                 console.log("redirecting to SSO...");
-                window.location.assign("/sso");
+                window.location.assign("@auth.sso.binding.path");
             }
         })();
     </script>

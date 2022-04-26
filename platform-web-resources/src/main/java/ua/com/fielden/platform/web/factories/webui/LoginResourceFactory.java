@@ -67,12 +67,12 @@ public class LoginResourceFactory extends Restlet {
     private static byte[] loadLoginPage(final boolean trustedDeviceByDefault, final AuthMode authMode, String authSsoProvider) {
         try {
             final String loginPage = ResourceLoader.getText("ua/com/fielden/platform/web/login.html");
-            // TODO use authMode and ssoIdentityProvider to enhance the Login page
             final String withTitle = replace(loginPage, "@title", "Login");
             final String withTrusted = replace(withTitle, "@trusted", trustedDeviceByDefault ? "checked" : "");
             final String withAuthMode = replace(withTrusted, "@auth.mode", AuthMode.SSO == authMode ? "block" : "none");
             final String withSsoIdentity = replace(withAuthMode, "@auth.sso.provider", authSsoProvider);
-            return withSsoIdentity.getBytes("UTF-8");
+            final String withSsoBindingPath = replace(withSsoIdentity, "@auth.sso.binding.path", LoginResource.SSO_BINDING_PATH);
+            return withSsoBindingPath.getBytes("UTF-8");
         } catch (final Exception ex) {
             throw new IllegalStateException(ex);
         }

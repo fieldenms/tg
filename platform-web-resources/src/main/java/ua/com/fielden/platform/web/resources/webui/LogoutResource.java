@@ -33,7 +33,7 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 public class LogoutResource extends AbstractWebResource {
 
     public static final String BINDING_PATH = "/logout";
-    
+
     private final Logger logger = Logger.getLogger(LogoutResource.class);
 
     private final IWebResourceLoader webResourceLoader;
