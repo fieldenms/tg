@@ -111,6 +111,20 @@
                 height: 100%;
                 z-index: -1;
             }
+
+            h4 {
+                width: 100%; 
+                text-align: center; 
+                border-bottom: 1px solid #4285f4; 
+                line-height: 0.1em;
+                margin: 32px 0 32px; 
+            } 
+
+            h4 span { 
+                background:#fafafa; 
+                color: #4285f4;
+                padding:0 10px; 
+            }
         </style>
     </custom-style>
 </head>
@@ -152,6 +166,12 @@
             <paper-button id="submitButton" style="width:100%; margin: 0px" class="submit-normal" raised>
                 <span id="submitLabel">Login</span>
             </paper-button>
+            <div style="display: @auth.mode">
+                <h4><span>OR</span></h4>
+                <paper-button id="submitButtonSso" style="width:100%; margin: 0px;background: #388E3C;" class="submit-normal" raised>
+                    <span id="submitLabelSso">Login with @auth.sso.provider</span>
+                </paper-button>
+            </div>
         </form>
     </iron-form>
 
@@ -194,7 +214,6 @@
                 submit.disabled = true;
                 form.submit();
             }
-
 
             form.addEventListener('iron-form-submit', function (event) {
                 console.log("submitting...");
@@ -255,6 +274,11 @@
                 }
             );
 
+            const submitSso = document.getElementById('submitButtonSso');
+            submitSso.onclick = function () {
+                console.log("redirecting to SSO...");
+                window.location.assign("/sso");
+            }
         })();
     </script>
 </body>

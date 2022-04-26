@@ -113,6 +113,7 @@ public class LoginResource extends AbstractWebResource {
                 final Authenticator auth = oAuth.get();
                 up.setUsername(auth.username, coUser);
                 final Optional<UserSession> session = coUserSession.currentSession(up.getUser(), auth.toString(), false);
+                // if authenticated session could be obtained, then we simply redirect request to "/"
                 if (session.isPresent()) {
                     // response needs to be provided with an authenticating cookie
                     assignAuthenticatingCookie(session.get().getUser(), constants.now(), session.get().getAuthenticator().get(), domainName, path, getRequest(), getResponse());
@@ -122,7 +123,8 @@ public class LoginResource extends AbstractWebResource {
                 }
             }
 
-            // otherwise just return the login page for user to login in explicitly
+            // otherwise just return the login page for user to login explicitly
+            // the returned page should take into account support for SSO
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(loginPage), MediaType.TEXT_HTML));
         } catch (final Exception ex) {
             // in case of an exception log the error and return the login page for the user to try again
