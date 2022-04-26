@@ -141,13 +141,13 @@ public class MetaModelProcessor extends AbstractProcessor {
         String source = this.fromMaven ? "mvn" : "Eclipse";
         this.procLogger = new ProcessorLogger(logFilename, source, logger);
         procLogger.ln();
-        procLogger.info("init");
+        procLogger.info(String.format("%s initialized.", this.getClass().getSimpleName()));
 
         // debug 
-        procLogger.debug("Options: " + String.join(" | ", 
+        procLogger.debug("Options: [" + String.join(", ", 
                                                     options.keySet().stream()
-                                                        .map(k -> String.format("%s = %s", k, options.get(k)))
-                                                        .toList()));
+                                                        .map(k -> String.format("%s=%s", k, options.get(k)))
+                                                        .toList()) + "]");
     }
 
     @Override
@@ -179,7 +179,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             final EntityElement entityElement = newEntityElement(typeElement);
             final MetaModelElement metaModelElement = new MetaModelElement(entityElement);
             metaModelElements.add(metaModelElement);
-
+            
             // TODO: optimize by annotating platform level entities with @DomainEntity
             // filter properties of this entity to find entity type ones and include them for meta-model generation
             // this helps find entities that are included from the platform, rather than defined by a domain model,
@@ -192,7 +192,7 @@ public class MetaModelProcessor extends AbstractProcessor {
                     .map(propEl -> new MetaModelElement(newEntityElement(propEl.getTypeAsTypeElementOrThrow())))
                     .toList());
         }
-
+        
         for (MetaModelElement element: metaModelElements) {
             writeMetaModel(element, metaModelElements);
         }
@@ -207,14 +207,17 @@ public class MetaModelProcessor extends AbstractProcessor {
         }
 
         procLogger.debug("xxx PROCESSING ROUND END xxx");
+
+        // the log file is closed here, that is, right at the end of the 1st processing round
+        // this should be modified in case more than 1 processing round is needed
         procLogger.end();
+
         return true;
     }
 
     private void writeMetaModel(final MetaModelElement metaModelElement, Set<MetaModelElement> metaModelElements) {
         final EntityElement entity = metaModelElement.getEntityElement();
         final EntityElement entityParent = EntityFinder.getParentOrNull(entity, elementUtils);
-        procLogger.debug(String.format("%s extends %s", entity.getSimpleName(), entityParent == null ? "" : entityParent.getSimpleName()));
 
         // ######################## PROPERTIES ########################
         final Set<PropertyElement> properties = new HashSet<>();
@@ -226,9 +229,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         else
             properties.addAll(EntityFinder.findDeclaredProperties(entity));
 
-        procLogger.debug("Properties: " + String.join(", ", properties.stream().map(el -> el.getName()).toList()));
         List<FieldSpec> fieldSpecs = new ArrayList<>();
-
         for (PropertyElement prop: properties) {
             FieldSpec.Builder fieldSpecBuilder = null;
             final String propName = prop.getName();
@@ -459,8 +460,6 @@ public class MetaModelProcessor extends AbstractProcessor {
 
         // if MetaModels class already exists
         if (typeElement != null) { 
-            procLogger.debug("MetaModels class exists");
-
             Set<VariableElement> fields = ElementFinder.findDeclaredFields(typeElement);
 
             // collect existing fields by mapping them from VariableElement to FieldSpec
@@ -477,6 +476,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             fieldSpecs.addAll(existingFieldSpecs);
         }
 
+        boolean write = false;
         for (MetaModelElement metaModelElement: metaModelElements) {
             // if a field for this meta-model already exists, then skip it
             // since changes to a particular meta-model do not affect the MetaModels class
@@ -484,10 +484,10 @@ public class MetaModelProcessor extends AbstractProcessor {
                     .filter(fs -> fs.type.equals(getMetaModelClassName(metaModelElement)))
                     .findAny()
                     .orElse(null);
-            if (fieldSpec != null) {
+            if (fieldSpec != null)
                 continue;
-            }
 
+            write = true;
             final EntityElement entityElement = metaModelElement.getEntityElement();
 
             // create a field for this meta-model
@@ -498,17 +498,22 @@ public class MetaModelProcessor extends AbstractProcessor {
                     .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
                     .build());
         }
+        
+        if (write) {
+            TypeSpec metaModelsTypeSpec = TypeSpec.classBuilder(META_MODELS_CLASS_SIMPLE_NAME)
+                    .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
+                    .addFields(fieldSpecs)
+                    .build();
 
-        TypeSpec metaModelsTypeSpec = TypeSpec.classBuilder(META_MODELS_CLASS_SIMPLE_NAME)
-                .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-                .addFields(fieldSpecs)
-                .build();
+            // ######################## WRITE TO FILE #####################
+            JavaFile javaFile = JavaFile.builder(META_MODELS_CLASS_PACKAGE_NAME, metaModelsTypeSpec).indent(INDENT).build();
+            javaFile.writeTo(filer);
 
-        // ######################## WRITE TO FILE #####################
-        JavaFile javaFile = JavaFile.builder(META_MODELS_CLASS_PACKAGE_NAME, metaModelsTypeSpec).indent(INDENT).build();
-        javaFile.writeTo(filer);
-
-        procLogger.info(String.format("Generated %s.", metaModelsTypeSpec.name));
+            if (typeElement != null)
+                procLogger.info(String.format("Regenerated %s.", metaModelsTypeSpec.name));
+            else
+                procLogger.info(String.format("Generated %s.", metaModelsTypeSpec.name));
+        }
     }
 
     private EntityElement newEntityElement(TypeElement typeElement) {

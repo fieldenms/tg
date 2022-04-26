@@ -45,7 +45,7 @@ public class ProcessorLogger {
             return false;
 
         String datetime = getDatetime();
-        printWriter.println(String.format("%s [%s] [%s] --- %s", datetime, level, source, text));
+        printWriter.println(String.format("%s [%5s] [%s] --- %s", datetime, level, source, text));
         return true;
     }
     
