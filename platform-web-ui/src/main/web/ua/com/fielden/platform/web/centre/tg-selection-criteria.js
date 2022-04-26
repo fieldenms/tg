@@ -43,15 +43,14 @@ Polymer({
         saveAsName: String,
 
         /**
-         * The value of 'queryPart' taken from tg-entity-centre-behavior to facilitate creation of retrieval URI with that query.
-         * Initial value must be 'null' to make '_computeRetrieverUrl(miType, saveAsName, queryPart, configUuid)' computable and not being undefined.
-         * Please note that on the server-side the information about centre parameters existence will be considered only during first-time retrival.
+         * The value of 'queryPart' taken from 'tg-entity-centre-behavior' to facilitate creation of retrieval URI with that query.
+         *
+         * Initial (and following empty) values must be 'null' to make '_computeRetrieverUrl(miType, saveAsName, queryPart, configUuid)' computable and not being undefined.
+         *
          * In case where 'queryPart' is not empty, LINK_CONFIG_TITLE will be returned on the client in 'saveAsName' property instead of preferred configuration name (which could be '' or some non-empty name).
+         * Corresponding 'configUuid' for that link configuration will be returned on the client too.
          */
-        queryPart: {
-            type: String,
-            value: null
-        },
+        queryPart: String,
 
         /**
          * UUID for currently loaded centre configuration.
