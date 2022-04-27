@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.web.security;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.basic.config.IApplicationSettings.AuthMode.SSO;
 import static ua.com.fielden.platform.security.session.Authenticator.fromString;
+import static ua.com.fielden.platform.web.resources.webui.LoginResource.BINDING_PATH;
+import static ua.com.fielden.platform.web.resources.webui.LoginResource.SSO_BINDING_PATH;
 
 import java.util.Optional;
 
@@ -13,10 +16,13 @@ import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.data.ChallengeScheme;
 import org.restlet.data.CookieSetting;
+import org.restlet.data.Method;
 import org.restlet.security.ChallengeAuthenticator;
 
 import com.google.inject.Injector;
 
+import ua.com.fielden.platform.basic.config.IApplicationSettings;
+import ua.com.fielden.platform.basic.config.IApplicationSettings.AuthMode;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.session.Authenticator;
 import ua.com.fielden.platform.security.session.IUserSession;
@@ -41,6 +47,7 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
     private final IUniversalConstants constants;
     private final String domainName;
     private final String path;
+    private final AuthMode authMode;
 
     /**
      * Principle constructor.
@@ -59,6 +66,7 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
         this.constants = injector.getInstance(IUniversalConstants.class);
         this.domainName = domainName;
         this.path = path;
+        this.authMode = injector.getInstance(IApplicationSettings.class).authMode();
 
         if (StringUtils.isEmpty(domainName) || StringUtils.isEmpty(path)) {
             throw new IllegalStateException("Both the domain name and the applicatin binding path should be provided.");
@@ -69,19 +77,24 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
 
     @Override
     public boolean authenticate(final Request request, final Response response) {
-        // uncomment following lines to be able to use http (StartOverHttp) server instead of https (Start) server for development purposes:
-//        if(true) {
-//            final IUserProvider userProvider = injector.getInstance(IUserProvider.class);
-//            userProvider.setUsername(User.system_users.SU.name(), injector.getInstance(IUser.class));
-//            return true;
-//        }
+        // uncomment the following lines to circumvent the use of session authenticators; this at time useful for development purposes, especially in HTTP mode (as opposed to HTTPS).
+        //  if(true) {
+        //      final IUserProvider userProvider = injector.getInstance(IUserProvider.class);
+        //      userProvider.setUsername(User.system_users.SU.name(), injector.getInstance(IUser.class));
+        //      return true;
+        //  }
         try {
             logger.debug(format("Starting request authentication to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
 
             final Optional<Authenticator> oAuth = extractAuthenticator(request);
             if (!oAuth.isPresent()) {
                 logger.warn(format("Authenticator cookie is missing for a request to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
-                forbid(response);
+                // GET requests should be redirected to an appropriate re-authentication resource
+                if (Method.GET.equals(request.getMethod())) {
+                    response.redirectTemporary(authMode == SSO ? SSO_BINDING_PATH : BINDING_PATH);
+                } else {
+                    forbid(response);
+                }
                 return false;
             }
 

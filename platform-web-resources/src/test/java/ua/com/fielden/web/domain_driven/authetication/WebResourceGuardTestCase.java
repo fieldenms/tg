@@ -61,11 +61,27 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
     }
 
     @Test
-    public void unauthenticated_request_should_be_refused_with_code_403_forbidden() throws SignatureException {
-        final Request request = new Request(Method.GET, format("%s/users/%s/%s/%s", baseUri, User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L));
+    public void unauthenticated_POST_request_should_be_refused_with_code_403_forbidden() throws SignatureException {
+        final Request request = new Request(Method.POST, format("%s/users/%s/%s/%s", baseUri, User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L));
         final Response response = client.handle(request);
 
         assertEquals(403, response.getStatus().getCode());
+    }
+
+    @Test
+    public void unauthenticated_PUT_request_should_be_refused_with_code_403_forbidden() throws SignatureException {
+        final Request request = new Request(Method.POST, format("%s/users/%s/%s/%s", baseUri, User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L));
+        final Response response = client.handle(request);
+
+        assertEquals(403, response.getStatus().getCode());
+    }
+
+    @Test
+    public void unauthenticated_GET_request_should_be_redirected() throws SignatureException {
+        final Request request = new Request(Method.GET, format("%s/users/%s/%s/%s", baseUri, User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L));
+        final Response response = client.handle(request);
+
+        assertEquals(307, response.getStatus().getCode());
     }
 
     @Test
