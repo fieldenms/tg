@@ -324,21 +324,21 @@ public class MetaModelProcessor extends AbstractProcessor {
 
 
         /*
-        public static Class<? extends AbstractEntity> getModelClass() {
+        @Override
+        public static Class<[ENTITY]> getEntityClass() {
             return [ENTITY].class;
         }
          */
-        final ClassName modelClassName = getEntityClassName(entity);
+        final ClassName entityClassName = getEntityClassName(entity);
         final ClassName abstractEntityClassName = ClassName.get(AbstractEntity.class);
         final ParameterizedTypeName returnType = ParameterizedTypeName.get(
-                ClassName.get(Class.class),
-                WildcardTypeName.subtypeOf(abstractEntityClassName)
-                );
+                ClassName.get(Class.class), WildcardTypeName.subtypeOf(abstractEntityClassName)); 
 
-        MethodSpec getModelMethod = MethodSpec.methodBuilder("getModelClass")
-                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+        MethodSpec getModelMethod = MethodSpec.methodBuilder("getEntityClass")
+                .addAnnotation(Override.class)
+                .addModifiers(Modifier.PUBLIC)
                 .returns(returnType)
-                .addStatement("return $T.class", modelClassName)
+                .addStatement("return $T.class", entityClassName)
                 .build();
 
         methodSpecs.add(getModelMethod);
@@ -428,7 +428,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         final String now = DateTime.now().toString("dd-MM-YYYY HH:mm:ss.SSS z");
 
         TypeSpec metaModel = TypeSpec.classBuilder(metaModelName)
-                .addJavadoc("Auto-generated meta-model for {@link $T}.\n<p>\n", modelClassName)
+                .addJavadoc("Auto-generated meta-model for {@link $T}.\n<p>\n", entityClassName)
                 .addJavadoc(String.format("Generation datetime: %s", now))
                 .addModifiers(Modifier.PUBLIC)
                 .superclass(metaModelSuperclassClassName)

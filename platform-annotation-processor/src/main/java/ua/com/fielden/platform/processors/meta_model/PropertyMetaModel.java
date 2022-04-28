@@ -10,4 +10,9 @@ public class PropertyMetaModel {
     public String toPath() {
         return this.path;
     }
+    
+    @Override
+    public String toString() {
+        return toPath();
+    }
 }

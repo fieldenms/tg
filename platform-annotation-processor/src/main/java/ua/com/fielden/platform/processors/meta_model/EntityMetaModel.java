@@ -13,10 +13,6 @@ public abstract class EntityMetaModel {
         this("");
     }
     
-    public static Class<? extends AbstractEntity> getModelClass() {
-        return null;
-    }
-
     protected final String joinPath(String propName) {
         if (this.path.length() > 0) {
             return this.path + "." + propName;
@@ -27,4 +23,11 @@ public abstract class EntityMetaModel {
     public final String toPath() {
         return this.path;
     }
+
+    @Override
+    public final String toString() {
+        return toPath();
+    }
+
+    public abstract Class<? extends AbstractEntity> getEntityClass();
 }
