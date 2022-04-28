@@ -3,6 +3,7 @@ package ua.com.fielden.platform.processors.meta_model;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -20,8 +21,10 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -54,7 +57,6 @@ import com.squareup.javapoet.WildcardTypeName;
 
 import ua.com.fielden.platform.annotations.meta_model.DomainEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -85,10 +87,6 @@ public class MetaModelProcessor extends AbstractProcessor {
 
     public static Set<Class<? extends Annotation>> getSupportedAnnotations() {
         return Set.of(MapEntityTo.class, DomainEntity.class);
-    }
-
-    public static List<Class<? extends Annotation>> ignoredPropertyAnnotations() {
-        return new ArrayList<>(List.of(IsProperty.class));
     }
 
     private static ClassName getMetaModelClassName(MetaModelElement element) {
@@ -313,11 +311,24 @@ public class MetaModelProcessor extends AbstractProcessor {
                 methodSpecBuilder = methodSpecBuilder.addJavadoc("Meta-model: {@link $T}\n<p>\n", propTypeMetaModelClassName);
             }
 
-            // javadoc: all annotations of a property (except ignored ones)
-            final List<String> annotNames = ElementFinder.getFieldAnnotationsExcept(prop.toVariableElement(), ignoredPropertyAnnotations()).stream()
-                    .map(a -> String.format("{@link %s}", ElementFinder.getAnnotationMirrorSimpleName(a)))
+            // javadoc: property annotations
+            final List<String> annotationsStrings = ElementFinder.getFieldAnnotations(prop.toVariableElement()).stream()
+                    .map(annotMirror -> {
+                        String str = String.format("{@literal @}{@link %s}", ElementFinder.getAnnotationMirrorSimpleName(annotMirror));
+                        Map<? extends ExecutableElement, ? extends AnnotationValue> valuesMap = annotMirror.getElementValues();
+                        if (!valuesMap.isEmpty()) {
+                            str += "(";
+                            str += String.join(", ", valuesMap.entrySet().stream()
+                                    .map(e -> String.format("%s = %s", 
+                                            e.getKey().getSimpleName(), 
+                                            e.getValue().toString().replaceAll("@", "{@literal @}")))
+                                    .toList());
+                            str += ")";
+                        }
+                        return str;
+                    })
                     .toList();
-            methodSpecBuilder = methodSpecBuilder.addJavadoc("Annotations: $L", String.join(", ", annotNames));
+            methodSpecBuilder = methodSpecBuilder.addJavadoc("$L", String.join("<br>\n", annotationsStrings));
 
             methodSpecs.add(methodSpecBuilder.build());
         }
