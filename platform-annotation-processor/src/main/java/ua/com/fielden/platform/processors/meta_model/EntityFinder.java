@@ -1,17 +1,21 @@
 package ua.com.fielden.platform.processors.meta_model;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
 
 import ua.com.fielden.platform.annotations.meta_model.DomainEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.Title;
@@ -101,7 +105,7 @@ public class EntityFinder {
     }
     
     public static Pair<String, String> getPropTitleAndDesc(PropertyElement propElement) {
-        AnnotationMirror titleAnnotationMirror = ElementFinder.getFieldAnnotationMirror(propElement.toVariableElement(), Title.class);
+        AnnotationMirror titleAnnotationMirror = ElementFinder.getElementAnnotationMirror(propElement.toVariableElement(), Title.class);
         
         if (titleAnnotationMirror == null) {
             return null;
@@ -127,12 +131,26 @@ public class EntityFinder {
         return Pair.pair(title, desc);
     }
 
-    public static Pair<String, String> getEntityKeyTitleAndDesc() {
-        return null;
-    }
-    
-    public static Pair<String, String> getEntityDescTitleAndDesc() {
-        return null;
+    public static Pair<String, String> getEntityTitleAndDesc(EntityElement entityElement) {
+        final AnnotationMirror entityTitleAnnotMirror = ElementFinder.getElementAnnotationMirror(entityElement.getTypeElement(), EntityTitle.class);
+        
+        if (entityTitleAnnotMirror == null) {
+            return null;
+        }
+        
+        final Map<? extends ExecutableElement, ? extends AnnotationValue> elements = entityTitleAnnotMirror.getElementValues();
+
+        final ExecutableElement valueKey = elements.keySet().stream()
+                .filter(k -> k.getSimpleName().toString().equals("value"))
+                .findFirst().orElse(null);
+        final String title = (valueKey == null) ? "" : (String) elements.get(valueKey).getValue();
+
+        final ExecutableElement descKey = elements.keySet().stream()
+                .filter(k -> k.getSimpleName().toString().equals("desc"))
+                .findFirst().orElse(null);
+        final String desc = (descKey == null) ? "" : (String) elements.get(descKey).getValue();
+
+        return Pair.pair(title, desc);
     }
 
     /**

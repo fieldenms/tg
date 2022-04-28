@@ -3,7 +3,6 @@ package ua.com.fielden.platform.processors.meta_model;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -112,6 +111,20 @@ public class MetaModelProcessor extends AbstractProcessor {
         }
 
         return isMetamodeled(propType);
+    }
+    
+    private static String getEntityTitleFromClassName(EntityElement element) {
+        final String entityName = element.getSimpleName();
+        String descriptiveName = "";
+
+        for (int i = 0; i < entityName.length(); i++) {
+            char c = entityName.charAt(i);
+            if (i > 0 && Character.isUpperCase(c))
+                descriptiveName += " ";
+            descriptiveName += c;
+        }
+        
+        return descriptiveName;
     }
 
     @Override
@@ -436,19 +449,38 @@ public class MetaModelProcessor extends AbstractProcessor {
 
         final String metaModelName = metaModelElement.getSimpleName();
         final String metaModelPkgName = metaModelElement.getPackageName();
-        final String now = DateTime.now().toString("dd-MM-YYYY HH:mm:ss.SSS z");
 
         TypeSpec metaModel = TypeSpec.classBuilder(metaModelName)
-                .addJavadoc("Auto-generated meta-model for {@link $T}.\n<p>\n", entityClassName)
-                .addJavadoc(String.format("Generation datetime: %s", now))
                 .addModifiers(Modifier.PUBLIC)
                 .superclass(metaModelSuperclassClassName)
                 .addFields(fieldSpecs)
                 .addMethods(methodSpecs)
                 .build();
+        
+        // javadoc
+        final Pair<String, String> entityTitleAndDesc = EntityFinder.getEntityTitleAndDesc(entity);
+        if (entityTitleAndDesc != null) {
+            final String title = entityTitleAndDesc.getKey();
+            if (title.length() > 0)
+                metaModel = metaModel.toBuilder().addJavadoc(String.format("Title: %s\n<p>\n", title)).build();
+
+            final String desc = entityTitleAndDesc.getValue();
+            if (desc.length() > 0)
+                metaModel = metaModel.toBuilder().addJavadoc(String.format("Description: %s\n<p>\n", desc)).build();
+        } else {
+            final String title = getEntityTitleFromClassName(entity);
+            metaModel = metaModel.toBuilder().addJavadoc(String.format("Title: %s\n<p>\n", title)).build();
+        }
+
+        final String now = DateTime.now().toString("dd-MM-YYYY HH:mm:ss.SSS z");
+        metaModel = metaModel.toBuilder()
+                .addJavadoc("Auto-generated meta-model for {@link $T}.\n<p>\n", entityClassName)
+                .addJavadoc(String.format("Generation datetime: %s", now))
+                .build();
+
 
         // ######################## WRITE TO FILE #####################
-        JavaFile javaFile = JavaFile.builder(metaModelPkgName, metaModel).indent(INDENT).build();
+        final JavaFile javaFile = JavaFile.builder(metaModelPkgName, metaModel).indent(INDENT).build();
         try {
             javaFile.writeTo(filer);
         } catch (IOException e) {

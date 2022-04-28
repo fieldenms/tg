@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.lang.model.AnnotatedConstruct;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Name;
@@ -164,8 +165,8 @@ public class ElementFinder {
                 .collect(Collectors.toList());
     }
 
-    public static AnnotationMirror getFieldAnnotationMirror(VariableElement varElement, Class<? extends Annotation> annotationClass) {
-        for (AnnotationMirror annotMirror: varElement.getAnnotationMirrors()) {
+    public static AnnotationMirror getElementAnnotationMirror(AnnotatedConstruct element, Class<? extends Annotation> annotationClass) {
+        for (AnnotationMirror annotMirror: element.getAnnotationMirrors()) {
             TypeElement annotTypeElement = ((TypeElement) annotMirror.getAnnotationType().asElement());
             if (equals(annotTypeElement, annotationClass))
                 return annotMirror;
