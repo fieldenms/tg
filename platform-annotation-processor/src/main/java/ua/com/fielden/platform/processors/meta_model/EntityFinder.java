@@ -10,6 +10,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
 
+import ua.com.fielden.platform.annotations.meta_model.DomainEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
@@ -133,9 +134,31 @@ public class EntityFinder {
     public static Pair<String, String> getEntityDescTitleAndDesc() {
         return null;
     }
-    
+
+    /**
+     * Entity is any class that inherits from {@link AbstractEntity} (which itself is also considered an entity).
+     * @param element
+     * @return
+     */
     public static boolean isEntity(TypeElement element) {
-        return element.getAnnotation(MapEntityTo.class) != null;
+        if (ElementFinder.equals(element, ROOT_ENTITY_CLASS))
+            return true;
+
+        TypeElement superclass = element;
+        while ((superclass = ElementFinder.getSuperclassOrNull(superclass)) != null) {
+            if (ElementFinder.equals(superclass, ROOT_ENTITY_CLASS))
+                return true;
+        }
+        
+        return false;
+    }
+    
+    public static boolean isPersistentEntity(EntityElement element) {
+        return element.getTypeElement().getAnnotation(MapEntityTo.class) != null;
+    }
+
+    public static boolean isDomainEntity(EntityElement element) {
+        return element.getTypeElement().getAnnotation(DomainEntity.class) != null;
     }
     
     public static boolean isProperty(VariableElement element) {
@@ -154,7 +177,7 @@ public class EntityFinder {
         return ElementFinder.getFieldAnnotations(property.toVariableElement());
     }
     
-    public static EntityElement getParentOrNull(EntityElement element, Elements elementUtils) {
+    public static EntityElement getParent(EntityElement element, Elements elementUtils) {
         // superclass can't be null, since every entity extends AbstractEntity
         TypeElement superclass = ElementFinder.getSuperclassOrNull(element.getTypeElement(), ROOT_ENTITY_CLASS);
         

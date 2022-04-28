@@ -18,6 +18,16 @@ import javax.lang.model.type.TypeMirror;
 
 public class ElementFinder {
     
+    /**
+     * A {@link TypeElement} instance is equal to a {@link Class} instance if both objects have the same qualified (canonical) name.
+     * <p>
+     * A local class, local interface, or anonymous class does not have a canonical name. 
+     * @see <a href="https://docs.oracle.com/javase/specs/jls/se16/html/jls-6.html#jls-6.7">Java SE16 Language Specification - Fully Qualified Names and Canonical Names</a>
+     */
+    public static boolean equals(TypeElement typeElement, Class<?> clazz) {
+        return typeElement.getQualifiedName().toString().equals(clazz.getCanonicalName());
+    }
+    
     public static TypeElement getSuperclassOrNull(TypeElement typeElement) {
         TypeMirror superclass = typeElement.getSuperclass();
         if (superclass.getKind() == TypeKind.NONE)
@@ -28,7 +38,7 @@ public class ElementFinder {
 
     public static TypeElement getSuperclassOrNull(TypeElement typeElement, Class<?> rootClass) {
         // if this is root class return null
-        if (typeElement.getQualifiedName().toString().equals(rootClass.getCanonicalName()))
+        if (equals(typeElement, rootClass))
             return null;
 
         // with correct usage this code would never be reached
@@ -155,22 +165,19 @@ public class ElementFinder {
     }
 
     public static AnnotationMirror getFieldAnnotationMirror(VariableElement varElement, Class<? extends Annotation> annotationClass) {
-        final String annotClassCanonicalName = annotationClass.getCanonicalName();
-        
         for (AnnotationMirror annotMirror: varElement.getAnnotationMirrors()) {
-            String qualifiedName = ((TypeElement) annotMirror.getAnnotationType().asElement()).getQualifiedName().toString();
-            if (qualifiedName.equals(annotClassCanonicalName)) {
+            TypeElement annotTypeElement = ((TypeElement) annotMirror.getAnnotationType().asElement());
+            if (equals(annotTypeElement, annotationClass))
                 return annotMirror;
-            }
         }
-        
+
         return null;
     }
-    
+
     public static String getVariableTypeSimpleName(VariableElement varElement) {
         return ((DeclaredType) varElement.asType()).asElement().getSimpleName().toString();
     }
-    
+
     public static Name getAnnotationMirrorSimpleName(AnnotationMirror annotMirror) {
         return annotMirror.getAnnotationType().asElement().getSimpleName();
     }
