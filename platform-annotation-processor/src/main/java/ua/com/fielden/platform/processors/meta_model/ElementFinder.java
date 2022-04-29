@@ -166,6 +166,29 @@ public class ElementFinder {
 
         return fields;
     }
+    
+    /**
+     * Returns a field with the given name if found, else null. The field might be either declared or inherited.
+     * @param typeElement
+     * @param fieldName
+     * @return
+     */
+    public static VariableElement findField(TypeElement typeElement, String fieldName) {
+        // search in declared fields
+        VariableElement field = findDeclaredFields(typeElement).stream()
+                .filter(varEl -> varEl.getSimpleName().toString().equals(fieldName))
+                .findFirst().orElse(null);
+        if (field != null)
+            return field;
+        
+        // search in inherited fields
+        field = findInheritedFields(typeElement).stream()
+                .filter(varEl -> varEl.getSimpleName().toString().equals(fieldName))
+                .findFirst().orElse(null);
+        
+        return field;
+    }
+    
     public static Set<VariableElement> findDeclaredFieldsAnnotatedWith(TypeElement typeElement, Class<? extends Annotation> annotationClass) {
         return findDeclaredFields(typeElement).stream()
                 .filter(el -> el.getAnnotation(annotationClass) != null)

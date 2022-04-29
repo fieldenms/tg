@@ -3,12 +3,15 @@ package ua.com.fielden.platform.processors.meta_model;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
@@ -226,7 +229,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         final EntityElement entity = metaModelElement.getEntityElement();
 
         // ######################## PROPERTIES ########################
-        final Set<PropertyElement> properties = new HashSet<>();
+        Set<PropertyElement> properties = new LinkedHashSet<>();
 
         final EntityElement entityParent = EntityFinder.getParent(entity, elementUtils);
         final boolean isEntitySuperclassMetamodeled = isMetamodeled(entityParent.getTypeElement());
@@ -237,6 +240,13 @@ public class MetaModelProcessor extends AbstractProcessor {
         } else {
             // find all properties (declared + inherited from <? extends AbstractEntity))
             properties.addAll(EntityFinder.findDistinctProperties(entity, PropertyElement::getName));
+        }
+        
+        // capture "id" property for persistent entities and those that extend persistent entities
+        if (EntityFinder.isPersistentEntity(entity) || EntityFinder.doesExtendPersistentEntity(entity)) {
+            VariableElement idField = ElementFinder.findField(entity.getTypeElement(), "id");
+            if (!properties.stream().map(PropertyElement::getName).toList().contains("id"))
+                properties.add(new PropertyElement(idField));
         }
 
         List<FieldSpec> fieldSpecs = new ArrayList<>();
@@ -449,6 +459,12 @@ public class MetaModelProcessor extends AbstractProcessor {
 
         final String metaModelName = metaModelElement.getSimpleName();
         final String metaModelPkgName = metaModelElement.getPackageName();
+
+        // sort fields alphabetically
+        fieldSpecs.sort((fs1, fs2) -> fs1.name.compareTo(fs2.name));
+
+        // sort methods alphabetically
+        methodSpecs.sort((ms1, ms2) -> ms1.name.compareTo(ms2.name));
 
         TypeSpec metaModel = TypeSpec.classBuilder(metaModelName)
                 .addModifiers(Modifier.PUBLIC)

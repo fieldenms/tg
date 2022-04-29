@@ -169,6 +169,16 @@ public class EntityFinder {
     public static boolean isPersistentEntity(EntityElement element) {
         return element.getTypeElement().getAnnotation(MapEntityTo.class) != null;
     }
+    
+    public static boolean doesExtendPersistentEntity(EntityElement element) {
+        TypeElement superclass = ElementFinder.getSuperclassOrNull(element.getTypeElement(), ROOT_ENTITY_CLASS);
+        while (isEntity(superclass)) {
+            if (isPersistentEntity(EntityElement.wrapperFor(superclass)))
+                return true;
+        }
+        
+        return true;
+    }
 
     public static boolean isDomainEntity(EntityElement element) {
         return element.getTypeElement().getAnnotation(DomainEntity.class) != null;
