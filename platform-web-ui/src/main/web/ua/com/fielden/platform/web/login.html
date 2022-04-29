@@ -277,7 +277,13 @@
             const submitSso = document.getElementById('submitButtonSso');
             submitSso.onclick = function () {
                 console.log("redirecting to SSO...");
-                window.location.assign("@auth.sso.binding.path");
+                // Similarly as in SW, it is necessary to pass the hash part of the URI (if present) to the server as a query parameter.
+                // This is necessary to ensure correct redirection upon successful authentication.
+                if (window.location.hash) {
+                    window.location.assign("@auth.sso.binding.path" + "?hash=" + window.location.hash.substring(1));
+                } else {
+                    window.location.assign("@auth.sso.binding.path");
+                }
             }
         })();
     </script>

@@ -89,12 +89,7 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
             final Optional<Authenticator> oAuth = extractAuthenticator(request);
             if (!oAuth.isPresent()) {
                 logger.warn(format("Authenticator cookie is missing for a request to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
-                // GET requests should be redirected to an appropriate re-authentication resource
-                if (Method.GET.equals(request.getMethod())) {
-                    response.redirectTemporary(authMode == SSO ? SSO_BINDING_PATH : BINDING_PATH);
-                } else {
-                    forbid(response);
-                }
+                forbid(response);
                 return false;
             }
 
