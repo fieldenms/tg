@@ -3,8 +3,10 @@ package ua.com.fielden.platform.processors.meta_model;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.lang.model.AnnotatedConstruct;
@@ -67,7 +69,9 @@ public class ElementFinder {
     }
 
     public static Set<VariableElement> findInheritedFields(TypeElement typeElement) {
-        Set<VariableElement> fields = new HashSet<>();
+        // use LinkedHashSet to store fields so that they appear in their hierarchical order,
+        // that is, fields inherited from the root of the type hierarchy will be placed at the end of the set
+        Set<VariableElement> fields = new LinkedHashSet<>();
 
         TypeElement superclass = getSuperclassOrNull(typeElement);
         while (superclass != null) {
@@ -95,7 +99,7 @@ public class ElementFinder {
      * @param rootClass - upper limit (included) of a superclass of typeElement
      */
     public static Set<VariableElement> findInheritedFields(TypeElement typeElement, Class<?> rootClass) {
-        Set<VariableElement> fields = new HashSet<>();
+        Set<VariableElement> fields = new LinkedHashSet<>();
 
         TypeElement superclass = getSuperclassOrNull(typeElement, rootClass);
         while (superclass != null) {
@@ -104,6 +108,28 @@ public class ElementFinder {
         }
 
         return fields;
+    }
+
+    /**
+     * Find all inherited fields of a type that are distinct by a specified condition.
+     * @param <T> - type of mapped field
+     * @param mapper - transformation applied to each field for determining its distinctness (e.g. {@link VariableElement#getSimpleName})
+     * @return
+     */
+    public static <T> Set<VariableElement> findDistinctInheritedFields(TypeElement typeElement, Function<VariableElement, T> mapper) {
+        Set<VariableElement> fields = new LinkedHashSet<>();
+        Set<T> mappedFields = new HashSet<>();
+
+        for (VariableElement field: findInheritedFields(typeElement)) {
+            T mappedField = mapper.apply(field);
+            if (mappedFields.contains(mappedField))
+                continue;
+
+            fields.add(field);
+            mappedFields.add(mappedField);
+        }
+
+        return fields;       
     }
 
     /**
@@ -119,6 +145,27 @@ public class ElementFinder {
         return fields;
     }
 
+    /**
+     * Find all fields of a type that are distinct by a specified condition.
+     * @param <T> - type of mapped field
+     * @param mapper - transformation applied to each field for determining its distinctness (e.g. {@link VariableElement#getSimpleName})
+     * @return
+     */
+    public static <T> Set<VariableElement> findDistinctFields(TypeElement typeElement, Function<VariableElement, T> mapper) {
+        Set<VariableElement> fields = findDeclaredFields(typeElement);
+        Set<T> mappedFields = fields.stream().map(mapper).collect(Collectors.toSet());
+
+        for (VariableElement field: findDistinctInheritedFields(typeElement, mapper)) {
+            T mappedField = mapper.apply(field);
+            if (mappedFields.contains(mappedField))
+                continue;
+
+            fields.add(field);
+            mappedFields.add(mappedField);
+        }
+
+        return fields;
+    }
     public static Set<VariableElement> findDeclaredFieldsAnnotatedWith(TypeElement typeElement, Class<? extends Annotation> annotationClass) {
         return findDeclaredFields(typeElement).stream()
                 .filter(el -> el.getAnnotation(annotationClass) != null)

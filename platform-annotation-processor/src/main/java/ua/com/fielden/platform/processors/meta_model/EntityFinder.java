@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.processors.meta_model;
 
+import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -33,7 +35,7 @@ public class EntityFinder {
         return ElementFinder.findDeclaredFields(typeElement).stream()
                 .filter(EntityFinder::isProperty)
                 .map(PropertyElement::new)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(() -> new LinkedHashSet<>()));
     }
     
     public static Set<PropertyElement> findInheritedProperties(EntityElement entityElement) {
@@ -41,7 +43,29 @@ public class EntityFinder {
         return ElementFinder.findInheritedFields(typeElement, ROOT_ENTITY_CLASS).stream()
                 .filter(EntityFinder::isProperty)
                 .map(PropertyElement::new)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(() -> new LinkedHashSet<>()));
+    }
+
+    /**
+     * Find all inherited properties of an entity that are distinct by a specified condition.
+     * @param <T> - type of a mapped property
+     * @param mapper - transformation applied to each property for determining its distinctness (e.g. {@link PropertyElement#getName})
+     * @return
+     */
+    public static <T> Set<PropertyElement> findDistinctInheritedProperties(EntityElement entityElement, Function<PropertyElement, T> mapper) {
+        Set<PropertyElement> properties = new LinkedHashSet<>();
+        Set<T> mappedProperties = new HashSet<>();
+        
+        for (PropertyElement prop: findInheritedProperties(entityElement)) {
+            T mappedProp = mapper.apply(prop);
+            if (mappedProperties.contains(mappedProp))
+                continue;
+
+            properties.add(prop);
+            mappedProperties.add(mappedProp);
+        }
+        
+        return properties;
     }
 
     /**
@@ -55,7 +79,7 @@ public class EntityFinder {
 
     /**
      * Find all properties of an entity that are distinct by a specified condition.
-     * @param <T> - type of mapped property
+     * @param <T> - type of a mapped property
      * @param mapper - transformation applied to each property for determining its distinctness (e.g. {@link PropertyElement#getName})
      * @return
      */
@@ -63,44 +87,15 @@ public class EntityFinder {
         Set<PropertyElement> properties = findDeclaredProperties(entityElement);
         Set<T> mappedProperties = properties.stream().map(mapper).collect(Collectors.toSet());
         
-        TypeElement superclass = ElementFinder.getSuperclassOrNull(entityElement.getTypeElement(), ROOT_ENTITY_CLASS);
-        while (superclass != null) {
-            EntityElement superentity = EntityElement.wrapperFor(superclass);
-            Set<PropertyElement> superprops = findDeclaredProperties(superentity);
+        for (PropertyElement prop: findDistinctInheritedProperties(entityElement, mapper)) {
+            T mappedProp = mapper.apply(prop);
+            if (mappedProperties.contains(mappedProp))
+                continue;
 
-            for (PropertyElement prop: superprops) {
-                T mappedProp = mapper.apply(prop);
-
-                if (!mappedProperties.contains(mappedProp)) {
-                    mappedProperties.add(mappedProp);
-                    properties.add(prop);
-                }
-            }
-
-            superclass = ElementFinder.getSuperclassOrNull(superclass, ROOT_ENTITY_CLASS);
+            properties.add(prop);
+            mappedProperties.add(mappedProp);
         }
         
-        return properties;
-    }
-    
-    /**
-     * Get all properties of this entity.
-     * 
-     * @param inheritedPropertiesNames - names of inherited properties that need to be retrieved
-     */
-    public static Set<PropertyElement> findProperties(EntityElement entityElement, List<String> inheritedPropertiesNames) {
-        final Set<PropertyElement> properties = EntityFinder.findDeclaredProperties(entityElement);
-        final List<String> declaredPropertiesNames = properties.stream().map(prop -> prop.getName()).toList();
-
-        final List<PropertyElement> inheritedProperties = EntityFinder.findInheritedProperties(entityElement).stream()
-                .filter(prop -> {
-                    String propName = prop.getName();
-                    return inheritedPropertiesNames.contains(propName) &&
-                            !(declaredPropertiesNames.contains(propName));
-                })
-                .toList();
-        properties.addAll(inheritedProperties);
-
         return properties;
     }
     
