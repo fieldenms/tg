@@ -1183,7 +1183,6 @@ const TgEntityMasterBehaviorImpl = {
                         entity: data.entity,
                         entityPath: [ self._currEntity, ...data.entityPath ], // prepend the path of entities from masters, that are on a chain of refresh cycle, with current entity
                         shouldRefreshParentCentreAfterSave: true,
-                        excludeInsertionPoints: data.excludeInsertionPoints,
                         selectedEntitiesInContext: [] // provide empty selectedEntitiesInContext, this ensures that parent centre will always be refreshed as per 'refreshEntities' method in tg-entity-centre-behavior
                     };
                     postal.publish({
