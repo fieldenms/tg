@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import ua.com.fielden.platform.IConvertableToPath;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IConcatFunctionArgument;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IDateAddIntervalFunctionArgument;
@@ -68,6 +69,11 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 		return prop(propertyName.toString());
 	}
 
+    @Override
+    public T prop(final IConvertableToPath propertyName) {
+        return prop(propertyName.toPath());
+    }
+
 	@Override
 	public T extProp(final String propertyName) {
 		return nextForSingleOperand(getTokens().extProp(propertyName));
@@ -77,6 +83,11 @@ abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 	public T extProp(final Enum propertyName) {
 		return extProp(propertyName.toString());
 	}
+
+    @Override
+    public T extProp(final IConvertableToPath propertyName) {
+        return extProp(propertyName.toPath());
+    }
 
 	@Override
 	public T expr(final ExpressionModel expr) {

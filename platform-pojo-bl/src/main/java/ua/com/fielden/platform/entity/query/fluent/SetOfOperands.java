@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import ua.com.fielden.platform.IConvertableToPath;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonSetOperand;
@@ -26,6 +27,11 @@ abstract class SetOfOperands<T, ET extends AbstractEntity<?>> //
 	public T props(final String... properties) {
 		return nextForSingleOperand(getTokens().setOfProps(properties));
 	}
+	
+    @Override
+    public T props(final IConvertableToPath... properties) {
+        return nextForSingleOperand(getTokens().setOfProps(properties));
+    }
 
 	@Override
 	public T params(final String... paramNames) {

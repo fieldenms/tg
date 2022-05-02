@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import ua.com.fielden.platform.IConvertableToPath;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IMultipleOperand;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
@@ -17,6 +18,11 @@ abstract class MultipleOperand<T, ET extends AbstractEntity<?>> //
 	public T anyOfProps(final String... propertyNames) {
 		return nextForSingleOperand(getTokens().anyOfProps(propertyNames));
 	}
+
+    @Override
+    public T anyOfProps(final IConvertableToPath... propertyNames) {
+        return nextForSingleOperand(getTokens().anyOfProps(propertyNames));
+    }
 
 	@Override
 	public T anyOfValues(final Object... values) {
@@ -47,6 +53,11 @@ abstract class MultipleOperand<T, ET extends AbstractEntity<?>> //
 	public T allOfProps(final String... propertyNames) {
 		return nextForSingleOperand(getTokens().allOfProps(propertyNames));
 	}
+
+    @Override
+    public T allOfProps(final IConvertableToPath... propertyNames) {
+        return nextForSingleOperand(getTokens().allOfProps(propertyNames));
+    }
 
 	@Override
 	public T allOfValues(final Object... values) {

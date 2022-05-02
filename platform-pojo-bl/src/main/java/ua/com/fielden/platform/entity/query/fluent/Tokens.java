@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.entity.query.fluent;
 
+import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator.ADD;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator.DIV;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ArithmeticalOperator.MOD;
@@ -114,9 +115,11 @@ import static ua.com.fielden.platform.utils.Pair.pair;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 
+import ua.com.fielden.platform.IConvertableToPath;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
@@ -182,6 +185,10 @@ final class Tokens {
         return listOf(items);
     }
 
+    private static List<String> convertToString(final List<IConvertableToPath> paths) {
+        return paths.stream().map(e -> e.toPath()).collect(toList());
+    }
+    
     public Tokens and() {
         return add(LOGICAL_OPERATOR, AND);
     }
@@ -334,6 +341,10 @@ final class Tokens {
         return add(ANY_OF_PROPS, getListFromArray(props));
     }
 
+    public Tokens anyOfProps(final IConvertableToPath... props) {
+        return add(ANY_OF_PROPS, convertToString(getListFromArray(props)));
+    }
+
     public Tokens anyOfParams(final String... params) {
         return add(ANY_OF_PARAMS, getListFromArray(params));
     }
@@ -356,6 +367,10 @@ final class Tokens {
 
     public Tokens allOfProps(final String... props) {
         return add(ALL_OF_PROPS, getListFromArray(props));
+    }
+
+    public Tokens allOfProps(final IConvertableToPath... props) {
+        return add(ALL_OF_PROPS, convertToString(getListFromArray(props)));
     }
 
     public Tokens allOfParams(final String... params) {
@@ -388,6 +403,10 @@ final class Tokens {
 
     public Tokens setOfProps(final String... props) {
         return add(SET_OF_PROPS, getListFromArray(props));
+    }
+
+    public Tokens setOfProps(final IConvertableToPath... props) {
+        return add(SET_OF_PROPS, convertToString(getListFromArray(props)));
     }
 
     public Tokens setOfParams(final String... params) {
