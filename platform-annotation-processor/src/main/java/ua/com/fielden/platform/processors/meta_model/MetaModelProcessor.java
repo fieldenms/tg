@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
@@ -59,6 +58,7 @@ import com.squareup.javapoet.WildcardTypeName;
 
 import ua.com.fielden.platform.annotations.meta_model.DomainEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -247,6 +247,20 @@ public class MetaModelProcessor extends AbstractProcessor {
             VariableElement idField = ElementFinder.findField(entity.getTypeElement(), "id");
             if (!properties.stream().map(PropertyElement::getName).toList().contains("id"))
                 properties.add(new PropertyElement(idField));
+        }
+        
+        // property `desc` should be considered only if entity or any of its supertypes are annotated with `@DescTitle`
+        final boolean descConsidered = properties.stream()
+                .map(PropertyElement::getName)
+                .anyMatch(pname -> pname.equals("desc"));
+        if (descConsidered) {
+            if (entity.getTypeElement().getAnnotation(DescTitle.class) == null) {
+                List<EntityElement> supertypes = EntityFinder.findParents(entity, elementUtils);
+                final boolean parentAnnotatedWithDescTitle = supertypes.stream()
+                        .anyMatch(el -> el.getTypeElement().getAnnotation(DescTitle.class) != null);
+                if (!parentAnnotatedWithDescTitle)
+                    properties.removeIf(prop -> prop.getName().equals("desc"));
+            }
         }
 
         List<FieldSpec> fieldSpecs = new ArrayList<>();
