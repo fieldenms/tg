@@ -1,4 +1,4 @@
-package ua.com.fielden.platform;
+package ua.com.fielden.platform.processors.meta_model;
 
 /**
  * A contract for constructs that can be converted to a dot-noted paths of properties.

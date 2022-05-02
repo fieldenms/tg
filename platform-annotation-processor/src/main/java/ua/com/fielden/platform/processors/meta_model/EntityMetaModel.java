@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.processors.meta_model;
 
-import ua.com.fielden.platform.IConvertableToPath;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 public abstract class EntityMetaModel implements IConvertableToPath {

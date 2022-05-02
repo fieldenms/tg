@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.processors.meta_model;
 
-import ua.com.fielden.platform.IConvertableToPath;
-
 public class PropertyMetaModel implements IConvertableToPath {
     private String path;
     
