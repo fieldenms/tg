@@ -20,6 +20,7 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
 public class ElementFinder {
+    private static final Class<?> DEFAULT_ROOT_CLASS = Object.class;
     
     /**
      * A {@link TypeElement} instance is equal to a {@link Class} instance if both objects have the same qualified (canonical) name.
@@ -30,15 +31,13 @@ public class ElementFinder {
     public static boolean equals(TypeElement typeElement, Class<?> clazz) {
         return typeElement.getQualifiedName().toString().equals(clazz.getCanonicalName());
     }
-    
-    public static TypeElement getSuperclassOrNull(TypeElement typeElement) {
-        TypeMirror superclass = typeElement.getSuperclass();
-        if (superclass.getKind() == TypeKind.NONE)
-            return null;
 
-        return (TypeElement) ((DeclaredType) superclass).asElement();
-    }
-
+    /**
+     * Returns the immediate parent class of this {@code typeElement} or null if the immediate parent is either an interface type or {@link Object} class or {@code rootClass}.
+     * @param typeElement
+     * @param rootClass
+     * @return
+     */
     public static TypeElement getSuperclassOrNull(TypeElement typeElement, Class<?> rootClass) {
         // if this is root class return null
         if (equals(typeElement, rootClass))
@@ -51,6 +50,52 @@ public class ElementFinder {
             return null;
 
         return (TypeElement) ((DeclaredType) superclass).asElement();
+    }
+    
+    /**
+     * Returns the immediate parent class of this {@code typeElement} or null if the immediate parent is either an interface type or {@link Object} class.
+     * @param typeElement
+     * @param rootClass
+     * @return
+     */
+    public static TypeElement getSuperclassOrNull(TypeElement typeElement) {
+        return getSuperclassOrNull(typeElement, DEFAULT_ROOT_CLASS);
+    }
+
+    /**
+     * Returns a list of all superclasses with respect to this {@code typeElement}. The type hierarchy is traversed until {@code rootType} or an interface type or the {@link Object} class is reached.
+     * @param typeElement
+     * @param rootType
+     * @param includeRootType - controls whether the provided {@code rootType} is included in the list.
+     * @return
+     */
+    public static List<TypeElement> findSuperclasses(TypeElement typeElement, Class<?> rootType, boolean includeRootType) {
+        List<TypeElement> superclasses = new ArrayList<>();
+
+        TypeMirror superclassTypeMirror = typeElement.getSuperclass();
+        TypeElement superclass = null;
+        while (superclassTypeMirror.getKind() != TypeKind.NONE) {
+            superclass = (TypeElement) ((DeclaredType) superclassTypeMirror).asElement();
+
+            if (equals(superclass, rootType)) {
+                if (includeRootType)
+                    superclasses.add(superclass);
+                break;
+            }
+
+            superclasses.add(superclass);
+            superclassTypeMirror = superclass.getSuperclass();
+        }
+        
+        // if the last parent element was an interface type, remove it
+        if (superclass != null && !superclasses.isEmpty() && (superclass.getKind() == ElementKind.INTERFACE))
+            superclasses.remove(superclasses.size() - 1);
+        
+        return superclasses;
+    }
+
+    public static List<TypeElement> findSuperclasses(TypeElement typeElement, boolean includeRootClass) {
+        return findSuperclasses(typeElement, DEFAULT_ROOT_CLASS, includeRootClass);
     }
 
     /**

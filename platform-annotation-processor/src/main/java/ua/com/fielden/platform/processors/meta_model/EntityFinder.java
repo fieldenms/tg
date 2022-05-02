@@ -209,4 +209,10 @@ public class EntityFinder {
 
         return new EntityElement(superclass, elementUtils);
     }
+    
+    public static List<EntityElement> findParents(EntityElement entityElement, Elements elementUtils) {
+        return ElementFinder.findSuperclasses(entityElement.getTypeElement(), ROOT_ENTITY_CLASS, true).stream()
+                .map(typeEl -> new EntityElement(typeEl, elementUtils))
+                .toList();
+    }
 }
