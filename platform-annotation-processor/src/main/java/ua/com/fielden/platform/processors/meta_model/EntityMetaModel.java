@@ -2,7 +2,7 @@ package ua.com.fielden.platform.processors.meta_model;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 
-public abstract class EntityMetaModel {
+public abstract class EntityMetaModel implements IConvertableToPath {
     private String path;
     
     public EntityMetaModel(String path) {
@@ -20,6 +20,7 @@ public abstract class EntityMetaModel {
         return propName;
     }
     
+    @Override
     public final String toPath() {
         return this.path;
     }

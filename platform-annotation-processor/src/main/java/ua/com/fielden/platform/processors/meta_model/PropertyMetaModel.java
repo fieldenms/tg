@@ -1,12 +1,13 @@
 package ua.com.fielden.platform.processors.meta_model;
 
-public class PropertyMetaModel {
+public class PropertyMetaModel implements IConvertableToPath {
     private String path;
     
     public PropertyMetaModel(String path) {
         this.path = path;
     }
     
+    @Override
     public String toPath() {
         return this.path;
     }
