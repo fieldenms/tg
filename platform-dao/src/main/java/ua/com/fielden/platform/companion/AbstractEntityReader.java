@@ -8,6 +8,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.pagination.IPage.pageCount;
 import static ua.com.fielden.platform.pagination.IPage.realPageCount;
 
 import java.util.ArrayList;
@@ -345,7 +346,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
             this.numberOfPagesAndCount = numberOfPagesAndCount;
             this.pageNumber = pageNumber;
             this.pageCapacity = pageCapacity;
-            this.numberOfPages = numberOfPagesAndCount.getKey() == 0 ? 1 : numberOfPagesAndCount.getKey();
+            this.numberOfPages = pageCount(numberOfPagesAndCount.getKey());
             this.queryModel = queryModel;
             this.data = numberOfPagesAndCount.getValue() > 0 ? getEntitiesOnPage(queryModel, pageNumber, pageCapacity) : new ArrayList<>();
 
