@@ -614,6 +614,7 @@ const TgEntityCentreBehaviorImpl = {
         this.allRetrievedEntities.forEach((entity, idx) => {
             if (this.satisfies(entity)) {
                 entities.push(entity);
+                // Note that allRenderingHints / allPrimaryActionIndices / allSecondaryActionIndices have already been updated in method _postRun
                 renderingHints.push(this.allRenderingHints[idx]);
                 primaryActionIndices.push(this.allPrimaryActionIndices[idx]);
                 secondaryActionIndices.push(this.allSecondaryActionIndices[idx]);
@@ -623,11 +624,12 @@ const TgEntityCentreBehaviorImpl = {
         this.allFilteredPrimaryActionIndices = primaryActionIndices;
         this.allFilteredSecondaryActionIndices = secondaryActionIndices;
         if (this.retrieveAll) {
-            // Note that this.$.selection_criteria properties have already been updated in method _postRunDefault and only then allRetrievedEntities is getting changed in _postRun
             const resultSize = entities.length;
+            // Note that this.$.selection_criteria.pageCapacity has already been updated in method _postRun
             const pageCapacity = this.$.selection_criteria.pageCapacity;
             const realPageCount = resultSize % pageCapacity == 0 ? resultSize / pageCapacity : Math.floor(resultSize / pageCapacity) + 1; // floor is needed because Javascript does not have integer division
-            const pageCount = realPageCount == 0 ? 1 : realPageCount
+            const pageCount = realPageCount == 0 ? 1 : realPageCount;
+            // Note that this.$.selection_criteria.pageNumber has already been updated in method _postRunDefault and only then allRetrievedEntities is getting changed in _postRun
             const pageNumber = pageCount <= this.$.selection_criteria.pageNumber ? pageCount - 1 : this.$.selection_criteria.pageNumber;
             this._setPageCount(pageCount);
             this._setPageNumber(pageNumber);
@@ -675,7 +677,7 @@ const TgEntityCentreBehaviorImpl = {
         this.$.selection_criteria.pageNumberUpdated = number;
     },
 
-    _setPageCount: function(pageCount) {
+    _setPageCount: function (pageCount) {
         this.$.selection_criteria.pageCount = pageCount;
         this.$.selection_criteria.pageCountUpdated = pageCount;
     },
@@ -1234,7 +1236,7 @@ const TgEntityCentreBehaviorImpl = {
             if (self.retrieveAll) {
                 this._setPageData(0, self.$.selection_criteria.pageCapacity);
                 this._setPageNumber(0);
-                return Promise.resolve(0);
+                return Promise.resolve();
             } else {
                 self.persistActiveElement();
                 return this.$.selection_criteria.firstPage().then(function () {
@@ -1255,7 +1257,7 @@ const TgEntityCentreBehaviorImpl = {
                     const startIdx = (self.$.selection_criteria.pageCount - 1) * self.$.selection_criteria.pageCapacity;
                     self._setPageData(startIdx, startIdx + self.$.selection_criteria.pageCapacity);
                     this._setPageNumber(self.$.selection_criteria.pageCount - 1);
-                    return Promise.resolve(0);
+                    return Promise.resolve();
                 } else {
                     self.persistActiveElement();
                     return self.$.selection_criteria.lastPage().then(function () {
@@ -1276,7 +1278,7 @@ const TgEntityCentreBehaviorImpl = {
                 const startIdx = (self.$.selection_criteria.pageNumber + 1) * self.$.selection_criteria.pageCapacity;
                 self._setPageData(startIdx, startIdx + self.$.selection_criteria.pageCapacity);
                 this._setPageNumber(self.$.selection_criteria.pageNumber + 1);
-                return Promise.resolve(0);
+                return Promise.resolve();
             } else {
                 self.persistActiveElement();
                 return this.$.selection_criteria.nextPage().then(function () {
@@ -1297,7 +1299,7 @@ const TgEntityCentreBehaviorImpl = {
                 const startIdx = (self.$.selection_criteria.pageNumber - 1) * self.$.selection_criteria.pageCapacity;
                 self._setPageData(startIdx, startIdx + self.$.selection_criteria.pageCapacity);
                 this._setPageNumber(self.$.selection_criteria.pageNumber - 1);
-                return Promise.resolve(0);
+                return Promise.resolve();
             } else {
                 self.persistActiveElement();
                 return this.$.selection_criteria.prevPage().then(function () {
