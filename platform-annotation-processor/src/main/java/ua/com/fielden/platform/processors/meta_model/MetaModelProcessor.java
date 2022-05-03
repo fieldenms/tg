@@ -188,9 +188,8 @@ public class MetaModelProcessor extends AbstractProcessor {
             final EntityElement entityElement = newEntityElement(typeElement);
             final MetaModelElement metaModelElement = new MetaModelElement(entityElement);
             metaModelElements.add(metaModelElement);
-            
-            // TODO: optimize by annotating platform level entities with @DomainEntity
-            // filter properties of this entity to find entity type ones and include them for meta-model generation
+
+            // find properties of this entity that are entity type and include these entities for meta-model generation
             // this helps find entities that are included from the platform, rather than defined by a domain model,
             // such as User
             final Set<PropertyElement> properties = EntityFinder.findDistinctProperties(entityElement, PropertyElement::getName);
