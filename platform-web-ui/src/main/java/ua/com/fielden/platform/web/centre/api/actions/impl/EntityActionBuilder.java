@@ -227,7 +227,7 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
     }
 
     @Override
-    public IEntityActionBuilder9<T> doNotRefreshInsertionPoints(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> firstInsertionPoint, final Class<? extends AbstractFunctionalEntityWithCentreContext<?>>... otherInsertionPoints) {
+    public IEntityActionBuilder9<T> withNoInsertionPointsRefresh(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> firstInsertionPoint, final Class<? extends AbstractFunctionalEntityWithCentreContext<?>>... otherInsertionPoints) {
         excludeInsertionPoints.clear();
         excludeInsertionPoints.add(firstInsertionPoint);
         excludeInsertionPoints.addAll(asList(otherInsertionPoints));

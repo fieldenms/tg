@@ -196,7 +196,7 @@ public class TgGeneratedEntityForTrippleDecAnalysisWebUiConfig {
             .shortDesc(desc)
             .longDesc(desc)
             .shortcut("alt+d")
-            .doNotRefreshInsertionPoints(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class)
+            .withNoInsertionPointsRefresh(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class)
             .build();
         final EntityActionConfig standardExportAction = StandardActions.EXPORT_ACTION.mkAction(TgGeneratedEntityForTrippleDecAnalysis.class);
         final EntityActionConfig standardEditAction = StandardActions.EDIT_ACTION.mkAction(TgGeneratedEntityForTrippleDecAnalysis.class);
