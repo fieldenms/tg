@@ -1742,6 +1742,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 .withFixedSummary()
                                 .done())
                 //.draggable()
+                //.retrieveAll()
                 .setPageCapacity(20)
                 //.setHeight("100%")
                 //.setVisibleRowsCount(10)
