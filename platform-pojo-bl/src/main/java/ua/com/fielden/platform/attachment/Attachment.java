@@ -5,6 +5,7 @@ import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitl
 
 import java.util.Date;
 
+import ua.com.fielden.platform.annotations.meta_model.DomainEntity;
 import ua.com.fielden.platform.attachment.definers.AssignAttachmentTitle;
 import ua.com.fielden.platform.attachment.definers.UpdateAttachmentRevNo;
 import ua.com.fielden.platform.attachment.validators.CanBeUsedAsLastAttachmentRev;
@@ -58,6 +59,7 @@ import ua.com.fielden.platform.utils.Pair;
 @DescTitle(value = "Description", desc = "A summary about the attachment, which can be used for search.")
 @DisplayDescription
 @MapEntityTo
+@DomainEntity
 @CompanionObject(IAttachment.class)
 public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     public static final String HYPERLINK = "[hyperlink]";

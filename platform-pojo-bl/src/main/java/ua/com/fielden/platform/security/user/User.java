@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.Set;
 import java.util.TreeSet;
 
+import ua.com.fielden.platform.annotations.meta_model.DomainEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.Dependent;
@@ -42,6 +43,7 @@ import ua.com.fielden.platform.security.user.validators.UserBaseValidator;
 @KeyTitle("Application User")
 @KeyType(String.class)
 @MapEntityTo
+@DomainEntity
 @CompanionObject(IUser.class)
 public class User extends ActivatableAbstractEntity<String> {
 
