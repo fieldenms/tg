@@ -1211,13 +1211,13 @@ const TgEntityCentreBehaviorImpl = {
      */
     currentPage: function (excludeInsertionPoints) {
         const self = this;
-        if (!this.$.egi.isEditing()) {
-            return this.$.selection_criteria.currentPage()
+        if (!self.$.egi.isEditing()) {
+            return self.$.selection_criteria.currentPage()
                 .then(function () {
                     self.runInsertionPointActions(excludeInsertionPoints);
                 });
         }
-        return this._saveOrCancelPromise();
+        return self._saveOrCancelPromise();
     },
 
     currentPageTap: function () {
@@ -1232,19 +1232,19 @@ const TgEntityCentreBehaviorImpl = {
      */
     firstPage: function () {
         const self = this;
-        if (!this.$.egi.isEditing()) {
+        if (!self.$.egi.isEditing()) {
             if (self.retrieveAll) {
-                this._setPageData(0, self.$.selection_criteria.pageCapacity);
-                this._setPageNumber(0);
+                self._setPageData(0, self.$.selection_criteria.pageCapacity);
+                self._setPageNumber(0);
                 return Promise.resolve();
             } else {
                 self.persistActiveElement();
-                return this.$.selection_criteria.firstPage().then(function () {
+                return self.$.selection_criteria.firstPage().then(function () {
                     self.restoreActiveElement();
                 });
             }
         }
-        return this._saveOrCancelPromise();
+        return self._saveOrCancelPromise();
     },
 
     /**
@@ -1253,17 +1253,17 @@ const TgEntityCentreBehaviorImpl = {
     lastPage: function () {
         const self = this;
         if (!self.$.egi.isEditing()) {
-                if (self.retrieveAll) {
-                    const startIdx = (self.$.selection_criteria.pageCount - 1) * self.$.selection_criteria.pageCapacity;
-                    self._setPageData(startIdx, startIdx + self.$.selection_criteria.pageCapacity);
-                    this._setPageNumber(self.$.selection_criteria.pageCount - 1);
-                    return Promise.resolve();
-                } else {
-                    self.persistActiveElement();
-                    return self.$.selection_criteria.lastPage().then(function () {
-                        self.restoreActiveElement();
-                    });
-                }
+            if (self.retrieveAll) {
+                const startIdx = (self.$.selection_criteria.pageCount - 1) * self.$.selection_criteria.pageCapacity;
+                self._setPageData(startIdx, startIdx + self.$.selection_criteria.pageCapacity);
+                self._setPageNumber(self.$.selection_criteria.pageCount - 1);
+                return Promise.resolve();
+            } else {
+                self.persistActiveElement();
+                return self.$.selection_criteria.lastPage().then(function () {
+                    self.restoreActiveElement();
+                });
+            }
         }
         return self._saveOrCancelPromise();
     },
@@ -1273,20 +1273,20 @@ const TgEntityCentreBehaviorImpl = {
      */
     nextPage: function () {
         const self = this;
-        if (!this.$.egi.isEditing()) {
+        if (!self.$.egi.isEditing()) {
             if (self.retrieveAll) {
                 const startIdx = (self.$.selection_criteria.pageNumber + 1) * self.$.selection_criteria.pageCapacity;
                 self._setPageData(startIdx, startIdx + self.$.selection_criteria.pageCapacity);
-                this._setPageNumber(self.$.selection_criteria.pageNumber + 1);
+                self._setPageNumber(self.$.selection_criteria.pageNumber + 1);
                 return Promise.resolve();
             } else {
                 self.persistActiveElement();
-                return this.$.selection_criteria.nextPage().then(function () {
+                return self.$.selection_criteria.nextPage().then(function () {
                     self.restoreActiveElement();
                 });
             }
         }
-        return this._saveOrCancelPromise();
+        return self._saveOrCancelPromise();
     },
 
     /**
@@ -1294,20 +1294,20 @@ const TgEntityCentreBehaviorImpl = {
      */
     prevPage: function () {
         const self = this;
-        if (!this.$.egi.isEditing()) {
+        if (!self.$.egi.isEditing()) {
             if (self.retrieveAll) {
                 const startIdx = (self.$.selection_criteria.pageNumber - 1) * self.$.selection_criteria.pageCapacity;
                 self._setPageData(startIdx, startIdx + self.$.selection_criteria.pageCapacity);
-                this._setPageNumber(self.$.selection_criteria.pageNumber - 1);
+                self._setPageNumber(self.$.selection_criteria.pageNumber - 1);
                 return Promise.resolve();
             } else {
                 self.persistActiveElement();
-                return this.$.selection_criteria.prevPage().then(function () {
+                return self.$.selection_criteria.prevPage().then(function () {
                     self.restoreActiveElement();
                 });
             }
         }
-        return this._saveOrCancelPromise();
+        return self._saveOrCancelPromise();
     },
 
     /**
