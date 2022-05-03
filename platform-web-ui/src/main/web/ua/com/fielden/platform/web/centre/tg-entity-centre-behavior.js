@@ -152,15 +152,17 @@ const TgEntityCentreBehaviorImpl = {
         entityType: {
             type: String
         },
+
         /**
-         * Indictes whether all data should be retrived at once or only separate page of data. 
+         * Indicates whether all data should be retrieved at once or only separate page of data.
          */
         retrieveAll: {
             type: Boolean,
             value: false
         },
+
         /**
-         * The entities retrieved when running this centre. It might be either all entities which should be paginated locally or only one page. It depends on retrieveAll property 
+         * The entities retrieved when running this centre. It might be either all entities which should be paginated locally or only one page. It depends on retrieveAll property.
          */
         allRetrievedEntities: {
             type: Array,
@@ -170,35 +172,35 @@ const TgEntityCentreBehaviorImpl = {
         /**
          * allRetrievedEntities those were filtered when running this centre.
          */
-         allFilteredEntities: {
+        allFilteredEntities: {
             type: Array,
             observer: '_allFilteredEntitiesChanged'
         },
 
         /**
-         * Rendering hints for all retrieved entities
+         * Rendering hints for all retrieved entities.
          */
         allRenderingHints: Array,
         /**
-         * Rendering hints for all filtered entities
+         * Rendering hints for all filtered entities.
          */
         allFilteredRenderingHints: Array,
 
         /**
-         * Indices for primary actions associated with all retrieved entities
+         * Indices for primary actions associated with all retrieved entities.
          */
         allPrimaryActionIndices: Array,
         /**
-         * Indices for primary actions associated with all filtered entities
+         * Indices for primary actions associated with all filtered entities.
          */
         allFilteredPrimaryActionIndices: Array,
 
         /**
-         * Indices for secondary actions associated with all retrieved entities
+         * Indices for secondary actions associated with all retrieved entities.
          */
         allSecondaryActionIndices: Array,
         /**
-         * Indices for secondary actions associated with all filtered entities
+         * Indices for secondary actions associated with all filtered entities.
          */
         allFilteredSecondaryActionIndices: Array,
 
@@ -621,7 +623,11 @@ const TgEntityCentreBehaviorImpl = {
         this.allFilteredPrimaryActionIndices = primaryActionIndices;
         this.allFilteredSecondaryActionIndices = secondaryActionIndices;
         if (this.retrieveAll) {
-            const pageCount = Math.ceil(entities.length / this.$.selection_criteria.pageCapacity) || 1;
+            // Note that this.$.selection_criteria properties have already been updated in method _postRunDefault and only then allRetrievedEntities is getting changed in _postRun
+            const resultSize = entities.length;
+            const pageCapacity = this.$.selection_criteria.pageCapacity;
+            const realPageCount = resultSize % pageCapacity == 0 ? resultSize / pageCapacity : Math.floor(resultSize / pageCapacity) + 1; // floor is needed because Javascript does not have integer division
+            const pageCount = realPageCount == 0 ? 1 : realPageCount
             const pageNumber = pageCount <= this.$.selection_criteria.pageNumber ? pageCount - 1 : this.$.selection_criteria.pageNumber;
             this._setPageCount(pageCount);
             this._setPageNumber(pageNumber);

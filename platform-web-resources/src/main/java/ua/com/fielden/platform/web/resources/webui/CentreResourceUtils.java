@@ -313,9 +313,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         // For run action this instance was already updated from FRESH surrogate centre and includes "fresh" pageCapacity for the purposes of running
         //  (the only way to make FRESH pageCapacity different from PREVIOUSLY_RUN is to change it using Customise Columns and press DISCARD on selection criteria).
         final String action = (String) customObject.get("@@action");
-        final Integer pageNumber = (Integer) customObject.get("@@pageNumber");
+        final Integer pageNumber = isRunning(customObject) ? 0 : (Integer) customObject.get("@@pageNumber");
+        final boolean retrieveAll = (Boolean) customObject.get("@@retrieveAll");
         if (isRunning(customObject)) {
-            final Either<IPage<T>, Pair<List<T>, T>> resultData = run(customObject, updatedPreviouslyRunCriteriaEntity);
+            final Either<IPage<T>, Pair<List<T>, T>> resultData = run(retrieveAll, updatedPreviouslyRunCriteriaEntity);
             if (resultData.isLeft()) {
                 page = resultData.asLeft().value;
                 resultantCustomObject.put("summary", page.summary());
@@ -326,7 +327,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 resultantCustomObject.put("summary", runData.getValue());
             }
         } else if (isRefreshing(customObject)) {
-            final Either<Pair<IPage<T>, T>, Pair<List<T>, T>> resultData = refresh(customObject, updatedPreviouslyRunCriteriaEntity);
+            final Either<Pair<IPage<T>, T>, Pair<List<T>, T>> resultData = refresh(retrieveAll, pageNumber, updatedPreviouslyRunCriteriaEntity);
             if (resultData.isLeft()) {
                 final Pair<IPage<T>, T> refreshedData = resultData.asLeft().value;
                 page = refreshedData.getKey();
@@ -354,34 +355,17 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         resultantCustomObject.put("resultEntities", data);
         resultantCustomObject.put("columnWidths", createColumnWidths(secondTick, updatedPreviouslyRunCriteriaEntity.getEntityClass()));
         resultantCustomObject.put("resultConfig", createResultConfigObject(updatedPreviouslyRunCriteriaEntity));
-        final int pageCount = page == null ? pageCount(realPageCount(data.size(), secondTick.getPageCapacity())) : page.numberOfPages();
+        final int pageCount = page != null ? page.numberOfPages() : pageCount(realPageCount(data.size(), secondTick.getPageCapacity()));
         resultantCustomObject.put("pageCount", pageCount);
-        resultantCustomObject.put("pageNumber", page == null ? getPageNo(pageCount, pageNumber, customObject) : page.no());
+        resultantCustomObject.put("pageNumber", page != null ? page.no() : pageCount <= pageNumber ? pageCount - 1 : pageNumber);
         return new Pair<>(resultantCustomObject, data);
     }
 
     /**
-     * Returns page number from {@code previousPageNumber} and actual {@code pageCount}. Used only in 'retrieveAll' option.
+     * Runs entity centre based on {@code retrieveAll} option. Returns {@link Right} with list of entities and summary if true. Otherwise returns {@link Left} with {@link IPage}.
      */
-    private static int getPageNo(final int pageCount, final Integer previousPageNumber, final Map<String, Object> customObject) {
-        if (isRunning(customObject)) {
-            return 0;
-        } else if (isRefreshing(customObject)){
-            if (pageCount <= previousPageNumber) {
-                return pageCount - 1;
-            } else {
-                return previousPageNumber;
-            }
-        }
-        return 0;
-    }
-
-    /**
-     * Runs entity centre based on 'retrieveAll' option in {@code customObject}. Returns {@link Right} with list of entities and summary if true. Otherwise returns {@link Left} with {@link IPage}.
-     */
-    private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Either<IPage<T>, Pair<List<T>, T>> run(final Map<String, Object> customObject, final M criteria) {
-        final Boolean shouldRetrieveAll = (Boolean) customObject.get("@@retrieveAll");
-        if (shouldRetrieveAll) {
+    private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Either<IPage<T>, Pair<List<T>, T>> run(final boolean retrieveAll, final M criteria) {
+        if (retrieveAll) {
             return right(criteria.getAllEntitiesWithSummary());
         } else {
             final Integer pageCapacity = criteria.getCentreDomainTreeMangerAndEnhancer().getSecondTick().getPageCapacity();
@@ -390,14 +374,12 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
 
     /**
-     * Refreshes current page of entity centre based on 'retrieveAll' option in {@code customObject}. Returns {@link Right} with list of entities and summary if true. Otherwise returns {@link Left} with {@link IPage}.
+     * Refreshes current page of entity centre based on {@code retrieveAll} option. Returns {@link Right} with list of entities and summary if true. Otherwise returns {@link Left} with {@link IPage}.
      */
-    private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Either<Pair<IPage<T>, T>, Pair<List<T>, T>> refresh(final Map<String, Object> customObject, final M criteria) {
-        final Boolean shouldRetrieveAll = (Boolean) customObject.get("@@retrieveAll");
-        if (shouldRetrieveAll) {
+    private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Either<Pair<IPage<T>, T>, Pair<List<T>, T>> refresh(final boolean retrieveAll, final Integer pageNumber, final M criteria) {
+        if (retrieveAll) {
             return right(criteria.getAllEntitiesWithSummary());
         } else {
-            final Integer pageNumber = (Integer) customObject.get("@@pageNumber");
             final Integer pageCapacity = criteria.getCentreDomainTreeMangerAndEnhancer().getSecondTick().getPageCapacity();
             return left(criteria.getPageWithSummaries(pageNumber, pageCapacity));
         }

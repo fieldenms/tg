@@ -15,6 +15,7 @@ import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryC
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isDotNotation;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.penultAndLast;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.transform;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -693,7 +694,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      */
     public final Pair<List<T>, T> getAllEntitiesWithSummary() {
         final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> queries = generateQueryWithSummaries();
-        return Pair.pair(getAllEntities(queries.getKey()), getSummary(queries.getValue()));
+        return pair(getAllEntities(queries.getKey()), getSummary(queries.getValue()));
     }
 
     /**
