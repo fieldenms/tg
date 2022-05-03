@@ -1,5 +1,10 @@
 package ua.com.fielden.platform.web.centre.api.actions.impl;
 
+import static java.util.Arrays.asList;
+
+import java.util.HashSet;
+import java.util.Set;
+
 import org.apache.commons.lang.StringUtils;
 
 import com.google.inject.Injector;
@@ -23,6 +28,7 @@ import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder6;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder7;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder7a;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder8;
+import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder8a;
 import ua.com.fielden.platform.web.centre.api.actions.IEntityActionBuilder9;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
@@ -44,6 +50,7 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
     private IPostAction successPostAction;
     private IPostAction errorPostAction;
     private PrefDim prefDimForView;
+    private final Set<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>> excludeInsertionPoints = new HashSet<>();
     private boolean shouldRefreshParentCentreAfterSave = true;
 
     /**
@@ -95,7 +102,8 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
             successPostAction,
             errorPostAction,
             prefDimForView,
-            shouldRefreshParentCentreAfterSave);
+            shouldRefreshParentCentreAfterSave,
+            excludeInsertionPoints);
     }
 
     @Override
@@ -201,7 +209,7 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
 	}
 
 	@Override
-	public IEntityActionBuilder9<T> withNoParentCentreRefresh() {
+	public IEntityActionBuilder8a<T> withNoParentCentreRefresh() {
 		this.shouldRefreshParentCentreAfterSave = false;
 		return this;
 	}
@@ -215,6 +223,14 @@ public class EntityActionBuilder<T extends AbstractEntity<?>> implements IEntity
     @Override
     public IEntityActionBuilder0<T> withView(final EntityMaster<?> embeddedMaster) {
         builder.register(Compound.detailsMaster(functionalEntity, builder.register(embeddedMaster), injector));
+        return this;
+    }
+
+    @Override
+    public IEntityActionBuilder9<T> doNotRefreshInsertionPoints(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> firstInsertionPoint, final Class<? extends AbstractFunctionalEntityWithCentreContext<?>>... otherInsertionPoints) {
+        excludeInsertionPoints.clear();
+        excludeInsertionPoints.add(firstInsertionPoint);
+        excludeInsertionPoints.addAll(asList(otherInsertionPoints));
         return this;
     }
 }

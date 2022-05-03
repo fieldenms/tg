@@ -3,6 +3,8 @@ package ua.com.fielden.platform.web.centre.api.resultset.impl;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static java.util.stream.Collectors.toList;
+import static org.apache.commons.lang.StringUtils.join;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -161,6 +163,9 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.put("pre-action", "[[" + actionsHolderName + "." + numberOfAction + ".preAction]]");
         attrs.put("post-action-success", "[[" + actionsHolderName + "." + numberOfAction + ".postActionSuccess]]");
         attrs.put("post-action-error", "[[" + actionsHolderName + "." + numberOfAction + ".postActionError]]");
+        if (!conf().excludeInsertionPoints.isEmpty()) {
+            attrs.put("exclude-insertion-points", "[[" + actionsHolderName + "." + numberOfAction + ".excludeInsertionPoints]]");
+        }
 
         // chosenProperty should be ignored strictly when it is null as an empty value means 'this'
         if (chosenProperty != null) {
@@ -251,8 +256,15 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.append("preAction: ").append(createPreAction()).append(",\n");
         attrs.append("postActionSuccess: ").append(createPostActionSuccess()).append(",\n");
         attrs.append("attrs: ").append(createElementAttributes(false)).append(",\n");
+        if (!conf().excludeInsertionPoints.isEmpty()) {
+            attrs.append("excludeInsertionPoints: ").append(createExcludeInsertionPoints()).append("\n,");
+        }
         attrs.append("postActionError: ").append(createPostActionError()).append("\n");
         return attrs.append("}\n").toString();
+    }
+
+    private String createExcludeInsertionPoints() {
+        return "[" + join(conf().excludeInsertionPoints.stream().map(insertionPointType -> "'tg-" + insertionPointType.getSimpleName() + "-master'").collect(toList()), ",") + "]";
     }
 
     /**
