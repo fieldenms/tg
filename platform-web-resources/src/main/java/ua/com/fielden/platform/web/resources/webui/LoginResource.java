@@ -34,6 +34,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
+import ua.com.fielden.platform.basic.config.IApplicationSettings.AuthMode;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.session.Authenticator;
 import ua.com.fielden.platform.security.session.IUserSession;
@@ -72,12 +73,14 @@ public class LoginResource extends AbstractWebResource {
     private final IUniversalConstants constants;
     
     private final byte[] loginPage;
+    private final byte[] loginPageForMixedMode;
 
     /**
      * Creates {@link LoginResource}.
      */
     public LoginResource(
             final byte[] loginPage,
+            final byte[] loginPageForMixedMode,
             final String domainName,
             final String path,
             final IUniversalConstants constants,
@@ -101,6 +104,7 @@ public class LoginResource extends AbstractWebResource {
         this.coUserSession = coUserSession;
         this.restUtil = restUtil;
         this.loginPage = loginPage;
+        this.loginPageForMixedMode = loginPageForMixedMode;
     }
 
     @Get
@@ -124,13 +128,18 @@ public class LoginResource extends AbstractWebResource {
                 }
             }
 
-            // otherwise just return the login page for user to login explicitly
-            // the returned page should take into account support for SSO
-            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(loginPage), MediaType.TEXT_HTML));
+            // Otherwise just return the login page for user to login explicitly.
+            // The returned page should take into account support for SSO and the mixed RSO/SSO mode
+            // Query parameter "auth" can be used to enforce the RSO mode even when SSO is preferred
+            // For example, https://tgdev.com/login?auth=RSO would always return a login page with a prompt without automatic re-direction to SSO
+            // Such request is valid in both RSO and SSO authentication modes.
+            final String requestedAuth = getQueryValue("auth");
+            final ByteArrayInputStream loginPageStream = AuthMode.RSO.name().equalsIgnoreCase(requestedAuth) ? new ByteArrayInputStream(loginPageForMixedMode) : new ByteArrayInputStream(loginPage);
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(loginPageStream, MediaType.TEXT_HTML));
         } catch (final Exception ex) {
             // in case of an exception log the error and return the login page for the user to try again
             LOGGER.fatal(ex.getMessage(), ex);
-            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(loginPage), MediaType.TEXT_HTML));
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(loginPageForMixedMode), MediaType.TEXT_HTML));
         }
     }
 

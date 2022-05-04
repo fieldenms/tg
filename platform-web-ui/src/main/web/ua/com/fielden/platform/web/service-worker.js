@@ -83,21 +83,6 @@ self.addEventListener('activate', event => {
 self.addEventListener('fetch', function (event) {
     const request = event.request;
     const urlObj = new URL(request.url);
-    // This match means that SW received a Forbidden (403) response and is now redirecting the original request for authentication.
-    // Unfortunately, in case of SSO via some OpenId Connect provider, the hash part of the request gets lost.
-    // This is why we need to capture it as a query parameter of this redirect, so that the server logic could perform redirection upon successful authentication.
-    if (request.url.includes("/sso/_forbidden_403_/") && urlObj.hash) {
-        const url = urlObj.origin + "/sso?hash=" + urlObj.hash.substring(1);
-        const newRequest = new Request(url, {
-            method: 'GET',
-            headers: request.headers,
-            mode: 'same-origin',
-            credentials: request.credentials,
-            redirect:  request.redirect
-        });
-        event.respondWith(fetch(newRequest));
-        return;
-    }
     const url = urlObj.origin + urlObj.pathname;
     if (isStatic(url, request.method)) { // only consider intercepting for static resources
         event.respondWith(function() {
@@ -141,8 +126,7 @@ self.addEventListener('fetch', function (event) {
                                 }, function (serverChecksumResponseError) { // it is very important not to chain catch clause but to use onRejected callback; this is because we need to process errors only from getTextFrom(...) promise and not from getTextFrom(...).then(...) promise.
                                     if (serverChecksumResponseError instanceof Response && !isResponseSuccessful(serverChecksumResponseError) && serverChecksumResponseError.status === 403) {
                                         // If server checksum response is Forbidden (403) then we need to respond with redirection response to a login resource.
-                                        // This ensures that local part of the URI (#) is preserved and handled correctly upon a subsequent redirect.
-                                        return Response.redirect(url + 'sso/_forbidden_403_/');
+                                        return Response.redirect(url + 'login/');
                                     } else {
                                         throw serverChecksumResponseError; // rethrow the error in other cases as if there was no onRejected clause here; this would lead to promise rejection
                                     }

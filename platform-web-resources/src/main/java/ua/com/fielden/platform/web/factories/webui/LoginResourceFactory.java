@@ -40,6 +40,7 @@ public class LoginResourceFactory extends Restlet {
     private final RestServerUtil util;
     private final Injector injector;
     private final byte[] loginPage;
+    private final byte[] loginPageForMixedMode;
 
     public LoginResourceFactory(final boolean trustedDeviceByDefault, final RestServerUtil util, final Injector injector) {
         this.util = util;
@@ -48,7 +49,13 @@ public class LoginResourceFactory extends Restlet {
         // this is why it can be loaded and prepared just once
         final AuthMode authMode = injector.getInstance(IApplicationSettings.class).authMode();
         final String authSsoProvider = injector.getInstance(Key.get(String.class, Names.named("auth.sso.provider")));
-        this.loginPage = loadLoginPage(trustedDeviceByDefault, authMode, authSsoProvider);
+        // For both SSO and RSO modes, the standard login page should not display the SSO button -- hence "none"
+        // For SSO auto redirect would happen and for RSO this button is invalid
+        this.loginPage = loadLoginPage(trustedDeviceByDefault, authMode, authSsoProvider, "none");
+        // We also need to provide a login page that would support the mixed mode (if SSO mode is on), giving the user control to choose how to login.
+        // This is needed for base user logins and, potentially, for users outside the organisation, which may not be eligible for SSO.
+        // If the authentication mode is RSO, this page is equivalent to loginPage where no SSO button is visible.
+        this.loginPageForMixedMode = loadLoginPage(trustedDeviceByDefault, AuthMode.RSO, authSsoProvider, AuthMode.SSO == authMode ? "block" : "none");
     }
 
     public LoginResourceFactory(final RestServerUtil util, final Injector injector) {
@@ -62,14 +69,16 @@ public class LoginResourceFactory extends Restlet {
      * @param trustedDeviceByDefault
      * @param authMode – either RSO or SSO.
      * @param authSsoProvider – a user-readable string representing an Identity Provider used for SSO.
+     * @param authSsoDisplay – control visibility for the SSO button; either "none" or "block" is expected as the value.
      * @return
      */
-    private static byte[] loadLoginPage(final boolean trustedDeviceByDefault, final AuthMode authMode, String authSsoProvider) {
+    private static byte[] loadLoginPage(final boolean trustedDeviceByDefault, final AuthMode authMode, final String authSsoProvider, final String authSsoDisplay) {
         try {
             final String loginPage = ResourceLoader.getText("ua/com/fielden/platform/web/login.html");
             final String withTitle = replace(loginPage, "@title", "Login");
             final String withTrusted = replace(withTitle, "@trusted", trustedDeviceByDefault ? "checked" : "");
-            final String withAuthMode = replace(withTrusted, "@auth.mode", AuthMode.SSO == authMode ? "block" : "none");
+            final String withAuthSsoDisplay = replace(withTrusted, "@auth.sso.display", authSsoDisplay);
+            final String withAuthMode = replace(withAuthSsoDisplay, "@auth.mode", authMode.name());
             final String withSsoIdentity = replace(withAuthMode, "@auth.sso.provider", authSsoProvider);
             final String withSsoBindingPath = replace(withSsoIdentity, "@auth.sso.binding.path", LoginResource.SSO_BINDING_PATH);
             return withSsoBindingPath.getBytes("UTF-8");
@@ -94,6 +103,7 @@ public class LoginResourceFactory extends Restlet {
 
             new LoginResource(
                     loginPage,
+                    loginPageForMixedMode,
                     webUiConfig.getDomainName(),
                     webUiConfig.getPath(),
                     injector.getInstance(IUniversalConstants.class),
