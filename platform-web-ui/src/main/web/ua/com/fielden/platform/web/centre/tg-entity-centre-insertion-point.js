@@ -215,9 +215,9 @@ Polymer({
         },
 
         /**
-         * The entities retrieved when running centre that has this insertion point. It might be either all entities which should be paginated locally or only one page. It depends on retrieveAll property of entity centre 
+         * The entities retrieved when running centre that has this insertion point. It might be either all entities, which should be paginated locally, or only one page. It depends on retrieveAll property of entity centre.
          */
-         allRetrievedEntities: {
+        allRetrievedEntities: {
             type: Array,
             observer: '_updateElementWithAllRetrievedEntities',
             notify: true
