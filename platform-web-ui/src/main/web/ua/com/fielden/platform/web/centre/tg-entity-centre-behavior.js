@@ -379,8 +379,16 @@ const TgEntityCentreBehaviorImpl = {
 
         /**
          * Parameters for running query.
+         *
+         * Initial (and following empty) values must be 'null' to make '_computeRetrieverUrl(miType, saveAsName, queryPart, configUuid)' in 'tg-selection-criteria' computable and not being undefined.
+         *
+         * In case where 'queryPart' is not empty, LINK_CONFIG_TITLE will be returned on the client in 'saveAsName' property instead of preferred configuration name (which could be '' or some non-empty name).
+         * Corresponding 'configUuid' for that link configuration will be returned on the client too.
          */
-        queryPart: String,
+        queryPart: {
+            type: String,
+            value: null
+        },
 
         /**
          * Indicates whether centre should forcibly refresh the current page upon successful saving of a related entity.
