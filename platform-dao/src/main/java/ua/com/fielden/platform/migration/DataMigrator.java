@@ -42,8 +42,8 @@ import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.persistence.HibernateUtil;
 
 public class DataMigrator {
-    private static final Integer BATCH_SIZE = 100; 
-    
+    private static final Integer BATCH_SIZE = 100;
+
     private static final Logger LOGGER = getLogger(DataMigrator.class);
 
     private final HibernateUtil hiberUtil;
@@ -87,19 +87,19 @@ public class DataMigrator {
     }
 
 	private static void printRetrieversScheme(final List<CompiledRetriever> retrieversJobs) {
-		var allRetrieverByType = retrieversJobs.stream().collect(Collectors.groupingBy(CompiledRetriever::getType));
+        final var allRetrieverByType = retrieversJobs.stream().collect(Collectors.groupingBy(CompiledRetriever::getType));
 
 		for (final Entry<? extends Class<? extends AbstractEntity<?>>, List<CompiledRetriever>> typeAndItsRetrievers : allRetrieverByType.entrySet()) {
 			if (typeAndItsRetrievers.getValue().size() > 1) {
 				System.out.println(" == " + typeAndItsRetrievers.getKey().getSimpleName());
-				for (CompiledRetriever compiledRetriever : typeAndItsRetrievers.getValue()) {
+				for (final CompiledRetriever compiledRetriever : typeAndItsRetrievers.getValue()) {
 					System.out.println("        " + (compiledRetriever.retriever.isUpdater() ? "U" : " ") + " "
 							+ compiledRetriever.retriever.getClass().getSimpleName());
 				}
 			}
 		}
 	}
-    
+
     private static List<CompiledRetriever> generateRetrieversJobs(final List<IRetriever<? extends AbstractEntity<?>>> retrievers, final EqlDomainMetadata eqlDmd) {
         final var result = new ArrayList<CompiledRetriever>();
         for (final var retriever : retrievers) {
@@ -115,9 +115,9 @@ public class DataMigrator {
                 final var md = generateEntityMd(emd.typeInfo.tableName, emd.props());
 
                 if (retriever.isUpdater()) {
-                    result.add(CompiledRetriever.forUpdate(retriever, legacySql, new TargetDataUpdate(retriever.type(), retResultFieldsIndices, md), md));    
+                    result.add(CompiledRetriever.forUpdate(retriever, legacySql, new TargetDataUpdate(retriever.type(), retResultFieldsIndices, md), md));
                 } else {
-                    result.add(CompiledRetriever.forInsert(retriever, legacySql, new TargetDataInsert(retriever.type(), retResultFieldsIndices, md), md));    
+                    result.add(CompiledRetriever.forInsert(retriever, legacySql, new TargetDataInsert(retriever.type(), retResultFieldsIndices, md), md));
                 }
             } catch (final Exception ex) {
                 throw new DataMigrationException("Errors while compiling retriever [" + retriever.getClass().getSimpleName() + "].", ex);
@@ -126,7 +126,7 @@ public class DataMigrator {
 
         return result;
     }
-    
+
     private static List<IRetriever<? extends AbstractEntity<?>>> instantiateRetrievers(final Injector injector, final Class<? extends IRetriever<? extends AbstractEntity<?>>> ... retrieversClasses) {
         final var result = new ArrayList<IRetriever<? extends AbstractEntity<?>>>();
         for (final Class<? extends IRetriever<? extends AbstractEntity<?>>> retrieverClass : retrieversClasses) {
@@ -162,13 +162,12 @@ public class DataMigrator {
                 final var retrieverName = cr.retriever.getClass().getSimpleName();
                 LOGGER.info("Executing compiled retriever " + retrieverName);
                 try {
-                    final Function<TargetDataUpdate, Optional<Long>> updater = (tdu) -> {
+                    final Function<TargetDataUpdate, Optional<Long>> updater = tdu -> {
                         performBatchUpdates(tdu, legacyRs, retrieverName);
                         return empty();
                     };
-                    final Function<TargetDataInsert, Optional<Long>> inserter = (tdi) -> {
-                        return of(performBatchInserts(tdi, legacyRs, retrieverName, id.get()));
-                    };
+                    final Function<TargetDataInsert, Optional<Long>> inserter = tdi ->
+                        of(performBatchInserts(tdi, legacyRs, retrieverName, id.get()));
 
                     cr.exec(updater, inserter).ifPresent(newId -> id.set(newId));
                 } catch (final Exception ex) {
@@ -194,7 +193,7 @@ public class DataMigrator {
                     batchId = batchId + 1;
                     final var keyValue = new ArrayList<>();
                     for (final Integer keyIndex : tdu.keyIndices) {
-                        keyValue.add(legacyRs.getObject(keyIndex.intValue()));
+                        keyValue.add(legacyRs.getObject(keyIndex));
                     }
                     final Object key = keyValue.size() == 1 ? keyValue.get(0) : keyValue;
                     final Long idObject = typeCache.get(key);
@@ -208,14 +207,14 @@ public class DataMigrator {
                     }
                     insertStmt.addBatch();
 
-                    if ((batchId % BATCH_SIZE) == 0) {
+                    if (batchId % BATCH_SIZE == 0) {
                         repeatAction(insertStmt, batchValues, exceptions);
                         batchValues.clear();
                         insertStmt.clearBatch();
                     }
                 }
 
-                if ((batchId % BATCH_SIZE) != 0) {
+                if (batchId % BATCH_SIZE != 0) {
                     repeatAction(insertStmt, batchValues, exceptions);
                 }
             }
@@ -240,7 +239,7 @@ public class DataMigrator {
                     batchId = batchId + 1;
                     final List<Object> keyValue = new ArrayList<>();
                     for (final Integer keyIndex : tdi.keyIndices) {
-                        keyValue.add(legacyRs.getObject(keyIndex.intValue()));
+                        keyValue.add(legacyRs.getObject(keyIndex));
                     }
                     typeCache.put(keyValue.size() == 1 ? keyValue.get(0) : keyValue, id);
 
@@ -253,14 +252,14 @@ public class DataMigrator {
                     }
                     insertStmt.addBatch();
 
-                    if ((batchId % BATCH_SIZE) == 0) {
+                    if (batchId % BATCH_SIZE == 0) {
                         repeatAction(insertStmt, batchValues, exceptions);
                         batchValues.clear();
                         insertStmt.clearBatch();
                     }
                 }
 
-                if ((batchId % BATCH_SIZE) != 0) {
+                if (batchId % BATCH_SIZE != 0) {
                     repeatAction(insertStmt, batchValues, exceptions);
                 }
 
