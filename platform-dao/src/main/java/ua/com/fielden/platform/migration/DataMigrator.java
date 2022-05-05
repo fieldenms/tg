@@ -86,20 +86,24 @@ public class DataMigrator {
         LOGGER.info("Migration duration: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
     }
 
-	// Used for troubleshooting purposes.
+    /**
+     * Prints out retrievers grouped by their entity types (only those that have more than one retriever per type).
+     * 
+     * @param retrieversJobs
+     */
     private static void printRetrieversScheme(final List<CompiledRetriever> retrieversJobs) {
         final var allRetrieverByType = retrieversJobs.stream().collect(Collectors.groupingBy(CompiledRetriever::getType));
 
-		for (final Entry<? extends Class<? extends AbstractEntity<?>>, List<CompiledRetriever>> typeAndItsRetrievers : allRetrieverByType.entrySet()) {
-			if (typeAndItsRetrievers.getValue().size() > 1) {
-				System.out.println(" == " + typeAndItsRetrievers.getKey().getSimpleName());
-				for (final CompiledRetriever compiledRetriever : typeAndItsRetrievers.getValue()) {
-					System.out.println("        " + (compiledRetriever.retriever.isUpdater() ? "U" : " ") + " "
-							+ compiledRetriever.retriever.getClass().getSimpleName());
-				}
-			}
-		}
-	}
+        for (final Entry<? extends Class<? extends AbstractEntity<?>>, List<CompiledRetriever>> typeAndItsRetrievers : allRetrieverByType.entrySet()) {
+            if (typeAndItsRetrievers.getValue().size() > 1) {
+                System.out.println(" == " + typeAndItsRetrievers.getKey().getSimpleName());
+                for (final CompiledRetriever compiledRetriever : typeAndItsRetrievers.getValue()) {
+                    System.out.println("        " + (compiledRetriever.retriever.isUpdater() ? "U" : " ") + " "
+                            + compiledRetriever.retriever.getClass().getSimpleName());
+                }
+            }
+        }
+    }
 
     private static List<CompiledRetriever> generateRetrieversJobs(final List<IRetriever<? extends AbstractEntity<?>>> retrievers, final EqlDomainMetadata eqlDmd) {
         final var result = new ArrayList<CompiledRetriever>();
@@ -128,14 +132,13 @@ public class DataMigrator {
         return result;
     }
 
-    private static List<IRetriever<? extends AbstractEntity<?>>> instantiateRetrievers(final Injector injector, final Class<? extends IRetriever<? extends AbstractEntity<?>>> ... retrieversClasses) {
+    private static List<IRetriever<? extends AbstractEntity<?>>> instantiateRetrievers(final Injector injector, final Class<? extends IRetriever<? extends AbstractEntity<?>>>... retrieversClasses) {
         final var result = new ArrayList<IRetriever<? extends AbstractEntity<?>>>();
         for (final Class<? extends IRetriever<? extends AbstractEntity<?>>> retrieverClass : retrieversClasses) {
             result.add(injector.getInstance(retrieverClass));
         }
         return result;
     }
-
 
     private void runSql(final List<String> ddl) throws SQLException {
         final var tr = hiberUtil.getSessionFactory().getCurrentSession().beginTransaction();
