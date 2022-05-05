@@ -120,21 +120,38 @@ public class MetaModelProcessor extends AbstractProcessor {
     
     private static String getEntityTitleFromClassName(EntityElement element) {
         final String entityName = element.getSimpleName();
-        String descriptiveName = "";
+        StringBuilder descriptiveName = new StringBuilder();
 
         for (int i = 0; i < entityName.length(); i++) {
             char c = entityName.charAt(i);
             if (i > 0 && Character.isUpperCase(c))
-                descriptiveName += " ";
-            descriptiveName += c;
+                descriptiveName.append(' ');
+            descriptiveName.append(c);
         }
         
-        return descriptiveName;
+        return descriptiveName.toString();
+    }
 
     private static MetaModelElement newMetaModelElement(EntityElement entityElement) {
         return new MetaModelElement(entityElement, META_MODEL_NAME_SUFFIX, META_MODEL_PKG_NAME_SUFFIX);
     }
 
+    /**
+     * Maps a field of the generated MetaModels class to a {@link FieldSpec}
+     * @param field
+     * @param elementUtils
+     * @return
+     */
+    protected static FieldSpec getFieldSpecFromMetaModelsClassField(final VariableElement field, Elements elementUtils) {
+        String fieldName = field.getSimpleName().toString();
+        TypeElement fieldTypeElement = (TypeElement) ((DeclaredType) field.asType()).asElement();
+        String fieldTypePkgName = elementUtils.getPackageOf(fieldTypeElement).getQualifiedName().toString();
+        ClassName className = ClassName.get(fieldTypePkgName, ElementFinder.getVariableTypeSimpleName(field));
+
+        return FieldSpec.builder(className, fieldName)
+                .initializer("new $T()", className)
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                .build();
     }
 
     @Override
@@ -169,7 +186,7 @@ public class MetaModelProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-        procLogger.debug("=== PROCESSING ROUND START ===");
+        procLogger.debug(String.format("=== PROCESSING ROUND %d START ===", roundCount));
 
         // debug
         String rootElements = String.join(", ", roundEnv.getRootElements().stream().map(el -> el.getSimpleName()).toList());
@@ -216,7 +233,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         }
 
         // MetaModels class needs to be regenerated only if something changed
-        if (metaModelElements.size() > 0) {
+        if (!metaModelElements.isEmpty()) {
             try {
                 writeMetaModelsClass(metaModelElements, now);
             } catch (IOException e) {
@@ -224,7 +241,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             }
         }
 
-        procLogger.debug("xxx PROCESSING ROUND END xxx");
+        procLogger.debug(String.format("xxx PROCESSING ROUND %d END xxx", roundCount));
 
         // the log file is closed here, that is, right at the end of the 1st processing round
         // this should be modified in case more than 1 processing round is needed
@@ -544,16 +561,9 @@ public class MetaModelProcessor extends AbstractProcessor {
             Set<VariableElement> fields = ElementFinder.findDeclaredFields(typeElement);
 
             // collect existing fields by mapping them from VariableElement to FieldSpec
-            List<FieldSpec> existingFieldSpecs = fields.stream().map(field -> {
-                String fieldName = field.getSimpleName().toString();
-                TypeElement fieldTypeElement = (TypeElement) ((DeclaredType) field.asType()).asElement();
-                String fieldTypePkgName = elementUtils.getPackageOf(fieldTypeElement).getQualifiedName().toString();
-                ClassName className = ClassName.get(fieldTypePkgName, ElementFinder.getVariableTypeSimpleName(field));
-                return FieldSpec.builder(className, fieldName)
-                        .initializer("new $T()", className)
-                        .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
-                        .build();
-            }).toList();
+            List<FieldSpec> existingFieldSpecs = fields.stream()
+                    .map(field -> getFieldSpecFromMetaModelsClassField(field, elementUtils))
+                    .toList();
             fieldSpecs.addAll(existingFieldSpecs);
         }
 
