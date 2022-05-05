@@ -7,13 +7,14 @@ import java.util.Objects;
  */
 
 public class MetaModelElement {
-    private static final String META_MODEL_PKG_NAME_SUFFIX = ".meta";
-    private static final String META_MODEL_NAME_SUFFIX = "MetaModel";
-
     private EntityElement entityElement;
+    private String nameSuffix;
+    private String packageSuffix;
 
-    public MetaModelElement(EntityElement EntityElement) {
+    public MetaModelElement(EntityElement EntityElement, String nameSuffix, String packageSuffix) {
         this.entityElement = EntityElement;
+        this.nameSuffix = nameSuffix;
+        this.packageSuffix = packageSuffix;
     }
 
     public EntityElement getEntityElement() {
@@ -21,11 +22,11 @@ public class MetaModelElement {
     }
 
     public String getSimpleName() {
-        return entityElement.getSimpleName() + META_MODEL_NAME_SUFFIX;
+        return entityElement.getSimpleName() + nameSuffix;
     }
 
     public String getPackageName() {
-        return entityElement.getPackageName() + META_MODEL_PKG_NAME_SUFFIX;
+        return entityElement.getPackageName() + packageSuffix;
     }
 
     @Override

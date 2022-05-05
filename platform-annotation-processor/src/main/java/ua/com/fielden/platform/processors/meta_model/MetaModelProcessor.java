@@ -74,6 +74,9 @@ public class MetaModelProcessor extends AbstractProcessor {
     public static final String METAMODELS_CLASS_QUAL_NAME = String.format("%s.%s", 
             METAMODELS_CLASS_PKG_NAME, METAMODELS_CLASS_SIMPLE_NAME);
 
+    public static final String META_MODEL_PKG_NAME_SUFFIX = ".meta";
+    public static final String META_MODEL_NAME_SUFFIX = "MetaModel";
+
     private static final String INDENT = "    ";
     private static final String LOG_FILENAME = "proc.log";
     private static final String ECLIPSE_OPTION_KEY = "projectdir";
@@ -127,6 +130,11 @@ public class MetaModelProcessor extends AbstractProcessor {
         }
         
         return descriptiveName;
+
+    private static MetaModelElement newMetaModelElement(EntityElement entityElement) {
+        return new MetaModelElement(entityElement, META_MODEL_NAME_SUFFIX, META_MODEL_PKG_NAME_SUFFIX);
+    }
+
     }
 
     @Override
@@ -186,7 +194,7 @@ public class MetaModelProcessor extends AbstractProcessor {
 
             final TypeElement typeElement = (TypeElement) element;
             final EntityElement entityElement = newEntityElement(typeElement);
-            final MetaModelElement metaModelElement = new MetaModelElement(entityElement);
+            final MetaModelElement metaModelElement = newMetaModelElement(entityElement);
             metaModelElements.add(metaModelElement);
 
             // find properties of this entity that are entity type and include these entities for meta-model generation
@@ -197,7 +205,7 @@ public class MetaModelProcessor extends AbstractProcessor {
                     properties.stream()
                     .filter(MetaModelProcessor::isPropertyTypeMetamodeled)
                     // it's safe to call getTypeAsTypeElementOrThrow() since elements were previously filtered
-                    .map(propEl -> new MetaModelElement(newEntityElement(propEl.getTypeAsTypeElementOrThrow())))
+                    .map(propEl -> newMetaModelElement(newEntityElement(propEl.getTypeAsTypeElementOrThrow())))
                     .toList());
         }
         
@@ -275,7 +283,7 @@ public class MetaModelProcessor extends AbstractProcessor {
 
             // ### instance property ###
             if (isPropertyTypeMetamodeled(prop)) {
-                MetaModelElement propTypeMetaModelElement = new MetaModelElement(newEntityElement(prop.getTypeAsTypeElementOrThrow()));
+                MetaModelElement propTypeMetaModelElement = newMetaModelElement(newEntityElement(prop.getTypeAsTypeElementOrThrow()));
                 ClassName propTypeMetaModelClassName = getMetaModelClassName(propTypeMetaModelElement);
                 // property type is target for meta-model generation
                 // private Supplier<[METAMODEL_NAME]> [PROP_NAME];
@@ -300,7 +308,7 @@ public class MetaModelProcessor extends AbstractProcessor {
 
             ClassName propTypeMetaModelClassName = null;
             if (isPropertyTypeMetamodeled(prop)) {
-                MetaModelElement propTypeMetaModelElement = new MetaModelElement(newEntityElement(prop.getTypeAsTypeElementOrThrow()));
+                MetaModelElement propTypeMetaModelElement = newMetaModelElement(newEntityElement(prop.getTypeAsTypeElementOrThrow()));
                 propTypeMetaModelClassName = getMetaModelClassName(propTypeMetaModelElement);
                 /* property type is target for meta-model generation
 
@@ -406,7 +414,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             final String propName = prop.getName();
 
             if (isPropertyTypeMetamodeled(prop)) {
-                MetaModelElement propTypeMetaModelElement = new MetaModelElement(newEntityElement(prop.getTypeAsTypeElementOrThrow()));
+                MetaModelElement propTypeMetaModelElement = newMetaModelElement(newEntityElement(prop.getTypeAsTypeElementOrThrow()));
                 ClassName propTypeMetaModelClassName = getMetaModelClassName(propTypeMetaModelElement);
 
                 /* property type is target for meta-model generation
@@ -463,7 +471,7 @@ public class MetaModelProcessor extends AbstractProcessor {
          */
         ClassName metaModelSuperclassClassName;
         if (isEntitySuperclassMetamodeled) {
-            MetaModelElement mme = new MetaModelElement(entityParent);
+            MetaModelElement mme = newMetaModelElement(entityParent);
             metaModelSuperclassClassName = ClassName.get(mme.getPackageName(), mme.getSimpleName());
         } else {
             metaModelSuperclassClassName = ClassName.get(METAMODEL_SUPERCLASS);
