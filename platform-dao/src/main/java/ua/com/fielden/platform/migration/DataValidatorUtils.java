@@ -19,11 +19,9 @@ public class DataValidatorUtils {
 
     public static String produceKeyUniquenessViolationSql(final Class<? extends AbstractEntity<?>> entityType, final List<CompiledRetriever> entityTypeRetrievers) {
         final List<String> keyProps = MigrationUtils.keyPaths(entityType);
-        final StringBuffer sb = new StringBuffer();
         final var from = entityTypeRetrievers.stream().map(r -> RetrieverSqlProducer.getKeyResultsOnlySql(r.retriever, keyProps)).collect(joining("\nUNION ALL"));
         final var props = keyProps.stream().map(k -> " \"" + k + "\"").collect(joining(", "));
-        sb.append("SELECT 1 WHERE EXISTS (\nSELECT *, COUNT(*) FROM (" + from + ") T GROUP BY " + props + " HAVING COUNT(*) > 1\n)");
-        return sb.toString();
+        return "SELECT 1 WHERE EXISTS (\nSELECT *, COUNT(*) FROM (" + from + ") T GROUP BY " + props + " HAVING COUNT(*) > 1\n)";
     }
 
     public static List<T3<String, String, String>> produceRequirednessValidationSql(final List<CompiledRetriever> retrieversJobs) {

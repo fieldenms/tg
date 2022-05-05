@@ -10,7 +10,12 @@ import java.util.TreeMap;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 public class RetrieverSqlProducer {
-
+    private final static String SELECT = "\nSELECT ALL ";
+    private final static String FROM = "\nFROM ";
+    private final static String WHERE = "\nWHERE ";
+    private final static String GROUP_BY = "\nGROUP BY ";
+    private final static String ORDER_BY = "\nORDER BY ";
+    
     public static String getSql(final IRetriever<? extends AbstractEntity<?>> retriever) {
         return getSql(retriever, true);
     }
@@ -20,7 +25,7 @@ public class RetrieverSqlProducer {
     }
 	
     private static String getSql(final IRetriever<? extends AbstractEntity<?>> retriever, final boolean withOrdering) {
-        final StringBuffer sb = new StringBuffer();
+        final var sb = new StringBuilder();
         sb.append(allYieldsSql(retriever.resultFields()));
         sb.append(coreSql(retriever));
         if (withOrdering) {
@@ -30,7 +35,7 @@ public class RetrieverSqlProducer {
     }
 
     public static String getKeyResultsOnlySql(final IRetriever<? extends AbstractEntity<?>> retriever, final List<String> keyProps) {
-        final StringBuffer sb = new StringBuffer();
+        final var sb = new StringBuilder();
         sb.append(allYieldsSql(getSpecifiedPropsYields(retriever, keyProps)));
         sb.append(coreSql(retriever));
         return sb.toString();
@@ -47,7 +52,7 @@ public class RetrieverSqlProducer {
     }
     
     private static String coreSql(final IRetriever<? extends AbstractEntity<?>> retriever) {
-        final StringBuffer sb = new StringBuffer();
+        final var sb = new StringBuilder();
         sb.append(fromSql(retriever));
         sb.append(whereSql(retriever));
         sb.append(groupBySql(retriever));
@@ -55,43 +60,22 @@ public class RetrieverSqlProducer {
     }
 
     public static String allYieldsSql(final SortedMap<String, String> resultProps) {
-        return "\nSELECT ALL " + resultProps.entrySet().stream().map(e -> e.getValue() + " \"" + e.getKey() + "\"").collect(joining(", "));
+        return SELECT + resultProps.entrySet().stream().map(e -> e.getValue() + " \"" + e.getKey() + "\"").collect(joining(", "));
     }
 
     private static String fromSql(final IRetriever<? extends AbstractEntity<?>> retriever) {
-        return "\nFROM " + retriever.fromSql();
+        return FROM + retriever.fromSql();
     }
 
-    private static StringBuffer whereSql(final IRetriever<? extends AbstractEntity<?>> retriever) {
-        final StringBuffer sb = new StringBuffer();
-
-        if (retriever.whereSql() != null) {
-            sb.append("\nWHERE ");
-            sb.append(retriever.whereSql());
-        }
-    
-        return sb;
+    private static String whereSql(final IRetriever<? extends AbstractEntity<?>> retriever) {
+        return retriever.whereSql() != null ? WHERE + retriever.whereSql() : "";
     }
     
-    private static StringBuffer groupBySql(final IRetriever<? extends AbstractEntity<?>> retriever) {
-        final StringBuffer sb = new StringBuffer();
-
-        if (retriever.groupSql() != null) {
-            sb.append("\nGROUP BY ");
-            sb.append(retriever.groupSql().stream().collect(joining(", ")));
-        }
-
-        return sb;
+    private static String groupBySql(final IRetriever<? extends AbstractEntity<?>> retriever) {
+        return retriever.groupSql() != null ? GROUP_BY + retriever.groupSql().stream().collect(joining(", ")) : "";
     }
     
-    private static StringBuffer orderBySql(final IRetriever<? extends AbstractEntity<?>> retriever) {
-        final StringBuffer sb = new StringBuffer();
-
-        if (retriever.orderSql() != null) {
-            sb.append("\nORDER BY ");
-            sb.append(retriever.orderSql().stream().collect(joining(", ")));
-        }
-
-        return sb;
+    private static String orderBySql(final IRetriever<? extends AbstractEntity<?>> retriever) {
+        return retriever.orderSql() != null ? ORDER_BY + retriever.orderSql().stream().collect(joining(", ")) : "";
     }
 }

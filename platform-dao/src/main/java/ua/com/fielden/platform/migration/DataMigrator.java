@@ -86,7 +86,8 @@ public class DataMigrator {
         LOGGER.info("Migration duration: " + pd.getMinutes() + " m " + pd.getSeconds() + " s " + pd.getMillis() + " ms");
     }
 
-	private static void printRetrieversScheme(final List<CompiledRetriever> retrieversJobs) {
+	// Used for troubleshooting purposes.
+    private static void printRetrieversScheme(final List<CompiledRetriever> retrieversJobs) {
         final var allRetrieverByType = retrieversJobs.stream().collect(Collectors.groupingBy(CompiledRetriever::getType));
 
 		for (final Entry<? extends Class<? extends AbstractEntity<?>>, List<CompiledRetriever>> typeAndItsRetrievers : allRetrieverByType.entrySet()) {
