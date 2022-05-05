@@ -88,6 +88,7 @@ public class MetaModelProcessor extends AbstractProcessor {
     private Messager messager;
     private Map<String, String> options;
     private boolean fromMaven;
+    private int roundCount;
 
     public static Set<Class<? extends Annotation>> getSupportedAnnotations() {
         return Set.of(MapEntityTo.class, DomainEntity.class);
@@ -161,6 +162,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         this.elementUtils = processingEnv.getElementUtils();
         this.messager = processingEnv.getMessager();
         this.options = processingEnv.getOptions();
+        this.roundCount = 0;
 
         // processor started from Eclipse?
         final String projectDir = options.get(ECLIPSE_OPTION_KEY);
@@ -186,6 +188,13 @@ public class MetaModelProcessor extends AbstractProcessor {
 
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+        if (roundCount > 0) {
+            // the log file is closed after the 1st (0) processing round
+            // this should be modified in case more than 1 processing round is needed
+            procLogger.end();
+            return false;
+        }
+
         procLogger.debug(String.format("=== PROCESSING ROUND %d START ===", roundCount));
 
         // debug
@@ -243,9 +252,7 @@ public class MetaModelProcessor extends AbstractProcessor {
 
         procLogger.debug(String.format("xxx PROCESSING ROUND %d END xxx", roundCount));
 
-        // the log file is closed here, that is, right at the end of the 1st processing round
-        // this should be modified in case more than 1 processing round is needed
-        procLogger.end();
+        roundCount++;
 
         return true;
     }
