@@ -23,36 +23,36 @@ import com.google.common.collect.Lists;
 import ua.com.fielden.platform.entity.AbstractEntity;
 
 public class DataValidator {
-	
+
     private static final String LONG_BREAK = "\n\n\n";
 
     private static final Logger LOGGER = getLogger(DataMigrator.class);
-    
+
     private final boolean includeDetails;
     private final Connection conn;
     private final List<CompiledRetriever> retrieversJobs;
     private final Map<Class<? extends AbstractEntity<?>>, List<CompiledRetriever>> entityTypeRetrievers;
     private final Map<CompiledRetriever, List<CompiledRetriever>> domainTypeRetrieversByUpdaters;
-    
+
     public DataValidator(final Connection conn, final boolean includeDetails, final List<CompiledRetriever> retrieversJobs) {
-    	this.conn = conn;
-    	this.includeDetails = includeDetails;
-    	this.retrieversJobs = retrieversJobs;
-    	this.entityTypeRetrievers = retrieversJobs.stream().filter(r -> !r.retriever.isUpdater()).collect(Collectors.groupingBy(CompiledRetriever::getType));
-    	this.domainTypeRetrieversByUpdaters = domainTypeRetrieversByUpdater(retrieversJobs);
+        this.conn = conn;
+        this.includeDetails = includeDetails;
+        this.retrieversJobs = retrieversJobs;
+        this.entityTypeRetrievers = retrieversJobs.stream().filter(r -> !r.retriever.isUpdater()).collect(Collectors.groupingBy(CompiledRetriever::getType));
+        this.domainTypeRetrieversByUpdaters = domainTypeRetrieversByUpdater(retrieversJobs);
     }
-    
+
     public void performValidations() {
-    	checkRetrievalSqlForSyntaxErrors();
-    	checkKeyUniqueness();
+        checkRetrievalSqlForSyntaxErrors();
+        checkKeyUniqueness();
         checkRequiredness();
-    	checkDataIntegrity();
-    	checkDataIntegrityOfUpdatersKeys();
+        checkDataIntegrity();
+        checkDataIntegrityOfUpdatersKeys();
     }
-    
+
     private void checkDataIntegrity() {
-    	final var stmts = produceDataIntegrityValidationSql(retrieversJobs);
-        
+        final var stmts = produceDataIntegrityValidationSql(retrieversJobs);
+
         LOGGER.debug("Checking data integrity ...");
 
         for (final var entry : stmts) {
@@ -67,10 +67,10 @@ public class DataValidator {
             }
         }
     }
-    
+
     private void checkDataIntegrityOfUpdatersKeys() {
-    	final var stmts = produceUpdatersKeysDataIntegrityValidationSql(domainTypeRetrieversByUpdaters);
-        
+        final var stmts = produceUpdatersKeysDataIntegrityValidationSql(domainTypeRetrieversByUpdaters);
+
         LOGGER.debug("Checking data integrity for updaters keys ...");
 
         for (final var entry : stmts) {
@@ -104,7 +104,7 @@ public class DataValidator {
     }
 
     private void checkRetrievalSqlForSyntaxErrors() {
-    	LOGGER.debug("Checking SQL syntax correctness ... ");
+        LOGGER.debug("Checking SQL syntax correctness ... ");
         for (final var rj : retrieversJobs) {
             try (final var st = conn.createStatement(); final var rs = st.executeQuery(rj.legacySql)) {
             } catch (final Exception ex) {
@@ -114,8 +114,8 @@ public class DataValidator {
     }
 
     private void checkKeyUniqueness() {
-    	LOGGER.debug("Checking key values uniqueness ... ");
-    	for (final var ret : entityTypeRetrievers.entrySet()) {
+        LOGGER.debug("Checking key values uniqueness ... ");
+        for (final var ret : entityTypeRetrievers.entrySet()) {
             final var sql = produceKeyUniquenessViolationSql(ret.getKey(), ret.getValue());
             try (final var st = conn.createStatement()) {
                 try (final var rs = st.executeQuery(sql)) {
@@ -131,26 +131,26 @@ public class DataValidator {
 
         }
     }
-    
-	private static Map<CompiledRetriever, List<CompiledRetriever>> domainTypeRetrieversByUpdater(final List<CompiledRetriever> retrieversJobs) {
-		var allRetrieverByType = retrieversJobs.stream().collect(Collectors.groupingBy(CompiledRetriever::getType));
 
-		var result = new HashMap<CompiledRetriever, List<CompiledRetriever>>();
+    private static Map<CompiledRetriever, List<CompiledRetriever>> domainTypeRetrieversByUpdater(final List<CompiledRetriever> retrieversJobs) {
+        final var allRetrieverByType = retrieversJobs.stream().collect(Collectors.groupingBy(CompiledRetriever::getType));
 
-		for (final Entry<? extends Class<? extends AbstractEntity<?>>, List<CompiledRetriever>> typeAndItsRetrievers : allRetrieverByType.entrySet()) {
-			var currentTypeResult = new HashMap<CompiledRetriever, List<CompiledRetriever>>();
+        final var result = new HashMap<CompiledRetriever, List<CompiledRetriever>>();
 
-			for (CompiledRetriever rt : Lists.reverse(typeAndItsRetrievers.getValue())) {
-				if (rt.retriever.isUpdater()) {
-					currentTypeResult.put(rt, new ArrayList<>());
-				} else {
-					for (List<CompiledRetriever> updaterDomain : currentTypeResult.values()) {
-						updaterDomain.add(rt);
-					}
-				}
-			}
-			result.putAll(currentTypeResult);
-		}
-		return result;
-	}
+        for (final Entry<? extends Class<? extends AbstractEntity<?>>, List<CompiledRetriever>> typeAndItsRetrievers : allRetrieverByType.entrySet()) {
+            final var currentTypeResult = new HashMap<CompiledRetriever, List<CompiledRetriever>>();
+
+            for (final CompiledRetriever rt : Lists.reverse(typeAndItsRetrievers.getValue())) {
+                if (rt.retriever.isUpdater()) {
+                    currentTypeResult.put(rt, new ArrayList<>());
+                } else {
+                    for (final List<CompiledRetriever> updaterDomain : currentTypeResult.values()) {
+                        updaterDomain.add(rt);
+                    }
+                }
+            }
+            result.putAll(currentTypeResult);
+        }
+        return result;
+    }
 }
