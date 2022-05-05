@@ -74,8 +74,13 @@ public class LoginResourceFactory extends Restlet {
      */
     private static byte[] loadLoginPage(final boolean trustedDeviceByDefault, final AuthMode authMode, final String authSsoProvider, final String authSsoDisplay) {
         try {
+            // If authMode == SSO then we expect an auto-redirection to "/sso" with appropriate encoding of the local URI part as a query parameter.
+            // If the login page contains the standard login form, this form may become visible for a split second before redirection takes place, potentially, confusing the user. 
+            // In order to prevent this, the form should be invisible and the message at the top could say something like "Authenticating..."
             final String loginPage = ResourceLoader.getText("ua/com/fielden/platform/web/login.html");
-            final String withTitle = replace(loginPage, "@title", "Login");
+            final String withLoginMsg = replace(loginPage, "@auth.login.msg", AuthMode.RSO == authMode ? "Please enter valid credentials." : "Authenticating...");
+            final String withRsoPrompt = replace(withLoginMsg, "@auth.rso.display", AuthMode.RSO == authMode ? "block" : "none");
+            final String withTitle = replace(withRsoPrompt, "@title", "Login");
             final String withTrusted = replace(withTitle, "@trusted", trustedDeviceByDefault ? "checked" : "");
             final String withAuthSsoDisplay = replace(withTrusted, "@auth.sso.display", authSsoDisplay);
             final String withAuthMode = replace(withAuthSsoDisplay, "@auth.mode", authMode.name());
