@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.migration;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 
@@ -16,20 +17,22 @@ public class CompiledRetriever {
     public final String legacySql;
     private final TargetDataInsert tdi;
     private final TargetDataUpdate tdu;
+    public final EntityMd md;
     
-    public static CompiledRetriever forInsert(final IRetriever<? extends AbstractEntity<?>> retriever, final String legacySql, final TargetDataInsert tdi) {
-        return new CompiledRetriever(retriever, tdi, null, legacySql);
+    public static CompiledRetriever forInsert(final IRetriever<? extends AbstractEntity<?>> retriever, final String legacySql, final TargetDataInsert tdi, final EntityMd md) {
+        return new CompiledRetriever(retriever, tdi, null, legacySql, md);
     }
 
-    public static CompiledRetriever forUpdate(final IRetriever<? extends AbstractEntity<?>> retriever, final String legacySql, final TargetDataUpdate tdu) {
-        return new CompiledRetriever(retriever, null, tdu, legacySql);
+    public static CompiledRetriever forUpdate(final IRetriever<? extends AbstractEntity<?>> retriever, final String legacySql, final TargetDataUpdate tdu, final EntityMd md) {
+        return new CompiledRetriever(retriever, null, tdu, legacySql, md);
     }
 
-    private CompiledRetriever(final IRetriever<? extends AbstractEntity<?>> retriever, final TargetDataInsert tdi, final TargetDataUpdate tdu, final String legacySql) {
+    private CompiledRetriever(final IRetriever<? extends AbstractEntity<?>> retriever, final TargetDataInsert tdi, final TargetDataUpdate tdu, final String legacySql, final EntityMd md) {
         this.retriever = retriever;
         this.tdi = tdi;
         this.tdu = tdu;
         this.legacySql = legacySql;
+        this.md = md;
     }
     
     public Optional<Long> exec(final Function<TargetDataUpdate, Optional<Long>> updater, Function<TargetDataInsert, Optional<Long>> inserter) {
@@ -39,4 +42,11 @@ public class CompiledRetriever {
         return updater.apply(tdu);
     }
 
+    public Class<? extends AbstractEntity<?>> getType() {
+    	return retriever.type();
+    }
+    
+    public List<PropInfo> getContainers() {
+    	return tdi != null ? tdi.containers : tdu.containers;
+    }
 }
