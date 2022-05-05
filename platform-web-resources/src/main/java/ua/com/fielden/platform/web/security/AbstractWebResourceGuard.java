@@ -1,10 +1,8 @@
 package ua.com.fielden.platform.web.security;
 
 import static java.lang.String.format;
-import static ua.com.fielden.platform.basic.config.IApplicationSettings.AuthMode.SSO;
 import static ua.com.fielden.platform.security.session.Authenticator.fromString;
 import static ua.com.fielden.platform.web.resources.webui.LoginResource.BINDING_PATH;
-import static ua.com.fielden.platform.web.resources.webui.LoginResource.SSO_BINDING_PATH;
 
 import java.util.Optional;
 
@@ -47,7 +45,6 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
     private final IUniversalConstants constants;
     private final String domainName;
     private final String path;
-    private final AuthMode authMode;
 
     /**
      * Principle constructor.
@@ -66,7 +63,6 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
         this.constants = injector.getInstance(IUniversalConstants.class);
         this.domainName = domainName;
         this.path = path;
-        this.authMode = injector.getInstance(IApplicationSettings.class).authMode();
 
         if (StringUtils.isEmpty(domainName) || StringUtils.isEmpty(path)) {
             throw new IllegalStateException("Both the domain name and the applicatin binding path should be provided.");
@@ -89,7 +85,13 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
             final Optional<Authenticator> oAuth = extractAuthenticator(request);
             if (!oAuth.isPresent()) {
                 logger.warn(format("Authenticator cookie is missing for a request to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
-                forbid(response);
+                // GET requests can be redirected to the login resource, which takes care of both RSO and SSO workflows.
+                // Need to forbid requests from SW containing "?checksum=true", which is specifically used to redirect to /login from the client side.
+                if (Method.GET.equals(request.getMethod()) && !request.getResourceRef().toString().contains("?checksum=true")) {
+                    response.redirectTemporary(BINDING_PATH);
+                } else {
+                    forbid(response);
+                }
                 return false;
             }
 
