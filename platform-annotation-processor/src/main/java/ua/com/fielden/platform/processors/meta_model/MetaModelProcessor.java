@@ -101,9 +101,9 @@ public class MetaModelProcessor extends AbstractProcessor {
         return ClassName.get(element.getPackageName(), element.getSimpleName());
     }
 
-    private static boolean isMetamodeled(TypeElement element) {
-        return EntityFinder.isEntity(element) && 
-                EntityFinder.isDomainEntity(EntityElement.wrapperFor(element));
+    protected static boolean isMetamodeled(TypeElement element) {
+        return element.getAnnotation(MapEntityTo.class) != null ||
+                element.getAnnotation(DomainEntity.class) != null;
     }
     
     private static boolean isPropertyTypeMetamodeled(PropertyElement element) {
