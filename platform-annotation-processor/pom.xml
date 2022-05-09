@@ -1,65 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <parent>
-        <groupId>fielden</groupId>
-        <artifactId>platform-parent</artifactId>
-        <version>1.4.6-SNAPSHOT</version>
-    </parent>
-
+    <groupId>fielden</groupId>
     <artifactId>platform-annotation-processor</artifactId>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
+    <version>1.4.6-SNAPSHOT</version>
+    <name>Trident Genesis Platform Annotation Processor Parent</name>
+    <description>
+        A parent project for annotation processors, which live in separate modules.
+    </description>
+    <inceptionYear>2022</inceptionYear>
+    <organization>
+        <name>Fielden Management Services</name>
+        <url>http://www.fielden.com.au/</url>
+    </organization>
 
-    <name>Trident Genesis Platform Annotation Processor</name>
+    <modules>
+        <module>platform-annotation-processor-generator</module>
+        <module>platform-annotation-processor-verifier</module>
+    </modules>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+
     <dependencies>
         <dependency>
-            <groupId>fielden</groupId>
-            <artifactId>platform-annotations</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>fielden</groupId>
-            <artifactId>platform-pojo-bl</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.squareup</groupId>
-            <artifactId>javapoet</artifactId>
-            <version>1.13.0</version>
-        </dependency>
-        <dependency>
-            <groupId>com.google.auto.service</groupId>
-            <artifactId>auto-service</artifactId>
-            <version>1.0.1</version>
-            <scope>provided</scope>
-        </dependency>   
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-api</artifactId>
-            <version>2.13.0</version>
-        </dependency>
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
-            <version>2.13.0</version>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.13.1</version>
         </dependency>
     </dependencies>
-    <build>
-        <resources>
-            <resource>
-                <directory>src/main/resources</directory>
-                <excludes>
-                    <exclude>**/log4j2-test.xml</exclude>
-                </excludes>
-            </resource>
-            <resource>
-                <directory>src/main/java</directory>
-                <excludes>
-                    <exclude>**/*.java</exclude>
-                </excludes>
-            </resource>
-        </resources>
 
+    <build>
         <pluginManagement>
             <plugins>
                 <plugin>
@@ -70,35 +43,153 @@
                         <release>16</release>
                         <encoding>UTF-8</encoding>
                         <optimize>true</optimize>
-                    </configuration>					
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-surefire-plugin</artifactId>
+                    <version>2.22.2</version>
+                    <configuration>
+                        <!-- forkMode>pertest</forkMode -->
+                        <argLine>-Djava.system.class.loader=ua.com.fielden.platform.classloader.TgSystemClassLoader</argLine>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-javadoc-plugin</artifactId>
+                    <version>3.2.0</version>
+                    <configuration>
+                        <additionalparam>-Xdoclint:none</additionalparam>
+                        <detectJavaApiLink>false</detectJavaApiLink>
+                    </configuration>
                     <executions>
                         <execution>
-                            <id>default-compile</id>
-                            <configuration>
-                                <compilerArgument>-proc:none</compilerArgument>
-                            </configuration>
-                        </execution>
-                        <execution>
-                            <id>default-testCompile</id>
-                            <configuration>
-                                <compilerArgument>-proc:none</compilerArgument>
-                            </configuration>
+                            <id>attach-javadocs</id>
+                            <goals>
+                                <goal>jar</goal>
+                            </goals>
                         </execution>
                     </executions>
                 </plugin>
                 <plugin>
-                    <artifactId>maven-assembly-plugin</artifactId>
-                    <configuration>
-                        <archive>
-                            <manifest>
-                            </manifest>
-                        </archive>
-                        <descriptorRefs>
-                            <descriptorRef>jar-with-dependencies</descriptorRef>
-                        </descriptorRefs>
-                    </configuration>
+                    <artifactId>maven-deploy-plugin</artifactId>
+                    <version>3.0.0-M1</version>
                 </plugin>
             </plugins>
         </pluginManagement>
+
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.2.0</version>
+                <configuration>
+                    <encoding>UTF-8</encoding>
+                </configuration>
+            </plugin>
+            <!-- The problem described below seems to have been resolved. Keeping this description for posterity in case similar occurs again.
+
+                 The maven-source-plugin has been commented as it appears to get executed twice during
+                 `mvn deploy`, which causes uploads to GitHub to undergo upgrade as a resource cannot
+                 be overwritten, and uploading the same file with the same name and the same build
+                 timestamp causes this.  This behaviour might be fixed in maven 3.7 - see:
+                 https://issues.apache.org/jira/browse/MNG-5868 -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-source-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>attach-sources</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <configuration>
+                    <additionalparam>-Xdoclint:none</additionalparam>
+                    <additionalOptions>-Xdoclint:none</additionalOptions>
+                    <additionalJOption>-Xdoclint:none</additionalJOption>
+                 </configuration>
+                <executions>
+                    <execution>
+                        <id>attach-javadocs</id>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <!-- explicitly define maven-deploy-plugin after other to force exec order -->
+                <artifactId>maven-deploy-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>deploy</id>
+                        <phase>deploy</phase>
+                        <goals>
+                            <goal>deploy</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-release-plugin</artifactId>
+                <version>2.5.3</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.apache.maven.scm</groupId>
+                        <artifactId>maven-scm-api</artifactId>
+                        <version>1.11.2</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.apache.maven.scm</groupId>
+                        <artifactId>maven-scm-provider-gitexe</artifactId>
+                        <version>1.11.2</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+            <artifactId>maven-assembly-plugin</artifactId>
+                <configuration>
+                    <archive>
+                        <manifest>
+                        </manifest>
+                    </archive>
+                    <descriptorRefs>
+                        <descriptorRef>jar-with-dependencies</descriptorRef>
+                    </descriptorRefs>
+                </configuration>
+            </plugin>
+        </plugins>
     </build>
+
+    <issueManagement>
+        <system>GitHub Issues</system>
+        <url>https://github.com/fieldenms/tg/issues</url>
+    </issueManagement>
+
+    <distributionManagement>
+        <repository>
+            <id>github-tg</id>
+            <name>GitHub fieldenms Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/fieldenms/tg</url>
+        </repository>
+        <snapshotRepository>
+            <id>github-tg</id>
+            <name>GitHub fieldenms Apache Maven Packages</name>
+            <url>https://maven.pkg.github.com/fieldenms/tg</url>
+        </snapshotRepository>
+    </distributionManagement>
+
+    <scm>
+        <connection>scm:git:git@github.com:fieldenms/tg.git</connection>
+        <url>scm:git:git@github.com:fieldenms/tg.git</url>
+        <developerConnection>scm:git:git@github.com:fieldenms/tg.git</developerConnection>
+        <tag>HEAD</tag>
+    </scm>
 </project>
