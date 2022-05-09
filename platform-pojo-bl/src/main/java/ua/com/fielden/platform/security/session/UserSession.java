@@ -59,6 +59,11 @@ public class UserSession extends AbstractEntity<DynamicEntityKey> {
     @MapTo
     @Title(value = "Last Access", desc = "The time when the session was last accessed.")
     private Date lastAccess;
+    
+    @IsProperty(length = 255)
+    @MapTo
+    @Title(value = "Custom Data", desc = "Custom data with custom semantics. Initially intended to support SSO logouts.")
+    private String customData;
 
     private Optional<Authenticator> authenticator = Optional.empty();
 
@@ -120,6 +125,16 @@ public class UserSession extends AbstractEntity<DynamicEntityKey> {
 
     public User getUser() {
         return user;
+    }
+
+    @Observable
+    public UserSession setCustomData(final String customData) {
+        this.customData = customData;
+        return this;
+    }
+
+    public String getCustomData() {
+        return customData;
     }
 
 }

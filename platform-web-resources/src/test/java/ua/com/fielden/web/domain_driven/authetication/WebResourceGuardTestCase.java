@@ -89,7 +89,7 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         constants.setNow(dateTime("2015-04-23 17:26:00"));
         // establish a new session
         final User currUser = getInstance(IUserProvider.class).getUser();
-        final UserSession session = coSession.newSession(currUser, true);
+        final UserSession session = coSession.newSession(currUser, true, null);
         final String authenticator = session.getAuthenticator().get().toString();
 
         final Request request = new Request(Method.GET, format("%s/users/%s/%s/%s", baseUri, currUser.getKey(), TgPerson.class.getSimpleName(), 12L));
@@ -107,7 +107,7 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         constants.setNow(dateTime("2015-04-23 17:26:00"));
         // establish a new session
         final User currUser = getInstance(IUserProvider.class).getUser();
-        final UserSession session = coSession.newSession(currUser, true);
+        final UserSession session = coSession.newSession(currUser, true, null);
         final String authenticator = session.getAuthenticator().get().toString();
 
         final Request request = new Request(Method.GET, format("%s/users/%s/%s/%s", baseUri, User.system_users.UNIT_TEST_USER, TgPerson.class.getSimpleName(), 12L));
@@ -129,7 +129,7 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         constants.setNow(dateTime("2015-04-23 17:26:00"));
         // establish a new session
         final User currUser = getInstance(IUserProvider.class).getUser();
-        final UserSession session = coSession.newSession(currUser, true);
+        final UserSession session = coSession.newSession(currUser, true, null);
         final String authenticator = session.getAuthenticator().get().toString();
 
         // some time passes by sufficient to evict authenticators from cache
@@ -167,7 +167,7 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         constants.setNow(dateTime("2015-04-23 17:26:00"));
         // establish a new session
         final User currUser = getInstance(IUserProvider.class).getUser();
-        final UserSession session = coSession.newSession(currUser, false);
+        final UserSession session = coSession.newSession(currUser, false, null);
         final String authenticator = session.getAuthenticator().get().toString();
 
         // some time passes by sufficient to evict authenticators from cache, but insufficient to invalidate the original authenticator from an untrusted device
@@ -206,7 +206,7 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         constants.setNow(dateTime("2015-04-23 17:26:00"));
         // establish a new session
         final User currUser = getInstance(IUserProvider.class).getUser();
-        final UserSession session = coSession.newSession(currUser, false);
+        final UserSession session = coSession.newSession(currUser, false, null);
         final String authenticator = session.getAuthenticator().get().toString();
 
         // sufficient time passes by to invalidate the authenticator
@@ -226,7 +226,7 @@ public class WebResourceGuardTestCase extends AbstractDaoTestCase {
         constants.setNow(dateTime("2015-04-23 17:26:00"));
         // establish a new session
         final User currUser = getInstance(IUserProvider.class).getUser();
-        final UserSession session = coSession.newSession(currUser, true);
+        final UserSession session = coSession.newSession(currUser, true, null);
         final String stolenAuthenticator = session.getAuthenticator().get().toString();
 
         // an authenticator gets stolen and used by an adversary after sufficiently long time to evict authenticators from cache has passed

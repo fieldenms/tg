@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.lang.String.format;
 import static org.restlet.data.MediaType.TEXT_HTML;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.createRepresentation;
 import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.extractAuthenticator;
@@ -70,6 +71,9 @@ public class LogoutResource extends AbstractWebResource {
     @Get
     public Representation logout() {
         try {
+            final String sid = getQueryValue("sid");
+            logger.info(format("LOGOUT sid (if any): [%s]", sid));
+            coUserSession.clearAllWithCustomData(sid);
             // check if there is a valid authenticator
             // if there is then the logout request is authentic and should be honored
             final Optional<Authenticator> oAuth = extractAuthenticator(getRequest());

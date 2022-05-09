@@ -41,11 +41,11 @@ public class UserSessionFraudulentAuthenticationAttemptsTestCase extends Abstrac
 
         // first session is from trusted device
         constants.setNow(dateTime("2015-04-23 11:00:00"));
-        coSession.newSession(currUser, true);
+        coSession.newSession(currUser, true, null);
 
         // second session from untrusted device, and this is the device where the authenticator gets stolen from
         constants.setNow(dateTime("2015-04-23 13:00:00"));
-        final UserSession newSession = coSession.newSession(currUser, false);
+        final UserSession newSession = coSession.newSession(currUser, false, null);
 
         // let's fabricate a fraudulent authenticator
         final String fraudulentAuthenticator = newSession.getAuthenticator().get().username + Authenticator.AUTHENTICATOR_SEPARATOR +
@@ -79,11 +79,11 @@ public class UserSessionFraudulentAuthenticationAttemptsTestCase extends Abstrac
 
         // first session is from trusted device
         constants.setNow(dateTime("2015-04-23 11:00:00"));
-        coSession.newSession(currUser, true);
+        coSession.newSession(currUser, true, null);
 
         // second session, also from a trusted device, the authenticator from this device got stolen
         constants.setNow(dateTime("2015-04-23 13:00:00"));
-        final UserSession newSession = coSession.newSession(currUser, true);
+        final UserSession newSession = coSession.newSession(currUser, true, null);
         final String authenticator = newSession.getAuthenticator().get().toString();
 
 
@@ -121,14 +121,14 @@ public class UserSessionFraudulentAuthenticationAttemptsTestCase extends Abstrac
 
         // trusted session for USER1
         constants.setNow(dateTime("2015-04-23 16:26:00"));
-        coSession.newSession(user1, true); // from work
+        coSession.newSession(user1, true, null); // from work
 
         up.setUsername("USER2", getInstance(IUser.class));
         final User user2 = up.getUser();
 
         // trusted session for USER2
         constants.setNow(dateTime("2015-04-23 16:30:00"));
-        coSession.newSession(user2, true); // from work
+        coSession.newSession(user2, true, null); // from work
     }
 
 }

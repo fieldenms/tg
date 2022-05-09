@@ -208,7 +208,7 @@ public class LoginResource extends AbstractWebResource {
                 final User user = (User) authResult.getInstance();
                 // let's use this opportunity to clear expired sessions for the user
                 coUserSession.clearExpired(user);
-                final UserSession session = coUserSession.newSession(user, credo.trustedDevice);
+                final UserSession session = coUserSession.newSession(user, credo.trustedDevice, null);
          
                 // ...and provide the response with an authenticating cookie
                 assignAuthenticatingCookie(user, constants.now(), session.getAuthenticator().get(), domainName, path, getRequest(), getResponse());

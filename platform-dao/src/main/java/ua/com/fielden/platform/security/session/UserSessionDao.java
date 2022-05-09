@@ -3,6 +3,7 @@ package ua.com.fielden.platform.security.session;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -13,9 +14,12 @@ import static ua.com.fielden.platform.security.session.Authenticator.mkToken;
 import java.security.SignatureException;
 import java.sql.PreparedStatement;
 import java.util.Date;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormat;
@@ -165,6 +169,35 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         invalidateCache(query);
         
         defaultBatchDelete(query);
+    }
+
+    @Override
+    public int clearAllWithCustomData(final String customData) {
+        // if customData is empty there is nothing to compare to, simply return
+        if (StringUtils.isEmpty(customData)) {
+            return 0;
+        }
+
+        // first delete from the database in a separate transaction
+        final int count = deleteSessionsByCustomData(customData);
+
+        // then delete all matching sessions from cache
+        final List<String> keys = cache.asMap().entrySet().stream().filter(p -> customData.equals(p.getValue().getCustomData())).map(Map.Entry::getKey).collect(toList());
+        cache.invalidateAll(keys);
+
+        return count;
+    }
+
+    /**
+     * This method is used strictly to enforce deletion in a separate transaction.
+     *
+     * @param customData
+     * 
+     * @return the number of deleted sessions
+     */
+    @SessionRequired(allowNestedScope = false)
+    protected int deleteSessionsByCustomData(final String customData) {
+        return this.defaultBatchDelete(select(UserSession.class).where().prop("customData").eq().val(customData).model());
     }
 
     /**
@@ -333,7 +366,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             // there is a tiny chance that there could be a clash of seriesId for the same user...
             // in this case, we may need to implement a re-try...
             // but let's first see if that is a problem by logging warning to this effect.
-            final UserSession newSession = newSessionToReplaceOld(user, session.isTrusted(), of(authenticator));
+            final UserSession newSession = newSessionToReplaceOld(user, session.isTrusted(), of(authenticator), session.getCustomData());
             forceUpdateExpiryTimeForSession(session.getId(), user, constants.now().plusMinutes(untrustedDurationMins));
             return of(newSession);
         } catch (final Exception ex) {
@@ -343,8 +376,8 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
     }
     
     /**
-     * Forcibly updates the expiry time for a session that is now repaced with new one.
-     * Forcibly means without regards for any concurrent modification, ignoring versioning.
+     * Forcibly updates the expiry time for a session that is now replaced with a new one.
+     * Forcibly means without regards for any concurrent modification, ignoring versioning to avoid conflict detection.
      *
      * @param oldSessionId
      * @param user
@@ -380,8 +413,8 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
 
     @Override
     @SessionRequired
-    public UserSession newSession(final User user, final boolean isDeviceTrusted) {
-        return newSessionToReplaceOld(user, isDeviceTrusted, empty());
+    public UserSession newSession(final User user, final boolean isDeviceTrusted, final String customData) {
+        return newSessionToReplaceOld(user, isDeviceTrusted, empty(), customData);
     }
 
     /**
@@ -390,13 +423,14 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
      * @param user
      * @param isDeviceTrusted
      * @param oldAuthenticator
+     * @param customData 
      * @return
      */
     @SessionRequired
-    protected UserSession newSessionToReplaceOld(final User user, final boolean isDeviceTrusted, final Optional<String> oldAuthenticator) {
+    protected UserSession newSessionToReplaceOld(final User user, final boolean isDeviceTrusted, final Optional<String> oldAuthenticator, final String customData) {
         // let's first construct the next series id
         final String seriesId = genSeriesId();
-        final UserSession session = new_().setUser(user).setSeriesId(seriesHash(seriesId));
+        final UserSession session = new_().setUser(user).setSeriesId(seriesHash(seriesId)).setCustomData(customData);
         
         session.setTrusted(isDeviceTrusted);
         final Date expiryTime = calcExpiryTime(isDeviceTrusted);
@@ -408,7 +442,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         final UserSession saved = assignAuthenticator(save(session), seriesId);
 
         // need to cache the established session as a plain object
-        final UserSession userSessionForCache = saved.copyTo(newPlainEntity(UserSession.class,  saved.getId()));
+        final UserSession userSessionForCache = saved.copyTo(newPlainEntity(UserSession.class, saved.getId()));
         userSessionForCache.setAuthenticator(saved.getAuthenticator().get());
         oldAuthenticator.ifPresent(auth -> cache.put(auth, userSessionForCache));
         cache.put(saved.getAuthenticator().get().toString(), userSessionForCache);
