@@ -246,7 +246,9 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         try {
             seriesIdHash = crypto.calculateRFC2104HMAC(seriesId, hashingKey);
         } catch (final SignatureException ex) {
-            throw new IllegalStateException(ex);
+            final String msg = "Could not hash a series ID.";
+            logger.error(msg, ex);
+            throw new SecurityException(msg, ex);
         }
         return seriesIdHash;
     }
@@ -291,7 +293,9 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             }
 
         } catch (final SignatureException ex) {
-            throw new IllegalStateException(ex);
+            final String msg = "Could not calculate a hash for session authenticator.";
+            logger.error(msg, ex);
+            throw new SecurityException(msg, ex);
         }
 
         // the provided authenticator has been verified based on its content and hash
@@ -484,7 +488,9 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             final String hash = crypto.calculateRFC2104HMAC(token, hashingKey);
             return new Authenticator(Optional.of(expiryTime), token, hash);
         } catch (final SignatureException ex) {
-            throw new IllegalStateException(ex);
+            final String msg = "Could not make authneticator.";
+            logger.error(msg, ex);
+            throw new SecurityException(msg, ex);
         }
     }
 
