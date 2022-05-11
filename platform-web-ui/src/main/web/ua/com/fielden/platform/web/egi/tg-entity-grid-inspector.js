@@ -1003,8 +1003,8 @@ Polymer({
         //Initialising property column mappings
         this.columnPropertiesMapper = (function (entity) {
             const result = [];
-            for (let index = 0; index < this.columns.length; index++) {
-                const column = this.columns[index];
+            for (let index = 0; index < this.allColumns.length; index++) {
+                const column = this.allColumns[index];
                 const entry = {
                     dotNotation: column.property,
                     value: this.getBindedValue(entity, column),
