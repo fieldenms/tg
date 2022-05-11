@@ -9,6 +9,7 @@ import static ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo.getEn
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.unmodifiableListOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -42,8 +43,8 @@ public class MigrationUtils {
             } else if (!el.subitems().isEmpty()) {
                 for (final EqlPropertyMetadata subitem : el.subitems()) {
                     if (subitem.expressionModel == null) {
-                        props.add(new PropMd(el.name + "." + subitem.name, subitem.javaType, subitem.column.name, subitem.required,
-                                subitem.hibType instanceof IUtcDateTimeType,
+                        props.add(new PropMd(el.name + "." + subitem.name, subitem.javaType, subitem.column.name, isUnionEntityType(el.javaType) ? false : el.required, 
+                                subitem.hibType instanceof IUtcDateTimeType, 
                                 isPersistedEntityType(subitem.javaType)
                                         ? keyPaths(el.name + "." + subitem.name, (Class<? extends AbstractEntity<?>>) subitem.javaType)
                                         : unmodifiableListOf(el.name + "." + subitem.name)));
