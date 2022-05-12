@@ -184,6 +184,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
 
         // first delete from the database in a separate transaction
         final int count = deleteSessionsByCustomData(sid);
+        logger.info(format("SSO sessions deleted [%s] for sid [%s].", count, sid));
 
         // then delete all matching sessions from cache
         final List<String> keys = cache.asMap().entrySet().stream().filter(p -> sid.equals(p.getValue().getSid())).map(Map.Entry::getKey).collect(toList());
@@ -440,14 +441,14 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
      * @param user
      * @param isDeviceTrusted
      * @param oldAuthenticator
-     * @param customData 
+     * @param sid 
      * @return
      */
     @SessionRequired
-    protected UserSession newSessionToReplaceOld(final User user, final boolean isDeviceTrusted, final Optional<String> oldAuthenticator, final String customData) {
+    protected UserSession newSessionToReplaceOld(final User user, final boolean isDeviceTrusted, final Optional<String> oldAuthenticator, final String sid) {
         // let's first construct the next series id
         final String seriesId = genSeriesId();
-        final UserSession session = new_().setUser(user).setSeriesId(seriesHash(seriesId)).setSid(customData);
+        final UserSession session = new_().setUser(user).setSeriesId(seriesHash(seriesId)).setSid(sid);
         
         session.setTrusted(isDeviceTrusted);
         final Date expiryTime = calcExpiryTime(isDeviceTrusted);

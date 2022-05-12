@@ -86,8 +86,8 @@ public class LogoutResource extends AbstractWebResource {
                 final Optional<UserSession> maybeSession = coUserSession.currentSession(userProvider.getUser(), auth.toString(), false);
                 if (maybeSession.isPresent()) {
                     final UserSession session = maybeSession.get();
-                    coUserSession.clearSession(session);
                     coUserSession.clearAllWithSid(session.getSid());
+                    coUserSession.clearSession(session);
                 }
                 // let's use this opportunity to clear expired sessions for the user
                 coUserSession.clearExpired(userProvider.getUser());
