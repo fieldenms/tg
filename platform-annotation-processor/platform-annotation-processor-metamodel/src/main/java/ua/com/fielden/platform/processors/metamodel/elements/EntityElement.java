@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.processors.meta_model;
+package ua.com.fielden.platform.processors.metamodel.elements;
 
 import java.util.Objects;
 

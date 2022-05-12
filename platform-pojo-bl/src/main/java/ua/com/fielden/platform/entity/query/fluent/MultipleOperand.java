@@ -4,7 +4,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IMultipleOperand;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
-import ua.com.fielden.platform.processors.meta_model.IConvertableToPath;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 abstract class MultipleOperand<T, ET extends AbstractEntity<?>> //
 		extends SingleOperand<T, ET> //

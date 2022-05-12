@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.processors.meta_model;
+package ua.com.fielden.platform.processors.metamodel.elements;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -298,4 +298,10 @@ public class ElementFinder {
         return annotMirror.getAnnotationType().asElement().getSimpleName();
     }
 
+    public static long countDeclaredFields(TypeElement typeElement) {
+        return typeElement.getEnclosedElements().stream()
+                .filter(el -> el.getKind() == ElementKind.FIELD)
+                .map(el -> (VariableElement) el)
+                .count();
+    }
 }

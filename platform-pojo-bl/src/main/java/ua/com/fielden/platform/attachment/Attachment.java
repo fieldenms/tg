@@ -5,7 +5,7 @@ import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitl
 
 import java.util.Date;
 
-import ua.com.fielden.platform.annotations.meta_model.DomainEntity;
+import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
 import ua.com.fielden.platform.attachment.definers.AssignAttachmentTitle;
 import ua.com.fielden.platform.attachment.definers.UpdateAttachmentRevNo;
 import ua.com.fielden.platform.attachment.validators.CanBeUsedAsLastAttachmentRev;

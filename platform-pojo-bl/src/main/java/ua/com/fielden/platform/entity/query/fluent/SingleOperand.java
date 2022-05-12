@@ -11,7 +11,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleOperand;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
-import ua.com.fielden.platform.processors.meta_model.IConvertableToPath;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 abstract class SingleOperand<T, ET extends AbstractEntity<?>> //
 		extends AbstractQueryLink //

@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.annotations.meta_model;
+package ua.com.fielden.platform.annotations.metamodel;
 
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.RUNTIME;

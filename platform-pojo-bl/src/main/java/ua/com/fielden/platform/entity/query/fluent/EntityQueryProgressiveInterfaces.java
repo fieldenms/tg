@@ -11,7 +11,7 @@ import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
-import ua.com.fielden.platform.processors.meta_model.IConvertableToPath;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 /**
  * Class for collecting all interfaces, which are part of Entity Query

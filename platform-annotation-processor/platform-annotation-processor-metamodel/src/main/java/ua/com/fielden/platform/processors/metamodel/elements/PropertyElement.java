@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.processors.meta_model;
+package ua.com.fielden.platform.processors.metamodel.elements;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -9,7 +9,7 @@ import javax.lang.model.type.TypeMirror;
 public class PropertyElement {
     private VariableElement varElement;
     
-    PropertyElement(VariableElement varElement) {
+    public PropertyElement(VariableElement varElement) {
         this.varElement = varElement;
     }
     

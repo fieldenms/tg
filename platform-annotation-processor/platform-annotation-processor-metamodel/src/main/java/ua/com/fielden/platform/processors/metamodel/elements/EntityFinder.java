@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.processors.meta_model;
+package ua.com.fielden.platform.processors.metamodel.elements;
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -15,12 +15,13 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
 
-import ua.com.fielden.platform.annotations.meta_model.DomainEntity;
+import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.processors.metamodel.MetaModelConstants;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntityFinder {
@@ -167,6 +168,8 @@ public class EntityFinder {
     }
     
     public static boolean isPersistentEntity(EntityElement element) {
+        // is persistent entity one that is annotated with @MapEntityTo
+        // or one that extends AbstractPersistentEntity ?
         return element.getTypeElement().getAnnotation(MapEntityTo.class) != null;
     }
     
@@ -214,5 +217,50 @@ public class EntityFinder {
         return ElementFinder.findSuperclasses(entityElement.getTypeElement(), ROOT_ENTITY_CLASS, true).stream()
                 .map(typeEl -> new EntityElement(typeEl, elementUtils))
                 .toList();
+    }
+
+    private static String getEntitySimpleName(final String metaModelSimpleName) {
+        int index = metaModelSimpleName.lastIndexOf(MetaModelConstants.META_MODEL_NAME_SUFFIX);
+
+        if (index == -1) {
+            return null;
+        }
+
+        return metaModelSimpleName.substring(0, index);
+    }
+
+    private static String getEntityPackageName(final String metaModelPackageName) {
+        int index = metaModelPackageName.lastIndexOf(MetaModelConstants.META_MODEL_PKG_NAME_SUFFIX);
+
+        if (index == -1) {
+            return null;
+        }
+
+        return metaModelPackageName.substring(0, index);
+    }
+
+    private static String getEntityQualifiedName(final String metaModelQualName) {
+        final int lastDot = metaModelQualName.lastIndexOf('.');
+        final String metaModelSimpleName = metaModelQualName.substring(lastDot + 1);
+        final String metaModelPackageName = metaModelQualName.substring(0, lastDot);
+
+        final String entitySimpleName = getEntitySimpleName(metaModelSimpleName);
+        if (entitySimpleName == null)
+            return null;
+
+        final String entityPackageName = getEntityPackageName(metaModelPackageName);
+        if (entityPackageName == null)
+            return null;
+
+        return String.format("%s.%s", entityPackageName, entitySimpleName);
+    }
+    
+    public static EntityElement findEntityForMetaModel(MetaModelElement mme, Elements elementUtils) {
+        final String entityQualName = getEntityQualifiedName(mme.getQualifiedName().toString());
+        if (entityQualName == null)
+            return null;
+        final TypeElement typeElement = elementUtils.getTypeElement(entityQualName);
+
+        return typeElement == null ? null : new EntityElement(typeElement, elementUtils);
     }
 }

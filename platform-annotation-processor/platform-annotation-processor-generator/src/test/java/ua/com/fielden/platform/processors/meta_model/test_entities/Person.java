@@ -1,14 +1,15 @@
 package ua.com.fielden.platform.processors.meta_model.test_entities;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.Unique;
 
 @KeyType(String.class)
-public class Person extends AbstractEntity<String> {
+public class Person extends ActivatableAbstractEntity<String> {
     @IsProperty
     @MapTo
     @Title(value = "Name", desc = "The name of this person.")
@@ -28,6 +29,25 @@ public class Person extends AbstractEntity<String> {
     @MapTo
     @Title(value = "House", desc = "A house belonging to this person.")
     private House house;
+    
+    @IsProperty
+    @MapTo
+    @Title(value = "Active", desc = "Person active")
+    @Unique
+    private boolean active;
+
+    @Observable
+    public Person setActive(final boolean active) {
+        this.active = active;
+        return this;
+    }
+
+    public boolean getActive() {
+        return active;
+    }
+
+    
+
 
     @Observable
     public Person setHouse(final House house) {
