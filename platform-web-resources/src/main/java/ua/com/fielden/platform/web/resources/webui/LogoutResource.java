@@ -71,18 +71,23 @@ public class LogoutResource extends AbstractWebResource {
     @Get
     public Representation logout() {
         try {
+            // Logout might be initiated from a TG-based app or from a front-channel logout process by OP (e.g., Microsoft Office365 portal).
+            // In case of front-channel request, a sid is expected as the request parameter.
+            // In case of TG-based app request, a corresponding sid needs to be identified from the current session
             final String sid = getQueryValue("sid");
             logger.info(format("LOGOUT sid (if any): [%s]", sid));
-            coUserSession.clearAllWithCustomData(sid);
+            coUserSession.clearAllWithSid(sid);
             // check if there is a valid authenticator
             // if there is then the logout request is authentic and should be honored
             final Optional<Authenticator> oAuth = extractAuthenticator(getRequest());
             if (oAuth.isPresent()) {
                 final Authenticator auth = oAuth.get();
                 userProvider.setUsername(auth.username, coUser);
-                final Optional<UserSession> session = coUserSession.currentSession(userProvider.getUser(), auth.toString(), false);
-                if (session.isPresent()) {
-                    coUserSession.clearSession(session.get());
+                final Optional<UserSession> maybeSession = coUserSession.currentSession(userProvider.getUser(), auth.toString(), false);
+                if (maybeSession.isPresent()) {
+                    final UserSession session = maybeSession.get();
+                    coUserSession.clearSession(session);
+                    coUserSession.clearAllWithSid(session.getSid());
                 }
                 // let's use this opportunity to clear expired sessions for the user
                 coUserSession.clearExpired(userProvider.getUser());

@@ -35,6 +35,7 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.annotations.SessionCache;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
@@ -60,6 +61,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
     private final SessionIdentifierGenerator crypto;
     private final Cache<String, UserSession> cache;
     private final IUniversalConstants constants;
+    private final ISsoSessionController ssoSessionController;
 
     @Inject
     public UserSessionDao(
@@ -69,6 +71,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             final @SessionCache Cache<String, UserSession> cache,
             final IUniversalConstants constants,
             final SessionIdentifierGenerator crypto,
+            final ISsoSessionController ssoSessionController,
             final IFilter filter) {
         super(filter);
         this.constants = constants;
@@ -77,6 +80,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         this.untrustedDurationMins = untrustedDurationMins;
         this.crypto = crypto;
         this.cache = cache;
+        this.ssoSessionController = ssoSessionController;
     }
 
     @Override
@@ -172,17 +176,17 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
     }
 
     @Override
-    public int clearAllWithCustomData(final String customData) {
-        // if customData is empty there is nothing to compare to, simply return
-        if (StringUtils.isEmpty(customData)) {
+    public int clearAllWithSid(final String sid) {
+        // if sid is empty there is nothing to compare to, simply return
+        if (StringUtils.isEmpty(sid)) {
             return 0;
         }
 
         // first delete from the database in a separate transaction
-        final int count = deleteSessionsByCustomData(customData);
+        final int count = deleteSessionsByCustomData(sid);
 
         // then delete all matching sessions from cache
-        final List<String> keys = cache.asMap().entrySet().stream().filter(p -> customData.equals(p.getValue().getCustomData())).map(Map.Entry::getKey).collect(toList());
+        final List<String> keys = cache.asMap().entrySet().stream().filter(p -> sid.equals(p.getValue().getSid())).map(Map.Entry::getKey).collect(toList());
         cache.invalidateAll(keys);
 
         return count;
@@ -191,13 +195,13 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
     /**
      * This method is used strictly to enforce deletion in a separate transaction.
      *
-     * @param customData
+     * @param sid
      * 
      * @return the number of deleted sessions
      */
     @SessionRequired(allowNestedScope = false)
-    protected int deleteSessionsByCustomData(final String customData) {
-        return this.defaultBatchDelete(select(UserSession.class).where().prop("customData").eq().val(customData).model());
+    protected int deleteSessionsByCustomData(final String sid) {
+        return this.defaultBatchDelete(select(UserSession.class).where().prop("sid").eq().val(sid).model());
     }
 
     /**
@@ -354,7 +358,8 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             logger.warn(format("Session for user [%s] has expired at [%s], access denied (skip regeneration == %s).", user, formatter.print(session.getExpiryTime().getTime()), skipRegeneration));
             // if authenticator has expired then use this opportunity to clear all expired sessions for the current
             clearExpired(user);
-            return Optional.empty();
+            ssoSessionController.invalidate(session.getSid());
+            return empty();
         }
 
         // if this point is reached then the identified session is considered valid
@@ -362,16 +367,24 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         // if not then simply return the identified session back
         // in practice this is limited to SSE requests that never return a response and thus would not be able to return a new security token back to the client
         if (skipRegeneration) {
-            return Optional.of(session);
+            return of(session);
         }
-        
+
         // otherwise, let's generate a new session
         try {
             // there is a tiny chance that there could be a clash of seriesId for the same user...
             // in this case, we may need to implement a re-try...
             // but let's first see if that is a problem by logging warning to this effect.
-            final UserSession newSession = newSessionToReplaceOld(user, session.isTrusted(), of(authenticator), session.getCustomData());
+            final UserSession newSession = newSessionToReplaceOld(user, session.isTrusted(), of(authenticator), session.getSid());
             forceUpdateExpiryTimeForSession(session.getId(), user, constants.now().plusMinutes(untrustedDurationMins));
+
+            final Result ssoRefreshed = ssoSessionController.refresh(session.getSid());
+            if (!ssoRefreshed.isSuccessful()) {
+                clearAllWithSid(session.getSid());
+                ssoSessionController.invalidate(session.getSid());
+                return empty();
+            }
+            
             return of(newSession);
         } catch (final Exception ex) {
             logger.warn(format("Saving of a new session for user [%s] did not succeed. Using previously verified session instead...", user), ex);
@@ -417,8 +430,8 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
 
     @Override
     @SessionRequired
-    public UserSession newSession(final User user, final boolean isDeviceTrusted, final String customData) {
-        return newSessionToReplaceOld(user, isDeviceTrusted, empty(), customData);
+    public UserSession newSession(final User user, final boolean isDeviceTrusted, final String sid) {
+        return newSessionToReplaceOld(user, isDeviceTrusted, empty(), sid);
     }
 
     /**
@@ -434,7 +447,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
     protected UserSession newSessionToReplaceOld(final User user, final boolean isDeviceTrusted, final Optional<String> oldAuthenticator, final String customData) {
         // let's first construct the next series id
         final String seriesId = genSeriesId();
-        final UserSession session = new_().setUser(user).setSeriesId(seriesHash(seriesId)).setCustomData(customData);
+        final UserSession session = new_().setUser(user).setSeriesId(seriesHash(seriesId)).setSid(customData);
         
         session.setTrusted(isDeviceTrusted);
         final Date expiryTime = calcExpiryTime(isDeviceTrusted);

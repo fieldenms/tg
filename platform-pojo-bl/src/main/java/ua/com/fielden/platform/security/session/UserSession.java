@@ -62,8 +62,8 @@ public class UserSession extends AbstractEntity<DynamicEntityKey> {
     
     @IsProperty(length = 255)
     @MapTo
-    @Title(value = "Custom Data", desc = "Custom data with custom semantics. Initially intended to support SSO logouts.")
-    private String customData;
+    @Title(value = "Session ID", desc = "A session ID, designed specifically to support SSO. This value should represent sid as provided during the establishment of an SSO session.")
+    private String sid;
 
     private Optional<Authenticator> authenticator = Optional.empty();
 
@@ -128,13 +128,13 @@ public class UserSession extends AbstractEntity<DynamicEntityKey> {
     }
 
     @Observable
-    public UserSession setCustomData(final String customData) {
-        this.customData = customData;
+    public UserSession setSid(final String customData) {
+        this.sid = customData;
         return this;
     }
 
-    public String getCustomData() {
-        return customData;
+    public String getSid() {
+        return sid;
     }
 
 }

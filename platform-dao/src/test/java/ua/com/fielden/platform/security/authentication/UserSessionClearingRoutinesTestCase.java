@@ -157,7 +157,7 @@ public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
         assertTrue(renewdSessionForUser1.isPresent());
         final String newAuthenticator = renewdSessionForUser1.get().getAuthenticator().get().toString();
         assertNotEquals("The new and subsequent session should have different IDs.", newSessionForUser1.getId(), renewdSessionForUser1.get().getId());
-        assertEquals("Custom data should persiste between sessions.", customDataForUser1, renewdSessionForUser1.get().getCustomData());
+        assertEquals("Custom data should persiste between sessions.", customDataForUser1, renewdSessionForUser1.get().getSid());
         assertEquals("Unexpected number of session in cache.", 2, coSession.getCache().size());
         
         // let's now create a session for some other user
@@ -167,7 +167,7 @@ public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
         assertEquals("Unexpected number of session in cache.", 3, coSession.getCache().size());
         
         // and clear sessions by customData for USER1, which should remove 2 records from the database and clear the cache accordingly
-        assertEquals(2, coSession.clearAllWithCustomData(customDataForUser1));
+        assertEquals(2, coSession.clearAllWithSid(customDataForUser1));
         assertEquals(1, coSession.getCache().size());
 
         // more time has passed and all sessions should have been evicted

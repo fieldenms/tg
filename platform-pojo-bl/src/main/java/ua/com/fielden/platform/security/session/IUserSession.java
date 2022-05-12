@@ -62,11 +62,11 @@ public interface IUserSession extends IEntityDao<UserSession> {
      *
      * @param user
      * @param isDeviceTrusted
-     * @param customData
+     * @param sid – a session id for SSO, if any; pass {@code null} if none is available or required
      *
      * @return
      */
-    UserSession newSession(final User user, final boolean isDeviceTrusted, final String customData);
+    UserSession newSession(final User user, final boolean isDeviceTrusted, final String sid);
 
     /**
      * Generates cryptographically strong series that is used as session id.
@@ -135,12 +135,12 @@ public interface IUserSession extends IEntityDao<UserSession> {
     void clearExpired();
     
     /**
-     * Clears all sessions that match {@code customData}.
+     * Clears all sessions that match {@code sid}.
      *
-     * @param customData
+     * @param sid
      * 
-     * @return the number of deleted persistent sessions matching {@code customData}.
+     * @return the number of deleted persistent sessions matching {@code sid}.
      */
-    int clearAllWithCustomData(final String customData);
+    int clearAllWithSid(final String sid);
 
 }
