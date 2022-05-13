@@ -40,12 +40,10 @@ public class SymmetricCypher {
     /** Initialisation for {@link SecureRandom()} can be slow. This is why it is best to keep an instance per thread. */
     private final ThreadLocal<SecureRandom> random = ThreadLocal.withInitial(() -> new SecureRandom());
 
-    private final Cipher cipher;
     private final SecretKey aesKey;
 
     public SymmetricCypher(final String passwd, final String salt) throws Exception {
         this.aesKey = prepKeyFromPassword(passwd, salt);
-        this.cipher = Cipher.getInstance("AES/GCM/NoPadding");
     }
 
     /**
@@ -70,6 +68,7 @@ public class SymmetricCypher {
      * @throws Exception
      */
     public String encrypt(final String text, final byte[] nonce) throws Exception {
+        final Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
         cipher.init(Cipher.ENCRYPT_MODE, aesKey, new GCMParameterSpec(GCM_TAG_LENGTH * 8, nonce));
         final byte[] cipherText = cipher.doFinal(text.getBytes("UTF-8"));
         return Base64.getEncoder().encodeToString(cipherText);
@@ -84,6 +83,7 @@ public class SymmetricCypher {
      * @throws Exception
      */
     public String decrypt(final String encryptedText, final byte[] nonce) throws Exception {
+        final Cipher cipher = Cipher.getInstance("AES/GCM/NoPadding");
         cipher.init(Cipher.DECRYPT_MODE, aesKey, new GCMParameterSpec(GCM_TAG_LENGTH * 8, nonce));
         final byte[] plainText = cipher.doFinal(Base64.getDecoder().decode(encryptedText));
         return new String(plainText);
