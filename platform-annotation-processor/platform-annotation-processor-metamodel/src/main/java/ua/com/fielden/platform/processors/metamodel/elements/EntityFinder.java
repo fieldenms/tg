@@ -13,7 +13,9 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 
 import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -101,7 +103,7 @@ public class EntityFinder {
     }
     
     public static Pair<String, String> getPropTitleAndDesc(PropertyElement propElement) {
-        AnnotationMirror titleAnnotationMirror = ElementFinder.getElementAnnotationMirror(propElement.toVariableElement(), Title.class);
+        AnnotationMirror titleAnnotationMirror = ElementFinder.getElementAnnotationMirror(propElement.getVariableElement(), Title.class);
         
         if (titleAnnotationMirror == null) {
             return null;
@@ -191,16 +193,16 @@ public class EntityFinder {
         return element.getAnnotation(IsProperty.class) != null;
     }
 
-    public static boolean isPropertyEntityType(PropertyElement propElement) {
+    public static boolean isPropertyEntityType(final PropertyElement propElement) {
         try {
             return EntityFinder.isEntity(propElement.getTypeAsTypeElement());
         } catch (Exception e) {
             return false;
         }
     }
-
+    
     public static List<? extends AnnotationMirror> getPropertyAnnotations(PropertyElement property) {
-        return ElementFinder.getFieldAnnotations(property.toVariableElement());
+        return ElementFinder.getFieldAnnotations(property.getVariableElement());
     }
     
     public static EntityElement getParent(EntityElement element, Elements elementUtils) {
@@ -262,5 +264,10 @@ public class EntityFinder {
         final TypeElement typeElement = elementUtils.getTypeElement(entityQualName);
 
         return typeElement == null ? null : new EntityElement(typeElement, elementUtils);
+    }
+
+    public static boolean hasPropertyOfType(EntityElement entityElement, TypeMirror type, Types typeUtils) {
+        return EntityFinder.findProperties(entityElement).stream()
+                .anyMatch(prop -> typeUtils.isSameType(prop.getType(), type));
     }
 }

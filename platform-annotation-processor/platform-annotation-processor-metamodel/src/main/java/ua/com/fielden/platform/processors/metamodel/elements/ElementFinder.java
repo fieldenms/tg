@@ -2,22 +2,27 @@ package ua.com.fielden.platform.processors.metamodel.elements;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import javax.lang.model.AnnotatedConstruct;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Types;
 
 public class ElementFinder {
     private static final Class<?> DEFAULT_ROOT_CLASS = Object.class;
@@ -31,9 +36,14 @@ public class ElementFinder {
     public static boolean equals(TypeElement typeElement, Class<?> clazz) {
         return typeElement.getQualifiedName().toString().equals(clazz.getCanonicalName());
     }
+    
+    public static boolean doesExtend(TypeElement typeElement, Class<?> clazz) {
+        final List<TypeElement> superclasses = ElementFinder.findSuperclasses(typeElement, true);
+        return superclasses.stream().anyMatch(sup -> equals(sup, clazz));
+    }
 
     /**
-     * Returns the immediate parent class of this {@code typeElement} or null if the immediate parent is either an interface type or {@link Object} class or {@code rootClass}.
+     * Returns the immediate parent class of this {@code typeElement} or null if this {@code typeElement} is either an interface type or {@link Object} class or {@code rootClass}.
      * @param typeElement
      * @param rootClass
      * @return
@@ -53,7 +63,7 @@ public class ElementFinder {
     }
     
     /**
-     * Returns the immediate parent class of this {@code typeElement} or null if the immediate parent is either an interface type or {@link Object} class.
+     * Returns the immediate parent class of this {@code typeElement} or null if this {@code typeElement} is either an interface type or {@link Object} class.
      * @param typeElement
      * @param rootClass
      * @return
@@ -97,20 +107,21 @@ public class ElementFinder {
     public static List<TypeElement> findSuperclasses(TypeElement typeElement, boolean includeRootClass) {
         return findSuperclasses(typeElement, DEFAULT_ROOT_CLASS, includeRootClass);
     }
+    
+    public static Set<VariableElement> findDeclaredFields(TypeElement typeElement, Predicate<VariableElement> predicate) {
+        return typeElement.getEnclosedElements().stream()
+                .filter(el -> el.getKind() == ElementKind.FIELD)
+                .map(el -> (VariableElement) el)
+                .filter(predicate)
+                .collect(Collectors.toCollection(() -> new LinkedHashSet<>()));
+    }
 
     /**
      * Find fields that are explicitly declared by this instance of {@link TypeElement}.
      */
     public static Set<VariableElement> findDeclaredFields(TypeElement typeElement) {
-        Set<VariableElement> fields = new HashSet<>();
-
-        List<VariableElement> enclosedFields = typeElement.getEnclosedElements().stream()
-                .filter(el -> el.getKind() == ElementKind.FIELD)
-                .map(el -> (VariableElement) el)
-                .toList();
-        fields.addAll(enclosedFields);
-        
-        return fields;
+        final Predicate<VariableElement> alwaysTrue = el -> true;
+        return findDeclaredFields(typeElement, alwaysTrue);
     }
 
     public static Set<VariableElement> findInheritedFields(TypeElement typeElement) {
@@ -264,6 +275,22 @@ public class ElementFinder {
         
         return annotations;
     }
+
+    public static Set<ExecutableElement> findDeclaredMethods(TypeElement typeElement, Predicate<ExecutableElement> predicate) {
+        return typeElement.getEnclosedElements().stream()
+                .filter(el -> el.getKind() == ElementKind.METHOD)
+                .map(el -> (ExecutableElement) el)
+                .filter(predicate)
+                .collect(Collectors.toCollection(() -> new LinkedHashSet<>()));
+    }
+
+    /**
+     * Find methods that are explicitly declared by this {@link TypeElement}.
+     */
+    public static Set<ExecutableElement> findDeclaredMethods(TypeElement typeElement) {
+        final Predicate<ExecutableElement> alwaysTrue = el -> true;
+        return findDeclaredMethods(typeElement, alwaysTrue);
+    }
     
     public static List<? extends AnnotationMirror> getFieldAnnotationsExcept(VariableElement field, List<Class<? extends Annotation>> ignoredAnnotationsClasses) {
         List<? extends AnnotationMirror> annotations = getFieldAnnotations(field);
@@ -290,8 +317,59 @@ public class ElementFinder {
         return null;
     }
 
-    public static String getVariableTypeSimpleName(VariableElement varElement) {
-        return ((DeclaredType) varElement.asType()).asElement().getSimpleName().toString();
+    public static String getFieldTypeSimpleName(VariableElement field) {
+        return ((DeclaredType) field.asType()).asElement().getSimpleName().toString();
+    }
+    
+    public static boolean isFieldOfType(final VariableElement field, final Class<?> type) {
+        final TypeMirror fieldType = field.asType();
+        final TypeKind fieldTypeKind = fieldType.getKind();
+
+        if (fieldTypeKind.equals(TypeKind.DECLARED))
+            return equals(((TypeElement) ((DeclaredType) fieldType).asElement()), type);
+        // TODO implement proper type checking for primitives and arrays
+        else
+            return false;
+    }
+    
+    public static boolean isFieldOfType(final VariableElement field, final TypeMirror typeMirror, final Types typeUtils) {
+        final TypeMirror fieldType = field.asType();
+        final TypeKind fieldTypeKind = fieldType.getKind();
+
+        if (fieldTypeKind.equals(TypeKind.DECLARED))
+            return typeUtils.isSameType(fieldType, typeMirror);
+        // TODO implement proper type checking for primitives and arrays
+        else
+            return false;
+    }
+
+    /**
+     * Tests whether a field is of one of the types that are represented by {@code typeElements}.
+     * @param field
+     * @param typeElements
+     * @param typeUtils
+     * @return
+     */
+    public static boolean isFieldOfType(final VariableElement field, final Collection<TypeMirror> typeMirrors, final Types typeUtils) {
+        final TypeMirror fieldType = field.asType();
+        final TypeKind fieldTypeKind = fieldType.getKind();
+
+        if (fieldTypeKind.equals(TypeKind.DECLARED))
+            return typeMirrors.stream().anyMatch(tm -> typeUtils.isSameType(fieldType, tm));
+        // TODO implement proper type checking for primitives and arrays
+        else
+            return false;
+    }
+
+    public static boolean isMethodReturnType(final ExecutableElement method, final Class<?> type) {
+        final TypeMirror returnType = method.getReturnType();
+        final TypeKind returnTypeKind = returnType.getKind();
+
+        if (returnTypeKind.equals(TypeKind.DECLARED))
+            return equals(((TypeElement) ((DeclaredType) returnType).asElement()), type);
+        // TODO implement proper type checking for primitives and arrays
+        else
+            return false;
     }
 
     public static Name getAnnotationMirrorSimpleName(AnnotationMirror annotMirror) {
@@ -303,5 +381,9 @@ public class ElementFinder {
                 .filter(el -> el.getKind() == ElementKind.FIELD)
                 .map(el -> (VariableElement) el)
                 .count();
+    }
+    
+    public static boolean isStatic(VariableElement varElement) {
+        return varElement.getModifiers().contains(Modifier.STATIC);
     }
 }

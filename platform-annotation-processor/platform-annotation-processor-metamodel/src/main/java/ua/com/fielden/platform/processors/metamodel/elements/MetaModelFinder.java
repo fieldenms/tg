@@ -1,0 +1,93 @@
+package ua.com.fielden.platform.processors.metamodel.elements;
+
+import java.util.Set;
+import java.util.function.Supplier;
+import java.util.stream.Collectors;
+
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
+
+import ua.com.fielden.platform.processors.metamodel.MetaModelConstants;
+import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
+import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
+
+public class MetaModelFinder {
+    
+    public static boolean isMetaModel(TypeElement typeElement) {
+        return ElementFinder.doesExtend(typeElement, MetaModelConstants.METAMODEL_SUPERCLASS);
+    }
+    
+    public static Set<VariableElement> findStaticFields(MetaModelElement mme) {
+        return ElementFinder.findDeclaredFields(mme.getTypeElement(), f -> ElementFinder.isStatic(f));
+    }
+
+    public static Set<VariableElement> findNonStaticFields(MetaModelElement mme) {
+        return ElementFinder.findDeclaredFields(mme.getTypeElement(), f -> !ElementFinder.isStatic(f));
+    }
+    
+    public static Set<VariableElement> findPropertyMetaModelFields(MetaModelElement mme) {
+        return findNonStaticFields(mme).stream()
+                .filter(field -> ElementFinder.isFieldOfType(field, PropertyMetaModel.class))
+                .collect(Collectors.toSet());
+    }
+
+    public static Set<VariableElement> findEntityMetaModelFields(MetaModelElement mme) {
+        return findNonStaticFields(mme).stream()
+                .filter(field -> {
+                    final TypeMirror fieldType = field.asType();
+                    final TypeKind fieldTypeKind = fieldType.getKind();
+
+                    if (fieldTypeKind == TypeKind.DECLARED) {
+                        final TypeElement fieldTypeElement = (TypeElement) ((DeclaredType) field.asType()).asElement();
+
+                        // EntityMetaModel fields have type Supplier<[METAMODEL]>
+                        if (ElementFinder.equals(fieldTypeElement, Supplier.class)) {
+                            final DeclaredType fieldTypeArgument = (DeclaredType) ((DeclaredType) fieldType).getTypeArguments().get(0);
+                            return ElementFinder.doesExtend((TypeElement) fieldTypeArgument.asElement(), EntityMetaModel.class);
+                        }
+                    }
+                    return false;
+                })
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Returns a set of meta-model elements for each field that is of type Supplier<? extends EntityMetaModel>.
+     * @param mme
+     * @return
+     */
+    public static Set<MetaModelElement> findReferencedMetaModels(MetaModelElement mme, Elements elementUtils) {
+        return findEntityMetaModelFields(mme).stream()
+                .map(field -> {
+                    // casting here is safe, since field is of type Supplier<[METAMODEL]>, thus DeclaredType
+                    // fieldType will be the Supplier type
+                    final DeclaredType fieldType = (DeclaredType) field.asType();
+                    // fieldTypeArgument will be the [METAMODEL] type
+                    final DeclaredType fieldTypeArgument = (DeclaredType) fieldType.getTypeArguments().get(0);
+                    final TypeElement fieldTypeArgumentTypeElement = (TypeElement) fieldTypeArgument.asElement();
+                    return new MetaModelElement(fieldTypeArgumentTypeElement, elementUtils);
+                })
+                .collect(Collectors.toSet());
+    }
+
+    public static boolean isPropertyMetaModelMethod(ExecutableElement method) {
+        return ElementFinder.isMethodReturnType(method, PropertyMetaModel.class);
+    }
+
+    public static boolean isEntityMetaModelMethod(ExecutableElement method) {
+        final TypeMirror methodType = method.asType();
+        final TypeKind methodTypeKind = methodType.getKind();
+
+        if (methodTypeKind.equals(TypeKind.DECLARED)) {
+            final TypeElement methodTypeElement = (TypeElement) ((DeclaredType) method.asType()).asElement();
+            return ElementFinder.doesExtend(methodTypeElement, EntityMetaModel.class);
+        }
+        else
+            return false;
+    }
+}
