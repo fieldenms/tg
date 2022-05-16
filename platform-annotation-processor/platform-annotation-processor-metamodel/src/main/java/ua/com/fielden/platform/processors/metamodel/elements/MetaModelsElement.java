@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.processors.metamodel.elements;
 
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import javax.lang.model.element.TypeElement;
@@ -10,15 +12,15 @@ import javax.lang.model.util.Elements;
 
 public final class MetaModelsElement {
     private TypeElement typeElement;
-    private Set<MetaModelElement> metaModels;
+    private List<MetaModelElement> metaModels;
     
     public MetaModelsElement(TypeElement typeElement, Elements elementUtils) {
         this.typeElement = typeElement;
         this.metaModels = findMetaModels(typeElement, elementUtils);
     }
     
-    private Set<MetaModelElement> findMetaModels(TypeElement typeElement, Elements elementUtils) {
-        final Set<MetaModelElement> metaModels = new HashSet<>();
+    private List<MetaModelElement> findMetaModels(TypeElement typeElement, Elements elementUtils) {
+        final List<MetaModelElement> metaModels = new ArrayList<>();
 
         final Set<VariableElement> fields = ElementFinder.findDeclaredFields(typeElement);
         for (final VariableElement field: fields) {
@@ -30,8 +32,8 @@ public final class MetaModelsElement {
         return metaModels;
     }
     
-    public Set<MetaModelElement> getMetaModels() {
-        return metaModels;
+    public List<MetaModelElement> getMetaModels() {
+        return Collections.unmodifiableList(metaModels);
     }
     
     public String getSimpleName() {

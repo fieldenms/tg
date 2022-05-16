@@ -13,7 +13,7 @@ public class PropertyElement {
         this.varElement = varElement;
     }
     
-    public VariableElement toVariableElement() {
+    public VariableElement getVariableElement() {
         return varElement;
     }
     

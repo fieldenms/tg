@@ -4,6 +4,7 @@ import java.util.Objects;
 
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 
 /**
@@ -38,6 +39,10 @@ public class MetaModelElement {
     public String getQualifiedName() {
         return typeElement.getQualifiedName().toString();
     }
+    
+    public TypeMirror asType() {
+        return this.typeElement.asType();
+    }
 
     @Override
     public int hashCode() {
@@ -57,5 +62,10 @@ public class MetaModelElement {
             return false;
         MetaModelElement other = (MetaModelElement) obj;
         return Objects.equals(getQualifiedName(), other.getQualifiedName());
+    }
+
+    @Override
+    public String toString() {
+        return getQualifiedName();
     }
 }

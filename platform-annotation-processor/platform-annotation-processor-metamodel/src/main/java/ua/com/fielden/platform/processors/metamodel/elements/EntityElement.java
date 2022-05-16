@@ -3,6 +3,7 @@ package ua.com.fielden.platform.processors.metamodel.elements;
 import java.util.Objects;
 
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 
 public class EntityElement {
@@ -39,6 +40,10 @@ public class EntityElement {
     
     public String getPackageName() {
         return packageName;
+    }
+    
+    public TypeMirror asType() {
+        return this.typeElement.asType();
     }
 
     @Override
