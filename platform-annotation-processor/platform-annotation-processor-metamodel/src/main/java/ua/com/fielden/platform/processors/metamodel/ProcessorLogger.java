@@ -36,34 +36,40 @@ public class ProcessorLogger {
         return datetime;
     }
 
-    public boolean log(String text, String level) {
+    public boolean log(Object obj, String level) {
         if (printWriter == null) 
             return false;
 
-        String datetime = getDatetime();
-        printWriter.println(String.format("%s [%5s] [%s] --- %s", datetime, level, source, text));
+        final String datetime = getDatetime();
+        printWriter.println(String.format("%s [%5s] [%s] --- %s", datetime, level, source, obj.toString()));
         return true;
     }
     
-    public boolean debug(String text) {
-        if (logger != null)
-            logger.debug(text);
+    public boolean debug(Object obj) {
+        final String objString = obj.toString();
 
-        return log(text, "DEBUG");
+        if (logger != null)
+            logger.debug(objString);
+
+        return log(objString, "DEBUG");
     }
 
-    public boolean info(String text) {
-        if (logger != null)
-            logger.info(text);
+    public boolean info(Object obj) {
+        final String objString = obj.toString();
 
-        return log(text, "INFO");
+        if (logger != null)
+            logger.info(objString);
+
+        return log(objString, "INFO");
     }
 
-    public boolean error(String text) {
-        if (logger != null)
-            logger.error(text);
+    public boolean error(Object obj) {
+        final String objString = obj.toString();
 
-        return log(text, "ERROR");
+        if (logger != null)
+            logger.error(objString);
+
+        return log(objString, "ERROR");
     }
 
     public boolean ln() {
