@@ -81,13 +81,7 @@ public abstract class AbstractWebResourceGuard extends org.restlet.security.Auth
             final Optional<Authenticator> oAuth = extractAuthenticator(request);
             if (!oAuth.isPresent()) {
                 logger.warn(format("Authenticator cookie is missing for a request to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
-                // GET requests can be redirected to the login resource, which takes care of both RSO and SSO workflows.
-                // Need to forbid requests from SW containing "?checksum=true", which is specifically used to redirect to /login from the client side.
-                if (Method.GET.equals(request.getMethod()) && !request.getResourceRef().toString().contains("?checksum=true")) {
-                    response.redirectTemporary(BINDING_PATH);
-                } else {
-                    forbid(response);
-                }
+                redirectGetToLoginOrForbid(request, response);
                 return false;
             }
 
@@ -102,11 +96,7 @@ public abstract class AbstractWebResourceGuard extends org.restlet.security.Auth
             final Optional<UserSession> session = coUserSession.currentSession(getUser(auth.username), auth.toString(), enforceUserSessionEvictionWhenDbSessionIsMissing(), skipRegeneration);
             if (!session.isPresent()) {
                 logger.warn(format("Authenticator validation failed for a request to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
-                // TODO this is an interesting approach to prevent any further processing of the request, this event prevents receiving it completely
-                // useful to prevent unauthorised file uploads
-                // However, the client side would not be able to receive a response.
-                //request.abort();
-                forbid(response);
+                redirectGetToLoginOrForbid(request, response);
                 assignAuthenticatorCookieToExpire(response);
                 return false;
             }
@@ -117,7 +107,7 @@ public abstract class AbstractWebResourceGuard extends org.restlet.security.Auth
         } catch (final Exception ex) {
             // in case of any internal exception forbid the request
             forbid(response);
-            
+
             // TODO Do we really want to expire a potentially valid authenticator in this case? For example, where there was just an intermittent DB connectivity issue?
             assignAuthenticatorCookieToExpire(response);
             logger.fatal(ex);
@@ -125,6 +115,22 @@ public abstract class AbstractWebResourceGuard extends org.restlet.security.Auth
         }
 
         return true;
+    }
+
+    /**
+     * Redirects HTTP GET requests to the login resource. Forbids all other requests.
+     *
+     * @param request
+     * @param response
+     */
+    protected void redirectGetToLoginOrForbid(final Request request, final Response response) {
+        // GET requests can be redirected to the login resource, which takes care of both RSO and SSO workflows.
+        // Need to forbid requests from SW containing "?checksum=true", which is specifically used to redirect to /login from the client side.
+        if (Method.GET.equals(request.getMethod()) && !request.getResourceRef().toString().contains("?checksum=true")) {
+            response.redirectTemporary(BINDING_PATH);
+        } else {
+            forbid(response);
+        }
     }
 
     /**
