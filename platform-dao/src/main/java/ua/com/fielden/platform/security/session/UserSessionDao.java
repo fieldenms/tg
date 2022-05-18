@@ -183,7 +183,7 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         }
 
         // first delete from the database in a separate transaction
-        final int count = deleteSessionsByCustomData(sid);
+        final int count = deleteSessionsBySid(sid);
         logger.info(format("SSO sessions deleted [%s] for sid [%s].", count, sid));
 
         // then delete all matching sessions from cache
@@ -201,8 +201,13 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
      * @return the number of deleted sessions
      */
     @SessionRequired(allowNestedScope = false)
-    protected int deleteSessionsByCustomData(final String sid) {
-        return this.defaultBatchDelete(select(UserSession.class).where().prop("sid").eq().val(sid).model());
+    protected int deleteSessionsBySid(final String sid) {
+        try {
+            return this.defaultBatchDelete(select(UserSession.class).where().prop("sid").eq().val(sid).model());
+        } catch (final Exception ex) {
+            logger.error(format("Could not delete sessions by sid [%s].", sid), ex);
+            return 0;
+        }
     }
 
     /**
