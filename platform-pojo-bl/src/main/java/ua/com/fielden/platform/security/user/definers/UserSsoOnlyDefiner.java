@@ -16,16 +16,16 @@ import ua.com.fielden.platform.security.user.User;
  */
 public class UserSsoOnlyDefiner implements IAfterChangeEventHandler<Boolean> {
 
-    private final boolean ssoOnly;
+    private final boolean ssoMode;
 
     @Inject
     protected UserSsoOnlyDefiner(final IApplicationSettings appSettings) {
-        this.ssoOnly = appSettings.authMode() == AuthMode.SSO;
+        this.ssoMode = appSettings.authMode() == AuthMode.SSO;
     }
 
     @Override
     public void handle(final MetaProperty<Boolean> property, final Boolean active) {
-        property.getEntity().getPropertyIfNotProxy(User.SSO_ONLY).ifPresent(p -> p.setEditable(this.ssoOnly));
+        property.getEntity().getPropertyIfNotProxy(User.SSO_ONLY).ifPresent(p -> p.setEditable(this.ssoMode));
     }
 
 }
