@@ -131,8 +131,8 @@ public class LoginResource extends AbstractWebResource {
             // Otherwise just return the login page for user to login explicitly.
             // The returned page should take into account support for SSO and the mixed RSO/SSO mode
             // Query parameter "auth" can be used to enforce the RSO mode even when SSO is preferred
-            // For example, https://tgdev.com/login?auth=RSO would always return a login page with a prompt without automatic re-direction to SSO
-            // Such request is valid in both RSO and SSO authentication modes.
+            // Accessing the login resource with /login?auth=RSO should return a login page with a prompt without automatic re-direction to SSO
+            // Such request is valid in both RSO and SSO authentication modes, but in the SSO mode it is ignored
             final String requestedAuth = getQueryValue("auth");
             final ByteArrayInputStream loginPageStream = AuthMode.RSO.name().equalsIgnoreCase(requestedAuth) ? new ByteArrayInputStream(loginPageForMixedMode) : new ByteArrayInputStream(loginPage);
             return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(loginPageStream, MediaType.TEXT_HTML));
