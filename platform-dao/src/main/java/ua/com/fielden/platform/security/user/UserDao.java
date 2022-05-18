@@ -40,6 +40,8 @@ import com.google.inject.Inject;
 import com.nulabinc.zxcvbn.Strength;
 import com.nulabinc.zxcvbn.Zxcvbn;
 
+import ua.com.fielden.platform.basic.config.IApplicationSettings;
+import ua.com.fielden.platform.basic.config.IApplicationSettings.AuthMode;
 import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -81,6 +83,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     private final INewUserNotifier newUserNotifier;
     private final SessionIdentifierGenerator crypto;
+    private final boolean ssoMode;
 
     private final fetch<User> fetchModel = fetch(User.class).with("roles", fetch(UserAndRoleAssociation.class));
 
@@ -88,16 +91,21 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     public UserDao(
             final INewUserNotifier newUserNotifier,
             final SessionIdentifierGenerator crypto,
+            final IApplicationSettings appSettings,
             final IFilter filter) {
         super(filter);
 
         this.newUserNotifier = newUserNotifier;
         this.crypto = crypto;
+        this.ssoMode = appSettings.authMode() == AuthMode.SSO;
     }
 
     @Override
     public User new_() {
-        return super.new_().getProperty(User.BASED_ON_USER).setRequired(true).getEntity();
+        final User newUser = super.new_();
+        newUser.getProperty(User.SSO_ONLY).setValue(ssoMode, /* enforce */ true); // set ssoOnly to reflect the current authentication mode; set forcibly to ensure execution of UserSsoOnlyDefiner, which processes the meta-property
+        newUser.getProperty(User.BASED_ON_USER).setRequired(true);
+        return newUser;
     }
 
     /**
