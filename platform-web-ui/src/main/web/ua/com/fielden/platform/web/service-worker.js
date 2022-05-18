@@ -124,8 +124,9 @@ self.addEventListener('fetch', function (event) {
                                         }
                                     }
                                 }, function (serverChecksumResponseError) { // it is very important not to chain catch clause but to use onRejected callback; this is because we need to process errors only from getTextFrom(...) promise and not from getTextFrom(...).then(...) promise.
-                                    if (serverChecksumResponseError instanceof Response && !isResponseSuccessful(serverChecksumResponseError) && serverChecksumResponseError.status === 403) {
-                                        // If server checksum response is Forbidden (403) then we need to respond with redirection response to a login resource.
+                                    if (serverChecksumResponseError instanceof Response && !isResponseSuccessful(serverChecksumResponseError) &&
+                                        (serverChecksumResponseError.status === 403 || serverChecksumResponseError.status === 503)) {
+                                        // If server checksum response is Forbidden (403) or Service Unavailable (503) then we need to respond with redirection response to a login resource.
                                         return Response.redirect(url + 'login/');
                                     } else {
                                         throw serverChecksumResponseError; // rethrow the error in other cases as if there was no onRejected clause here; this would lead to promise rejection
