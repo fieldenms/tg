@@ -137,14 +137,14 @@ public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
     }
 
     @Test
-    public void clearing_user_sessions_by_custom_data_removes_associated_sessions_from_cache_and_database() {
+    public void clearing_user_sessions_by_sid_removes_associated_sessions_from_cache_and_database() {
         // establish a new sessions for user TEST, which effectively emulates the explicit login
-        final String customDataForUser1 = "this could be sid or something else for User1";
+        final String sidForUser1 = "5daf08eb-9dcd-4baa-91e3-51d3daed5ba5";
         getInstance(IUserProvider.class).setUsername("USER1", co(User.class));
         final User currUser1 = getInstance(IUserProvider.class).getUser();
         constants.setNow(dateTime("2015-04-23 13:00:00"));
         cacheTicker.setStartTime(dateTime("2015-04-23 13:00:00"));
-        final UserSession newSessionForUser1 = coSession.newSession(currUser1, true, customDataForUser1);
+        final UserSession newSessionForUser1 = coSession.newSession(currUser1, true, sidForUser1);
         final String authenticator = newSessionForUser1.getAuthenticator().get().toString();
 
         // enough time has passed to evict authenticators from cache
@@ -157,17 +157,17 @@ public class UserSessionClearingRoutinesTestCase extends AbstractDaoTestCase {
         assertTrue(renewdSessionForUser1.isPresent());
         final String newAuthenticator = renewdSessionForUser1.get().getAuthenticator().get().toString();
         assertNotEquals("The new and subsequent session should have different IDs.", newSessionForUser1.getId(), renewdSessionForUser1.get().getId());
-        assertEquals("Custom data should persiste between sessions.", customDataForUser1, renewdSessionForUser1.get().getSid());
+        assertEquals("A sid value should persiste between sessions.", sidForUser1, renewdSessionForUser1.get().getSid());
         assertEquals("Unexpected number of session in cache.", 2, coSession.getCache().size());
         
         // let's now create a session for some other user
         getInstance(IUserProvider.class).setUsername("USER2", co(User.class));
         final User currUser2 = getInstance(IUserProvider.class).getUser();
-        final UserSession newSessionForUser2 = coSession.newSession(currUser2, true, "custom data for USER2");
+        final UserSession newSessionForUser2 = coSession.newSession(currUser2, true, "gda108eb-9dcd-4baa-18d3-51d3daed5ba5");
         assertEquals("Unexpected number of session in cache.", 3, coSession.getCache().size());
         
-        // and clear sessions by customData for USER1, which should remove 2 records from the database and clear the cache accordingly
-        assertEquals(2, coSession.clearAllWithSid(customDataForUser1));
+        // and clear sessions by sid for USER1, which should remove 2 records from the database and clear the cache accordingly
+        assertEquals(2, coSession.clearAllWithSid(sidForUser1));
         assertEquals(1, coSession.getCache().size());
 
         // more time has passed and all sessions should have been evicted
