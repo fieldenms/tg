@@ -25,7 +25,7 @@ public class ProcessorLogger {
             this.printWriter = null;
             return;
         }
-        this.printWriter = new PrintWriter(fileWriter);
+        this.printWriter = new PrintWriter(fileWriter, true);
     }
     
     private String getDatetime() {
@@ -37,9 +37,7 @@ public class ProcessorLogger {
     }
 
     public boolean log(Object obj, String level) {
-        if (printWriter == null) 
-            return false;
-
+        if (printWriter == null) return false;
         final String datetime = getDatetime();
         printWriter.println(String.format("%s [%5s] [%s] --- %s", datetime, level, source, obj.toString()));
         return true;
@@ -73,15 +71,13 @@ public class ProcessorLogger {
     }
 
     public boolean ln() {
-        if (printWriter == null)
-            return false;
+        if (printWriter == null) return false;
         printWriter.println();
         return true;
     }
     
     public boolean end() {
-        if (printWriter == null)
-            return false;
+        if (printWriter == null) return false;
         printWriter.close();
         return true;
     }

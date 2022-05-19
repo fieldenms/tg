@@ -100,6 +100,7 @@ public class MetaModelProcessor extends AbstractProcessor {
     private int roundCount;
     private DateTime initDateTime;
     private Types typeUtils;
+    private boolean metaModelsClassVerified;
     // stores meta-models that are generated during the lifetime of this processor's instance
     // used as a class field so it can be accessed in each round, due to unpredictable incremental compilation environment of Eclipse
     // TODO use an approach with a separate file for storing a list of existing meta-models and an appropriate class
@@ -164,6 +165,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         this.roundCount = 0;
         this.metaModelConcepts = new HashMap<>();
         this.inactiveMetaModels = new HashMap<>();
+        this.metaModelsClassVerified = false;
 
         // processor started from Eclipse?
         final String projectDir = options.get(ECLIPSE_OPTION_KEY);
@@ -205,7 +207,6 @@ public class MetaModelProcessor extends AbstractProcessor {
 
         // TODO detect when rootElements are exclusively test sources and exit
 
-        final Set<EntityElement> roundInputEntities = new HashSet<>();
 
         // find elements annotated with any of @DomainEntity, @MapEntityTo
         final Set<? extends Element> annotatedElements = roundEnv.getElementsAnnotatedWithAny(getSupportedAnnotations());
@@ -224,9 +225,8 @@ public class MetaModelProcessor extends AbstractProcessor {
                 continue;
 
             final EntityElement entityElement = newEntityElement(typeElement);
-            roundInputEntities.add(entityElement);
             final MetaModelConcept mmc = new MetaModelConcept(entityElement);
-            this.metaModelConcepts.put(mmc, false);
+            this.metaModelConcepts.putIfAbsent(mmc, false);
 
             // TODO optimize by finding platform-level entities EXCLUSIVELY, this may save a lot of computation time
             // find properties of this entity that are entity type and include these entities for meta-model generation
@@ -236,10 +236,9 @@ public class MetaModelProcessor extends AbstractProcessor {
                     // it's safe to call getTypeAsTypeElementOrThrow() since elements were previously filtered
                     .map(propEl -> new EntityElement(propEl.getTypeAsTypeElementOrThrow(), elementUtils))
                     .toList(); 
-            roundInputEntities.addAll(platformEntities);
             platformEntities.stream()
                 .map(MetaModelConcept::new)
-                .forEach(mmc1 -> this.metaModelConcepts.put(mmc1, false));
+                .forEach(mmc1 -> this.metaModelConcepts.putIfAbsent(mmc1, false));
         }
 
         procLogger.debug("metaModelConcepts: " + Arrays.toString(this.metaModelConcepts.keySet().stream().map(MetaModelConcept::getSimpleName).toArray()));
@@ -257,35 +256,29 @@ public class MetaModelProcessor extends AbstractProcessor {
             final MetaModelsElement metaModelsElement = new MetaModelsElement(metaModelsTypeElement, elementUtils);
 
             // verify MetaModels
-            final List<MetaModelElement> inactive = findInactiveMetaModels(metaModelsElement);
-            procLogger.debug("Inactive meta-models: " + Arrays.toString(inactive.stream().map(MetaModelElement::getSimpleName).toArray()));
+            if (!this.metaModelsClassVerified) {
+                final List<MetaModelElement> inactive = findInactiveMetaModels(metaModelsElement);
+                this.metaModelsClassVerified = true;
 
-            for (MetaModelElement imm: inactive)
-                this.inactiveMetaModels.put(imm, false);
+                procLogger.debug("Inactive meta-models: " + Arrays.toString(inactive.stream().map(MetaModelElement::getSimpleName).toArray()));
 
-            if (!this.inactiveMetaModels.isEmpty()) {
-                final List<MetaModelElement> regenerationTargets = getGenerationTargets(this.inactiveMetaModels);
-                // handle inactive meta-models
-                regenerateInactiveMetaModels(regenerationTargets);
-                // regenerate meta-models that reference the inactive ones
-                final List<MetaModelElement> activeMetaModels = metaModelsElement.getMetaModels().stream()
-                        .filter(mme -> !regenerationTargets.contains(mme))
-                        .toList();
-                regenerateMetaModelsWithReferenceTo(activeMetaModels, regenerationTargets);
+                for (MetaModelElement imm: inactive)
+                    this.inactiveMetaModels.putIfAbsent(imm, false);
+
+                if (!this.inactiveMetaModels.isEmpty()) {
+                    final List<MetaModelElement> regenerationTargets = getGenerationTargets(this.inactiveMetaModels);
+                    // handle inactive meta-models
+                    regenerateInactiveMetaModels(regenerationTargets);
+                    // regenerate meta-models that reference the inactive ones
+                    final List<MetaModelElement> activeMetaModels = metaModelsElement.getMetaModels().stream()
+                            .filter(mme -> !regenerationTargets.contains(mme))
+                            .toList();
+                    regenerateMetaModelsWithReferenceTo(activeMetaModels, regenerationTargets);
+                }
             }
             
             //  TODO delete inactive meta-models java sources
 //            final boolean deleted = deleteJavaSources(inactiveMetaModels);
-            if (!roundInputEntities.isEmpty()) {
-                // regenerate meta-models, the underlying entities of which reference any of the entities that had meta-models generated for them in this round (input entities)
-                // regenerate only those meta-models that are not metamodeling the input entities
-                final List<MetaModelElement> metaModels = metaModelsElement.getMetaModels().stream()
-                        // ignore inactive meta-models
-                        .filter(mme -> !this.inactiveMetaModels.containsKey(mme))
-                        .filter(mme -> !roundInputEntities.contains(EntityFinder.findEntityForMetaModel(mme, elementUtils)))
-                        .toList();
-                regenerateMetaModelsForEntitiesWithReferenceTo(metaModels, roundInputEntities);
-            }
 
             if (!this.metaModelConcepts.isEmpty() || !this.inactiveMetaModels.isEmpty()) {
                 //  regenerate the MetaModels class by adding new fields and removing inactive ones
