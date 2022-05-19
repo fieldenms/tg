@@ -121,7 +121,7 @@ public class User extends ActivatableAbstractEntity<String> {
 
     @IsProperty
     @MapTo
-    @Title(value = "SSO only?", desc = "Only relevant in the SSO authentication mode. Controls user's ability to loging with Reduced Sign-On (value false) or Signle Sign-On only (value true).")
+    @Title(value = "SSO only?", desc = "Only relevant in the SSO authentication mode. Controls the ability for users to loging with Reduced Sign-On (value false) or Signle Sign-On only (value true).")
     @AfterChange(UserSsoOnlyDefiner.class)
     private boolean ssoOnly;
 
