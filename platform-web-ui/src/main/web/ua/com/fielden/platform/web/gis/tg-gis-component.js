@@ -205,6 +205,11 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
                         self._select.select(layerId);
                     } else {
                         self._select.deselect(layerId);
+                        setTimeout(() => {
+                            if (layer.isPopupOpen()) {
+                                layer.closePopup();
+                            }
+                        });
                     }
                 });
             }
