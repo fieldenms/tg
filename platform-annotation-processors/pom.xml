@@ -2,25 +2,16 @@
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>fielden</groupId>
-        <artifactId>platform-annotation-processor</artifactId>
+        <artifactId>platform-parent</artifactId>
         <version>1.4.6-SNAPSHOT</version>
     </parent>
 
-    <artifactId>platform-annotation-processor-verifier</artifactId>
+    <artifactId>platform-annotation-processors</artifactId>
     <packaging>jar</packaging>
 
-    <name>Trident Genesis Platform Annotation Processor (Meta-model Verifier)</name>
+    <name>Trident Genesis Platform Annotation Processors</name>
     <dependencies>
-        <dependency>
-            <groupId>fielden</groupId>
-            <artifactId>platform-annotation-processor-metamodel</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>fielden</groupId>
-            <artifactId>platform-annotation-processor-generator</artifactId>
-            <version>${project.version}</version>
-        </dependency>
+        <!-- inner module dependencies -->
         <dependency>
             <groupId>fielden</groupId>
             <artifactId>platform-annotations</artifactId>
@@ -54,6 +45,7 @@
             <version>2.13.0</version>
         </dependency>
     </dependencies>
+
     <build>
         <resources>
             <resource>
@@ -90,34 +82,24 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <id>default-compile</id>
+                        <configuration>
+                            <compilerArgument>-proc:none</compilerArgument>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>default-testCompile</id>
+                        <configuration>
+                            <compilerArgument>-proc:none</compilerArgument>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
         </plugins>
-        <pluginManagement>
-            <plugins>
-                <plugin>
-                    <groupId>org.apache.maven.plugins</groupId>
-                    <artifactId>maven-compiler-plugin</artifactId>
-                    <version>3.8.1</version>
-                    <configuration>
-                        <release>16</release>
-                        <encoding>UTF-8</encoding>
-                        <optimize>true</optimize>
-                    </configuration>					
-                    <executions>
-                        <execution>
-                            <id>default-compile</id>
-                            <configuration>
-                                <compilerArgument>-proc:none</compilerArgument>
-                            </configuration>
-                        </execution>
-                        <execution>
-                            <id>default-testCompile</id>
-                            <configuration>
-                                <compilerArgument>-proc:none</compilerArgument>
-                            </configuration>
-                        </execution>
-                    </executions>
-                </plugin>
-            </plugins>
-        </pluginManagement>
     </build>
 </project>
