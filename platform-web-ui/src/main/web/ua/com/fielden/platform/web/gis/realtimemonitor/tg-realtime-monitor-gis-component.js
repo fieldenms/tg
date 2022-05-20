@@ -5,6 +5,7 @@ import { RealtimeMonitorMarkerFactory } from '/resources/gis/realtimemonitor/tg-
 
 export const RealtimeMonitorGisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap) {
     GisComponent.call(this, mapDiv, progressDiv, progressBarDiv, tgMap);
+    this._select.deselectPrevEgiEntityOnLayerSelection = true;
 };
 
 RealtimeMonitorGisComponent.prototype = Object.create(GisComponent.prototype);

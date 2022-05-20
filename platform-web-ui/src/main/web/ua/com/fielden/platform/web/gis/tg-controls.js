@@ -8,7 +8,7 @@ import { fitToBounds } from '/resources/gis/tg-gis-utils.js';
 
 export { leafletStylesName, leafletDrawStylesName, leafletControlloadingStylesName, leafletEasybuttonStylesName };
 
-export const Controls = function (_map, _markersClusterGroup, _baseLayers, _additionalOverlays, _editableArcGisOverlay, ... customControls) {
+export const Controls = function (_map, _markersClusterGroup, _baseLayers, _overlays, _editableArcGisOverlay, ... customControls) {
     const self = this;
 
     self._map = _map;
@@ -31,23 +31,23 @@ export const Controls = function (_map, _markersClusterGroup, _baseLayers, _addi
     const fitToBoundsControl = easyButton(
         'fa-compress',
         function () {
-            fitToBounds(self._map, self._markersClusterGroup, _additionalOverlays);
+            fitToBounds(self._map, self._markersClusterGroup);
         },
         'Fit to bounds',
         self._map
     );
     self._map.addControl(fitToBoundsControl);
 
-    // Add our zoom control manually where we want to
+    // add zoom control manually in top-left position
     const zoomControl = L.control.zoom({
         position: 'topleft'
     });
     self._map.addControl(zoomControl);
 
-    // Add our loading control in the same position and pass the
-    // zoom control to attach to it
+    // add loading control slightly below and pass zoom control to attach to it
     const loadingControl = controlLoading({
         position: 'topleft',
+        separate: true, // make loading control separate to avoid Forced Reflow that is triggered by Control.Loading.js._getLastControlButton method during layers removal; this problem manifests itself on Refresh button
         zoomControl: zoomControl
     });
     self._map.addControl(loadingControl);
@@ -167,10 +167,9 @@ export const Controls = function (_map, _markersClusterGroup, _baseLayers, _addi
         });
     }
     
-    _additionalOverlays['GEO-json'] = self._markersClusterGroup;
-    _additionalOverlays['GEO-json']._checkedByDefault = true;
-    Object.values(_additionalOverlays).filter(overlay => overlay._checkedByDefault).forEach(overlay => self._map.addLayer(overlay));
+    self._map.addLayer(self._markersClusterGroup);
+    Object.values(_overlays).filter(overlay => overlay._checkedByDefault).forEach(overlay => self._map.addLayer(overlay));
 
-    const overlaysControl = L.control.layers(self._baseLayers.getBaseLayers(), _additionalOverlays);
+    const overlaysControl = L.control.layers(self._baseLayers.getBaseLayers(), _overlays);
     self._map.addControl(overlaysControl);
 };
