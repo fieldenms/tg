@@ -201,7 +201,11 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
                     }
                 });
                 layer.on('click', function () { // dblclick
-                    self._select.select(layerId);
+                    if (self._select._prevId !== layerId) {
+                        self._select.select(layerId);
+                    } else {
+                        self._select.deselect(layerId);
+                    }
                 });
             }
         });
