@@ -34,10 +34,6 @@ public class EqlPropertyMetadata {
     public List<EqlPropertyMetadata> subitems() {
         return unmodifiableList(subitems);
     }
-    
-    public String getName() {
-        return name;
-    }
 
     public boolean isVirtualKey() {
         return KEY.equals(name) && expressionModel != null;

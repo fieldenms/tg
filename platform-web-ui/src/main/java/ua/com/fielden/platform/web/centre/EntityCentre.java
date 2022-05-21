@@ -45,6 +45,7 @@ import static ua.com.fielden.platform.web.interfaces.DeviceProfile.DESKTOP;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalPropertyName;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalType;
 import static ua.com.fielden.platform.web.view.master.EntityMaster.flattenedNameOf;
+import static ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder.createImports;
 import static ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityAutocompletionWidget.createDefaultAdditionalProps;
 
 import java.math.BigDecimal;
@@ -155,7 +156,6 @@ import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.minijs.JsCode;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
-import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.snappy.DateRangeConditionEnum;
 
 /**
@@ -239,8 +239,9 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private final Class<? extends MiWithConfigurationSupport<?>> miType;
     private final ICompanionObjectFinder companionFinder;
     private final UnaryOperator<ICentreDomainTreeManagerAndEnhancer> postCentreCreated;
-    private Optional<JsCode> customCode = Optional.empty();
-    private Optional<JsCode> customCodeOnAttach = Optional.empty();
+    private Optional<JsCode> customCode = empty();
+    private Optional<JsCode> customCodeOnAttach = empty();
+    private Optional<JsCode> customImports = empty();
 
     private final IDomainTreeEnhancerCache domainTreeEnhancerCache;
     private final IWebUiConfig webUiConfig;
@@ -1221,7 +1222,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final String text = ResourceLoader.getText("ua/com/fielden/platform/web/centre/tg-entity-centre-template.js");
         logger.debug("Replacing some parts...");
         final String entityCentreStr = text.
-                replace(IMPORTS, SimpleMasterBuilder.createImports(importPaths)).
+                replace(IMPORTS, createImports(importPaths) + customImports.map(ci -> ci.toString()).orElse("")).
                 replace(EGI_LAYOUT, gridLayoutConfig.getKey()).
                 replace(FULL_ENTITY_TYPE, entityType.getName()).
                 replace(MI_TYPE, flattenedNameOf(miType)).
@@ -1642,4 +1643,16 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         this.customCodeOnAttach = Optional.of(customCode);
         return this;
     }
+
+    /**
+     * Injects custom JavaScript imports into centre implementation.
+     *
+     * @param customImports
+     * @return
+     */
+    public EntityCentre<T> injectCustomImports(final JsCode customImports) {
+        this.customImports = of(customImports);
+        return this;
+    }
+
 }

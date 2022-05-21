@@ -5,6 +5,7 @@ import { StopMarkerFactory } from '/resources/gis/stop/tg-stop-marker-factory.js
 
 export const StopGisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap) {
     GisComponent.call(this, mapDiv, progressDiv, progressBarDiv, tgMap);
+    this._select.deselectPrevEgiEntityOnLayerSelection = true;
 };
 
 StopGisComponent.prototype = Object.create(GisComponent.prototype);
