@@ -152,8 +152,8 @@ public class PersistDomainMetadataModel {
                         entityType.id, //
                         null, //
                         typesMap.get(propMd.javaType).id, //
-                        (isEmpty(prelTitle) && ID.equals(propMd.getName()) ? "ID" : prelTitle), //
-                        (isEmpty(prelDesc) && ID.equals(propMd.getName()) ? "ID" : prelDesc), //
+                        prelTitle, //
+                        prelDesc, //
                         entityType.getKeyMemberIndex(propMd.name), //
                         propMd.required, //
                         determinePropColumn(entityType.superType == null ? propMd
@@ -167,13 +167,14 @@ public class PersistDomainMetadataModel {
                     for (final EqlPropertyMetadata subProp : propMd.subitems().stream().filter(el -> el.column != null).collect(toList())) {
                         id = id + 1;
                         subItemPosition = subItemPosition + 1;
+                        final Pair<String, String> titleAndDesc = getTitleAndDesc(subProp.name, propMd.javaType);
                         result.add(new DomainPropertyData(id, //
-                                subProp.getName(), //
+                                subProp.name, //
                                 null, //
                                 holderId, //
                                 typesMap.get(subProp.javaType).id, //
-                                getTitleAndDesc(subProp.getName(), propMd.javaType).getKey(), //
-                                getTitleAndDesc(subProp.getName(), propMd.javaType).getValue(), //
+                                titleAndDesc.getKey(), //
+                                titleAndDesc.getValue(), //
                                 null, //
                                 false, //
                                 subProp.column.name, //
