@@ -17,6 +17,8 @@ import java.util.stream.Stream;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.basic.config.IApplicationSettings;
+import ua.com.fielden.platform.basic.config.IApplicationSettings.AuthMode;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.validation.UserAlmostUniqueEmailValidator;
@@ -26,9 +28,9 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
-import ua.com.fielden.platform.security.user.UserSecretCo;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserSecret;
+import ua.com.fielden.platform.security.user.UserSecretCo;
 import ua.com.fielden.platform.security.user.validators.UserBaseOnUserValidator;
 import ua.com.fielden.platform.test.ioc.UniversalConstantsForTesting;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
@@ -563,6 +565,28 @@ public class UserTestCase extends AbstractDaoTestCase {
         } catch (final Exception ex) {
             
         }
+    }
+
+    @Test
+    public void in_RSO_authentication_mode_new_users_have_property_ssoOnly_equal_false_and_readonly() {
+        assertEquals("Invalid initial conditions for this test.", AuthMode.RSO, getInstance(IApplicationSettings.class).authMode());
+        
+        final User user = co$(User.class).new_();
+        assertFalse(user.isSsoOnly());
+        assertFalse(user.getProperty(User.SSO_ONLY).isEditable());
+    }
+
+    /**
+     * One caveat to this test is that if some user was saved in the SSO authentication mode with {@code ssoOnly = true}, then retrieving such user in the RSO mode would still have that value set to {@code true}.
+     * But the property itself would be read-only. However, transitioning from SSO to RSO mode for an application is very unlikely. Also, the authentication logic should not be considering {@code ssoOnly} in the RSO mode.
+     */
+    @Test
+    public void in_RSO_authentication_mode_retrieved_for_editing_users_have_property_ssoOnly_equal_false_and_readonly() {
+        assertEquals("Invalid initial conditions for this test.", AuthMode.RSO, getInstance(IApplicationSettings.class).authMode());
+        
+        final User user = co$(User.class).findByKey("USER3");
+        assertFalse(user.isSsoOnly());
+        assertFalse(user.getProperty(User.SSO_ONLY).isEditable());
     }
     
     @Override

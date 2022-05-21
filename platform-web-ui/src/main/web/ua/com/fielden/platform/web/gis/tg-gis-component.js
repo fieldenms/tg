@@ -10,6 +10,7 @@ import { MarkerCluster, leafletMarkerClusterStylesName, tgMarkerClusterStylesNam
 import { Select } from '/resources/gis/tg-select.js';
 import { Controls, leafletDrawStylesName, leafletControlloadingStylesName, leafletEasybuttonStylesName } from '/resources/gis/tg-controls.js';
 import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
+import '/resources/gis/leaflet/subgroup/leaflet-subgroup-lib.js';
 import { TgReflector, _isEntity } from '/app/tg-reflector.js';
 import { TgAppConfig } from '/app/tg-app-config.js';
 import { RunActions } from '/resources/centre/tg-selection-criteria-behavior.js';
@@ -22,6 +23,8 @@ const tgGisComponentStyles = `
 `;
 const tgGisComponentStylesName = 'tg-gis-component-styles';
 createStyleModule(tgGisComponentStylesName, tgGisComponentStyles);
+
+const GEOJSON = 'GEO-json'; // default overlay's name
 
 export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap, ...otherStyles) {
     // IMPORTANT: use the following reference in cases when you need some properties of the 
@@ -46,43 +49,42 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
         ...otherStyles
     );
 
-    tgMap.retrivedEntitiesHandler = function (newRetrievedEntities) {
-        const isRunAction = tgMap.dataChangeReason === RunActions.run;
-        self._markerCluster.setShouldFitToBounds(isRunAction); // only fitToBounds on Run action, not on Navigate / Refresh
-        self.initReload();
-        const _select = self._select; // tg-select component (can be not initialised yet)
+    /**
+     * Captures selected entity and whether that entity has popup open.
+     */
+    self.capturePrevEntityAndWasPopupOpen = (isRunAction) => {
+        const _select = this._select; // tg-select component (can be not initialised yet)
         const prevId = _select ? _select._prevId : null; // leaflet id of previously selected layer
         let prevEntity = null;
         let wasPopupOpen = false;
-        if (!isRunAction && prevId !== null) { // if there was some selected layer; (note for navigation: potentially selected entity can be moved to e.g. the next page when going forward and it would be nice to preserve selection and popup for this entity too)
+        if (prevId !== null) { // if there was some selected layer;
             _select._prevId = null; // clear that selected layer information
-            const prevLayer = _select._getLayerById(prevId); // capture selected layer (that will be removed from map soon)
-            if (prevLayer) {
-                wasPopupOpen = prevLayer.isPopupOpen(); // capture indicator whether the popup was opened on it
-                prevEntity = _select.findEntityBy(prevLayer.feature); // get the entity (that will be removed from map soon) from which that layer was formed
+            if (!isRunAction) { // note for navigation: potentially selected entity can be moved to e.g. the next page when going forward and it would be nice to preserve selection and popup for this entity too
+                const prevLayer = _select._getLayerById(prevId); // capture selected layer (that will be removed from map soon)
+                if (prevLayer) {
+                    wasPopupOpen = prevLayer.isPopupOpen(); // capture indicator whether the popup was opened on it
+                    prevEntity = _select.findEntityBy(prevLayer.feature); // get the entity (that will be removed from map soon) from which that layer was formed
+                }
             }
         }
-        self.clearAll();
+        return [prevEntity, wasPopupOpen];
+    };
 
-        // Shallow copy of this array is needed to be done: not to alter original array, that is bound to EGI.
-        // Any added features to the shallow copy of the array will not be added to EGI's array of entities.
-        // However, if the entity object in copied array will be modified, the same (literally) entity object will be modified also in original array.
-        const newRetrievedEntitiesCopy = newRetrievedEntities.slice();
-
-        self.promoteEntities(newRetrievedEntitiesCopy);
-
-        self._markerCluster.getGisMarkerClusterGroup().addLayer(self._geoJsonOverlay);
-        self.finishReload();
+    /**
+     * Restores selection for previously selected entity and its popup in case where it was open.
+     */
+    self.restorePrevEntityAndWasPopupOpen = (prevEntity, wasPopupOpen) => {
         if (_isEntity(prevEntity)) { // if there was previously selected layer (with or without popup) and corresponding entity was found
-            const foundEntity = self._entities.find(entity => self._reflector.equalsEx(entity, prevEntity)); // find new entity that is equal to previous entity (if present)
+            const foundEntity = this._entities.find(entity => this._reflector.equalsEx(entity, prevEntity)); // find new entity that is equal to previous entity (if present)
             if (foundEntity) {
+                const _select = this._select;
                 const foundLayerId = _select.getLayerIdByEntity(foundEntity); // find leaflet layer id of the new corresponding layer (if present)
                 if (foundLayerId) {
                     _select._silentlySelectById(foundLayerId); // perform selection of new leaflet layer to preserve selected state of the same entity on map after refreshing
                     const foundLayer = _select._getLayerById(foundLayerId);
                     if (foundLayer && wasPopupOpen) { // if popup was open previously
                         if (!foundEntity.properties.popupContentInitialised) { // initialise popupContent on new entity
-                            foundLayer.bindPopup(self.createPopupContent(foundEntity)); // and bind updated popup
+                            foundLayer.bindPopup(this.createPopupContent(foundEntity)); // and bind updated popup
                             foundEntity.properties.popupContentInitialised = true;
                         }
                         foundLayer.openPopup(); // and then open updated popup to preserve it on the same entity on map after refreshing
@@ -91,7 +93,53 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
             }
         }
     };
+
+    tgMap.retrivedEntitiesHandler = function (newRetrievedEntities) {
+        const isRunAction = tgMap.dataChangeReason === RunActions.run;
+        self._markerCluster.setShouldFitToBounds(isRunAction); // only fitToBounds on Run action, not on Navigate / Refresh
+        self.initReload();
+        const [prevEntity, wasPopupOpen] = self.capturePrevEntityAndWasPopupOpen(isRunAction);
+        const overlaysAndChecked = self.clearAll(); // returns map of previously checked states for overlays (for the very first time it returns the data according to overlay._checkedByDefault state)
+
+        Object.values(self._overlays).filter(overlay => {
+            return overlaysAndChecked.get(overlay); // add previously checked overlays for Run / Refresh actions and others
+        }).forEach(overlay => self._map.addLayer(overlay));
+
+        // Shallow copy of this array is needed to be done: not to alter original array, that is bound to EGI.
+        // Any added features to the shallow copy of the array will not be added to EGI's array of entities.
+        // However, if the entity object in copied array will be modified, the same (literally) entity object will be modified also in original array.
+        const newRetrievedEntitiesCopy = newRetrievedEntities.slice();
+
+        self.promoteEntities(newRetrievedEntitiesCopy);
+
+        // we add checked overlays to marker cluster again: this is because we need to trigger tg-progress-bar-updater's chunked loading and fitToBounds logic
+        Object.values(self._overlays).filter(overlay => {
+            return self._map.hasLayer(overlay); // add previously checked overlays for Run / Refresh action and others
+        }).forEach(overlay => self._markerCluster.getGisMarkerClusterGroup().addLayer(overlay));
+
+        self.restorePrevEntityAndWasPopupOpen(prevEntity, wasPopupOpen);
+        self.finishReload();
+        self._markerCluster.setShouldFitToBounds(false); // reset shouldFitToBounds to avoid fitting to bounds on overlay's tick
+    };
     self.tgMap = tgMap;
+
+    /**
+     * Handles changes to local _entities in a map component using array of new / updated ones.
+     * This method will have no effect on 'retrievedEntities' of parent insertion point / centres.
+     *
+     * New entities are added to the end of _entities list (and after summary feature, if such exists).
+     * The centre-based ordering is not respected here.
+     * Summary features for root (and deeper level) entities are not supported too.
+     *
+     * This method also handles marker selection and popups; and events that trigger loading indicator.
+     */
+    self.handleNewOrUpdatedEntities = newOrUpdatedEntities => {
+        this.initReload();
+        const [prevEntity, wasPopupOpen] = this.capturePrevEntityAndWasPopupOpen(false /* isRunAction */);
+        this.promoteNewOrUpdatedEntities(newOrUpdatedEntities);
+        this.restorePrevEntityAndWasPopupOpen(prevEntity, wasPopupOpen);
+        this.finishReload();
+    };
 
     tgMap.columnPropertiesMapperHandler = function (newColumnPropertiesMapper) {
         self.columnPropertiesMapper = newColumnPropertiesMapper;
@@ -135,6 +183,32 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     // create a factory for markers
     self._markerFactory = self.createMarkerFactory();
 
+    self._createLayer = function (checkedByDefault = false, parentGroup) {
+        const geoJson = new L.GeoJSON.SubGroup(parentGroup, [], {
+            style: function (feature) {
+                return self._entityStyling.getStyle(feature);
+            },
+            pointToLayer: function (feature, latlng) {
+                return self._markerFactory.createFeatureMarker(feature, latlng);
+            },
+            onEachFeature: function (feature, layer) {
+                const layerId = geoJson.getLayerId(layer);
+                feature.properties.layerId = layerId;
+                layer.on('mouseover', function () {
+                    if (!feature.properties.popupContentInitialised) { // initialise popupContent (text or even heavyweight HTMLElement) only once when mouseOver occurs
+                        layer.bindPopup(self.createPopupContent(feature));
+                        feature.properties.popupContentInitialised = true;
+                    }
+                });
+                layer.on('click', function () { // dblclick
+                    self._select.select(layerId);
+                });
+            }
+        });
+        geoJson._checkedByDefault = checkedByDefault;
+        return geoJson;
+    };
+
     self._createEsriLayer = function (url, _featureType, checkedByDefault = false) {
         const esriOverlay = esri.featureLayer({
             url: url,
@@ -165,33 +239,13 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
         return esriOverlay;
     };
 
-    const overlays = self.createOverlays();
-    self._markerCluster = self.createMarkerCluster(self._map, self._markerFactory, progressDiv, progressBarDiv, overlays);
+    self._markerCluster = self.createMarkerCluster(self._map, self._markerFactory, progressDiv, progressBarDiv);
+    const overlays = self.createOverlays(self._markerCluster.getGisMarkerClusterGroup());
+    self._overlays = overlays;
 
     self._entityStyling = self.createEntityStyling();
-    self._geoJsonOverlay = L.geoJson([], {
-        style: function (feature) {
-            return self._entityStyling.getStyle(feature);
-        },
-        pointToLayer: function (feature, latlng) {
-            return self._markerFactory.createFeatureMarker(feature, latlng);
-        },
-        onEachFeature: function (feature, layer) {
-            const layerId = self._geoJsonOverlay.getLayerId(layer);
-            feature.properties.layerId = layerId;
-            layer.on('mouseover', function () {
-                if (!feature.properties.popupContentInitialised) { // initialise popupContent (text or even heavyweight HTMLElement) only once when mouseOver occurs
-                    layer.bindPopup(self.createPopupContent(feature));
-                    feature.properties.popupContentInitialised = true;
-                }
-            });
-            layer.on('click', function () { // dblclick
-                self._select.select(layerId);
-            });
-        }
-    });
 
-    self._controls = new Controls(self._map, self._markerCluster.getGisMarkerClusterGroup(), self._baseLayers, overlays, Object.values(overlays)[0]);
+    self._controls = new Controls(self._map, self._markerCluster.getGisMarkerClusterGroup(), self._baseLayers, self._overlays);
 
     const findLayerByPredicate = function (overlay, predicate) {
         if (overlay._layers) {
@@ -218,11 +272,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     };
 
     const getLayerById = function (layerId) {
-        const found = findLayerByPredicateIn(Object.values(overlays), value => value._leaflet_id === layerId);
-        if (found) {
-            return found;
-        }
-        return self._geoJsonOverlay.getLayer(layerId);
+        return findLayerByPredicateIn(Object.values(overlays), value => value._leaflet_id === layerId);
     };
     const getLayerByGlobalId = function (globalId) {
         return findLayerByPredicateIn(Object.values(overlays), value => value.feature.properties.GlobalID === globalId);
@@ -230,7 +280,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     self._select = new Select(self._map, getLayerById, self._markerFactory, tgMap, self.findEntityBy.bind(self), getLayerByGlobalId);
     self._map.fire('dataloading');
     self.initialise();
-    self._markerCluster.getGisMarkerClusterGroup().addLayer(self._geoJsonOverlay);
+
     self._map.fire('dataload');
 };
 
@@ -244,8 +294,24 @@ GisComponent.prototype.appendStyles = function (tgMap, ...styleModuleNames) {
     tgMap.shadowRoot.appendChild(styleWrapper);
 };
 
-GisComponent.prototype.createOverlays = function () {
-    return {};
+/**
+ * Creates overlays of domain-specific objects to be displayed on map.
+ * User can tick/untick overlays by their names in right top corner's button.
+ * Override this default implementation to provide custom map of overlays.
+ */
+GisComponent.prototype.createOverlays = function (parentGroup) {
+    const geoJsonLayer = this._createLayer(true, parentGroup);
+    const overlays = {};
+    overlays[GEOJSON] = geoJsonLayer;
+    return overlays;
+};
+
+/**
+ * Distributes 'entity' into specific overlay by its name.
+ * Override this default implementation to support distribution into custom map of overlays.
+ */
+GisComponent.prototype.overlayNameFor = function (entity) {
+    return GEOJSON;
 };
 
 /**
@@ -280,15 +346,17 @@ GisComponent.prototype.getTopEntityFor = function (feature) {
 }
 
 GisComponent.prototype.initialise = function () {
-    this._geoJsonOverlay.addData([]);
+    Object.values(this._overlays).forEach(function (overlay) {
+        overlay.addData([]);
+    });
 };
 
 GisComponent.prototype.createMarkerFactory = function () {
     return new MarkerFactory();
 };
 
-GisComponent.prototype.createMarkerCluster = function (map, markerFactory, progressDiv, progressBarDiv, overlays) {
-    return new MarkerCluster(map, markerFactory, progressDiv, progressBarDiv, overlays);
+GisComponent.prototype.createMarkerCluster = function (map, markerFactory, progressDiv, progressBarDiv) {
+    return new MarkerCluster(map, markerFactory, progressDiv, progressBarDiv);
 };
 
 GisComponent.prototype.createEntityStyling = function () {
@@ -306,46 +374,74 @@ GisComponent.prototype.finishReload = function () {
 };
 
 GisComponent.prototype.clearAll = function () {
-    this._geoJsonOverlay.clearLayers();
-    this._markerCluster.getGisMarkerClusterGroup().clearLayers();
+    const self = this;
+    const overlaysAndChecked = new Map(); // Map of overlay and its checked state
+    Object.values(this._overlays).forEach(function (overlay) {
+        overlay.clearLayers(); // remove all layers from overlay; this is important because new markers will be created through addData call even if retrieved data is the same
+        overlaysAndChecked.set(overlay, self._map.hasLayer(overlay)); // add checked state to Map
+        self._map.removeLayer(overlay); // remove overlay from map, which triggers removal from parent group, that is a marker cluster group
+    });
+    this._markerCluster.getGisMarkerClusterGroup().clearLayers(); // at this stage marker cluster group should already be clean; we do clearing to reassure it is empty and to trigger marker cluster plugin clearing specifics
+    return overlaysAndChecked;
 };
 
-GisComponent.prototype.promoteEntities = function (newEntities) {
-    const self = this;
-    this._entities = newEntities;
-
-    this.traverseEntities(this._entities, null /* the parent for top-level entities is null! */, function (entity) {
-        if (entity.type) {
-            console.warn('Entity already has "type" object. Cannot continue with conversion into feature.');
-        }
-        entity.type = "Feature";
-
-         if (entity.properties) {
-            console.warn('Entity already has "properties" object. Cannot continue with conversion into feature.');
-        }
-        entity.properties = entity.properties || {};
-        entity.properties._parentFeature = null;
-
-         if (entity.geometry) {
-            throw 'Entity already has "geometry" object. Cannot continue with conversion into feature.';
-        }
-        entity.geometry = self.createGeometry(entity);
-
-         // console.debug('entity:');
-        // console.debug(entity);
-        // console.debug('entity.geometry:');
-        // console.debug(entity.geometry);
-
-         if (entity.geometry) {
-            self._geoJsonOverlay.addData(entity);
+/**
+ * Promotes changes to local _entities in a map component using array of new / updated ones.
+ * This method will have no effect on 'retrievedEntities' of parent insertion point / centres.
+ *
+ * New entities are added to the end of _entities list (and after summary feature, if such exists).
+ * The centre-based ordering is not respected here.
+ * Summary features for root (and deeper level) entities are not supported too.
+ */
+GisComponent.prototype.promoteNewOrUpdatedEntities = function (newOrUpdatedEntities) {
+    this.traverseEntities(newOrUpdatedEntities, null /* the parent for top-level entities is null */, (entity, parentFeature) => {
+        const indexToUpdate = this._entities.findIndex(prevEntity => this._reflector.equalsEx(entity, prevEntity));
+        if (indexToUpdate >= 0) {
+            const prevLayerId = this._entities[indexToUpdate].properties.layerId;
+            // found prev entity could probably have no corresponding leaflet layer -- need to check this
+            if (typeof prevLayerId === 'number') {
+                const prevLayer = this._select._getLayerById(prevLayerId);
+                if (prevLayer) {
+                    this._map.removeLayer(prevLayer);
+                }
+            }
+            this._entities[indexToUpdate] = entity;
         } else {
-            // TODO do nothing in case when the entity has no visual representation
-            console.debug("entity with no visual representation: ");
-            console.debug(entity);
+            this._entities.push(entity);
         }
-    }, function (entities) {
-        return self.createSummaryFeature(entities);
-    });
+        this.promoteEntity(entity, parentFeature);
+    }, entities => null); // summary features are not supported
+};
+
+/**
+ * Promotes changes to local _entities in a map component using new entities to be replacing old ones.
+ * This method will have no effect on 'retrievedEntities' of parent insertion point / centres.
+ *
+ * Summary features for root (and deeper level) entities are supported.
+ * The order of newEntities is respected too.
+ */
+GisComponent.prototype.promoteEntities = function (newEntities) {
+    this._entities = newEntities;
+    this.traverseEntities(this._entities, null /* the parent for top-level entities is null */, this.promoteEntity.bind(this), this.createSummaryFeature.bind(this));
+};
+
+/**
+ * Converts entity into GEOJson feature parentFeature relationships. Promotes converted feature into corresponding overlay.
+ */
+GisComponent.prototype.promoteEntity = function (entity, parentFeature) {
+    entity.type = 'Feature';
+    if (entity.properties) {
+        console.warn('Entity already has "properties" object.');
+    }
+    entity.properties = entity.properties || {};
+    entity.properties._parentFeature = parentFeature;
+    if (entity.geometry) {
+        throw 'Entity already has "geometry" object. Cannot continue with conversion into feature.';
+    }
+    entity.geometry = this.createGeometry(entity);
+    if (entity.geometry) {
+        this._overlays[this.overlayNameFor(entity)].addData(entity);
+    } // do nothing in case when the entity has no visual representation
 };
 
 /** 
@@ -407,22 +503,18 @@ GisComponent.prototype.createGeometry = function (feature) {
 GisComponent.prototype.traverseEntities = function (entities, parentFeature, entityAction, createSummaryFeatureAction) {
     for (let i = 0; i < entities.length; i++) {
         const entity = entities[i];
-        this.traverseEntity(entity, entityAction, createSummaryFeatureAction); // entityAction converts entity to a feature form
-
-        entity.properties._parentFeature = parentFeature;
+        this.traverseEntity(entity, parentFeature, entityAction, createSummaryFeatureAction); // entityAction converts entity to a feature form
     }
     const summaryFeature = createSummaryFeatureAction(entities);
     if (summaryFeature) {
         entities.push(summaryFeature); // the last sibling item to the entities will be summaryFeature (if any)
-        entityAction(summaryFeature); // entityAction converts entity to a feature form if it is not feature already
-
-        summaryFeature.properties._parentFeature = parentFeature;
+        entityAction(summaryFeature, parentFeature); // entityAction converts entity to a feature form if it is not feature already
     }
 }
 
-GisComponent.prototype.traverseEntity = function (entity, entityAction, createSummaryFeatureAction) {
+GisComponent.prototype.traverseEntity = function (entity, parentFeature, entityAction, createSummaryFeatureAction) {
     const self = this;
-    entityAction(entity); // entityAction converts entity to a feature form
+    entityAction(entity, parentFeature); // entityAction converts entity to a feature form
 
     /* if (entity.properties) {
         for (let prop in entity.properties) {
@@ -497,7 +589,7 @@ GisComponent.prototype.createPopupContent = function (feature) {
         const extendPopupText = entry => {
             if (entry.value) { // entry.value is already converted to string; if entry.value === '' it will be considered empty and such property will not be shown in a popup
                 const value = entry.value === 'true' ? '<iron-icon class="bool-true-icon" icon="icons:check"></iron-icon>' : (entry.value === 'false' ? '' : entry.value);
-                popupText = popupText + '<tr class="popup-row" title="' + entry.title + '"><td>' + entry.title + ':</td><td><div>' + value + '</div></td></tr>';
+                popupText = popupText + '<tr class="popup-row" dotnotation="' + entry.dotNotation + '"><td>' + entry.title + ':</td><td><div>' + value + '</div></td></tr>';
             }
         };
         
@@ -518,7 +610,7 @@ GisComponent.prototype.createPopupContent = function (feature) {
         const rows = element.children[0].querySelectorAll('.popup-row'); // ... find all popup 'rows' ... ('element' is a <table> and its first child is a <tbody> that contains all <tr>s)
         const columnPropertiesMapped = self.columnPropertiesMapper(entity);
         rows.forEach(row => {
-            const foundEntry = columnPropertiesMapped.find(entry => entry.column.columnTitle === row.title);
+            const foundEntry = columnPropertiesMapped.find(entry => entry.dotNotation === row.getAttribute('dotnotation'));
             if (foundEntry && foundEntry.column && foundEntry.column.parentNode /* EGI */ && foundEntry.column.parentNode.hasAction(entity, foundEntry.column)) {
                 const valueElement = row.children[1].children[0]; // ... 'row' is a <tr> element; second child of it represents <td> with a value; make the child of this <td> (<div> element) clickable ...
                 valueElement.className = 'popup-button';
