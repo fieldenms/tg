@@ -48,7 +48,7 @@ import ua.com.fielden.platform.utils.Pair;
 public class PersistDomainMetadataModel {
     final static String CRITERION = "[selection criterion]";
     final static String DOMAINTYPE_INSERT_STMT = "INSERT INTO DOMAINTYPE_ VALUES(?,?,?,?,?,?,?,?);";
-    final static String DOMAINPROPERTY_INSERT_STMT = "INSERT INTO DOMAINPROPERTY_ VALUES(?,?,?,?,?,?,?,?,?,?,?);";
+    final static String DOMAINPROPERTY_INSERT_STMT = "INSERT INTO DOMAINPROPERTY_ VALUES(?,?,?,?,?,?,?,?,?,?,?,?);";
     final static String EXISTING_DATA_DELETE_STMT = "DELETE FROM DOMAINPROPERTY_; DELETE FROM DOMAINTYPE_;";
 
     private static final Logger LOGGER = Logger.getLogger(PersistDomainMetadataModel.class);
@@ -142,7 +142,9 @@ public class PersistDomainMetadataModel {
                 }
                 id = id + 1;
                 position = position + 1;
-                final String prelTitle = getTitleAndDesc(propMd.name, entityType.type).getKey();
+                final Pair<String, String> prelTitleAndDesc = getTitleAndDesc(propMd.name, entityType.type);
+                final String prelTitle = prelTitleAndDesc.getKey();
+                final String prelDesc = prelTitleAndDesc.getValue();
 
                 final DomainTypeData superTypeDtd = typesMap.get(entityType.superType);
                 result.add(new DomainPropertyData(id, //
@@ -150,7 +152,8 @@ public class PersistDomainMetadataModel {
                         entityType.id, //
                         null, //
                         typesMap.get(propMd.javaType).id, //
-                        (isEmpty(prelTitle) && ID.equals(propMd.getName()) ? "ID" : prelTitle), //
+                        prelTitle, //
+                        prelDesc, //
                         entityType.getKeyMemberIndex(propMd.name), //
                         propMd.required, //
                         determinePropColumn(entityType.superType == null ? propMd
@@ -164,12 +167,14 @@ public class PersistDomainMetadataModel {
                     for (final EqlPropertyMetadata subProp : propMd.subitems().stream().filter(el -> el.column != null).collect(toList())) {
                         id = id + 1;
                         subItemPosition = subItemPosition + 1;
+                        final Pair<String, String> titleAndDesc = getTitleAndDesc(subProp.name, propMd.javaType);
                         result.add(new DomainPropertyData(id, //
-                                subProp.getName(), //
+                                subProp.name, //
                                 null, //
                                 holderId, //
                                 typesMap.get(subProp.javaType).id, //
-                                getTitleAndDesc(subProp.getName(), propMd.javaType).getKey(), //
+                                titleAndDesc.getKey(), //
+                                titleAndDesc.getValue(), //
                                 null, //
                                 false, //
                                 subProp.column.name, //
@@ -235,14 +240,15 @@ public class PersistDomainMetadataModel {
                             pst.setLong(1, propType.id);
                             pst.setString(2, propType.name);
                             pst.setString(3, propType.title);
-                            setNullableLongParameter(4, propType.holderAsDomainType, pst);
-                            setNullableLongParameter(5, propType.holderAsDomainProperty, pst);
-                            pst.setLong(6, propType.domainType);
-                            setNullableIntegerParameter(7, propType.keyIndex, pst);
-                            setBooleanParameter(8, propType.required, pst);
-                            pst.setString(9, propType.dbColumn);
-                            pst.setInt(10, propType.position);
-                            pst.setInt(11, 0);
+                            pst.setString(4, propType.desc);
+                            setNullableLongParameter(5, propType.holderAsDomainType, pst);
+                            setNullableLongParameter(6, propType.holderAsDomainProperty, pst);
+                            pst.setLong(7, propType.domainType);
+                            setNullableIntegerParameter(8, propType.keyIndex, pst);
+                            setBooleanParameter(9, propType.required, pst);
+                            pst.setString(10, propType.dbColumn);
+                            pst.setInt(11, propType.position);
+                            pst.setInt(12, 0);
                             pst.addBatch();
                         } catch (final SQLException ex) {
                             final String error = format("Could not create insert for [%s].", propType.name);
@@ -333,18 +339,20 @@ public class PersistDomainMetadataModel {
         private final Long holderAsDomainProperty;
         private final long domainType;
         private final String title;
+        private final String desc;
         private final Integer keyIndex;
         private final boolean required;
         private final String dbColumn;
         private final int position;
 
-        public DomainPropertyData(final long id, final String name, final Long holderAsDomainType, final Long holderAsDomainProperty, final long domainType, final String title, final Integer keyIndex, final boolean required, final String dbColumn, final int position) {
+        public DomainPropertyData(final long id, final String name, final Long holderAsDomainType, final Long holderAsDomainProperty, final long domainType, final String title, final String desc, final Integer keyIndex, final boolean required, final String dbColumn, final int position) {
             this.id = id;
             this.name = name;
             this.holderAsDomainType = holderAsDomainType;
             this.holderAsDomainProperty = holderAsDomainProperty;
             this.domainType = domainType;
             this.title = title;
+            this.desc = desc;
             this.keyIndex = keyIndex;
             this.required = required;
             this.dbColumn = dbColumn;

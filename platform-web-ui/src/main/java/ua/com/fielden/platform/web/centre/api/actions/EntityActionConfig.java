@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.centre.api.actions;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
@@ -30,6 +32,7 @@ public final class EntityActionConfig {
     public final Optional<PrefDim> prefDimForView;
     public final Optional<InsertionPoints> whereToInsertView;
 	public final boolean shouldRefreshParentCentreAfterSave;
+	public final Set<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>> excludeInsertionPoints = new HashSet<>();
 	public final UI_ROLE role;
 
 	public enum UI_ROLE {
@@ -50,7 +53,8 @@ public final class EntityActionConfig {
             final PrefDim prefDimForView,
             final boolean shouldRefreshParentCentreAfterSave,
             final InsertionPoints whereToInsertView,
-            final UI_ROLE role) {
+            final UI_ROLE role,
+            final Set<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>> excludeInsertionPoints) {
 
         if (context == null) {
             throw new IllegalArgumentException("Any functional entity requires some execution context to be specified.");
@@ -79,6 +83,7 @@ public final class EntityActionConfig {
         this.prefDimForView = Optional.ofNullable(prefDimForView);
         this.whereToInsertView = Optional.ofNullable(whereToInsertView);
         this.role = role;
+        this.excludeInsertionPoints.addAll(excludeInsertionPoints);
     }
 
 
@@ -94,8 +99,9 @@ public final class EntityActionConfig {
             final IPostAction successPostAction,
             final IPostAction errorPostAction,
             final PrefDim prefDimForView,
-            final boolean shouldRefreshParentCentreAfterSave) {
-        this(functionalEntity, context, icon, iconStyle, shortDesc, longDesc, shortcut, preAction, successPostAction, errorPostAction, prefDimForView, shouldRefreshParentCentreAfterSave, null, UI_ROLE.ICON);
+            final boolean shouldRefreshParentCentreAfterSave,
+            final Set<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>> excludeInsertionPoints) {
+        this(functionalEntity, context, icon, iconStyle, shortDesc, longDesc, shortcut, preAction, successPostAction, errorPostAction, prefDimForView, shouldRefreshParentCentreAfterSave, null, UI_ROLE.ICON, excludeInsertionPoints);
     }
 
     public static EntityActionConfig withContext(final EntityActionConfig ac, final CentreContextConfig cc) {
@@ -113,7 +119,8 @@ public final class EntityActionConfig {
                         ac.prefDimForView.isPresent() ? ac.prefDimForView.get() : null,
                         ac.shouldRefreshParentCentreAfterSave,
                         ac.whereToInsertView.isPresent() ? ac.whereToInsertView.get() : null,
-                        ac.role);
+                        ac.role,
+                        ac.excludeInsertionPoints);
     }
 
 
@@ -135,7 +142,8 @@ public final class EntityActionConfig {
                 ac.prefDimForView.isPresent() ? ac.prefDimForView.get() : null,
                 ac.shouldRefreshParentCentreAfterSave,
                 ip,
-                UI_ROLE.ICON);
+                UI_ROLE.ICON,
+                ac.excludeInsertionPoints);
     }
 
     /**
@@ -160,7 +168,8 @@ public final class EntityActionConfig {
                 ac.prefDimForView.isPresent() ? ac.prefDimForView.get() : null,
                 ac.shouldRefreshParentCentreAfterSave,
                 ac.whereToInsertView.isPresent() ? ac.whereToInsertView.get() : null,
-                role);
+                role,
+                ac.excludeInsertionPoints);
     }
 
     /**
@@ -188,7 +197,8 @@ public final class EntityActionConfig {
             final IPostAction successPostAction,
             final IPostAction errorPostAction,
             final PrefDim prefDimForView,
-            final boolean shouldRefreshParentCentreAfterSave
+            final boolean shouldRefreshParentCentreAfterSave,
+            final Set<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>> excludeInsertionPoints
             ) {
         return new EntityActionConfig(
                 functionalEntity,
@@ -202,7 +212,8 @@ public final class EntityActionConfig {
                 successPostAction,
                 errorPostAction,
                 prefDimForView,
-                shouldRefreshParentCentreAfterSave);
+                shouldRefreshParentCentreAfterSave,
+                excludeInsertionPoints);
     }
 
     @Override

@@ -77,6 +77,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected IToolbarConfig toolbarConfig = new CentreToolbar();
     protected boolean hideToolbar = false;
     protected IScrollConfig scrollConfig = ScrollConfig.configScroll().done();
+    protected boolean retrieveAll = false;
     protected int pageCapacity = 30;
     protected int maxPageCapacity = 300;
     //EGI height related properties
@@ -189,6 +190,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 toolbarConfig,
                 hideToolbar,
                 scrollConfig,
+                retrieveAll,
                 pageCapacity,
                 maxPageCapacity,
                 visibleRowsCount,

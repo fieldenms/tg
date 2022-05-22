@@ -225,6 +225,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static final String TOP_INSERTION_POINT_DOM = "<!--@top_insertion_points-->";
     private static final String BOTTOM_INSERTION_POINT_DOM = "<!--@bottom_insertion_points-->";
     private static final String ALTERNATIVE_VIEW_INSERTION_POINT_DOM = "<!--@alternative_view_insertion_points-->";
+    //centre related  config properties
+    private static final String CENTRE_RETRIEVE_ALL_OPTION = "@retrieveAll";
     // generic custom code
     private static final String READY_CUSTOM_CODE = "//@centre-is-ready-custom-code";
     private static final String ATTACHED_CUSTOM_CODE = "//@centre-has-been-attached-custom-code";
@@ -1275,6 +1277,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(TOP_INSERTION_POINT_DOM, topInsertionPointsDom.toString()).
                 replace(BOTTOM_INSERTION_POINT_DOM, bottomInsertionPointsDom.toString()).
                 replace(ALTERNATIVE_VIEW_INSERTION_POINT_DOM, join(alternativeViewsDom, "\n")).
+                replace(CENTRE_RETRIEVE_ALL_OPTION, Boolean.toString(dslDefaultConfig.shouldRetrieveAll())).
                 replace(READY_CUSTOM_CODE, customCode.map(code -> code.toString()).orElse("")).
                 replace(ATTACHED_CUSTOM_CODE, customCodeOnAttach.map(code -> code.toString()).orElse(""));
         logger.debug("Finishing...");
