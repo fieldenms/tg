@@ -253,7 +253,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
 
     /**
-     * Returns <code>true</code> if 'Run' action represented by specified <code>customObject</code> is performed, otherwise returns <code>false</code>.
+     * A predicate to determine whether {@code customObject} represents action {@code Run}.
      *
      * @param customObject
      * @return
@@ -263,7 +263,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
 
     /**
-     * Returns <code>true</code> if 'Refresh' action represented by specified <code>customObject</code> is performed, otherwise returns <code>false</code>.
+     * A predicate to determine whether {@code customObject} represents action {@code Refresh}.
      *
      * @param customObject
      * @return
@@ -362,7 +362,12 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
 
     /**
-     * Runs entity centre based on {@code retrieveAll} option. Returns {@link Right} with list of entities and summary if true. Otherwise returns {@link Left} with {@link IPage}.
+     * Runs the entity centre with option {@code retrieveAll}. Returns {@link Right} with a list of entities of all matching entities and a summary, if {@code retrieveAll == true}.
+     * Otherwise, returns {@link Left} with {@link IPage}, which should be most common case.
+     * 
+     * @param retrieveAll
+     * @param criteria
+     * @return
      */
     private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Either<IPage<T>, Pair<List<T>, T>> run(final boolean retrieveAll, final M criteria) {
         if (retrieveAll) {
