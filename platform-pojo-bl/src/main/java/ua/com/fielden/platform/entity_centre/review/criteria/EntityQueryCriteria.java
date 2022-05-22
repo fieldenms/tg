@@ -524,7 +524,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     /**
-     * Exports data, those were retrieved with query, in to the file specified with appropriate filename.
+     * Exports the data, which is retrieved with {@code qem}, to a file with {@code filename}.
      *
      * @param fileName
      * @param query
@@ -563,7 +563,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     /**
      * Creates {@link IFetchProvider} for result-set of the entity centre.
      * The result includes all properties in result-set columns and properties from additional fetch provider, if there is one.
-     * Also it includes properties those are used as tooltips for other properties, if there are any.
+     * Also it includes properties that are used as tooltips for other properties, if there are any.
      */
     public IFetchProvider<T> createResultSetFetchProvider() {
         return createFetchModelFrom(
@@ -679,7 +679,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     /**
-     * Returns all entities those satisfies conditions of this entity query criteria.
+     * Returns all entities that satisfy conditions of {@code this} entity query criteria.
      *
      * @return
      */
@@ -688,7 +688,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     /**
-     * Returns all entities those satisfies conditions of this entity query criteria with summary.
+     * Returns all entities that satisfy conditions of {@code this} entity query criteria with summary.
      *
      * @return
      */
@@ -698,7 +698,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     /**
-     * Returns all entities those satisfies conditions of the specified {@link QueryExecutionModel}.
+     * Returns all entities that get retrieved with {@code queryModel}.
      *
      * @param queryModel
      *            - query model for which the first result page must be returned.
@@ -714,7 +714,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     /**
-     * Returns a stream of entities that match the generated query.
+     * Returns a stream of entities that match a generated query.
      * The returned stream must always be wrapped into <code>try with resources</code> clause to ensure that the underlying resultset is closed.
      */
 
@@ -747,10 +747,10 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     /**
-     * Returns first entities those satisfies conditions of the specified {@link QueryExecutionModel}.
+     * Returns first {@code numberOfEntities} that match {@code queryModel}.
      *
      * @param queryModel
-     *            - query model for which the first result page must be returned.
+     *            - query model for which the first result page is returned.
      * @return
      */
     public final List<T> getFirstEntities(final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel, final int numberOfEntities) {
@@ -763,7 +763,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     /**
-     * Returns the first result page for query model with summary. The page size is specified with the third parameter.
+     * Returns the first result page for query model with summary. The page size is specified with argument {@code pageSize}.
      *
      * @param queryModel
      *            - query model for which the first result page must be returned.
@@ -781,8 +781,8 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     }
 
     /**
-     * Converts existing properties model (which has separate properties for from/to, is/isNot and so on) into new properties model (which has single abstraction for one
-     * criterion).
+     * Converts existing properties model, which has separate properties for from/to, is/isNot and so on, into a new properties model, which has a single abstraction for one
+     * criterion.
      *
      * @param properties
      * @return
