@@ -35,7 +35,7 @@ public class UserSessionEstablishmentTestCase extends AbstractDaoTestCase {
         final User currUser = getInstance(IUserProvider.class).getUser();
         assertNotNull(currUser);
 
-        final UserSession session = coSession.newSession(currUser, true);
+        final UserSession session = coSession.newSession(currUser, true, null);
         assertNotNull("User session should have been created.", session);
 
         assertTrue(session.isPersisted());
@@ -57,7 +57,7 @@ public class UserSessionEstablishmentTestCase extends AbstractDaoTestCase {
         final User currUser = getInstance(IUserProvider.class).getUser();
         assertNotNull(currUser);
 
-        final UserSession session = coSession.newSession(currUser, false);
+        final UserSession session = coSession.newSession(currUser, false, null);
         assertNotNull("User session should have been created.", session);
 
         assertTrue(session.isPersisted());
@@ -79,10 +79,10 @@ public class UserSessionEstablishmentTestCase extends AbstractDaoTestCase {
         final User currUser = getInstance(IUserProvider.class).getUser();
         assertNotNull(currUser);
 
-       coSession.newSession(currUser, false);
-       coSession.newSession(currUser, true);
-       coSession.newSession(currUser, false);
-       coSession.newSession(currUser, true);
+       coSession.newSession(currUser, false, null);
+       coSession.newSession(currUser, true, null);
+       coSession.newSession(currUser, false, null);
+       coSession.newSession(currUser, true, null);
 
        assertEquals(4, coSession.count(select(UserSession.class).where().prop("user").eq().val(currUser). model()));
     }

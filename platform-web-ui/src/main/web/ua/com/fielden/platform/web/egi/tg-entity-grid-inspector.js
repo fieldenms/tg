@@ -1003,8 +1003,8 @@ Polymer({
         //Initialising property column mappings
         this.columnPropertiesMapper = (function (entity) {
             const result = [];
-            for (let index = 0; index < this.columns.length; index++) {
-                const column = this.columns[index];
+            for (let index = 0; index < this.allColumns.length; index++) {
+                const column = this.allColumns[index];
                 const entry = {
                     dotNotation: column.property,
                     value: this.getBindedValue(entity, column),
@@ -1047,6 +1047,7 @@ Polymer({
         const entityIndex = this._findEntity(entity, this.filteredEntities);
         if (entityIndex >= 0) {
             const egiEntity = this.egiModel[entityIndex];
+            egiEntity.entity.set(propPath, entity.get(propPath));
             egiEntity._propertyChangedHandlers && egiEntity._propertyChangedHandlers[propPath] && egiEntity._propertyChangedHandlers[propPath]();
         }
     },

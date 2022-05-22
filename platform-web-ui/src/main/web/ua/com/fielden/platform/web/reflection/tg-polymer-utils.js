@@ -275,3 +275,19 @@ export const doWhenDimentionsAttainedAnd = function (self, conditionFun, doFun, 
         }
     }, time);
 };
+
+/**
+ * Replaces all triangular brackets with appropriate html sign.
+ * 
+ * @param {String} text - the text with html tags 
+ * @returns 
+ */
+export const escapeHtmlText = function(text) {
+    const searchFor = [/</g, />/g];
+    const replaceWith = ['&lt;', '&gt;'];
+    let escapedStr = text;
+    searchFor.forEach((search, i) => {
+        escapedStr = escapedStr.replace(search, replaceWith[i]);
+    });
+    return escapedStr;
+};

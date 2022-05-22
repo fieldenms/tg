@@ -55,10 +55,10 @@ public interface IBasicWebApplicationServerModule {
         // bind IWebResourceLoader to its implementation as singleton
         bindType(IWebResourceLoader.class).to(WebResourceLoader.class).in(Scopes.SINGLETON);
 
-        // bind ISerialisationTypeEncoder to its implementation as singleton -- it is dependent on IServerGlobalDomainTreeManager and IUserProvider
+        // bind ISerialisationTypeEncoder to its implementation as singleton -- it is dependent on IWebUiConfig, IUserProvider and other Web UI infrastructure
         bindType(ISerialisationTypeEncoder.class).to(SerialisationTypeEncoder.class).in(Scopes.SINGLETON);
 
-        // bind ICriteriaEntityRestorer to its implementation as singleton -- it is dependent on IWebUiConfig, IServerGlobalDomainTreeManager, IUserProvider and other Web UI infrastructure
+        // bind ICriteriaEntityRestorer to its implementation as singleton -- it is dependent on IWebUiConfig, IUserProvider and other Web UI infrastructure
         bindType(ICriteriaEntityRestorer.class).to(CriteriaEntityRestorer.class).in(Scopes.SINGLETON);
 
         // bind companion object implementations that are dependent on ICriteriaEntityRestorer

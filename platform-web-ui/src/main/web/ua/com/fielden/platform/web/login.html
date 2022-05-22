@@ -111,6 +111,20 @@
                 height: 100%;
                 z-index: -1;
             }
+
+            h4 {
+                width: 100%; 
+                text-align: center; 
+                border-bottom: 1px solid #4285f4; 
+                line-height: 0.1em;
+                margin: 32px 0 32px; 
+            } 
+
+            h4 span { 
+                background:#fafafa; 
+                color: #4285f4;
+                padding:0 10px; 
+            }
         </style>
     </custom-style>
 </head>
@@ -121,11 +135,11 @@
     <tg-message-panel></tg-message-panel>
     <hgroup>
         <h1>Application Login</h1>
-        <h3>Please enter valid credentials.</h3>
+        <h3>@auth.login.msg</h3>
     </hgroup>
     <!-- Autocompletion of fields from other un-related forms is prevented, however in-browser Save Password capabilities are always stronger than this.-->
     <!-- See https://developer.mozilla.org/en-US/docs/Web/Security/Securing_your_site/Turning_off_form_autocompletion for more details. -->
-    <iron-form id="form">
+    <iron-form id="form" style="display: @auth.rso.display">
         <form action="login" method="post" autocomplete="off">
             <div class="vertical-section">
                 <paper-input-container id="in-username-container">
@@ -152,6 +166,12 @@
             <paper-button id="submitButton" style="width:100%; margin: 0px" class="submit-normal" raised>
                 <span id="submitLabel">Login</span>
             </paper-button>
+            <div style="display: @auth.sso.display">
+                <h4><span>OR</span></h4>
+                <paper-button id="submitButtonSso" style="width:100%; margin: 0px;background: #388E3C;" class="submit-normal" raised>
+                    <span id="submitLabelSso">Login with @auth.sso.provider</span>
+                </paper-button>
+            </div>
         </form>
     </iron-form>
 
@@ -194,7 +214,6 @@
                 submit.disabled = true;
                 form.submit();
             }
-
 
             form.addEventListener('iron-form-submit', function (event) {
                 console.log("submitting...");
@@ -255,6 +274,29 @@
                 }
             );
 
+            // Let's handle SSO redirects as appropriate.
+            // We should be fine to always create the function to redirection.
+            const redirectToSso = function () {
+                console.log("redirecting to SSO...");
+                // It is necessary to pass the hash part of the URI (if present) to the server as a query parameter.
+                // This is necessary to ensure correct redirection upon successful authentication.
+                // Otherwise, the local URI part gets lost when redirecting to an OpenID Connect provider.
+                if (window.location.hash) {
+                    window.location.assign("@auth.sso.binding.path" + "?hash=" + window.location.hash.substring(1));
+                } else {
+                    window.location.assign("@auth.sso.binding.path");
+                }
+            }
+            // However, we need to be selective how function redirectToSso is used.
+            // For the SSO mode we want to automatically redirect calls to the login page to the SSO resource.
+            // However, we still need to be able to provide RSO support even in the SSO mode as well as for cases where only RSO is used.
+            // The login page with RSO support must not redirect to SSO upon loading.
+            // At the same time RSO page can have button submitSso bound to redirectToSso – it won't be visible.
+            if ("@auth.mode" === "SSO") { // redirect automatically to the SSO resource upon page load in the SSO mode
+                window.addEventListener('DOMContentLoaded', redirectToSso.bind(window));
+            }
+            const submitSso = document.getElementById('submitButtonSso');
+            submitSso.onclick = redirectToSso.bind(submitSso);
         })();
     </script>
 </body>

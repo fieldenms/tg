@@ -81,6 +81,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     private final IToolbarConfig toolbarConfig;
     private final boolean hideToolbar;
     private final IScrollConfig scrollConfig;
+    private final boolean retrieveAll;
     private final int pageCapacity;
     private final int maxPageCapacity;
     private final int visibleRowsCount;
@@ -244,10 +245,11 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         public final Optional<Class<? extends IDynamicColumnBuilder<T>>> dynamicColBuilderType;
         public final Optional<CentreContextConfig> contextConfig;
         public final Optional<BiConsumer> entityPreProcessor;
-        public final Supplier<Optional<EntityActionConfig>> propAction;
         public final Optional<AbstractWidget> widget;
         public final int width;
         public final boolean isFlexible;
+
+        private Supplier<Optional<EntityActionConfig>> propAction = Optional::empty;
 
          public static <T extends AbstractEntity<?>> ResultSetProp<T> propByName(final String propName, final int width, final boolean isFlexible, final Optional<AbstractWidget> widget, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
             return new ResultSetProp<>(propName, empty(), empty(), empty(), width, isFlexible, widget, tooltipProp, null, propAction);
@@ -295,6 +297,14 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             this.dynamicColBuilderType = dynColBuilderType;
             this.contextConfig = contextConfig;
             this.entityPreProcessor = entityPreProcessor;
+        }
+
+        public void setPropAction(final Supplier<Optional<EntityActionConfig>> propAction) {
+            this.propAction = propAction;
+        }
+
+        public Supplier<Optional<EntityActionConfig>> getPropAction() {
+            return propAction;
         }
 
         /**
@@ -400,6 +410,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final IToolbarConfig toolbarConfig,
             final boolean hideToolbar,
             final IScrollConfig scrollConfig,
+            final boolean retrieveAll,
             final int pageCapacity,
             final int maxPageCapacity,
             final int visibleRowsCount,
@@ -472,6 +483,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.toolbarConfig = toolbarConfig;
         this.hideToolbar = hideToolbar;
         this.scrollConfig = scrollConfig;
+        this.retrieveAll = retrieveAll;
         this.pageCapacity = pageCapacity;
         this.maxPageCapacity = maxPageCapacity;
         this.visibleRowsCount = visibleRowsCount;
@@ -918,6 +930,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public IScrollConfig getScrollConfig() {
         return scrollConfig;
+    }
+
+    public boolean shouldRetrieveAll() {
+        return retrieveAll;
     }
 
     public int getPageCapacity() {

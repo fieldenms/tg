@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.security;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.security.session.Authenticator.fromString;
+import static ua.com.fielden.platform.web.resources.webui.LoginResource.BINDING_PATH;
 
 import java.util.Optional;
 
@@ -11,9 +12,9 @@ import org.joda.time.DateTime;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
-import org.restlet.data.ChallengeScheme;
 import org.restlet.data.CookieSetting;
-import org.restlet.security.ChallengeAuthenticator;
+import org.restlet.data.Method;
+import org.restlet.data.Status;
 
 import com.google.inject.Injector;
 
@@ -34,7 +35,7 @@ import ua.com.fielden.platform.web.sse.SseUtils;
  * @author TG Team
  *
  */
-public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
+public abstract class AbstractWebResourceGuard extends org.restlet.security.Authenticator {
     private final Logger logger = Logger.getLogger(getClass());
     public static final String AUTHENTICATOR_COOKIE_NAME = "authenticator";
     protected final Injector injector;
@@ -50,7 +51,7 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
      * @throws IllegalArgumentException
      */
     public AbstractWebResourceGuard(final Context context, final String domainName, final String path, final Injector injector) {
-        super(context, ChallengeScheme.CUSTOM, "TG");
+        super(context);
         if (injector == null) {
             throw new IllegalArgumentException("Injector is required.");
         }
@@ -64,24 +65,23 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
             throw new IllegalStateException("Both the domain name and the applicatin binding path should be provided.");
         }
 
-        setRechallenging(false);
     }
 
     @Override
     public boolean authenticate(final Request request, final Response response) {
-        // uncomment following lines to be able to use http (StartOverHttp) server instead of https (Start) server for development purposes:
-//        if(true) {
-//            final IUserProvider userProvider = injector.getInstance(IUserProvider.class);
-//            userProvider.setUsername(User.system_users.SU.name(), injector.getInstance(IUser.class));
-//            return true;
-//        }
+        // uncomment the following lines to circumvent the use of session authenticators; this at time useful for development purposes, especially in HTTP mode (as opposed to HTTPS).
+        //  if(true) {
+        //      final IUserProvider userProvider = injector.getInstance(IUserProvider.class);
+        //      userProvider.setUsername(User.system_users.SU.name(), injector.getInstance(IUser.class));
+        //      return true;
+        //  }
         try {
             logger.debug(format("Starting request authentication to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
 
             final Optional<Authenticator> oAuth = extractAuthenticator(request);
             if (!oAuth.isPresent()) {
                 logger.warn(format("Authenticator cookie is missing for a request to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
-                forbid(response);
+                redirectGetToLoginOrForbid(request, response);
                 return false;
             }
 
@@ -96,11 +96,7 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
             final Optional<UserSession> session = coUserSession.currentSession(getUser(auth.username), auth.toString(), enforceUserSessionEvictionWhenDbSessionIsMissing(), skipRegeneration);
             if (!session.isPresent()) {
                 logger.warn(format("Authenticator validation failed for a request to a resource at URI %s (%s, %s, %s)", request.getResourceRef(), request.getClientInfo().getAddress(), request.getClientInfo().getAgentName(), request.getClientInfo().getAgentVersion()));
-                // TODO this is an interesting approach to prevent any further processing of the request, this event prevents receiving it completely
-                // useful to prevent unauthorised file uploads
-                // However, the client side would not be able to receive a response.
-                //request.abort();
-                forbid(response);
+                redirectGetToLoginOrForbid(request, response);
                 assignAuthenticatorCookieToExpire(response);
                 return false;
             }
@@ -111,7 +107,7 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
         } catch (final Exception ex) {
             // in case of any internal exception forbid the request
             forbid(response);
-            
+
             // TODO Do we really want to expire a potentially valid authenticator in this case? For example, where there was just an intermittent DB connectivity issue?
             assignAuthenticatorCookieToExpire(response);
             logger.fatal(ex);
@@ -119,6 +115,22 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
         }
 
         return true;
+    }
+
+    /**
+     * Redirects HTTP GET requests to the login resource. Forbids all other requests.
+     *
+     * @param request
+     * @param response
+     */
+    protected void redirectGetToLoginOrForbid(final Request request, final Response response) {
+        // GET requests can be redirected to the login resource, which takes care of both RSO and SSO workflows.
+        // Need to forbid requests from SW containing "?checksum=true", which is specifically used to redirect to /login from the client side.
+        if (Method.GET.equals(request.getMethod()) && !request.getResourceRef().toString().contains("?checksum=true")) {
+            response.redirectTemporary(BINDING_PATH);
+        } else {
+            forbid(response);
+        }
     }
 
     /**
@@ -221,6 +233,15 @@ public abstract class AbstractWebResourceGuard extends ChallengeAuthenticator {
      */
     protected boolean enforceUserSessionEvictionWhenDbSessionIsMissing() {
         return false;
+    }
+
+    /**
+     * Sets the status for {@code response} as forbidden.
+     *
+     * @param response
+     */
+    private void forbid(final Response response) {
+        response.setStatus(Status.CLIENT_ERROR_FORBIDDEN);
     }
 
 }
