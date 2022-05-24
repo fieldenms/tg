@@ -152,6 +152,58 @@ const TgEntityCentreBehaviorImpl = {
         entityType: {
             type: String
         },
+
+        /**
+         * Indicates whether all data should be retrieved at once or only separate page of data.
+         */
+        retrieveAll: {
+            type: Boolean,
+            value: false
+        },
+
+        /**
+         * The entities retrieved when running this centre. It might be either all entities which should be paginated locally or only one page. It depends on retrieveAll property.
+         */
+        allRetrievedEntities: {
+            type: Array,
+            observer: '_allRetrievedEntitiesChanged'
+        },
+
+        /**
+         * allRetrievedEntities those were filtered when running this centre.
+         */
+        allFilteredEntities: {
+            type: Array,
+            observer: '_allFilteredEntitiesChanged'
+        },
+
+        /**
+         * Rendering hints for all retrieved entities.
+         */
+        allRenderingHints: Array,
+        /**
+         * Rendering hints for all filtered entities.
+         */
+        allFilteredRenderingHints: Array,
+
+        /**
+         * Indices for primary actions associated with all retrieved entities.
+         */
+        allPrimaryActionIndices: Array,
+        /**
+         * Indices for primary actions associated with all filtered entities.
+         */
+        allFilteredPrimaryActionIndices: Array,
+
+        /**
+         * Indices for secondary actions associated with all retrieved entities.
+         */
+        allSecondaryActionIndices: Array,
+        /**
+         * Indices for secondary actions associated with all filtered entities.
+         */
+        allFilteredSecondaryActionIndices: Array,
+
         /**
          * The entities retrieved when running this centre
          */
@@ -327,8 +379,16 @@ const TgEntityCentreBehaviorImpl = {
 
         /**
          * Parameters for running query.
+         *
+         * Initial (and following empty) values must be 'null' to make '_computeRetrieverUrl(miType, saveAsName, queryPart, configUuid)' in 'tg-selection-criteria' computable and not being undefined.
+         *
+         * In case where 'queryPart' is not empty, LINK_CONFIG_TITLE will be returned on the client in 'saveAsName' property instead of preferred configuration name (which could be '' or some non-empty name).
+         * Corresponding 'configUuid' for that link configuration will be returned on the client too.
          */
-        queryPart: String,
+        queryPart: {
+            type: String,
+            value: null
+        },
 
         /**
          * Indicates whether centre should forcibly refresh the current page upon successful saving of a related entity.
@@ -554,6 +614,82 @@ const TgEntityCentreBehaviorImpl = {
         return _buttonDisabled || _wasRun !== "yes";
     },
 
+    _allRetrievedEntitiesChanged: function () {
+        const entities = [];
+        const renderingHints = [];
+        const primaryActionIndices = [];
+        const secondaryActionIndices = [];
+        this.allRetrievedEntities.forEach((entity, idx) => {
+            if (this.satisfies(entity)) {
+                entities.push(entity);
+                // Note that allRenderingHints / allPrimaryActionIndices / allSecondaryActionIndices have already been updated in method _postRun
+                renderingHints.push(this.allRenderingHints[idx]);
+                primaryActionIndices.push(this.allPrimaryActionIndices[idx]);
+                secondaryActionIndices.push(this.allSecondaryActionIndices[idx]);
+            }
+        });
+        this.allFilteredRenderingHints = renderingHints;
+        this.allFilteredPrimaryActionIndices = primaryActionIndices;
+        this.allFilteredSecondaryActionIndices = secondaryActionIndices;
+        if (this.retrieveAll) {
+            const resultSize = entities.length;
+            // Note that this.$.selection_criteria.pageCapacity has already been updated in method _postRun
+            const pageCapacity = this.$.selection_criteria.pageCapacity;
+            const realPageCount = resultSize % pageCapacity == 0 ? resultSize / pageCapacity : Math.floor(resultSize / pageCapacity) + 1; // floor is needed because Javascript does not have integer division
+            const pageCount = realPageCount == 0 ? 1 : realPageCount;
+            // Note that this.$.selection_criteria.pageNumber has already been updated in method _postRunDefault and only then allRetrievedEntities is getting changed in _postRun
+            const pageNumber = pageCount <= this.$.selection_criteria.pageNumber ? pageCount - 1 : this.$.selection_criteria.pageNumber;
+            this._setPageCount(pageCount);
+            this._setPageNumber(pageNumber);
+        }
+        this.allFilteredEntities = entities;
+    },
+
+    filter: function () {
+        this._allRetrievedEntitiesChanged();
+    },
+
+    satisfies: function(entity) {
+        return true;
+    },
+
+    _allFilteredEntitiesChanged: function (allFilteredEntites, oldValue) {
+        if (!this.retrieveAll) {
+            this._setPageData();
+        } else {
+            if (this.$.selection_criteria.pageNumber) {
+                const startIdx = this.$.selection_criteria.pageNumber * this.$.selection_criteria.pageCapacity;
+                this._setPageData(startIdx, startIdx + this.$.selection_criteria.pageCapacity);
+            } else {
+                this._setPageData(0, this.$.selection_criteria.pageCapacity);
+            }
+        }
+    },
+
+    _setPageData: function (startIdx, endIdx) {
+        if (typeof startIdx === 'undefined') {
+            this.retrievedEntities = this.allFilteredEntities;
+            this.$.egi.renderingHints = this.allFilteredRenderingHints;
+            this.$.egi.primaryActionIndices = this.allFilteredPrimaryActionIndices;
+            this.$.egi.secondaryActionIndices = this.allFilteredSecondaryActionIndices;
+        } else {
+            this.retrievedEntities = this.allFilteredEntities.slice(startIdx, endIdx);
+            this.$.egi.renderingHints = this.allFilteredRenderingHints.slice(startIdx, endIdx);
+            this.$.egi.primaryActionIndices = this.allFilteredPrimaryActionIndices.slice(startIdx, endIdx);
+            this.$.egi.secondaryActionIndices = this.allFilteredSecondaryActionIndices.slice(startIdx, endIdx);
+        }
+    },
+
+    _setPageNumber: function (number) {
+        this.$.selection_criteria.pageNumber = number;
+        this.$.selection_criteria.pageNumberUpdated = number;
+    },
+
+    _setPageCount: function (pageCount) {
+        this.$.selection_criteria.pageCount = pageCount;
+        this.$.selection_criteria.pageCountUpdated = pageCount;
+    },
+
     _retrievedEntitiesChanged: function (retrievedEntities, oldValue) {
         this.$.egi.entities = retrievedEntities;
     },
@@ -611,15 +747,15 @@ const TgEntityCentreBehaviorImpl = {
                 if (typeof result.summary !== 'undefined') {
                     this.retrievedTotals = result.summary;
                 }
-                this.retrievedEntities = result.resultEntities;
-                this.dynamicColumns = result.dynamicColumns;
-                this.selectionCriteriaEntity = result.criteriaEntity;
-                this.$.egi.renderingHints = result.renderingHints;
-                this.$.egi.primaryActionIndices = result.primaryActionIndices;
-                this.$.egi.secondaryActionIndices = result.secondaryActionIndices;
-                this.$.egi.adjustColumnWidths(result.columnWidths);
                 const pageCapacity = result.resultConfig.pageCapacity;
                 this.$.selection_criteria.pageCapacity = pageCapacity;
+                this.allRenderingHints = result.renderingHints;
+                this.allPrimaryActionIndices = result.primaryActionIndices;
+                this.allSecondaryActionIndices = result.secondaryActionIndices;
+                this.allRetrievedEntities = result.resultEntities;
+                this.dynamicColumns = result.dynamicColumns;
+                this.selectionCriteriaEntity = result.criteriaEntity;
+                this.$.egi.adjustColumnWidths(result.columnWidths);
                 this.$.egi.visibleRowsCount = result.resultConfig.visibleRowsCount;
                 this.$.egi.numberOfHeaderLines = result.resultConfig.numberOfHeaderLines;
                 this.$.egi.adjustColumnsVisibility(result.resultConfig.visibleColumnsWithOrder.map(column => column === "this" ? "" : column));
@@ -688,10 +824,10 @@ const TgEntityCentreBehaviorImpl = {
             return null;
         }).bind(self);
 
-        self._postFunctionalEntitySaved = (function (savingException, potentiallySavedOrNewEntity, shouldRefreshParentCentreAfterSave, selectedEntitiesInContext) {
+        self._postFunctionalEntitySaved = (function (savingException, potentiallySavedOrNewEntity, shouldRefreshParentCentreAfterSave, selectedEntitiesInContext, excludeInsertionPoints) {
             if (shouldRefreshParentCentreAfterSave === true && potentiallySavedOrNewEntity.isValidWithoutException()) {
                 // old implementation was this.currentPage(); -- for now only selectedEntitiesInContext will be refreshed, not the whole current page
-                this.refreshEntities(selectedEntitiesInContext);
+                this.refreshEntities(selectedEntitiesInContext, excludeInsertionPoints);
             }
         }).bind(self);
 
@@ -745,7 +881,7 @@ const TgEntityCentreBehaviorImpl = {
         /**
          * A function to run the entity centre.
          */
-        self.run = (function (isAutoRunning, isSortingAction, forceRegeneration) {
+        self.run = (function (isAutoRunning, isSortingAction, forceRegeneration, excludeInsertionPoints) {
             if (this._criteriaLoaded === false) {
                 throw new Error(`Cannot run ${this.is} centre (not initialised criteria).`);
             }
@@ -780,7 +916,7 @@ const TgEntityCentreBehaviorImpl = {
                     const sc = self.$.selection_criteria;
                     const deserialisedResult = sc._serialiser().deserialise(detail.response);
                     if (!self._reflector.isError(deserialisedResult) && (!self._reflector.isEntity(deserialisedResult.instance[0]) || deserialisedResult.instance[0].isValidWithoutException())) {
-                        self.runInsertionPointActions();
+                        self.runInsertionPointActions(excludeInsertionPoints);
                     }
                     self._actionInProgress = false;
                 }, function (error) {
@@ -906,7 +1042,7 @@ const TgEntityCentreBehaviorImpl = {
             channel: "centre_" + self.$.selection_criteria.uuid,
             topic: "detail.saved",
             callback: function (data, envelope) {
-                self._postFunctionalEntitySaved(data.savingException, data.entity, data.shouldRefreshParentCentreAfterSave, data.selectedEntitiesInContext);
+                self._postFunctionalEntitySaved(data.savingException, data.entity, data.shouldRefreshParentCentreAfterSave, data.selectedEntitiesInContext, data.excludeInsertionPoints);
             }
         }));
 
@@ -1081,15 +1217,15 @@ const TgEntityCentreBehaviorImpl = {
     /**
      * Starts the process of refreshing the current page (only after run() has been already performed).
      */
-    currentPage: function () {
+    currentPage: function (excludeInsertionPoints) {
         const self = this;
-        if (!this.$.egi.isEditing()) {
-            return this.$.selection_criteria.currentPage()
+        if (!self.$.egi.isEditing()) {
+            return self.$.selection_criteria.currentPage()
                 .then(function () {
-                    self.runInsertionPointActions();
+                    self.runInsertionPointActions(excludeInsertionPoints);
                 });
         }
-        return this._saveOrCancelPromise();
+        return self._saveOrCancelPromise();
     },
 
     currentPageTap: function () {
@@ -1104,13 +1240,19 @@ const TgEntityCentreBehaviorImpl = {
      */
     firstPage: function () {
         const self = this;
-        if (!this.$.egi.isEditing()) {
-            self.persistActiveElement();
-            return this.$.selection_criteria.firstPage().then(function () {
-                self.restoreActiveElement();
-            });
+        if (!self.$.egi.isEditing()) {
+            if (self.retrieveAll) {
+                self._setPageData(0, self.$.selection_criteria.pageCapacity);
+                self._setPageNumber(0);
+                return Promise.resolve();
+            } else {
+                self.persistActiveElement();
+                return self.$.selection_criteria.firstPage().then(function () {
+                    self.restoreActiveElement();
+                });
+            }
         }
-        return this._saveOrCancelPromise();
+        return self._saveOrCancelPromise();
     },
 
     /**
@@ -1118,13 +1260,20 @@ const TgEntityCentreBehaviorImpl = {
      */
     lastPage: function () {
         const self = this;
-        if (!this.$.egi.isEditing()) {
-            self.persistActiveElement();
-            return this.$.selection_criteria.lastPage().then(function () {
-                self.restoreActiveElement();
-            });
+        if (!self.$.egi.isEditing()) {
+            if (self.retrieveAll) {
+                const startIdx = (self.$.selection_criteria.pageCount - 1) * self.$.selection_criteria.pageCapacity;
+                self._setPageData(startIdx, startIdx + self.$.selection_criteria.pageCapacity);
+                self._setPageNumber(self.$.selection_criteria.pageCount - 1);
+                return Promise.resolve();
+            } else {
+                self.persistActiveElement();
+                return self.$.selection_criteria.lastPage().then(function () {
+                    self.restoreActiveElement();
+                });
+            }
         }
-        return this._saveOrCancelPromise();
+        return self._saveOrCancelPromise();
     },
 
     /**
@@ -1132,13 +1281,20 @@ const TgEntityCentreBehaviorImpl = {
      */
     nextPage: function () {
         const self = this;
-        if (!this.$.egi.isEditing()) {
-            self.persistActiveElement();
-            return this.$.selection_criteria.nextPage().then(function () {
-                self.restoreActiveElement();
-            });
+        if (!self.$.egi.isEditing()) {
+            if (self.retrieveAll) {
+                const startIdx = (self.$.selection_criteria.pageNumber + 1) * self.$.selection_criteria.pageCapacity;
+                self._setPageData(startIdx, startIdx + self.$.selection_criteria.pageCapacity);
+                self._setPageNumber(self.$.selection_criteria.pageNumber + 1);
+                return Promise.resolve();
+            } else {
+                self.persistActiveElement();
+                return self.$.selection_criteria.nextPage().then(function () {
+                    self.restoreActiveElement();
+                });
+            }
         }
-        return this._saveOrCancelPromise();
+        return self._saveOrCancelPromise();
     },
 
     /**
@@ -1146,13 +1302,20 @@ const TgEntityCentreBehaviorImpl = {
      */
     prevPage: function () {
         const self = this;
-        if (!this.$.egi.isEditing()) {
-            self.persistActiveElement();
-            return this.$.selection_criteria.prevPage().then(function () {
-                self.restoreActiveElement();
-            });
+        if (!self.$.egi.isEditing()) {
+            if (self.retrieveAll) {
+                const startIdx = (self.$.selection_criteria.pageNumber - 1) * self.$.selection_criteria.pageCapacity;
+                self._setPageData(startIdx, startIdx + self.$.selection_criteria.pageCapacity);
+                self._setPageNumber(self.$.selection_criteria.pageNumber - 1);
+                return Promise.resolve();
+            } else {
+                self.persistActiveElement();
+                return self.$.selection_criteria.prevPage().then(function () {
+                    self.restoreActiveElement();
+                });
+            }
         }
-        return this._saveOrCancelPromise();
+        return self._saveOrCancelPromise();
     },
 
     /**
@@ -1162,14 +1325,16 @@ const TgEntityCentreBehaviorImpl = {
      *     EGI grid (a subset of current page entities). Those matched entities get replaced with refreshed instances (or removed
      *     from the result-set if they became unmatchable to the selection criteria after modification).
      */
-    refreshEntities: function (entities) {
+    refreshEntities: function (entities, excludeInsertionPoints) {
         if (this._selectedView !== 0 && (// only if the selectedView is the one of resultant views, we need to refresh entitites and...
             // there is no data or refresh is enforeced or...
             this.enforcePostSaveRefresh === true || this.$.egi.egiModel.length === 0 ||
             // there are no entities specified or the currrent result contains any of them then...
-            entities === null || entities.length === 0 || this.$.egi.containsAnyEntity(entities))) {
+            entities === null || entities.length === 0 || this.$.egi.containsAnyEntity(entities)) ||
+            //Or centre uses local pagination
+            this.retrieveAll) {
             // refresh the current page
-            this.currentPage();
+            this.currentPage(excludeInsertionPoints);
         }
     },
 
@@ -1248,14 +1413,16 @@ const TgEntityCentreBehaviorImpl = {
         self.fire('tg-save-as-name-changed', newSaveAsName);
     },
 
-    runInsertionPointActions: function () {
+    runInsertionPointActions: function (excludeInsertionPoints) {
         const self = this;
         const actions = self.$.egi.querySelectorAll('.insertion-point-action');
         if (actions) {
             actions.forEach(function (action) {
-                self.async(function () {
-                    action._run();
-                }, 1);
+                if (!Array.isArray(excludeInsertionPoints) || !excludeInsertionPoints.includes(action.elementName)) {
+                    self.async(function () {
+                        action._run();
+                    }, 1);
+                }
             });
         }
     },

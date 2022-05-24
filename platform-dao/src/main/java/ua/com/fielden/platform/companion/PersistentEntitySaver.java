@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.companion;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static org.hibernate.LockOptions.UPGRADE;
@@ -40,6 +42,7 @@ import org.hibernate.Session;
 import org.joda.time.DateTime;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
+import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -145,10 +148,10 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      */
     @Override
     public T save(final T entity) {
-        return coreSave(entity, false)._2;
+        return coreSave(entity, false, empty())._2;
     }
 
-    public T2<Long, T> coreSave(final T entity, final boolean skipRefetching) {
+    public T2<Long, T> coreSave(final T entity, final boolean skipRefetching, final Optional<fetch<T>> maybeFetch) {
         if (entity == null || !entity.isPersistent()) {
             throw new EntityCompanionException(format("Only non-null persistent entities are permitted for saving. Ether type [%s] is not persistent or entity is null.", entityType.getName()));
         } else if (!entity.isInstrumented()) {
@@ -157,7 +160,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             final Result isValid = validateEntity(entity);
             if (isValid.isSuccessful()) {
                 //logger.debug(format("Entity [%s] is not dirty (ID = %s). Saving is skipped. Entity refetched.", entity, entity.getId()));
-                return t2(entity.getId(), skipRefetching ? entity : findById.apply(entity.getId(), FetchModelReconstructor.reconstruct(entity)));
+                return t2(entity.getId(), skipRefetching ? entity : findById.apply(entity.getId(), maybeFetch.orElseGet(() -> FetchModelReconstructor.reconstruct(entity))));
             } else {
                 throw isValid;
             }
@@ -180,9 +183,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             // entity is valid and we should proceed with saving
             // new and previously saved entities are handled differently
             if (!entity.isPersisted()) { // is it a new entity?
-                result = saveNewEntity(entity, skipRefetching);
+                result = saveNewEntity(entity, skipRefetching, maybeFetch);
             } else { // so, this is a modified entity
-                result = saveModifiedEntity(entity, skipRefetching);
+                result = saveModifiedEntity(entity, skipRefetching, maybeFetch);
             }
         } finally {
             //logger.debug("Finished saving entity " + entity + " (ID = " + entity.getId() + ")");
@@ -232,7 +235,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      * @param entity
      * @param skipRefetching
      */
-    private T2<Long, T> saveModifiedEntity(final T entity, final boolean skipRefetching) {
+    private T2<Long, T> saveModifiedEntity(final T entity, final boolean skipRefetching, final Optional<fetch<T>> maybeFetch) {
         // let's first prevent not permissibly modifications that could not be checked any earlier than this,
         // which pertain to required and marked as assign before save properties that must have values
         checkDirtyMarkedForAssignmentBeforeSaveProperties(entity);
@@ -254,8 +257,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         }
 
         // reconstruct entity fetch model for future retrieval at the end of the method call
-        final Optional<fetch<T>> entityFetchOption = skipRefetching ? Optional.empty() : Optional.of(FetchModelReconstructor.reconstruct(entity));
-
+        final Optional<fetch<T>> entityFetchOption = skipRefetching ? empty() : (maybeFetch.isPresent() ? maybeFetch : of(FetchModelReconstructor.reconstruct(entity)));
 
         // proceed with property assignment from entity to persistent entity, which in case of a resolvable conflict acts like a fetch/rebase in git
         // it is essential that if a property is of an entity type it should be re-associated with the current session before being set
@@ -462,7 +464,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      * @param entity
      * @param skipRefetching
      */
-    private T2<Long, T> saveNewEntity(final T entity, final boolean skipRefetching) {
+    private T2<Long, T> saveNewEntity(final T entity, final boolean skipRefetching, final Optional<fetch<T>> maybeFetch) {
         // let's make sure that entity is not a duplicate
         if (entityExists.apply(createQueryByKey(dbVersion.get(), entityType, keyType, false, entity.getKey()))) {
             throw new EntityAlreadyExists(format("%s [%s] already exists.", TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey(), entity));
@@ -475,7 +477,7 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
         assignPropertiesBeforeSave(entity);
 
         // reconstruct entity fetch model for future retrieval at the end of the method call
-        final Optional<fetch<T>> entityFetchOption = skipRefetching ? Optional.empty() : Optional.of(FetchModelReconstructor.reconstruct(entity));
+        final Optional<fetch<T>> entityFetchOption = skipRefetching ? empty() : (maybeFetch.isPresent() ? maybeFetch : of(FetchModelReconstructor.reconstruct(entity)));
 
         // new entity might be activatable, but this has no effect on its refCount -- should be zero as no other entity could yet reference it
         // however, it might reference other activatable entities, which warrants update to their refCount.
@@ -491,20 +493,24 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
             final Set<String> keyMembers = Finder.getKeyMembers(entity.getType()).stream().map(Field::getName).collect(toSet());
             final Set<MetaProperty<? extends ActivatableAbstractEntity<?>>> activatableDirtyProperties = collectActivatableDirtyProperties(entity, keyMembers);
 
-            for (final MetaProperty<? extends ActivatableAbstractEntity<?>> prop : activatableDirtyProperties) {
+            for (final MetaProperty prop : activatableDirtyProperties) {
                 if (prop.getValue() != null) {
                     // need to update refCount for the activatable entity
-                    final ActivatableAbstractEntity<?> value = prop.getValue();
+                    final ActivatableAbstractEntity<?> value = (ActivatableAbstractEntity<?>) prop.getValue();
                     final ActivatableAbstractEntity<?>  persistedEntity = (ActivatableAbstractEntity<?> ) session.get().load(value.getType(), value.getId(), UPGRADE);
                     // the returned value could already be inactive due to some concurrent modification
                     // therefore it is critical to ensure that the property of the current entity being saved can still accept the obtained value if it is inactive
                     if (!persistedEntity.isActive()) {
-                        entity.beginInitialising();
-                        entity.set(prop.getName(), persistedEntity);
-                        entity.endInitialising();
-                        
-                        final Result res = prop.revalidate(false);
-                        if (!res.isSuccessful()) {
+                        prop.setValue(persistedEntity, true);
+
+                        final Result res = prop.getFirstFailure();
+                        if (res != null) {
+                            session.get().detach(persistedEntity);
+                            // the last invalid value would now be set to persistedEntity, which is proxied by Hibernate and cannot be serialised
+                            // this is why we need to reset the last invalid value to the re-fetched value, which is effectively being revalidated
+                            final IEntityDao co = coFinder.get().find(value.getType(), true /* uninstrumented */);
+                            final ActivatableAbstractEntity<?> refetchedValue = (ActivatableAbstractEntity<?>) co.findById(value.getId(), FetchModelReconstructor.reconstruct(value));
+                            prop.setLastInvalidValue(refetchedValue);
                             throw res;
                         }
                     }

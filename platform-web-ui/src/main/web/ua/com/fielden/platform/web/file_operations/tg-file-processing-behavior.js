@@ -107,14 +107,16 @@ const TgFileProcessingBehaviorImpl = {
 
     /* A create callback to perform initialisation. */
     created: function () {
+        this.useTimerBasedScheduling = false; // perform dataHandler immediately when SSE event arrives (not exactly immediately -- scheduled on a main thread waiting for current operations to be completed, as usual)
+
         // need to assign SSE data handler to reflect the server side file processing progress
         this.dataHandler = (msg) => {
             if (this.fpFileProcessingProgressEventHandler) {
                 this.fpFileProcessingProgressEventHandler(msg.prc);
             }
         }
-        // SSE error handler to prevent reconnection
-        this.errorHandler = (e) => { this.shouldReconnectWhenError = false }
+        // wait 1 second before the next try for SSE error reconnection
+        this.errorReconnectionDelay = 1000;
 
         // let's create a dummy file input element to be used for opening a file dialog
         this._uploadInput = document.createElement('input');
@@ -252,7 +254,7 @@ const TgFileProcessingBehaviorImpl = {
                 }
             }.bind(this);
 
-            // let's also monitor and provide indicattion of the file upload...
+            // let's also monitor and provide indication of the file upload...
             xhr.upload.onprogress = function (event) {
                 var prc = event.loaded / event.total * 100;
                 if (this.fpFileUploadingProgressEventHandler) {
@@ -272,6 +274,7 @@ const TgFileProcessingBehaviorImpl = {
 
             // file uploading/processing error might also need to be handled externally
             // and to invoke an external response handler if provided
+            // onerror usually happens in case of networking issues
             xhr.onerror = function (e) {
                 this.closeEventSource();
                 this._cleanup();

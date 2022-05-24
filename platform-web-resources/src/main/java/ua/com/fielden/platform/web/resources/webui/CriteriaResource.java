@@ -48,6 +48,7 @@ import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.w
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.CENTRE_DIRTY;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.META_VALUES;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.STALE_CRITERIA_MESSAGE;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.complementCriteriaEntityBeforeRunning;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityWithoutConflicts;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValues;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaMetaValuesCustomObject;
@@ -108,8 +109,8 @@ import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
-import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
+import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
@@ -658,36 +659,23 @@ public class CriteriaResource extends AbstractWebResource {
 
             final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> previouslyRunCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, previouslyRunCentre, companionFinder, critGenerator, 0L, user, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
-
-            final Optional<Pair<IQueryEnhancer<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> queryEnhancerAndContext = createQueryEnhancerAndContext(
+            final Pair<Map<String, Object>, List<?>> pair = createCriteriaMetaValuesCustomObjectWithResult(
+                customObject,
+                complementCriteriaEntityBeforeRunning( // complements previouslyRunCriteriaEntity instance
+                    previouslyRunCriteriaEntity,
                     webUiConfig,
                     companionFinder,
                     user,
                     critGenerator,
                     entityFactory,
                     centreContextHolder,
-                    centre.getQueryEnhancerConfig(),
-                    previouslyRunCriteriaEntity,
-                    device(),
                     domainTreeEnhancerCache,
                     eccCompanion,
                     mmiCompanion,
                     userCompanion,
-                    sharingModel);
-
-            final Pair<Map<String, Object>, List<?>> pair =
-                    createCriteriaMetaValuesCustomObjectWithResult(
-                            customObject,
-                            previouslyRunCriteriaEntity,
-                            centre.getAdditionalFetchProvider(),
-                            centre.getAdditionalFetchProviderForTooltipProperties(),
-                            queryEnhancerAndContext,
-                            // There could be cases where the generated data and the queried data would have different types.
-                            // For example, the queried data could be modelled by a synthesized entity that includes a subquery based on some generated data.
-                            // In such cases, it is unpossible to enhance the final query with a user related condition automatically.
-                            // This should be the responsibility of the application developer to properly construct a subquery that is based on the generated data.
-                            // The query will be enhanced with condition createdBy=currentUser if createdByConstraintShouldOccur and generatorEntityType equal to the type of queried data (otherwise end-developer should do that itself by using queryEnhancer or synthesized model).
-                            createdByConstraintShouldOccur && centre.getGeneratorTypes().get().getKey().equals(getEntityType(miType)) ? of(user) : empty());
+                    sharingModel
+                )
+            );
             if (isRunning) {
                 updateResultantCustomObject(previouslyRunCriteriaEntity.centreDirtyCalculator(), miType, saveAsName, user, previouslyRunCentre, pair.getKey(), null, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             }

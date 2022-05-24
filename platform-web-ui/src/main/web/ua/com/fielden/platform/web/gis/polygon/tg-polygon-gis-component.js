@@ -5,6 +5,7 @@ import { PolygonMarkerFactory } from '/resources/gis/polygon/tg-polygon-marker-f
 
 export const PolygonGisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap) {
     GisComponent.call(this, mapDiv, progressDiv, progressBarDiv, tgMap);
+    this._select.deselectPrevEgiEntityOnLayerSelection = true;
 };
 
 PolygonGisComponent.prototype = Object.create(GisComponent.prototype);

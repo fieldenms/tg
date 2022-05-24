@@ -17,6 +17,7 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.EntityOne;
+import ua.com.fielden.platform.sample.domain.EntityThree;
 import ua.com.fielden.platform.sample.domain.EntityTwo;
 import ua.com.fielden.platform.sample.domain.ExportAction;
 import ua.com.fielden.platform.sample.domain.TgBogie;
@@ -98,6 +99,7 @@ import ua.com.fielden.platform.sample.domain.TgWebApiEntitySyntheticMulti;
 import ua.com.fielden.platform.sample.domain.TgWebApiEntitySyntheticSingle;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
+import ua.com.fielden.platform.sample.domain.UnionEntityWithoutSecondDescTitle;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityChild;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityDetail;
@@ -107,6 +109,7 @@ import ua.com.fielden.platform.sample.domain.compound.master.menu.actions.TgComp
 import ua.com.fielden.platform.sample.domain.compound.master.menu.actions.TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem;
 import ua.com.fielden.platform.sample.domain.compound.ui_actions.OpenTgCompoundEntityMasterAction;
 import ua.com.fielden.platform.sample.domain.stream_processors.DumpCsvTxtProcessor;
+import ua.com.fielden.platform.sample.domain.ui_actions.MakeCompletedAction;
 import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
 
@@ -186,8 +189,10 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgOrgUnit5.class);
         add(TgFuelType.class);
         add(UnionEntity.class);
+        add(UnionEntityWithoutSecondDescTitle.class);
         add(EntityOne.class);
         add(EntityTwo.class);
+        add(EntityThree.class);
 
         add(TgBogieLocation.class);
         add(TgWorkshop.class);
@@ -238,6 +243,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgUnionCommonType.class);
         
         add(TgSynBogie.class);
+        add(MakeCompletedAction.class);
     }
 
     @Override
