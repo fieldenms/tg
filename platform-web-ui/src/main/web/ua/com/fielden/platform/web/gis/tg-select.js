@@ -11,6 +11,13 @@ export const Select = function (_map, _getLayerById, _markerFactory, tgMap, find
 
     self._featureToLeafletIds = {};
     self._prevId = null;
+    self.outsideTapDeselectionListener = () => {
+        if (self._prevId !== null) {
+            self.deselect(self._prevId);
+        }
+    };
+    self._map.on('click', self.outsideTapDeselectionListener);
+
     /**
      * Indicates whether previously selected EGI entity should be deselected in case where some different map marker gets selected.
      */

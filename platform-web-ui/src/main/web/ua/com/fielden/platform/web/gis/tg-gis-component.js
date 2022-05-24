@@ -201,16 +201,7 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
                     }
                 });
                 layer.on('click', function () { // dblclick
-                    if (layerId !== self._select._prevId) { // '_prevId' can be empty; perform selection of new 'layerId' in that case; also perform selection if '_prevId' is different from 'layerId'
-                        self._select.select(layerId);
-                    } else { // otherwise 'layerId' is selected; need to deselect it
-                        self._select.deselect(layerId);
-                        setTimeout(() => {
-                            if (layer.isPopupOpen()) { // and close popup; but do it on event queue to guarantee execution after Leaflet default 'click' event that opens popup
-                                layer.closePopup();
-                            }
-                        });
-                    }
+                    self._select.select(layerId);
                 });
             }
         });
