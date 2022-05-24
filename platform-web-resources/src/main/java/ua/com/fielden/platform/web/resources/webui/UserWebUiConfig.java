@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.resources.webui;
 import static java.util.Optional.empty;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.security.user.User.EMAIL;
+import static ua.com.fielden.platform.security.user.User.SSO_ONLY;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.action.pre.ConfirmationPreAction.okCancel;
 import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBuilder.action;
@@ -66,7 +67,7 @@ public class UserWebUiConfig {
      * @return
      */
     private static EntityCentre<ReUser> createCentre(final Injector injector, final IWebUiBuilder builder, final EntityActionConfig locator) {
-        final String layout = LayoutComposer.mkVarGridForCentre(2, 2, 2);
+        final String layout = LayoutComposer.mkVarGridForCentre(2, 2, 2, 1);
 
         final EntityActionConfig userNewAction = UserActions.NEW_ACTION.mkAction();
         final EntityActionConfig userEditAction = UserActions.EDIT_ACTION.mkAction();
@@ -84,6 +85,7 @@ public class UserWebUiConfig {
                 .addCrit(ACTIVE).asMulti().bool().also()
                 .addCrit("base").asMulti().bool().also()
                 .addCrit(EMAIL).asMulti().text().also()
+                .addCrit(SSO_ONLY).asMulti().bool().also()
                 .addCrit("userRoles").asMulti().autocompleter(UserRole.class)
                 .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
                 .addProp("this")
@@ -95,6 +97,7 @@ public class UserWebUiConfig {
                 .addProp("base").width(80).also()
                 .addProp(EMAIL).minWidth(150).also()
                 .addProp(ACTIVE).width(50).also()
+                .addProp(SSO_ONLY).width(50).also()
                 .addProp("roles").minWidth(70).withAction(UserActions.MANAGE_ROLES_SECONDARY_ACTION.mkAction())
                 .addPrimaryAction(userEditAction).also()
                 .addSecondaryAction(UserActions.MANAGE_ROLES_SECONDARY_ACTION.mkAction())
@@ -108,15 +111,16 @@ public class UserWebUiConfig {
      * @return
      */
     private static EntityMaster<User> createMaster(final Injector injector) {
-        final String layout = LayoutComposer.mkVarGridForMasterFitWidth(2, 2, 1, 1);
+        final String layout = LayoutComposer.mkVarGridForMasterFitWidth(2, 2, 2, 1);
 
         final IMaster<User> masterConfigForUser = new SimpleMasterBuilder<User>()
                 .forEntity(User.class)
                 .addProp("key").asSinglelineText().also()
                 .addProp("basedOnUser").asAutocompleter().withMatcher(UserMasterBaseUserMatcher.class).also()
-                .addProp("active").asCheckbox().also()
+                .addProp(ACTIVE).asCheckbox().also()
                 .addProp("base").asCheckbox().also()
-                .addProp("email").asSinglelineText().also()
+                .addProp(EMAIL).asSinglelineText().also()
+                .addProp(SSO_ONLY).asCheckbox().also()
                 .addProp("roles").asCollectionalRepresentor().withAction(UserActions.MANAGE_ROLES_MASTER_PROP_ACTION.mkAction()).also()
                 .addAction(MasterActions.REFRESH).shortDesc("Cancel").longDesc("Cancel changes if any and refresh.")
                 .addAction(MasterActions.SAVE).shortDesc("Save").longDesc("Save changes.")
