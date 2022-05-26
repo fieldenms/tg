@@ -31,6 +31,7 @@ import ua.com.fielden.platform.property.validator.StringValidator;
 import ua.com.fielden.platform.security.user.definers.UserActivationDefiner;
 import ua.com.fielden.platform.security.user.definers.UserBaseDefiner;
 import ua.com.fielden.platform.security.user.definers.UserBasedOnUserDefiner;
+import ua.com.fielden.platform.security.user.definers.UserSsoOnlyDefiner;
 import ua.com.fielden.platform.security.user.validators.UserBaseOnUserValidator;
 import ua.com.fielden.platform.security.user.validators.UserBaseValidator;
 
@@ -50,6 +51,7 @@ public class User extends ActivatableAbstractEntity<String> {
     public static final String ROLES = "roles";
     public static final String BASED_ON_USER = "basedOnUser";
     public static final String EMAIL = "email";
+    public static final String SSO_ONLY = "ssoOnly";
     public static final String USER_NAME_REGEX = "^\\w+$"; // permits only letters and digits, must not permit SECRET_RESET_UUID_SEPERATOR
 
     /**
@@ -118,6 +120,22 @@ public class User extends ActivatableAbstractEntity<String> {
     @BeforeChange(@Handler(ActivePropertyValidator.class))
     @AfterChange(UserActivationDefiner.class)
     private boolean active;
+
+    @IsProperty
+    @MapTo
+    @Title(value = "SSO only?", desc = "Only relevant in the SSO authentication mode. Controls the ability for users to loging with Reduced Sign-On (value false) or Signle Sign-On only (value true).")
+    @AfterChange(UserSsoOnlyDefiner.class)
+    private boolean ssoOnly;
+
+    @Observable
+    public User setSsoOnly(final boolean ssoOnly) {
+        this.ssoOnly = ssoOnly;
+        return this;
+    }
+
+    public boolean isSsoOnly() {
+        return ssoOnly;
+    }
 
     @Override
     @Observable

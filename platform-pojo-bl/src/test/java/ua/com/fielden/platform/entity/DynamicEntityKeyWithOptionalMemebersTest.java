@@ -114,8 +114,7 @@ public class DynamicEntityKeyWithOptionalMemebersTest {
 
     
     @KeyType(DynamicEntityKey.class)
-    static class EntityWithTwoOptionalKeyMembers extends AbstractEntity<DynamicEntityKey> {
-        private static final long serialVersionUID = 1L;
+    public static class EntityWithTwoOptionalKeyMembers extends AbstractEntity<DynamicEntityKey> {
 
         @IsProperty
         @CompositeKeyMember(1)
@@ -148,8 +147,7 @@ public class DynamicEntityKeyWithOptionalMemebersTest {
     }
     
     @KeyType(DynamicEntityKey.class)
-    static class EntityWithTreeOptionalKeyMembers extends AbstractEntity<DynamicEntityKey> {
-        private static final long serialVersionUID = 1L;
+    public static class EntityWithTreeOptionalKeyMembers extends AbstractEntity<DynamicEntityKey> {
 
         @IsProperty
         @CompositeKeyMember(1)

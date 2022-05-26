@@ -4,10 +4,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.security.SignatureException;
 import java.util.Optional;
@@ -15,13 +13,11 @@ import java.util.Random;
 
 import org.joda.time.DateTime;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.common.base.Ticker;
 import com.google.common.cache.Cache;
 
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.sample.domain.TgPerson;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.session.UserSessionDao;
@@ -58,7 +54,7 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
         final User currUser = getInstance(IUserProvider.class).getUser();
         constants.setNow(dateTime("2015-04-23 13:00:00"));
         cacheTicker.setStartTime(dateTime("2015-04-23 13:00:00"));
-        final UserSession newSession = coSession.newSession(currUser, true);
+        final UserSession newSession = coSession.newSession(currUser, true, null);
 
         // at this stage the cache should contain only one entry
         assertEquals(1, coSession.getCache().size());
@@ -71,7 +67,7 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
         final User currUser = getInstance(IUserProvider.class).getUser();
         constants.setNow(dateTime("2015-04-23 13:00:00"));
         cacheTicker.setStartTime(dateTime("2015-04-23 13:00:00"));
-        final UserSession newSession = coSession.newSession(currUser, true);
+        final UserSession newSession = coSession.newSession(currUser, true, null);
         final String newAuthenticator = newSession.getAuthenticator().get().toString();
 
         // emulate burst requests with random increment of request time within 2 seconds
@@ -95,7 +91,7 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
         final User currUser = getInstance(IUserProvider.class).getUser();
         constants.setNow(dateTime("2015-04-23 13:00:00"));
         cacheTicker.setStartTime(dateTime("2015-04-23 13:00:00"));
-        final UserSession newSession = coSession.newSession(currUser, false);
+        final UserSession newSession = coSession.newSession(currUser, false, null);
         final String newAuthenticator = newSession.getAuthenticator().get().toString();
 
         // emulate burst requests with random increment of request time within 2 seconds
@@ -126,7 +122,7 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
         final User currUser = getInstance(IUserProvider.class).getUser();
         constants.setNow(dateTime("2015-04-23 13:00:00"));
         cacheTicker.setStartTime(dateTime("2015-04-23 13:00:00"));
-        final UserSession newSession = coSession.newSession(currUser, true);
+        final UserSession newSession = coSession.newSession(currUser, true, null);
         final String authenticator = newSession.getAuthenticator().get().toString();
 
         // enough time has passed to evict authenticators from cache
@@ -179,7 +175,7 @@ public class UserSessionCacheEvictionStrategyTestCase extends AbstractDaoTestCas
         final User currUser = getInstance(IUserProvider.class).getUser();
         constants.setNow(dateTime("2015-04-23 13:00:00"));
         cacheTicker.setStartTime(dateTime("2015-04-23 13:00:00"));
-        final UserSession newSession = coSession.newSession(currUser, true);
+        final UserSession newSession = coSession.newSession(currUser, true, null);
         final String authenticator = newSession.getAuthenticator().get().toString();
 
         // enough time has passed to evict authenticators from cache

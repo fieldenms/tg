@@ -41,6 +41,8 @@ import com.google.inject.Inject;
 import com.nulabinc.zxcvbn.Strength;
 import com.nulabinc.zxcvbn.Zxcvbn;
 
+import ua.com.fielden.platform.basic.config.IApplicationSettings;
+import ua.com.fielden.platform.basic.config.IApplicationSettings.AuthMode;
 import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -50,6 +52,7 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
@@ -82,6 +85,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     private final INewUserNotifier newUserNotifier;
     private final SessionIdentifierGenerator crypto;
+    private final boolean ssoMode;
 
     private final fetch<User> fetchModel = fetch(User.class).with("roles", fetch(UserAndRoleAssociation.class));
 
@@ -89,16 +93,21 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     public UserDao(
             final INewUserNotifier newUserNotifier,
             final SessionIdentifierGenerator crypto,
+            final IApplicationSettings appSettings,
             final IFilter filter) {
         super(filter);
 
         this.newUserNotifier = newUserNotifier;
         this.crypto = crypto;
+        this.ssoMode = appSettings.authMode() == AuthMode.SSO;
     }
 
     @Override
     public User new_() {
-        return super.new_().getProperty(User.BASED_ON_USER).setRequired(true).getEntity();
+        final User newUser = super.new_();
+        newUser.getProperty(User.SSO_ONLY).setValue(ssoMode, /* enforce */ true); // set ssoOnly to reflect the current authentication mode; set forcibly to ensure execution of UserSsoOnlyDefiner, which processes the meta-property
+        newUser.getProperty(User.BASED_ON_USER).setRequired(true);
+        return newUser;
     }
 
     /**
@@ -148,12 +157,12 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             menuItemsToSave.addAll(invisibleMenuItems(user));
         }
 
-        // if a new active user is being created then need to send an activation email
+        // if a new active user is being created then need to send an activation email, but only if user is not restricted to SSO only for an application in the SSO mode
         // this is possible only if an email address is associated with the user, which is required for active users
         // there could also be a situation where an inactive existing user, which did not have their password set in the first place, is being activated... this also warrants an activation email
         final Either<Long, User> savedUser;
-        if ((!user.isPersisted() && user.isActive()) ||
-            (user.isPersisted() && user.isActive() && user.getProperty(ACTIVE).isDirty() && passwordNotAssigned(user))) {
+        if ((!user.isPersisted() && user.isActive() && notRestrictedToSsoOnly(user)) ||
+            ( user.isPersisted() && user.isActive() && notRestrictedToSsoOnly(user) && user.getProperty(ACTIVE).isDirty() && passwordNotAssigned(user))) {
             savedUser = super.save(user, maybeFetch);
             final Function<Long, EntityCompanionException> error = (Long id) -> new EntityCompanionException(format("Unexpected error: user ID [%s] was returned instead of an instance after saving user [%s].", id, user));
             newUserNotifier.notify(assignPasswordResetUuid(savedUser.orElseThrow(error).getKey()).orElseThrow(() -> new SecurityException("Could not initiate password reset.")));
@@ -166,6 +175,16 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         saveMenuItemInvisibility(menuItemsToSave, menuOwner);
 
         return savedUser;
+    }
+    
+    /**
+     * A helper predicate, which return {@code true} for users who are not restricted to SSO only in the SSO authentication mode.
+     *
+     * @param user
+     * @return
+     */
+    private boolean notRestrictedToSsoOnly(final User user) {
+        return !ssoMode || !user.isSsoOnly();
     }
 
     /**
@@ -415,14 +434,16 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     @Override
     public Optional<UserSecret> assignPasswordResetUuid(final String usernameOrEmail) {
         // let's try to find a user by username or email
-        final EntityResultQueryModel<User> query = select(User.class)
+        // in the SSO authentication mode, it is necessary to exclude those users, who are restricted to SSO only.
+        final ICompoundCondition0<User> rsoCondition = select(User.class)
                 .where()
                 .prop(ACTIVE).eq().val(true)
                 .and()
                 .begin()
                     .lowerCase().prop(KEY).eq().lowerCase().val(usernameOrEmail).or()
                     .lowerCase().prop(EMAIL).eq().lowerCase().val(usernameOrEmail)
-                .end().model();
+                .end();
+        final EntityResultQueryModel<User> query = (ssoMode ? rsoCondition.and().prop(User.SSO_ONLY).eq().val(false) : rsoCondition).model();
 
         final User user = getEntity(from(query).with(fetchAll(User.class)).model());
 
