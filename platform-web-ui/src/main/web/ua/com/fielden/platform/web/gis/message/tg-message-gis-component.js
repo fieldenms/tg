@@ -5,6 +5,7 @@ import { MessageMarkerFactory } from '/resources/gis/message/tg-message-marker-f
 
 export const MessageGisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap) {
     GisComponent.call(this, mapDiv, progressDiv, progressBarDiv, tgMap);
+    this._select.deselectPrevEgiEntityOnLayerSelection = true;
 };
 
 MessageGisComponent.prototype = Object.create(GisComponent.prototype);

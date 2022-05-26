@@ -11,6 +11,8 @@ import '/resources/images/tg-icons.js';
 
 import {html, PolymerElement} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
+import { escapeHtmlText } from '/resources/reflection/tg-polymer-utils.js';
+
 const template = html`
     <style>
         :host {
@@ -70,7 +72,7 @@ const template = html`
         </div>
         <tg-tree-table id="domainExplorerTree" class="domain-explorer-tree" model="[[treeModel]]" last-search-text="{{lastSearchText}}" on-current-matched-item-changed="_updateCurrentMatchedItemRelatedData" on-tg-load-subtree="_loadSubtree">
             <tg-hierarchy-column slot='hierarchy-column' property="key" type="String" width="420" min-width="80" grow-factor="0" column-title="Title" column-desc="Domain entity or property title." content-builder="[[_buildContent]]"></tg-hierarchy-column>
-            <tg-property-column slot='regular-column' property="desc" type="String" width="370" min-width="80" grow-factor="0" column-title="Description" column-desc="Domain entity or property description."></tg-property-column>
+            <tg-property-column slot='regular-column' property="desc" type="String" width="370" min-width="80" grow-factor="0" column-title="Description" column-desc="Domain entity or property description." content-builder="[[_buildDescContent]]"></tg-property-column>
             <tg-property-column slot='regular-column' property="propertyType.desc" type="String" width="220" min-width="80" grow-factor="0" column-title="Property Type" column-desc="Property type."></tg-property-column>
             <tg-property-column slot='regular-column' property="internalName" type="String" width="270" min-width="80" grow-factor="0" column-title="Internal Name" column-desc="Domain entity or property name at the application level." content-builder="[[_buildInternalNameContent]]"></tg-property-column>
             <tg-property-column slot='regular-column' property="dbSchema" type="String" width="200" min-width="80" grow-factor="0" column-title="DB Schema" column-desc="Table or column name at the database level. Entities used for reporting, which are based on a query, may not have this information available." content-builder="[[_buildDbSchemaContent]]"></tg-property-column>
@@ -177,6 +179,7 @@ class TgDomainExplorer extends PolymerElement {
         this._saveInProgress = false;
 
         this._buildContent = this._buildContent.bind(this);
+        this._buildDescContent = this._buildDescContent.bind(this);
         this._buildInternalNameContent = this._buildInternalNameContent.bind(this);
         this._buildDbSchemaContent = this._buildDbSchemaContent.bind(this);
     }
@@ -200,6 +203,10 @@ class TgDomainExplorer extends PolymerElement {
         const parentEntity = entity.parent;
         const numOfKeys = parentEntity ? parentEntity.entity.children.filter(ent => ent.isKey).length : 0;
         return getKeyIcon(entity, numOfKeys) + "<span class='truncate'" + (numOfKeys !== 1 ? "style='margin-left:8px;'" : "") + ">" + entity.entity.key + "</span>";
+    }
+
+    _buildDescContent (entity) {
+        return escapeHtmlText(entity.entity.desc);
     }
 
     _buildInternalNameContent (entity) {

@@ -19,7 +19,7 @@ import ua.com.fielden.platform.types.Money;
  * @author TG Team
  *
  */
-class LogicThatNeedsTransaction implements ISessionEnabled {
+public class LogicThatNeedsTransaction implements ISessionEnabled {
     private final IEntityDao<EntityWithMoney> dao;
     private Session session;
     private String transactionGuid;

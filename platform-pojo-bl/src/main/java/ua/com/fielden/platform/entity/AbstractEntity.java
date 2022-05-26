@@ -267,6 +267,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     protected final Logger logger;
 
     @MapTo("_ID")
+    @Title(value = "Id", desc = "Surrogate unique identifier.")
     private Long id;
     
     @MapTo(value = "_VERSION", defaultValue = "0")

@@ -35,6 +35,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
+import ua.com.fielden.platform.basic.config.IApplicationSettings.AuthMode;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.session.Authenticator;
 import ua.com.fielden.platform.security.session.IUserSession;
@@ -57,6 +58,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
 public class LoginResource extends AbstractWebResource {
     
     public static final String BINDING_PATH = "/login";
+    public static final String SSO_BINDING_PATH = "/sso";
     public static final int BLOCK_TIME_SECONDS = 15;
     public static final int LOCKOUT_THRESHOLD = 6;
     private static final Cache<String, LoginAttempts> LOGIN_ATTEMPTS = CacheBuilder.newBuilder().initialCapacity(100).maximumSize(1000).concurrencyLevel(50).build();
@@ -72,12 +74,14 @@ public class LoginResource extends AbstractWebResource {
     private final IUniversalConstants constants;
     
     private final byte[] loginPage;
+    private final byte[] loginPageForMixedMode;
 
     /**
      * Creates {@link LoginResource}.
      */
     public LoginResource(
             final byte[] loginPage,
+            final byte[] loginPageForMixedMode,
             final String domainName,
             final String path,
             final IUniversalConstants constants,
@@ -101,6 +105,7 @@ public class LoginResource extends AbstractWebResource {
         this.coUserSession = coUserSession;
         this.restUtil = restUtil;
         this.loginPage = loginPage;
+        this.loginPageForMixedMode = loginPageForMixedMode;
     }
 
     @Get
@@ -114,6 +119,7 @@ public class LoginResource extends AbstractWebResource {
                 final Authenticator auth = oAuth.get();
                 up.setUsername(auth.username, coUser);
                 final Optional<UserSession> session = coUserSession.currentSession(up.getUser(), auth.toString(), false);
+                // if authenticated session could be obtained, then we simply redirect request to "/"
                 if (session.isPresent()) {
                     // response needs to be provided with an authenticating cookie
                     assignAuthenticatingCookie(session.get().getUser(), constants.now(), session.get().getAuthenticator().get(), domainName, path, getRequest(), getResponse());
@@ -123,12 +129,18 @@ public class LoginResource extends AbstractWebResource {
                 }
             }
 
-            // otherwise just return the login page for user to login in explicitly
-            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(loginPage), MediaType.TEXT_HTML));
+            // Otherwise just return the login page for user to login explicitly.
+            // The returned page should take into account support for SSO and the mixed RSO/SSO mode
+            // Query parameter "auth" can be used to enforce the RSO mode even when SSO is preferred
+            // Accessing the login resource with /login?auth=RSO should return a login page with a prompt without automatic re-direction to SSO
+            // Such request is valid in both RSO and SSO authentication modes, but in the SSO mode it is ignored
+            final String requestedAuth = getQueryValue("auth");
+            final ByteArrayInputStream loginPageStream = AuthMode.RSO.name().equalsIgnoreCase(requestedAuth) ? new ByteArrayInputStream(loginPageForMixedMode) : new ByteArrayInputStream(loginPage);
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(loginPageStream, MediaType.TEXT_HTML));
         } catch (final Exception ex) {
             // in case of an exception log the error and return the login page for the user to try again
             LOGGER.fatal(ex.getMessage(), ex);
-            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(loginPage), MediaType.TEXT_HTML));
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(loginPageForMixedMode), MediaType.TEXT_HTML));
         }
     }
 
@@ -197,7 +209,7 @@ public class LoginResource extends AbstractWebResource {
                 final User user = (User) authResult.getInstance();
                 // let's use this opportunity to clear expired sessions for the user
                 coUserSession.clearExpired(user);
-                final UserSession session = coUserSession.newSession(user, credo.trustedDevice);
+                final UserSession session = coUserSession.newSession(user, credo.trustedDevice, null);
          
                 // ...and provide the response with an authenticating cookie
                 assignAuthenticatingCookie(user, constants.now(), session.getAuthenticator().get(), domainName, path, getRequest(), getResponse());

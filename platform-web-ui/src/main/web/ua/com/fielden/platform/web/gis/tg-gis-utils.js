@@ -32,35 +32,12 @@ export const createStyleModule = function (moduleId, ...styleStrings) {
  * Fits all markers / layers into view by zooming and panning them in the map.
  * 
  * @param map -- the map in which all features are about to be fitted
- * @param markerClusterGroup -- default overlay for which the children will be fitted to bounds (non-ArcGIS GIS components)
- * @param overlays -- all existing overlays for which the children will be fitted to bounds (ArcGIS GIS components)
+ * @param markerClusterGroup -- default overlay for which the children will be fitted to bounds
  */
-export const fitToBounds = function (map, markerClusterGroup, overlays) {
+export const fitToBounds = function (map, markerClusterGroup) {
     window.setTimeout(function () {
-        try {
+        if (markerClusterGroup.getBounds().isValid()) { // marker cluster group can have no real objects and its bounds would be invalid -- do nothing in that case
             map.fitBounds(markerClusterGroup.getBounds());
-        } catch (error) {
-            let bounds = null;
-            let processedArcGisOverlaysCount = 0;
-            let arcGisOverlaysCount = 0;
-            Object.values(overlays).forEach(overlay => {
-                if (overlay.query) {
-                    if (map.hasLayer(overlay)) {
-                        arcGisOverlaysCount++;
-                        overlay.query().bounds(function (error, latlngbounds) {
-                            if (bounds) {
-                                bounds = bounds.extend(latlngbounds);
-                            } else {
-                                bounds = latlngbounds;
-                            }
-                            processedArcGisOverlaysCount++;
-                            if (processedArcGisOverlaysCount === arcGisOverlaysCount) {
-                                map.fitBounds(bounds);
-                            }
-                        });
-                    }
-                }
-            });
         }
     }, 1);
 }
