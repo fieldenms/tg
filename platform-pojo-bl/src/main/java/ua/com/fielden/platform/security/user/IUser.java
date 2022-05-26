@@ -5,6 +5,7 @@ package ua.com.fielden.platform.security.user;
 
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.security.user.User.EMAIL;
+import static ua.com.fielden.platform.security.user.User.SSO_ONLY;
 
 import java.util.List;
 import java.util.Map;
@@ -26,7 +27,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 public interface IUser extends IEntityDao<User> {
 
     static final IFetchProvider<User> FETCH_PROVIDER = EntityUtils.fetch(User.class)
-            .with("key", EMAIL, ACTIVE)
+            .with("key", EMAIL, ACTIVE, SSO_ONLY)
             .with("base", "basedOnUser.base", "roles");
 
     /**

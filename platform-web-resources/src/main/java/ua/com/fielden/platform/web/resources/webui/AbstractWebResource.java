@@ -27,6 +27,7 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
  */
 public abstract class AbstractWebResource extends ServerResource {
     private final DeviceProfile deviceProfile;
+    protected final IDates dates;
 
     public AbstractWebResource(final Context context, final Request request, final Response response, final IDeviceProvider deviceProvider, final IDates dates) {
         init(context, request, response);
@@ -34,6 +35,7 @@ public abstract class AbstractWebResource extends ServerResource {
         if (dates instanceof DefaultDates) {
             ((DefaultDates) dates).setRequestTimeZone(request.getHeaders().getValues("Time-Zone"));
         }
+        this.dates = dates;
     }
 
     /**

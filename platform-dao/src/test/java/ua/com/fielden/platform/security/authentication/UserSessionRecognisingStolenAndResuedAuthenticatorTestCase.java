@@ -43,7 +43,7 @@ public class UserSessionRecognisingStolenAndResuedAuthenticatorTestCase extends 
 
         constants.setNow(dateTime("2015-04-23 13:00:00"));
         cacheTicker.setStartTime(dateTime("2015-04-23 13:00:00"));
-        final UserSession newSession = coSession.newSession(currUser, true);
+        final UserSession newSession = coSession.newSession(currUser, true, null);
 
         // authenticator that is associated with just established session gets stolen by an adversary....
         final String stolenAuthenticator = newSession.getAuthenticator().get().toString();
@@ -80,14 +80,14 @@ public class UserSessionRecognisingStolenAndResuedAuthenticatorTestCase extends 
         constants.setNow(dateTime("2015-04-23 16:26:00"));
         cacheTicker.setStartTime(dateTime("2015-04-23 16:26:00"));
 
-        coSession.newSession(user1, true); // from work
+        coSession.newSession(user1, true, null); // from work
 
         up.setUsername("USER2", getInstance(IUser.class));
         final User user2 = up.getUser();
 
         // trusted session for USER2
         constants.setNow(dateTime("2015-04-23 16:30:00"));
-        coSession.newSession(user2, true); // from work
+        coSession.newSession(user2, true, null); // from work
     }
 
 }

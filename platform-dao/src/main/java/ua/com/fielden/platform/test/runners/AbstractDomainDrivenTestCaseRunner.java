@@ -99,7 +99,7 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
 
         logger.info(format("Running [%s] with loadDdlScriptFromFile = [%s], saveScriptsToFile = [%s], loadDataScriptFromFile = [%s] and  databaseUri = [%s]", klass, loadDdlScriptFromFile, saveScriptsToFile, loadDataScriptFromFile, databaseUri));
 
-        // lets construct and assign test configuration
+        // let's construct and assign test configuration
         // this should occur only once per JVM instance as this is a computationally intensive operation
         // hence, caching of the produced value in the static variable
         // in the essence this is like a static initialization block that occurs during instantiation of the first test runner 
@@ -108,12 +108,8 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
             config = testConfig.orElseGet(() -> createConfig(dbProps));
             coFinder = config.getInstance(ICompanionObjectFinder.class);
             factory = config.getInstance(EntityFactory.class);
-            assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("instantiator"), 
-                    new Function<Class<?>, Object>() {
-                        @Override
-                        public Object apply(Class<?> type) {
-                            return config.getInstance(type);
-                        }});
+            final Function<Class<?>, Object> instFun = type -> config.getInstance(type);
+            assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("instantiator"), instFun);
             assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("coFinder"), coFinder);
             assignStatic(AbstractDomainDrivenTestCase.class.getDeclaredField("factory"), factory);
         }

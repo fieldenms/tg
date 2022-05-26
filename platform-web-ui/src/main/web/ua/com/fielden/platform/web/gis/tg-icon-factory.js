@@ -38,8 +38,8 @@ export const IconFactory = function () {
     });
     const CircleIcon = L.Icon.extend({
         options: {
-            iconSize: [12, 12],
-            iconAnchor: [6, 6],
+            iconSize: [8, 8],
+            iconAnchor: [4, 4],
             popupAnchor: [0, 0]
         }
     });

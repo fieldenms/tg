@@ -11,6 +11,7 @@ import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 import { composeDefaultUnconvertedEntityValue } from '/resources/editors/tg-entity-formatter.js';
+import { escapeHtmlText } from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
@@ -143,16 +144,6 @@ const buildTitles = function (titleObject, reflector) {
 const buildFilteringKey = function(titleObject) {
     return titleObject.map(curr => (Array.isArray(curr.value) ? buildFilteringKey(curr.value) : curr.value)).join(" ");
 };
-
-const escapeHtmlText = function(text) {
-    const searchFor = [/</g, />/g];
-    const replaceWith = ['&lt;', '&gt;'];
-    let escapedStr = text;
-    searchFor.forEach((search, i) => {
-        escapedStr = escapedStr.replace(search, replaceWith[i]);
-    });
-    return escapedStr;
-}
 
 Polymer({
     _template: template,
