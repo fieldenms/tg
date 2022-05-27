@@ -30,7 +30,7 @@ public class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T>
     public final EntityCentre<?> embeddedCentre;
     private final IRenderable renderable;
 
-    MasterWithCentre(final Class<T> entityType, final boolean saveOnActivate, final EntityCentre<?> entityCentre, final Optional<JsCode> customCode, final Optional<JsCode> customCodeOnAttach) {
+    MasterWithCentre(final Class<T> entityType, final boolean saveOnActivate, final EntityCentre<?> entityCentre, final Optional<JsCode> customCode, final Optional<JsCode> customCodeOnAttach, final Optional<JsCode> customImports) {
         embeddedCentre = entityCentre;
         final StringBuilder attrs = new StringBuilder();
 
@@ -55,7 +55,7 @@ public class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T>
         final String attributes = attrs.toString().replace(", }", " }");
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
-                .replace(IMPORTS, "import '/resources/element_loader/tg-element-loader.js';\n")
+                .replace(IMPORTS, "import '/resources/element_loader/tg-element-loader.js';\n" + customImports.map(ci -> ci.toString()).orElse(""))
                 .replace(ENTITY_TYPE, flattenedNameOf(entityType))
                 .replace("<!--@tg-entity-master-content-->",
                         format(""

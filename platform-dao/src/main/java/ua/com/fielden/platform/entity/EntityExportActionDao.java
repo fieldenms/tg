@@ -58,6 +58,9 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         entity.setMime("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         final Map<String, Object> adhocParams = new LinkedHashMap<>();
         final Stream<AbstractEntity<?>> entities;
+        // selectionCrit.getDynamicProperties() are used only for EntityExportAction and only in this class;
+        //   they are initialised in below selectionCrit.export(...) calls; see selectionCrit.setDynamicProperties method callers for more details;
+        //   that's why there is no need to initialise selectionCrit.getDynamicProperties() anywhere outside EntityExportAction, i.e. for other functional actions.
         if (entity.isExportAll()) {
             entities = selectionCrit.export(adhocParams);
         } else if (entity.isExportTop()) {

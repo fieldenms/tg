@@ -1888,7 +1888,9 @@
             });
             
             test('unionCommonProps method does not return desc for types where one of them has no @DescTitle annotation', function (done) {
-                assert.deepEqual(reflector.getType('ua.com.fielden.platform.domain.metadata.DomainPropertyHolder').unionCommonProps(), []);
+                assert.deepEqual(reflector.getType('ua.com.fielden.platform.sample.domain.UnionEntityWithoutSecondDescTitle').unionCommonProps(), [
+                    'stringProperty' // common props from most specific types EntityOne and EntityThree
+                ]);
                 done();
             });
             
