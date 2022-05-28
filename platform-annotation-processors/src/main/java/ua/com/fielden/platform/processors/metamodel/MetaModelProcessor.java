@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.processors.metamodel;
 
+import static java.lang.String.format;
+
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -39,8 +41,6 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import javax.tools.FileObject;
-import javax.tools.StandardLocation;
 
 import org.apache.logging.log4j.Level;
 import org.apache.logging.log4j.LogManager;
@@ -104,18 +104,18 @@ public class MetaModelProcessor extends AbstractProcessor {
     // stores meta-models that are generated during the lifetime of this processor's instance
     // used as a class field so it can be accessed in each round, due to unpredictable incremental compilation environment of Eclipse
     // TODO use an approach with a separate file for storing a list of existing meta-models and an appropriate class
-    private Map<MetaModelConcept, Boolean> metaModelConcepts;
-    private Map<MetaModelElement, Boolean> inactiveMetaModels;
+    private final Map<MetaModelConcept, Boolean> metaModelConcepts = new HashMap<>();
+    private final Map<MetaModelElement, Boolean> inactiveMetaModels = new HashMap<>();
     
     static {
-        System.out.println(String.format("%s class loaded.", MetaModelProcessor.class.getSimpleName()));
+        System.out.println(format("%s class loaded.", MetaModelProcessor.class.getSimpleName()));
     }
     
     public static Set<Class<? extends Annotation>> getSupportedAnnotations() {
         return Set.of(MapEntityTo.class, DomainEntity.class);
     }
 
-    private static ClassName getMetaModelClassName(MetaModelElement element) {
+    private static ClassName getMetaModelClassName(final MetaModelElement element) {
         return ClassName.get(element.getPackageName(), element.getSimpleName());
     }
 
@@ -154,7 +154,7 @@ public class MetaModelProcessor extends AbstractProcessor {
     }
 
     @Override
-    public synchronized void init(ProcessingEnvironment processingEnv) {
+    public synchronized void init(final ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
         this.initDateTime = DateTime.now();
         this.filer = processingEnv.getFiler();
@@ -163,8 +163,8 @@ public class MetaModelProcessor extends AbstractProcessor {
         this.messager = processingEnv.getMessager();
         this.options = processingEnv.getOptions();
         this.roundCount = 0;
-        this.metaModelConcepts = new HashMap<>();
-        this.inactiveMetaModels = new HashMap<>();
+        this.metaModelConcepts.clear();
+        this.inactiveMetaModels.clear();
         this.metaModelsClassVerified = false;
 
         // processor started from Eclipse?
@@ -176,14 +176,14 @@ public class MetaModelProcessor extends AbstractProcessor {
         this.logger = LogManager.getLogger(MetaModelProcessor.class);
 
         // ProcessorLogger
-        String logFilename = this.fromMaven ? LOG_FILENAME : projectDir + "/" + LOG_FILENAME;
-        String source = this.fromMaven ? "mvn" : "Eclipse";
+        final String logFilename = this.fromMaven ? LOG_FILENAME : projectDir + "/" + LOG_FILENAME;
+        final String source = this.fromMaven ? "mvn" : "Eclipse";
         this.procLogger = new ProcessorLogger(logFilename, source, logger);
-        procLogger.info(String.format("%s initialized.", this.getClass().getSimpleName()));
+        procLogger.info(format("%s initialized.", this.getClass().getSimpleName()));
 
         // debug 
         procLogger.debug("Options: " + Arrays.toString(options.keySet().stream()
-                                                        .map(k -> String.format("%s=%s", k, options.get(k)))
+                                                        .map(k -> format("%s=%s", k, options.get(k)))
                                                         .toArray()));
 //        if (Files.exists(Path.of(projectDir + "/target/generated-sources"))) {
 //            try {
@@ -198,9 +198,9 @@ public class MetaModelProcessor extends AbstractProcessor {
     }
 
     @Override
-    public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+    public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
         final int roundNumber = ++this.roundCount;
-        procLogger.debug(String.format("=== PROCESSING ROUND %d START ===", roundNumber));
+        procLogger.debug(format("=== PROCESSING ROUND %d START ===", roundNumber));
         procLogger.debug("annotations: " + Arrays.toString(annotations.stream().map(Element::getSimpleName).toArray()));
         final Set<? extends Element> rootElements = roundEnv.getRootElements();
         procLogger.debug("rootElements: " + Arrays.toString(rootElements.stream().map(Element::getSimpleName).toArray()));
@@ -244,15 +244,16 @@ public class MetaModelProcessor extends AbstractProcessor {
         procLogger.debug("metaModelConcepts: " + Arrays.toString(this.metaModelConcepts.keySet().stream().map(MetaModelConcept::getSimpleName).toArray()));
 
         for (MetaModelConcept mmc: getGenerationTargets(this.metaModelConcepts)) {
-            if (writeMetaModel(mmc))
+            if (writeMetaModel(mmc)) {
                 markAsGenerated(mmc);
+            }
         }
 
         final TypeElement metaModelsTypeElement = elementUtils.getTypeElement(MetaModelConstants.METAMODELS_CLASS_QUAL_NAME);
 
         // if MetaModels class exists
         if (metaModelsTypeElement != null) { 
-            procLogger.debug(String.format("%s found.", MetaModelConstants.METAMODELS_CLASS_QUAL_NAME));
+            procLogger.debug(format("%s found.", MetaModelConstants.METAMODELS_CLASS_QUAL_NAME));
             final MetaModelsElement metaModelsElement = new MetaModelsElement(metaModelsTypeElement, elementUtils);
 
             // verify MetaModels
@@ -282,7 +283,7 @@ public class MetaModelProcessor extends AbstractProcessor {
 
             if (!this.metaModelConcepts.isEmpty() || !this.inactiveMetaModels.isEmpty()) {
                 //  regenerate the MetaModels class by adding new fields and removing inactive ones
-                procLogger.debug(String.format("Regenerating %s.", metaModelsElement.getSimpleName()));
+                procLogger.debug(format("Regenerating %s.", metaModelsElement.getSimpleName()));
                 writeMetaModelsClass(this.metaModelConcepts.keySet(), metaModelsElement, this.inactiveMetaModels.keySet());
             }
         } else {
@@ -316,7 +317,7 @@ public class MetaModelProcessor extends AbstractProcessor {
     }
     
     private void endRound(final int n, final boolean processingOver) {
-        procLogger.debug(String.format("xxx PROCESSING ROUND %d END xxx", n));
+        procLogger.debug(format("xxx PROCESSING ROUND %d END xxx", n));
         if (processingOver) {
             procLogger.info("### LAST ROUND. PROCESSING OVER ###");
             procLogger.ln();
@@ -340,7 +341,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             if (!Collections.disjoint(referencedByThisMetaModel, referencedMetaModels)) {
                 final Set<MetaModelElement> intersection = Set.copyOf(referencedByThisMetaModel);
                 intersection.retainAll(referencedMetaModels);
-                procLogger.debug(String.format("%s references %s. Regenerating.", mme.getSimpleName(), Arrays.toString(intersection.stream().map(MetaModelElement::getSimpleName).toArray())));
+                procLogger.debug(format("%s references %s. Regenerating.", mme.getSimpleName(), Arrays.toString(intersection.stream().map(MetaModelElement::getSimpleName).toArray())));
                 if (writeMetaModel(mme))
                     regenerated.add(mme);
             }
@@ -366,7 +367,7 @@ public class MetaModelProcessor extends AbstractProcessor {
                     .collect(Collectors.toSet());
 
             if (!referencedByThisEntity.isEmpty())  {
-                procLogger.debug(String.format("%s references %s. Regenerating %s.", entity.getSimpleName(), Arrays.toString(referencedByThisEntity.stream().map(EntityElement::getSimpleName).toArray()), mme.getSimpleName()));
+                procLogger.debug(format("%s references %s. Regenerating %s.", entity.getSimpleName(), Arrays.toString(referencedByThisEntity.stream().map(EntityElement::getSimpleName).toArray()), mme.getSimpleName()));
                 final List<TypeMirror> referencedTypes = referencedByThisEntity.stream()
                         .map(EntityElement::asType)
                         .toList();
@@ -405,8 +406,8 @@ public class MetaModelProcessor extends AbstractProcessor {
         final String datetime = initDateTime.toString("dd-MM-YYYY HH:mm:ss.SSS z");
         emptyMetaModelBuilder = emptyMetaModelBuilder
                 .addJavadoc("INACTIVE auto-generated meta-model.\n<p>\n")
-                .addJavadoc(String.format("Generation datetime: %s\n<p>\n", datetime))
-                .addJavadoc(String.format("Generated by {@link %s}\n<p>\n", this.getClass().getCanonicalName()))
+                .addJavadoc(format("Generation datetime: %s\n<p>\n", datetime))
+                .addJavadoc(format("Generated by {@link %s}\n<p>\n", this.getClass().getCanonicalName()))
                 .addAnnotation(generatedAnnotation);
 
         final TypeSpec emptyMetaModel = emptyMetaModelBuilder.build();
@@ -420,12 +421,12 @@ public class MetaModelProcessor extends AbstractProcessor {
             return false;
         }
 
-        procLogger.debug(String.format("Generated empty meta-model %s.", mme.getSimpleName()));
+        procLogger.debug(format("Generated empty meta-model %s.", mme.getSimpleName()));
         return true;
     }
 
     private List<MetaModelElement> findInactiveMetaModels(MetaModelsElement metaModelsElement) {
-        procLogger.debug(String.format("Verifying %s.", metaModelsElement.getSimpleName()));
+        procLogger.debug(format("Verifying %s.", metaModelsElement.getSimpleName()));
 
         final List<MetaModelElement> inactive = new ArrayList<>();
 
@@ -434,12 +435,12 @@ public class MetaModelProcessor extends AbstractProcessor {
 
             // debug
             if (entity == null)
-                procLogger.debug(String.format("Entity for %s does not exist", mme.getSimpleName()));
+                procLogger.debug(format("Entity for %s does not exist", mme.getSimpleName()));
 
             if (entity == null || !MetaModelConstants.isMetamodeled(entity.getTypeElement())) {
                 // debug
                 if (entity != null)
-                    procLogger.debug(String.format("Entity %s should no longer be metamodeled", entity.getSimpleName()));
+                    procLogger.debug(format("Entity %s should no longer be metamodeled", entity.getSimpleName()));
 
                 inactive.add(mme);
             }
@@ -579,12 +580,12 @@ public class MetaModelProcessor extends AbstractProcessor {
             // javadoc: property annotations
             final List<String> annotationsStrings = ElementFinder.getFieldAnnotations(prop.getVariableElement()).stream()
                     .map(annotMirror -> {
-                        String str = String.format("{@literal @}{@link %s}", ElementFinder.getAnnotationMirrorSimpleName(annotMirror));
+                        String str = format("{@literal @}{@link %s}", ElementFinder.getAnnotationMirrorSimpleName(annotMirror));
                         Map<? extends ExecutableElement, ? extends AnnotationValue> valuesMap = annotMirror.getElementValues();
                         if (!valuesMap.isEmpty()) {
                             str += "(";
                             str += String.join(", ", valuesMap.entrySet().stream()
-                                    .map(e -> String.format("%s = %s", 
+                                    .map(e -> format("%s = %s", 
                                             e.getKey().getSimpleName(), 
                                             e.getValue().toString().replaceAll("@", "{@literal @}")))
                                     .toList());
@@ -721,14 +722,14 @@ public class MetaModelProcessor extends AbstractProcessor {
         if (entityTitleAndDesc != null) {
             final String title = entityTitleAndDesc.getKey();
             if (title.length() > 0)
-                metaModel = metaModel.toBuilder().addJavadoc(String.format("Title: %s\n<p>\n", title)).build();
+                metaModel = metaModel.toBuilder().addJavadoc(format("Title: %s\n<p>\n", title)).build();
 
             final String desc = entityTitleAndDesc.getValue();
             if (desc.length() > 0)
-                metaModel = metaModel.toBuilder().addJavadoc(String.format("Description: %s\n<p>\n", desc)).build();
+                metaModel = metaModel.toBuilder().addJavadoc(format("Description: %s\n<p>\n", desc)).build();
         } else {
             final String title = getEntityTitleFromClassName(entityElement);
-            metaModel = metaModel.toBuilder().addJavadoc(String.format("Title: %s\n<p>\n", title)).build();
+            metaModel = metaModel.toBuilder().addJavadoc(format("Title: %s\n<p>\n", title)).build();
         }
 
         // @Generated annotation
@@ -740,8 +741,8 @@ public class MetaModelProcessor extends AbstractProcessor {
         final String datetime = initDateTime.toString("dd-MM-YYYY HH:mm:ss.SSS z");
         metaModel = metaModel.toBuilder()
                 .addJavadoc("Auto-generated meta-model for {@link $T}.\n<p>\n", entityClassName)
-                .addJavadoc(String.format("Generation datetime: %s\n<p>\n", datetime))
-                .addJavadoc(String.format("Generated by {@link %s}\n<p>\n", this.getClass().getCanonicalName()))
+                .addJavadoc(format("Generation datetime: %s\n<p>\n", datetime))
+                .addJavadoc(format("Generated by {@link %s}\n<p>\n", this.getClass().getCanonicalName()))
 //                .addJavadoc("Originating elements: {@link $L}", entityElement.getTypeElement().getQualifiedName())
                 .addAnnotation(generatedAnnotation)
                 .build();
@@ -756,7 +757,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             return false;
         }
 
-        procLogger.info(String.format("Generated %s for entity %s.", metaModel.name, entityElement.getSimpleName()));
+        procLogger.info(format("Generated %s for entity %s.", metaModel.name, entityElement.getSimpleName()));
         return true;
     }
 
@@ -788,16 +789,12 @@ public class MetaModelProcessor extends AbstractProcessor {
             public static final [ENTITY]MetaModel [ENTITY] = new [ENTITY]MetaModel();
         }
          */
-        SortedSet<FieldSpec> fieldSpecs = new TreeSet<>((f1, f2) -> f1.name.compareTo(f2.name));
+        final SortedSet<FieldSpec> fieldSpecs = new TreeSet<>((f1, f2) -> f1.name.compareTo(f2.name));
 
         // generate fields for new meta-models
-        for (MetaModelConcept mmc: metaModelConcepts) {
-            final ClassName fieldTypeName = getMetaModelClassName(mmc);
-            final String fieldName = mmc.getEntityElement().getSimpleName();
-            fieldSpecs.add(FieldSpec.builder(fieldTypeName, fieldName)
-                    .initializer("new $T()", fieldTypeName)
-                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
-                    .build());
+        for (final MetaModelConcept mmc: metaModelConcepts) {
+            final String fieldName = nameFieldForMetaModel(mmc.getEntityElement().getSimpleName());
+            fieldSpecs.add(specFieldForMetaModel(getMetaModelClassName(mmc), fieldName));
         }
 
         // if MetaModels class exists, then collect the meta-models and filter inactive ones
@@ -807,16 +804,11 @@ public class MetaModelProcessor extends AbstractProcessor {
                     .filter(mme -> !inactiveMetaModelElements.contains(mme))
                     .toList());
 
-            for (MetaModelElement mme: activeMetaModelElements) {
+            for (final MetaModelElement mme: activeMetaModelElements) {
                 final EntityElement entity = EntityFinder.findEntityForMetaModel(mme, elementUtils);
-
                 // generate a field for this meta-model
-                final ClassName fieldTypeName = getMetaModelClassName(mme);
-                final String fieldName = entity.getSimpleName();
-                fieldSpecs.add(FieldSpec.builder(fieldTypeName, fieldName)
-                        .initializer("new $T()", fieldTypeName)
-                        .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
-                        .build());
+                final String fieldName = nameFieldForMetaModel(entity.getSimpleName());
+                fieldSpecs.add(specFieldForMetaModel(getMetaModelClassName(mme), fieldName));
             }
         }
 
@@ -827,16 +819,16 @@ public class MetaModelProcessor extends AbstractProcessor {
                 .build();
         
         final String dateTimeString = initDateTime.toString("dd-MM-YYYY HH:mm:ss.SSS z");
-        TypeSpec metaModelsTypeSpec = TypeSpec.classBuilder(MetaModelConstants.METAMODELS_CLASS_SIMPLE_NAME)
+        final TypeSpec metaModelsTypeSpec = TypeSpec.classBuilder(MetaModelConstants.METAMODELS_CLASS_SIMPLE_NAME)
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
-                .addJavadoc(String.format("Generation datetime: %s\n<p>\n", dateTimeString))
-                .addJavadoc(String.format("Generated by {@link %s}.", this.getClass().getCanonicalName()))
+                .addJavadoc(format("Generation datetime: %s\n<p>\n", dateTimeString))
+                .addJavadoc(format("Generated by {@link %s}.", this.getClass().getCanonicalName()))
                 .addAnnotation(generatedAnnotation)
                 .addFields(fieldSpecs)
                 .build();
 
         // ######################## WRITE TO FILE #####################
-        JavaFile javaFile = JavaFile.builder(MetaModelConstants.METAMODELS_CLASS_PKG_NAME, metaModelsTypeSpec).indent(INDENT).build();
+        final JavaFile javaFile = JavaFile.builder(MetaModelConstants.METAMODELS_CLASS_PKG_NAME, metaModelsTypeSpec).indent(INDENT).build();
         try {
             javaFile.writeTo(filer);
         } catch (IOException e) {
@@ -844,8 +836,33 @@ public class MetaModelProcessor extends AbstractProcessor {
             return false;
         }
 
-        procLogger.info(String.format("Generated %s.", metaModelsTypeSpec.name));
+        procLogger.info(format("Generated %s.", metaModelsTypeSpec.name));
         return true;
+    }
+
+    /**
+     * Creates a {@link FieldSpec} for field with name {@code fieldName} of type {@code metaModelClassName} in {@code MetaModels} for representing a reference to a domain meta-model. 
+     *
+     * @param metaModelClassName
+     * @param fieldName
+     * @return
+     */
+    private static FieldSpec specFieldForMetaModel(final ClassName metaModelClassName, final String fieldName) {
+        final var fieldSpec = FieldSpec.builder(metaModelClassName, fieldName)
+                .initializer("new $T()", metaModelClassName)
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                .build();
+        return fieldSpec;
+    }
+
+    /**
+     * A helper method for naming fields in {@code MetaModels} that represent access points to domain meta-models.
+     *
+     * @param simpleName
+     * @return
+     */
+    private static String nameFieldForMetaModel(final String simpleName) {
+        return simpleName + "_";
     }
 
     private EntityElement newEntityElement(TypeElement typeElement) {
