@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.processors.metamodel.concepts;
 
+import static java.lang.String.format;
+
 import java.util.Objects;
 
 import ua.com.fielden.platform.processors.metamodel.MetaModelConstants;
@@ -27,7 +29,7 @@ public final class MetaModelConcept {
     }
     
     public String getQualifiedName() {
-        return String.format("%s.%s", getPackageName(), getSimpleName());
+        return format("%s.%s", getPackageName(), getSimpleName());
     }
 
     @Override
@@ -40,13 +42,16 @@ public final class MetaModelConcept {
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (obj == null) {
             return false;
-        if (getClass() != obj.getClass())
+        }
+        if (getClass() != obj.getClass()) {
             return false;
-        MetaModelConcept other = (MetaModelConcept) obj;
+        }
+        final MetaModelConcept other = (MetaModelConcept) obj;
         return Objects.equals(getQualifiedName(), other.getQualifiedName());
     }
 }
