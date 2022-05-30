@@ -651,7 +651,7 @@ const TgSelectionCriteriaBehaviorImpl = {
         if (self.isRunning) {
             console.warn("Refresh is already in progress...");
             self._refreshPromiseInProgress = self._refreshPromiseInProgress
-                .then(function () {
+                .finally(function () {
                     return self._createPromise(action, isAutoRunning, isSortingAction, forceRegeneration);
                 });
             return self._refreshPromiseInProgress;
