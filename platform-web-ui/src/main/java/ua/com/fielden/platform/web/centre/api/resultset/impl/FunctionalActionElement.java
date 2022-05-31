@@ -256,9 +256,6 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.append("preAction: ").append(createPreAction()).append(",\n");
         attrs.append("postActionSuccess: ").append(createPostActionSuccess()).append(",\n");
         attrs.append("attrs: ").append(createElementAttributes(false)).append(",\n");
-        if (!conf().excludeInsertionPoints.isEmpty()) {
-            attrs.append("excludeInsertionPoints: ").append(createExcludeInsertionPoints()).append("\n,");
-        }
         attrs.append("postActionError: ").append(createPostActionError()).append("\n");
         return attrs.append("}\n").toString();
     }
@@ -269,7 +266,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
     /**
      * Creates non-empty JS function string for {@code bodyOpt}. Generated function logs the {@code name} and {@code actionShortDescOpt} and executes the body.
-     * 
+     *
      * @param params -- string of parameters for the generated function
      * @param codeOptIfEmptyBody -- code to be executed if body is empty
      * @return
@@ -317,7 +314,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
     /**
      * Creates action 'attrs' for generation ({@code asString} === false) or for client-side parsing in 'tg-app-template.postRetrieved' method ({@code asString} === true).
-     * 
+     *
      * @param asString
      * @return
      */
@@ -329,16 +326,19 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         conf().functionalEntity.ifPresent(entityType -> {
             code.append("    " + keyQ + "entityType" + keyQ + ": " + valueQ + entityType.getName() + valueQ + ",\n");
         });
+        if (!conf().excludeInsertionPoints.isEmpty()) {
+            code.append("    " + keyQ +"excludeInsertionPoints" + keyQ + ": " + valueQ + createExcludeInsertionPoints() + valueQ + ",\n");
+        }
         code.append("    " + keyQ + "currentState" + keyQ + ": " + valueQ + "EDIT" + valueQ + ",\n");
         code.append("    " + keyQ + "centreUuid" + keyQ + ": " + keyQ + "self.uuid" + keyQ); // value surrounded with "" -- will be interpreted in tg-app-template specifically
-        
+
         conf().prefDimForView.ifPresent(prefDim -> {
-            code.append(format(",\n    " + 
-                keyQ + "prefDim" + keyQ + ": " + "{" + 
+            code.append(format(",\n    " +
+                keyQ + "prefDim" + keyQ + ": " + "{" +
                     keyQ + "width" + keyQ + ": " + keyQ + "function() {return %s}" + keyQ +", " + // value surrounded with "" -- will be interpreted in tg-app-template specifically
                     keyQ + "height" + keyQ + ": " + keyQ + "function() {return %s}" + keyQ + ", " + // value surrounded with "" -- will be interpreted in tg-app-template specifically
                     keyQ + "widthUnit" + keyQ + ": " + valueQ + "%s" + valueQ + ", " +
-                    keyQ + "heightUnit" + keyQ + ": " + valueQ + "%s" + valueQ + 
+                    keyQ + "heightUnit" + keyQ + ": " + valueQ + "%s" + valueQ +
                 "}", prefDim.width, prefDim.height, prefDim.widthUnit.value, prefDim.heightUnit.value
             ));
         });

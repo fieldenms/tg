@@ -1185,6 +1185,10 @@ const TgEntityMasterBehaviorImpl = {
                         shouldRefreshParentCentreAfterSave: true,
                         selectedEntitiesInContext: [] // provide empty selectedEntitiesInContext, this ensures that parent centre will always be refreshed as per 'refreshEntities' method in tg-entity-centre-behavior
                     };
+                    const extendedInsertionPointListToExclude = [...(this.excludeInsertionPoints || []), ...(data.excludeInsertionPoints || [])];
+                    if (extendedInsertionPointListToExclude.length !== 0) {
+                        newData.excludeInsertionPoints = extendedInsertionPointListToExclude;
+                    }
                     postal.publish({
                         channel: 'centre_' + self.centreUuid,
                         topic: 'detail.saved',
