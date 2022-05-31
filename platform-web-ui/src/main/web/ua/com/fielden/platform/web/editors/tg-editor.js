@@ -666,11 +666,33 @@ export class TgEditor extends PolymerElement {
             this.commit();
         }
     }
-    
+
+    /**
+     * Converts 'property' value (original if 'original' === true or current otherwise).
+     * 
+     * All non-dot-notated properties is converted here.
+     * 
+     * Also the method converts root properties for dot-notated properties. This is necessary to guarantee that root property value, defined from definer of other property,
+     * would not get lost on subsequent validation / saving cycles. This is possible if the value, from which root property was defined, was removed.
+     * The method provides automatic conversion to cover cases where root property is not on the master and not in 'isNecessaryForConversion' list.
+     */
+    _convertPropertyValue (bindingEntity, property, original) {
+        if (!this.reflector().isDotNotated(property)) {
+            const fullEntity = this.reflector().tg_getFullEntity(bindingEntity);
+            if (original) {
+                this.reflector().tg_convertOriginalPropertyValue(bindingEntity, property, fullEntity);
+            } else {
+                this.reflector().tg_convertPropertyValue(bindingEntity, property, fullEntity, this.previousModifiedPropertiesHolder);
+            }
+        } else {
+            this._convertPropertyValue(bindingEntity, property.substring(0, property.lastIndexOf('.')), original);
+        }
+    }
+
     _originalEntityChanged (newValue, oldValue) {
         if (this.reflector().isEntity(newValue)) {
             // lazy conversion of original property value performs here (previusly it was done for all properties inside tg-entity-binder-behavior)
-            this.reflector().tg_convertOriginalPropertyValue(newValue, this.propertyName, this.reflector().tg_getFullEntity(newValue));
+            this._convertPropertyValue(newValue, this.propertyName, true /* original? */);
         }
     }
 
@@ -688,9 +710,7 @@ export class TgEditor extends PolymerElement {
             this._refreshCycleStarted = true;
             
             // lazy conversion of property value performs here (previusly it was done for all properties inside tg-entity-binder-behavior)
-            if (!this.reflector().isDotNotated(this.propertyName)) {
-                this.reflector().tg_convertPropertyValue(newValue, this.propertyName, this.reflector().tg_getFullEntity(newValue), this.previousModifiedPropertiesHolder);
-            }
+            this._convertPropertyValue(newValue, this.propertyName, false /* original? */);
             
             const convertedValue = this.reflector().tg_getBindingValue.bind(this.reflector())(newValue, this.propertyName);
             const newEditingValue = this.convertToString(convertedValue);
