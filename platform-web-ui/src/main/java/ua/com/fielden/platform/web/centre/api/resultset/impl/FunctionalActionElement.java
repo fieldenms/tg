@@ -16,6 +16,7 @@ import ua.com.fielden.platform.web.centre.api.crit.impl.AbstractCriterionWidget;
 import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.view.master.api.actions.IAction;
+import ua.com.fielden.platform.web.view.master.api.actions.post.IPostAction;
 import ua.com.fielden.platform.web.view.master.api.actions.pre.IPreAction;
 
 /**
@@ -163,9 +164,6 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.put("pre-action", "[[" + actionsHolderName + "." + numberOfAction + ".preAction]]");
         attrs.put("post-action-success", "[[" + actionsHolderName + "." + numberOfAction + ".postActionSuccess]]");
         attrs.put("post-action-error", "[[" + actionsHolderName + "." + numberOfAction + ".postActionError]]");
-        if (!conf().excludeInsertionPoints.isEmpty()) {
-            attrs.put("exclude-insertion-points", "[[" + actionsHolderName + "." + numberOfAction + ".excludeInsertionPoints]]");
-        }
 
         // chosenProperty should be ignored strictly when it is null as an empty value means 'this'
         if (chosenProperty != null) {
