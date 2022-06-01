@@ -327,7 +327,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             code.append("    " + keyQ + "entityType" + keyQ + ": " + valueQ + entityType.getName() + valueQ + ",\n");
         });
         if (!conf().excludeInsertionPoints.isEmpty()) {
-            code.append("    " + keyQ +"excludeInsertionPoints" + keyQ + ": " + valueQ + createExcludeInsertionPoints() + valueQ + ",\n");
+            code.append("    " + keyQ +"excludeInsertionPoints" + keyQ + ": " + keyQ + createExcludeInsertionPoints() + keyQ + ",\n");
         }
         code.append("    " + keyQ + "currentState" + keyQ + ": " + valueQ + "EDIT" + valueQ + ",\n");
         code.append("    " + keyQ + "centreUuid" + keyQ + ": " + keyQ + "self.uuid" + keyQ); // value surrounded with "" -- will be interpreted in tg-app-template specifically
