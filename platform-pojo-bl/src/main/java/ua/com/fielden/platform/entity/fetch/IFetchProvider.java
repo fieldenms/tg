@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.entity.fetch;
 
+import static java.util.stream.Collectors.toSet;
+
 import java.util.Collection;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
@@ -44,7 +47,9 @@ public interface IFetchProvider<T extends AbstractEntity<?>> {
      *
      * @return new immutable {@link IFetchProvider} with included property(-ies)
      */
-    IFetchProvider<T> with(final Collection<IConvertableToPath> dotNotationProperties); // used Collection instead of Set to preserve 'with' overloaded name; this API (with collection of properties) is not used very often
+    default IFetchProvider<T> with(final Collection<IConvertableToPath> dotNotationProperties) { // used Collection instead of Set to preserve 'with' overloaded name; this API (with collection of properties) is not used very often
+        return with(dotNotationProperties.stream().map(IConvertableToPath::toPath).collect(toSet()));
+    }
 
     /**
      * Includes the property(-ies) into {@link IFetchProvider} (if it was not included already). If the property is of entity type (or collection of entities) then it will use
@@ -66,7 +71,9 @@ public interface IFetchProvider<T extends AbstractEntity<?>> {
      *
      * @return new immutable {@link IFetchProvider} with included property(-ies)
      */
-    IFetchProvider<T> with(final IConvertableToPath dotNotationProperty, final IConvertableToPath... otherDotNotationProperties);
+    default IFetchProvider<T> with(final IConvertableToPath dotNotationProperty, final IConvertableToPath... otherDotNotationProperties) {
+        return with(dotNotationProperty.toPath(), Stream.of(otherDotNotationProperties).map(IConvertableToPath::toPath).toArray(String[]::new));
+    }
 
     /**
      * Merges the entity-typed property fetch provider into this {@link IFetchProvider}. If the property has had the fetch provider before -- it will be merged with new one
@@ -88,7 +95,9 @@ public interface IFetchProvider<T extends AbstractEntity<?>> {
      *
      * @return new immutable {@link IFetchProvider} with merged property fetch provider
      */
-    <M extends AbstractEntity<?>> IFetchProvider<T> with(final IConvertableToPath dotNotationProperty, final IFetchProvider<M> propertyFetchProvider);
+    default <M extends AbstractEntity<?>> IFetchProvider<T> with(final IConvertableToPath dotNotationProperty, final IFetchProvider<M> propertyFetchProvider) {
+        return with(dotNotationProperty.toPath(), propertyFetchProvider);
+    }
 
     /**
      * Creates the union of this fetch provider with <code>otherFetchProvider</code>.
@@ -122,7 +131,9 @@ public interface IFetchProvider<T extends AbstractEntity<?>> {
      * @throws IllegalStateException -- if {@code dotNotationProperty} should not be fetched (as it is defined in this entity fetch strategy)
      * @return
      */
-    <M extends AbstractEntity<?>> IFetchProvider<M> fetchFor(final IConvertableToPath dotNotationProperty) throws IllegalArgumentException, IllegalStateException;
+    default <M extends AbstractEntity<?>> IFetchProvider<M> fetchFor(final IConvertableToPath dotNotationProperty) throws IllegalArgumentException, IllegalStateException {
+        return fetchFor(dotNotationProperty.toPath());
+    }
 
     /**
      * Returns {@code true} if the property should be fetched by this {@link IFetchProvider}, {@code false} otherwise.
@@ -138,7 +149,9 @@ public interface IFetchProvider<T extends AbstractEntity<?>> {
      * @param dotNotationProperty -- the name of the property ("dot-notation" syntax from meta-models e.g. Station_.zone().sector().division())
      * @return
      */
-    boolean shouldFetch(final IConvertableToPath dotNotationProperty);
+    default boolean shouldFetch(final IConvertableToPath dotNotationProperty) {
+        return shouldFetch(dotNotationProperty.toPath());
+    }
 
     /**
      * Returns a flat representation (in a form of set) of all properties, that should be fetched.
@@ -165,7 +178,9 @@ public interface IFetchProvider<T extends AbstractEntity<?>> {
      *
      * @return new immutable {@link IFetchProvider} without specified property(-ies)
      */
-    IFetchProvider<T> without(final IConvertableToPath dotNotationProperty, final IConvertableToPath... otherDotNotationProperties);
+    default IFetchProvider<T> without(final IConvertableToPath dotNotationProperty, final IConvertableToPath... otherDotNotationProperties) {
+        return without(dotNotationProperty.toPath(), Stream.of(otherDotNotationProperties).map(IConvertableToPath::toPath).toArray(String[]::new));
+    }
 
     /**
      * Copies {@link IFetchProvider} with new {@code managedType}.
@@ -205,6 +220,8 @@ public interface IFetchProvider<T extends AbstractEntity<?>> {
      * @param withDesc -- specifies whether {@link AbstractEntity#DESC} property needs to be added, iff {@code dotNotationProperty} is entity-typed and has {@link AbstractEntity#DESC} property
      * @return
      */
-    FetchProvider<T> addKeysTo(final IConvertableToPath dotNotationProperty, final boolean withDesc);
+    default FetchProvider<T> addKeysTo(final IConvertableToPath dotNotationProperty, final boolean withDesc) {
+        return addKeysTo(dotNotationProperty.toPath(), withDesc);
+    }
 
 }
