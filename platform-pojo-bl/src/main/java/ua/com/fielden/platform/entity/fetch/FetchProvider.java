@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.fetch;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
@@ -31,12 +32,14 @@ import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -45,6 +48,7 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -647,5 +651,40 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
             provider.enhanceWith(ID); // synthetic based on persistent types require ID (see EntityRetrievalModel.includeKeyAndDescOnly)
         }
     }
-    
+
+    @Override
+    public IFetchProvider<T> with(final Collection<IConvertableToPath> dotNotationProperties) {
+        return with(dotNotationProperties.stream().map(IConvertableToPath::toPath).collect(toSet()));
+    }
+
+    @Override
+    public IFetchProvider<T> with(final IConvertableToPath dotNotationProperty, final IConvertableToPath... otherDotNotationProperties) {
+        return with(dotNotationProperty.toPath(), Stream.of(otherDotNotationProperties).map(IConvertableToPath::toPath).toArray(String[]::new));
+    }
+
+    @Override
+    public <M extends AbstractEntity<?>> IFetchProvider<T> with(final IConvertableToPath dotNotationProperty, final IFetchProvider<M> propertyFetchProvider) {
+        return with(dotNotationProperty.toPath(), propertyFetchProvider);
+    }
+
+    @Override
+    public <M extends AbstractEntity<?>> IFetchProvider<M> fetchFor(final IConvertableToPath dotNotationProperty) throws IllegalArgumentException, IllegalStateException {
+        return fetchFor(dotNotationProperty.toPath());
+    }
+
+    @Override
+    public boolean shouldFetch(final IConvertableToPath dotNotationProperty) {
+        return shouldFetch(dotNotationProperty.toPath());
+    }
+
+    @Override
+    public IFetchProvider<T> without(final IConvertableToPath dotNotationProperty, final IConvertableToPath... otherDotNotationProperties) {
+        return without(dotNotationProperty.toPath(), Stream.of(otherDotNotationProperties).map(IConvertableToPath::toPath).toArray(String[]::new));
+    }
+
+    @Override
+    public FetchProvider<T> addKeysTo(final IConvertableToPath dotNotationProperty, final boolean withDesc) {
+        return addKeysTo(dotNotationProperty.toPath(), withDesc);
+    }
+
 }
