@@ -670,11 +670,11 @@ export class TgEditor extends PolymerElement {
     /**
      * Converts 'property' value (original if 'original' === true or current otherwise).
      * 
-     * All non-dot-notated properties is converted here.
+     * All non-dot-notated properties are converted here.
      * 
-     * Also the method converts root properties for dot-notated properties. This is necessary to guarantee that root property value, defined from definer of other property,
-     * would not get lost on subsequent validation / saving cycles. This is possible if the value, from which root property was defined, was removed.
-     * The method provides automatic conversion to cover cases where root property is not on the master and not in 'isNecessaryForConversion' list.
+     * Also, the method converts root properties for dot-notated properties. This is necessary to guarantee that root property value, assigned in a definer of another property,
+     * would not get lost on subsequent validation/saving cycles. Such loss was happening in cases were a value, from which root property was defined, got removed as part of some domain logic (e.g., a definer).
+     * The method implements an automatic conversion to include cases where a root property is not on the master and not in 'isNecessaryForConversion' list.
      */
     _convertPropertyValue (bindingEntity, property, original) {
         if (!this.reflector().isDotNotated(property)) {
