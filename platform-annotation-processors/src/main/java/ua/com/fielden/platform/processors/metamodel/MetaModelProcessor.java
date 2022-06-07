@@ -468,27 +468,6 @@ public class MetaModelProcessor extends AbstractProcessor {
             // find all properties (declared + inherited from <? extends AbstractEntity))
             properties.addAll(EntityFinder.findDistinctProperties(entityElement, PropertyElement::getName));
         }
-        
-        // capture "id" property for persistent entities and those that extend persistent entities
-        if (EntityFinder.isPersistentEntity(entityElement) || EntityFinder.doesExtendPersistentEntity(entityElement)) {
-            VariableElement idField = ElementFinder.findField(entityElement.getTypeElement(), "id");
-            if (!properties.stream().map(PropertyElement::getName).toList().contains("id"))
-                properties.add(new PropertyElement(idField));
-        }
-        
-        // property `desc` should be considered only if entity or any of its supertypes are annotated with `@DescTitle`
-        final boolean descConsidered = properties.stream()
-                .map(PropertyElement::getName)
-                .anyMatch(pname -> pname.equals("desc"));
-        if (descConsidered) {
-            if (entityElement.getTypeElement().getAnnotation(DescTitle.class) == null) {
-                List<EntityElement> supertypes = EntityFinder.findParents(entityElement, elementUtils);
-                final boolean parentAnnotatedWithDescTitle = supertypes.stream()
-                        .anyMatch(el -> el.getTypeElement().getAnnotation(DescTitle.class) != null);
-                if (!parentAnnotatedWithDescTitle)
-                    properties.removeIf(prop -> prop.getName().equals("desc"));
-            }
-        }
 
 //        procLogger.debug("Properties: " + Arrays.toString(properties.stream().map(PropertyElement::getName).toArray()));
 
