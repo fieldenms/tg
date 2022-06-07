@@ -29,7 +29,6 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
-import ua.com.fielden.platform.processors.metamodel.elements.EntityFinder;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserSecret;

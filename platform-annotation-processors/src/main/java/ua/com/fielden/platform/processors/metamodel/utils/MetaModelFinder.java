@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.processors.metamodel.elements;
+package ua.com.fielden.platform.processors.metamodel.utils;
 
 import java.util.Set;
 import java.util.function.Supplier;
@@ -13,6 +13,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 
 import ua.com.fielden.platform.processors.metamodel.MetaModelConstants;
+import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
 

@@ -11,6 +11,8 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.util.Elements;
 
+import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
+
 /**
  * A convenient wrapper around {@code TypeElement}, which represents an entry point to all domain meta-models (i.e., class {@code MetaModels} where all meta-models are referenced
  * as static fields).

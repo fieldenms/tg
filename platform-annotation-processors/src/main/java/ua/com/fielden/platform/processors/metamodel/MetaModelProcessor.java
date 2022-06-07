@@ -2,7 +2,7 @@ package ua.com.fielden.platform.processors.metamodel;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;
-import static ua.com.fielden.platform.processors.metamodel.elements.EntityFinder.isDomainEntity;
+import static ua.com.fielden.platform.processors.metamodel.utils.EntityFinder.isDomainEntity;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -71,14 +71,14 @@ import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
-import ua.com.fielden.platform.processors.metamodel.elements.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
-import ua.com.fielden.platform.processors.metamodel.elements.EntityFinder;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
-import ua.com.fielden.platform.processors.metamodel.elements.MetaModelFinder;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelsElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
+import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
+import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
+import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
 import ua.com.fielden.platform.utils.Pair;
 
 @AutoService(Processor.class)

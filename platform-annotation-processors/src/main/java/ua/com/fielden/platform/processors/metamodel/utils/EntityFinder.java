@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.processors.metamodel.elements;
+package ua.com.fielden.platform.processors.metamodel.utils;
 
 import static java.lang.String.format;
 import static java.util.Optional.of;
@@ -32,6 +32,9 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.processors.metamodel.MetaModelConstants;
+import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
+import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
+import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.utils.Pair;
 
 /**

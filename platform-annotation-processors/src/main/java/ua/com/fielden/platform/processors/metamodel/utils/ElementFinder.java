@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.processors.metamodel.elements;
+package ua.com.fielden.platform.processors.metamodel.utils;
 
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
