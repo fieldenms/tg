@@ -124,24 +124,6 @@ public class MetaModelProcessor extends AbstractProcessor {
         return ClassName.get(element.getPackageName(), element.getSimpleName());
     }
 
-    /**
-     * A predicate to determine if {@code element} represents a property of an entity type.
-     *
-     * @param element
-     * @return
-     */
-    private static boolean isPropertyOfDomainEntityType(final PropertyElement element) {
-        TypeElement propType = null;
-        try {
-            propType = element.getTypeAsTypeElement();
-        } catch (final Exception ex) {
-            // property type is not a declared type
-            return false;
-        }
-
-        return isDomainEntity(propType);
-    }
-    
     private static String getEntityTitleFromClassName(EntityElement element) {
         final String entityName = element.getSimpleName();
         StringBuilder descriptiveName = new StringBuilder();
@@ -226,7 +208,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             // find properties of this entity that are entity type and include these entities for meta-model generation
             // this helps find entities that are included from the platform, rather than defined by a domain model, such as User
             final List<EntityElement> platformEntities = EntityFinder.findDistinctProperties(entityElement, PropertyElement::getName).stream()
-                    .filter(MetaModelProcessor::isPropertyOfDomainEntityType)
+                    .filter(EntityFinder::isPropertyOfDomainEntityType)
                     // it's safe to call getTypeAsTypeElementOrThrow() since elements were previously filtered
                     .map(propEl -> new EntityElement(propEl.getTypeAsTypeElementOrThrow(), elementUtils))
                     .toList();
@@ -367,7 +349,7 @@ public class MetaModelProcessor extends AbstractProcessor {
                         .toList();
                 // provide a custom test for property type being metamodeled to take into account those entities that had their meta-model generated in this round
                 if (writeMetaModel(mme, prop -> 
-                                    isPropertyOfDomainEntityType(prop) ||
+                                    EntityFinder.isPropertyOfDomainEntityType(prop) ||
                                     ElementFinder.isFieldOfType(prop.getVariableElement(), referencedTypes, typeUtils)))
                     regenerated.add(mme);
             }
@@ -444,7 +426,7 @@ public class MetaModelProcessor extends AbstractProcessor {
     }
 
     private boolean writeMetaModel(final MetaModelConcept mmc) {
-        return writeMetaModel(mmc, MetaModelProcessor::isPropertyOfDomainEntityType);
+        return writeMetaModel(mmc, EntityFinder::isPropertyOfDomainEntityType);
     }
 
     private boolean writeMetaModel(final MetaModelConcept mmc, final Predicate<PropertyElement> propertyTypeMetamodeledTest) {

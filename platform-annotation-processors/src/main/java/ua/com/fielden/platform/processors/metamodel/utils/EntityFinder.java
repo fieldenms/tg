@@ -3,6 +3,7 @@ package ua.com.fielden.platform.processors.metamodel.utils;
 import static java.lang.String.format;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toCollection;
+import static ua.com.fielden.platform.processors.metamodel.utils.EntityFinder.isDomainEntity;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.annotation.Annotation;
@@ -242,7 +243,7 @@ public class EntityFinder {
     }
 
     /**
-     * Identifies whether {@code propElement} represents an entity-typed property. 
+     * Identifies whether {@code propElement} represents an entity-typed property, which may not necessarily be a domain entity. 
      *
      * @param propElement
      * @return
@@ -251,10 +252,38 @@ public class EntityFinder {
         try {
             return EntityFinder.isEntityType(propElement.getTypeAsTypeElement());
         } catch (final Exception ex) {
+            // an exception may be thrown is property type is not a DECLARED type (i.e., not a class or an interface)
             return false;
         }
     }
-    
+
+    /**
+     * A predicate to determine if {@code propElement} represents an entity-typed property, which is a domain entity.
+     *
+     * @param propElement
+     * @return
+     */
+    public static boolean isPropertyOfDomainEntityType(final PropertyElement propElement) {
+        try {
+            return isDomainEntity(propElement.getTypeAsTypeElement());
+        } catch (final Exception ex) {
+            // an exception may be thrown is property type is not a DECLARED type (i.e., not a class or an interface)
+            return false;
+        }
+    }
+
+    /**
+     * A predicate that determines whether {@code element} represent a domain entity type.
+     * An element is considered to be a domain entity iff it represents an entity type that is annotated with either {@code @MapEntityTo} or {@code @DomainEntity}.
+     *
+     * @param element
+     * @return
+     */
+    public static boolean isDomainEntity(final TypeElement element) {
+        return EntityFinder.isEntityType(element) && 
+               (element.getAnnotation(MapEntityTo.class) != null || element.getAnnotation(DomainEntity.class) != null);
+    }
+
     public static List<? extends AnnotationMirror> getPropertyAnnotations(final PropertyElement property) {
         return ElementFinder.getFieldAnnotations(property.getVariableElement());
     }
@@ -327,18 +356,6 @@ public class EntityFinder {
     public static boolean hasPropertyOfType(final EntityElement entityElement, final TypeMirror type, final Types typeUtils) {
         return EntityFinder.findProperties(entityElement).stream()
                .anyMatch(prop -> typeUtils.isSameType(prop.getType(), type));
-    }
-
-    /**
-     * A predicate that determines whether {@code element} represent a domain entity type.
-     * An element is considered to be a domain entity iff it represents an entity type that is annotated with either {@code @MapEntityTo} or {@code @DomainEntity}.
-     *
-     * @param element
-     * @return
-     */
-    public static boolean isDomainEntity(final TypeElement element) {
-        return EntityFinder.isEntityType(element) && 
-               (element.getAnnotation(MapEntityTo.class) != null || element.getAnnotation(DomainEntity.class) != null);
     }
 
 }
