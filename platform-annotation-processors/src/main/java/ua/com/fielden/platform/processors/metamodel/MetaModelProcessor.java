@@ -2,7 +2,7 @@ package ua.com.fielden.platform.processors.metamodel;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;
-import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.isDomainEntity;
+import static ua.com.fielden.platform.processors.metamodel.elements.EntityFinder.isDomainEntity;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -39,7 +39,6 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -70,7 +69,6 @@ import com.squareup.javapoet.WildcardTypeName;
 
 import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
 import ua.com.fielden.platform.processors.metamodel.elements.ElementFinder;
@@ -433,7 +431,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             if (entity == null)
                 procLogger.debug(format("Entity for %s does not exist", mme.getSimpleName()));
 
-            if (entity == null || !MetaModelConstants.isDomainEntity(entity.getTypeElement())) {
+            if (entity == null || !isDomainEntity(entity.getTypeElement())) {
                 // debug
                 if (entity != null)
                     procLogger.debug(format("Entity %s should no longer be metamodeled", entity.getSimpleName()));
@@ -455,7 +453,7 @@ public class MetaModelProcessor extends AbstractProcessor {
 
         final EntityElement entityElement = mmc.getEntityElement();
         final EntityElement entityParent = EntityFinder.getParent(entityElement, elementUtils);
-        final boolean isEntitySuperclassMetamodeled = MetaModelConstants.isDomainEntity(entityParent.getTypeElement());
+        final boolean isEntitySuperclassMetamodeled = isDomainEntity(entityParent.getTypeElement());
 
         if (isEntitySuperclassMetamodeled) {
             // find only declared properties

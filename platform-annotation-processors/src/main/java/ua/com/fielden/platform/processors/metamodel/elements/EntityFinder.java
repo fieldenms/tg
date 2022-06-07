@@ -24,6 +24,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
+import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
@@ -323,6 +324,18 @@ public class EntityFinder {
     public static boolean hasPropertyOfType(final EntityElement entityElement, final TypeMirror type, final Types typeUtils) {
         return EntityFinder.findProperties(entityElement).stream()
                .anyMatch(prop -> typeUtils.isSameType(prop.getType(), type));
+    }
+
+    /**
+     * A predicate that determines whether {@code element} represent a domain entity type.
+     * An element is considered to be a domain entity iff it represents an entity type that is annotated with either {@code @MapEntityTo} or {@code @DomainEntity}.
+     *
+     * @param element
+     * @return
+     */
+    public static boolean isDomainEntity(final TypeElement element) {
+        return EntityFinder.isEntityType(element) && 
+               (element.getAnnotation(MapEntityTo.class) != null || element.getAnnotation(DomainEntity.class) != null);
     }
 
 }

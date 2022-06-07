@@ -20,6 +20,7 @@ import org.junit.Test;
 
 import com.google.testing.compile.CompilationRule;
 
+import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -200,6 +201,14 @@ public class EntityFinderTest {
         assertFalse(EntityFinder.findAnnotation(superUserElement, MapEntityTo.class).isEmpty());
     }
 
+    @Test
+    public void isDomainEntity_recognises_as_domain_only_entities_that_are_explicityly_annotated_with_MapEntityTo_or_DomainEntity() {
+        assertTrue(EntityFinder.isDomainEntity(elements.getTypeElement(User.class.getCanonicalName())));
+        assertFalse(EntityFinder.isDomainEntity(elements.getTypeElement(SuperUser.class.getCanonicalName())));
+        assertTrue(EntityFinder.isDomainEntity(elements.getTypeElement(SuperUserWithDeclaredDesc.class.getCanonicalName())));
+        assertFalse("Non-entity should not be recognised as a domain entity.", EntityFinder.isDomainEntity(elements.getTypeElement(NonEntity.class.getCanonicalName())));
+    }
+
     /**
      * A type for testing purposes. Represents an entity that extends a persistent one.
      */
@@ -210,6 +219,7 @@ public class EntityFinderTest {
     /**
      * A type for testing purposes. Represents an entity that extends a persistent one and has property {@code desc} declared explicitly.
      */
+    @DomainEntity
     public static class SuperUserWithDeclaredDesc extends User {
         @IsProperty
         @MapTo
@@ -226,6 +236,13 @@ public class EntityFinderTest {
         public String getDesc() {
             return desc;
         }
+    }
+
+    /**
+     * A non-entity pretending to be one.
+     */
+    @DomainEntity
+    public static class NonEntity {
     }
 
 }
