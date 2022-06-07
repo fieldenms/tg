@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.entity.annotation;
 
 import static ua.com.fielden.platform.entity.annotation.CritOnly.Mnemonics.WITH;
-import static ua.com.fielden.platform.entity.annotation.CritOnly.Mnemonics.WITHOUT;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -34,6 +33,12 @@ public @interface CritOnly {
     /** Attribute that determines whether to exclude missing mnemonic or not.*/
     boolean excludeMissing() default false;
 
+    /** The entity type of submodel that will be used in <code>.critCondition</code> statement*/
+    Class<?> entityUnderCondition() default Object.class;
+
+    /** The property name that will be used to bind <code>.critCondition</code> model with main query for entity centre */
+    String propUnderCondition() default "";
+
     /**
      * Mnemonic options for overriding default value deduced from critonly {@link Type}.
      */
@@ -53,7 +58,7 @@ public @interface CritOnly {
         /** Indicates that property should be selected by left and right boundary (if it is range property) and by single boundary (if it is single property). */
         RANGE(WITH),
         /** Indicates that property should be selected only by single boundary (even if it is range property). */
-        SINGLE(WITHOUT),
+        SINGLE(WITH),
         /** Specifies whether associated crit-only property should represent a multi valued selection criterion. */
         MULTI(WITH);
 

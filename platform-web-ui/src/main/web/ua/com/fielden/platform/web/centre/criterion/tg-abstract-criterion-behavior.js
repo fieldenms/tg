@@ -62,6 +62,14 @@ const TgAbstractCriterionBehaviorImpl = {
         },
 
         /**
+         * Indicates whether to exclude 'Not' value mnemonic
+         */
+        excludeNot: {
+            type: Boolean,
+            value: false
+        },
+
+        /**
          * Indicates whether to exclude missing value mnemonic. 
          */
         excludeMissing: {
@@ -296,6 +304,14 @@ const TgAbstractCriterionBehaviorImpl = {
         if (validate) {
             this.validationCallback();
         }
+    },
+
+    /**
+     * Creates the string representation for meta value editors DOM (to be inserted into dynamic meta-value dialog).
+     */
+     _createMetaValueEditors: function () {
+        console.log("tg-abstract-criterion-behavior: _createMetaValueEditors");
+        return '<tg-multi-criterion-config class="layout vertical" _exclude-missing="[[_excludeMissingBind]]" _or-null="{{_orNullBind}}" _not="{{_notBind}}" _exclude-or-group="[[_excludeOrGroupBind]]" _or-group="{{_orGroupBind}}"></tg-multi-criterion-config>';
     },
 
     /**
