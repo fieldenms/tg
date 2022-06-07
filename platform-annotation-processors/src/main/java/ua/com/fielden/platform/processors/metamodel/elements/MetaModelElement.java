@@ -2,70 +2,63 @@ package ua.com.fielden.platform.processors.metamodel.elements;
 
 import java.util.Objects;
 
-import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 
 /**
- * Represents a source code meta-model construct. 
+ * Represents a source code of a meta-model for a corresponding domain entity.
+ *
+ * @author TG Team 
  */
-
 public class MetaModelElement {
-    private TypeElement typeElement;
-    private PackageElement packageElement;
+    private final TypeElement typeElement;
+    private final String simpleName;
+    private final String packageName;
+    private final String qualifiedName;
 
-    public MetaModelElement(TypeElement typeElement, Elements elementUtils) {
+    public MetaModelElement(final TypeElement typeElement, final Elements elementUtils) {
         this.typeElement = typeElement;
-        this.packageElement = elementUtils.getPackageOf(typeElement);
+        this.qualifiedName = typeElement.getQualifiedName().toString();
+        this.simpleName = typeElement.getSimpleName().toString();
+        this.packageName = elementUtils.getPackageOf(typeElement).getQualifiedName().toString();
     }
 
     public TypeElement getTypeElement() {
         return typeElement;
     }
     
-    public PackageElement getPackageElement() {
-        return this.packageElement;
-    }
-
     public String getSimpleName() {
-        return typeElement.getSimpleName().toString();
+        return simpleName;
     }
 
     public String getPackageName() {
-        return packageElement.getQualifiedName().toString();
+        return packageName;
     }
     
     public String getQualifiedName() {
-        return typeElement.getQualifiedName().toString();
+        return qualifiedName;
     }
     
-    public TypeMirror asType() {
-        return this.typeElement.asType();
-    }
-
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + Objects.hash(getQualifiedName());
-        return result;
+        return 31 + Objects.hash(qualifiedName);
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (obj == null)
+        }
+        if (!(obj instanceof MetaModelElement)) {
             return false;
-        if (getClass() != obj.getClass())
-            return false;
-        MetaModelElement other = (MetaModelElement) obj;
-        return Objects.equals(getQualifiedName(), other.getQualifiedName());
+        }
+        final MetaModelElement that = (MetaModelElement) obj;
+        return Objects.equals(this.qualifiedName, that.qualifiedName);
     }
 
     @Override
     public String toString() {
         return getQualifiedName();
     }
+
 }

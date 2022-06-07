@@ -16,33 +16,39 @@ import ua.com.fielden.platform.processors.metamodel.MetaModelConstants;
 import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
 
+/**
+ * A class to provide utility methods for identifying various parts of domain meta-models.
+ *
+ * @author TG Team
+ *
+ */
 public class MetaModelFinder {
     
-    public static boolean isMetaModel(TypeElement typeElement) {
+    public static boolean isMetaModel(final TypeElement typeElement) {
         return ElementFinder.doesExtend(typeElement, MetaModelConstants.METAMODEL_SUPERCLASS);
     }
     
-    public static Set<VariableElement> findStaticFields(MetaModelElement mme) {
+    public static Set<VariableElement> findStaticFields(final MetaModelElement mme) {
         return ElementFinder.findDeclaredFields(mme.getTypeElement(), f -> ElementFinder.isStatic(f));
     }
 
-    public static Set<VariableElement> findNonStaticFields(MetaModelElement mme) {
+    public static Set<VariableElement> findNonStaticFields(final MetaModelElement mme) {
         return ElementFinder.findDeclaredFields(mme.getTypeElement(), f -> !ElementFinder.isStatic(f));
     }
     
-    public static Set<VariableElement> findPropertyMetaModelFields(MetaModelElement mme) {
+    public static Set<VariableElement> findPropertyMetaModelFields(final MetaModelElement mme) {
         return findNonStaticFields(mme).stream()
                 .filter(field -> ElementFinder.isFieldOfType(field, PropertyMetaModel.class))
                 .collect(Collectors.toSet());
     }
 
-    public static Set<VariableElement> findEntityMetaModelFields(MetaModelElement mme) {
+    public static Set<VariableElement> findEntityMetaModelFields(final MetaModelElement mme) {
         return findNonStaticFields(mme).stream()
                 .filter(field -> {
                     final TypeMirror fieldType = field.asType();
                     final TypeKind fieldTypeKind = fieldType.getKind();
 
-                    if (fieldTypeKind == TypeKind.DECLARED) {
+                    if (TypeKind.DECLARED == fieldTypeKind) {
                         final TypeElement fieldTypeElement = (TypeElement) ((DeclaredType) field.asType()).asElement();
 
                         // EntityMetaModel fields have type Supplier<[METAMODEL]>
@@ -57,11 +63,11 @@ public class MetaModelFinder {
     }
 
     /**
-     * Returns a set of meta-model elements for each field that is of type Supplier<? extends EntityMetaModel>.
+     * Returns a set of meta-model elements for each field that is of type {@code Supplier<? extends EntityMetaModel>}.
      * @param mme
      * @return
      */
-    public static Set<MetaModelElement> findReferencedMetaModels(MetaModelElement mme, Elements elementUtils) {
+    public static Set<MetaModelElement> findReferencedMetaModels(final MetaModelElement mme, final Elements elementUtils) {
         return findEntityMetaModelFields(mme).stream()
                 .map(field -> {
                     // casting here is safe, since field is of type Supplier<[METAMODEL]>, thus DeclaredType
@@ -75,19 +81,20 @@ public class MetaModelFinder {
                 .collect(Collectors.toSet());
     }
 
-    public static boolean isPropertyMetaModelMethod(ExecutableElement method) {
+    public static boolean isPropertyMetaModelMethod(final ExecutableElement method) {
         return ElementFinder.isMethodReturnType(method, PropertyMetaModel.class);
     }
 
-    public static boolean isEntityMetaModelMethod(ExecutableElement method) {
+    public static boolean isEntityMetaModelMethod(final ExecutableElement method) {
         final TypeMirror methodType = method.asType();
         final TypeKind methodTypeKind = methodType.getKind();
 
-        if (methodTypeKind.equals(TypeKind.DECLARED)) {
+        if (TypeKind.DECLARED == methodTypeKind) {
             final TypeElement methodTypeElement = (TypeElement) ((DeclaredType) method.asType()).asElement();
             return ElementFinder.doesExtend(methodTypeElement, EntityMetaModel.class);
-        }
-        else
+        } else {
             return false;
+        }
     }
+
 }
