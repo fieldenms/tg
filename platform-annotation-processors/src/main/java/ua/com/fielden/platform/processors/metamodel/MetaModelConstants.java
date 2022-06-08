@@ -4,6 +4,12 @@ import static java.lang.String.format;
 
 import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 
+/**
+ * This class stores constant values that are used for generation of meta-models and validation of their underlying entities.
+ * 
+ * @author TG Team
+ */
+
 public abstract class MetaModelConstants {
 
     public static final Class<EntityMetaModel> METAMODEL_SUPERCLASS = EntityMetaModel.class;
