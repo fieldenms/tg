@@ -103,6 +103,7 @@ public class MetaModelProcessor extends AbstractProcessor {
 //    private boolean fromMaven;
     private int roundCount;
     private boolean metaModelsClassVerified;
+    private boolean processingOver;
 
     private static ClassName getMetaModelClassName(final MetaModelElement element) {
         return ClassName.get(element.getPackageName(), element.getSimpleName());
@@ -141,7 +142,6 @@ public class MetaModelProcessor extends AbstractProcessor {
         this.typeUtils = processingEnv.getTypeUtils();
         this.messager = processingEnv.getMessager();
         this.options = processingEnv.getOptions();
-
         messager.printMessage(Kind.NOTE, format("Options: %s", Arrays.toString(options.keySet().stream()
                                                                 .map(k -> format("%s=%s", k, options.get(k)))
                                                                 .toArray())));
@@ -180,6 +180,12 @@ public class MetaModelProcessor extends AbstractProcessor {
         messager.printMessage(Kind.NOTE, format("annotations: %s%n", Arrays.toString(annotations.stream().map(Element::getSimpleName).map(Name::toString).sorted().toArray())));
         final Set<? extends Element> rootElements = roundEnv.getRootElements();
         messager.printMessage(Kind.NOTE, format("rootElements: %s%n", Arrays.toString(rootElements.stream().map(Element::getSimpleName).map(Name::toString).sorted().toArray())));
+        
+        // manually control the end of processing to skip redundant rounds
+        if (processingOver) {
+            endRound(roundNumber, roundEnv.processingOver());
+            return false;
+        }
 
         // TODO detect when rootElements are exclusively test sources and exit
 
@@ -239,6 +245,10 @@ public class MetaModelProcessor extends AbstractProcessor {
                 writeMetaModelsClass(metaModelConcepts.keySet());
             }
         }
+        
+        // manually "end" the processing after everything was regenerated
+        processingOver = true;
+        messager.printMessage(Kind.NOTE, "Processing is effectively over. Skipping subsequent rounds.");
 
         endRound(roundNumber, roundEnv.processingOver());
         // must return false to avoid claiming all annotations (as defined by @SupportedAnnotationTypes("*")) to allow other processors to run
