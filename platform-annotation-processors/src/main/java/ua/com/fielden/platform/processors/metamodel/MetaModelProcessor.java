@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.processors.metamodel;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.processors.metamodel.utils.EntityFinder.isDomainEntity;
 
@@ -142,9 +143,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         this.typeUtils = processingEnv.getTypeUtils();
         this.messager = processingEnv.getMessager();
         this.options = processingEnv.getOptions();
-        messager.printMessage(Kind.NOTE, format("Options: %s", Arrays.toString(options.keySet().stream()
-                                                                .map(k -> format("%s=%s", k, options.get(k)))
-                                                                .toArray())));
+        messager.printMessage(Kind.NOTE, format("Options: %s", options.keySet().stream().map(k -> format("%s=%s", k, options.get(k))).collect(joining(", "))));
         this.roundCount = 0;
         this.metaModelsClassVerified = false;
 
@@ -177,9 +176,9 @@ public class MetaModelProcessor extends AbstractProcessor {
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
         final int roundNumber = ++this.roundCount;
         messager.printMessage(Kind.NOTE, format("=== PROCESSING ROUND %d START ===", roundNumber));
-        messager.printMessage(Kind.NOTE, format("annotations: %s%n", Arrays.toString(annotations.stream().map(Element::getSimpleName).map(Name::toString).sorted().toArray())));
+        messager.printMessage(Kind.NOTE, format("annotations: %s%n", annotations.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
         final Set<? extends Element> rootElements = roundEnv.getRootElements();
-        messager.printMessage(Kind.NOTE, format("rootElements: %s%n", Arrays.toString(rootElements.stream().map(Element::getSimpleName).map(Name::toString).sorted().toArray())));
+        messager.printMessage(Kind.NOTE, format("rootElements: %s%n", rootElements.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
         
         // manually control the end of processing to skip redundant rounds
         if (processingOver) {
@@ -209,7 +208,7 @@ public class MetaModelProcessor extends AbstractProcessor {
                 final List<MetaModelElement> inactive = findInactiveMetaModels(metaModelsElement);
                 this.metaModelsClassVerified = true;
 
-        messager.printMessage(Kind.NOTE, format("Inactive meta-models: %s", Arrays.toString(inactive.stream().map(MetaModelElement::getSimpleName).toArray())));
+                messager.printMessage(Kind.NOTE, format("Inactive meta-models: %s", inactive.stream().map(MetaModelElement::getSimpleName).collect(joining(", "))));
 
                 for (MetaModelElement imm: inactive) {
                     inactiveMetaModels.putIfAbsent(imm, false);
@@ -268,7 +267,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         final Set<TypeElement> annotatedElements = roundEnv.getElementsAnnotatedWithAny(DOMAIN_TYPE_ANNOTATIONS).stream()
                                                            .filter(element -> element.getKind() == ElementKind.CLASS) // just in case make sure identified elements are classes
                                                            .map(el -> (TypeElement) el).collect(toSet());
-        messager.printMessage(Kind.NOTE, format("annotatedElements: %s%n", Arrays.toString(annotatedElements.stream().map(Element::getSimpleName).map(Name::toString).sorted().toArray())));
+        messager.printMessage(Kind.NOTE, format("annotatedElements: %s%n", annotatedElements.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
 
         // generate meta-models for these elements
         for (final TypeElement typeElement: annotatedElements) {
@@ -284,7 +283,7 @@ public class MetaModelProcessor extends AbstractProcessor {
                         .forEach(eel -> metaModelConcepts.putIfAbsent(new MetaModelConcept(eel), false));
         }
 
-        messager.printMessage(Kind.NOTE, format("metaModelConcepts: %s%n", Arrays.toString(metaModelConcepts.keySet().stream().map(MetaModelConcept::getSimpleName).sorted().toArray())));
+        messager.printMessage(Kind.NOTE, format("metaModelConcepts: %s%n", metaModelConcepts.keySet().stream().map(MetaModelConcept::getSimpleName).sorted().collect(joining(", "))));
         return metaModelConcepts;
     }
 
@@ -319,7 +318,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             if (!Collections.disjoint(referencedByThisMetaModel, referencedMetaModels)) {
                 final Set<MetaModelElement> intersection = new HashSet<>(referencedByThisMetaModel);
                 intersection.retainAll(referencedMetaModels);
-                messager.printMessage(Kind.NOTE, format("%s references %s. Regenerating.", mme.getSimpleName(), Arrays.toString(intersection.stream().map(MetaModelElement::getSimpleName).toArray())));
+                messager.printMessage(Kind.NOTE, format("%s references %s. Regenerating.", mme.getSimpleName(), intersection.stream().map(MetaModelElement::getSimpleName).collect(joining(", "))));
                 if (writeMetaModel(mme)) {
                     regenerated.add(mme);
                 }
@@ -346,7 +345,7 @@ public class MetaModelProcessor extends AbstractProcessor {
                     .collect(Collectors.toSet());
 
             if (!referencedByThisEntity.isEmpty())  {
-                messager.printMessage(Kind.NOTE, format("%s references %s. Regenerating %s.", entity.getSimpleName(), Arrays.toString(referencedByThisEntity.stream().map(EntityElement::getSimpleName).toArray()), mme.getSimpleName()));
+                messager.printMessage(Kind.NOTE, format("%s references %s. Regenerating %s.", entity.getSimpleName(), referencedByThisEntity.stream().map(EntityElement::getSimpleName).collect(joining(", ")), mme.getSimpleName()));
                 final List<TypeMirror> referencedTypes = referencedByThisEntity.stream()
                         .map(EntityElement::asType)
                         .toList();
@@ -767,9 +766,9 @@ public class MetaModelProcessor extends AbstractProcessor {
                     .filter(mme -> metaModelConcepts.stream().noneMatch(mmc -> MetaModelFinder.isSameMetaModel(mmc, mme)))
                     .toList();
 
-            messager.printMessage(Kind.NOTE, format("Inactive meta-models: %s", Arrays.toString(inactiveMetaModelElements.stream()
+            messager.printMessage(Kind.NOTE, format("Inactive meta-models: %s", inactiveMetaModelElements.stream()
                     .map(mm -> mm.getSimpleName())
-                    .sorted().toArray())));
+                    .sorted().collect(joining(", "))));
             
             for (final MetaModelElement mme: activeUnchangedMetaModels) {
                 final EntityElement entity = EntityFinder.findEntityForMetaModel(mme, elementUtils);
