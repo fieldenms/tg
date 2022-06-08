@@ -300,22 +300,24 @@ public class MetaModelProcessor extends AbstractProcessor {
 
     /**
      * Regenerates the meta-models that reference any of the {@code referencedMetaModels}.
+     *
      * @param metaModels - a collection of meta-models to be regenerated if a reference is found
      * @param referencedMetaModels - the set of referenced meta-models
      * @return
      */
-    private List<MetaModelElement> regenerateMetaModelsWithReferenceTo(Collection<MetaModelElement> metaModels, List<MetaModelElement> referencedMetaModels) {
+    private List<MetaModelElement> regenerateMetaModelsWithReferenceTo(final Collection<MetaModelElement> metaModels, final List<MetaModelElement> referencedMetaModels) {
         final List<MetaModelElement> regenerated = new ArrayList<>();
 
-        for (MetaModelElement mme: metaModels) {
+        for (final MetaModelElement mme: metaModels) {
             final Set<MetaModelElement> referencedByThisMetaModel = MetaModelFinder.findReferencedMetaModels(mme, elementUtils);
             // if the set of referenced meta-models intersects with the set of trigger meta-models - regenerate this meta-model
             if (!Collections.disjoint(referencedByThisMetaModel, referencedMetaModels)) {
-                final Set<MetaModelElement> intersection = Set.copyOf(referencedByThisMetaModel);
+                final Set<MetaModelElement> intersection = new HashSet<>(referencedByThisMetaModel);
                 intersection.retainAll(referencedMetaModels);
                 procLogger.debug(format("%s references %s. Regenerating.", mme.getSimpleName(), Arrays.toString(intersection.stream().map(MetaModelElement::getSimpleName).toArray())));
-                if (writeMetaModel(mme))
+                if (writeMetaModel(mme)) {
                     regenerated.add(mme);
+                }
             }
         }
         return regenerated;
