@@ -38,6 +38,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
@@ -186,9 +187,9 @@ public class MetaModelProcessor extends AbstractProcessor {
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
         final int roundNumber = ++this.roundCount;
         procLogger.debug(format("=== PROCESSING ROUND %d START ===", roundNumber));
-        procLogger.debug("annotations: " + Arrays.toString(annotations.stream().map(Element::getSimpleName).toArray()));
+        procLogger.debug(format("annotations: %s%n", Arrays.toString(annotations.stream().map(Element::getSimpleName).map(Name::toString).sorted().toArray())));
         final Set<? extends Element> rootElements = roundEnv.getRootElements();
-        procLogger.debug("rootElements: " + Arrays.toString(rootElements.stream().map(Element::getSimpleName).toArray()));
+        procLogger.debug(format("rootElements: %s%n", Arrays.toString(rootElements.stream().map(Element::getSimpleName).map(Name::toString).sorted().toArray())));
 
         // TODO detect when rootElements are exclusively test sources and exit
 
@@ -196,7 +197,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         final Set<TypeElement> annotatedElements = roundEnv.getElementsAnnotatedWithAny(DOMAIN_TYPE_ANNOTATIONS).stream()
                                                            .filter(element -> element.getKind() == ElementKind.CLASS) // just in case make sure identified elements are classes
                                                            .map(el -> (TypeElement) el).collect(toSet());
-        procLogger.debug("annotatedElements: " + Arrays.toString(annotatedElements.stream().map(Element::getSimpleName).toArray()));
+        procLogger.debug(format("annotatedElements: %s%n", Arrays.toString(annotatedElements.stream().map(Element::getSimpleName).map(Name::toString).sorted().toArray())));
 
         // generate meta-models for these elements
         for (final TypeElement typeElement: annotatedElements) {
@@ -204,20 +205,15 @@ public class MetaModelProcessor extends AbstractProcessor {
             final MetaModelConcept mmc = new MetaModelConcept(entityElement);
             this.metaModelConcepts.putIfAbsent(mmc, false);
 
-            // TODO optimize by finding platform-level entities EXCLUSIVELY, this may save a lot of computation time
-            // find properties of this entity that are entity type and include these entities for meta-model generation
-            // this helps find entities that are included from the platform, rather than defined by a domain model, such as User
-            final List<EntityElement> platformEntities = EntityFinder.findDistinctProperties(entityElement, PropertyElement::getName).stream()
-                    .filter(EntityFinder::isPropertyOfDomainEntityType)
-                    // it's safe to call getTypeAsTypeElementOrThrow() since elements were previously filtered
-                    .map(propEl -> new EntityElement(propEl.getTypeAsTypeElementOrThrow(), elementUtils))
-                    .toList();
-            platformEntities.stream()
-                .map(MetaModelConcept::new)
-                .forEach(mmc1 -> this.metaModelConcepts.putIfAbsent(mmc1, false));
+            // traverse all properties for the current entity element to ensure that any entity-typed properties get their type included as a meta-model
+            // this is mainly important to pick up entity types that come from other project dependencies, such as the TG platform itself
+            EntityFinder.findProperties(entityElement).stream()
+                        .filter(EntityFinder::isPropertyOfDomainEntityType)
+                        .map(pel -> new EntityElement(pel.getTypeAsTypeElementOrThrow(), elementUtils))
+                        .forEach(eel -> this.metaModelConcepts.putIfAbsent(new MetaModelConcept(eel), false));
         }
 
-        procLogger.debug("metaModelConcepts: " + Arrays.toString(this.metaModelConcepts.keySet().stream().map(MetaModelConcept::getSimpleName).toArray()));
+        procLogger.debug(format("metaModelConcepts: %s%n", Arrays.toString(this.metaModelConcepts.keySet().stream().map(MetaModelConcept::getSimpleName).sorted().toArray())));
 
         for (MetaModelConcept mmc: getGenerationTargets(this.metaModelConcepts)) {
             if (writeMetaModel(mmc)) {
@@ -442,7 +438,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             properties.addAll(EntityFinder.findDeclaredProperties(entityElement));
         } else {
             // find all properties (declared + inherited from <? extends AbstractEntity))
-            properties.addAll(EntityFinder.findDistinctProperties(entityElement, PropertyElement::getName));
+            properties.addAll(EntityFinder.findProperties(entityElement));
         }
 
 //        procLogger.debug("Properties: " + Arrays.toString(properties.stream().map(PropertyElement::getName).toArray()));

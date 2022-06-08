@@ -99,28 +99,6 @@ public class EntityFinder {
     }
 
     /**
-     * Find all inherited properties of an entity that are distinct by a specified condition.
-     *
-     * @param <T> - type of a mapped property
-     * @param mapper - transformation applied to each property for determining its distinctness (e.g. {@link PropertyElement#getName})
-     * @return
-     */
-    public static <T> Set<PropertyElement> findDistinctInheritedProperties(final EntityElement entityElement, final Function<PropertyElement, T> mapper) {
-        final Set<PropertyElement> properties = new LinkedHashSet<>();
-        final Set<T> mappedProperties = new HashSet<>();
-        
-        for (final PropertyElement prop: findInheritedProperties(entityElement)) {
-            final T mappedProp = mapper.apply(prop);
-            if (!mappedProperties.contains(mappedProp)) {
-                properties.add(prop);
-                mappedProperties.add(mappedProp);
-            }
-        }
-
-        return properties;
-    }
-
-    /**
      * Finds all properties for entity represented by {@code entityElement}.
      * The result is the union of result, returned by {@link #findDeclaredProperties(EntityElement)} and {@link #findInheritedProperties(EntityElement)}.
      */
@@ -130,28 +108,6 @@ public class EntityFinder {
         return properties;
     }
 
-    /**
-     * Find all properties of an entity that are distinct by a specified condition.
-     *
-     * @param <T> - type of a mapped property
-     * @param mapper - transformation applied to each property for determining its distinctness (e.g. {@link PropertyElement#getName})
-     * @return
-     */
-    public static <T> Set<PropertyElement> findDistinctProperties(final EntityElement entityElement, final Function<PropertyElement, T> mapper) {
-        final Set<PropertyElement> properties = findDeclaredProperties(entityElement);
-        final Set<T> mappedProperties = properties.stream().map(mapper).collect(Collectors.toSet());
-        
-        for (final PropertyElement prop: findDistinctInheritedProperties(entityElement, mapper)) {
-            final T mappedProp = mapper.apply(prop);
-            if (!mappedProperties.contains(mappedProp)) {
-                properties.add(prop);
-                mappedProperties.add(mappedProp);
-            }
-        }
-
-        return properties;
-    }
-    
     public static Pair<String, String> getPropTitleAndDesc(final PropertyElement propElement) {
         // TODO need to replicate the logic from TitlesDescsGetter in application to the Mirror types.
         final AnnotationMirror titleAnnotationMirror = ElementFinder.getElementAnnotationMirror(propElement.getVariableElement(), Title.class);
