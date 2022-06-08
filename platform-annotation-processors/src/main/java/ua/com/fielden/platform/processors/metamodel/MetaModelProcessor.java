@@ -89,7 +89,7 @@ public class MetaModelProcessor extends AbstractProcessor {
     private static final String INDENT = "    ";
     private static final String LOG_FILENAME = "proc.log";
     private static final String ECLIPSE_OPTION_KEY = "projectdir";
-    private static final Set<Class<? extends Annotation>> DOMAIN_TTYPE_ANNOTATIONS = Set.of(MapEntityTo.class, DomainEntity.class);
+    private static final Set<Class<? extends Annotation>> DOMAIN_TYPE_ANNOTATIONS = Set.of(MapEntityTo.class, DomainEntity.class);
 
     private Logger logger;
     private ProcessorLogger procLogger;
@@ -193,7 +193,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         // TODO detect when rootElements are exclusively test sources and exit
 
         // find classes annotated with any of DOMAIN_TYPE_ANNOTATIONS
-        final Set<TypeElement> annotatedElements = roundEnv.getElementsAnnotatedWithAny(DOMAIN_TTYPE_ANNOTATIONS).stream()
+        final Set<TypeElement> annotatedElements = roundEnv.getElementsAnnotatedWithAny(DOMAIN_TYPE_ANNOTATIONS).stream()
                                                            .filter(element -> element.getKind() == ElementKind.CLASS) // just in case make sure identified elements are classes
                                                            .map(el -> (TypeElement) el).collect(toSet());
         procLogger.debug("annotatedElements: " + Arrays.toString(annotatedElements.stream().map(Element::getSimpleName).toArray()));
@@ -829,7 +829,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         return simpleName + "_";
     }
 
-    private EntityElement newEntityElement(TypeElement typeElement) {
+    private EntityElement newEntityElement(final TypeElement typeElement) {
         return new EntityElement(typeElement, elementUtils);
     }
 
@@ -860,4 +860,5 @@ public class MetaModelProcessor extends AbstractProcessor {
 
         return builder.build();
     }
+
 }
