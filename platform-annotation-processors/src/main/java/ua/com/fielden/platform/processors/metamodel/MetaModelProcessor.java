@@ -746,6 +746,7 @@ public class MetaModelProcessor extends AbstractProcessor {
      * @param inactiveMetaModelElements
      */
     private boolean writeMetaModelsClass(final Collection<MetaModelConcept> metaModelConcepts, final MetaModelsElement metaModelsElement, final Collection<MetaModelElement> inactiveMetaModelElements) {
+        messager.printMessage(Kind.NOTE, "Started generating the meta-models entry point...");
         /*
         public final class MetaModels {
             public static final [ENTITY]MetaModel [ENTITY] = new [ENTITY]MetaModel();
@@ -756,6 +757,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         // generate fields for new meta-models
         for (final MetaModelConcept mmc: metaModelConcepts) {
             final String fieldName = nameFieldForMetaModel(mmc.getEntityElement().getSimpleName());
+            messager.printMessage(Kind.NOTE, format("New meta-models, generating field: %s", fieldName));
             fieldSpecs.add(specFieldForMetaModel(getMetaModelClassName(mmc), fieldName));
         }
 
@@ -766,10 +768,13 @@ public class MetaModelProcessor extends AbstractProcessor {
                     .filter(mme -> !inactiveMetaModelElements.contains(mme))
                     .toList());
 
+            messager.printMessage(Kind.WARNING, format("Inactive meta-models: %s", inactiveMetaModelElements.stream().map(mm -> mm.getSimpleName()).sorted().collect(joining(","))));
+            
             for (final MetaModelElement mme: activeMetaModelElements) {
                 final EntityElement entity = EntityFinder.findEntityForMetaModel(mme, elementUtils);
                 // generate a field for this meta-model
                 final String fieldName = nameFieldForMetaModel(entity.getSimpleName());
+                messager.printMessage(Kind.NOTE, format("Prev meta models, generating field: %s", fieldName));
                 fieldSpecs.add(specFieldForMetaModel(getMetaModelClassName(mme), fieldName));
             }
         }
@@ -798,7 +803,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             return false;
         }
 
-        procLogger.info(format("Generated %s.", metaModelsTypeSpec.name));
+        messager.printMessage(Kind.NOTE, format("Finished generating the meta-models entry point as [%s].", metaModelsTypeSpec.name));
         return true;
     }
 
