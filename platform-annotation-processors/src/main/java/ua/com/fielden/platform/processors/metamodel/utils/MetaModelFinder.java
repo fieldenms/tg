@@ -13,6 +13,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 
 import ua.com.fielden.platform.processors.metamodel.MetaModelConstants;
+import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
@@ -97,5 +98,8 @@ public class MetaModelFinder {
             return false;
         }
     }
-
+    
+    public static boolean isSameMetaModel(final MetaModelConcept mmc, final MetaModelElement mme) {
+        return mmc.getQualifiedName().equals(mme.getQualifiedName());
+    }
 }
