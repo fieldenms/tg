@@ -758,20 +758,21 @@ public class MetaModelProcessor extends AbstractProcessor {
             fieldSpecs.add(specFieldForMetaModel(getMetaModelClassName(mmc), fieldName));
         }
 
-        // if MetaModels class exists, then collect the meta-models and filter inactive ones
+        // if MetaModels class exists, then collect its fields for the active *unchanged* meta-models 
         if (metaModelsElement != null) {
-            final Set<MetaModelElement> activeMetaModelElements = new HashSet<>();
-            activeMetaModelElements.addAll(metaModelsElement.getMetaModels().stream()
+            final List<MetaModelElement> activeUnchangedMetaModels = metaModelsElement.getMetaModels().stream()
+                    // skip inactive
                     .filter(mme -> !inactiveMetaModelElements.contains(mme))
-                    .toList());
+                    // skip updated active
+                    .filter(mme -> metaModelConcepts.stream().noneMatch(mmc -> MetaModelFinder.isSameMetaModel(mmc, mme)))
+                    .toList();
 
             messager.printMessage(Kind.NOTE, format("Inactive meta-models: %s", Arrays.toString(inactiveMetaModelElements.stream()
                     .map(mm -> mm.getSimpleName())
                     .sorted().toArray())));
             
-            for (final MetaModelElement mme: activeMetaModelElements) {
+            for (final MetaModelElement mme: activeUnchangedMetaModels) {
                 final EntityElement entity = EntityFinder.findEntityForMetaModel(mme, elementUtils);
-                // generate a field for this meta-model
                 final String fieldName = nameFieldForMetaModel(entity.getSimpleName());
                 messager.printMessage(Kind.NOTE, format("Old meta-model, generating field: %s", fieldName));
                 fieldSpecs.add(specFieldForMetaModel(getMetaModelClassName(mme), fieldName));
