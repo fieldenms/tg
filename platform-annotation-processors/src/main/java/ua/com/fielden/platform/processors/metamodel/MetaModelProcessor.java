@@ -351,14 +351,22 @@ public class MetaModelProcessor extends AbstractProcessor {
         return writeMetaModel(mmc, EntityFinder::isPropertyOfDomainEntityType);
     }
 
+    /**
+     * Generates and writes a meta-model source file for an entity, represented by {@code mmc}.
+     * <p>
+     * Properties, which test positive for COVID... {@code propertyTypeMetamodeledTest} are generated as such that have a meta-model on their own.
+     * All other properties are generated as instances of {@link PropertyMetaModel}, which are terminal and do not support property traversing.
+     *
+     * @param mmc
+     * @param propertyTypeMetamodeledTest
+     * @return
+     */
     private boolean writeMetaModel(final MetaModelConcept mmc, final Predicate<PropertyElement> propertyTypeMetamodeledTest) {
-        // ######################## PROPERTIES ########################
-        final Set<PropertyElement> properties = new LinkedHashSet<>();
-
         final EntityElement entityElement = mmc.getEntityElement();
         final EntityElement entityParent = EntityFinder.getParent(entityElement, elementUtils);
         final boolean isEntitySuperclassMetamodeled = isDomainEntity(entityParent.getTypeElement());
-
+        // collect properties to process
+        final Set<PropertyElement> properties = new LinkedHashSet<>();
         if (isEntitySuperclassMetamodeled) {
             // find only declared properties
             properties.addAll(EntityFinder.findDeclaredProperties(entityElement));
@@ -367,41 +375,49 @@ public class MetaModelProcessor extends AbstractProcessor {
             properties.addAll(EntityFinder.findProperties(entityElement));
         }
 
-
-        SortedSet<FieldSpec> fieldSpecs = new TreeSet<>((f1, f2) -> f1.name.compareTo(f2.name));
-        for (PropertyElement prop: properties) {
-            FieldSpec.Builder fieldSpecBuilder = null;
-            final String propName = prop.getName();
-
+        // ######################## FIELDS ###########################
+        final SortedSet<FieldSpec> fieldSpecs = new TreeSet<>((f1, f2) -> f1.name.compareTo(f2.name));
+        // first generate field TYPE for a convenient access to the type of a modelled entity
+        final ClassName entityClassName = entityElement.getEntityClassName();
+        final ParameterizedTypeName entityType = ParameterizedTypeName.get(ClassName.get(Class.class), entityClassName); 
+        fieldSpecs.add(FieldSpec.builder(entityType, "TYPE")
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                .initializer("$L.class", entityClassName)
+                .build());
+        // now let's process all properties
+        for (final PropertyElement prop: properties) {
+            final var propName = prop.getName();
+            final var propName_ = propName + "_";
             // ### static property holding the property's name ###
             // private static final String ${PROPERTY}_ = "${PROPERTY}";
-            fieldSpecs.add(FieldSpec.builder(String.class, propName + "_")
-                    .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
-                    .initializer("$S", propName)
-                    .build());
-
+            fieldSpecs.add(FieldSpec.builder(String.class, propName)
+                                    .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                                    .initializer("$S", propName)
+                                    .build());
             // ### instance property ###
+            final FieldSpec.Builder fieldSpecBuilder;
             if (propertyTypeMetamodeledTest.test(prop)) {
                 final MetaModelConcept propTypeMmc = new MetaModelConcept(newEntityElement(prop.getTypeAsTypeElementOrThrow()));
                 final ClassName propTypeMmcClassName = propTypeMmc.getMetaModelClassName();
                 // property type is target for meta-model generation
                 // private Supplier<${METAMODEL}> ${PROPERTY};
                 final ParameterizedTypeName propTypeName = ParameterizedTypeName.get(ClassName.get(Supplier.class), propTypeMmcClassName);
-                fieldSpecBuilder = FieldSpec.builder(propTypeName, propName)
-                        .addModifiers(Modifier.PRIVATE);
+                fieldSpecBuilder = FieldSpec.builder(propTypeName, propName_)
+                                            .addModifiers(Modifier.PRIVATE);
             } else {
                 // private final PropertyMetaModel ${PROPERTY}; 
-                fieldSpecBuilder = FieldSpec.builder(ClassName.get(PropertyMetaModel.class), propName)
-                        .addModifiers(Modifier.PRIVATE, Modifier.FINAL);
+                fieldSpecBuilder = FieldSpec.builder(ClassName.get(PropertyMetaModel.class), propName_)
+                                            .addModifiers(Modifier.PRIVATE, Modifier.FINAL);
             }
-
             fieldSpecs.add(fieldSpecBuilder.build());
         }
 
         // ######################## METHODS ###########################
+        // methods to access property meta-models
         final List<MethodSpec> methodSpecs = new ArrayList<>();
         for (final PropertyElement prop: properties) {
-            final String propName = prop.getName();
+            final var propName = prop.getName();
+            final var propName_ = propName + "_";
             final MethodSpec.Builder methodSpecBuilder = MethodSpec.methodBuilder(propName);
 
             final ClassName propTypeMmcClassName;
@@ -416,7 +432,7 @@ public class MetaModelProcessor extends AbstractProcessor {
                  */
                 methodSpecBuilder.addModifiers(Modifier.PUBLIC)
                                  .returns(propTypeMmcClassName)
-                                 .addStatement("return $L.get()", propName);
+                                 .addStatement("return $L.get()", propName_);
             } else {
                 propTypeMmcClassName = null;
                 /*
@@ -426,35 +442,32 @@ public class MetaModelProcessor extends AbstractProcessor {
                  */
                 methodSpecBuilder.addModifiers(Modifier.PUBLIC)
                                  .returns(ClassName.get(PropertyMetaModel.class))
-                                 .addStatement("return $L", propName);
+                                 .addStatement("return $L", propName_);
             }
 
             buildJavadoc(prop, methodSpecBuilder, propTypeMmcClassName);
             methodSpecs.add(methodSpecBuilder.build());
         }
 
+        // also need to override generic getEntityClass() to return TYPE
         /*
         @Override
         public static Class<${ENTITY}> getEntityClass() {
-            return ${ENTITY}.class;
+            return TYPE;
         }
          */
-        final ClassName entityClassName = entityElement.getEntityClassName();
         final ClassName abstractEntityClassName = ClassName.get(AbstractEntity.class);
-        final ParameterizedTypeName returnType = ParameterizedTypeName.get(
-                ClassName.get(Class.class), WildcardTypeName.subtypeOf(abstractEntityClassName)); 
-
-        MethodSpec getModelMethod = MethodSpec.methodBuilder("getEntityClass")
+        final ParameterizedTypeName returnType = ParameterizedTypeName.get(ClassName.get(Class.class), WildcardTypeName.subtypeOf(abstractEntityClassName)); 
+        final MethodSpec getModelMethod = MethodSpec
+                .methodBuilder("getEntityClass")
                 .addAnnotation(Override.class)
                 .addModifiers(Modifier.PUBLIC)
                 .returns(returnType)
-                .addStatement("return $T.class", entityClassName)
+                .addStatement("return TYPE")
                 .build();
-
         methodSpecs.add(getModelMethod);
 
         // ######################## CONSTRUCTORS ######################
-        final List<MethodSpec> constructors = new ArrayList<>();
 
         /*
         public ${METAMODEL}(String path) {
@@ -462,18 +475,19 @@ public class MetaModelProcessor extends AbstractProcessor {
             ...
         }
          */
-        MethodSpec.Builder constructorBuilder = MethodSpec.constructorBuilder()
+        final MethodSpec.Builder constructorBuilder = MethodSpec
+                .constructorBuilder()
                 .addModifiers(Modifier.PUBLIC)
-                .addParameter(String.class, "path")
+                .addParameter(String.class, "path", Modifier.FINAL)
                 .addStatement("super(path)");
 
-        CodeBlock.Builder constructorStatementsBuilder = CodeBlock.builder();
-        for (PropertyElement prop: properties) {
-            final String propName = prop.getName();
-
+        final CodeBlock.Builder constructorStatementsBuilder = CodeBlock.builder();
+        for (final PropertyElement prop: properties) {
+            final var propName = prop.getName();
+            final var propName_ = propName + "_";
             if (propertyTypeMetamodeledTest.test(prop)) {
-                MetaModelConcept propTypeMmc = new MetaModelConcept(newEntityElement(prop.getTypeAsTypeElementOrThrow()));
-                ClassName propTypeMetaModelClassName = propTypeMmc.getMetaModelClassName();
+                final MetaModelConcept propTypeMmc = new MetaModelConcept(newEntityElement(prop.getTypeAsTypeElementOrThrow()));
+                final ClassName propTypeMetaModelClassName = propTypeMmc.getMetaModelClassName();
 
                 /* property type is target for meta-model generation
 
@@ -483,51 +497,51 @@ public class MetaModelProcessor extends AbstractProcessor {
                     return value;
                 };
                  */
-                CodeBlock lambda = CodeBlock.builder()
+                final CodeBlock lambda = CodeBlock.builder()
                         .add("() -> {\n").indent()
                         .addStatement(
-                                "$T $L = new $T(joinPath($L_))", 
+                                "$T $L = new $T(joinPath($L))", 
                                 propTypeMetaModelClassName, "value", propTypeMetaModelClassName, propName)
                         .addStatement(
                                 "$L = () -> $L",
-                                propName, "value")
+                                propName_, "value")
                         .addStatement("return $L", "value")
                         .unindent().add("}")
                         .build();
-                CodeBlock code = CodeBlock.builder()
-                        .addStatement("this.$L = $L", propName, lambda.toString())
+                final CodeBlock code = CodeBlock.builder()
+                        .addStatement("this.$L = $L", propName_, lambda.toString())
                         .build();
-                constructorStatementsBuilder = constructorStatementsBuilder.add(code);
+                constructorStatementsBuilder.add(code);
             } else {
                 // this.${PROPERTY} = new PropertyMetaModel ( joinPath( ${PROPERTY}_ ) );
-                constructorStatementsBuilder = constructorStatementsBuilder.addStatement(
-                        "this.$L = new $T(joinPath($L_))", 
-                        propName, ClassName.get(PropertyMetaModel.class), propName);
+                constructorStatementsBuilder.addStatement(
+                        "this.$L = new $T(joinPath($L))", 
+                        propName_, ClassName.get(PropertyMetaModel.class), propName);
             }
         }
 
         final MethodSpec constructor = constructorBuilder.addCode(constructorStatementsBuilder.build()).build();
-        constructors.add(constructor);
 
-        // the empty constructor
+        // the default constructor
         /*
         public ${METAMODEL} {
             this("");
         }
          */
-        final MethodSpec emptyConstructor = MethodSpec.constructorBuilder()
+        final MethodSpec defaultConstructor = MethodSpec.constructorBuilder()
                 .addModifiers(Modifier.PUBLIC)
                 .addStatement("this(\"\")")
                 .build();
-        constructors.add(emptyConstructor);
 
-        // class declaration
+        final List<MethodSpec> constructors = List.of(constructor, defaultConstructor);
+
+        // ######################## CLASS ######################
         /*
         public class ${METAMODEL} extends [EntityMetaModel | ${PARENT_METAMODEL}] {
             ...
         }
          */
-        ClassName metaModelSuperclassClassName;
+        final ClassName metaModelSuperclassClassName;
         if (isEntitySuperclassMetamodeled) {
             final MetaModelConcept parentMmc = new MetaModelConcept(entityParent);
             metaModelSuperclassClassName = ClassName.get(parentMmc.getPackageName(), parentMmc.getSimpleName());
@@ -541,24 +555,24 @@ public class MetaModelProcessor extends AbstractProcessor {
         // sort methods alphabetically
         methodSpecs.sort((ms1, ms2) -> ms1.name.compareTo(ms2.name));
 
-        TypeSpec metaModel = TypeSpec.classBuilder(metaModelName)
+        final TypeSpec.Builder metaModelBuilder = TypeSpec.classBuilder(metaModelName)
                 .addModifiers(Modifier.PUBLIC)
                 .superclass(metaModelSuperclassClassName)
                 .addFields(fieldSpecs)
                 .addMethods(constructors)
                 .addMethods(methodSpecs)
-                .build();
+                .build().toBuilder();
         
         // javadoc
         final Pair<String, String> entityTitleAndDesc = EntityFinder.getEntityTitleAndDesc(entityElement);
         final String title = entityTitleAndDesc.getKey();
         if (!title.isEmpty()) {
-            metaModel = metaModel.toBuilder().addJavadoc(format("Title: %s\n<p>\n", title)).build();
+            metaModelBuilder.addJavadoc(format("Title: %s\n<p>\n", title)).build();
         }
 
         final String desc = entityTitleAndDesc.getValue();
         if (!desc.isEmpty()) {
-            metaModel = metaModel.toBuilder().addJavadoc(format("Description: %s\n<p>\n", desc)).build();
+            metaModelBuilder.addJavadoc(format("Description: %s\n<p>\n", desc)).build();
         }
 
         // @Generated annotation
@@ -568,16 +582,14 @@ public class MetaModelProcessor extends AbstractProcessor {
                 .build();
 
         final String datetime = initDateTime.toString("dd-MM-YYYY HH:mm:ss.SSS z");
-        metaModel = metaModel.toBuilder()
-                .addJavadoc("Auto-generated meta-model for {@link $T}.\n<p>\n", entityClassName)
-                .addJavadoc(format("Generation datetime: %s\n<p>\n", datetime))
-                .addJavadoc(format("Generated by {@link %s}\n<p>\n", this.getClass().getCanonicalName()))
-                .addAnnotation(generatedAnnotation)
-                .build();
-
+        final TypeSpec metaModelSpec = metaModelBuilder.addJavadoc("Auto-generated meta-model for {@link $T}.\n<p>\n", entityClassName)
+                 .addJavadoc(format("Generation datetime: %s\n<p>\n", datetime))
+                 .addJavadoc(format("Generated by {@link %s}\n<p>\n", this.getClass().getCanonicalName()))
+                 .addAnnotation(generatedAnnotation)
+                 .build();
 
         // ######################## WRITE TO FILE #####################
-        final JavaFile javaFile = JavaFile.builder(metaModelPkgName, metaModel).indent(INDENT).build();
+        final JavaFile javaFile = JavaFile.builder(metaModelPkgName, metaModelSpec).indent(INDENT).build();
         try {
             javaFile.writeTo(filer);
         } catch (final IOException ex) {
@@ -585,7 +597,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             return false;
         }
 
-        messager.printMessage(Kind.NOTE, format("Generated %s for entity %s.", metaModel.name, entityElement.getSimpleName()));
+        messager.printMessage(Kind.NOTE, format("Generated %s for entity %s.", metaModelSpec.name, entityElement.getSimpleName()));
         return true;
     }
 
