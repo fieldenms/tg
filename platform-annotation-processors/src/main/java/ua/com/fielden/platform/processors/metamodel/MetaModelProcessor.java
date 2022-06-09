@@ -138,16 +138,17 @@ public class MetaModelProcessor extends AbstractProcessor {
     @Override
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
         final int roundNumber = ++this.roundCount;
-        messager.printMessage(Kind.NOTE, format("=== PROCESSING ROUND %d START ===", roundNumber));
-        messager.printMessage(Kind.NOTE, format("annotations: %s%n", annotations.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
-        final Set<? extends Element> rootElements = roundEnv.getRootElements();
-        messager.printMessage(Kind.NOTE, format("rootElements: %s%n", rootElements.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
         
         // manually control the end of processing to skip redundant rounds
         if (processingOver) {
-            endRound(roundNumber, roundEnv.processingOver());
+            messager.printMessage(Kind.NOTE, format("~~~ SKIP PROCESSING ROUND %d ~~~", roundNumber));
             return false;
         }
+
+        messager.printMessage(Kind.NOTE, format(">>> PROCESSING ROUND %d START >>>", roundNumber));
+        messager.printMessage(Kind.NOTE, format("annotations: %s%n", annotations.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
+        final Set<? extends Element> rootElements = roundEnv.getRootElements();
+        messager.printMessage(Kind.NOTE, format("rootElements: %s%n", rootElements.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
 
         // TODO detect when rootElements are exclusively test sources and exit
 
@@ -210,9 +211,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         
         // manually "end" the processing after everything was regenerated
         processingOver = true;
-        messager.printMessage(Kind.NOTE, "Processing is effectively over. Skipping subsequent rounds.");
-
-        endRound(roundNumber, roundEnv.processingOver());
+        messager.printMessage(Kind.NOTE, format("<<< PROCESSING ROUND %d END <<<", roundNumber));
         // must return false to avoid claiming all annotations (as defined by @SupportedAnnotationTypes("*")) to allow other processors to run
         return false;
     }
@@ -255,14 +254,6 @@ public class MetaModelProcessor extends AbstractProcessor {
                 .filter(e -> e.getValue().equals(Boolean.FALSE))
                 .map(Entry::getKey)
                 .toList();
-    }
-    
-
-    private void endRound(final int n, final boolean processingOver) {
-        messager.printMessage(Kind.NOTE, format("xxx PROCESSING ROUND %d END xxx", n));
-        if (processingOver) {
-            messager.printMessage(Kind.NOTE, "### LAST ROUND. PROCESSING OVER ###");
-        }
     }
 
     /**
