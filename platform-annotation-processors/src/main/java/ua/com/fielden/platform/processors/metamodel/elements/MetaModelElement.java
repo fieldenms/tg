@@ -5,6 +5,8 @@ import java.util.Objects;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 
+import com.squareup.javapoet.ClassName;
+
 /**
  * Represents a source code of a meta-model for a corresponding domain entity.
  *
@@ -39,6 +41,10 @@ public class MetaModelElement {
         return qualifiedName;
     }
     
+    public ClassName getMetaModelClassName() {
+        return ClassName.get(getPackageName(), getSimpleName());
+    }
+
     @Override
     public int hashCode() {
         return 31 + Objects.hash(qualifiedName);

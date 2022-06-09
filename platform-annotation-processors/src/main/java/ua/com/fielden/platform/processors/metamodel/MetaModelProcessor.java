@@ -31,7 +31,6 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
-import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -89,18 +88,6 @@ public class MetaModelProcessor extends AbstractProcessor {
     private int roundCount;
     private boolean metaModelsClassVerified;
     private boolean processingOver;
-
-    private static ClassName getMetaModelClassName(final MetaModelElement element) {
-        return ClassName.get(element.getPackageName(), element.getSimpleName());
-    }
-
-    private static ClassName getMetaModelClassName(MetaModelConcept mmc) {
-        return ClassName.get(mmc.getPackageName(), mmc.getSimpleName());
-    }
-    
-    private static ClassName getEntityClassName(EntityElement element) {
-        return ClassName.get(element.getPackageName(), element.getSimpleName());
-    }
 
     private static String getEntityTitleFromClassName(EntityElement element) {
         final String entityName = element.getSimpleName();
@@ -410,7 +397,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             // ### instance property ###
             if (propertyTypeMetamodeledTest.test(prop)) {
                 final MetaModelConcept propTypeMmc = new MetaModelConcept(newEntityElement(prop.getTypeAsTypeElementOrThrow()));
-                final ClassName propTypeMmcClassName = getMetaModelClassName(propTypeMmc);
+                final ClassName propTypeMmcClassName = propTypeMmc.getMetaModelClassName();
                 // property type is target for meta-model generation
                 // private Supplier<${METAMODEL}> ${PROPERTY};
                 final ParameterizedTypeName propTypeName = ParameterizedTypeName.get(ClassName.get(Supplier.class), propTypeMmcClassName);
@@ -434,7 +421,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             final ClassName propTypeMmcClassName;
             if (propertyTypeMetamodeledTest.test(prop)) {
                 final MetaModelConcept propTypeMmc = new MetaModelConcept(newEntityElement(prop.getTypeAsTypeElementOrThrow()));
-                propTypeMmcClassName = getMetaModelClassName(propTypeMmc);
+                propTypeMmcClassName = propTypeMmc.getMetaModelClassName();
                 /* property type is target for meta-model generation
 
                 public ${METAMODEL} ${PROPERTY}() {
@@ -466,7 +453,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             return ${ENTITY}.class;
         }
          */
-        final ClassName entityClassName = getEntityClassName(entityElement);
+        final ClassName entityClassName = entityElement.getEntityClassName();
         final ClassName abstractEntityClassName = ClassName.get(AbstractEntity.class);
         final ParameterizedTypeName returnType = ParameterizedTypeName.get(
                 ClassName.get(Class.class), WildcardTypeName.subtypeOf(abstractEntityClassName)); 
@@ -500,7 +487,7 @@ public class MetaModelProcessor extends AbstractProcessor {
 
             if (propertyTypeMetamodeledTest.test(prop)) {
                 MetaModelConcept propTypeMmc = new MetaModelConcept(newEntityElement(prop.getTypeAsTypeElementOrThrow()));
-                ClassName propTypeMetaModelClassName = getMetaModelClassName(propTypeMmc);
+                ClassName propTypeMetaModelClassName = propTypeMmc.getMetaModelClassName();
 
                 /* property type is target for meta-model generation
 
@@ -707,7 +694,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         for (final MetaModelConcept mmc: metaModelConcepts) {
             final String fieldName = nameFieldForMetaModel(mmc.getEntityElement().getSimpleName());
             messager.printMessage(Kind.NOTE, format("New/Updated meta-model, generating field: %s", fieldName));
-            fieldSpecs.add(specFieldForMetaModel(getMetaModelClassName(mmc), fieldName));
+            fieldSpecs.add(specFieldForMetaModel(mmc.getMetaModelClassName(), fieldName));
         }
 
         // if MetaModels class exists, then collect its fields for the active *unchanged* meta-models 
@@ -727,7 +714,7 @@ public class MetaModelProcessor extends AbstractProcessor {
                 final EntityElement entity = EntityFinder.findEntityForMetaModel(mme, elementUtils);
                 final String fieldName = nameFieldForMetaModel(entity.getSimpleName());
                 messager.printMessage(Kind.NOTE, format("Old meta-model, generating field: %s", fieldName));
-                fieldSpecs.add(specFieldForMetaModel(getMetaModelClassName(mme), fieldName));
+                fieldSpecs.add(specFieldForMetaModel(mme.getMetaModelClassName(), fieldName));
             }
         }
 

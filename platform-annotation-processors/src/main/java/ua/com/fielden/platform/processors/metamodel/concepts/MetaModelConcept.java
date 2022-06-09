@@ -4,54 +4,59 @@ import static java.lang.String.format;
 
 import java.util.Objects;
 
+import com.squareup.javapoet.ClassName;
+
 import ua.com.fielden.platform.processors.metamodel.MetaModelConstants;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 
 public final class MetaModelConcept {
-    private EntityElement entityElement;
-    private final String simpleNameSuffix = MetaModelConstants.META_MODEL_NAME_SUFFIX;
-    private final String packageNameSuffix = MetaModelConstants.META_MODEL_PKG_NAME_SUFFIX;
-    
-    public MetaModelConcept(EntityElement entityElement) {
+    private final EntityElement entityElement;
+    private final String simpleName;
+    private final String packageName;
+    private final String qualifiedName;
+
+    public MetaModelConcept(final EntityElement entityElement) {
         this.entityElement = entityElement;
+        this.simpleName = entityElement.getSimpleName() + MetaModelConstants.META_MODEL_NAME_SUFFIX;
+        this.packageName = entityElement.getPackageName() + MetaModelConstants.META_MODEL_PKG_NAME_SUFFIX;
+        this.qualifiedName = format("%s.%s", packageName, simpleName);
     }
-    
+
     public EntityElement getEntityElement() {
         return entityElement;
     }
 
     public String getSimpleName() {
-        return entityElement.getSimpleName() + simpleNameSuffix;
+        return simpleName;
     }
 
     public String getPackageName() {
-        return entityElement.getPackageName() + packageNameSuffix;
+        return packageName;
     }
-    
+
     public String getQualifiedName() {
-        return format("%s.%s", getPackageName(), getSimpleName());
+        return qualifiedName;
+    }
+
+    public ClassName getMetaModelClassName() {
+        return ClassName.get(packageName, simpleName);
     }
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = 1;
-        result = prime * result + Objects.hash(getQualifiedName());
-        return result;
+        return 31 + Objects.hash(getQualifiedName());
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(final Object obj) {
         if (this == obj) {
             return true;
         }
-        if (obj == null) {
+        if (!(obj instanceof MetaModelConcept)) {
             return false;
         }
-        if (getClass() != obj.getClass()) {
-            return false;
-        }
-        final MetaModelConcept other = (MetaModelConcept) obj;
-        return Objects.equals(getQualifiedName(), other.getQualifiedName());
+        final MetaModelConcept that = (MetaModelConcept) obj;
+        return Objects.equals(this.qualifiedName, that.qualifiedName);
     }
+
 }

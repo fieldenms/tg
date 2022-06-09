@@ -6,6 +6,8 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 
+import com.squareup.javapoet.ClassName;
+
 /**
  * A convenient wrapper around {@link TypeElement} to represent an entity element.
  *
@@ -51,6 +53,10 @@ public class EntityElement {
 
     public TypeMirror asType() {
         return this.typeElement.asType();
+    }
+
+    public ClassName getEntityClassName() {
+        return ClassName.get(packageName, simpleName);
     }
 
     @Override
