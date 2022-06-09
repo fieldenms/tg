@@ -3,17 +3,13 @@ package ua.com.fielden.platform.processors.metamodel.utils;
 import static java.lang.String.format;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toCollection;
-import static ua.com.fielden.platform.processors.metamodel.utils.EntityFinder.isDomainEntity;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.annotation.Annotation;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -36,6 +32,7 @@ import ua.com.fielden.platform.processors.metamodel.MetaModelConstants;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -120,11 +117,11 @@ public class EntityFinder {
     }
 
     public static Pair<String, String> getEntityTitleAndDesc(final EntityElement entityElement) {
-        // TODO need to replicate the logic from TitlesDescsGetter in application to the Mirror types.
         final AnnotationMirror entityTitleAnnotMirror = ElementFinder.getElementAnnotationMirror(entityElement.getTypeElement(), EntityTitle.class);
 
         if (entityTitleAnnotMirror == null) {
-            return null;
+            final var title = TitlesDescsGetter.breakClassName(entityElement.getSimpleName());
+            return pair(title, title + " entity");
         }
 
         return getTitleAndDesc(entityTitleAnnotMirror);

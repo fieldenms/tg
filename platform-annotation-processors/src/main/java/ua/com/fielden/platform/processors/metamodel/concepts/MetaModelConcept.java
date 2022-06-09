@@ -8,7 +8,14 @@ import com.squareup.javapoet.ClassName;
 
 import ua.com.fielden.platform.processors.metamodel.MetaModelConstants;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
+import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 
+/**
+ * This class represents an abstraction for a meta-model that needs to be generated as opposed to a meta-model that was already generated. The latter is represented by {@link MetaModelElement}. 
+ *
+ * @author TG Team
+ *
+ */
 public final class MetaModelConcept {
     private final EntityElement entityElement;
     private final String simpleName;

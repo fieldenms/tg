@@ -91,21 +91,6 @@ public class MetaModelProcessor extends AbstractProcessor {
     private boolean metaModelsClassVerified;
     private boolean processingOver;
 
-    private static String getEntityTitleFromClassName(EntityElement element) {
-        final String entityName = element.getSimpleName();
-        StringBuilder descriptiveName = new StringBuilder();
-
-        for (int i = 0; i < entityName.length(); i++) {
-            char c = entityName.charAt(i);
-            if (i > 0 && Character.isUpperCase(c)) {
-                descriptiveName.append(' ');
-            }
-            descriptiveName.append(c);
-        }
-        
-        return descriptiveName.toString();
-    }
-
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
@@ -140,19 +125,17 @@ public class MetaModelProcessor extends AbstractProcessor {
         final Set<? extends Element> rootElements = roundEnv.getRootElements();
         messager.printMessage(Kind.NOTE, format("rootElements: %s%n", rootElements.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
 
-        // TODO detect when rootElements are exclusively test sources and exit
-
         final Map<MetaModelConcept, Boolean> metaModelConcepts = collectEntitiesForMetaModelGeneration(roundEnv);
-        final Map<MetaModelElement, Boolean> inactiveMetaModels = new HashMap<>();
 
-        for (MetaModelConcept mmc: getGenerationTargets(metaModelConcepts)) {
+        for (final MetaModelConcept mmc: getGenerationTargets(metaModelConcepts)) {
             if (writeMetaModel(mmc)) {
                 metaModelConcepts.put(mmc, true);
             }
         }
 
         final TypeElement metaModelsTypeElement = elementUtils.getTypeElement(MetaModelConstants.METAMODELS_CLASS_QUAL_NAME);
-        // if MetaModels class exists
+        // if MetaModels class already exists, we need to identify
+        final Map<MetaModelElement, Boolean> inactiveMetaModels = new HashMap<>();
         if (metaModelsTypeElement != null) { 
             messager.printMessage(Kind.NOTE, format("%s found.", MetaModelConstants.METAMODELS_CLASS_QUAL_NAME));
             final MetaModelsElement metaModelsElement = new MetaModelsElement(metaModelsTypeElement, elementUtils);
@@ -570,19 +553,14 @@ public class MetaModelProcessor extends AbstractProcessor {
         
         // javadoc
         final Pair<String, String> entityTitleAndDesc = EntityFinder.getEntityTitleAndDesc(entityElement);
-        if (entityTitleAndDesc != null) {
-            final String title = entityTitleAndDesc.getKey();
-            if (!title.isEmpty()) {
-                metaModel = metaModel.toBuilder().addJavadoc(format("Title: %s\n<p>\n", title)).build();
-            }
-
-            final String desc = entityTitleAndDesc.getValue();
-            if (!desc.isEmpty()) {
-                metaModel = metaModel.toBuilder().addJavadoc(format("Description: %s\n<p>\n", desc)).build();
-            }
-        } else {
-            final String title = getEntityTitleFromClassName(entityElement);
+        final String title = entityTitleAndDesc.getKey();
+        if (!title.isEmpty()) {
             metaModel = metaModel.toBuilder().addJavadoc(format("Title: %s\n<p>\n", title)).build();
+        }
+
+        final String desc = entityTitleAndDesc.getValue();
+        if (!desc.isEmpty()) {
+            metaModel = metaModel.toBuilder().addJavadoc(format("Description: %s\n<p>\n", desc)).build();
         }
 
         // @Generated annotation

@@ -23,6 +23,7 @@ import com.google.testing.compile.CompilationRule;
 import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
+import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
@@ -30,8 +31,10 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
+import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserSecret;
+import ua.com.fielden.platform.utils.Pair;
 
 /**
  * A test case for utility functions in {@link EntityFinder}.
@@ -208,10 +211,21 @@ public class EntityFinderTest {
         assertFalse("Non-entity should not be recognised as a domain entity.", EntityFinder.isDomainEntity(elements.getTypeElement(NonEntity.class.getCanonicalName())));
     }
 
+    @Test
+    public void getEntityTitleAndDesc_is_equivalent_to_TitlesDescsGetter() {
+        final var userTitleAndDesc = Pair.pair("User", "User entity");
+        assertEquals(userTitleAndDesc, TitlesDescsGetter.getEntityTitleAndDesc(User.class));
+        assertEquals(userTitleAndDesc, EntityFinder.getEntityTitleAndDesc(EntityElement.wrapperFor(elements.getTypeElement(User.class.getCanonicalName()))));
+        final var superUserTitleAndDesc = Pair.pair("Super User", "A test entity extedning User.");
+        assertEquals(superUserTitleAndDesc, TitlesDescsGetter.getEntityTitleAndDesc(SuperUser.class));
+        assertEquals(superUserTitleAndDesc, EntityFinder.getEntityTitleAndDesc(EntityElement.wrapperFor(elements.getTypeElement(SuperUser.class.getCanonicalName()))));
+    }
+
     /**
      * A type for testing purposes. Represents an entity that extends a persistent one.
      */
     @DescTitle("Desc")
+    @EntityTitle(value = "Super User", desc = "A test entity extedning User.")
     public static class SuperUser extends User {
     }
 

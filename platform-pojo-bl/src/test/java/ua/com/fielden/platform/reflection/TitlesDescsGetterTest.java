@@ -147,4 +147,21 @@ public class TitlesDescsGetterTest {
         assertEquals("Two", baseCaseTitleAndDesc.getValue());
     }
 
+    @Test
+    public void breakClassName_handles_empty_strings_as_empty() {
+        assertEquals("", TitlesDescsGetter.breakClassName(""));
+        assertEquals("", TitlesDescsGetter.breakClassName(null));
+        assertEquals("", TitlesDescsGetter.breakClassName(" "));
+    }
+
+    @Test
+    public void breakClassName_breaks_strings_by_upper_cased_words() {
+        assertEquals("nouppercase", TitlesDescsGetter.breakClassName("nouppercase"));
+        assertEquals("one Uppercase", TitlesDescsGetter.breakClassName("oneUppercase"));
+        assertEquals("two Upper Cases", TitlesDescsGetter.breakClassName("twoUpperCases"));
+        assertEquals("Tree Upper Cases", TitlesDescsGetter.breakClassName("TreeUpperCases"));
+        assertEquals("Tree Upper Cases", TitlesDescsGetter.breakClassName("Tree UpperCases"));
+        assertEquals("Tree Upper Cases", TitlesDescsGetter.breakClassName("Tree Upper Cases "));
+    }
+
 }
