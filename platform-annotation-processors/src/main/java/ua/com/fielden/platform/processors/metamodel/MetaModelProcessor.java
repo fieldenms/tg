@@ -89,7 +89,6 @@ public class MetaModelProcessor extends AbstractProcessor {
     private DateTime initDateTime;
     private int roundCount;
     private boolean metaModelsClassVerified;
-    private boolean processingOver;
 
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
@@ -111,13 +110,6 @@ public class MetaModelProcessor extends AbstractProcessor {
     @Override
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
         final int roundNumber = ++this.roundCount;
-        
-        // manually control the end of processing to skip redundant rounds
-        if (processingOver) {
-            messager.printMessage(Kind.NOTE, format("~~~ SKIP PROCESSING ROUND %d ~~~", roundNumber));
-            messager.printMessage(Kind.NOTE, format("annotations: %s%n", annotations.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
-            return false;
-        }
         final Stopwatch stopwatchProcess = Stopwatch.createStarted();
         
         messager.printMessage(Kind.NOTE, format(">>> PROCESSING ROUND %d START >>>", roundNumber));
@@ -181,9 +173,7 @@ public class MetaModelProcessor extends AbstractProcessor {
                 writeMetaModelsClass(metaModelConcepts.keySet());
             }
         }
-        
-        // manually "end" the processing after everything was regenerated
-        processingOver = true;
+
         stopwatchProcess.stop();
         messager.printMessage(Kind.NOTE, format("<<< PROCESSING ROUND %d END [%s millis] <<<", roundNumber, stopwatchProcess.elapsed(TimeUnit.MILLISECONDS)));
         // must return false to avoid claiming all annotations (as defined by @SupportedAnnotationTypes("*")) to allow other processors to run
