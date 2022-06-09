@@ -8,7 +8,6 @@ import static ua.com.fielden.platform.processors.metamodel.utils.EntityFinder.is
 import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -46,14 +45,6 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic.Kind;
 
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.core.config.Configuration;
-import org.apache.logging.log4j.core.config.builder.api.AppenderComponentBuilder;
-import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilder;
-import org.apache.logging.log4j.core.config.builder.api.ConfigurationBuilderFactory;
-import org.apache.logging.log4j.core.config.builder.api.LayoutComponentBuilder;
-import org.apache.logging.log4j.core.config.builder.api.RootLoggerComponentBuilder;
-import org.apache.logging.log4j.core.config.builder.impl.BuiltConfiguration;
 import org.joda.time.DateTime;
 
 import com.google.auto.service.AutoService;
@@ -87,8 +78,6 @@ import ua.com.fielden.platform.utils.Pair;
 public class MetaModelProcessor extends AbstractProcessor {
 
     private static final String INDENT = "    ";
-//    private static final String LOG_FILENAME = "proc.log";
-//    private static final String ECLIPSE_OPTION_KEY = "projectdir";
     private static final Set<Class<? extends Annotation>> DOMAIN_TYPE_ANNOTATIONS = Set.of(MapEntityTo.class, DomainEntity.class);
 
     private Filer filer;
@@ -97,11 +86,7 @@ public class MetaModelProcessor extends AbstractProcessor {
     private Messager messager;
     private Map<String, String> options;
 
-//    private Logger logger;
-//    private ProcessorLogger procLogger;
-
     private DateTime initDateTime;
-//    private boolean fromMaven;
     private int roundCount;
     private boolean metaModelsClassVerified;
     private boolean processingOver;
@@ -143,33 +128,11 @@ public class MetaModelProcessor extends AbstractProcessor {
         this.typeUtils = processingEnv.getTypeUtils();
         this.messager = processingEnv.getMessager();
         this.options = processingEnv.getOptions();
-        messager.printMessage(Kind.NOTE, format("Options: %s", options.keySet().stream().map(k -> format("%s=%s", k, options.get(k))).collect(joining(", "))));
+        messager.printMessage(Kind.NOTE, format("Options: %s", options.keySet().stream().map(k -> format("%s=%s", k, options.get(k))).sorted().collect(joining(", "))));
         this.roundCount = 0;
         this.metaModelsClassVerified = false;
 
-//        // processor started from Eclipse?
-//        final String projectDir = options.get(ECLIPSE_OPTION_KEY);
-//        this.fromMaven = projectDir == null;
-//
-//        // log4j configuration
-//        Configurator.initialize(getLog4jConfig());
-//        this.logger = LogManager.getLogger(MetaModelProcessor.class);
-//
-//        // initialize ProcessorLogger
-//        final String logFilename = this.fromMaven ? LOG_FILENAME : projectDir + "/" + LOG_FILENAME;
-//        final String source = this.fromMaven ? "mvn" : "Eclipse";
-//        this.procLogger = new ProcessorLogger(logFilename, source, logger);
         messager.printMessage(Kind.NOTE, format("%s initialized.", this.getClass().getSimpleName()));
-//        if (Files.exists(Path.of(projectDir + "/target/generated-sources"))) {
-//            try {
-//                procLogger.debug("target/generated-sources: " + Arrays.toString(Files.walk(Path.of(projectDir + "/target/generated-sources"))
-//                        .filter(Files::isRegularFile)
-//                        .map(p -> p.getFileName().toString().split("\\.java")[0])
-//                        .toArray()));
-//            } catch (IOException e) {
-//                procLogger.error(e.toString());
-//            }
-//        }
     }
 
     @Override
@@ -345,7 +308,7 @@ public class MetaModelProcessor extends AbstractProcessor {
                     .collect(Collectors.toSet());
 
             if (!referencedByThisEntity.isEmpty())  {
-                messager.printMessage(Kind.NOTE, format("%s references %s. Regenerating %s.", entity.getSimpleName(), referencedByThisEntity.stream().map(EntityElement::getSimpleName).collect(joining(", ")), mme.getSimpleName()));
+                messager.printMessage(Kind.NOTE, format("%s references %s. Regenerating %s.", entity.getSimpleName(), referencedByThisEntity.stream().map(EntityElement::getSimpleName).sorted().collect(joining(", ")), mme.getSimpleName()));
                 final List<TypeMirror> referencedTypes = referencedByThisEntity.stream()
                         .map(EntityElement::asType)
                         .toList();
@@ -833,34 +796,6 @@ public class MetaModelProcessor extends AbstractProcessor {
 
     private EntityElement newEntityElement(final TypeElement typeElement) {
         return new EntityElement(typeElement, elementUtils);
-    }
-
-    private Configuration getLog4jConfig() {
-        ConfigurationBuilder<BuiltConfiguration> builder = ConfigurationBuilderFactory.newConfigurationBuilder();
-
-        AppenderComponentBuilder console = builder.newAppender("ConsoleAppender", "Console"); 
-
-        String projectDir = options.get("projectdir");
-        String filename = "processor.log";
-        filename = projectDir == null ? filename : projectDir + '/' + filename;
-        AppenderComponentBuilder file = builder.newAppender("FileAppender", "File"); 
-        file.addAttribute("fileName", filename);
-        file.addAttribute("append", "true");
-
-        LayoutComponentBuilder layout = builder.newLayout("PatternLayout");
-        layout.addAttribute("pattern", "%highlight{%d{yyyy-MM-dd HH:mm:ss.SSS} [%-5level] %c{1} --- %msg%n}{ERROR=red}");
-        console.add(layout);
-        file.add(layout);
-
-        builder.add(console);
-        builder.add(file);
-
-        RootLoggerComponentBuilder rootLogger = builder.newRootLogger(Level.DEBUG);
-        rootLogger.add(builder.newAppenderRef("ConsoleAppender"));
-        rootLogger.add(builder.newAppenderRef("FileAppender"));
-        builder.add(rootLogger);
-
-        return builder.build();
     }
 
 }
