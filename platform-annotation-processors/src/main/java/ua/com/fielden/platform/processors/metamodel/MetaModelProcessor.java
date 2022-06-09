@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.processors.metamodel;
 
 import static java.lang.String.format;
+import static java.lang.String.join;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.processors.metamodel.utils.EntityFinder.isDomainEntity;
@@ -45,6 +46,7 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.Diagnostic.Kind;
 
+import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 
 import com.google.auto.service.AutoService;
@@ -566,12 +568,12 @@ public class MetaModelProcessor extends AbstractProcessor {
         // javadoc
         final Pair<String, String> entityTitleAndDesc = EntityFinder.getEntityTitleAndDesc(entityElement);
         final String title = entityTitleAndDesc.getKey();
-        if (!title.isEmpty()) {
+        if (!StringUtils.isEmpty(title)) {
             metaModelBuilder.addJavadoc(format("Title: %s\n<p>\n", title)).build();
         }
 
         final String desc = entityTitleAndDesc.getValue();
-        if (!desc.isEmpty()) {
+        if (!StringUtils.isEmpty(desc)) {
             metaModelBuilder.addJavadoc(format("Description: %s\n<p>\n", desc)).build();
         }
 
@@ -614,12 +616,12 @@ public class MetaModelProcessor extends AbstractProcessor {
         final Pair<String, String> propTitleAndDesc = EntityFinder.getPropTitleAndDesc(prop);
         if (propTitleAndDesc != null) {
             final String propTitle = propTitleAndDesc.getKey();
-            if (propTitle.length() > 0) {
+            if (!StringUtils.isEmpty(propTitle)) {
                 specBuilder.addJavadoc("Title: $L\n<p>\n", propTitle);
             }
 
             final String propDesc = propTitleAndDesc.getValue();
-            if (propDesc.length() > 0) {
+            if (!StringUtils.isEmpty(propDesc)) {
                 specBuilder.addJavadoc("Description: $L\n<p>\n", propDesc);
             }
         }
@@ -635,21 +637,22 @@ public class MetaModelProcessor extends AbstractProcessor {
         // javadoc: property annotations
         final List<String> annotationsStrings = ElementFinder.getFieldAnnotations(prop.getVariableElement()).stream()
                 .map(annotMirror -> {
-                    String str = format("{@literal @}{@link %s}", ElementFinder.getAnnotationMirrorSimpleName(annotMirror));
-                    Map<? extends ExecutableElement, ? extends AnnotationValue> valuesMap = annotMirror.getElementValues();
+                    final StringBuilder builder = new StringBuilder();
+                    builder.append(format("{@literal @}{@link %s}", ElementFinder.getAnnotationMirrorSimpleName(annotMirror)));
+                    final Map<? extends ExecutableElement, ? extends AnnotationValue> valuesMap = annotMirror.getElementValues();
                     if (!valuesMap.isEmpty()) {
-                        str += "(";
-                        str += String.join(", ", valuesMap.entrySet().stream()
+                        builder.append("(");
+                        builder.append(join(", ", valuesMap.entrySet().stream()
                                 .map(e -> format("%s = %s", 
-                                        e.getKey().getSimpleName(), 
-                                        e.getValue().toString().replaceAll("@", "{@literal @}")))
-                                .toList());
-                        str += ")";
+                                                 e.getKey().getSimpleName(), 
+                                                 e.getValue().toString().replaceAll("@", "{@literal @}")))
+                                .toList()));
+                        builder.append(")");
                     }
-                    return str;
+                    return builder.toString();
                 })
                 .toList();
-        specBuilder.addJavadoc("$L", String.join("<br>\n", annotationsStrings));
+        specBuilder.addJavadoc("$L", join("<br>\n", annotationsStrings));
     }
 
     private boolean writeMetaModel(final MetaModelElement metaModelElement) {
