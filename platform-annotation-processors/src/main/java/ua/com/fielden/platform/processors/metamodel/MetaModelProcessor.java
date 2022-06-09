@@ -74,7 +74,6 @@ import ua.com.fielden.platform.utils.Pair;
 
 @AutoService(Processor.class)
 @SupportedAnnotationTypes("*")
-@SupportedSourceVersion(SourceVersion. RELEASE_16)
 public class MetaModelProcessor extends AbstractProcessor {
 
     private static final String INDENT = "    ";
@@ -787,6 +786,11 @@ public class MetaModelProcessor extends AbstractProcessor {
 
     private EntityElement newEntityElement(final TypeElement typeElement) {
         return new EntityElement(typeElement, elementUtils);
+    }
+
+    @Override
+    public SourceVersion getSupportedSourceVersion() {
+      return SourceVersion.latestSupported();
     }
 
 }
