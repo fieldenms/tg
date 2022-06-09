@@ -119,7 +119,7 @@ public class MetaModelProcessor extends AbstractProcessor {
 
         final Map<MetaModelConcept, Boolean> metaModelConcepts = collectEntitiesForMetaModelGeneration(roundEnv);
 
-        for (final MetaModelConcept mmc: getGenerationTargets(metaModelConcepts)) {
+        for (final MetaModelConcept mmc: getModelsToGenerate(metaModelConcepts)) {
             if (writeMetaModel(mmc)) {
                 metaModelConcepts.put(mmc, true);
             }
@@ -144,7 +144,7 @@ public class MetaModelProcessor extends AbstractProcessor {
                 }
 
                 if (!inactiveMetaModels.isEmpty()) {
-                    final List<MetaModelElement> regenerationTargets = getGenerationTargets(inactiveMetaModels);
+                    final List<MetaModelElement> regenerationTargets = getModelsToGenerate(inactiveMetaModels);
                     // process inactive meta-models
                     for (final MetaModelElement mme: regenerationTargets) {
                         if (writeInactiveMetaModel(mme)) {
@@ -213,9 +213,17 @@ public class MetaModelProcessor extends AbstractProcessor {
         return metaModelConcepts;
     }
 
-    private <T> List<T> getGenerationTargets(Map<T, Boolean> metaModels) {
+    
+    /**
+     * A utility method to filter out inactive entries in {@code metaModels}, returning corresponding key values.
+     *
+     * @param <T>
+     * @param metaModels
+     * @return
+     */
+    private static <T> List<T> getModelsToGenerate(final Map<T, Boolean> metaModels) {
         return metaModels.entrySet().stream()
-                .filter(e -> e.getValue().equals(Boolean.FALSE))
+                .filter(e -> !e.getValue())
                 .map(Entry::getKey)
                 .toList();
     }
