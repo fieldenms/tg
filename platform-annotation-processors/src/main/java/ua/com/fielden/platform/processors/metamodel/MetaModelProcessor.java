@@ -19,6 +19,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -47,6 +48,7 @@ import javax.tools.Diagnostic.Kind;
 import org.joda.time.DateTime;
 
 import com.google.auto.service.AutoService;
+import com.google.common.base.Stopwatch;
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
@@ -128,9 +130,11 @@ public class MetaModelProcessor extends AbstractProcessor {
         // manually control the end of processing to skip redundant rounds
         if (processingOver) {
             messager.printMessage(Kind.NOTE, format("~~~ SKIP PROCESSING ROUND %d ~~~", roundNumber));
+            messager.printMessage(Kind.NOTE, format("annotations: %s%n", annotations.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
             return false;
         }
-
+        final Stopwatch stopwatchProcess = Stopwatch.createStarted();
+        
         messager.printMessage(Kind.NOTE, format(">>> PROCESSING ROUND %d START >>>", roundNumber));
         messager.printMessage(Kind.NOTE, format("annotations: %s%n", annotations.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
         final Set<? extends Element> rootElements = roundEnv.getRootElements();
@@ -197,7 +201,8 @@ public class MetaModelProcessor extends AbstractProcessor {
         
         // manually "end" the processing after everything was regenerated
         processingOver = true;
-        messager.printMessage(Kind.NOTE, format("<<< PROCESSING ROUND %d END <<<", roundNumber));
+        stopwatchProcess.stop();
+        messager.printMessage(Kind.NOTE, format("<<< PROCESSING ROUND %d END [%s millis] <<<", roundNumber, stopwatchProcess.elapsed(TimeUnit.MILLISECONDS)));
         // must return false to avoid claiming all annotations (as defined by @SupportedAnnotationTypes("*")) to allow other processors to run
         return false;
     }
