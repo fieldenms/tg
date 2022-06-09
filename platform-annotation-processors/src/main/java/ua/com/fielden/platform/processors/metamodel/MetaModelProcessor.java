@@ -335,7 +335,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         try {
             javaFile.writeTo(filer);
         } catch (final IOException ex) {
-            messager.printMessage(Kind.ERROR, ex.getMessage(), mme.getTypeElement());
+            messager.printMessage(Kind.WARNING, ex.getMessage());
             return false;
         }
 
@@ -605,7 +605,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         try {
             javaFile.writeTo(filer);
         } catch (final IOException ex) {
-            messager.printMessage(Kind.ERROR, ex.getMessage(), entityElement.getTypeElement());
+            messager.printMessage(Kind.WARNING, ex.getMessage());
             return false;
         }
 
@@ -743,7 +743,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         try {
             javaFile.writeTo(filer);
         } catch (final IOException ex) {
-            messager.printMessage(Kind.ERROR, ex.getMessage());
+            messager.printMessage(Kind.WARNING, ex.getMessage());
             return false;
         }
 
