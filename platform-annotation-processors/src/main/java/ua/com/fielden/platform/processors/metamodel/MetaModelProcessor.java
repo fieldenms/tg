@@ -154,7 +154,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         final TypeElement metaModelsTypeElement = elementUtils.getTypeElement(MetaModelConstants.METAMODELS_CLASS_QUAL_NAME);
         // if MetaModels class exists
         if (metaModelsTypeElement != null) { 
-        messager.printMessage(Kind.NOTE, format("%s found.", MetaModelConstants.METAMODELS_CLASS_QUAL_NAME));
+            messager.printMessage(Kind.NOTE, format("%s found.", MetaModelConstants.METAMODELS_CLASS_QUAL_NAME));
             final MetaModelsElement metaModelsElement = new MetaModelsElement(metaModelsTypeElement, elementUtils);
 
             // verify MetaModels
@@ -172,7 +172,7 @@ public class MetaModelProcessor extends AbstractProcessor {
                     final List<MetaModelElement> regenerationTargets = getGenerationTargets(inactiveMetaModels);
                     // process inactive meta-models
                     for (final MetaModelElement mme: regenerationTargets) {
-                        if (writeEmptyMetaModel(mme)) {
+                        if (writeInactiveMetaModel(mme)) {
                             inactiveMetaModels.put(mme, true);
                         }
                     }
@@ -306,7 +306,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         return regenerated;
     }
 
-    private boolean writeEmptyMetaModel(MetaModelElement mme) {
+    private boolean writeInactiveMetaModel(final MetaModelElement mme) {
         TypeSpec.Builder emptyMetaModelBuilder = TypeSpec.classBuilder(mme.getSimpleName())
                 .addModifiers(Modifier.PUBLIC, Modifier.ABSTRACT);
 
@@ -334,8 +334,8 @@ public class MetaModelProcessor extends AbstractProcessor {
         final JavaFile javaFile = JavaFile.builder(mme.getPackageName(), emptyMetaModel).indent(INDENT).build();
         try {
             javaFile.writeTo(filer);
-        } catch (IOException e) {
-            messager.printMessage(Kind.ERROR, e.toString());
+        } catch (final IOException ex) {
+            messager.printMessage(Kind.ERROR, ex.getMessage(), mme.getTypeElement());
             return false;
         }
 
@@ -604,8 +604,8 @@ public class MetaModelProcessor extends AbstractProcessor {
         final JavaFile javaFile = JavaFile.builder(metaModelPkgName, metaModel).indent(INDENT).build();
         try {
             javaFile.writeTo(filer);
-        } catch (IOException e) {
-            messager.printMessage(Kind.ERROR, e.toString());
+        } catch (final IOException ex) {
+            messager.printMessage(Kind.ERROR, ex.getMessage(), entityElement.getTypeElement());
             return false;
         }
 
@@ -742,8 +742,8 @@ public class MetaModelProcessor extends AbstractProcessor {
         final JavaFile javaFile = JavaFile.builder(MetaModelConstants.METAMODELS_CLASS_PKG_NAME, metaModelsTypeSpec).indent(INDENT).build();
         try {
             javaFile.writeTo(filer);
-        } catch (IOException e) {
-            messager.printMessage(Kind.ERROR, e.toString());
+        } catch (final IOException ex) {
+            messager.printMessage(Kind.ERROR, ex.getMessage());
             return false;
         }
 
