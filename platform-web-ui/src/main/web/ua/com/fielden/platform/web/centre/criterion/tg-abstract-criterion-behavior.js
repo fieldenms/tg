@@ -4,6 +4,7 @@ import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restorat
 import '/resources/components/tg-scrollable-component.js';
 import '/resources/images/tg-icons.js';
 import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
+import '/resources/centre/criterion/tg-criterion-config.js';
 
 const criterionBehaviorStyle = html`
     <custom-style>
@@ -45,6 +46,34 @@ const TgAbstractCriterionBehaviorImpl = {
         // These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
         // No default values are allowed in this case.														   //
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+        /**
+         * This published property specifies whether 'missing value' will be also considered in search queries.
+         */
+         orNull: {
+            type: Boolean,
+            notify: true, // TODO val: false
+            observer: '_orNullChanged'
+        },
+
+        /**
+         * This published property specifies whether the criterion should be negated.
+         */
+        not: {
+            type: Boolean,
+            notify: true, // TODO val: false
+            observer: '_notChanged'
+        },
+
+        /**
+         * Number of the group of conditions [glued together through logical OR] that this criterion belongs to.
+         * 'null' if this criterion does not belong to any group.
+         */
+        orGroup: {
+            type: Number,
+            notify: true,
+            observer: '_orGroupChanged'
+        },
 
         /**
          * This callback should be used for custom validation action after some meta-value has been changed.
@@ -101,6 +130,15 @@ const TgAbstractCriterionBehaviorImpl = {
         // Also, these properties are designed to be bound to children element properties -- it is necessary to//
         //   populate their default values in ready callback (to have these values populated in children)!     //
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
+        _orNull: {
+            type: Boolean
+        },
+        _not: {
+            type: Boolean
+        },
+        _orGroup: {
+            type: Number
+        },
         _showMetaValuesEditor: Function,
         _acceptMetaValuesForBinding: Function,
         _cancelMetaValuesForBinding: Function,
@@ -119,6 +157,9 @@ const TgAbstractCriterionBehaviorImpl = {
             mve.open();
         }).bind(this);
 
+        this._orNull = false;
+        this._not = false;
+        this._orGroup = null;
         this._acceptMetaValuesForBinding = this._acceptMetaValues.bind(this);
         this._cancelMetaValuesForBinding = this._cancelMetaValues.bind(this);
         this._computeIconButtonStyleForBinding = this._computeIconButtonStyle.bind(this);
@@ -150,6 +191,7 @@ const TgAbstractCriterionBehaviorImpl = {
 
         domBind._orNullBind = self._orNull;
         domBind._excludeMissingBind = self.excludeMissing;
+        domBind._excludeNotBind = self.excludeNot;
         domBind._notBind = self._not;
         domBind._excludeOrGroupBind = self.excludeOrGroup;
         domBind._orGroupBind = self._orGroup;
@@ -290,17 +332,12 @@ const TgAbstractCriterionBehaviorImpl = {
     },
 
     /**
-     * Creates the string representation for meta value editors DOM (to be inserted into dynamic meta-value dialog).
-     */
-    _createMetaValueEditors: function () {
-        console.log("tg-abstract-criterion-behavior: _createMetaValueEditors");
-        return '';
-    },
-
-    /**
      * Accepts all new meta-values. Should be overridden to provide acceptance in specific descendants.
      */
     _acceptMetaValues: function (validate) {
+        this.orNull = this._orNull;
+        this.not = this._not;
+        this.orGroup = this._orGroup;
         if (validate) {
             this.validationCallback();
         }
@@ -311,19 +348,23 @@ const TgAbstractCriterionBehaviorImpl = {
      */
      _createMetaValueEditors: function () {
         console.log("tg-abstract-criterion-behavior: _createMetaValueEditors");
-        return '<tg-multi-criterion-config class="layout vertical" _exclude-missing="[[_excludeMissingBind]]" _or-null="{{_orNullBind}}" _not="{{_notBind}}" _exclude-or-group="[[_excludeOrGroupBind]]" _or-group="{{_orGroupBind}}"></tg-multi-criterion-config>';
+        return '<tg-criterion-config class="layout vertical" _exclude-missing="[[_excludeMissingBind]]" _or-null="{{_orNullBind}}" _exclude-not="[[_excludeNotBind]]" _not="{{_notBind}}" _exclude-or-group="[[_excludeOrGroupBind]]" _or-group="{{_orGroupBind}}"></tg-criterion-config>';
     },
 
     /**
      * Cancels all new meta-values. Should be overridden to provide cancellation in specific descendants.
      */
-    _cancelMetaValues: function () { },
+    _cancelMetaValues: function () {
+        this._orNull = this.orNull;
+        this._not = this.not;
+        this._orGroup = this.orGroup;
+     },
 
     /**
      * Returns 'true' if criterion has no meta values assigned, 'false' otherwise. Should be overridden to provide functionality in specific descendants.
      */
     _hasNoMetaValues: function (orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
-        return true;
+        return orNull === false && not === false && orGroup === null;
     },
 
     _updateIconButtonStyle: function (orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
@@ -352,6 +393,18 @@ const TgAbstractCriterionBehaviorImpl = {
      */
     _dom: function () {
         throw 'not implemented';
+    },
+
+    _orNullChanged: function (newValue) {
+        this._orNull = newValue;
+    },
+
+    _notChanged: function (newValue) {
+        this._not = newValue;
+    },
+    
+    _orGroupChanged: function (newValue) {
+        this._orGroup = newValue;
     }
 };
 

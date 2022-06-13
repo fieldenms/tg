@@ -22,7 +22,7 @@
 
         import '/resources/centre/criterion/single/tg-single-criterion.js';
         import '/resources/centre/criterion/multi/tg-boolean-criterion.js';
-        import '/resources/centre/criterion/multi/tg-multi-criterion.js';
+        import '/resources/centre/criterion/tg-criterion.js';
         import '/resources/centre/criterion/multi/range/tg-range-criterion.js';
         import '/resources/centre/criterion/multi/range/tg-date-range-criterion.js';
     </script>
@@ -46,12 +46,12 @@
             </tg-criterion-example-supplements>
 
             <tg-flex-layout debug when-desktop="[[_whenDesktop]]" when-tablet="[[_whenTablet]]" when-mobile="[[_whenMobile]]">
-                <tg-multi-criterion mnemonics-visible or-null="{{orNull}}" not="{{not}}" or-group="{{orGroup}}" validation-callback="[[validationCallback]]">
+                <tg-criterion mnemonics-visible or-null="{{orNull}}" not="{{not}}" or-group="{{orGroup}}" validation-callback="[[validationCallback]]">
                     <tg-integer-editor entity="[[entity]]" slot="criterion-editors" class="criterion-editors flex"
                         property-name="integerProp" current-state="EDIT" prop-title="Integer property title"
                         prop-desc="Integer property desc" action="null" validation-callback="[[validationCallback]]">
                     </tg-integer-editor>
-                </tg-multi-criterion>
+                </tg-criterion>
 
                 <tg-boolean-criterion mnemonics-visible or-null="{{orNull}}" not="{{not}}" or-group="{{orGroup}}" validation-callback="[[validationCallback]]">
                     <tg-integer-editor entity="[[entity]]" slot="range-criterion-editor-1" class="criterion-editors flex"
@@ -89,12 +89,12 @@
                     </tg-datetime-picker>
                 </tg-date-range-criterion>
 
-                <tg-single-criterion validation-callback="[[validationCallback]]">
+                <tg-criterion validation-callback="[[validationCallback]]">
                     <tg-integer-editor entity="[[entity]]" slot="criterion-editors" class="criterion-editors flex"
                         property-name="integerProp" current-state="EDIT" prop-title="Integer property title"
                         prop-desc="Integer property desc" action="null" validation-callback="[[validationCallback]]">
                     </tg-integer-editor>
-                </tg-single-criterion>
+                </tg-criterion>
             </tg-flex-layout>
         </template>
     </dom-bind>

@@ -25,7 +25,7 @@ public class EntityCriterionWidget extends AbstractMultiCriterionWidget {
      * @param propertyName
      */
     public EntityCriterionWidget(final Class<? extends AbstractEntity<?>> root, final Class<?> managedType, final String propertyName, final List<Pair<String, Boolean>> additionalProps, final CentreContextConfig centreContextConfig) {
-        super(root, "centre/criterion/multi/tg-multi-criterion", propertyName,
+        super(root, "centre/criterion/tg-criterion", propertyName,
                 new EntityMultiCritAutocompletionWidget(
                         AbstractCriterionWidget.generateSingleTitleDesc(root, managedType, propertyName),
                         AbstractCriterionWidget.generateSingleName(root, managedType, propertyName),

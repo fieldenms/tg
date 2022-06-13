@@ -12,6 +12,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.paramValue;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
+import static ua.com.fielden.platform.reflection.Finder.isPropertyPresent;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.baseEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
@@ -107,7 +108,7 @@ public class DynamicQueryBuilder {
         private final String propertyName;
         private final String conditionBuildingName;
         private final boolean critOnly;
-        private final boolean critOnlyWithMnemonics;
+        private final boolean critOnlyWithModel;
         private final boolean single;
         private final boolean aECritOnlyChild;
         private final Class<?> type;
@@ -179,7 +180,7 @@ public class DynamicQueryBuilder {
 
             final CritOnly critAnnotation = analyser.getPropertyFieldAnnotation(CritOnly.class);
             this.critOnly = critAnnotation != null;
-            this.critOnlyWithMnemonics = critOnly && critOnlyWithMnemonics(critAnnotation);
+            this.critOnlyWithModel = critOnly && critOnlyWithModel(critAnnotation, analyser.propertyTypes[analyser.propertyTypes.length - 2], analyser.propertyNames[analyser.propertyNames.length - 1]);
 
             final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
             final String penultPropertyName = PropertyTypeDeterminator.isDotNotation(propertyName) ? PropertyTypeDeterminator.penultAndLast(propertyName).getKey() : null;
@@ -191,7 +192,7 @@ public class DynamicQueryBuilder {
          * Creates {@link QueryProperty} ensuring that all its values (including {@link #value} and {@link #value2}) are empty.
          * All other state (e.g. {@link #datePrefix}) is empty (aka {@code null}) by default -- please enhance this method
          * if this will change in future.
-         * 
+         *
          * @param entityClass
          * @param propertyName
          * @return
@@ -201,11 +202,6 @@ public class DynamicQueryBuilder {
             queryProperty.setValue(getEmptyValue(queryProperty.getType(), queryProperty.isSingle()));
             queryProperty.setValue2(getEmptyValue(queryProperty.getType(), queryProperty.isSingle()));
             return queryProperty;
-        }
-
-        public static boolean critOnlyWithMnemonics(final CritOnly critAnnotation) {
-            final CritOnly.Mnemonics mnemonics = critAnnotation.mnemonics() == CritOnly.Mnemonics.DEFAULT ? critAnnotation.value().defaultMnemonics : critAnnotation.mnemonics();
-            return mnemonics == CritOnly.Mnemonics.WITH;
         }
 
         public Object getValue() {
@@ -309,6 +305,17 @@ public class DynamicQueryBuilder {
             // due to Web UI changes were empty value for String is always null, need to treat string nulls as empty
             // for Swing UI this was different, whereby value "" was treated at an empty string while null was NOT treated as an empty value
             return (String.class == type && value == null) || EntityUtils.equalsEx(value, getEmptyValue(type, single));
+        }
+
+        private static boolean critOnlyWithModel(final CritOnly critAnnotation, final Class<?> propertyType, final String string) {
+            try {
+                return !StringUtils.isEmpty(critAnnotation.propUnderCondition()) &&
+                        AbstractEntity.class.isAssignableFrom(critAnnotation.entityUnderCondition()) &&
+                        isPropertyPresent(critAnnotation.entityUnderCondition(), critAnnotation.propUnderCondition()) &&
+                        propertyType.getDeclaredField(string + "_") != null;
+            } catch (NoSuchFieldException | SecurityException e) {
+                return false;
+            }
         }
 
         /**
@@ -441,21 +448,12 @@ public class DynamicQueryBuilder {
         }
 
         /**
-         * Returns <code>true</code> if property is crit-only with mnemonics, <code>false</code> otherwise.
+         * Returns <code>true</code> if property is crit-only without model, <code>false</code> otherwise.
          *
          * @return
          */
-        public boolean isCritOnlyWithMnemonics() {
-            return critOnlyWithMnemonics;
-        }
-
-        /**
-         * Returns <code>true</code> if property is crit-only and without mnemonics, <code>false</code> otherwise.
-         *
-         * @return
-         */
-        public boolean isCritOnlyWithoutMnemonics() {
-            return critOnly && !critOnlyWithMnemonics;
+        public boolean isCritOnlyWithoutModel() {
+            return critOnly && !critOnlyWithModel;
         }
 
         /**
@@ -644,7 +642,7 @@ public class DynamicQueryBuilder {
         for (final List<QueryProperty> orGroup : orGroups.values()) {
             compoundCondition = getConditionOperator(condOperand, compoundCondition).condition(buildOrGroup(orGroup, dates)); // please note that '.condition(' construction adds parentheses itself when converting to SQL -- no need to provide explicit parentheses
         }
-        
+
         //enhances query with union property condition
         for (final Map<String, List<QueryProperty>> unionGroup : unionProperties.values()) {
             compoundCondition = getConditionOperator(condOperand, compoundCondition).condition(buildUnion(unionGroup, dates));
@@ -673,7 +671,7 @@ public class DynamicQueryBuilder {
      *
      * @param unionGroup
      * @param dates
-     * 
+     *
      * @return
      */
     private static <ET extends AbstractEntity<?>> ConditionModel buildUnion(final Map<String, List<QueryProperty>> unionGroup, final IDates dates) {
@@ -684,13 +682,13 @@ public class DynamicQueryBuilder {
         }
         return compoundCondition.model();
     }
-    
+
     /**
      * Creates condition model for OR group.
      *
      * @param properties -- non-empty {@link QueryProperty} list depicting the group of OR-glued conditions
      * @param dates
-     * 
+     *
      * @return
      */
     private static <ET extends AbstractEntity<?>> ConditionModel buildOrGroup(final List<QueryProperty> properties, final IDates dates) {
@@ -752,7 +750,7 @@ public class DynamicQueryBuilder {
      * @param dateMnemonic
      * @param andBefore
      * @param dates
-     * 
+     *
      * @return
      */
     public static Pair<Date, Date> getDateValuesFrom(final DateRangePrefixEnum datePrefix, final MnemonicEnum dateMnemonic, final Boolean andBefore, final IDates dates) {
@@ -884,7 +882,7 @@ public class DynamicQueryBuilder {
      * @param mainModelProperty
      * @param filteringProperties
      * @param dates
-     * 
+     *
      * @return
      */
     private static <ET extends AbstractEntity<?>> ICompoundCondition0<ET> createSubmodel(final Class<ET> collectionContainerType, final String nameOfCollectionController, final String mainModelProperty, final List<QueryProperty> filteringProperties, final IDates dates) {
@@ -914,7 +912,7 @@ public class DynamicQueryBuilder {
      * @param key
      * @param isNegated -- indicates whether appropriate condition should be negated
      * @param dates
-     * 
+     *
      * @return
      */
     public static <ET extends AbstractEntity<?>> ConditionModel buildCondition(final QueryProperty property, final String propertyName, final boolean isNegated, final IDates dates) {
@@ -945,7 +943,7 @@ public class DynamicQueryBuilder {
      * @param property
      * @param isNegated
      * @param dates
-     * 
+     *
      * @return
      */
     private static <ET extends AbstractEntity<?>> ConditionModel buildCondition(final QueryProperty property, final boolean isNegated, final IDates dates) {
@@ -958,7 +956,7 @@ public class DynamicQueryBuilder {
      * @param property
      * @param propertyName
      * @param dates
-     * 
+     *
      * @return
      */
     @SuppressWarnings("unchecked")

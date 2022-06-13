@@ -2,7 +2,7 @@ import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 import '/resources/centre/criterion/tg-abstract-criterion.js';
-import { TgAbstractMultiCriterionBehavior } from '/resources/centre/criterion/multi/tg-abstract-multi-criterion-behavior.js';
+import { TgAbstractCriterionBehavior } from '/resources/centre/criterion/tg-abstract-criterion-behavior.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
 const template = html`
@@ -34,7 +34,7 @@ Polymer({
         '_updateIconButtonStyle(orNull, not, orGroup)'
     ],
 
-    behaviors: [ TgAbstractMultiCriterionBehavior ],
+    behaviors: [ TgAbstractCriterionBehavior ],
 
     _dom: function () {
         return this.$.dom;
