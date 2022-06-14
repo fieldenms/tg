@@ -183,7 +183,7 @@ public class ElementFinder {
         TypeElement superclass = getSuperclassOrNull(typeElement);
         while (superclass != null) {
             fields.addAll(findDeclaredFields(superclass));
-            superclass = getSuperclassOrNull(superclass);;
+            superclass = getSuperclassOrNull(superclass);
         }
 
         return fields;
@@ -340,9 +340,7 @@ public class ElementFinder {
 
     public static boolean isFieldOfType(final VariableElement field, final Class<?> type) {
         final TypeMirror fieldType = field.asType();
-        final TypeKind fieldTypeKind = fieldType.getKind();
-
-        if (fieldTypeKind.equals(TypeKind.DECLARED)) {
+        if (fieldType.getKind().equals(TypeKind.DECLARED)) {
             return equals(((TypeElement) ((DeclaredType) fieldType).asElement()), type);
         } else {
             // TODO implement proper type checking for primitives and arrays
