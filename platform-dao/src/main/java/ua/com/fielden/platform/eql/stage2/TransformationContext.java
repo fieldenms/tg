@@ -20,18 +20,24 @@ public class TransformationContext {
 
     private final TablesAndSourceChildren tablesAndSourceChildren;
     private final Map<String, Map<String, T2<ISource3, Object>>> resolutions = new HashMap<>();
-    private final Map<String, Object> paramValues = new HashMap<>();
+    private final Map<String, Object> paramValuesByNames = new HashMap<>();
+    private final Map<Object, String> paramNamesByValues = new HashMap<>();
     public final int sqlId;
-    public final int paramId; //incremented after usage as part of the `cloneWithParamValue(..)` method
+    private final int paramId; //incremented after each new param name generation
 
     public TransformationContext(final TablesAndSourceChildren tablesAndSourceChildren) {
-        this(tablesAndSourceChildren, emptyMap(), emptyMap(), 0, 1);
+        this(tablesAndSourceChildren, emptyMap(), emptyMap(), emptyMap(), 0, 1);
     }
 
-    private TransformationContext(final TablesAndSourceChildren tablesAndSourceChildren, final Map<String, Map<String, T2<ISource3, Object>>> resolutions, final Map<String, Object> paramValues, final int sqlId, final int paramId) {
+    private TransformationContext(final TablesAndSourceChildren tablesAndSourceChildren, 
+            final Map<String, Map<String, T2<ISource3, Object>>> resolutions,
+            final Map<String, Object> paramValuesByNames,
+            final Map<Object, String> paramNamesByValues,
+            final int sqlId, final int paramId) {
         this.tablesAndSourceChildren = tablesAndSourceChildren;
         this.resolutions.putAll(resolutions);
-        this.paramValues.putAll(paramValues);
+        this.paramValuesByNames.putAll(paramValuesByNames);
+        this.paramNamesByValues.putAll(paramNamesByValues);
         this.sqlId = sqlId;
         this.paramId = paramId;
     }
@@ -41,7 +47,21 @@ public class TransformationContext {
     }
 
     public Map<String, Object> getParamValues() {
-        return unmodifiableMap(paramValues);
+        return unmodifiableMap(paramValuesByNames);
+    }
+    
+    public T2<String, TransformationContext> obtainParamNameAndUpdateContext(final Object paramValue) {
+        final String existingParamName = paramNamesByValues.get(paramValue);
+        if (existingParamName != null) {
+            return t2(existingParamName, this);
+        } else {
+            final String paramName = "P_" + paramId;
+            final TransformationContext result = new TransformationContext(tablesAndSourceChildren, resolutions, paramValuesByNames, paramNamesByValues, sqlId, paramId + 1);
+            result.paramValuesByNames.put(paramName, paramValue);
+            result.paramNamesByValues.put(paramValue, paramName);
+
+            return t2(paramName, result);
+        }
     }
 
     public List<ChildGroup> getSourceChildren(final String sourceId) {
@@ -50,11 +70,11 @@ public class TransformationContext {
     }
 
     public TransformationContext cloneWithNextSqlId() {
-        return new TransformationContext(tablesAndSourceChildren, resolutions, paramValues, sqlId + 1, paramId);
+        return new TransformationContext(tablesAndSourceChildren, resolutions, paramValuesByNames, paramNamesByValues, sqlId + 1, paramId);
     }
 
     public TransformationContext cloneWithResolutions(final ISource3 source, final List<ChildGroup> children) {
-        final TransformationContext result = new TransformationContext(tablesAndSourceChildren, resolutions, paramValues, sqlId, paramId);
+        final TransformationContext result = new TransformationContext(tablesAndSourceChildren, resolutions, paramValuesByNames, paramNamesByValues, sqlId, paramId);
         
         for (final ChildGroup fc : children) {
             for (final Entry<String, String> el : fc.paths().entrySet()) {
@@ -68,12 +88,6 @@ public class TransformationContext {
                 }
             }
         }
-        return result;
-    }
-
-    public TransformationContext cloneWithParamValue(final String paramName, final Object paramValue) {
-        final TransformationContext result = new TransformationContext(tablesAndSourceChildren, resolutions, paramValues, sqlId, paramId + 1);
-        result.paramValues.put(paramName, paramValue);
         return result;
     }
 
