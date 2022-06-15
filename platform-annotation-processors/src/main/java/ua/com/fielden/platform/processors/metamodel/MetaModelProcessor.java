@@ -2,8 +2,12 @@ package ua.com.fielden.platform.processors.metamodel;
 
 import static java.lang.String.format;
 import static java.lang.String.join;
+import static java.util.Collections.emptyList;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
+import static ua.com.fielden.platform.processors.metamodel.utils.EntityFinder.findEntityForMetaModel;
 import static ua.com.fielden.platform.processors.metamodel.utils.EntityFinder.isDomainEntity;
 
 import java.io.IOException;
@@ -11,12 +15,12 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
@@ -88,9 +92,12 @@ public class MetaModelProcessor extends AbstractProcessor {
     private Messager messager;
     private Map<String, String> options;
 
+    // this collection is used to track meta-models that were generated during one of the rounds of the current compilation cycle
+    // this tracking helps avoiding attempts to regenerate already generated meta-models during the current compilation cycle, which otherwise results in FilerException
+    private final Set<MetaModelConcept> allGeneratedMetaModels = new HashSet<>();
+    
     private DateTime initDateTime;
-    private int roundCount;
-    private boolean metaModelsClassVerified;
+    private int roundNumber;
 
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
@@ -103,76 +110,50 @@ public class MetaModelProcessor extends AbstractProcessor {
         this.messager = processingEnv.getMessager();
         this.options = processingEnv.getOptions();
         messager.printMessage(Kind.NOTE, format("Options: %s", options.keySet().stream().map(k -> format("%s=%s", k, options.get(k))).sorted().collect(joining(", "))));
-        this.roundCount = 0;
-        this.metaModelsClassVerified = false;
+        this.roundNumber = 0;
 
         messager.printMessage(Kind.NOTE, format("%s initialized.", this.getClass().getSimpleName()));
     }
 
     @Override
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-        final int roundNumber = ++this.roundCount;
+        this.roundNumber = this.roundNumber + 1;
         final Stopwatch stopwatchProcess = Stopwatch.createStarted();
         
         messager.printMessage(Kind.NOTE, format(">>> PROCESSING ROUND %d START >>>", roundNumber));
-        messager.printMessage(Kind.NOTE, format("annotations: %s%n", annotations.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
+        messager.printMessage(Kind.NOTE, format("annotations: [%s]", annotations.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
         final Set<? extends Element> rootElements = roundEnv.getRootElements();
-        messager.printMessage(Kind.NOTE, format("rootElements: %s%n", rootElements.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
+        messager.printMessage(Kind.NOTE, format("rootElements: [%s]", rootElements.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
 
-        final Map<MetaModelConcept, Boolean> metaModelConcepts = collectEntitiesForMetaModelGeneration(roundEnv);
+        // meta-models need to be generated at every processing round for the matching entities, which where included into the round by the compiler
+        // except those that were already generated on one of the subsequent rounds during the current compilation process
+        final var generatedMetaModels = collectEntitiesForMetaModelGeneration(roundEnv).stream()
+                                        .filter(mmc -> !allGeneratedMetaModels.contains(mmc))
+                                        .filter(mmc -> writeMetaModel(mmc)).collect(Collectors.toSet());
+        allGeneratedMetaModels.addAll(generatedMetaModels);
 
-        for (final MetaModelConcept mmc: getModelsToGenerate(metaModelConcepts)) {
-            if (writeMetaModel(mmc)) {
-                metaModelConcepts.put(mmc, true);
-            }
-        }
+        // generation or re-generation of the meta-models entry point class should occur only during the first round of processing
+        if (roundNumber == 1) {
+            final TypeElement metaModelsTypeElement = elementUtils.getTypeElement(MetaModelConstants.METAMODELS_CLASS_QUAL_NAME);
+            if (metaModelsTypeElement == null) {
+                // if the MetaModels class does not yet exist, let's generate it to include all meta-models, which were generated during this first round 
+                writeMetaModelsClass(generatedMetaModels);
+            } else {
+                // if MetaModels class already exists, we need to analyse its content and identify meta-model, which represent "inactive" entities -- those that either no longer exist or are not considered to be domain entities.
+                // such meta-models need to be regenerated as empty and abstract classes and MetaModels should be re-generated without those fields
+                messager.printMessage(Kind.NOTE, format("%s already exists. It needs to be processed and re-generated.", MetaModelConstants.METAMODELS_CLASS_QUAL_NAME));
+                final MetaModelsElement metaModelsElement = new MetaModelsElement(metaModelsTypeElement, elementUtils);
 
-        final TypeElement metaModelsTypeElement = elementUtils.getTypeElement(MetaModelConstants.METAMODELS_CLASS_QUAL_NAME);
-        // if MetaModels class already exists, we need to identify
-        final Map<MetaModelElement, Boolean> inactiveMetaModels = new HashMap<>();
-        if (metaModelsTypeElement != null) { 
-            messager.printMessage(Kind.NOTE, format("%s found.", MetaModelConstants.METAMODELS_CLASS_QUAL_NAME));
-            final MetaModelsElement metaModelsElement = new MetaModelsElement(metaModelsTypeElement, elementUtils);
+                // analyse fields in the MetaModels class to identify meta-models that do not represent domain entities any longer
+                final Set<MetaModelElement> inactiveMetaModels = findInactiveMetaModels(metaModelsElement);
 
-            // verify MetaModels
-            if (!this.metaModelsClassVerified) {
-                final List<MetaModelElement> inactive = findInactiveMetaModels(metaModelsElement);
-                this.metaModelsClassVerified = true;
+                messager.printMessage(Kind.NOTE, format("Inactive meta-models: [%s]", inactiveMetaModels.stream().map(MetaModelElement::getSimpleName).collect(joining(", "))));
 
-                messager.printMessage(Kind.NOTE, format("Inactive meta-models: %s", inactive.stream().map(MetaModelElement::getSimpleName).collect(joining(", "))));
+                // deactivate meta-models by regenerating them as abstract classes to prevent their instantiation
+                final Set<MetaModelElement> deactivedMetaModels = inactiveMetaModels.stream().filter(mme -> writeInactiveMetaModel(mme)).collect(toSet());
 
-                for (MetaModelElement imm: inactive) {
-                    inactiveMetaModels.putIfAbsent(imm, false);
-                }
-
-                if (!inactiveMetaModels.isEmpty()) {
-                    final List<MetaModelElement> regenerationTargets = getModelsToGenerate(inactiveMetaModels);
-                    // process inactive meta-models
-                    for (final MetaModelElement mme: regenerationTargets) {
-                        if (writeInactiveMetaModel(mme)) {
-                            inactiveMetaModels.put(mme, true);
-                        }
-                    }
-
-                    // regenerate meta-models that reference the inactive ones
-                    final List<MetaModelElement> activeMetaModels = metaModelsElement.getMetaModels().stream()
-                            .filter(mme -> !regenerationTargets.contains(mme))
-                            .toList();
-                    regenerateMetaModelsWithReferenceTo(activeMetaModels, regenerationTargets);
-                }
-            }
-
-            //  TODO delete inactive meta-models java sources
-            // final boolean deleted = deleteJavaSources(inactiveMetaModels);
-
-            if (!metaModelConcepts.isEmpty() || !inactiveMetaModels.isEmpty()) {
-                //  regenerate the MetaModels class by adding new fields and removing inactive ones
-                writeMetaModelsClass(metaModelConcepts.keySet(), metaModelsElement, inactiveMetaModels.keySet());
-            }
-        } else {
-            if (!metaModelConcepts.isEmpty()) {
-                // generate the MetaModels class
-                writeMetaModelsClass(metaModelConcepts.keySet());
+                // regenerate the MetaModels class by adding new fields and removing those that represent deactivated meta-models 
+                writeMetaModelsClass(generatedMetaModels, of(metaModelsElement), deactivedMetaModels);
             }
         }
 
@@ -189,29 +170,29 @@ public class MetaModelProcessor extends AbstractProcessor {
      * @param roundEnv
      * @return
      */
-    private Map<MetaModelConcept, Boolean> collectEntitiesForMetaModelGeneration(final RoundEnvironment roundEnv) {
-        final Map<MetaModelConcept, Boolean> metaModelConcepts = new HashMap<>();
+    private Set<MetaModelConcept> collectEntitiesForMetaModelGeneration(final RoundEnvironment roundEnv) {
+        final Set<MetaModelConcept> metaModelConcepts = new HashSet<>();
         // find classes annotated with any of DOMAIN_TYPE_ANNOTATIONS
         final Set<TypeElement> annotatedElements = roundEnv.getElementsAnnotatedWithAny(DOMAIN_TYPE_ANNOTATIONS).stream()
                                                            .filter(element -> element.getKind() == ElementKind.CLASS) // just in case make sure identified elements are classes
                                                            .map(el -> (TypeElement) el).collect(toSet());
-        messager.printMessage(Kind.NOTE, format("annotatedElements: %s%n", annotatedElements.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
+        messager.printMessage(Kind.NOTE, format("annotatedElements: [%s]", annotatedElements.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
 
         // generate meta-models for these elements
         for (final TypeElement typeElement: annotatedElements) {
             final EntityElement entityElement = newEntityElement(typeElement);
             final MetaModelConcept mmc = new MetaModelConcept(entityElement);
-            metaModelConcepts.putIfAbsent(mmc, false);
+            metaModelConcepts.add(mmc);
 
             // traverse all properties for the current entity element to ensure that any entity-typed properties get their type included as a meta-model
             // this is mainly important to pick up entity types that come from other project dependencies, such as the TG platform itself
             EntityFinder.findProperties(entityElement).stream()
                         .filter(EntityFinder::isPropertyOfDomainEntityType)
                         .map(pel -> new EntityElement(pel.getTypeAsTypeElementOrThrow(), elementUtils))
-                        .forEach(eel -> metaModelConcepts.putIfAbsent(new MetaModelConcept(eel), false));
+                        .forEach(eel -> metaModelConcepts.add(new MetaModelConcept(eel)));
         }
 
-        messager.printMessage(Kind.NOTE, format("metaModelConcepts: %s%n", metaModelConcepts.keySet().stream().map(MetaModelConcept::getSimpleName).sorted().collect(joining(", "))));
+        messager.printMessage(Kind.NOTE, format("metaModelConcepts: [%s]", metaModelConcepts.stream().map(MetaModelConcept::getSimpleName).sorted().collect(joining(", "))));
         return metaModelConcepts;
     }
 
@@ -231,6 +212,8 @@ public class MetaModelProcessor extends AbstractProcessor {
     }
 
     /**
+     * TODO Remove as this aspect seems to be handled automatically during sequential processing rounds.
+     *
      * Regenerates the meta-models that reference any of the {@code referencedMetaModels}.
      *
      * @param metaModels - a collection of meta-models to be regenerated if a reference is found
@@ -256,7 +239,10 @@ public class MetaModelProcessor extends AbstractProcessor {
     }
 
     /**
+     * TODO Remove as this aspect seems to be handled automatically during sequential processing rounds. 
+     *
      * Regenerates meta-models for entities that have a property of any of the entity types provided by {@code referencedEntities}.
+     * 
      * @param metaModels
      * @param referencedEntities
      */
@@ -326,26 +312,26 @@ public class MetaModelProcessor extends AbstractProcessor {
         return true;
     }
 
-    private List<MetaModelElement> findInactiveMetaModels(MetaModelsElement metaModelsElement) {
+    /**
+     * Check the content of {@code metaModelsElement} to identify fields that represent meta-models for entities, which do not exists or are not domain entities.
+     *
+     * @param metaModelsElement
+     * @return a set of inactive meta-models; could be empty
+     */
+    private Set<MetaModelElement> findInactiveMetaModels(final MetaModelsElement metaModelsElement) {
         messager.printMessage(Kind.NOTE, format("Verifying %s.", metaModelsElement.getSimpleName()));
-        final List<MetaModelElement> inactive = new ArrayList<>();
-
-        for (MetaModelElement mme: metaModelsElement.getMetaModels()) {
-            final EntityElement entity = EntityFinder.findEntityForMetaModel(mme, elementUtils);
-            // debug
-            if (entity == null) {
-                messager.printMessage(Kind.NOTE, format("Entity for %s does not exist", mme.getSimpleName()));
-            }
-
+        final Set<MetaModelElement> inactive = new LinkedHashSet<>();
+        for (final MetaModelElement mme: metaModelsElement.getMetaModels()) {
+            final EntityElement entity = findEntityForMetaModel(mme, elementUtils);
             if (entity == null || !isDomainEntity(entity.getTypeElement())) {
-                // debug
                 if (entity != null) {
-                    messager.printMessage(Kind.NOTE, format("Entity %s should no longer be metamodeled", entity.getSimpleName()));
+                    messager.printMessage(Kind.NOTE, format("Entity %s is no longer a domain entity.", entity.getSimpleName()));
+                } else {
+                    messager.printMessage(Kind.NOTE, format("Entity for %s does not exist anymore.", mme.getSimpleName()));
                 }
                 inactive.add(mme);
             }
         }
-
         return inactive;
     }
 
@@ -655,6 +641,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         specBuilder.addJavadoc("$L", join("<br>\n", annotationsStrings));
     }
 
+
     private boolean writeMetaModel(final MetaModelElement metaModelElement) {
         final EntityElement entityElement = EntityFinder.findEntityForMetaModel(metaModelElement, elementUtils);
         final MetaModelConcept metaModelConcept = new MetaModelConcept(entityElement);
@@ -667,18 +654,24 @@ public class MetaModelProcessor extends AbstractProcessor {
         return writeMetaModel(metaModelConcept, propertyTypeMetamodeledTest);
     }
 
-    private boolean writeMetaModelsClass(Collection<MetaModelConcept> metaModelConcepts) {
-        return writeMetaModelsClass(metaModelConcepts, null, null);
+    private void writeMetaModelsClass(Collection<MetaModelConcept> metaModelConcepts) {
+        writeMetaModelsClass(metaModelConcepts, empty(), emptyList());
     }
 
+
     /**
-     * Generates the meta-models collection class that has a field for each meta-model in {@code metaModelConcepts}, as well as the existing fields that are provided by {@code metaModelsElement} apart from those that are inactive ({@code inactiveMetaModelElements}).
+     * Generates a meta-models collection class that has a field for each meta-model in {@code metaModelConcepts}, as well as the existing fields that are provided by {@code metaModelsElement} apart from those that are inactive ({@code inactiveMetaModelElements}).
+     *
      * @param metaModelConcepts
-     * @param metaModelsElement
+     * @param maybeMetaModelsElement
      * @param inactiveMetaModelElements
      */
-    private boolean writeMetaModelsClass(final Collection<MetaModelConcept> metaModelConcepts, final MetaModelsElement metaModelsElement, final Collection<MetaModelElement> inactiveMetaModelElements) {
+    private void writeMetaModelsClass(final Collection<MetaModelConcept> metaModelConcepts, final Optional<MetaModelsElement> maybeMetaModelsElement, final Collection<MetaModelElement> inactiveMetaModelElements) {
         messager.printMessage(Kind.NOTE, "Started generating the meta-models entry point...");
+        if (metaModelConcepts.isEmpty() && inactiveMetaModelElements.isEmpty()) {
+            messager.printMessage(Kind.NOTE, "Aborted generating the meta-models entry point as there are no meta-models to include.");
+            return;
+        }
         /*
         public final class MetaModels {
             public static final ${METAMODEL} ${ENTITY_NAME} = new ${METAMODEL}();
@@ -694,7 +687,8 @@ public class MetaModelProcessor extends AbstractProcessor {
         }
 
         // if MetaModels class exists, then collect its fields for the active *unchanged* meta-models 
-        if (metaModelsElement != null) {
+        if (maybeMetaModelsElement.isPresent()) {
+            final MetaModelsElement metaModelsElement = maybeMetaModelsElement.get();
             final List<MetaModelElement> activeUnchangedMetaModels = metaModelsElement.getMetaModels().stream()
                     // skip inactive
                     .filter(mme -> !inactiveMetaModelElements.contains(mme))
@@ -702,7 +696,7 @@ public class MetaModelProcessor extends AbstractProcessor {
                     .filter(mme -> metaModelConcepts.stream().noneMatch(mmc -> MetaModelFinder.isSameMetaModel(mmc, mme)))
                     .toList();
 
-            messager.printMessage(Kind.NOTE, format("Inactive meta-models: %s", inactiveMetaModelElements.stream()
+            messager.printMessage(Kind.NOTE, format("Inactive meta-models: [%s]", inactiveMetaModelElements.stream()
                     .map(mm -> mm.getSimpleName())
                     .sorted().collect(joining(", "))));
             
@@ -719,7 +713,7 @@ public class MetaModelProcessor extends AbstractProcessor {
                 .addMember("value", "$S", this.getClass().getCanonicalName())
                 .addMember("date", "$S", initDateTime.toString())
                 .build();
-        
+
         final String dateTimeString = initDateTime.toString("dd-MM-YYYY HH:mm:ss.SSS z");
         final TypeSpec metaModelsTypeSpec = TypeSpec.classBuilder(MetaModelConstants.METAMODELS_CLASS_SIMPLE_NAME)
                 .addModifiers(Modifier.PUBLIC, Modifier.FINAL)
@@ -735,11 +729,10 @@ public class MetaModelProcessor extends AbstractProcessor {
             javaFile.writeTo(filer);
         } catch (final IOException ex) {
             messager.printMessage(Kind.WARNING, ex.getMessage());
-            return false;
+            return;
         }
 
         messager.printMessage(Kind.NOTE, format("Finished generating the meta-models entry point as [%s].", metaModelsTypeSpec.name));
-        return true;
     }
 
     /**
