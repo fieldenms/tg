@@ -19,7 +19,6 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
@@ -28,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
@@ -127,8 +127,7 @@ public class MetaModelProcessor extends AbstractProcessor {
 
         // meta-models need to be generated at every processing round for the matching entities, which where included into the round by the compiler
         // except those that were already generated on one of the subsequent rounds during the current compilation process
-        final var generatedMetaModels = collectEntitiesForMetaModelGeneration(roundEnv).stream()
-                                        .filter(mmc -> !allGeneratedMetaModels.contains(mmc))
+        final var generatedMetaModels = collectEntitiesForMetaModelGeneration(roundEnv)
                                         .filter(mmc -> writeMetaModel(mmc)).collect(Collectors.toSet());
         allGeneratedMetaModels.addAll(generatedMetaModels);
 
@@ -165,12 +164,12 @@ public class MetaModelProcessor extends AbstractProcessor {
 
     /**
      * Processes {@code roundEnv} to collect entity classes for processing.
-     * Returns a map with instances of {@link MetaModelConcept}, representing each entity that require a meta-model, and a corresponding boolean value, indicating if a meta-model was actually generated ({@code false} initially).   
+     * Returns a set with instances of {@link MetaModelConcept}, representing each entity that require a meta-model to be generated.   
      *
      * @param roundEnv
      * @return
      */
-    private Set<MetaModelConcept> collectEntitiesForMetaModelGeneration(final RoundEnvironment roundEnv) {
+    private Stream<MetaModelConcept> collectEntitiesForMetaModelGeneration(final RoundEnvironment roundEnv) {
         final Set<MetaModelConcept> metaModelConcepts = new HashSet<>();
         // find classes annotated with any of DOMAIN_TYPE_ANNOTATIONS
         final Set<TypeElement> annotatedElements = roundEnv.getElementsAnnotatedWithAny(DOMAIN_TYPE_ANNOTATIONS).stream()
@@ -182,35 +181,22 @@ public class MetaModelProcessor extends AbstractProcessor {
         for (final TypeElement typeElement: annotatedElements) {
             final EntityElement entityElement = newEntityElement(typeElement);
             final MetaModelConcept mmc = new MetaModelConcept(entityElement);
-            metaModelConcepts.add(mmc);
-
-            // traverse all properties for the current entity element to ensure that any entity-typed properties get their type included as a meta-model
-            // this is mainly important to pick up entity types that come from other project dependencies, such as the TG platform itself
-            EntityFinder.findProperties(entityElement).stream()
-                        .filter(EntityFinder::isPropertyOfDomainEntityType)
-                        .map(pel -> new EntityElement(pel.getTypeAsTypeElementOrThrow(), elementUtils))
-                        .forEach(eel -> metaModelConcepts.add(new MetaModelConcept(eel)));
+            if (!allGeneratedMetaModels.contains(mmc)) {
+                metaModelConcepts.add(mmc);
+    
+                // traverse all properties for the current entity element to ensure that any entity-typed properties get their type included as a meta-model
+                // this is mainly important to pick up entity types that come from other project dependencies, such as the TG platform itself
+                EntityFinder.findProperties(entityElement).stream()
+                            .filter(EntityFinder::isPropertyOfDomainEntityType)
+                            .map(pel -> new EntityElement(pel.getTypeAsTypeElementOrThrow(), elementUtils))
+                            .forEach(eel -> metaModelConcepts.add(new MetaModelConcept(eel)));
+            }
         }
 
         messager.printMessage(Kind.NOTE, format("metaModelConcepts: [%s]", metaModelConcepts.stream().map(MetaModelConcept::getSimpleName).sorted().collect(joining(", "))));
-        return metaModelConcepts;
+        return metaModelConcepts.stream();
     }
-
     
-    /**
-     * A utility method to filter out inactive entries in {@code metaModels}, returning corresponding key values.
-     *
-     * @param <T>
-     * @param metaModels
-     * @return
-     */
-    private static <T> List<T> getModelsToGenerate(final Map<T, Boolean> metaModels) {
-        return metaModels.entrySet().stream()
-                .filter(e -> !e.getValue())
-                .map(Entry::getKey)
-                .toList();
-    }
-
     /**
      * TODO Remove as this aspect seems to be handled automatically during sequential processing rounds.
      *
@@ -311,6 +297,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         messager.printMessage(Kind.NOTE, format("Generated empty meta-model %s.", mme.getSimpleName()));
         return true;
     }
+
 
     /**
      * Check the content of {@code metaModelsElement} to identify fields that represent meta-models for entities, which do not exists or are not domain entities.
@@ -589,6 +576,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         return true;
     }
 
+
     /**
      * Add Javadoc to {@code specBuilder}, which describes an entity property.
      *
@@ -641,12 +629,12 @@ public class MetaModelProcessor extends AbstractProcessor {
         specBuilder.addJavadoc("$L", join("<br>\n", annotationsStrings));
     }
 
-
     private boolean writeMetaModel(final MetaModelElement metaModelElement) {
         final EntityElement entityElement = EntityFinder.findEntityForMetaModel(metaModelElement, elementUtils);
         final MetaModelConcept metaModelConcept = new MetaModelConcept(entityElement);
         return writeMetaModel(metaModelConcept);
     }
+
 
     private boolean writeMetaModel(final MetaModelElement metaModelElement, final Predicate<PropertyElement> propertyTypeMetamodeledTest) {
         final EntityElement entityElement = EntityFinder.findEntityForMetaModel(metaModelElement, elementUtils);
@@ -657,7 +645,6 @@ public class MetaModelProcessor extends AbstractProcessor {
     private void writeMetaModelsClass(Collection<MetaModelConcept> metaModelConcepts) {
         writeMetaModelsClass(metaModelConcepts, empty(), emptyList());
     }
-
 
     /**
      * Generates a meta-models collection class that has a field for each meta-model in {@code metaModelConcepts}, as well as the existing fields that are provided by {@code metaModelsElement} apart from those that are inactive ({@code inactiveMetaModelElements}).
