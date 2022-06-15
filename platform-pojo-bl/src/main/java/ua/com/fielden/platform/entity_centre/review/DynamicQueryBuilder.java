@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity_centre.review;
 
 import static java.lang.Boolean.TRUE;
+import static java.lang.String.format;
 import static java.util.Arrays.stream;
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.groupingBy;
@@ -24,6 +25,7 @@ import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.snappy.DateUtilities.dateOfRangeThatIncludes;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Iterator;
@@ -58,6 +60,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity_centre.exceptions.EntityCentreExecutionException;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -109,6 +112,8 @@ public class DynamicQueryBuilder {
         private final String conditionBuildingName;
         private final boolean critOnly;
         private final boolean critOnlyWithModel;
+        private final String propertyUnderCondition;
+        private final ICompoundCondition0<?> critOnlyModel;
         private final boolean single;
         private final boolean aECritOnlyChild;
         private final Class<?> type;
@@ -181,6 +186,13 @@ public class DynamicQueryBuilder {
             final CritOnly critAnnotation = analyser.getPropertyFieldAnnotation(CritOnly.class);
             this.critOnly = critAnnotation != null;
             this.critOnlyWithModel = critOnly && critOnlyWithModel(critAnnotation, analyser.propertyTypes[analyser.propertyTypes.length - 2], analyser.propertyNames[analyser.propertyNames.length - 1]);
+            if (this.critOnlyWithModel) {
+                this.propertyUnderCondition = critAnnotation.propUnderCondition();
+                this.critOnlyModel = getCritOnlyModel(analyser.propertyTypes[analyser.propertyTypes.length - 2], analyser.propertyNames[analyser.propertyNames.length - 1]);
+            } else {
+                this.propertyUnderCondition = "";
+                this.critOnlyModel = null;
+            }
 
             final boolean isEntityItself = "".equals(propertyName); // empty property means "entity itself"
             final String penultPropertyName = PropertyTypeDeterminator.isDotNotation(propertyName) ? PropertyTypeDeterminator.penultAndLast(propertyName).getKey() : null;
@@ -307,14 +319,30 @@ public class DynamicQueryBuilder {
             return (String.class == type && value == null) || EntityUtils.equalsEx(value, getEmptyValue(type, single));
         }
 
-        private static boolean critOnlyWithModel(final CritOnly critAnnotation, final Class<?> propertyType, final String string) {
+        private static boolean critOnlyWithModel(final CritOnly critAnnotation, final Class<?> propertyType, final String propertyName) {
             try {
                 return !StringUtils.isEmpty(critAnnotation.propUnderCondition()) &&
                         AbstractEntity.class.isAssignableFrom(critAnnotation.entityUnderCondition()) &&
                         isPropertyPresent(critAnnotation.entityUnderCondition(), critAnnotation.propUnderCondition()) &&
-                        propertyType.getDeclaredField(string + "_") != null;
+                        propertyType.getDeclaredField(propertyName + "_") != null;
             } catch (NoSuchFieldException | SecurityException e) {
                 return false;
+            }
+        }
+
+        private static ICompoundCondition0<?> getCritOnlyModel(final Class<?> type, final String propertyName) {
+            try {
+                final Field exprField = type.getDeclaredField(propertyName + "_");
+                exprField.setAccessible(true);
+                final Object value = exprField.get(null);
+                if (value instanceof ICompoundCondition0) {
+                    return (ICompoundCondition0<?>)value;
+                } else {
+                    throw new EntityCentreExecutionException(format("The model for @CritOnly %s_ property name in %s entity type should have ICompoundCondition0 type.",
+                                                         propertyName, type.getSimpleName()));
+                }
+            } catch (final NoSuchFieldException | IllegalAccessException ex) {
+                throw new EntityCentreExecutionException(format("The @CritOnly %s property in %s entity type has no submodel defined with %s_ name", propertyName, type.getSimpleName(), propertyName));
             }
         }
 
@@ -334,7 +362,7 @@ public class DynamicQueryBuilder {
          * @return
          */
         public boolean shouldBeIgnored() {
-            return isCritOnly() || isAECritOnlyChild() || isEmptyWithoutMnemonics();
+            return isCritOnlyWithoutModel() || isAECritOnlyChild() || isEmptyWithoutMnemonics();
         }
 
         /**
@@ -445,6 +473,15 @@ public class DynamicQueryBuilder {
          */
         public boolean isCritOnly() {
             return critOnly;
+        }
+
+        /**
+         * Returns <code>true</code> if this property is crit only and has associated query model, otherwise returns <code>false</code>
+         *
+         * @return
+         */
+        public boolean isCritOnlyWithModel() {
+            return critOnlyWithModel;
         }
 
         /**
@@ -947,6 +984,9 @@ public class DynamicQueryBuilder {
      * @return
      */
     private static <ET extends AbstractEntity<?>> ConditionModel buildCondition(final QueryProperty property, final boolean isNegated, final IDates dates) {
+        if (property.isCritOnlyWithModel()) {
+            return cond().critCondition(property.critOnlyModel, property.propertyUnderCondition, property.propertyName).model();
+        }
         return buildCondition(property, property.getConditionBuildingName(), isNegated, dates);
     }
 
@@ -968,7 +1008,7 @@ public class DynamicQueryBuilder {
                 // left boundary should be inclusive and right -- exclusive!
                 final Pair<Date, Date> fromAndTo = getDateValuesFrom(property.getDatePrefix(), property.getDateMnemonic(), property.getAndBefore(), dates);
                 return scag1.ge()
-                        .iVal(paramValue(fromAndTo.getKey  (), isDate, property)).and().prop(propertyName)
+                        .iVal(paramValue(fromAndTo.getKey(), isDate, property)).and().prop(propertyName)
                         .lt()
                         .iVal(paramValue(fromAndTo.getValue(), isDate, property)).model();
             } else {
