@@ -45,9 +45,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
 import javax.tools.Diagnostic.Kind;
 
 import org.apache.commons.lang3.StringUtils;
@@ -79,6 +77,12 @@ import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
 import ua.com.fielden.platform.utils.Pair;
 
+/**
+ * A processor that generate meta-models for domain entities.
+ *
+ * @author TG Team
+ *
+ */
 @AutoService(Processor.class)
 @SupportedAnnotationTypes("*")
 public class MetaModelProcessor extends AbstractProcessor {
@@ -290,6 +294,12 @@ public class MetaModelProcessor extends AbstractProcessor {
         return inactive;
     }
 
+    /**
+     * A convenient wrapper invoking {@link #writeMetaModel(MetaModelConcept, Predicate)} with predicate {@code EntityFinder::isPropertyOfDomainEntityType} to generate matching fields having the type of a corresponding meta-model.
+     *
+     * @param mmc
+     * @return
+     */
     private boolean writeMetaModel(final MetaModelConcept mmc) {
         return writeMetaModel(mmc, EntityFinder::isPropertyOfDomainEntityType);
     }
@@ -299,6 +309,9 @@ public class MetaModelProcessor extends AbstractProcessor {
      * <p>
      * Properties, which test positive for COVID... {@code propertyTypeMetamodeledTest} are generated as such that have a meta-model on their own.
      * All other properties are generated as instances of {@link PropertyMetaModel}, which are terminal and do not support property traversing.
+     * <p>
+     * A super class for meta-models is determined based on the entity type hierarchy.
+     * If an entity extends another domain entity (i.e., it has a meta-model), then the meta-model for that entity would be used as a super class for the meta-model being generated.
      *
      * @param mmc
      * @param propertyTypeMetamodeledTest
