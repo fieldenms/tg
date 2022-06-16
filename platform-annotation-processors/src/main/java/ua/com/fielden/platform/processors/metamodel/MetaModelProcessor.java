@@ -333,7 +333,6 @@ public class MetaModelProcessor extends AbstractProcessor {
         return true;
     }
 
-
     /**
      * Check the content of {@code metaModelsElement} to identify fields that represent meta-models for entities, which do not exists or are not domain entities.
      *
@@ -551,28 +550,21 @@ public class MetaModelProcessor extends AbstractProcessor {
             ...
         }
          */
-        final ClassName metaModelSuperclassClassName;
-        if (isEntitySuperclassMetamodeled) {
-            final MetaModelConcept parentMmc = new MetaModelConcept(entityParent);
-            metaModelSuperclassClassName = ClassName.get(parentMmc.getPackageName(), parentMmc.getSimpleName());
-        } else {
-            metaModelSuperclassClassName = ClassName.get(MetaModelConstants.METAMODEL_SUPERCLASS);
-        }
-
         final String metaModelName = mmc.getSimpleName();
         final String metaModelPkgName = mmc.getPackageName();
 
         // sort methods alphabetically
         methodSpecs.sort((ms1, ms2) -> ms1.name.compareTo(ms2.name));
 
+        // Let's now create a meta-model class by putting all the parts together
         final TypeSpec.Builder metaModelBuilder = TypeSpec.classBuilder(metaModelName)
                 .addModifiers(Modifier.PUBLIC)
-                .superclass(metaModelSuperclassClassName)
+                .superclass(determineMetaModelSuperClassName(entityParent, isEntitySuperclassMetamodeled))
                 .addFields(fieldSpecs)
                 .addMethods(constructors)
                 .addMethods(methodSpecs)
                 .build().toBuilder();
-        
+
         // javadoc
         final Pair<String, String> entityTitleAndDesc = EntityFinder.getEntityTitleAndDesc(entityElement);
         final String title = entityTitleAndDesc.getKey();
@@ -611,6 +603,21 @@ public class MetaModelProcessor extends AbstractProcessor {
         return true;
     }
 
+    /**
+     * Determines appropriate super class for a meta-model to extend. It can either be the default meta-model super class or another meta-model class.
+     *
+     * @param entityParent
+     * @param isEntitySuperclassMetamodeled
+     * @return
+     */
+    private static ClassName determineMetaModelSuperClassName(final EntityElement entityParent, final boolean isEntitySuperclassMetamodeled) {
+        if (isEntitySuperclassMetamodeled) {
+            final MetaModelConcept parentMmc = new MetaModelConcept(entityParent);
+            return ClassName.get(parentMmc.getPackageName(), parentMmc.getSimpleName());
+        } else {
+            return MetaModelConstants.METAMODEL_SUPERCLASS_CLASSNAME;
+        }
+    }
 
     /**
      * Add Javadoc to {@code specBuilder}, which describes an entity property.

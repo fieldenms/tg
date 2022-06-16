@@ -2,6 +2,8 @@ package ua.com.fielden.platform.processors.metamodel;
 
 import static java.lang.String.format;
 
+import com.squareup.javapoet.ClassName;
+
 import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 
 /**
@@ -13,6 +15,7 @@ import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 public abstract class MetaModelConstants {
 
     public static final Class<EntityMetaModel> METAMODEL_SUPERCLASS = EntityMetaModel.class;
+    public static final ClassName METAMODEL_SUPERCLASS_CLASSNAME = ClassName.get(METAMODEL_SUPERCLASS);
 
     public static final String METAMODELS_CLASS_SIMPLE_NAME = "MetaModels";
     public static final String METAMODELS_CLASS_PKG_NAME = "metamodels";
