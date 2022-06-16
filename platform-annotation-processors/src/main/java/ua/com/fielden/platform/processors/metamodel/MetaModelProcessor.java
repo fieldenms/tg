@@ -4,7 +4,7 @@ import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.empty;
-import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.processors.metamodel.utils.EntityFinder.findEntityForMetaModel;
@@ -127,8 +127,8 @@ public class MetaModelProcessor extends AbstractProcessor {
 
         // we need the meta-model entry point if it exists, as it provides a definitive list of meta-models that have been generated previously
         // this information is used for processing optimisation and identification of meta-models that should be deactivated
-        final Optional<MetaModelsElement> maybeMetaModelsElement = Optional.ofNullable(elementUtils.getTypeElement(MetaModelConstants.METAMODELS_CLASS_QUAL_NAME))
-                                                                            .map(metaModelsTypeElement -> new MetaModelsElement(metaModelsTypeElement, elementUtils));
+        final Optional<MetaModelsElement> maybeMetaModelsElement = ofNullable(elementUtils.getTypeElement(MetaModelConstants.METAMODELS_CLASS_QUAL_NAME))
+                                                                   .map(metaModelsTypeElement -> new MetaModelsElement(metaModelsTypeElement, elementUtils));
         
         // meta-models need to be generated at every processing round for the matching entities, which where included into the round by the compiler
         // except those that were already generated on one of the subsequent rounds during the current compilation process
@@ -140,12 +140,12 @@ public class MetaModelProcessor extends AbstractProcessor {
         // generation or re-generation of the meta-models entry point class should occur only during the first round of processing
         if (roundNumber == 1) {
             if (maybeMetaModelsElement.isEmpty()) {
-                // if the MetaModels class does not yet exist, let's generate it to include all meta-models, which were generated during this first round 
+                // if the MetaModels class does not yet exist, let's generate it to include meta-models, which were generated during this first round 
                 writeMetaModelsClass(generatedMetaModels);
             } else {
-                // if MetaModels class already exists, we need to analyse its content and identify meta-model, which represent "inactive" entities -- those that either no longer exist or are not considered to be domain entities.
+                // if MetaModels class already exists, we need to analyse its content and identify meta-models that represent "inactive" entities -- those that either no longer exist or are not considered to be domain entities.
                 // such meta-models need to be regenerated as empty and abstract classes and MetaModels should be re-generated without those fields
-                messager.printMessage(Kind.NOTE, format("%s already exists. It needs to be processed and re-generated.", MetaModelConstants.METAMODELS_CLASS_QUAL_NAME));
+                messager.printMessage(Kind.NOTE, format("Entry point [%s] already exists. It needs to be processed and re-generated.", MetaModelConstants.METAMODELS_CLASS_QUAL_NAME));
 
                 // analyse fields in the MetaModels class to identify meta-models that do not represent domain entities any longer
                 final Set<MetaModelElement> inactiveMetaModels = findInactiveMetaModels(maybeMetaModelsElement.get());
