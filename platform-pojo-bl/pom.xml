@@ -21,11 +21,11 @@
     </properties>
 
     <dependencies>
-		<dependency>
-			<groupId>fielden</groupId>
-			<artifactId>platform-annotations</artifactId>
-			<version>${project.version}</version>
-		</dependency>
+        <dependency>
+            <groupId>fielden</groupId>
+            <artifactId>platform-annotations</artifactId>
+            <version>${project.version}</version>
+        </dependency>
 
         <!-- https://mvnrepository.com/artifact/com.google.guava/guava -->
         <dependency>
