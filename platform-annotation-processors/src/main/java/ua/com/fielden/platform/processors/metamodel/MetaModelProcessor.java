@@ -346,7 +346,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             final var propName_ = propName + "_";
             // ### static property holding the property's name ###
             // private static final String ${PROPERTY}_ = "${PROPERTY}";
-            fieldSpecs.add(FieldSpec.builder(String.class, propName)
+            fieldSpecs.add(FieldSpec.builder(String.class, propName_)
                                     .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
                                     .initializer("$S", propName)
                                     .build());
@@ -358,11 +358,11 @@ public class MetaModelProcessor extends AbstractProcessor {
                 // property type is target for meta-model generation
                 // private Supplier<${METAMODEL}> ${PROPERTY};
                 final ParameterizedTypeName propTypeName = ParameterizedTypeName.get(ClassName.get(Supplier.class), propTypeMmcClassName);
-                fieldSpecBuilder = FieldSpec.builder(propTypeName, propName_)
+                fieldSpecBuilder = FieldSpec.builder(propTypeName, propName)
                                             .addModifiers(Modifier.PRIVATE);
             } else {
                 // private final PropertyMetaModel ${PROPERTY}; 
-                fieldSpecBuilder = FieldSpec.builder(ClassName.get(PropertyMetaModel.class), propName_)
+                fieldSpecBuilder = FieldSpec.builder(ClassName.get(PropertyMetaModel.class), propName)
                                             .addModifiers(Modifier.PRIVATE, Modifier.FINAL);
             }
             fieldSpecs.add(fieldSpecBuilder.build());
@@ -373,7 +373,6 @@ public class MetaModelProcessor extends AbstractProcessor {
         final List<MethodSpec> methodSpecs = new ArrayList<>();
         for (final PropertyElement prop: properties) {
             final var propName = prop.getName();
-            final var propName_ = propName + "_";
             final MethodSpec.Builder methodSpecBuilder = MethodSpec.methodBuilder(propName);
 
             final ClassName propTypeMmcClassName;
@@ -388,7 +387,7 @@ public class MetaModelProcessor extends AbstractProcessor {
                  */
                 methodSpecBuilder.addModifiers(Modifier.PUBLIC)
                                  .returns(propTypeMmcClassName)
-                                 .addStatement("return $L.get()", propName_);
+                                 .addStatement("return $L.get()", propName);
             } else {
                 propTypeMmcClassName = null;
                 /*
@@ -398,7 +397,7 @@ public class MetaModelProcessor extends AbstractProcessor {
                  */
                 methodSpecBuilder.addModifiers(Modifier.PUBLIC)
                                  .returns(ClassName.get(PropertyMetaModel.class))
-                                 .addStatement("return $L", propName_);
+                                 .addStatement("return $L", propName);
             }
 
             buildJavadoc(prop, methodSpecBuilder, propTypeMmcClassName);
@@ -449,6 +448,7 @@ public class MetaModelProcessor extends AbstractProcessor {
 
                 this.${PROPERTY} = () -> {
                     ${METAMODEL} value = new ${METAMODEL} ( joinPath( ${PROPERTY}_ ) );
+                    // this is an optimisation technique to avoid meta-model re-instantiation after the initial instantiation
                     ${PROPERTY} = () -> value;
                     return value;
                 };
@@ -457,22 +457,22 @@ public class MetaModelProcessor extends AbstractProcessor {
                         .add("() -> {\n").indent()
                         .addStatement(
                                 "$T $L = new $T(joinPath($L))", 
-                                propTypeMetaModelClassName, "value", propTypeMetaModelClassName, propName)
+                                propTypeMetaModelClassName, "value", propTypeMetaModelClassName, propName_)
                         .addStatement(
                                 "$L = () -> $L",
-                                propName_, "value")
+                                propName, "value")
                         .addStatement("return $L", "value")
                         .unindent().add("}")
                         .build();
                 final CodeBlock code = CodeBlock.builder()
-                        .addStatement("this.$L = $L", propName_, lambda.toString())
+                        .addStatement("this.$L = $L", propName, lambda.toString())
                         .build();
                 constructorStatementsBuilder.add(code);
             } else {
                 // this.${PROPERTY} = new PropertyMetaModel ( joinPath( ${PROPERTY}_ ) );
                 constructorStatementsBuilder.addStatement(
                         "this.$L = new $T(joinPath($L))", 
-                        propName_, ClassName.get(PropertyMetaModel.class), propName);
+                        propName, ClassName.get(PropertyMetaModel.class), propName_);
             }
         }
 
