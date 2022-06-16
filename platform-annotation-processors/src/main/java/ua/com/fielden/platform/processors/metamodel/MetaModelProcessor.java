@@ -88,7 +88,6 @@ public class MetaModelProcessor extends AbstractProcessor {
 
     private Filer filer;
     private Elements elementUtils;
-    private Types typeUtils;
     private Messager messager;
     private Map<String, String> options;
 
@@ -106,7 +105,6 @@ public class MetaModelProcessor extends AbstractProcessor {
 
         this.filer = processingEnv.getFiler();
         this.elementUtils = processingEnv.getElementUtils();
-        this.typeUtils = processingEnv.getTypeUtils();
         this.messager = processingEnv.getMessager();
         this.options = processingEnv.getOptions();
         messager.printMessage(Kind.NOTE, format("Options: %s", options.keySet().stream().map(k -> format("%s=%s", k, options.get(k))).sorted().collect(joining(", "))));
@@ -230,70 +228,6 @@ public class MetaModelProcessor extends AbstractProcessor {
             .map(MetaModelConcept::getEntityElement)
             .forEach(ee -> explorePropsOf(ee, existingMetaModels, metaModelConcepts));
         }
-    }
-
-    /**
-     * TODO Remove as this aspect seems to be handled automatically during sequential processing rounds.
-     *
-     * Regenerates the meta-models that reference any of the {@code referencedMetaModels}.
-     *
-     * @param metaModels - a collection of meta-models to be regenerated if a reference is found
-     * @param referencedMetaModels - the set of referenced meta-models
-     * @return
-     */
-    private List<MetaModelElement> regenerateMetaModelsWithReferenceTo(final Collection<MetaModelElement> metaModels, final List<MetaModelElement> referencedMetaModels) {
-        final List<MetaModelElement> regenerated = new ArrayList<>();
-
-        for (final MetaModelElement mme: metaModels) {
-            final Set<MetaModelElement> referencedByThisMetaModel = MetaModelFinder.findReferencedMetaModels(mme, elementUtils);
-            // if the set of referenced meta-models intersects with the set of trigger meta-models - regenerate this meta-model
-            if (!Collections.disjoint(referencedByThisMetaModel, referencedMetaModels)) {
-                final Set<MetaModelElement> intersection = new HashSet<>(referencedByThisMetaModel);
-                intersection.retainAll(referencedMetaModels);
-                messager.printMessage(Kind.NOTE, format("%s references %s. Regenerating.", mme.getSimpleName(), intersection.stream().map(MetaModelElement::getSimpleName).collect(joining(", "))));
-                if (writeMetaModel(mme)) {
-                    regenerated.add(mme);
-                }
-            }
-        }
-        return regenerated;
-    }
-
-    /**
-     * TODO Remove as this aspect seems to be handled automatically during sequential processing rounds. 
-     *
-     * Regenerates meta-models for entities that have a property of any of the entity types provided by {@code referencedEntities}.
-     * 
-     * @param metaModels
-     * @param referencedEntities
-     */
-    private List<MetaModelElement> regenerateMetaModelsForEntitiesWithReferenceTo(final Collection<MetaModelElement> metaModels, final Set<EntityElement> referencedEntities) {
-        final List<MetaModelElement> regenerated = new ArrayList<>();
-
-        for (MetaModelElement mme: metaModels) {
-            final EntityElement entity = EntityFinder.findEntityForMetaModel(mme, elementUtils);
-            final Set<EntityElement> referencedByThisEntity = EntityFinder.findProperties(entity).stream()
-                    .filter(EntityFinder::isPropertyOfEntityType)
-                    .map(propEl -> new EntityElement(propEl.getTypeAsTypeElementOrThrow(), elementUtils))
-                    // keep those that are contained in referencedEntities
-                    .filter(entityEl -> referencedEntities.contains(entityEl))
-                    .collect(Collectors.toSet());
-
-            if (!referencedByThisEntity.isEmpty())  {
-                messager.printMessage(Kind.NOTE, format("%s references %s. Regenerating %s.", entity.getSimpleName(), referencedByThisEntity.stream().map(EntityElement::getSimpleName).sorted().collect(joining(", ")), mme.getSimpleName()));
-                final List<TypeMirror> referencedTypes = referencedByThisEntity.stream()
-                        .map(EntityElement::asType)
-                        .toList();
-                // provide a custom test for property type being metamodeled to take into account those entities that had their meta-model generated in this round
-                if (writeMetaModel(mme, prop -> 
-                                    EntityFinder.isPropertyOfDomainEntityType(prop) ||
-                                    ElementFinder.isFieldOfType(prop.getVariableElement(), referencedTypes, typeUtils))) {
-                    regenerated.add(mme);
-                }
-            }
-        }
-        
-        return regenerated;
     }
 
     /**
@@ -671,18 +605,6 @@ public class MetaModelProcessor extends AbstractProcessor {
         specBuilder.addJavadoc("$L", join("<br>\n", annotationsStrings));
     }
 
-    private boolean writeMetaModel(final MetaModelElement metaModelElement) {
-        final EntityElement entityElement = EntityFinder.findEntityForMetaModel(metaModelElement, elementUtils);
-        final MetaModelConcept metaModelConcept = new MetaModelConcept(entityElement);
-        return writeMetaModel(metaModelConcept);
-    }
-
-
-    private boolean writeMetaModel(final MetaModelElement metaModelElement, final Predicate<PropertyElement> propertyTypeMetamodeledTest) {
-        final EntityElement entityElement = EntityFinder.findEntityForMetaModel(metaModelElement, elementUtils);
-        final MetaModelConcept metaModelConcept = new MetaModelConcept(entityElement);
-        return writeMetaModel(metaModelConcept, propertyTypeMetamodeledTest);
-    }
 
     private void writeMetaModelsClass(Collection<MetaModelConcept> metaModelConcepts) {
         writeMetaModelsClass(metaModelConcepts, empty(), emptyList());
