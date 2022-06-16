@@ -2,6 +2,7 @@ package ua.com.fielden.platform.reflection;
 
 import static java.util.Arrays.asList;
 import static java.util.Optional.of;
+import static java.util.stream.Collectors.joining;
 import static org.apache.commons.lang3.StringUtils.capitalize;
 import static org.apache.commons.lang3.StringUtils.join;
 import static org.apache.commons.lang3.StringUtils.splitByCharacterTypeCamelCase;
@@ -219,28 +220,21 @@ public class TitlesDescsGetter {
      */
     public static Pair<String, String> getDefaultEntityTitleAndDesc(final Class<? extends AbstractEntity<?>> klass) {
         final String s = breakClassName(klass.getSimpleName());
-        return new Pair<>(s, s + " entity");
+        return pair(s, s + " entity");
     }
 
-    private static String breakClassName(final String str) {
-        String temp = str;
-        int i = 0;
-        while (firstUpperCaseLetterIndex(temp) == 0) { // iterate to find first lowerCase letter
-            temp = str.substring(++i);
+    /**
+     * Breaks a simple class name, returning a string with spaces between camel case words.
+     * For example, {@code "MyClassName"} becomes {@code "My Class Name"}.
+     * 
+     * @param classSimpleName
+     * @return
+     */
+    public static String breakClassName(final String classSimpleName) {
+        if (StringUtils.isEmpty(classSimpleName)) {
+            return "";
         }
-        final String upperCasePart = str.substring(0, i);
-        final int firstUpperCaseLetterIndex = firstUpperCaseLetterIndex(temp);
-        return upperCasePart
-                + (firstUpperCaseLetterIndex < 0 ? temp : temp.substring(0, firstUpperCaseLetterIndex) + " " + breakClassName(temp.substring(firstUpperCaseLetterIndex)));
-    }
-
-    private static int firstUpperCaseLetterIndex(final String str) {
-        for (int i = 0; i < str.length(); i++) {
-            if (str.charAt(i) >= 'A' && str.charAt(i) <= 'Z') {
-                return i;
-            }
-        }
-        return -1;
+        return Stream.of(classSimpleName.split("(?=\\p{Upper})")).map(String::trim).collect(joining(" "));
     }
 
     public static String processReqErrorMsg(final String propName, final Class<? extends AbstractEntity<?>> entityType) {
