@@ -513,7 +513,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .html("<span>This is binded text for String prop: </span><span id='stringProp_bind' style='color:blue'>{{stringProp}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end())
                 .html("<span>This is binded text for Status.desc: </span><span id='status_Desc_bind' style='color:blue'>{{status.desc}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end()),
                 layoutConfig).toString();
-        
+
         // Add entity masters.
         final SimpleMasterBuilder<TgPersistentEntityWithProperties> smb = new SimpleMasterBuilder<>();
         @SuppressWarnings("unchecked")
@@ -1343,7 +1343,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
             logger.debug("restored masterEntity: " + funcEntity);
             logger.debug("restored masterEntity (centre context's selection criteria): " + funcEntity.getCritOnlyBigDecimalPropCriterion());
             logger.debug("restored masterEntity (centre context's selection criteria): " + funcEntity.getBigDecimalPropFromCriterion());
-            return where.val(1).eq().val(1);
+            return where.critCondition("bigDecimalProp", "critOnlyBigDecimalProp").and()
+                    .critCondition("booleanProp", "critOnlyBooleanProp").and()
+                    .critCondition("stringProp", "critOnlyStringProp").and()
+                    .critCondition("dateProp", "critOnlyDateProp").and()
+                    .critCondition("entityProp", "critOnlyEntityProp");
         }
     }
 

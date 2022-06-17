@@ -303,6 +303,9 @@ public class DynamicQueryBuilder {
          */
         protected boolean hasEmptyValue() {
             if (EntityUtils.isBoolean(type)) {
+                if (single) {//Boolean single can't have empty value therefore return false
+                    return false;
+                }
                 final boolean is = (Boolean) value;
                 final boolean isNot = (Boolean) value2;
                 return is && isNot || !is && !isNot; // both true and both false will be indicated as default
@@ -1001,7 +1004,9 @@ public class DynamicQueryBuilder {
      */
     @SuppressWarnings("unchecked")
     private static <ET extends AbstractEntity<?>> ConditionModel buildAtomicCondition(final QueryProperty property, final String propertyName, final IDates dates) {
-        if (isRangeType(property.getType())) {
+        if (property.isSingle()) {
+            return propertyEquals(propertyName, property.getValue());
+        }else if (isRangeType(property.getType())) {
             final boolean isDate = isDate(property.getType());
             final IStandAloneConditionComparisonOperator<ET> scag1 = EntityQueryUtils.<ET> cond().prop(propertyName);
             if (isDate && property.getDatePrefix() != null && property.getDateMnemonic() != null) {
@@ -1024,13 +1029,9 @@ public class DynamicQueryBuilder {
         } else if (isString(property.getType())) {
             return cond().prop(propertyName).iLike().anyOfValues((Object[]) prepCritValuesForStringTypedProp((String) property.getValue())).model();
         } else if (isEntityType(property.getType())) {
-            if (property.isSingle()) {
-                return propertyEquals(propertyName, property.getValue()); // this covers PropertyDescriptor case too
-            } else {
-                return isPropertyDescriptor(property.getType())
+            return isPropertyDescriptor(property.getType())
                     ? propertyDescriptorLike(propertyName, (List<String>) property.getValue(), (Class<AbstractEntity<?>>) getPropertyAnnotation(IsProperty.class, property.getEntityClass(), property.getPropertyName()).value())
                     : propertyLike(propertyName, (List<String>) property.getValue(), baseEntityType((Class<AbstractEntity<?>>) property.getType()));
-            }
         } else {
             throw new UnsupportedTypeException(property.getType());
         }
