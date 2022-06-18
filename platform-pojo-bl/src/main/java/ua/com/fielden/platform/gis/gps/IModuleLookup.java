@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.gis.gps;
 
+import java.util.Optional;
+
 /**
  * A contract for lookin up a module by its IMEI.
  * 
@@ -7,5 +9,5 @@ package ua.com.fielden.platform.gis.gps;
  * 
  */
 public interface IModuleLookup<MODULE extends AbstractAvlModule> {
-    Option<MODULE> get(final String imei);
+    Optional<MODULE> get(final String imei);
 }

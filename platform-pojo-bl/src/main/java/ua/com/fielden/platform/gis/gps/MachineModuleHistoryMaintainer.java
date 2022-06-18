@@ -1,10 +1,13 @@
 package ua.com.fielden.platform.gis.gps;
 
+import static java.util.Optional.ofNullable;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * A singleton abstraction for maintaining module-machine associations.
@@ -49,19 +52,18 @@ public class MachineModuleHistoryMaintainer<MESSAGE extends AbstractAvlMessage, 
         Collections.sort(this.machineSortedAssociations, machineAndDateComparator);
     }
 
-    public Option<MACHINE> get(final MODULE module, final Date date) {
+    public Optional<MACHINE> get(final MODULE module, final Date date) {
         final AbstractAvlMachineModuleTemporalAssociation<MESSAGE, MACHINE, MODULE> assoc = findContaining(date, module, moduleSortedAssociations, moduleAndDateComparator);
-        return assoc == null ? new Option<MACHINE>(null) : new Option<MACHINE>(assoc.getMachine());
+        return ofNullable(assoc == null ? null : assoc.getMachine());
     }
 
-    public Option<MODULE> get(final MACHINE machine, final Date date) {
+    public Optional<MODULE> get(final MACHINE machine, final Date date) {
         final AbstractAvlMachineModuleTemporalAssociation<MESSAGE, MACHINE, MODULE> assoc = findContaining(date, machine, machineSortedAssociations, machineAndDateComparator);
-        return assoc == null ? new Option<MODULE>(null) : new Option<MODULE>(assoc.getModule());
+        return ofNullable(assoc == null ? null : assoc.getModule());
     }
 
     private AbstractAvlMachineModuleTemporalAssociation<MESSAGE, MACHINE, MODULE> createSampleModuleAssociation(final Date date, final MODULE module) {
         final AbstractAvlMachineModuleTemporalAssociation<MESSAGE, MACHINE, MODULE> association = new AbstractAvlMachineModuleTemporalAssociation<MESSAGE, MACHINE, MODULE>() {
-            private static final long serialVersionUID = 2678157290073520879L;
             private MODULE module;
 
             @Override
