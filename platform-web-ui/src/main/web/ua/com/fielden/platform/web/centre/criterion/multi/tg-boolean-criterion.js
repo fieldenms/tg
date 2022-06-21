@@ -36,6 +36,10 @@ Polymer({
 
     behaviors: [ TgAbstractCriterionBehavior ],
 
+    ready: function () {
+        this.orGroupOpened = true;
+    },
+
     _dom: function () {
         return this.$.dom;
     }

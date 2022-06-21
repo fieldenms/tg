@@ -216,6 +216,11 @@ public class DynamicQueryBuilder {
             return queryProperty;
         }
 
+        public static boolean critOnlyWithMnemonics(final CritOnly critAnnotation) {
+            final CritOnly.Mnemonics mnemonics = critAnnotation.mnemonics() == CritOnly.Mnemonics.DEFAULT ? critAnnotation.value().defaultMnemonics : critAnnotation.mnemonics();
+            return mnemonics == CritOnly.Mnemonics.WITH;
+        }
+
         public Object getValue() {
             return value;
         }
@@ -824,6 +829,20 @@ public class DynamicQueryBuilder {
     }
 
     /**
+     * Adjusts string criteria by changing wildcard <code>*</code> to SQL wildcard <code>%</code> if it exists.
+     * Otherwise prepends and appends these wildcard to specified criteria value.
+     *
+     * @param criteria
+     * @return
+     */
+    private static String prepCritValuesForSingleStringTypedProp(final String criteria) {
+        if (!criteria.contains("*")) {
+            return prepare("*" + criteria + "*");
+        }
+        return prepare(criteria);
+    }
+
+    /**
      * Creates new array based on the passed list of string. This method also changes * to % for every element of the passed list.
      *
      * @param criteria
@@ -1005,6 +1024,9 @@ public class DynamicQueryBuilder {
     @SuppressWarnings("unchecked")
     private static <ET extends AbstractEntity<?>> ConditionModel buildAtomicCondition(final QueryProperty property, final String propertyName, final IDates dates) {
         if (property.isSingle()) {
+            if (isString(property.getType())) {
+                return cond().prop(propertyName).iLike().val(prepCritValuesForSingleStringTypedProp((String)property.getValue())).model();
+            }
             return propertyEquals(propertyName, property.getValue());
         }else if (isRangeType(property.getType())) {
             final boolean isDate = isDate(property.getType());

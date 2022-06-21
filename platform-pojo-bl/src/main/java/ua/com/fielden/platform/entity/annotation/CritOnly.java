@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.entity.annotation;
 
+import static ua.com.fielden.platform.entity.annotation.CritOnly.Mnemonics.WITH;
+import static ua.com.fielden.platform.entity.annotation.CritOnly.Mnemonics.WITHOUT;
+
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -43,6 +46,8 @@ public @interface CritOnly {
     public enum Mnemonics {
         /** The value for mnemonics should be deduced from the value of {@code CritOnly.Type}. */
         DEFAULT,
+        /** Critonly property should be with mnemonics. */
+        WITH,
         /** Critonly property should be without mnemonics. */
         WITHOUT
     }
@@ -52,10 +57,16 @@ public @interface CritOnly {
      */
     public enum Type {
         /** Indicates that property should be selected by left and right boundary (if it is range property) and by single boundary (if it is single property). */
-        RANGE,
+        RANGE(WITH),
         /** Indicates that property should be selected only by single boundary (even if it is range property). */
-        SINGLE,
+        SINGLE(WITHOUT),
         /** Specifies whether associated crit-only property should represent a multi valued selection criterion. */
-        MULTI;
+        MULTI(WITH);
+
+        public final Mnemonics defaultMnemonics;
+
+        private Type (final Mnemonics mnemonics) {
+            this.defaultMnemonics = mnemonics;
+        }
     }
 }

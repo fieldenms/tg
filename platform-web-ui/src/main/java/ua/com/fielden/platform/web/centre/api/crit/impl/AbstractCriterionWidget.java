@@ -8,6 +8,7 @@ import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.not;
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.to;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty.critOnlyWithMnemonics;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationInHierarchy;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
@@ -23,7 +24,6 @@ import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dom.DomElement;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
-import ua.com.fielden.platform.entity.annotation.CritOnly.Mnemonics;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -74,7 +74,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         this.excludeMissing = optionalCritOnlyAnnotation.map(val -> val.excludeMissing()).orElse(false) || shouldExcludeMissing(root, propertyName);
         this.excludeNot = shouldExcludeNot(root, propertyName);
         this.excludeOrGroup = shouldExcludeOrGroup(root, propertyName); // 'or' mnemonic is always visible except when property is crit only without model
-        this.mnemonicsVisible = optionalCritOnlyAnnotation.map(val -> val.mnemonics() == Mnemonics.WITHOUT ? false : null).orElse(!excludeMissing || !excludeNot || !excludeOrGroup);
+        this.mnemonicsVisible = optionalCritOnlyAnnotation.map(val -> critOnlyWithMnemonics(val)).orElse(true) && (!excludeMissing || !excludeNot || !excludeOrGroup);
         this.editors = new Pair<>(editors[0], null);
         if (editors.length > 1) {
             this.editors.setValue(editors[1]);

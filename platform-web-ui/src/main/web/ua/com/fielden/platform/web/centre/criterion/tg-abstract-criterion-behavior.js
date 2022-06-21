@@ -114,6 +114,14 @@ const TgAbstractCriterionBehaviorImpl = {
             value: false
         },
 
+        /**
+         * Indicates whether 'or group' accordion should be opened or not.
+         */
+        orGroupOpened: {
+            type: Boolean,
+            value: false
+        },
+
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
         //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -194,6 +202,7 @@ const TgAbstractCriterionBehaviorImpl = {
         domBind._excludeNotBind = self.excludeNot;
         domBind._notBind = self._not;
         domBind._excludeOrGroupBind = self.excludeOrGroup;
+        domBind._orGroupOpenedBind = self.orGroupOpened;
         domBind._orGroupBind = self._orGroup;
         domBind._exclusiveBind = self._exclusive;
         domBind._exclusive2Bind = self._exclusive2;
@@ -348,7 +357,7 @@ const TgAbstractCriterionBehaviorImpl = {
      */
      _createMetaValueEditors: function () {
         console.log("tg-abstract-criterion-behavior: _createMetaValueEditors");
-        return '<tg-criterion-config class="layout vertical" _exclude-missing="[[_excludeMissingBind]]" _or-null="{{_orNullBind}}" _exclude-not="[[_excludeNotBind]]" _not="{{_notBind}}" _exclude-or-group="[[_excludeOrGroupBind]]" _or-group="{{_orGroupBind}}"></tg-criterion-config>';
+        return '<tg-criterion-config class="layout vertical" _exclude-missing="[[_excludeMissingBind]]" _or-null="{{_orNullBind}}" _exclude-not="[[_excludeNotBind]]" _not="{{_notBind}}" _exclude-or-group="[[_excludeOrGroupBind]]" _or-group-opened=[[_orGroupOpenedBind]] _or-group-opened=[[]] _or-group="{{_orGroupBind}}"></tg-criterion-config>';
     },
 
     /**

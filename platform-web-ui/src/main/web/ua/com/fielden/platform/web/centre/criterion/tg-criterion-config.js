@@ -67,6 +67,10 @@ Polymer({
         _excludeOrGroup: {
             type: Boolean
         },
+        _orGroupOpened: {
+            type: Boolean,
+            value: false
+        },
         _threeColumnLayout: Array,
         _twoColumnLayout: Array,
     },
@@ -85,7 +89,7 @@ Polymer({
             // It surely can be closed if user wants to [after that].
             // Otherwise, if 'orGroup' mnemonic is not assigned, then accordion to be deliberately closed as a minor item for user action.
             const accordion = this.shadowRoot.querySelector('#orGroupAccordion'); // by default the fist accordion should be open
-            accordion.opened = accordion.selected;
+            accordion.opened = accordion.selected || this._orGroupOpened;
         }.bind(this), 1);
     },
 
