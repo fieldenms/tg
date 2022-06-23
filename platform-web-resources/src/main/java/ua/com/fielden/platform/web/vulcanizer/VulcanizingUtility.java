@@ -290,6 +290,12 @@ public class VulcanizingUtility {
      * Removes all intermediate files after vulcanisation.
      */
     private static void clearObsoleteResources() {
+        // As described in Java bug JDK-4715154, Windows does not allow a mapped file to be deleted, and the mapped memory buffer is only released when the GC decides to invoke finalize(), or something like that.
+        // Therefore, in order to have a reasonable chance to delete all intermediate files after vulcanization, it is necessary to force System.gc() here.
+        // While this is only significant for Windows, there should be no ill effects on other operating systems.
+        LOGGER.info("\tForce System.gc()...");
+        System.gc();
+        
         LOGGER.info("\tClear obsolete files...");
         try {
             deleteDirectory(new File("vulcan"));
