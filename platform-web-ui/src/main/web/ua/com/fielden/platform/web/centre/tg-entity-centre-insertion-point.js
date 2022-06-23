@@ -45,6 +45,7 @@ const template = html`
         #pm {
             background: white;
             border-radius: 2px;
+            min-width: fit-content;
             @apply --shadow-elevation-2dp;
         }
 
