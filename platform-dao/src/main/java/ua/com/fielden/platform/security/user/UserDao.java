@@ -4,12 +4,14 @@ import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchIdOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
@@ -18,14 +20,19 @@ import static ua.com.fielden.platform.security.user.User.EMAIL;
 import static ua.com.fielden.platform.security.user.UserSecret.RESER_UUID_EXPIRATION_IN_MUNUTES;
 import static ua.com.fielden.platform.security.user.UserSecret.SECRET_RESET_UUID_SEPERATOR;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.utils.EntityUtils.fetchNotInstrumentedWithKeyAndDesc;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
 
@@ -33,6 +40,8 @@ import com.google.inject.Inject;
 import com.nulabinc.zxcvbn.Strength;
 import com.nulabinc.zxcvbn.Zxcvbn;
 
+import ua.com.fielden.platform.basic.config.IApplicationSettings;
+import ua.com.fielden.platform.basic.config.IApplicationSettings.AuthMode;
 import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -42,10 +51,12 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.IFilter;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.menu.WebMenuItemInvisibilityCo;
 import ua.com.fielden.platform.menu.WebMenuItemInvisibility;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.security.Authorise;
@@ -73,6 +84,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
 
     private final INewUserNotifier newUserNotifier;
     private final SessionIdentifierGenerator crypto;
+    private final boolean ssoMode;
 
     private final fetch<User> fetchModel = fetch(User.class).with("roles", fetch(UserAndRoleAssociation.class));
 
@@ -80,16 +92,21 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     public UserDao(
             final INewUserNotifier newUserNotifier,
             final SessionIdentifierGenerator crypto,
+            final IApplicationSettings appSettings,
             final IFilter filter) {
         super(filter);
 
         this.newUserNotifier = newUserNotifier;
         this.crypto = crypto;
+        this.ssoMode = appSettings.authMode() == AuthMode.SSO;
     }
 
     @Override
     public User new_() {
-        return super.new_().getProperty(User.BASED_ON_USER).setRequired(true).getEntity();
+        final User newUser = super.new_();
+        newUser.getProperty(User.SSO_ONLY).setValue(ssoMode, /* enforce */ true); // set ssoOnly to reflect the current authentication mode; set forcibly to ensure execution of UserSsoOnlyDefiner, which processes the meta-property
+        newUser.getProperty(User.BASED_ON_USER).setRequired(true);
+        return newUser;
     }
 
     /**
@@ -126,17 +143,105 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             coUserSecrete.batchDelete(listOf(user.getId()));
         }
 
-        // if a new active user is being created then need to send an activation email
+        // User becomes a based-on user or has its base user changed -- need to handle menu invisibility.
+        // If a based-on user is new or became active or changed its base user then we need remove any previous invisible menu items and create new ones
+        // for menu items, which are invisible for all based-on users for the current base user (and whish is now also a base user for the user instance being saved).
+        final List<String> menuItemsToSave = new ArrayList<>();
+        // the use is new or it either has base user or active flag changed
+        final boolean newOrHasBaseUserOrActivePropsChanged = !user.isPersisted() ||
+                                                             (user.isPersisted() && (user.getProperty("basedOnUser").isDirty() || user.getProperty(ACTIVE).isDirty()));
+        if (!user.isBase() && user.isActive() && newOrHasBaseUserOrActivePropsChanged) {
+            final WebMenuItemInvisibilityCo coMenuItemInvisibility = co(WebMenuItemInvisibility.class);
+            coMenuItemInvisibility.batchDelete(select(WebMenuItemInvisibility.class).where().prop("owner").eq().val(user).model());
+            menuItemsToSave.addAll(invisibleMenuItems(user));
+        }
+
+        // if a new active user is being created then need to send an activation email, but only if user is not restricted to SSO only for an application in the SSO mode
         // this is possible only if an email address is associated with the user, which is required for active users
         // there could also be a situation where an inactive existing user, which did not have their password set in the first place, is being activated... this also warrants an activation email
-        if ((!user.isPersisted() && user.isActive()) ||
-            (user.isPersisted() && user.isActive() && user.getProperty(ACTIVE).isDirty() && passwordNotAssigned(user))) {
-            final Either<Long, User> savedUser = super.save(user, maybeFetch);
+        final Either<Long, User> savedUser;
+        if ((!user.isPersisted() && user.isActive() && notRestrictedToSsoOnly(user)) ||
+            ( user.isPersisted() && user.isActive() && notRestrictedToSsoOnly(user) && user.getProperty(ACTIVE).isDirty() && passwordNotAssigned(user))) {
+            savedUser = super.save(user, maybeFetch);
             final Function<Long, EntityCompanionException> error = (Long id) -> new EntityCompanionException(format("Unexpected error: user ID [%s] was returned instead of an instance after saving user [%s].", id, user));
             newUserNotifier.notify(assignPasswordResetUuid(savedUser.orElseThrow(error).getKey()).orElseThrow(() -> new SecurityException("Could not initiate password reset.")));
-            return savedUser;
         } else {
-            return super.save(user, maybeFetch);
+            savedUser = super.save(user, maybeFetch);
+        }
+
+        // save menu item invisibility for a user, this may require fetching the user in case savedUser is only an ID (i.e. left).
+        final User menuOwner = savedUser.isLeft() ? co(User.class).findById(savedUser.asLeft().value, WebMenuItemInvisibilityCo.FETCH_PROVIDER.<User>fetchFor("owner").fetchModel()) : savedUser.asRight().value;
+        saveMenuItemInvisibility(menuItemsToSave, menuOwner);
+
+        return savedUser;
+    }
+    
+    /**
+     * A helper predicate, which return {@code true} for users who are not restricted to SSO only in the SSO authentication mode.
+     *
+     * @param user
+     * @return
+     */
+    private boolean notRestrictedToSsoOnly(final User user) {
+        return !ssoMode || !user.isSsoOnly();
+    }
+
+    /**
+     * Saves new {@link WebMenuItemInvisibility} for menu item URIs specified in menuItems, and specified non base user.
+     * 
+     * TODO once issue https://github.com/fieldenms/tg/issues/1032 is merged, this saving should be optimised
+     *
+     * @param menuItems
+     * @param menuOwner
+     */
+    private void saveMenuItemInvisibility(final List<String> menuItems, final User menuOwner) {
+        final WebMenuItemInvisibilityCo co$MenuItemInvisibility = co$(WebMenuItemInvisibility.class);
+        menuItems.forEach(menuItem -> {
+            co$MenuItemInvisibility.save(co$MenuItemInvisibility.new_().setOwner(menuOwner).setMenuItemUri(menuItem));
+        });
+    }
+
+    /**
+     * Returns menu item URIs to save as invisible menu items for specified user. That is needed when user changes it's base user or it is new user or
+     * the user that becomes active. The given user should be non base user
+     *
+     * @param user
+     * @return
+     */
+    private List<String> invisibleMenuItems(final User user) {
+        //First find all active non base users for specified non base user.
+        final Set<User> availableUsers = findBasedOnUsers(user.getBasedOnUser(), fetchKeyAndDescOnly(User.class));
+        //Then find all invisible menu items for non base users based on the same user as base user of given user.
+        final Map<String, Set<User>> invisibleMenuItems = getInvisibleMenuItemsForBaseUser(user.getBasedOnUser());
+        //Find all menu items those are invisible for all non base user of specified user's base user.
+        return invisibleMenuItems.entrySet().stream()
+            .filter(entry -> entry.getValue().containsAll(availableUsers))
+            .map(entry -> entry.getKey()).collect(Collectors.toList());
+    }
+
+    @Override
+    public Set<User> findBasedOnUsers(final User baseUser, final fetch<User> userFetch) {
+        return new LinkedHashSet<>(co(User.class).getAllEntities(from(
+                select(User.class).where()
+                .prop("active").eq().val(true).and()
+                .prop("base").eq().val(false).and()
+                .prop("basedOnUser").eq().val(baseUser).model())
+                .with(userFetch).with(orderBy().prop("key").asc().model()).model()));
+    }
+
+    /**
+     * Returns all invisible menu items for active non base users based on given base user.
+     *
+     * @param baseUser
+     * @return
+     */
+    private Map<String, Set<User>> getInvisibleMenuItemsForBaseUser(final User baseUser) {
+        final WebMenuItemInvisibilityCo coMenuItemInvisibility = co(WebMenuItemInvisibility.class);
+        final EntityResultQueryModel<WebMenuItemInvisibility> query = select(WebMenuItemInvisibility.class).where()
+                .prop("owner.basedOnUser").eq().val(baseUser).and()
+                .prop("owner.active").eq().val(true).model();
+        try (Stream<WebMenuItemInvisibility> stream = coMenuItemInvisibility.stream(from(query).with(fetchNotInstrumentedWithKeyAndDesc(WebMenuItemInvisibility.class).fetchModel()).model())) {
+            return stream.collect(Collectors.groupingBy(WebMenuItemInvisibility::getMenuItemUri, Collectors.mapping(WebMenuItemInvisibility::getOwner, toSet())));
         }
     }
 
@@ -218,7 +323,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     @Override
     public User findUser(final String username) {
         // it is critical that the fetch is as tight here as possible in order not to leak any sensitive info to the client
-        final fetch<User> fetch = fetchOnly(User.class).with(KEY).with(ACTIVE).with("base").with("basedOnUser", fetchIdOnly(User.class));                
+        final fetch<User> fetch = fetchOnly(User.class).with(KEY).with(ACTIVE).with("base").with("basedOnUser", fetchIdOnly(User.class));
         return findByKeyAndFetch(fetch, username);
     }
 
@@ -228,7 +333,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     }
 
     /**
-     * A convenient method that either returns an instance of {@link UserSecret} that is already associated with {@code user}, 
+     * A convenient method that either returns an instance of {@link UserSecret} that is already associated with {@code user},
      * or a new instance of {@link UserSecret}.
      *
      * @param user
@@ -251,9 +356,9 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         if (user != null) {
             save(user.setActive(false));
         }
-        
+
         // attempt to delete user secret regardless of whether user exists or not
-        // this is to reduce the difference in the computation time that is required for processing existing and non-existing accounts 
+        // this is to reduce the difference in the computation time that is required for processing existing and non-existing accounts
         final UserSecretCo coUserSecret = co(UserSecret.class);
         coUserSecret.batchDelete(select(UserSecret.class).where().prop("key.key").eq().val(username).model());
     }
@@ -264,7 +369,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     public UserSecret resetPasswd(final User forUser, final String passwd) {
         try {
             final User user = forUser.isInstrumented() && forUser.isDirty() ? save(forUser) : forUser;
-            
+
             final UserSecretCo co$UserSecret = co$(UserSecret.class);
             final UserSecret secret = findOrCreateNewSecret(user, co$UserSecret);
             // salt needs to be unique... at least amongst the users
@@ -284,7 +389,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             secret.setPassword(co$UserSecret.hashPasswd(passwd, secret.getSalt()));
             secret.setResetUuid(null);
             final UserSecret savedSecret = co$UserSecret.save(secret);
-            
+
             // clear all the current user sessions
             this.<IUserSession, UserSession>co$(UserSession.class).clearAll(savedSecret.getKey());
             return savedSecret;
@@ -314,13 +419,13 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
             return empty();
         }
         final String userName = uuidParts[0];
-        
+
         final EntityResultQueryModel<User> query = select(UserSecret.class)
                 .where()
                     .prop("key.key").eq().val(userName).and()
                     .prop("resetUuid").eq().val(uuid)
                 .yield().prop("key").modelAsEntity(User.class);
-        
+
         final User user = getEntity(from(query).with(fetchAll(User.class)).model());
         return ofNullable(user);
     }
@@ -328,14 +433,16 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
     @Override
     public Optional<UserSecret> assignPasswordResetUuid(final String usernameOrEmail) {
         // let's try to find a user by username or email
-        final EntityResultQueryModel<User> query = select(User.class)
+        // in the SSO authentication mode, it is necessary to exclude those users, who are restricted to SSO only.
+        final ICompoundCondition0<User> rsoCondition = select(User.class)
                 .where()
                 .prop(ACTIVE).eq().val(true)
                 .and()
                 .begin()
                     .lowerCase().prop(KEY).eq().lowerCase().val(usernameOrEmail).or()
                     .lowerCase().prop(EMAIL).eq().lowerCase().val(usernameOrEmail)
-                .end().model();
+                .end();
+        final EntityResultQueryModel<User> query = (ssoMode ? rsoCondition.and().prop(User.SSO_ONLY).eq().val(false) : rsoCondition).model();
 
         final User user = getEntity(from(query).with(fetchAll(User.class)).model());
 
@@ -344,7 +451,7 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         if (user != null) {
             final UserSecretCo co$UserSecret = co$(UserSecret.class);
             final UserSecret secret = findOrCreateNewSecret(user, co$UserSecret);
-            
+
             final String uuid = format("%s%s%s%s%s", user.getKey(), SECRET_RESET_UUID_SEPERATOR, crypto.nextSessionId(), SECRET_RESET_UUID_SEPERATOR, getUniversalConstants().now().plusMinutes(RESER_UUID_EXPIRATION_IN_MUNUTES).getMillis());
             return of(co$UserSecret.save(secret.setResetUuid(uuid)));
         }
@@ -409,5 +516,4 @@ public class UserDao extends CommonEntityDao<User> implements IUser {
         // and only now can we delete users
         return defaultBatchDelete(userIds);
     }
-
 }

@@ -294,9 +294,16 @@ const TgEntityMasterBehaviorImpl = {
         },
 
         /**
-         * The entities retrieved when running centre that has this insertion point
+         * The entities retrieved when running centre that has this entity master
          */
         retrievedEntities: {
+            type: Array,
+            notify: true
+        },
+        /**
+         * The entities retrieved when running centre. It might be either all entities which should be paginated locally or only one page. It depends on retrieveAll property of entity centre 
+         */
+         allRetrievedEntities: {
             type: Array,
             notify: true
         },
@@ -312,7 +319,8 @@ const TgEntityMasterBehaviorImpl = {
          * Last egi selection changes to bind into insertion point.
          */
         centreSelection: {
-            type: Object
+            type: Object,
+            notify: true
         },
 
         /**
@@ -1177,6 +1185,10 @@ const TgEntityMasterBehaviorImpl = {
                         shouldRefreshParentCentreAfterSave: true,
                         selectedEntitiesInContext: [] // provide empty selectedEntitiesInContext, this ensures that parent centre will always be refreshed as per 'refreshEntities' method in tg-entity-centre-behavior
                     };
+                    const extendedInsertionPointListToExclude = [...(self.excludeInsertionPoints || []), ...(data.excludeInsertionPoints || [])];
+                    if (extendedInsertionPointListToExclude.length !== 0) {
+                        newData.excludeInsertionPoints = extendedInsertionPointListToExclude;
+                    }
                     postal.publish({
                         channel: 'centre_' + self.centreUuid,
                         topic: 'detail.saved',
@@ -1186,7 +1198,10 @@ const TgEntityMasterBehaviorImpl = {
                     // and entity path doesn't contain persistent and not persisted (or invalid) entity, in order to update master editors;
                     // do this, for example, if a postal 'detail.saved' event was published by child master;
                     // these child masters include those opened with entity editor title (i.e. tgOpenMasterAction), or from property / entity / continuation actions
-                    if (!self._hasEmbededView() && !data.entityPath.some(entity => entity.type().isPersistent() && (!entity.isPersisted() || !entity.isValidWithoutException()) )) {
+                    if (!self._hasEmbededView() // skip all entity masters that has embedded masters inside
+                        && !data.entityPath.some(entity => !entity.isValidWithoutException()) // skip all entities down under any unsuccessful entity in the chain
+                        && !data.entityPath.some(entity => entity.type().isPersistent() && !entity.isPersisted()) // skip all entities down under any persistent entity not yet saved (NEW entity) in the chain
+                    ) {
                         self.validate();
                     }
                 }

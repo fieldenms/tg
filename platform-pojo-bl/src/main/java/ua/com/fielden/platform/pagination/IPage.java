@@ -94,4 +94,19 @@ public interface IPage<T extends AbstractEntity<?>> {
      * @return
      */
     T summary();
+
+    /**
+     * Returns real page count from known {@code resultSize} and {@code pageCapacity}.
+     */
+    static int realPageCount(final int resultSize, final int pageCapacity) {
+        return resultSize % pageCapacity == 0 ? resultSize / pageCapacity : resultSize / pageCapacity + 1;
+    }
+
+    /**
+     * Returns display-related page count from {@code realPageCount}.
+     */
+    static int pageCount(final int realPageCount) {
+        return realPageCount == 0 ? 1 : realPageCount;
+    }
+
 }

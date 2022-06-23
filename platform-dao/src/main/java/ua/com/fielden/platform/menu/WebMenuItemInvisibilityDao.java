@@ -1,7 +1,12 @@
 package ua.com.fielden.platform.menu;
 
+import static ua.com.fielden.platform.companion.helper.KeyConditionBuilder.createQueryByKeyFor;
+
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
+
+import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
@@ -9,16 +14,14 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-
-import com.google.inject.Inject;
 /**
- * DAO implementation for companion object {@link IWebMenuItemInvisibility}.
+ * DAO implementation for companion object {@link WebMenuItemInvisibilityCo}.
  *
  * @author Developers
  *
  */
 @EntityType(WebMenuItemInvisibility.class)
-public class WebMenuItemInvisibilityDao extends CommonEntityDao<WebMenuItemInvisibility> implements IWebMenuItemInvisibility {
+public class WebMenuItemInvisibilityDao extends CommonEntityDao<WebMenuItemInvisibility> implements WebMenuItemInvisibilityCo {
 
     @Inject
     public WebMenuItemInvisibilityDao(final IFilter filter) {
@@ -38,10 +41,8 @@ public class WebMenuItemInvisibilityDao extends CommonEntityDao<WebMenuItemInvis
     }
 
     @Override
-    protected IFetchProvider<WebMenuItemInvisibility> createFetchProvider() {
-        // TODO: uncomment the following line and specify the properties, which are required for the UI
-        // return super.createFetchProvider().with("key", "desc");
-        throw new UnsupportedOperationException("Please specify the properties, which are required for the UI in WebMenuItemInvisibilityDao.createFetchProvider()");
+    public IFetchProvider<WebMenuItemInvisibility> createFetchProvider() {
+        return WebMenuItemInvisibilityCo.FETCH_PROVIDER;
     }
 
     @Override
@@ -50,4 +51,8 @@ public class WebMenuItemInvisibilityDao extends CommonEntityDao<WebMenuItemInvis
         return defaultBatchDelete(model);
     }
 
+    @Override
+    public void deleteAssociation(final Set<WebMenuItemInvisibility> associations) {
+        createQueryByKeyFor(getDbVersion(), getEntityType(), getKeyType(), associations).map(this::batchDelete);
+    }
 }

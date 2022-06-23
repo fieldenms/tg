@@ -20,6 +20,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bCheck
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cToolbar;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dScroll;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eDraggable;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1efRetrieveAll;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1fPageCapacity;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1gMaxPageCapacity;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1hHeaderWrap;
@@ -29,7 +30,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1kRowHe
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder2Properties;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder3Ordering;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4aWidth;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderAlsoDynamicProps;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderDynamicPropsAction;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderWidgetSelector;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
@@ -131,8 +132,13 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     }
 
     @Override
-    public IResultSetBuilder1fPageCapacity<T> draggable() {
+    public IResultSetBuilder1efRetrieveAll<T> draggable() {
         return new ResultSetBuilder<>(builder).draggable();
+    }
+
+    @Override
+    public IResultSetBuilder1fPageCapacity<T> retrieveAll() {
+        return new ResultSetBuilder<>(builder).retrieveAll();
     }
 
     @Override
@@ -176,7 +182,7 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     }
 
     @Override
-    public <M extends AbstractEntity<?>> IResultSetBuilderAlsoDynamicProps<T> addProps(final String propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<M, Optional<CentreContext<T,?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
+    public <M extends AbstractEntity<?>> IResultSetBuilderDynamicPropsAction<T> addProps(final String propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<M, Optional<CentreContext<T,?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
         return new ResultSetBuilder<>(builder).addProps(propName, dynColBuilderType, entityPreProcessor, contextConfig);
     }
 

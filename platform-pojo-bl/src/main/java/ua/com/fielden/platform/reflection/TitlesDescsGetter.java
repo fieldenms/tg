@@ -182,7 +182,7 @@ public class TitlesDescsGetter {
         final Class<?> propertyType = determinePropertyType(propOwnerType, dotNotationExp);
         if (AbstractEntity.class.isAssignableFrom(propertyType)) {
             final Class<? extends AbstractEntity<?>> type = (Class<? extends AbstractEntity<?>>) propertyType;
-            return Optional.of(getEntityTitleAndDesc(type));
+            return of(getEntityTitleAndDesc(type));
         }
         final String propName = isDotNotation(dotNotationExp) ? penultAndLast(dotNotationExp).getValue() : dotNotationExp;
         final String readablePropertyName = join(asList(splitByCharacterTypeCamelCase(capitalize(propName))), " ");

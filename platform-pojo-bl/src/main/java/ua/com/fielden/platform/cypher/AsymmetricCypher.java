@@ -14,14 +14,14 @@ import javax.crypto.Cipher;
  * @author TG Team
  * 
  */
-public class Cypher {
+public class AsymmetricCypher {
     private final String algorithm = AsymmetricKeyGenerator.ALGORITHM;
     private final Cipher cipher;
     // the minimum key size for RSA is 512 bits, which can encode maximum of 53 bites of information
     private final int BLOCK_SIZE = 53;
     private final String DEFAULT_SEPARATOR = "/";
 
-    public Cypher() throws Exception {
+    public AsymmetricCypher() throws Exception {
         cipher = Cipher.getInstance(algorithm);
     }
 
@@ -79,7 +79,7 @@ public class Cypher {
     }
 
     /**
-     * Encrypts any integer value wit the provided public key.
+     * Encrypts any integer value with {@code privateKey}.
      * 
      * @param numberOfLicences
      * @param privateKey
@@ -91,7 +91,7 @@ public class Cypher {
     }
 
     /**
-     * Decodes value using the provided private key.
+     * Decodes value using {@code publicKey}.
      * 
      * @param encryptedValue
      * @param publicKey
@@ -112,7 +112,7 @@ public class Cypher {
     }
 
     /**
-     * Decodes text, consisting of several parts concatenated by separator, using provided public key.
+     * Decodes text, consisting of several parts concatenated by separator, using {@code publicKey}.
      * 
      * @param encryptedText
      * @param publicKey
@@ -133,7 +133,7 @@ public class Cypher {
     }
 
     /**
-     * Decrypts value and converts it to integer using the provided private key
+     * Decrypts value and converts it to integer using {@code publicKey}.
      * 
      * @param encryptedValue
      * @param publicKey

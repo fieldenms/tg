@@ -520,6 +520,7 @@ Polymer({
         }).bind(self);
 
         self._onExecuted = (function (e, master, source) {
+            //self constatnt is created to have a reference on action in functions created for entity master like postRetrieved, postSaved etc.
             const self = this;
 
             // spinner requiredness assignment should be before action's progress changes as it is used in its observer
@@ -570,18 +571,6 @@ Polymer({
             };
 
             master.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
-                postal.publish({
-                    channel: "centre_" + this.centreUuid,
-                    topic: "detail.saved",
-                    data: {
-                        shouldRefreshParentCentreAfterSave: this.shouldRefreshParentCentreAfterSave,
-                        entity: potentiallySavedOrNewEntity,
-                        entityPath: [ potentiallySavedOrNewEntity ], // the starting point of the path of entities from masters that are on a chain of refresh cycle
-                        // send selectedEntitiesInContext further to be able to update only them on EGI
-                        selectedEntitiesInContext: selectedEntitiesSupplier()
-                    }
-                });
-
                 try {
                     if (potentiallySavedOrNewEntity.isValidWithoutException()) {
                         if (self.postActionSuccess) {
@@ -597,10 +586,21 @@ Polymer({
                         restoreStateAfterSave();
                         master.restoreAfterSave();
                     });
+                } finally {
+                    postal.publish({
+                        channel: "centre_" + this.centreUuid,
+                        topic: "detail.saved",
+                        data: {
+                            shouldRefreshParentCentreAfterSave: this.shouldRefreshParentCentreAfterSave,//Here 'this' references entity master.
+                            excludeInsertionPoints: this.excludeInsertionPoints,//Here 'this' references entity master.
+                            entity: potentiallySavedOrNewEntity,
+                            entityPath: [ potentiallySavedOrNewEntity ], // the starting point of the path of entities from masters that are on a chain of refresh cycle
+                            // send selectedEntitiesInContext further to be able to update only them on EGI
+                            selectedEntitiesInContext: selectedEntitiesSupplier()
+                        }
+                    });
                 }
-
                 restoreStateAfterSave();
-                
             };
 
             master.postSavedError = function (errorResult) {

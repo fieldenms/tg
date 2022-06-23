@@ -2,6 +2,7 @@ package ua.com.fielden.platform.sample.domain;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithoutCritOnly;
+import static ua.com.fielden.platform.error.Result.failure;
 
 import java.util.Collection;
 import java.util.Date;
@@ -71,6 +72,9 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
             final Result res = entity.isValid();
             if (!res.isSuccessful()) { // throw precise exception about the validation error
                 throw new IllegalArgumentException(format("Modification failed: %s", res.getMessage()));
+            }
+            if (entity.getRequiredValidatedProp() == 55) {
+                throw failure("Saving failed with exception.");
             }
         }
         
@@ -145,13 +149,14 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
                 .with("domainInitProp", "nonConflictingProp", "conflictingProp")
                 // .with("entityProp", EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("key"))
                 .with("userParam", "userParam.basedOnUser")
-                .with("entityProp", "entityProp.entityProp", "entityProp.compositeProp", "entityProp.compositeProp.desc", "entityProp.booleanProp")
+                .with("entityProp.completed", "entityProp.entityProp.completed", "entityProp.compositeProp", "entityProp.compositeProp.desc", "entityProp.booleanProp")
                 //                .with("status")
                 .with("critOnlyEntityProp")
                 .with("compositeProp", "compositeProp.desc")
                 // .with("producerInitProp", EntityUtils.fetch(TgPersistentEntityWithProperties.class).with("key")
-                .with("producerInitProp", "status.key", "status.desc")
+                .with("producerInitProp.completed", "status.key", "status.desc")
                 .with("colourProp", "hyperlinkProp")
+                .with("completed")
                 .with("idOnlyProxyProp"); //
     }
 
@@ -163,6 +168,12 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
                 .setAttachment(attachment);
         
         return co$.findByEntityAndFetchOptional(co$.getFetchProvider().fetchModel(), entityAttachment)
-                  .orElseGet(() -> co$.save(entityAttachment));        
+                  .orElseGet(() -> co$.save(entityAttachment));
     }
+
+    @Override
+    public TgPersistentEntityWithProperties new_() {
+        return super.new_().setCompleted(false);
+    }
+
 }

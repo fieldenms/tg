@@ -5,9 +5,9 @@ import ua.com.fielden.platform.dao.IEntityDao;
 /** 
  * Companion object for entity {@link Menu}.
  * 
- * @author Developers
+ * @author TG Team
  *
  */
-public interface IMenu extends IEntityDao<Menu> {
+public interface MenuCo extends IEntityDao<Menu> {
 
 }
