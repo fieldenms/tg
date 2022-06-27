@@ -95,7 +95,11 @@ public class DynamicQueryBuilder {
      *
      */
     public static class QueryProperty {
+
+        private static final String MISSING_CRITONLY_SUBMODEL_ERR = "The @CritOnly %s property in %s entity type has no submodel defined with %s_ name";
+        private static final String INCOMPATIBLE_CRITONLY_SUBMODEL_TYPE_ERR = "The model for @CritOnly %s_ property name in %s entity type should have ICompoundCondition0 type";
         private static final String QP_PREFIX = "QP_";
+
         private Object value = null;
         private Object value2 = null;
         private Boolean exclusive = null;
@@ -346,11 +350,10 @@ public class DynamicQueryBuilder {
                 if (value instanceof ICompoundCondition0) {
                     return (ICompoundCondition0<?>)value;
                 } else {
-                    throw new EntityCentreExecutionException(format("The model for @CritOnly %s_ property name in %s entity type should have ICompoundCondition0 type.",
-                                                         propertyName, type.getSimpleName()));
+                    throw new EntityCentreExecutionException(format(INCOMPATIBLE_CRITONLY_SUBMODEL_TYPE_ERR, propertyName, type.getSimpleName()));
                 }
             } catch (final NoSuchFieldException | IllegalAccessException ex) {
-                throw new EntityCentreExecutionException(format("The @CritOnly %s property in %s entity type has no submodel defined with %s_ name", propertyName, type.getSimpleName(), propertyName));
+                throw new EntityCentreExecutionException(format(MISSING_CRITONLY_SUBMODEL_ERR, propertyName, type.getSimpleName(), propertyName));
             }
         }
 

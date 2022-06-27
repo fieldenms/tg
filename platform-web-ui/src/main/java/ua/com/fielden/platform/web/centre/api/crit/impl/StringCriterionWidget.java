@@ -9,7 +9,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.singlelinetext.impl.S
  * @author TG Team
  *
  */
-public class StringCriterionWidget extends AbstractMultiCriterionWidget {
+public class StringCriterionWidget extends AbstractCriterionWidget {
 
     /**
      * Creates an instance of {@link StringCriterionWidget} for specified entity type and property name.
