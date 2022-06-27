@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.validation;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 
@@ -23,6 +24,7 @@ public class GreaterOrEqualValidator implements IBeforeChangeEventHandler<Object
     public static final String ERR_VALUE_SHOULD_BE_GREATER_THAN_OR_EQUAL_TO = "Value should be greater than or equal to %s.";
 
     protected String limit;
+    protected String customErrorMsg;
 
     protected GreaterOrEqualValidator() { }
 
@@ -41,7 +43,7 @@ public class GreaterOrEqualValidator implements IBeforeChangeEventHandler<Object
 
         return numValue.compareTo(new BigDecimal(limit)) >= 0
                ? successful(property.getEntity())
-               : failure(property.getEntity(), format(ERR_VALUE_SHOULD_BE_GREATER_THAN_OR_EQUAL_TO, limit));
+               : failure(property.getEntity(), format(isEmpty(customErrorMsg) ? ERR_VALUE_SHOULD_BE_GREATER_THAN_OR_EQUAL_TO : customErrorMsg, limit));
     }
 
 }
