@@ -173,13 +173,18 @@ public class EqlDomainMetadata {
             }
         });
 
-        domainInfo = entityPropsMetadata.entrySet().stream().collect(Collectors.toConcurrentMap(k -> k.getKey(), k -> new EntityInfo<>(k.getKey(), k.getValue().typeInfo.category)));
+        domainInfo = entityPropsMetadata.entrySet().stream().collect(Collectors.toConcurrentMap(k -> k.getKey(), k -> new EntityInfo<>(k.getKey(), k.getValue().typeInfo.category))); 
         domainInfo.values().stream().forEach(ei -> addProps(ei, domainInfo, entityPropsMetadata.get(ei.javaType()).props()));
 
-        for (EqlEntityMetadata el : entityPropsMetadata.values()) {
+        for (final EqlEntityMetadata el : entityPropsMetadata.values()) {
             if (el.typeInfo.category == QUERY_BASED) {
-                final EntityInfo<? extends AbstractEntity<?>> enhancedEntityInfo = generateEnhancedEntityInfoForSyntheticType(el.typeInfo, el.typeInfo.entityType);
-                domainInfo.put(enhancedEntityInfo.javaType(), enhancedEntityInfo);
+                try {
+                    final EntityInfo<? extends AbstractEntity<?>> enhancedEntityInfo = generateEnhancedEntityInfoForSyntheticType(el.typeInfo, el.typeInfo.entityType);
+                    domainInfo.put(enhancedEntityInfo.javaType(), enhancedEntityInfo);
+                } catch (final Exception e) {
+                    e.printStackTrace();
+                    throw new EqlMetadataGenerationException("Couldn't generate enhanced entity info for synthetic entity [" + el.typeInfo.entityType + "] due to: " + e);
+                }
             }
         }
 
@@ -208,7 +213,7 @@ public class EqlDomainMetadata {
                     if (prop.expression != null && !prop.name.equals(KEY)) {
                        try {
                             p2tt.groupChildren(setOf(new Prop2(source, asList(prop))));    
-                        } catch (Exception e) {
+                        } catch (final Exception e) {
                             throw new EqlException("There is an error in expression of calculated property [" + et.javaType().getSimpleName() + ":" + prop.name + "]: " + e.getMessage());
                         }
                     } else if (prop.hasExpression() && prop instanceof ComponentTypePropInfo) {
@@ -216,7 +221,7 @@ public class EqlDomainMetadata {
                             if (subprop.expression != null) {
                                 try {
                                     p2tt.groupChildren(setOf(new Prop2(source, asList(prop, subprop))));    
-                                } catch (Exception e) {
+                                } catch (final Exception e) {
                                     throw new EqlException("There is an error in expression of calculated property [" + et.javaType().getSimpleName() + ":" + prop.name  + "." + subprop.name + "]: " + e.getMessage());
                                 }
                             }
