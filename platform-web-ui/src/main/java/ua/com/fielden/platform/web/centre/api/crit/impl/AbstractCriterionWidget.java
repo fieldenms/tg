@@ -134,7 +134,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
      * @return
      */
     private static boolean shouldExcludeMissing(final Class<? extends AbstractEntity<?>> root, final String propertyName) {
-        return isBoolean("".equals(propertyName) ? root :determinePropertyType(root, propertyName));
+        return isBoolean("".equals(propertyName) ? root : determinePropertyType(root, propertyName));
     }
 
     protected String getCriterionClass(final int editorIndex) {

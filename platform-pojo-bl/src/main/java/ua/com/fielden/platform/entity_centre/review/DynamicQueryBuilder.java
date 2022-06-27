@@ -331,12 +331,12 @@ public class DynamicQueryBuilder {
             return (String.class == type && value == null) || EntityUtils.equalsEx(value, getEmptyValue(type, single));
         }
 
-        private static boolean critOnlyWithModel(final CritOnly critAnnotation, final Class<?> propertyType, final String propertyName) {
+        private static boolean critOnlyWithModel(final CritOnly critAnnotation, final Class<?> entityType, final String propertyName) {
             try {
                 return !StringUtils.isEmpty(critAnnotation.propUnderCondition()) &&
                         AbstractEntity.class.isAssignableFrom(critAnnotation.entityUnderCondition()) &&
                         isPropertyPresent(critAnnotation.entityUnderCondition(), critAnnotation.propUnderCondition()) &&
-                        propertyType.getDeclaredField(propertyName + "_") != null;
+                        entityType.getDeclaredField(propertyName + "_") != null;
             } catch (NoSuchFieldException | SecurityException e) {
                 return false;
             }
@@ -367,7 +367,7 @@ public class DynamicQueryBuilder {
         }
 
         /**
-         * Determines whether property should be ignored during query composition, which means that 1) it is crit-only property; 2) it is empty and has not "orNull" condition
+         * Determines whether property should be ignored during query composition, which means that 1) it is crit-only without model property; 2) it is empty and has not "orNull" condition
          * assigned.
          *
          * @return
@@ -1031,7 +1031,7 @@ public class DynamicQueryBuilder {
                 return cond().prop(propertyName).iLike().val(prepCritValuesForSingleStringTypedProp((String)property.getValue())).model();
             }
             return propertyEquals(propertyName, property.getValue());
-        }else if (isRangeType(property.getType())) {
+        } else if (isRangeType(property.getType())) {
             final boolean isDate = isDate(property.getType());
             final IStandAloneConditionComparisonOperator<ET> scag1 = EntityQueryUtils.<ET> cond().prop(propertyName);
             if (isDate && property.getDatePrefix() != null && property.getDateMnemonic() != null) {
