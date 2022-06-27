@@ -21,6 +21,7 @@ import org.junit.Test;
 import com.google.testing.compile.CompilationRule;
 
 import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
+import ua.com.fielden.platform.annotations.metamodel.WithMetaModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
@@ -204,11 +205,12 @@ public class EntityFinderTest {
     }
 
     @Test
-    public void isDomainEntity_recognises_as_domain_only_entities_that_are_explicityly_annotated_with_MapEntityTo_or_DomainEntity() {
-        assertTrue(EntityFinder.isDomainEntity(elements.getTypeElement(User.class.getCanonicalName())));
-        assertFalse(EntityFinder.isDomainEntity(elements.getTypeElement(SuperUser.class.getCanonicalName())));
-        assertTrue(EntityFinder.isDomainEntity(elements.getTypeElement(SuperUserWithDeclaredDesc.class.getCanonicalName())));
-        assertFalse("Non-entity should not be recognised as a domain entity.", EntityFinder.isDomainEntity(elements.getTypeElement(NonEntity.class.getCanonicalName())));
+    public void isEntityThatNeedsMetaModel_is_true_only_entities_that_are_explicityly_annotated_with_MapEntityTo_or_DomainEntity_or_WithMetaModel() {
+        assertTrue(EntityFinder.isEntityThatNeedsMetaModel(elements.getTypeElement(User.class.getCanonicalName())));
+        assertTrue(EntityFinder.isEntityThatNeedsMetaModel(elements.getTypeElement(NonDomainEntityWithMetaModel.class.getCanonicalName())));
+        assertFalse(EntityFinder.isEntityThatNeedsMetaModel(elements.getTypeElement(SuperUser.class.getCanonicalName())));
+        assertTrue(EntityFinder.isEntityThatNeedsMetaModel(elements.getTypeElement(SuperUserWithDeclaredDesc.class.getCanonicalName())));
+        assertFalse("Non-entity should not be recognised as a domain entity.", EntityFinder.isEntityThatNeedsMetaModel(elements.getTypeElement(NonEntity.class.getCanonicalName())));
     }
 
     @Test
@@ -227,6 +229,13 @@ public class EntityFinderTest {
     @DescTitle("Desc")
     @EntityTitle(value = "Super User", desc = "A test entity extedning User.")
     public static class SuperUser extends User {
+    }
+
+    /**
+     * A type for testing purposes. Represents an entity that is not a domain entity, but needs a meta-model.
+     */
+    @WithMetaModel
+    public static class NonDomainEntityWithMetaModel extends AbstractEntity<String> {
     }
 
     /**

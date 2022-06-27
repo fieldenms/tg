@@ -22,6 +22,7 @@ import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
 import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
+import ua.com.fielden.platform.annotations.metamodel.WithMetaModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
@@ -218,7 +219,7 @@ public class EntityFinder {
      */
     public static boolean isPropertyOfDomainEntityType(final PropertyElement propElement) {
         try {
-            return isDomainEntity(propElement.getTypeAsTypeElement());
+            return isEntityThatNeedsMetaModel(propElement.getTypeAsTypeElement());
         } catch (final Exception ex) {
             // an exception may be thrown is property type is not a DECLARED type (i.e., not a class or an interface)
             return false;
@@ -226,15 +227,14 @@ public class EntityFinder {
     }
 
     /**
-     * A predicate that determines whether {@code element} represent a domain entity type.
-     * An element is considered to be a domain entity iff it represents an entity type that is annotated with either {@code @MapEntityTo} or {@code @DomainEntity}.
+     * A predicate that determines whether {@code element} represent an entity that needs a meta model.
      *
      * @param element
      * @return
      */
-    public static boolean isDomainEntity(final TypeElement element) {
+    public static boolean isEntityThatNeedsMetaModel(final TypeElement element) {
         return EntityFinder.isEntityType(element) && 
-               (element.getAnnotation(MapEntityTo.class) != null || element.getAnnotation(DomainEntity.class) != null);
+               (element.getAnnotation(MapEntityTo.class) != null || element.getAnnotation(DomainEntity.class) != null || element.getAnnotation(WithMetaModel.class) != null);
     }
 
     public static List<? extends AnnotationMirror> getPropertyAnnotations(final PropertyElement property) {
