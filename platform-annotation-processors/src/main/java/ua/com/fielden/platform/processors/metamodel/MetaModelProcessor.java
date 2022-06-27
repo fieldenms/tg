@@ -8,7 +8,7 @@ import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.processors.metamodel.utils.EntityFinder.findEntityForMetaModel;
-import static ua.com.fielden.platform.processors.metamodel.utils.EntityFinder.isDomainEntity;
+import static ua.com.fielden.platform.processors.metamodel.utils.EntityFinder.isEntityThatNeedsMetaModel;
 
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -64,6 +64,7 @@ import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.WildcardTypeName;
 
 import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
+import ua.com.fielden.platform.annotations.metamodel.WithMetaModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
@@ -88,7 +89,7 @@ import ua.com.fielden.platform.utils.Pair;
 public class MetaModelProcessor extends AbstractProcessor {
 
     private static final String INDENT = "    ";
-    private static final Set<Class<? extends Annotation>> DOMAIN_TYPE_ANNOTATIONS = Set.of(MapEntityTo.class, DomainEntity.class);
+    private static final Set<Class<? extends Annotation>> ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION = Set.of(MapEntityTo.class, DomainEntity.class, WithMetaModel.class);
 
     private Filer filer;
     private Elements elementUtils;
@@ -178,7 +179,7 @@ public class MetaModelProcessor extends AbstractProcessor {
      */
     private Stream<MetaModelConcept> collectEntitiesForMetaModelGeneration(final RoundEnvironment roundEnv, final Optional<MetaModelsElement> maybeMetaModelsElement) {
         // find classes annotated with any of DOMAIN_TYPE_ANNOTATIONS
-        final Set<TypeElement> annotatedElements = roundEnv.getElementsAnnotatedWithAny(DOMAIN_TYPE_ANNOTATIONS).stream()
+        final Set<TypeElement> annotatedElements = roundEnv.getElementsAnnotatedWithAny(ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION).stream()
                                                            .filter(element -> element.getKind() == ElementKind.CLASS) // just in case make sure identified elements are classes
                                                            .map(el -> (TypeElement) el).collect(toSet());
         messager.printMessage(Kind.NOTE, format("annotatedElements: [%s]", annotatedElements.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
@@ -282,7 +283,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         final Set<MetaModelElement> inactive = new LinkedHashSet<>();
         for (final MetaModelElement mme: metaModelsElement.getMetaModels()) {
             final EntityElement entity = findEntityForMetaModel(mme, elementUtils);
-            if (entity == null || !isDomainEntity(entity.getTypeElement())) {
+            if (entity == null || !isEntityThatNeedsMetaModel(entity.getTypeElement())) {
                 if (entity != null) {
                     messager.printMessage(Kind.NOTE, format("Entity %s is no longer a domain entity.", entity.getSimpleName()));
                 } else {
@@ -320,7 +321,7 @@ public class MetaModelProcessor extends AbstractProcessor {
     private boolean writeMetaModel(final MetaModelConcept mmc, final Predicate<PropertyElement> propertyTypeMetamodeledTest) {
         final EntityElement entityElement = mmc.getEntityElement();
         final EntityElement entityParent = EntityFinder.getParent(entityElement, elementUtils);
-        final boolean isEntitySuperclassMetamodeled = isDomainEntity(entityParent.getTypeElement());
+        final boolean isEntitySuperclassMetamodeled = isEntityThatNeedsMetaModel(entityParent.getTypeElement());
         // collect properties to process
         final Set<PropertyElement> properties = new LinkedHashSet<>();
         if (isEntitySuperclassMetamodeled) {

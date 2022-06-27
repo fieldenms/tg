@@ -7,13 +7,13 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * Should be used to annotate entities, which should be recognised as domain entities.
- * All domain entities have a meta-model generated for them.
+ * Should be used to annotate entities, which may not be necessarily {@link DomainEntity}, but do need their meta-models generated.
+ * The actual meta-models generated for domain entities and entities annotated with this annotation, may diverge over time.
  * 
  * @author TG Team
  */
 @Retention(RUNTIME)
 @Target(TYPE)
-public @interface DomainEntity {
+public @interface WithMetaModel {
 
 }
