@@ -3,6 +3,7 @@ package ua.com.fielden.platform.entity.validation;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
@@ -37,6 +38,7 @@ public class MaxValueValidator implements IBeforeChangeEventHandler<Object> {
 
     protected String limit;
     protected String limitPropName;
+    protected String customErrorMsg;
 
     protected MaxValueValidator() { }
 
@@ -64,7 +66,7 @@ public class MaxValueValidator implements IBeforeChangeEventHandler<Object> {
 
         return numValue.get().compareTo(limitValue.get()) <= 0
                 ? successful(entity)
-                : failure(entity, format(ERR_VALUE_SHOULD_NOT_EXCEED_MAX, limitValue.get()));
+                : failure(entity, format(isEmpty(customErrorMsg) ? ERR_VALUE_SHOULD_NOT_EXCEED_MAX : customErrorMsg, limitValue.get()));
     }
     
     /**
