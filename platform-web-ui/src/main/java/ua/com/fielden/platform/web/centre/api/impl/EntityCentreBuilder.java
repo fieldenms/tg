@@ -155,6 +155,8 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
 
     protected boolean runAutomatically = false;
     protected boolean enforcePostSaveRefresh = false;
+    protected Integer leftSplitterPosition = null;
+    protected Integer rightSplitterPosition = null;
     protected String sseUri;
 
     private EntityCentreBuilder() {

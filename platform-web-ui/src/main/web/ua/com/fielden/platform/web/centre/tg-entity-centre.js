@@ -238,6 +238,14 @@ Polymer({
         embedded: Boolean,
         discard: Function,
         run: Function,
+        leftSplitterPosition:{
+            type: Number,
+            observer: '_leftSplitterPositionChanged'
+        },
+        rightSplitterPosition:{
+            type: Number,
+            observer: '_rightSplitterPositionChanged'
+        },
         _showDialog: Function,
         saveAsName: {
             type: String,
@@ -309,6 +317,18 @@ Polymer({
         if (!newValue && this._afterCriteriaLoadedPromise) {
             this._afterCriteriaLoadedPromise(newValue);
             this._afterCriteriaLoadedPromise = null;
+        }
+    },
+
+    _leftSplitterPositionChanged: function (newValue) {
+        if (newValue != null && typeof newValue !== 'undefined') {
+            this.$.leftInsertionPointContainer.style.width = `${newValue}%`
+        }
+    },
+
+    _rightSplitterPositionChanged: function (newValue) {
+        if (newValue != null && typeof newValue !== 'undefined') {
+            this.$.rightInsertionPointContainer.style.width = `${newValue}%`
         }
     },
 

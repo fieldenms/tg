@@ -42,6 +42,8 @@ import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.OrderDirection;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.SummaryPropDef;
+import ua.com.fielden.platform.web.centre.api.IEcbCompletion;
+import ua.com.fielden.platform.web.centre.api.IWithRightSplitterPosition;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector;
@@ -112,6 +114,8 @@ import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerW
  */
 class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder1aEgiAppearance<T>, IResultSetBuilder1aEgiIconStyle<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T>{
 
+    private static final String SPLITTER_OVERLAPPING_ERR = "The left and right splitters are overlapping (i.e. left splitter position + right splitter position > 100)";
+    private static final String SPLITTER_POSITION_OUT_OF_BOUNDS_ERR = "The splitter position should be greater than 0 and less than 100";
     private static final String ERR_EDITABLE_SUB_PROP_DISALLOWED = "Dot-notated property [%s] cannot be added as editable. Only first-level properties are supported.";
 
     protected final EntityCentreBuilder<T> builder;
@@ -516,6 +520,16 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         public IInsertionPointPreferred<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
             return ResultSetBuilder.this.addInsertionPoint(actionConfig, whereToInsertView);
         }
+
+        @Override
+        public IWithRightSplitterPosition<T> withLiftSplitterPosition(final int percantage) {
+            return ResultSetBuilder.this.withLiftSplitterPosition(percantage);
+        }
+
+        @Override
+        public IEcbCompletion<T> withRightSplitterPosition(final int percentage) {
+            return ResultSetBuilder.this.withRightSplitterPosition(percentage);
+        }
     }
 
     @Override
@@ -661,6 +675,27 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     public ResultSetBuilder<T> addInsertionPoint(final InsertionPointConfig insertionPoint) {
         this.builder.insertionPointConfigs.add(insertionPoint);
+        return this;
+    }
+
+    @Override
+    public IWithRightSplitterPosition<T> withLiftSplitterPosition(final int percentage) {
+        if (percentage < 0 || percentage > 100) {
+            throw new EntityCentreConfigurationException(SPLITTER_POSITION_OUT_OF_BOUNDS_ERR);
+        }
+        builder.leftSplitterPosition = Integer.valueOf(percentage);
+        return this;
+    }
+
+    @Override
+    public IEcbCompletion<T> withRightSplitterPosition(final int percentage) {
+        if (percentage < 0 || percentage > 100) {
+            throw new EntityCentreConfigurationException(SPLITTER_POSITION_OUT_OF_BOUNDS_ERR);
+        }
+        if (builder.leftSplitterPosition != null && builder.leftSplitterPosition.intValue() + percentage > 100) {
+            throw new EntityCentreConfigurationException(SPLITTER_OVERLAPPING_ERR);
+        }
+        builder.rightSplitterPosition = Integer.valueOf(percentage);
         return this;
     }
 }

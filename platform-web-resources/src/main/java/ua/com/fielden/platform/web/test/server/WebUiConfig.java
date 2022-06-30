@@ -153,6 +153,7 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCrit
 import ua.com.fielden.platform.web.centre.api.crit.layout.ILayoutConfigWithResultsetSupport;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
+import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
 import ua.com.fielden.platform.web.centre.api.resultset.IAlsoSecondaryAction;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
@@ -513,7 +514,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .html("<span>This is binded text for String prop: </span><span id='stringProp_bind' style='color:blue'>{{stringProp}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end())
                 .html("<span>This is binded text for Status.desc: </span><span id='status_Desc_bind' style='color:blue'>{{status.desc}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end()),
                 layoutConfig).toString();
-        
+
         // Add entity masters.
         final SimpleMasterBuilder<TgPersistentEntityWithProperties> smb = new SimpleMasterBuilder<>();
         @SuppressWarnings("unchecked")
@@ -1384,7 +1385,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final String centreMrLast = "['flex']";
 
         final ICentreTopLevelActionsWithRunConfig<TgPersistentEntityWithProperties> partialCentre = EntityCentreBuilder.centreFor(TgPersistentEntityWithProperties.class);
-        ICentreTopLevelActionsInGroup<TgPersistentEntityWithProperties> actionConf = (runAutomatically ? partialCentre.runAutomatically() : partialCentre)
+        final ICentreTopLevelActionsInGroup<TgPersistentEntityWithProperties> actionConf = (runAutomatically ? partialCentre.runAutomatically() : partialCentre)
                 .hasEventSourceAt("/sse/entity-centre-events")
                 .enforcePostSaveRefresh()
                 .addFrontAction(action(EntityNewAction.class).
@@ -1432,16 +1433,16 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
 
         if (isComposite) {
-            actionConf = actionConf.addGroupAction(
-                    action(TgCentreInvokerWithCentreContext.class)
-                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
-                            .icon("assignment-ind")
-                            .shortDesc("Function 4 (TgCentreInvokerWithCentreContext)")
-                            .longDesc("Functional context-dependent action 4 (TgCentreInvokerWithCentreContext)")
-                            .prefDimForView(mkDim("'80%'", "'400px'"))
-                            .withNoParentCentreRefresh()
-                            .build()
-                    ).endTopActionsGroup().also().beginTopActionsGroup("group 3");
+//            actionConf = actionConf.addGroupAction(
+//                    action(TgCentreInvokerWithCentreContext.class)
+//                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+//                            .icon("assignment-ind")
+//                            .shortDesc("Function 4 (TgCentreInvokerWithCentreContext)")
+//                            .longDesc("Functional context-dependent action 4 (TgCentreInvokerWithCentreContext)")
+//                            .prefDimForView(mkDim("'80%'", "'400px'"))
+//                            .withNoParentCentreRefresh()
+//                            .build()
+//                    ).endTopActionsGroup().also().beginTopActionsGroup("group 3");
 
         }
 
@@ -1746,7 +1747,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .setPageCapacity(20)
                 //.setHeight("100%")
                 //.setVisibleRowsCount(10)
-                .fitToHeight()
+                //.fitToHeight()
                 .addProp("this")
                     .order(2).asc()
                     .width(60);
@@ -1990,16 +1991,16 @@ public class WebUiConfig extends AbstractWebUiConfig {
         //                .addProp(mkProp("IS", "In service", "IS")).withAction(null)
 
         if (isComposite) {
-//            return scl.addInsertionPoint(
-//                    action(TgCentreInvokerWithCentreContext.class)
-//                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
-//                            .icon("assignment-ind")
-//                            .shortDesc("Insertion Point")
-//                            .longDesc("Functional context-dependent Insertion Point")
-//                            .prefDimForView(mkDim("''", "'500px'"))
-//                            .withNoParentCentreRefresh()
-//                            .build(),
-//                    InsertionPoints.RIGHT)
+            return scl.addInsertionPoint(
+                    action(TgCentreInvokerWithCentreContext.class)
+                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+                            .icon("assignment-ind")
+                            .shortDesc("Insertion Point")
+                            .longDesc("Functional context-dependent Insertion Point")
+                            .prefDimForView(mkDim("''", "'500px'"))
+                            .withNoParentCentreRefresh()
+                            .build(),
+                    InsertionPoints.RIGHT)
 //                    .addInsertionPoint(
 //                            action(TgCentreInvokerWithCentreContext.class)
 //                                    .withContext(context().withSelectionCrit().withSelectedEntities().build())
@@ -2010,17 +2011,17 @@ public class WebUiConfig extends AbstractWebUiConfig {
 //                                    .withNoParentCentreRefresh()
 //                                    .build(),
 //                            InsertionPoints.RIGHT)
-//                    .addInsertionPoint(
-//                            action(TgCentreInvokerWithCentreContext.class)
-//                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
-//                            .icon("assignment-ind")
-//                            .shortDesc("Insertion Point")
-//                            .longDesc("Functional context-dependent Insertion Point")
-//                            .prefDimForView(mkDim("'350px'", "'500px'"))
-//                            .withNoParentCentreRefresh()
-//                            .build(),
-//                    InsertionPoints.LEFT)
-//                    .build();
+                    .addInsertionPoint(
+                            action(TgCentreInvokerWithCentreContext.class)
+                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+                            .icon("assignment-ind")
+                            .shortDesc("Insertion Point")
+                            .longDesc("Functional context-dependent Insertion Point")
+                            .prefDimForView(mkDim("'350px'", "'500px'"))
+                            .withNoParentCentreRefresh()
+                            .build(),
+                    InsertionPoints.LEFT)
+                    .build();
         }
         return scl.build();
     }

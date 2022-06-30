@@ -10,6 +10,8 @@ import java.util.Optional;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
+import ua.com.fielden.platform.web.centre.api.IEcbCompletion;
+import ua.com.fielden.platform.web.centre.api.IWithRightSplitterPosition;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointPreferred;
 import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointWithToolbar;
@@ -20,7 +22,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 
 /**
  * Implementation for insertion point APIs.
- * 
+ *
  * @author TG Team
  *
  * @param <T>
@@ -65,5 +67,17 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
         }
         this.preferred = true;
         return this;
+    }
+
+    @Override
+    public IWithRightSplitterPosition<T> withLiftSplitterPosition(final int percantage) {
+        // TODO Auto-generated method stub
+        return null;
+    }
+
+    @Override
+    public IEcbCompletion<T> withRightSplitterPosition(final int percentage) {
+        // TODO Auto-generated method stub
+        return null;
     }
 }

@@ -8,6 +8,8 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
+import ua.com.fielden.platform.web.centre.api.IEcbCompletion;
+import ua.com.fielden.platform.web.centre.api.IWithRightSplitterPosition;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
@@ -127,6 +129,16 @@ public class ResultSetDynamicPropertyBuilder<T extends AbstractEntity<?>> implem
 
         resultSetProp.setPropAction(actionConfigSupplier);
         return this;
+    }
+
+    @Override
+    public IWithRightSplitterPosition<T> withLiftSplitterPosition(final int percentage) {
+        return builder.withLiftSplitterPosition(percentage);
+    }
+
+    @Override
+    public IEcbCompletion<T> withRightSplitterPosition(final int percentage) {
+        return builder.withRightSplitterPosition(percentage);
     }
 
 }
