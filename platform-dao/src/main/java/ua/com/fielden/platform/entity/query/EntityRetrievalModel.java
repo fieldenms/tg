@@ -46,7 +46,11 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
     private final EntityTypeInfo<T> entityTypeInfo;
 
     public EntityRetrievalModel(final fetch<T> originalFetch, final DomainMetadataAnalyser domainMetadataAnalyser) {
-        super(originalFetch, domainMetadataAnalyser);
+        this(originalFetch, domainMetadataAnalyser, true);
+    }
+
+    EntityRetrievalModel(final fetch<T> originalFetch, final DomainMetadataAnalyser domainMetadataAnalyser, final boolean topLevel) {
+        super(originalFetch, domainMetadataAnalyser, topLevel);
         this.propsMetadata = domainMetadataAnalyser.getPropertyMetadatasForEntity(getEntityType());
         entityTypeInfo = new EntityTypeInfo<>(getEntityType());
         
@@ -233,7 +237,7 @@ public class EntityRetrievalModel<T extends AbstractEntity<?>> extends AbstractR
         
         final EntityRetrievalModel<?> existingFetch = getRetrievalModels().get(propName);
         fetch<?> finalFetch = existingFetch != null ? existingFetch.originalFetch.unionWith(fetchModel) : fetchModel;
-        addEntityPropFetchModel(propName, new EntityRetrievalModel<>(finalFetch, getDomainMetadataAnalyser()));
+        addEntityPropFetchModel(propName, new EntityRetrievalModel<>(finalFetch, getDomainMetadataAnalyser(), false));
     }
     
     public boolean isFetchIdOnly() {
