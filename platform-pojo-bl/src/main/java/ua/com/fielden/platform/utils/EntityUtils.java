@@ -8,9 +8,9 @@ import static java.util.stream.Stream.concat;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
 import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.apache.commons.lang.StringUtils.lastIndexOf;
 import static org.apache.commons.lang.StringUtils.length;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
@@ -80,6 +80,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -1209,6 +1210,19 @@ public class EntityUtils {
         final Class<T> entityClass = (Class<T>) PropertyTypeDeterminator.determinePropertyType(coOther.getEntityType(), propName);
         final fetch<T> eFetch = coOther.getFetchProvider().<T> fetchFor(propName).fetchModel();
         return coOther.co(entityClass).findByKeyAndFetchOptional(eFetch, keyValues);
+    }
+
+    /**
+     * The same as {@link #fetchEntityForPropOf(String, IEntityReader, Object...)}, but accepting {@link IConvertableToPath} to represent a property a property.
+     *
+     * @param <T>
+     * @param propName
+     * @param coOther
+     * @param keyValues
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final IConvertableToPath propName, final IEntityReader<?> coOther, final Object... keyValues) {
+        return fetchEntityForPropOf(propName.toPath(), coOther, keyValues);
     }
 
     /**
