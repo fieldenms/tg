@@ -227,6 +227,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static final String ALTERNATIVE_VIEW_INSERTION_POINT_DOM = "<!--@alternative_view_insertion_points-->";
     //centre related  config properties
     private static final String CENTRE_RETRIEVE_ALL_OPTION = "@retrieveAll";
+    private static final String LEFT_SPLITTER_POSITION = "@leftSplitterPositionPlacehoder";
+    private static final String RIGHT_SPLITTER_POSITION = "@rightSplitterPositionPlacehoder";
     // generic custom code
     private static final String READY_CUSTOM_CODE = "//@centre-is-ready-custom-code";
     private static final String ATTACHED_CUSTOM_CODE = "//@centre-has-been-attached-custom-code";
@@ -1274,6 +1276,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(INSERTION_POINT_ACTIONS_DOM, insertionPointActionsDom.toString()).
                 replace(LEFT_INSERTION_POINT_DOM, leftInsertionPointsDom.toString()).
                 replace(RIGHT_INSERTION_POINT_DOM, rightInsertionPointsDom.toString()).
+                replace(LEFT_SPLITTER_POSITION, dslDefaultConfig.getLeftSplitterPosition().map(pos -> format("left-splitter-position=\"%s\"", pos + "%")).orElse("")).
+                replace(RIGHT_SPLITTER_POSITION, dslDefaultConfig.getRightSplitterPosition().map(pos -> format("right-splitter-position=\"%s\"", pos + "%")).orElse("")).
                 replace(TOP_INSERTION_POINT_DOM, topInsertionPointsDom.toString()).
                 replace(BOTTOM_INSERTION_POINT_DOM, bottomInsertionPointsDom.toString()).
                 replace(ALTERNATIVE_VIEW_INSERTION_POINT_DOM, join(alternativeViewsDom, "\n")).

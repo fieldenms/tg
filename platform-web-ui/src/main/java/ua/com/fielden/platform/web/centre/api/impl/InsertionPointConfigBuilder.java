@@ -70,14 +70,12 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
     }
 
     @Override
-    public IWithRightSplitterPosition<T> withLiftSplitterPosition(final int percantage) {
-        // TODO Auto-generated method stub
-        return null;
+    public IWithRightSplitterPosition<T> withLeftSplitterPosition(final int percentage) {
+        return resultSetBuilder.withLeftSplitterPosition(percentage);
     }
 
     @Override
     public IEcbCompletion<T> withRightSplitterPosition(final int percentage) {
-        // TODO Auto-generated method stub
-        return null;
+        return resultSetBuilder.withRightSplitterPosition(percentage);
     }
 }

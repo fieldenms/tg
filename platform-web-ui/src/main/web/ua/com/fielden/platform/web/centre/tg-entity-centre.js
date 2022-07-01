@@ -239,11 +239,11 @@ Polymer({
         discard: Function,
         run: Function,
         leftSplitterPosition:{
-            type: Number,
+            type: String,
             observer: '_leftSplitterPositionChanged'
         },
         rightSplitterPosition:{
-            type: Number,
+            type: String,
             observer: '_rightSplitterPositionChanged'
         },
         _showDialog: Function,
@@ -322,13 +322,13 @@ Polymer({
 
     _leftSplitterPositionChanged: function (newValue) {
         if (newValue != null && typeof newValue !== 'undefined') {
-            this.$.leftInsertionPointContainer.style.width = `${newValue}%`
+            this.$.leftInsertionPointContainer.style.width = newValue;
         }
     },
 
     _rightSplitterPositionChanged: function (newValue) {
         if (newValue != null && typeof newValue !== 'undefined') {
-            this.$.rightInsertionPointContainer.style.width = `${newValue}%`
+            this.$.rightInsertionPointContainer.style.width = newValue;
         }
     },
 
@@ -372,7 +372,7 @@ Polymer({
 
     // Splitter functionality
     _expandLeftInsertionPoint: function () {
-        this._expandContainer(this.$.leftInsertionPointContainer);
+        this._expandContainer(this.$.leftInsertionPointContainer, this.leftSplitterPosition);
     },
 
     _collapseLeftInsertionPoint: function () {
@@ -380,7 +380,7 @@ Polymer({
     },
 
     _expandRightInsertionPoint: function () {
-        this._expandContainer(this.$.rightInsertionPointContainer);
+        this._expandContainer(this.$.rightInsertionPointContainer, this.rightSplitterPosition);
     },
 
     _collapseRightInsertionPoint: function () {
@@ -428,17 +428,19 @@ Polymer({
     },
 
     _leftInsertionPointContainerUpdater: function (newPos) {
-        this._updateInsertionPointContainerWidth(newPos, this.$.leftInsertionPointContainer);
+        this._updateInsertionPointContainerWidth(newPos, this.$.leftInsertionPointContainer, newWidth => this.leftSplitterPosition = newWidth);
     },
 
     _rightInsertionPointContainerUpdater: function (newPos) {
-        this._updateInsertionPointContainerWidth(this.$.centreResultContainer.offsetWidth - this.$.fantomSplitter.offsetWidth - newPos, this.$.rightInsertionPointContainer);
+        this._updateInsertionPointContainerWidth(this.$.centreResultContainer.offsetWidth - this.$.fantomSplitter.offsetWidth - newPos,
+            this.$.rightInsertionPointContainer,
+            newWidth => this.rightSplitterPosition = newWidth);
     },
 
-    _updateInsertionPointContainerWidth: function (newWidth, insertionPointContaier) {
+    _updateInsertionPointContainerWidth: function (newWidth, insertionPointContaier, splitterPositionUpdater) {
         const oldWidth = insertionPointContaier.offsetWidth;
         if (oldWidth !== newWidth) {
-            insertionPointContaier.style.width = newWidth + "px";
+            splitterPositionUpdater(`${newWidth}px`);
             if (insertionPointContaier.offsetParent === null) {
                 insertionPointContaier.style.removeProperty("display");
             }
@@ -483,8 +485,8 @@ Polymer({
     },
 
     _expandContainer: function (element) {
-        element.style.removeProperty("width");
         element.style.removeProperty("display");
+        //TODO this should be revised and adjusted ask @01es.
         if (element == this.$.rightInsertionPointContainer && this._rightWidth) {
             this.$.rightInsertionPointContainer.style.width = this._rightWidth;
         }

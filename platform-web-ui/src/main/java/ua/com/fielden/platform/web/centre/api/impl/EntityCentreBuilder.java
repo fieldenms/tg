@@ -231,6 +231,8 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 providedTypesForAutocompletedSelectionCriteria,
                 runAutomatically,
                 enforcePostSaveRefresh,
+                leftSplitterPosition,
+                rightSplitterPosition,
                 sseUri,
                 selectionCriteriaLayout,
                 resultsetCollapsedCardLayout,

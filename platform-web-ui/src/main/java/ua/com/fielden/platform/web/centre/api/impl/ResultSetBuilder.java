@@ -522,8 +522,8 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
 
         @Override
-        public IWithRightSplitterPosition<T> withLiftSplitterPosition(final int percantage) {
-            return ResultSetBuilder.this.withLiftSplitterPosition(percantage);
+        public IWithRightSplitterPosition<T> withLeftSplitterPosition(final int percantage) {
+            return ResultSetBuilder.this.withLeftSplitterPosition(percantage);
         }
 
         @Override
@@ -679,7 +679,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IWithRightSplitterPosition<T> withLiftSplitterPosition(final int percentage) {
+    public IWithRightSplitterPosition<T> withLeftSplitterPosition(final int percentage) {
         if (percentage < 0 || percentage > 100) {
             throw new EntityCentreConfigurationException(SPLITTER_POSITION_OUT_OF_BOUNDS_ERR);
         }

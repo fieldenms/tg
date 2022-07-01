@@ -207,6 +207,12 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     private final boolean runAutomatically;
 
     /**
+     * Determines the position of left and right splitters.
+     */
+    private final Integer leftSplitterPosition;
+    private final Integer rightSplitterPosition;
+
+    /**
      * Determines whether centre should forcibly refresh the current page upon a successful save of a related entity (regardless of the presence of that entity on the current page).
      */
     private final boolean enforcePostSaveRefresh;
@@ -458,6 +464,9 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final boolean runAutomatically,
             final boolean enforcePostSaveRefresh,
 
+            final Integer leftSplitterPosition,
+            final Integer rightSplitterPosition,
+
             final String sseUri,
 
             final FlexLayout selectionCriteriaLayout,
@@ -535,6 +544,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
         this.runAutomatically = runAutomatically;
         this.enforcePostSaveRefresh = enforcePostSaveRefresh;
+        this.leftSplitterPosition = leftSplitterPosition;
+        this.rightSplitterPosition = rightSplitterPosition;
 
         this.sseUri = sseUri;
 
@@ -586,6 +597,14 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public boolean isRunAutomatically() {
         return runAutomatically;
+    }
+
+    public Optional<Integer> getLeftSplitterPosition() {
+        return ofNullable(leftSplitterPosition);
+    }
+
+    public Optional<Integer> getRightSplitterPosition() {
+        return ofNullable(rightSplitterPosition);
     }
 
     public boolean shouldEnforcePostSaveRefresh() {

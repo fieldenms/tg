@@ -141,8 +141,8 @@ public class ResultSetBuilderWrapperForEditors<T extends AbstractEntity<?>> impl
     }
 
     @Override
-    public IWithRightSplitterPosition<T> withLiftSplitterPosition(final int percentage) {
-        return builder.withLiftSplitterPosition(percentage);
+    public IWithRightSplitterPosition<T> withLeftSplitterPosition(final int percentage) {
+        return builder.withLeftSplitterPosition(percentage);
     }
 
     @Override

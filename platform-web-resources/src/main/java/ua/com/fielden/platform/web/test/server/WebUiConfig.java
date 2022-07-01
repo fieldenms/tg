@@ -2021,6 +2021,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                             .withNoParentCentreRefresh()
                             .build(),
                     InsertionPoints.LEFT)
+                    .withLeftSplitterPosition(33)
+                    .withRightSplitterPosition(33)
                     .build();
         }
         return scl.build();

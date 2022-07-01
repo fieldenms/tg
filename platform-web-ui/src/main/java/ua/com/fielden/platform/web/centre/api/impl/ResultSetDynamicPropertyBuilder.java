@@ -132,8 +132,8 @@ public class ResultSetDynamicPropertyBuilder<T extends AbstractEntity<?>> implem
     }
 
     @Override
-    public IWithRightSplitterPosition<T> withLiftSplitterPosition(final int percentage) {
-        return builder.withLiftSplitterPosition(percentage);
+    public IWithRightSplitterPosition<T> withLeftSplitterPosition(final int percentage) {
+        return builder.withLeftSplitterPosition(percentage);
     }
 
     @Override

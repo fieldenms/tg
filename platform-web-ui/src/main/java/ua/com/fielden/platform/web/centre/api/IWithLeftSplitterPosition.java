@@ -12,5 +12,5 @@ public interface IWithLeftSplitterPosition<T extends AbstractEntity<?>> extends 
      * @param percentage
      * @return
      */
-    IWithRightSplitterPosition<T> withLiftSplitterPosition(int percentage);
+    IWithRightSplitterPosition<T> withLeftSplitterPosition(int percentage);
 }
