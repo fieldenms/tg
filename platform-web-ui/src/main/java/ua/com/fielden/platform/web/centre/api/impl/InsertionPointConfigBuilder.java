@@ -71,11 +71,13 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
 
     @Override
     public IWithRightSplitterPosition<T> withLeftSplitterPosition(final int percentage) {
+        resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView)).setPreferred(preferred).setToolbar(toolbarConfig));
         return resultSetBuilder.withLeftSplitterPosition(percentage);
     }
 
     @Override
     public IEcbCompletion<T> withRightSplitterPosition(final int percentage) {
+        resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView)).setPreferred(preferred).setToolbar(toolbarConfig));
         return resultSetBuilder.withRightSplitterPosition(percentage);
     }
 }
