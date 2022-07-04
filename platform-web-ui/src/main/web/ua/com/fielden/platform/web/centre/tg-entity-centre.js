@@ -110,7 +110,7 @@ const template = html`
             min-height: fit-content;
         }
         .insertion-point-slot {
-            overflow: hidden;
+            overflow: auto;
         }
         .noselect {
             -webkit-touch-callout: none;
