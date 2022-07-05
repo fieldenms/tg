@@ -1270,6 +1270,19 @@ public class EntityUtils {
     }
 
     /**
+     * The same as {@link #fetchEntityForPropOf(AbstractEntity, String, IEntityReader)}, but accepting an argument of type {@link IConvertableToPath} to represent a property.
+     *
+     * @param <T>
+     * @param instance
+     * @param propPath
+     * @param coOther
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final T instance, final IConvertableToPath propPath, final IEntityReader<?> coOther) {
+        return fetchEntityForPropOf(instance, propPath.toPath(), coOther);
+    }
+
+    /**
      * Finds entity by {@code id} and retrieves it with a fetch model suitable for mutation (i.e. the same as for entity masters).
      * However, if the resultant entity to be mutated then argument {@code co} must correspond to an instrumenting instance.
      *
