@@ -25,6 +25,7 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
 
+import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderException;
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelException;
 
 /**
@@ -303,6 +304,33 @@ public class ElementFinder {
     }
 
     /**
+     * Looks for executable elements, representing inherited methods.
+     *
+     * @param typeElement
+     * @return
+     */
+    public static Set<ExecutableElement> findInheritedMethods(final TypeElement typeElement) {
+        final Set<ExecutableElement> methods = new LinkedHashSet<>();
+
+        TypeElement superclass = getSuperclassOrNull(typeElement);
+        while (superclass != null) {
+            methods.addAll(findDeclaredMethods(superclass));
+            superclass = getSuperclassOrNull(superclass);
+        }
+
+        return methods;
+    }
+
+    /**
+     * Looks for executable elements, representing all declared and inherited methods.
+     */
+    public static Set<ExecutableElement> findMethods(TypeElement typeElement) {
+        final Set<ExecutableElement> fields = findDeclaredMethods(typeElement);
+        fields.addAll(findInheritedMethods(typeElement));
+        return fields;
+    }
+
+    /**
      * The same as {@link #getFieldAnnotations(VariableElement)}, but without annotations {@code ignoredAnnotationsClasses}.
      *
      * @param field
@@ -407,4 +435,26 @@ public class ElementFinder {
         return varElement.getModifiers().contains(Modifier.STATIC);
     }
 
+    /**
+     * Tests whether an instance of {@link TypeMirror} ({@code typeMirror}) is a subtype of a {@link Class} instance ({@code type}).
+     * Any type is considered to be a subtype of itself.
+     *
+     * @param typeMirror  the child type
+     * @param type  the parent type
+     * @return {@code true} if and only if the first type is a subtype
+     *          of the second
+     */
+    public static boolean isSubtype(final TypeMirror typeMirror, final Class<?> type, final Types typeUtils) {
+        if (typeUtils == null) {
+            throw new ElementFinderException("typeUtils parameter can't be null.");
+        }
+        if (typeMirror.getKind() != TypeKind.DECLARED) {
+            return false;
+        }
+        if (equals((TypeElement) ((DeclaredType) typeMirror).asElement(), type)) {
+            return true;
+        }
+        return typeUtils.directSupertypes(typeMirror).stream()
+            .anyMatch(tm -> equals((TypeElement) ((DeclaredType) tm).asElement(), type));
+    }
 }
