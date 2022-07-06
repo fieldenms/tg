@@ -27,8 +27,12 @@ import '/resources/polymer/@polymer/paper-styles/element-styles/paper-material-s
 import '/resources/polymer/@polymer/neon-animation/animations/fade-in-animation.js';
 import '/resources/polymer/@polymer/neon-animation/animations/fade-out-animation.js';
 import '/resources/centre/tg-entity-centre-styles.js';
-import { tearDownEvent, getKeyEventTarget } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, getKeyEventTarget, allDefined } from '/resources/reflection/tg-polymer-utils.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
+
+const insertionPointKey = function(centre, element) {
+    return `${centre.userName}_${centre.miType}_${element.tagName}`;
+};
 
 const template = html`
     <style>
@@ -302,7 +306,7 @@ Polymer({
         }
     },
 
-    observers: ['_adjustView(detachedView, alternativeView)'],
+    observers: ['_adjustView(detachedView, alternativeView)', '_restoreFromLocalStorage(_element, contextRetriever)'],
 
     ready: function () {
         this.triggerElement = this.$.insertionPointContent;
@@ -526,6 +530,19 @@ Polymer({
         this.notifyResize();
     },
 
+    _restoreFromLocalStorage: function(_element, contextRetriever) {
+        if (_element && contextRetriever) {
+            const height = localStorage.getItem(insertionPointKey(contextRetriever(), _element));
+            if (height) {
+                this._height = height;
+            }
+        }
+    },
+
+    _saveInsertionPointHeight: function(newHeight) {
+        localStorage.setItem(insertionPointKey(this.contextRetriever(), this._element), newHeight);
+    },
+
     _expandColapseTap: function (event) {
         if (this.detachedView) {
             this._closeDialog();
@@ -562,6 +579,7 @@ Polymer({
                     const heightNeedsResize = resizedHeight >= 44 /* toolbar height*/ + 14 /* resizer image height */ ;
                     if (heightNeedsResize) {
                         this._height = resizedHeight + 'px';
+                        this._saveInsertionPointHeight(this._height);
                     }
                     break;
                 case 'end':

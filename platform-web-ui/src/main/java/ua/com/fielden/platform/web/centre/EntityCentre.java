@@ -227,6 +227,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static final String ALTERNATIVE_VIEW_INSERTION_POINT_DOM = "<!--@alternative_view_insertion_points-->";
     //centre related  config properties
     private static final String CENTRE_RETRIEVE_ALL_OPTION = "@retrieveAll";
+    private static final String CENTRE_USER_NAME = "@userName";
     private static final String LEFT_SPLITTER_POSITION = "@leftSplitterPositionPlacehoder";
     private static final String RIGHT_SPLITTER_POSITION = "@rightSplitterPositionPlacehoder";
     // generic custom code
@@ -1282,6 +1283,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(BOTTOM_INSERTION_POINT_DOM, bottomInsertionPointsDom.toString()).
                 replace(ALTERNATIVE_VIEW_INSERTION_POINT_DOM, join(alternativeViewsDom, "\n")).
                 replace(CENTRE_RETRIEVE_ALL_OPTION, Boolean.toString(dslDefaultConfig.shouldRetrieveAll())).
+                replace(CENTRE_USER_NAME, getUser().getKey()).
                 replace(READY_CUSTOM_CODE, customCode.map(code -> code.toString()).orElse("")).
                 replace(ATTACHED_CUSTOM_CODE, customCodeOnAttach.map(code -> code.toString()).orElse(""));
         logger.debug("Finishing...");

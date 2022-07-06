@@ -22,6 +22,14 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
+const leftSplitterKey = function (userName, miType) {
+    return `${userName}_${miType}_leftSplitterPosition`;
+};
+
+const rightSplitterKey = function (userName, miType) {
+    return `${userName}_${miType}_rightSplitterPosition`;
+};
+
 const template = html`
     <style>
         .tabs {
@@ -246,6 +254,8 @@ Polymer({
             type: String,
             observer: '_rightSplitterPositionChanged'
         },
+        miType: String,
+        userName: String,
         _showDialog: Function,
         saveAsName: {
             type: String,
@@ -290,6 +300,8 @@ Polymer({
         this._rightSplitterUpdater = this._rightSplitterUpdater.bind(this);
         this._leftInsertionPointContainerUpdater = this._leftInsertionPointContainerUpdater.bind(this);
         this._rightInsertionPointContainerUpdater = this._rightInsertionPointContainerUpdater.bind(this);
+        this._updateLeftSplitter = this._updateLeftSplitter.bind(this);
+        this._updateRightSplitter = this._updateRightSplitter.bind(this);
         this._allViews = [this.$.selectionView, 
             this.$.customEgiSlot.assignedNodes({ flatten: true })[0], 
             ...this.$.alternativeViewSlot.assignedNodes({ flatten: true })];
@@ -368,6 +380,17 @@ Polymer({
         self.bottomActions = [
             self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigSaveAction')
         ];
+
+        if (this.userName && this.miType) {
+            const leftSplitterPosition = localStorage.getItem(leftSplitterKey(this.userName, this.miType));
+            if (leftSplitterPosition) {
+                this.leftSplitterPosition = leftSplitterPosition;
+            }
+            const rightSplitterPosition = localStorage.getItem(rightSplitterKey(this.userName, this.miType));
+            if (rightSplitterPosition) {
+                this.rightSplitterPosition = rightSplitterPosition;
+            }
+        }
     },
 
     // Splitter functionality
@@ -428,13 +451,23 @@ Polymer({
     },
 
     _leftInsertionPointContainerUpdater: function (newPos) {
-        this._updateInsertionPointContainerWidth(newPos, this.$.leftInsertionPointContainer, newWidth => this.leftSplitterPosition = newWidth);
+        this._updateInsertionPointContainerWidth(newPos, this.$.leftInsertionPointContainer, this._updateLeftSplitter);
+    },
+
+    _updateLeftSplitter: function (newWidth) {
+        this.leftSplitterPosition = newWidth;
+        localStorage.setItem(leftSplitterKey(this.userName, this.miType) ,newWidth);
     },
 
     _rightInsertionPointContainerUpdater: function (newPos) {
         this._updateInsertionPointContainerWidth(this.$.centreResultContainer.offsetWidth - this.$.fantomSplitter.offsetWidth - newPos,
             this.$.rightInsertionPointContainer,
-            newWidth => this.rightSplitterPosition = newWidth);
+            this._updateRightSplitter);
+    },
+
+    _updateRightSplitter: function (newWidth) {
+        this.rightSplitterPosition = newWidth;
+        localStorage.setItem(rightSplitterKey(this.userName, this.miType) ,newWidth);
     },
 
     _updateInsertionPointContainerWidth: function (newWidth, insertionPointContaier, splitterPositionUpdater) {
