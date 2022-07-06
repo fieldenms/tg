@@ -8,7 +8,8 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 /**
  * Companion object for entity {@link EntityCentreConfig}.
  * <p>
- * Please, do not use standard {@link #save(EntityCentreConfig)} method in client code, use instead the methods below, deciding whether graceful conflict resolution is needed.
+ * Please, do not use standard {@link #save(EntityCentreConfig)} / {@link #quickSave(EntityCentreConfig)} methods in client code.
+ * Use {@link #saveWithoutConflicts} method instead (for graceful conflict resolution).
  * 
  * @author TG Team
  * 

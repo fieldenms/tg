@@ -17,7 +17,6 @@ import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
@@ -44,7 +43,7 @@ public class CentreConfigLoadActionDao extends CommonEntityDao<CentreConfigLoadA
     }
     
     @Override
-    @SessionRequired
+    // @SessionRequired -- avoid transaction here; see EntityCentreConfigDao for more details
     public CentreConfigLoadAction save(final CentreConfigLoadAction entity) {
         if (entity.isSkipUi()) {
             return super.save(entity);

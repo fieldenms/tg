@@ -18,13 +18,13 @@ import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserDao;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfig;
+import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfigCo;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfigDao;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigDao;
-import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfigCo;
-import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
+import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.config.MainMenuItemDao;
 import ua.com.fielden.platform.utils.EntityUtils;
 
@@ -45,7 +45,7 @@ public class EntityCentreAnalysisConfigPersistenceTest extends AbstractDaoTestCa
         final EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
         config.setConfigBody(new byte[] { 1, 2, 3 });
         config.setDesc("desc");
-        daoECC.saveWithConflicts(config);
+        daoECC.saveWithoutConflicts(config); // conflicts not possible
         final EntityCentreConfig config2 = daoECC.findByEntityAndFetch(null, config);
 
         final EntityCentreAnalysisConfig analysis = new_composite(EntityCentreAnalysisConfig.class, config2, "ANALYSIS 1");

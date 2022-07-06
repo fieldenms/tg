@@ -22,8 +22,8 @@ import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigDao;
-import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
+import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.config.MainMenuItemDao;
 
 /**
@@ -42,7 +42,7 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
         final EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
         config.setDesc("desc");
         config.setConfigBody(new byte[] { 1, 2, 3 });
-        dao.saveWithConflicts(config);
+        dao.saveWithoutConflicts(config); // conflicts not possible
         
         final EntityResultQueryModel<EntityCentreConfig> query = select(EntityCentreConfig.class).model();
         final OrderingModel orderBy = orderBy().prop(AbstractEntity.ID).asc().model();
@@ -51,21 +51,16 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
         assertTrue("Incorrectly saved binary property.", Arrays.equals(new byte[] { 1, 2, 3 }, result.get(0).getConfigBody()));
     }
     
-    private EntityCentreConfig saveWithConflicts(final EntityCentreConfig config) {
-        dao.saveWithConflicts(config);
-        return dao.findByEntityAndFetch(null, config);
-    }
-    
     @Test
     public void test_update_of_binary_data() {
         EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
         config.setConfigBody(new byte[] { 1, 2, 3 });
         config.setDesc("desc");
-        config = saveWithConflicts(config);
+        config = saveWithoutConflicts(config); // conflicts not possible
         
         assertEquals("Incorrect version.", Long.valueOf("0"), config.getVersion());
         config.setConfigBody(new byte[] { 1, 2, 3, 4 });
-        config = saveWithConflicts(config);
+        config = saveWithoutConflicts(config); // conflicts not possible
         assertEquals("Incorrect version.", Long.valueOf("1"), config.getVersion());
         
         final EntityCentreConfig fromDb = dao.findById(config.getId());
@@ -87,7 +82,7 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
         final EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
         config.setConfigBody(new byte[] { 0 });
         config.setDesc("desc0");
-        dao.saveWithConflicts(config); // no conflict should appear -- initial saving
+        dao.saveWithoutConflicts(config); // no conflict should appear -- initial saving
         assertEquals("Incorrect version.", Long.valueOf("0"), config.getVersion());
         
         // |----------------| first
@@ -115,7 +110,7 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
         final EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
         config.setConfigBody(new byte[] { 0 });
         config.setDesc("desc0");
-        dao.saveWithConflicts(config); // no conflict should appear -- initial saving
+        dao.saveWithoutConflicts(config); // no conflict should appear -- initial saving
         assertEquals("Incorrect version.", Long.valueOf("0"), config.getVersion());
         
         // |----------------| first
@@ -143,7 +138,7 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
         final EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
         config.setConfigBody(new byte[] { 0 });
         config.setDesc("desc0");
-        dao.saveWithConflicts(config); // no conflict should appear -- initial saving
+        dao.saveWithoutConflicts(config); // no conflict should appear -- initial saving
         assertEquals("Incorrect version.", Long.valueOf("0"), config.getVersion());
         
         // |----------------------------| first
@@ -171,7 +166,7 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
         final EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
         config.setConfigBody(new byte[] { 0 });
         config.setDesc("desc0");
-        dao.saveWithConflicts(config); // no conflict should appear -- initial saving
+        dao.saveWithoutConflicts(config); // no conflict should appear -- initial saving
         assertEquals("Incorrect version.", Long.valueOf("0"), config.getVersion());
         
         // |----------------| first

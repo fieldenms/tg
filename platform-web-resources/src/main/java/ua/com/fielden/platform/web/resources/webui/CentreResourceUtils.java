@@ -778,7 +778,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                             config.setDashboardRefreshFrequency(dashboardRefreshFrequency);
                             config.setRunAutomatically(validationPrototype.centreRunAutomatically(saveAsName)); // copy runAutomatically from currently loaded centre configuration being copied
                         }
-                        eccCompanion.saveWithConflicts(config.setConfigUuid(newConfigUuid));
+                        eccCompanion.saveWithoutConflicts(config.setConfigUuid(newConfigUuid));
                     }); // update with newConfigUuid
             };
             createAndOverrideUuid.apply(newDesc).accept(FRESH_CENTRE_NAME);
@@ -1385,10 +1385,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 }
                 calcRunAutomaticallyOpt.get().ifPresent(runAutomatically -> config.setRunAutomatically(runAutomatically));
                 changedTitle.ifPresent(ct -> config.setTitle(NAME_OF.apply(name).apply(of(ct)).apply(device))); // update title of configuration from upstream if it has changed
-                eccCompanion.saveWithConflicts(config.setConfigBody(upstreamConfig.getConfigBody()));
+                eccCompanion.saveWithoutConflicts(config.setConfigBody(upstreamConfig.getConfigBody()));
             });
         final Function<String, Consumer<String>> overrideConfigTitleFor = name -> ct -> findConfigOpt(miType, user, NAME_OF.apply(name).apply(saveAsName).apply(device), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT /*contains 'title' inside fetch model*/).ifPresent(config ->
-            eccCompanion.saveWithConflicts(config.setTitle(NAME_OF.apply(name).apply(of(ct)).apply(device)))
+            eccCompanion.saveWithoutConflicts(config.setTitle(NAME_OF.apply(name).apply(of(ct)).apply(device)))
         );
         final boolean notUpdateFresh = checkChanges.map(check -> check.get()).orElse(FALSE);
         // update SAVED surrogate configuration; always

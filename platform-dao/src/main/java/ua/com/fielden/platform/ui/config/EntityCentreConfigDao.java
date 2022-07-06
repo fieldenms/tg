@@ -18,15 +18,14 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.ui.config.EntityCentreConfig;
-import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 
 /**
  * DAO implementation of {@link EntityCentreConfigCo}.
  * <p>
  * Method {@link #save(EntityCentreConfig)} is intentionally not overridden due to the need to use {@link #quickSave(EntityCentreConfig)}.
- * However, please always use {@link #saveWithConflicts(EntityCentreConfig)} or {@link #saveWithoutConflicts(EntityCentreConfig)} and decide
- * whether outer transaction scope [xor] graceful conflict resolution is needed.
+ * However, please always use {@link #saveWithoutConflicts(EntityCentreConfig)} instead of save/quickSave.
+ * This ensures graceful conflict resolution in cases where simultaneous processes for the same user occur.
+ * This method should not be used in another transaction scope.
  * 
  * @author TG Team
  * 
@@ -55,6 +54,11 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
     @SessionRequired
     public int batchDelete(final EntityResultQueryModel<EntityCentreConfig> model) {
         return defaultBatchDelete(model);
+    }
+    
+    @Override
+    public <T> T withDbVersion(final Function<DbVersion, T> fun) {
+        return fun.apply(getDbVersion());
     }
     
     ///////////////////////////////// GRACEFULL CONFLICT RESOLUTION /////////////////////////////////
@@ -88,10 +92,6 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
         }
     }
     
-    @Override
-    public <T> T withDbVersion(final Function<DbVersion, T> fun) {
-        return fun.apply(getDbVersion());
-    }
     /**
      * Regular entity saving process with transaction scope but not allowing to nest that scope inside another scope.
      * 
@@ -111,7 +111,9 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
      */
     private Long refetchReapplyAndSaveWithoutConflicts(final EntityCentreConfig entity) {
         final EntityCentreConfig persistedEntity = findByEntityAndFetch(null, entity);
-        for (final MetaProperty<?> prop : entity.getDirtyProperties()) { // the only two properties that can be conflicting: 'configBody' (most cases) and 'desc' (rare, but possible); other properties are the parts of key and will not conflict
+        // several properties can be conflicting, e.g. 'configBody' (most cases), 'desc' (rare, but possible), 'preferred' etc.; other properties are the parts of key and will not conflict;
+        // for the case of new entity saving, all props would be dirty, however only some - conflicting
+        for (final MetaProperty<?> prop : entity.getDirtyProperties()) {
             final String name = prop.getName();
             if (isConflicting(prop.getValue(), prop.getOriginalValue(), persistedEntity.get(name))) {
                 persistedEntity.set(name, prop.getValue());

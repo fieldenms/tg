@@ -450,10 +450,10 @@ public class CentreUpdater {
         }
         
         // save
-        eccCompanion.saveWithConflicts(freshConfig); // editCentreTitleAndDesc is used inside other transaction scopes (e.g. CentreConfigEditActionDao.performSave and AbstractCentreConfigCommitActionDao.save) -- saveWithConflicts must be used
-        eccCompanion.saveWithConflicts(savedConfig);
+        eccCompanion.saveWithoutConflicts(freshConfig); // editCentreTitleAndDesc is not used inside other transaction scopes (i.e. CentreConfigEditActionDao.performSave and AbstractCentreConfigCommitActionDao.save do not have @SessionRequired) -- saveWithoutConflicts can be used
+        eccCompanion.saveWithoutConflicts(savedConfig);
         if (previouslyRunConfig != null) { // previouslyRun centre may not exist
-            eccCompanion.saveWithConflicts(previouslyRunConfig);
+            eccCompanion.saveWithoutConflicts(previouslyRunConfig);
         }
     }
     
@@ -477,7 +477,7 @@ public class CentreUpdater {
         final EntityCentreConfig freshConfig = findConfig(miType, user, deviceSpecificName + DIFFERENCES_SUFFIX , eccCompanion);
         if (freshConfig != null) {
             freshConfig.setRunAutomatically(newRunAutomatically);
-            eccCompanion.saveWithConflicts(freshConfig); // configureCentre is used inside other transaction scopes (e.g. CentreConfigConfigureActionDao.save) -- saveWithConflicts must be used
+            eccCompanion.saveWithoutConflicts(freshConfig); // configureCentre is not used inside other transaction scopes (i.e. CentreConfigConfigureActionDao.save has no @SessionRequired) -- saveWithoutConflicts can be used
         }
     }
     
@@ -730,7 +730,7 @@ public class CentreUpdater {
     }
     
     /**
-     * Returns {@link Stream} of preferred {@link EntityCentreConfig} configurations for specified <code>user</code>, <code>device</code> and concrete 
+     * Returns {@link List} of preferred {@link EntityCentreConfig} configurations for specified <code>user</code>, <code>device</code> and concrete 
      * <code>miType</code>'ed menu item.
      * <p>
      * Please note that by design this stream should return single or none instance.
@@ -740,12 +740,12 @@ public class CentreUpdater {
      * @param device
      * @return
      */
-    private static Stream<EntityCentreConfig> streamPreferredConfigs(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final ICompanionObjectFinder companionFinder) {
+    private static List<EntityCentreConfig> getAllPreferredConfigs(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final ICompanionObjectFinder companionFinder) {
         final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
         final EntityResultQueryModel<EntityCentreConfig> queryForCurrentUser = eccCompanion.withDbVersion(centreConfigQueryFor(user, miType, device, FRESH_CENTRE_NAME))
             .and().prop("preferred").eq().val(true).model();
         final fetch<EntityCentreConfig> fetch = fetchWithKeyAndDesc(EntityCentreConfig.class).with("preferred").fetchModel();
-        return eccCompanion.stream(from(queryForCurrentUser).with(fetch).model());
+        return eccCompanion.getAllEntities(from(queryForCurrentUser).with(fetch).model());
     }
     
     /**
@@ -762,9 +762,8 @@ public class CentreUpdater {
             return empty();
         }
         final String surrogateNamePrefix = deviceSpecific(FRESH_CENTRE_NAME, device);
-        try (final Stream<EntityCentreConfig> stream = streamPreferredConfigs(user, miType, device, companionFinder) ) {
-            return stream.findAny().map(ecc -> obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix));
-        }
+        final List<EntityCentreConfig> prefConfigs = getAllPreferredConfigs(user, miType, device, companionFinder);
+        return prefConfigs.stream().findAny().map(ecc -> obtainTitleFrom(ecc.getTitle(), surrogateNamePrefix));
     }
     
     /**
@@ -781,11 +780,10 @@ public class CentreUpdater {
     public static void makePreferred(final User user, final Class<? extends MiWithConfigurationSupport<?>> miType, final Optional<String> saveAsName, final DeviceProfile device, final ICompanionObjectFinder companionFinder, final IWebUiConfig webUiConfig) {
         if (!webUiConfig.isEmbeddedCentre(miType)) { // standalone centres only, not embedded
             final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
-            try (final Stream<EntityCentreConfig> stream = streamPreferredConfigs(user, miType, device, companionFinder) ) { // stream has its own transaction scope -- saveWithConflicts must be used
-                stream.forEach(ecc -> eccCompanion.saveWithConflicts(ecc.setPreferred(false)));
-            }
+            final List<EntityCentreConfig> prefConfigs = getAllPreferredConfigs(user, miType, device, companionFinder);
+            prefConfigs.stream().forEach(ecc -> eccCompanion.saveWithoutConflicts(ecc.setPreferred(false)));
             if (saveAsName.isPresent()) {
-                eccCompanion.saveWithConflicts( // used inside other transaction scopes (e.g. CentreConfigLoadActionDao->makePreferredConfig->makePreferred) -- saveWithConflicts must be used
+                eccCompanion.saveWithoutConflicts( // not used inside other transaction scopes (e.g. CentreConfigLoadActionDao->makePreferredConfig->makePreferred does not have @SessionRequired) -- saveWithoutConflicts can be used
                     findConfig(miType, user, deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX, eccCompanion)
                     .setPreferred(true)
                 );
