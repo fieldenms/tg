@@ -1008,7 +1008,7 @@ public class CentreUpdater {
                     findConfigOpt(miType, user, deviceSpecificDiffName, eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("runAutomatically"))
                         .ifPresent(freshConfig -> {
                             final boolean upstreamRunAutomatically = of(LINK_CONFIG_TITLE).equals(saveAsName) /* link: always runAutomatically */ || defaultRunAutomatically(miType, webUiConfig) /* default/base: runAutomatically as in Centre DSL */;
-                            eccCompanion.saveWithConflicts(freshConfig.setRunAutomatically(upstreamRunAutomatically));
+                            eccCompanion.saveWithoutConflicts(freshConfig.setRunAutomatically(upstreamRunAutomatically));
                         });
                 }
             } else { // non-base user
@@ -1027,10 +1027,10 @@ public class CentreUpdater {
                 if (FRESH_CENTRE_NAME.equals(name)) { // inherited configs have uuid only in FRESH centre
                     if (upstreamConfigUuid.isPresent()) {
                         findConfigOpt(miType, user, deviceSpecificDiffName, eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid").with("runAutomatically"))
-                            .ifPresent(freshConfig -> eccCompanion.saveWithConflicts(freshConfig.setConfigUuid(upstreamConfigUuid.get()).setRunAutomatically(upstreamRunAutomatically)));
+                            .ifPresent(freshConfig -> eccCompanion.saveWithoutConflicts(freshConfig.setConfigUuid(upstreamConfigUuid.get()).setRunAutomatically(upstreamRunAutomatically)));
                     } else {
                         findConfigOpt(miType, user, deviceSpecificDiffName, eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("runAutomatically"))
-                            .ifPresent(freshConfig -> eccCompanion.saveWithConflicts(freshConfig.setRunAutomatically(upstreamRunAutomatically)));
+                            .ifPresent(freshConfig -> eccCompanion.saveWithoutConflicts(freshConfig.setRunAutomatically(upstreamRunAutomatically)));
                     }
                 }
             }

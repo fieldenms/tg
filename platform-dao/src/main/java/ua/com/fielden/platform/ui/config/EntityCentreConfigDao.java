@@ -70,13 +70,24 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
      * This method can not have {@link SessionRequired} scope.
      * This is due to recursive invocation of the same {@link #saveWithoutConflicts(EntityCentreConfig)} method down inside {@link #refetchReapplyAndSaveWithoutConflicts(EntityCentreConfig)}.
      * The problem lies in {@link OptimisticLockException} which, when actioned, makes transaction inactive internally; that makes impossible to invoke {@link #saveWithoutConflicts(EntityCentreConfig)} method recursively again.
-     * What we need here is granular {@link SessionRequired} scope, so we annotate {@link #saveNotAllowingNestedScope(EntityCentreConfig)} with {@link SessionRequired} and when {@link OptimisticLockException} occurs, only little granular transaction ({@link #saveNotAllowingNestedScope(EntityCentreConfig)}) makes inactive (and further rollbacks in SessionInterceptor).
-     * Next recursive invocation of {@link #saveWithoutConflicts(EntityCentreConfig)} method will trigger separate independent {@link SessionRequired} scope for nested call {@link #saveNotAllowingNestedScope(EntityCentreConfig)}.
+     * What we need here is granular {@link SessionRequired} scope, so we have {@link #quickSave(EntityCentreConfig)} with {@link SessionRequired} and when {@link OptimisticLockException} occurs, only little granular transaction ({@link #quickSave(EntityCentreConfig)}) makes inactive (and further rollbacks in SessionInterceptor).
+     * Next recursive invocation of {@link #saveWithoutConflicts(EntityCentreConfig)} method will trigger separate independent {@link SessionRequired} scope for nested call {@link #quickSave(EntityCentreConfig)}.
      */
     @Override
     public Long saveWithoutConflicts(final EntityCentreConfig entity) {
         try {
-            return saveNotAllowingNestedScope(entity);
+            // we allow nested transaction scopes here intentionally (quickSave allows it);
+            // i.e. there will be rollbacked outer transaction in case of saving conflicts in some rare combinations, but no exception about disallowed nested transaction;
+            // the only possible existing combination (very unlikely) is as following:
+            // 1. multiple @SessionRequired dao savings with ICriteriaEntityRestorer restoration occur simultaneously for the same user;
+            // updateDifferences
+            //   updateCentre
+            //     createCriteriaEntityForPaginating
+            //       createCriteriaEntityForContext
+            //         restoreCriteriaEntity
+            // 2. somehow FRESH centre configuration was not persisted earlier (extremely unlikely, because action would not be possible to open -- need loaded entity centre configuration on the client);
+            // in this situation dao saving would have broken transaction, i.e. if some exception would be thrown after saveWithoutConflicts then full rollback would not be performed
+            return quickSave(entity); // must be quickSave(entity), not super.quickSave(entity)!
             // Need to repeat saving of entity in case of "self conflict": in a concurrent environment the same user on the same entity centre configuration can trigger multiple concurrent validations with different parameters.
         } catch (final EntityCompanionException companionException) {
             if (companionException.getMessage() != null && companionException.getMessage().contains(ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES)) { // conflict could occur for concrete user, miType and surrogate+saveAs name
@@ -90,17 +101,6 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
             // Exactly the same strategy should be used for Hibernate-based conflicts as for TG-based ones.
             return refetchReapplyAndSaveWithoutConflicts(entity); // repeat the procedure of 'conflict-aware' saving in cases of subsequent conflicts
         }
-    }
-    
-    /**
-     * Regular entity saving process with transaction scope but not allowing to nest that scope inside another scope.
-     * 
-     * @param entity
-     * @return
-     */
-    @SessionRequired(allowNestedScope = false)
-    public Long saveNotAllowingNestedScope(final EntityCentreConfig entity) { // must be 'public' (or perhaps 'protected') for SessionInterceptor to take effect
-        return super.quickSave(entity);
     }
     
     /**
