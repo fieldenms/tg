@@ -122,14 +122,4 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
         return saveWithoutConflicts(persistedEntity);
     }
     
-    ///////////////////////////////// CONFLICTS UNRESOLVED /////////////////////////////////
-    /**
-     * {@inheritDoc}
-     */
-    @Override
-    @SessionRequired
-    public Long saveWithConflicts(final EntityCentreConfig entity) {
-        return super.quickSave(entity);
-    }
-    
 }

@@ -132,7 +132,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
             logger.error(format("Creating and saving of empty diff %s...", loggingSuffix));
             final Map<String, Object> emptyDiff = createEmptyDifferences();
             ecc.setConfigBody(CENTRE_DIFF_SERIALISER.serialise(emptyDiff));
-            eccCompanion.saveWithoutConflicts(ecc); // this rare saving case should never be conflicted -- it is safe to use saveWithConflicts here (also nesting inside bigger transaction scopes is required)
+            eccCompanion.saveWithoutConflicts(ecc); // this rare saving case should never be conflicted -- however, we still use saveWithoutConflicts here
             logger.error(format("Creating and saving of empty diff %s...done", loggingSuffix));
             logger.error("============================================ CENTRE DESERIALISATION HAS FAILED [END] ============================================");
             return emptyDiff;
@@ -151,37 +151,16 @@ public class CentreUpdaterUtils extends CentreUpdater {
         final EntityCentreConfigCo eccCompanion,
         final MainMenuItemCo mmiCompanion
     ) {
-        return saveNewEntityCentreManager(false, differences, menuItemType, user, newName, newDesc, eccCompanion, mmiCompanion);
-    }
-    
-    /**
-     * Saves new {@link EntityCentreConfig} instance with serialised {@code differences} inside.
-     * 
-     * @param withoutConflicts -- <code>true</code> to avoid self-conflict checks, <code>false</code> otherwise; <code>true</code> only to be used NOT IN another SessionRequired transaction scope
-     */
-    public static Map<String, Object> saveNewEntityCentreManager(
-        final boolean withoutConflicts,
-        final Map<String, Object> differences,
-        final Class<?> menuItemType,
-        final User user,
-        final String newName,
-        final String newDesc,
-        final EntityCentreConfigCo eccCompanion,
-        final MainMenuItemCo mmiCompanion
-    ) {
-        saveNewEntityCentreManager(withoutConflicts, CENTRE_DIFF_SERIALISER.serialise(differences), menuItemType, user, newName, newDesc, eccCompanion, mmiCompanion, identity());
+        saveNewEntityCentreManager(CENTRE_DIFF_SERIALISER.serialise(differences), menuItemType, user, newName, newDesc, eccCompanion, mmiCompanion, identity());
         return differences;
     }
 
-    
     /**
      * Saves new {@link EntityCentreConfig} instance with {@code serialisedDifferences} inside.
      * 
-     * @param withoutConflicts -- <code>true</code> to avoid self-conflict checks, <code>false</code> otherwise; <code>true</code> only to be used NOT IN another SessionRequired transaction scope
      * @param adjustConfig -- function to adjust newly created centre config just before saving
      */
     public static Long saveNewEntityCentreManager(
-        final boolean withoutConflicts,
         final byte[] serialisedDifferences,
         final Class<?> menuItemType,
         final User user,
@@ -197,21 +176,14 @@ public class CentreUpdaterUtils extends CentreUpdater {
             return mmiCompanion.save(newMainMenuItem);
         });
         final EntityCentreConfig ecc = adjustConfig.apply(eccCompanion.new_().setOwner(user).setTitle(newName).setMenuItem(menuItem).setConfigBody(serialisedDifferences).setDesc(newDesc));
-        if (withoutConflicts) {
-            return eccCompanion.saveWithoutConflicts(ecc);
-        } else {
-            return eccCompanion.saveWithConflicts(ecc);
-        }
+        return eccCompanion.saveWithoutConflicts(ecc);
     }
     
     /**
      * Overrides existing {@link EntityCentreConfig} instance with new serialised diff.
      * Otherwise, in case where there is no such instance in database, creates and saves new {@link EntityCentreConfig} instance with serialised diff inside.
-     * 
-     * @param withoutConflicts -- <code>true</code> to avoid self-conflict checks, <code>false</code> otherwise; <code>true</code> only to be used NOT IN another SessionRequired transaction scope
      */
     public static Map<String, Object> saveEntityCentreManager(
-        final boolean withoutConflicts,
         final Map<String, Object> differences,
         final Class<?> menuItemType,
         final User user,
@@ -222,17 +194,13 @@ public class CentreUpdaterUtils extends CentreUpdater {
     ) {
         final EntityCentreConfig config = eccCompanion.getEntity(from(modelFor(user, menuItemType.getName(), name)).model());
         if (config == null) {
-            saveNewEntityCentreManager(withoutConflicts, differences, menuItemType, user, name, newDesc, eccCompanion, mmiCompanion);
+            saveNewEntityCentreManager(differences, menuItemType, user, name, newDesc, eccCompanion, mmiCompanion);
         } else {
             if (newDesc != null) {
                 config.setDesc(newDesc);
             }
             config.setConfigBody(CENTRE_DIFF_SERIALISER.serialise(differences));
-            if (withoutConflicts) {
-                eccCompanion.saveWithoutConflicts(config);
-            } else {
-                eccCompanion.saveWithConflicts(config);
-            }
+            eccCompanion.saveWithoutConflicts(config);
         }
         return differences;
     }

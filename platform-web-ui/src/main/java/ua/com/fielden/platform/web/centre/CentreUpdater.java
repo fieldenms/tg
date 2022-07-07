@@ -502,34 +502,6 @@ public class CentreUpdater {
      * Initialises and commits centre from the passed <code>centreToBeInitialisedAndCommitted</code> instance for surrogate centre with concrete <code>name</code>.
      * <p>
      * Please note that this operation is immutable in regard to the surrogate centre instance being copied.
-     *
-     * @param user
-     * @param miType
-     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
-     * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
-     * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
-     * @param centre -- the centre manager to commit
-     * @param newDesc -- new description to be saved into persistent storage
-     */
-    public static ICentreDomainTreeManagerAndEnhancer commitCentre(
-            final User user,
-            final Class<? extends MiWithConfigurationSupport<?>> miType,
-            final String name,
-            final Optional<String> saveAsName,
-            final DeviceProfile device,
-            final ICentreDomainTreeManagerAndEnhancer centre,
-            final String newDesc,
-            final IWebUiConfig webUiConfig,
-            final EntityCentreConfigCo eccCompanion,
-            final MainMenuItemCo mmiCompanion,
-            final IUser userCompanion) {
-        return commitCentre(false, user, miType, name, saveAsName, device, centre, newDesc, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-    }
-    
-    /**
-     * Initialises and commits centre from the passed <code>centreToBeInitialisedAndCommitted</code> instance for surrogate centre with concrete <code>name</code>.
-     * <p>
-     * Please note that this operation is immutable in regard to the surrogate centre instance being copied.
      * <p>
      * IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE.
      * 
@@ -553,40 +525,10 @@ public class CentreUpdater {
             final EntityCentreConfigCo eccCompanion,
             final MainMenuItemCo mmiCompanion,
             final IUser userCompanion) {
-        return commitCentre(true, user, miType, name, saveAsName, device, centre, newDesc, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-    }
-    
-    /**
-     * Initialises and commits centre from the passed <code>centreToBeInitialisedAndCommitted</code> instance for surrogate centre with concrete <code>name</code>.
-     * <p>
-     * Please note that this operation is immutable in regard to the surrogate centre instance being copied.
-     *
-     * @param withoutConflicts -- <code>true</code> to avoid self-conflict checks, <code>false</code> otherwise; <code>true</code> only to be used NOT IN another SessionRequired transaction scope
-     * @param user
-     * @param miType
-     * @param name -- surrogate name of the centre (fresh, previouslyRun etc.); can be {@link CentreUpdater#deviceSpecific(String, DeviceProfile)}.
-     * @param saveAsName -- user-defined title of 'saveAs' centre configuration or empty {@link Optional} for unnamed centre
-     * @param device -- device profile (mobile or desktop) for which the centre is accessed / maintained
-     * @param centre -- the centre manager to commit
-     * @param newDesc -- new description to be saved into persistent storage
-     */
-    protected static ICentreDomainTreeManagerAndEnhancer commitCentre(
-            final boolean withoutConflicts,
-            final User user,
-            final Class<? extends MiWithConfigurationSupport<?>> miType,
-            final String name,
-            final Optional<String> saveAsName,
-            final DeviceProfile device,
-            final ICentreDomainTreeManagerAndEnhancer centre,
-            final String newDesc,
-            final IWebUiConfig webUiConfig,
-            final EntityCentreConfigCo eccCompanion,
-            final MainMenuItemCo mmiCompanion,
-            final IUser userCompanion) {
         final String deviceSpecificName = deviceSpecific(saveAsSpecific(name, saveAsName), device);
         final ICentreDomainTreeManagerAndEnhancer defaultCentre = getDefaultCentre(miType, webUiConfig);
         // override old 'diff' with recently created one and save it
-        saveEntityCentreManager(withoutConflicts, createDifferences(centre, defaultCentre, getEntityType(miType)), miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, newDesc, eccCompanion, mmiCompanion);
+        saveEntityCentreManager(createDifferences(centre, defaultCentre, getEntityType(miType)), miType, user, deviceSpecificName + DIFFERENCES_SUFFIX, newDesc, eccCompanion, mmiCompanion);
         return centre;
     }
     

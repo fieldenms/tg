@@ -28,14 +28,6 @@ public interface EntityCentreConfigCo extends IEntityDao<EntityCentreConfig> {
     Long saveWithoutConflicts(final EntityCentreConfig entity);
     
     /**
-     * Saves the entity (quickly) in a regular manner with conflict check. Can be nested inside other transaction scopes.
-     * 
-     * @param entity
-     * @return
-     */
-    Long saveWithConflicts(final EntityCentreConfig entity);
-    
-    /**
      * Runs function {@code fun} with the {@link DbVersion} as the argument.
      * @param fun
      * @return
