@@ -23,8 +23,6 @@ import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityEditActionProducer;
 import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.entity.EntityExportActionProducer;
-import ua.com.fielden.platform.entity.EntityNavigationAction;
-import ua.com.fielden.platform.entity.EntityNavigationActionProducer;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.EntityNewActionProducer;
 import ua.com.fielden.platform.web.PrefDim;
@@ -34,8 +32,8 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
+import ua.com.fielden.platform.web.view.master.api.with_master.impl.EntityEditMaster;
 import ua.com.fielden.platform.web.view.master.api.with_master.impl.EntityManipulationMasterBuilder;
-import ua.com.fielden.platform.web.view.master.api.with_master.impl.EntityNavigationMaster;
 import ua.com.fielden.platform.web.view.master.attachments.AttachmentPreviewEntityMaster;
 import ua.com.fielden.platform.web.view.master.attachments.AttachmentsUploadActionMaster;
 
@@ -65,17 +63,7 @@ public class StandardMastersWebUiConfig {
     public static EntityMaster<EntityEditAction> createEntityEditMaster(final Injector injector) {
         return new EntityMaster<>(EntityEditAction.class,
                 EntityEditActionProducer.class,
-                new EntityManipulationMasterBuilder<EntityEditAction>()
-                /*  */.forEntityWithSaveOnActivate(EntityEditAction.class)
-                /*  */.withMaster(null) // the master instance is not passing here, this is generic implementation, and master type is calculated from currentEntity context
-                /*  */.done(),
-                injector);
-    }
-
-    public static EntityMaster<EntityNavigationAction> createEntityNavigationMaster(final Injector injector) {
-        return new EntityMaster<>(EntityNavigationAction.class,
-                EntityNavigationActionProducer.class,
-                new EntityNavigationMaster(EntityNavigationAction.class, true),
+                new EntityEditMaster(EntityEditAction.class, true),
                 injector);
     }
 

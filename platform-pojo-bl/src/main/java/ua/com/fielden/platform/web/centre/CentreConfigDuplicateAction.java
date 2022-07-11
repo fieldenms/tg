@@ -8,7 +8,7 @@ import ua.com.fielden.platform.entity.annotation.CompanionObject;
  * @author TG Team
  *
  */
-@CompanionObject(ICentreConfigDuplicateAction.class)
+@CompanionObject(CentreConfigDuplicateActionCo.class)
 public class CentreConfigDuplicateAction extends AbstractCentreConfigAction {
     
 }

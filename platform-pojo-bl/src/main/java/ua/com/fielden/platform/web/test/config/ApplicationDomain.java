@@ -17,6 +17,7 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.EntityOne;
+import ua.com.fielden.platform.sample.domain.EntityThree;
 import ua.com.fielden.platform.sample.domain.EntityTwo;
 import ua.com.fielden.platform.sample.domain.ExportAction;
 import ua.com.fielden.platform.sample.domain.TgBogie;
@@ -42,6 +43,7 @@ import ua.com.fielden.platform.sample.domain.TgEntityStringKey;
 import ua.com.fielden.platform.sample.domain.TgEntityTwoEntityKeys;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDependency;
 import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptor;
+import ua.com.fielden.platform.sample.domain.TgEntityWithPropertyDescriptorExt;
 import ua.com.fielden.platform.sample.domain.TgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.sample.domain.TgExportFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgFetchProviderTestEntity;
@@ -77,6 +79,11 @@ import ua.com.fielden.platform.sample.domain.TgSelectedEntitiesExampleAction;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgStop;
 import ua.com.fielden.platform.sample.domain.TgStopMap;
+import ua.com.fielden.platform.sample.domain.TgUnion;
+import ua.com.fielden.platform.sample.domain.TgUnionCommonType;
+import ua.com.fielden.platform.sample.domain.TgUnionHolder;
+import ua.com.fielden.platform.sample.domain.TgUnionType1;
+import ua.com.fielden.platform.sample.domain.TgUnionType2;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 import ua.com.fielden.platform.sample.domain.TgVehicleFuelUsage;
@@ -91,6 +98,7 @@ import ua.com.fielden.platform.sample.domain.TgWebApiEntitySyntheticMulti;
 import ua.com.fielden.platform.sample.domain.TgWebApiEntitySyntheticSingle;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
+import ua.com.fielden.platform.sample.domain.UnionEntityWithoutSecondDescTitle;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityChild;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityDetail;
@@ -100,6 +108,7 @@ import ua.com.fielden.platform.sample.domain.compound.master.menu.actions.TgComp
 import ua.com.fielden.platform.sample.domain.compound.master.menu.actions.TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem;
 import ua.com.fielden.platform.sample.domain.compound.ui_actions.OpenTgCompoundEntityMasterAction;
 import ua.com.fielden.platform.sample.domain.stream_processors.DumpCsvTxtProcessor;
+import ua.com.fielden.platform.sample.domain.ui_actions.MakeCompletedAction;
 import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
 import ua.com.fielden.platform.web.test.server.master_action.NewEntityAction;
 
@@ -141,6 +150,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgDummyAction.class);
         add(TgEntityWithPropertyDependency.class);
         add(TgEntityWithPropertyDescriptor.class);
+        add(TgEntityWithPropertyDescriptorExt.class);
         add(DumpCsvTxtProcessor.class);
         add(NewEntityAction.class);
         add(ExportAction.class);
@@ -178,8 +188,10 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgOrgUnit5.class);
         add(TgFuelType.class);
         add(UnionEntity.class);
+        add(UnionEntityWithoutSecondDescTitle.class);
         add(EntityOne.class);
         add(EntityTwo.class);
+        add(EntityThree.class);
 
         add(TgBogieLocation.class);
         add(TgWorkshop.class);
@@ -222,6 +234,14 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgWebApiEntity.class);
         add(TgWebApiEntitySyntheticSingle.class);
         add(TgWebApiEntitySyntheticMulti.class);
+        
+        add(TgUnionHolder.class);
+        add(TgUnion.class);
+        add(TgUnionType1.class);
+        add(TgUnionType2.class);
+        add(TgUnionCommonType.class);
+        
+        add(MakeCompletedAction.class);
     }
 
     @Override

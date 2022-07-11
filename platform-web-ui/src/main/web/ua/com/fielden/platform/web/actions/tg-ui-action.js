@@ -1,8 +1,6 @@
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
-import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
-
 import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/paper-button/paper-button.js';
 import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';
@@ -12,10 +10,9 @@ import '/resources/components/postal-lib.js';
 
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
-import { tearDownEvent, getFirstEntityValueType } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, getFirstEntityType } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 import {processResponseError, toastMsgForError} from '/resources/reflection/tg-ajax-utils.js';
 import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
 
@@ -61,8 +58,6 @@ const template = html`
             padding: var(--tg-ui-action-icon-button-padding, 8px);
         }
     </style>
-    <iron-ajax id="masterRetriever" headers="[[_headers]]" url="[[_masterUri]]" method="GET" handle-as="json" reject-with-request on-error="_processMasterError">
-    </iron-ajax>
     <paper-icon-button id="iActionButton" hidden$="[[!isIconButton]]" icon="[[icon]]" on-tap="_run" disabled$="[[_computeDisabled(isActionInProgress, disabled)]]" tooltip-text$="[[longDesc]]"></paper-icon-button>
     <paper-button id="bActionButton" hidden$="[[isIconButton]]" raised roll="button" on-tap="_run" style="width:100%" disabled$="[[_computeDisabled(isActionInProgress, disabled)]]" tooltip-text$="[[longDesc]]">
         <span>[[shortDesc]]</span>
@@ -260,6 +255,14 @@ Polymer({
             observer: "_iconStyleChanged"
         },
 
+        /**
+         * Entity type title that is used if action is navigatable; it is retrieved only if action is dynamic.
+         */
+        entityTypeTitle: {
+            type: String,
+            value: ""
+        },
+
         /** 
          * Property of this value gets passed into the data parameter for the details.saved topic of the event that is published after the functional entity has been saved.
          * There are cases where it is desired to prevent unnecesary centre refreshes such as in case of some insertion points.
@@ -347,13 +350,6 @@ Polymer({
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         /**
-         * The type of entity for which dynamic action was invoked previous time.
-         */
-        _previousEntityType: {
-            type: String,
-            value: ""
-        },
-        /**
          * The saved short desc in case the action is dynamic 
          * If short desc wasn't specified then short desc should be specified every time new master is retrieved
          * And this property becomes an indicator of that fact. 
@@ -416,22 +412,6 @@ Polymer({
             value: false
         },
 
-        _masterUri: {
-            type: String,
-            value: ""
-        },
-
-        /**
-         * Additional headers for every 'iron-ajax' client-side requests. These only contain 
-         * our custom 'Time-Zone' header that indicates real time-zone for the client application.
-         * The time-zone then is to be assigned to threadlocal 'IDates.timeZone' to be able
-         * to compute 'Now' moment properly.
-         */
-        _headers: {
-            type: String,
-            value: _timeZoneHeader
-        },
-
         /**
          * In case where this tg-ui-action represents continuation action, continuationProperty uniquely identifies continuation in saving session of parent initiating entity (will be set into companion object).
          */
@@ -462,7 +442,28 @@ Polymer({
         this._reflector = new TgReflector();
         this._serialiser = new TgSerialiser();
 
-        this._processMasterError = this._processMasterError.bind(this);
+        /**
+         * Runs dynamic action with the specified mandatory context. Both 'currentEntity' and 'chosenProperty' must be specified.
+         * 'chosenProperty' can be null -- in this case dynamic action runs for 'currentEntity' itself.
+         */
+        self._runDynamicAction = function (currentEntity, chosenProperty) {
+            this.currentEntity = currentEntity;
+            this.chosenProperty = chosenProperty;
+            this.rootEntityType = null;
+
+            this._run();
+        }.bind(this);
+
+        /**
+         * Runs dynamic action [for creating New instances] with the specified mandatory root entity type.
+         */
+        self._runDynamicActionForNew = function (rootEntityType) {
+            this.currentEntity = () => null;
+            this.chosenProperty = null;
+            this.rootEntityType = rootEntityType;
+
+            this._run();
+        }.bind(this);
 
         self._run = (function (event) {
             console.log(this.shortDesc + ": execute");
@@ -491,33 +492,25 @@ Polymer({
 
             self.persistActiveElement();
 
-            
-            if (this.dynamicAction && this.currentEntity()) {
-                const currentEntityType = getFirstEntityValueType(this._reflector, this.currentEntity(), this.chosenProperty);
-                if (this._previousEntityType !== currentEntityType) {
-                    if (!this.elementName) {//Element name for dynamic action is not specified at first run
-                        this._originalShortDesc = this.shortDesc;//It means that shortDesc wasn't changed yet.
+            if (this.dynamicAction && (this.rootEntityType || this.currentEntity())) {
+                const currentEntityType = this.rootEntityType ? this._reflector.getType(this.rootEntityType) : getFirstEntityType(this.currentEntity(), this.chosenProperty); // currentEntityType is never empty due to either this.rootEntityType not empty or this.currentEntity() not empty
+                if (!this.elementName) { // element name for dynamic action is not specified at first run
+                    this._originalShortDesc = this.shortDesc; // it means that shortDesc wasn't changed yet
+                }
+                this.isActionInProgress = true;
+                try {
+                    const masterInfo = this.rootEntityType ? currentEntityType.newEntityMaster() : currentEntityType.entityMaster();
+                    if (!masterInfo) {
+                        const masterErrorMessage = `Could not find master for entity type: ${currentEntityType.notEnhancedFullClassName()}.`;
+                        this.toaster && this.toaster.openToastForError('Entity Master Error', masterErrorMessage, true);
+                        throw { msg: masterErrorMessage };
                     }
-                    this._masterUri = '/master/' + currentEntityType;
-                    this.isActionInProgress = true;
-                    this.$.masterRetriever.generateRequest().completes
-                        .then(res => {
-                            try {
-                                this._processMasterRetriever(res);
-                                this._previousEntityType = getFirstEntityValueType(this._reflector, this.currentEntity(), this.chosenProperty);
-                                postMasterInfoRetrieve();
-                            }catch (e) {
-                                this.isActionInProgress = false;
-                                this.restoreActionState();
-                                console.log("The action was rejected with error: " + e);
-                            }
-                        }).catch(error => {
-                            this.isActionInProgress = false;
-                            this.restoreActionState();
-                            console.log("The action was rejected with error: " + error);
-                        });
-                } else {
-                    postMasterInfoRetrieve();    
+                    this._setEntityMasterInfo(masterInfo);
+                    postMasterInfoRetrieve();
+                } catch (e) {
+                    this.isActionInProgress = false;
+                    this.restoreActionState();
+                    console.log("The action was rejected with error: " + e);
                 }
             } else {
                 postMasterInfoRetrieve();
@@ -527,6 +520,7 @@ Polymer({
         }).bind(self);
 
         self._onExecuted = (function (e, master, source) {
+            //self constatnt is created to have a reference on action in functions created for entity master like postRetrieved, postSaved etc.
             const self = this;
 
             // spinner requiredness assignment should be before action's progress changes as it is used in its observer
@@ -577,17 +571,6 @@ Polymer({
             };
 
             master.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
-                postal.publish({
-                    channel: "centre_" + this.centreUuid,
-                    topic: "detail.saved",
-                    data: {
-                        shouldRefreshParentCentreAfterSave: this.shouldRefreshParentCentreAfterSave,
-                        entity: potentiallySavedOrNewEntity,
-                        // send selectedEntitiesInContext further to be able to update only them on EGI
-                        selectedEntitiesInContext: selectedEntitiesSupplier()
-                    }
-                });
-
                 try {
                     if (potentiallySavedOrNewEntity.isValidWithoutException()) {
                         if (self.postActionSuccess) {
@@ -603,10 +586,21 @@ Polymer({
                         restoreStateAfterSave();
                         master.restoreAfterSave();
                     });
+                } finally {
+                    postal.publish({
+                        channel: "centre_" + this.centreUuid,
+                        topic: "detail.saved",
+                        data: {
+                            shouldRefreshParentCentreAfterSave: this.shouldRefreshParentCentreAfterSave,//Here 'this' references entity master.
+                            excludeInsertionPoints: this.excludeInsertionPoints,//Here 'this' references entity master.
+                            entity: potentiallySavedOrNewEntity,
+                            entityPath: [ potentiallySavedOrNewEntity ], // the starting point of the path of entities from masters that are on a chain of refresh cycle
+                            // send selectedEntitiesInContext further to be able to update only them on EGI
+                            selectedEntitiesInContext: selectedEntitiesSupplier()
+                        }
+                    });
                 }
-
                 restoreStateAfterSave();
-                
             };
 
             master.postSavedError = function (errorResult) {
@@ -693,6 +687,9 @@ Polymer({
         if (self.chosenProperty !== null) {
             self._enhanceContextWithChosenProperty(context, self.chosenProperty);
         }
+        if (self.rootEntityType) {
+            this._reflector.setCustomProperty(context, '@@rootEntityType', self.rootEntityType);
+        }
         return context;
     },
 
@@ -745,50 +742,29 @@ Polymer({
         return isActionInProgress || disabled;
     },
 
-    _processMasterRetriever: function(e) {
-        console.log("PROCESS MASTER INFO RETRIEVE:");
-        console.log("Master info retrieve: iron-response: status = ", e.xhr.status, ", e.response = ", e.response);
-        if (e.xhr.status === 200) { // successful execution of the request
-            const deserialisedResult = this._serialiser.deserialise(e.response);
-            
-            if (this._reflector.isError(deserialisedResult)) {
-                console.log('deserialisedResult: ', deserialisedResult);
-                this.toaster && this.toaster.openToastForError(deserialisedResult.message, toastMsgForError(this._reflector, deserialisedResult), true);
-                throw {msg: deserialisedResult};
+    _setEntityMasterInfo: function (masterInfo) {
+        this.elementName = masterInfo.key;
+        this.componentUri = masterInfo.desc;
+        this.shortDesc = this._originalShortDesc || masterInfo.shortDesc;
+        this.longDesc = this.longDesc || masterInfo.longDesc;
+        this.entityTypeTitle = masterInfo.entityTypeTitle;
+        this.attrs = Object.assign({}, this.attrs, {
+            entityType: masterInfo.entityType,
+            currentState:'EDIT',
+            prefDim: masterInfo.width && masterInfo.height && masterInfo.widthUnit && masterInfo.heightUnit && {
+                width: () => masterInfo.width,
+                height: () => masterInfo.height,
+                widthUnit: masterInfo.widthUnit,
+                heightUnit: masterInfo.heightUnit
             }
-            const masterInfo = deserialisedResult.instance;
-            this.elementName = masterInfo.key;
-            this.componentUri = masterInfo.desc;
-            this.shortDesc = this._originalShortDesc || masterInfo.shortDesc;
-            this.longDesc = this.longDesc || masterInfo.longDesc;
-            this.attrs = Object.assign({}, this.attrs, {
-                entityType: masterInfo.entityType,
-                currentState:'EDIT',
-                prefDim: masterInfo.width && masterInfo.height && masterInfo.widthUnit && masterInfo.heightUnit && {
-                    width: () => masterInfo.width,
-                    height: () => masterInfo.height,
-                    widthUnit: masterInfo.widthUnit,
-                    heightUnit: masterInfo.heightUnit
-                }
-            });
-            if (masterInfo.relativePropertyName) {
-                const oldCurrentEntity = this.currentEntity.bind(this);
-                this.currentEntity = function () {
-                    return oldCurrentEntity().get(masterInfo.relativePropertyName);
-                }
-            }
-            this.requireSelectionCriteria = masterInfo.requireSelectionCriteria;
-            this.requireSelectedEntities = masterInfo.requireSelectedEntities;
-            this.requireMasterEntity = masterInfo.requireMasterEntity;
-            this.shouldRefreshParentCentreAfterSave = masterInfo.shouldRefreshParentCentreAfterSave;
-        } else { // other codes
-            this.toaster && this.toaster.openToastForError('Master load error: ', 'Request could not be dispatched.', true);
-            throw {msg: 'Request could not be dispatched.'};
+        });
+        if (masterInfo.relativePropertyName) {
+            this.chosenProperty = (this.chosenProperty ? this.chosenProperty + "." : "") + masterInfo.relativePropertyName;
         }
-    }, 
-    
-    _processMasterError: function (e) {
-        processResponseError(e, this._reflector, this._serialiser, null, this.toaster);
-    },
+        this.requireSelectionCriteria = masterInfo.requireSelectionCriteria;
+        this.requireSelectedEntities = masterInfo.requireSelectedEntities;
+        this.requireMasterEntity = masterInfo.requireMasterEntity;
+        this.shouldRefreshParentCentreAfterSave = masterInfo.shouldRefreshParentCentreAfterSave;
+    }
 
 });

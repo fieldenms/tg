@@ -70,11 +70,14 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
 
     protected boolean egiHidden = false;
+    protected String gridViewIcon = "tg-icons:grid";
+    protected String gridViewIconStyle = "";
     protected boolean draggable = false;
     protected boolean hideCheckboxes = false;
     protected IToolbarConfig toolbarConfig = new CentreToolbar();
     protected boolean hideToolbar = false;
     protected IScrollConfig scrollConfig = ScrollConfig.configScroll().done();
+    protected boolean retrieveAll = false;
     protected int pageCapacity = 30;
     protected int maxPageCapacity = 300;
     //EGI height related properties
@@ -180,11 +183,14 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
 
         return new EntityCentreConfig<>(
                 egiHidden,
+                gridViewIcon,
+                gridViewIconStyle,
                 draggable,
                 hideCheckboxes,
                 toolbarConfig,
                 hideToolbar,
                 scrollConfig,
+                retrieveAll,
                 pageCapacity,
                 maxPageCapacity,
                 visibleRowsCount,

@@ -11,6 +11,9 @@ const additionalTemplate = html`
             cursor: text;
         }
     </style>`;
+const customLabelTemplate = html`
+    <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue, entity)]]" slot="label">[[propTitle]]</label>`;
+
 const customInputTemplate = html`
     <iron-input bind-value="{{_editingValue}}" class="custom-input-wrapper collectional-representor-input">
         <input
@@ -30,7 +33,7 @@ const propertyActionTemplate = html`<slot name="property-action"></slot>`;
 export class TgCollectionalRepresentor extends TgEditor {
 
     static get template() { 
-        return createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate);
+        return createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate, customLabelTemplate);
     }
     
     /**

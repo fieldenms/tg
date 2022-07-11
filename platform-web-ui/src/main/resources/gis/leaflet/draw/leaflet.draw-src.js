@@ -146,12 +146,12 @@ L.drawLocal = {
 			},
 			rectangle: {
 				tooltip: {
-					start: 'Click and drag to draw rectangle.'
+					start: 'Click (tap) and drag to draw rectangle.'
 				}
 			},
 			simpleshape: {
 				tooltip: {
-					end: 'Release mouse to finish drawing.'
+					end: 'Release mouse (finger) to finish drawing.'
 				}
 			}
 		}
@@ -1373,22 +1373,38 @@ L.Draw.Rectangle = L.Draw.SimpleShape.extend({
 			return;
 		}
 
-		this._isCurrentlyTwoClickDrawing = false;
+		// TG change: this._isCurrentlyTwoClickDrawing = false;
 		L.Draw.SimpleShape.prototype.disable.call(this);
 	},
 
 	_onMouseUp: function (e) {
-		if (!this._shape && !this._isCurrentlyTwoClickDrawing) {
-			this._isCurrentlyTwoClickDrawing = true;
+		if (!this._shape /* TG change: && !this._isCurrentlyTwoClickDrawing */) {
+			// TG change: this._isCurrentlyTwoClickDrawing = true;
 			return;
 		}
 
-		// Make sure closing click is on map
-		if (this._isCurrentlyTwoClickDrawing && !_hasAncestor(e.target, 'leaflet-pane')) {
-			return;
-		}
+		// TG change: // Make sure closing click is on map
+		// TG change: if (this._isCurrentlyTwoClickDrawing && !_hasAncestor(e.target, 'leaflet-pane')) {
+		// TG change: 	return;
+		// TG change: }
 
-		L.Draw.SimpleShape.prototype._onMouseUp.call(this);
+		// TG change: change behaviour of finishing of rectangle drawing: if it is finished above Cancel button then do not _fireCreatedEvent
+		// TG change: L.Draw.SimpleShape.prototype._onMouseUp.call(this);
+		const x = e.clientX;
+		const y = e.clientY;
+		let elementFromPoint = document.elementFromPoint(x, y);
+		while (elementFromPoint && elementFromPoint.shadowRoot) {
+			elementFromPoint = elementFromPoint.shadowRoot.elementFromPoint(x, y);
+		} // -- finds top-most element under mouse pointer (desktop) or finger (touch devices)
+		
+		if (this._shape && !(elementFromPoint && elementFromPoint.title && elementFromPoint.title === 'Cancel drawing')) { // if that element is Cancel button then avoid creation of new rectangle;
+			this._fireCreatedEvent();
+		}
+		// but still, continue disabling drawing mode
+		this.disable();
+		if (this.options.repeatMode) {
+			this.enable();
+		}
 	},
 
 	_drawShape: function (latlng) {
@@ -3158,7 +3174,7 @@ L.LatLngUtil = {
 
 			if (isMetric) {
 				units = ['ha', 'm'];
-				type = typeof isMetric;
+				const type = typeof isMetric;
 				if (type === 'string') {
 					units = [isMetric];
 				} else if (type !== 'boolean') {
@@ -3764,6 +3780,10 @@ L.Toolbar = L.Class.extend({
 			.on(link, 'touchstart', L.DomEvent.stopPropagation)
 			.on(link, 'click', L.DomEvent.preventDefault)
 			.on(link, buttonEvent, options.callback, options.context);
+		
+		if (options.title && options.title === 'Cancel drawing') {
+			L.DomEvent.on(link, 'touchend', options.callback, options.context); // TG change: allow tapping of Cancel button on touch devices
+		}
 
 		return link;
 	},
@@ -4771,4 +4791,3 @@ L.EditToolbar.Delete = L.Handler.extend({
 
 
 }(window, document));
-//# sourceMappingURL=leaflet.draw-src.map

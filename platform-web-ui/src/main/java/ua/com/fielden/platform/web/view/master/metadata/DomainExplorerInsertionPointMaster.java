@@ -47,7 +47,7 @@ public class DomainExplorerInsertionPointMaster implements IMaster<DomainExplore
                 .attr("property-name", "domainFilter")
                 .attr("validation-callback", "[[doNotValidate]]")
                 .attr("prop-title", "Type to find domain type or property by title")
-                .attr("prop-desc", "Finds domain types or properties those matched the text")
+                .attr("prop-desc", "Finds domain types or properties that match the search text")
                 .attr("current-state", "[[currentState]]")
                 .add(searchItemsText, prevButton, nextButton);
 
@@ -87,9 +87,7 @@ public class DomainExplorerInsertionPointMaster implements IMaster<DomainExplore
                 + "self._matchedItemOrder = 0;\n"
                 + "self._matchedItemsNumber = 0;\n"
                 + "self.classList.add('vertical');\n"
-                + "self.canLeave = function () {\n"
-                + "    return null;\n"
-                + "}.bind(self);\n"
+                + "self.classList.remove('canLeave');\n"
                 + "self._showDataLoadingPromt = function (msg) {\n"
                 + "    this.$.domainExplorer.lock = true;\n"
                 + "    this._toastGreeting().text = msg;\n"

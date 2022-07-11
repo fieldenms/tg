@@ -257,7 +257,7 @@ public abstract class DbCreator {
             conn.setAutoCommit(false);
             return conn;
         } catch (final Exception ex) {
-            throw new DomainDriventTestException(format("Could not establish a dabase connection to [%s]", url), ex);
+            throw new DomainDriventTestException(format("Could not establish a database connection to [%s]", url), ex);
         }
     }
 

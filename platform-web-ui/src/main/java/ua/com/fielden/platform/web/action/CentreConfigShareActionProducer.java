@@ -25,7 +25,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
+import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.web.centre.CentreConfigShareAction;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
@@ -79,7 +79,7 @@ public class CentreConfigShareActionProducer extends DefaultEntityProducerWithCo
      * @param userProvider
      * @return
      */
-    public static Result validateShareActionContext(final IContextDecomposer contextDecomposer, final IEntityCentreConfig eccCompanion, final IUserProvider userProvider) {
+    public static Result validateShareActionContext(final IContextDecomposer contextDecomposer, final EntityCentreConfigCo eccCompanion, final IUserProvider userProvider) {
         if (isEmpty(contextDecomposer.chosenProperty())) {
             return failure(SAVE_MSG); // default configuration (the one with empty configUuid) can not be shared
         }

@@ -1,13 +1,16 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
+import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 
 //Actions those can be applied to entity centre.
-const RunActions = {
+export const RunActions = {
     run: "run",
     navigate: "navigate",
     refresh: "refresh"
 };
+
+const CRITERIA_NOT_LOADED_MSG = "Cannot activate result-set view (not initialised criteria).";
 
 const TgSelectionCriteriaBehaviorImpl = {
 
@@ -83,6 +86,14 @@ const TgSelectionCriteriaBehaviorImpl = {
         },
 
         /**
+         * Indicates whether current centre configuration should load data immediately upon loading.
+         */
+        autoRun: {
+            type: Boolean,
+            notify: true
+        },
+
+        /**
          * Centre URI parameters taken from tg-entity-centre-behavior.
          */
         queryPart: {
@@ -105,6 +116,14 @@ const TgSelectionCriteriaBehaviorImpl = {
          */
         pageCapacity: {
             type: Number
+        },
+
+        /**
+         * Preferred view retrieved with selection criteria.
+         */
+        preferredView: {
+            type: Number,
+            notify: true
         },
 
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -169,6 +188,14 @@ const TgSelectionCriteriaBehaviorImpl = {
         },
 
         /**
+         * Indictes whether all data should be retrived at once or only separate page of data. 
+         */
+        retrieveAll: {
+            type: Boolean,
+            value: false
+        },
+
+        /**
          * The current number of pages after the data has been retrieved from the server.
          * This updating occurs not only during Run, but also during Refresh and Page Navigate actions.
          */
@@ -200,6 +227,15 @@ const TgSelectionCriteriaBehaviorImpl = {
         isRunning: {
             type: Boolean,
             notify: true
+        },
+
+        /**
+         * Indicates the reason why data for this selection criteria's centre changed. This should have a type of RunActions.
+         */
+        dataChangeReason: {
+            type: String,
+            notify: true,
+            value: null,
         },
 
         /**
@@ -382,24 +418,26 @@ const TgSelectionCriteriaBehaviorImpl = {
         if (typeof customObject.saveAsName !== 'undefined') {
             this.saveAsName = customObject.saveAsName;
         }
+        if (typeof customObject.autoRun !== 'undefined') {
+            this.autoRun = customObject.autoRun;
+        }
         if (typeof customObject.configUuid !== 'undefined') {
             const newConfigUuid = customObject.configUuid;
-            const hrefNoParams = window.location.href.split('?')[0];
-            const hrefNoParamsNoSlash = hrefNoParams.endsWith('/') ? hrefNoParams.substring(0, hrefNoParams.length - 1) : hrefNoParams;
-            const hrefNoParamsNoSlashNoUuid = this.configUuid === '' ? hrefNoParamsNoSlash : hrefNoParamsNoSlash.substring(0, hrefNoParamsNoSlash.lastIndexOf(this.configUuid) - 1 /* slash also needs removal */);
-            const hrefReplacedUuid = hrefNoParamsNoSlashNoUuid + (newConfigUuid === '' ? '' : '/' + newConfigUuid);
-            if (hrefReplacedUuid !== window.location.href) { // when configuration is loaded through some action then potentially new URI will be formed matching new loaded configuration;
-                window.history.pushState(window.history.state, '', hrefReplacedUuid); // in that case need to create new history entry for new URI;
-                window.dispatchEvent(new CustomEvent('location-changed')); // the 'window.history.state' number will be increased later in tg-app-template 'location-changed' listener
-            } // if the URI hasn't been changed then URI is already matching to new loaded configuration and history transition has been recorded earlier (e.g. when manually changing URI in address bar)
-            this.configUuid = newConfigUuid;
+            const configUuid = this.configUuid;
+            this.loadCentreFreezed = true;
+            this.fire('tg-config-uuid-before-change', { newConfigUuid: newConfigUuid, configUuid: configUuid });
+            delete this.loadCentreFreezed;
+            this.configUuid = customObject.configUuid;
         }
-        if (typeof customObject.wasRun !== 'undefined') {
-            this._wasRun = customObject.wasRun;
+        if (typeof customObject.preferredView !== 'undefined') {
+            this.preferredView = customObject.preferredView;
         }
     },
 
-    _configUuidChanged: function (newConfigUuid) {
+    _configUuidChanged: function (newConfigUuid, oldConfigUuid) {
+        if (typeof oldConfigUuid === 'string' && this._wasRun === 'yes') {
+            this._wasRun = null; // reset _wasRun if configuration has been changed
+        }
         this.fire('tg-config-uuid-changed', newConfigUuid);
     },
 
@@ -559,6 +597,36 @@ const TgSelectionCriteriaBehaviorImpl = {
     },
 
     /**
+     * A function to cancel active autocompletion search request.
+     */
+    _cancelAutocompletion: function () {
+        this._dom().querySelectorAll('tg-entity-editor').forEach((currentValue, currentIndex, list) => {
+            if (currentValue.searching) {
+                currentValue._cancelSearch();
+            }
+        });
+    },
+
+    /**
+     * @returns object that explains the reason why this selection criteria can not be left or undefined.
+     */
+    canLeave: function () {
+        if (this._criteriaLoaded === false) {
+            return {
+                msg: CRITERIA_NOT_LOADED_MSG
+            };
+        }
+    },
+
+    //Performs custom tasks before leaving this selection criteria.
+    leave: function () {
+        // cancel any autocompleter searches
+        this._cancelAutocompletion();
+        //Persist active element
+        this.persistActiveElement();
+    },
+
+    /**
      * Starts the process of centre run.
      *
      * isAutoRunning -- returns true if this running action represents autoRun event action invocation rather than simple running, undefined or false otherwise; not to be confused with 'link' centre auto-running capability
@@ -583,7 +651,7 @@ const TgSelectionCriteriaBehaviorImpl = {
         if (self.isRunning) {
             console.warn("Refresh is already in progress...");
             self._refreshPromiseInProgress = self._refreshPromiseInProgress
-                .then(function () {
+                .finally(function () {
                     return self._createPromise(action, isAutoRunning, isSortingAction, forceRegeneration);
                 });
             return self._refreshPromiseInProgress;
@@ -608,6 +676,7 @@ const TgSelectionCriteriaBehaviorImpl = {
 
             // cancel previous validation before starting saving process -- it includes validation process internally!
             self._validator().abortValidationIfAny();
+            self.dataChangeReason = action;
             resolve(
                 self._runModifiedProperties(
                     self._createContextHolderForRunning(function () {
@@ -752,7 +821,7 @@ const TgSelectionCriteriaBehaviorImpl = {
         } else {
             self._reflector().removeCustomProperty(contextHolder, "@@pageNumber");
         }
-
+        self._reflector().setCustomProperty(contextHolder, "@@retrieveAll", self.retrieveAll);
         return contextHolder;
     }
 
@@ -760,6 +829,7 @@ const TgSelectionCriteriaBehaviorImpl = {
 
 export const TgSelectionCriteriaBehavior = [
     TgEntityBinderBehavior,
+    TgFocusRestorationBehavior,
     TgSelectionCriteriaBehaviorImpl,
     TgElementSelectorBehavior
 ];

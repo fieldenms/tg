@@ -8,6 +8,7 @@ import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 
 /**
@@ -18,7 +19,7 @@ import ua.com.fielden.platform.ui.config.EntityCentreConfig;
  */
 @KeyType(String.class)
 @KeyTitle(value = "Save As Name", desc = "Save As Name of loadable centre configuration.")
-@CompanionObject(ILoadableCentreConfig.class)
+@CompanionObject(LoadableCentreConfigCo.class)
 @DescTitle(value = "Description", desc = "Description of loadable centre configuration.")
 public class LoadableCentreConfig extends AbstractEntity<String> {
 
@@ -37,6 +38,34 @@ public class LoadableCentreConfig extends AbstractEntity<String> {
     @IsProperty
     @Title(value = "Orphaned Sharing Message", desc = "For own save-as configurations, contains message whether configuration was orphaned from based / shared. Such orphaned configurations act like own save-as except they can not be shared, unless duplicated and saved.")
     private String orphanedSharingMessage;
+
+    @IsProperty
+    @Title(value = "Shared By", desc = "For inherited from shared configurations, contains the user, who created that configuration and shared it with the current user.")
+    private User sharedBy;
+
+    @IsProperty
+    @Title(value = "Save As Name", desc = "For inherited from shared configurations, contains configuration title; the title can be different from title of the inherited configuration, as the creator could have changed it and current user haven't updated it yet.")
+    private String saveAsName;
+
+    @Observable
+    public LoadableCentreConfig setSaveAsName(final String saveAsName) {
+        this.saveAsName = saveAsName;
+        return this;
+    }
+
+    public String getSaveAsName() {
+        return saveAsName;
+    }
+
+    @Observable
+    public LoadableCentreConfig setSharedBy(final User sharedBy) {
+        this.sharedBy = sharedBy;
+        return this;
+    }
+
+    public User getSharedBy() {
+        return sharedBy;
+    }
 
     @Observable
     public LoadableCentreConfig setOrphanedSharingMessage(final String orphanedSharingMessage) {

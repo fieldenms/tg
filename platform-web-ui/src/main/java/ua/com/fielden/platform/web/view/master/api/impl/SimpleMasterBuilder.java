@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.view.master.api.impl;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.setRole;
@@ -60,11 +62,12 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
 
     private Class<T> entityType;
-    private Optional<PrefDim> prefDim = Optional.empty();
+    private Optional<PrefDim> prefDim = empty();
     private boolean saveOnActivation = false;
 
-    private Optional<JsCode> customCode = Optional.empty();
-    private Optional<JsCode> customCodeOnAttach = Optional.empty();
+    private Optional<JsCode> customCode = empty();
+    private Optional<JsCode> customCodeOnAttach = empty();
+    private Optional<JsCode> customImports = empty();
 
     @Override
     public IPropertySelector<T> forEntity(final Class<T> type) {
@@ -109,7 +112,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
 
     public static Optional<String> getFocusingCallback(final MasterActions masterAction) {
         if (MasterActions.SAVE == masterAction) {
-            return Optional.of("focusViewBound");
+            return Optional.of("focusViewBound"); // focuses enabled input or other subcomponent on SAVE completion either from actual tap or shortcut activation; see 'focusViewBound' in 'tg-entity-master-behavior'
         } else {
             return Optional.empty();
         }
@@ -269,7 +272,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         final String dimensionsString = prefDimBuilder.toString();
 
         final String entityMasterStr = ResourceLoader.getText("ua/com/fielden/platform/web/master/tg-entity-master-template.js")
-                .replace(IMPORTS, createImports(importPaths))
+                .replace(IMPORTS, createImports(importPaths) + customImports.map(ci -> ci.toString()).orElse(""))
                 .replace(ENTITY_TYPE, flattenedNameOf(entityType))
                 .replace("<!--@tg-entity-master-content-->", elementContainer.toString()) // TODO should contain prop actions
                 .replace("//@ready-callback",
@@ -440,4 +443,16 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         this.customCodeOnAttach = Optional.of(customCode);
         return this;
     }
+
+    /**
+     * Injects custom JavaScript imports into centre implementation.
+     *
+     * @param customImports
+     * @return
+     */
+    public SimpleMasterBuilder<T> injectCustomImports(final JsCode customImports) {
+        this.customImports = of(customImports);
+        return this;
+    }
+
 }

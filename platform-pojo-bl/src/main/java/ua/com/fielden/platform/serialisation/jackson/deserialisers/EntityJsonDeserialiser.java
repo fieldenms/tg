@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.serialisation.jackson.deserialisers;
 
 import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.fromString;
 import static ua.com.fielden.platform.entity.proxy.EntityProxyContainer.proxy;
@@ -147,7 +148,12 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                     throw new EntityDeserialisationException("The field [" + versionField + "] is not declared in entity with type [" + type.getName() + "]. Fatal error during deserialisation process for entity [" + entity + "].", ex);
                 }
             }
-
+            
+            ofNullable(node.get("@_pp")) // for undefined node, leave preferred property 'null' (default value after creation)
+                .filter(JsonNode::isTextual) // for non-textual value, also leave preferred property 'null' (e.g. in case of client-side erroneous entity's preferred property manipulation)
+                .map(JsonNode::asText) // for defined node, set its textual representation
+                .ifPresent(preferredProperty -> entity.setPreferredProperty(preferredProperty));
+            
             final List<CachedProperty> nonProxiedProps = properties.stream().filter(prop -> node.get(prop.field().getName()) != null).collect(Collectors.toList()); 
             for (final CachedProperty prop : nonProxiedProps) {
                 final String propertyName = prop.field().getName();

@@ -12,7 +12,6 @@ import java.io.ByteArrayInputStream;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.restlet.Context;
@@ -29,13 +28,13 @@ import org.restlet.representation.InputRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
 import org.restlet.resource.Post;
-import org.restlet.resource.ServerResource;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 
+import ua.com.fielden.platform.basic.config.IApplicationSettings.AuthMode;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.session.Authenticator;
 import ua.com.fielden.platform.security.session.IUserSession;
@@ -44,8 +43,9 @@ import ua.com.fielden.platform.security.user.IAuthenticationModel;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
-import ua.com.fielden.platform.utils.ResourceLoader;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 /**
@@ -54,9 +54,10 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  * @author TG Team
  *
  */
-public class LoginResource extends ServerResource {
+public class LoginResource extends AbstractWebResource {
     
     public static final String BINDING_PATH = "/login";
+    public static final String SSO_BINDING_PATH = "/sso";
     public static final int BLOCK_TIME_SECONDS = 15;
     public static final int LOCKOUT_THRESHOLD = 6;
     private static final Cache<String, LoginAttempts> LOGIN_ATTEMPTS = CacheBuilder.newBuilder().initialCapacity(100).maximumSize(1000).concurrencyLevel(50).build();
@@ -70,11 +71,16 @@ public class LoginResource extends ServerResource {
     private final IUserSession coUserSession;
     private final RestServerUtil restUtil;
     private final IUniversalConstants constants;
+    
+    private final byte[] loginPage;
+    private final byte[] loginPageForMixedMode;
 
     /**
      * Creates {@link LoginResource}.
      */
     public LoginResource(
+            final byte[] loginPage,
+            final byte[] loginPageForMixedMode,
             final String domainName,
             final String path,
             final IUniversalConstants constants,
@@ -83,10 +89,12 @@ public class LoginResource extends ServerResource {
             final IUser coUser,
             final IUserSession coUserSession,
             final RestServerUtil restUtil,
+            final IDeviceProvider deviceProvider,
+            final IDates dates,
             final Context context,
             final Request request,
             final Response response) {
-        init(context, request, response);
+        super(context, request, response, deviceProvider, dates);
         this.domainName = domainName;
         this.path = path;
         this.constants = constants;
@@ -95,6 +103,8 @@ public class LoginResource extends ServerResource {
         this.coUser = coUser;
         this.coUserSession = coUserSession;
         this.restUtil = restUtil;
+        this.loginPage = loginPage;
+        this.loginPageForMixedMode = loginPageForMixedMode;
     }
 
     @Get
@@ -108,6 +118,7 @@ public class LoginResource extends ServerResource {
                 final Authenticator auth = oAuth.get();
                 up.setUsername(auth.username, coUser);
                 final Optional<UserSession> session = coUserSession.currentSession(up.getUser(), auth.toString(), false);
+                // if authenticated session could be obtained, then we simply redirect request to "/"
                 if (session.isPresent()) {
                     // response needs to be provided with an authenticating cookie
                     assignAuthenticatingCookie(session.get().getUser(), constants.now(), session.get().getAuthenticator().get(), domainName, path, getRequest(), getResponse());
@@ -117,22 +128,18 @@ public class LoginResource extends ServerResource {
                 }
             }
 
-            // otherwise just load the login page for user to login in explicitly
-            return loginPage();
+            // Otherwise just return the login page for user to login explicitly.
+            // The returned page should take into account support for SSO and the mixed RSO/SSO mode
+            // Query parameter "auth" can be used to enforce the RSO mode even when SSO is preferred
+            // Accessing the login resource with /login?auth=RSO should return a login page with a prompt without automatic re-direction to SSO
+            // Such request is valid in both RSO and SSO authentication modes, but in the SSO mode it is ignored
+            final String requestedAuth = getQueryValue("auth");
+            final ByteArrayInputStream loginPageStream = AuthMode.RSO.name().equalsIgnoreCase(requestedAuth) ? new ByteArrayInputStream(loginPageForMixedMode) : new ByteArrayInputStream(loginPage);
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(loginPageStream, MediaType.TEXT_HTML));
         } catch (final Exception ex) {
-            // in case of an exception try try return a login page.
-            LOGGER.fatal(ex);
-            return loginPage();
-        }
-    }
-
-    public Representation loginPage() {
-        try {
-            final byte[] body = StringUtils.replace(ResourceLoader.getText("ua/com/fielden/platform/web/login.html"), "@title", "Login").getBytes("UTF-8");
-            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(body), MediaType.TEXT_HTML));
-        } catch (final Exception ex) {
-            LOGGER.fatal(ex);
-            throw new IllegalStateException(ex);
+            // in case of an exception log the error and return the login page for the user to try again
+            LOGGER.fatal(ex.getMessage(), ex);
+            return new EncodeRepresentation(Encoding.GZIP, new InputRepresentation(new ByteArrayInputStream(loginPageForMixedMode), MediaType.TEXT_HTML));
         }
     }
 
@@ -156,7 +163,7 @@ public class LoginResource extends ServerResource {
                 }
             }
         } catch (final Exception ex) {
-            LOGGER.fatal(ex);
+            LOGGER.fatal(ex.getMessage(), ex);
             getResponse().setEntity(restUtil.errorJsonRepresentation(ex.getMessage()));
             getResponse().setStatus(Status.SERVER_ERROR_INTERNAL);
         } finally {
@@ -201,7 +208,7 @@ public class LoginResource extends ServerResource {
                 final User user = (User) authResult.getInstance();
                 // let's use this opportunity to clear expired sessions for the user
                 coUserSession.clearExpired(user);
-                final UserSession session = coUserSession.newSession(user, credo.trustedDevice);
+                final UserSession session = coUserSession.newSession(user, credo.trustedDevice, null);
          
                 // ...and provide the response with an authenticating cookie
                 assignAuthenticatingCookie(user, constants.now(), session.getAuthenticator().get(), domainName, path, getRequest(), getResponse());
@@ -245,8 +252,8 @@ public class LoginResource extends ServerResource {
         public String toString() {
             try {
                 return new ObjectMapper().writer().writeValueAsString(this);
-            } catch (final JsonProcessingException e) {
-                LOGGER.error(e);
+            } catch (final JsonProcessingException ex) {
+                LOGGER.error(ex.getMessage(), ex);
                 return "could not serialise to JSON";
             }
         }

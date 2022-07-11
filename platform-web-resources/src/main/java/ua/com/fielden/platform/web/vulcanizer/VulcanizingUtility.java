@@ -13,6 +13,7 @@ import static org.apache.commons.io.FileUtils.deleteDirectory;
 import static org.apache.log4j.xml.DOMConfigurator.configure;
 import static ua.com.fielden.platform.cypher.Checksum.sha1;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -23,6 +24,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.function.Function;
@@ -50,16 +52,16 @@ import ua.com.fielden.platform.web.vulcanizer.exceptions.VulcanisationException;
  */
 public class VulcanizingUtility {
     private static final Logger LOGGER = Logger.getLogger(VulcanizingUtility.class);
-    
+
     public static String[] unixCommands(final String action) {
         return new String[] {"/bin/bash", action + "-script.bat"};
     }
-    
+
     public static String[] windowsCommands(final String action) {
         // JVM arguments (brackets should be removed): [src/main/resources/application.properties "C:/Program Files/nodejs;C:/Users/Yuriy/AppData/Roaming/npm"]
         return new String[] {"CMD", "/c", action + "-script.bat"};
     }
-    
+
     protected static T3<Properties, String[], String[]> processVmArguments(final String[] args) throws IOException {
         if (args.length < 1) {
             throw new VulcanisationException(
@@ -71,8 +73,8 @@ public class VulcanizingUtility {
         final String propertyFile = args[0];
         final String paths = args.length == 1 ? "" : args[1];
         final String[] envVars = new String[args.length - 2];
-        arraycopy(args, 2, envVars, 0, args.length - 2); 
-        
+        arraycopy(args, 2, envVars, 0, args.length - 2);
+
         try {
             final Properties props = retrieveApplicationPropertiesAndConfigureLogging(propertyFile);
             final String[] additionalPaths = paths.split(pathSeparator);
@@ -82,7 +84,7 @@ public class VulcanizingUtility {
             throw ex;
         }
     }
-        
+
     /**
      * Retrieves application properties from the specified file.
      *
@@ -101,7 +103,7 @@ public class VulcanizingUtility {
         configure(props.getProperty("log4j"));
         return props;
     }
-    
+
     /**
      * Vulcanizes '*-startup-resources-origin.js' file into '*-startup-resources-vulcanized.js'.
      */
@@ -115,11 +117,12 @@ public class VulcanizingUtility {
             final String mobileAndDesktopAppSpecificPath,
             final Function<String, String[]> commandMaker,
             final String[] additionalPaths,
-            final String[] envVarPairs) {
+            final String[] envVarPairs,
+            final String... externalResources) {
         if (LOGGER == null) {
             throw new VulcanisationException("Logger is a required argumet.");
         }
-        
+
         try {
             LOGGER.info("Vulcanizing...");
             final IWebResourceLoader webResourceLoader = injector.getInstance(IWebResourceLoader.class);
@@ -144,9 +147,9 @@ public class VulcanizingUtility {
             adjustRootResources(webResourceLoader, prefix);
             vulcanizeStartupResourcesFor(prefix, mobileAndDesktopAppSpecificPath, commandMaker.apply("build"), commandMaker.apply("minify"), additionalPaths, envVarPairs, dir);
             LOGGER.info(format("\tVulcanized [%s] resources...", prefix));
-            
+
             LOGGER.info(format("\tGenerating checksums..."));
-            final Map<String, String> checksums = generateChecksums(
+            final List<String> allExternalResources = listOf(
                 "/app/tg-app-index.html",
                 "/resources/startup-resources-vulcanized.js",
                 "/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js",
@@ -170,8 +173,32 @@ public class VulcanizingUtility {
                 "/resources/graphiql/images/lint-mark-warning.png",
                 "/resources/graphiql/images/lint-marker-multiple.png",
                 "/resources/graphiql/images/lint-message-error.png",
-                "/resources/graphiql/images/lint-message-warning.png"
+                "/resources/graphiql/images/lint-message-warning.png",
+                "/resources/gis/images/arrow-blue.png",
+                "/resources/gis/images/arrow-green.png",
+                "/resources/gis/images/circle-orange.png",
+                "/resources/gis/images/circle-purple.png",
+                "/resources/gis/images/circle-red.png",
+                "/resources/gis/images/circle-black.png",
+                "/resources/gis/images/triangle.png",
+                "/resources/gis/leaflet/images/empty-image.gif",
+                "/resources/gis/leaflet/images/layers-2x.png",
+                "/resources/gis/leaflet/images/layers.png",
+                "/resources/gis/leaflet/images/marker-icon-2x.png",
+                "/resources/gis/leaflet/images/marker-icon.png",
+                "/resources/gis/leaflet/images/marker-shadow.png",
+                "/resources/gis/leaflet/controlloading/images/control-loading.gif",
+                "/resources/gis/leaflet/draw/images/spritesheet-2x.png",
+                "/resources/gis/leaflet/draw/images/spritesheet-2x.png",
+                "/resources/gis/leaflet/draw/images/spritesheet.svg",
+                "/resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.eot",
+                "/resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.svg",
+                "/resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.ttf",
+                "/resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.woff",
+                "/resources/gis/leaflet/easybutton/fontawesome/fonts/fontawesome-webfont.woff2"
             );
+            allExternalResources.addAll(listOf(externalResources));
+            final Map<String, String> checksums = generateChecksums(allExternalResources.toArray(new String[0]));
             try {
                 final ObjectMapper objectMapper = new ObjectMapper();
                 objectMapper.writeValue(new File(mobileAndDesktopAppSpecificPath + prefix + "checksums.json"), checksums);
@@ -180,7 +207,7 @@ public class VulcanizingUtility {
                 LOGGER.error(msg, ex);
                 throw new VulcanisationException(msg, ex);
             }
-            
+
             LOGGER.info(format("\tGenerated checksums... [%s]", checksums));
         } catch (final Exception ex) {
             LOGGER.fatal(ex.getMessage(), ex);
@@ -190,10 +217,10 @@ public class VulcanizingUtility {
         }
         LOGGER.info("Vulcanized.");
     }
-    
+
     /**
      * Generates SHA1 checksums for specified <code>paths</code>.
-     * 
+     *
      * @param paths
      * @return
      */
@@ -215,7 +242,7 @@ public class VulcanizingUtility {
 
     /**
      * Copies template for 'rollup.config.js' and adjusts it according to <code>profile</code>.
-     * 
+     *
      * @param webResourceLoader
      * @param logger
      * @param profile
@@ -233,10 +260,10 @@ public class VulcanizingUtility {
             throw new VulcanisationException(msg, ex);
         }
     }
-    
+
     /**
      * Replaces '@profile' with concrete <code>profile</code> inside file.
-     * 
+     *
      * @param fileName
      * @param profile
      */
@@ -249,7 +276,7 @@ public class VulcanizingUtility {
             LOGGER.error(msg, ex);
             throw new VulcanisationException(msg, ex);
         }
-        
+
         try (final PrintStream ps = new PrintStream(fileName)) {
             ps.print(contents.replace("@profile-", profile));
         } catch (final Exception ex) {
@@ -258,11 +285,17 @@ public class VulcanizingUtility {
             throw new VulcanisationException(msg, ex);
         }
     }
-    
+
     /**
      * Removes all intermediate files after vulcanisation.
      */
     private static void clearObsoleteResources() {
+        // As described in Java bug JDK-4715154, Windows does not allow a mapped file to be deleted, and the mapped memory buffer is only released when the GC decides to invoke finalize(), or something like that.
+        // Therefore, in order to have a reasonable chance to delete all intermediate files after vulcanization, it is necessary to force System.gc() here.
+        // While this is only significant for Windows, there should be no ill effects on other operating systems.
+        LOGGER.info("\tForce System.gc()...");
+        System.gc();
+        
         LOGGER.info("\tClear obsolete files...");
         try {
             deleteDirectory(new File("vulcan"));
@@ -283,10 +316,10 @@ public class VulcanizingUtility {
         }
         LOGGER.info("\tCleared obsolete files.");
     }
-    
+
     /**
      * Downloads generated resources.
-     * 
+     *
      * @param webUiConfig
      * @param webResourceLoader
      */
@@ -311,10 +344,10 @@ public class VulcanizingUtility {
         downloadSource("app", "application-startup-resources.js", webResourceLoader);
         LOGGER.info("\tDownloaded generated resources.");
     }
-    
+
     /**
      * Executes vulcanisation process.
-     * 
+     *
      * @param prefix
      * @param targetAppSpecificPath
      * @param vulcanizeCommands
@@ -390,7 +423,7 @@ public class VulcanizingUtility {
             throw new VulcanisationException(msg, ex);
         }
     }
-    
+
     /**
      * Copies static resources from the places that should be relative to the application module, in which concrete Vulcanize utility reside.
      *
@@ -420,10 +453,10 @@ public class VulcanizingUtility {
         }
         LOGGER.info("\tCopied static resources.");
     }
-    
+
     /**
      * Downloads source into 'vulcan' directory based on concrete <code>deviceProfile</code>.
-     * 
+     *
      * @param dir
      * @param name
      * @param webResourceLoader
@@ -443,5 +476,5 @@ public class VulcanizingUtility {
             throw new VulcanisationException(msg, ex);
         }
     }
-    
+
 }

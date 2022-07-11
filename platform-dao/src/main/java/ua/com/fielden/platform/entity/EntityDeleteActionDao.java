@@ -12,13 +12,13 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 
 /**
- * DAO implementation for companion object {@link IEntityDeleteAction}.
+ * DAO implementation for companion object {@link EntityDeleteActionCo}.
  *
  * @author TG Team
  *
  */
 @EntityType(EntityDeleteAction.class)
-public class EntityDeleteActionDao extends CommonEntityDao<EntityDeleteAction> implements IEntityDeleteAction {
+public class EntityDeleteActionDao extends CommonEntityDao<EntityDeleteAction> implements EntityDeleteActionCo {
     
     @Inject
     public EntityDeleteActionDao(final IFilter filter) {

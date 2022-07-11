@@ -248,22 +248,19 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
     IAddToResultTickManager getSecondTick();
 
     /**
-     * Gets a <i>runAutomatically</i> flag. <br>
-     * <br>
+     * Returns the index of preferred resultant view of the entity centre.
      *
      * @return
      */
-    boolean isRunAutomatically();
+    Integer getPreferredView();
 
     /**
-     * Sets a <i>runAutomatically</i> flag. <br>
-     * <br>
+     * Sets the index of preferred resultant view for this entity centre.
      *
-     * @param runAutomatically
-     *            -- a value to set
-     * @return -- a criteria manager
+     * @param prefViewIndex
+     * @return
      */
-    ICentreDomainTreeManager setRunAutomatically(final boolean runAutomatically);
+    ICentreDomainTreeManager setPreferredView(final Integer preferredView);
 
     /**
      * This interface defines <b>entity centre</b> domain tree can be managed for <b>criteria</b> (property represents as a criteria editor). <br>

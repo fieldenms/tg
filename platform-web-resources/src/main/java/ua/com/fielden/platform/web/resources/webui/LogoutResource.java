@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.lang.String.format;
 import static org.restlet.data.MediaType.TEXT_HTML;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.createRepresentation;
 import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.extractAuthenticator;
@@ -14,14 +15,15 @@ import org.restlet.Response;
 import org.restlet.representation.EmptyRepresentation;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Get;
-import org.restlet.resource.ServerResource;
 
 import ua.com.fielden.platform.security.session.Authenticator;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebResourceLoader;
+import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 
 /**
  * A web resource handling explicit user logins.
@@ -29,10 +31,10 @@ import ua.com.fielden.platform.web.app.IWebResourceLoader;
  * @author TG Team
  *
  */
-public class LogoutResource extends ServerResource {
+public class LogoutResource extends AbstractWebResource {
 
     public static final String BINDING_PATH = "/logout";
-    
+
     private final Logger logger = Logger.getLogger(LogoutResource.class);
 
     private final IWebResourceLoader webResourceLoader;
@@ -52,10 +54,12 @@ public class LogoutResource extends ServerResource {
             final IUserSession coUserSession,
             final String domainName,
             final String path,
+            final IDeviceProvider deviceProvider,
+            final IDates dates,
             final Context context,
             final Request request,
             final Response response) {
-        init(context, request, response);
+        super(context, request, response, deviceProvider, dates);
         this.webResourceLoader = webResourceLoader;
         this.userProvider = userProvider;
         this.coUser = coUser;
@@ -67,15 +71,23 @@ public class LogoutResource extends ServerResource {
     @Get
     public Representation logout() {
         try {
+            // Logout might be initiated from a TG-based app or from a front-channel logout process by OP (e.g., Microsoft Office365 portal).
+            // In case of front-channel request, a sid is expected as the request parameter.
+            // In case of TG-based app request, a corresponding sid needs to be identified from the current session
+            final String sid = getQueryValue("sid");
+            logger.info(format("LOGOUT sid (if any): [%s]", sid));
+            coUserSession.clearAllWithSid(sid);
             // check if there is a valid authenticator
             // if there is then the logout request is authentic and should be honored
             final Optional<Authenticator> oAuth = extractAuthenticator(getRequest());
             if (oAuth.isPresent()) {
                 final Authenticator auth = oAuth.get();
                 userProvider.setUsername(auth.username, coUser);
-                final Optional<UserSession> session = coUserSession.currentSession(userProvider.getUser(), auth.toString(), false);
-                if (session.isPresent()) {
-                    coUserSession.clearSession(session.get());
+                final Optional<UserSession> maybeSession = coUserSession.currentSession(userProvider.getUser(), auth.toString(), false);
+                if (maybeSession.isPresent()) {
+                    final UserSession session = maybeSession.get();
+                    coUserSession.clearAllWithSid(session.getSid());
+                    coUserSession.clearSession(session);
                 }
                 // let's use this opportunity to clear expired sessions for the user
                 coUserSession.clearExpired(userProvider.getUser());

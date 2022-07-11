@@ -74,11 +74,14 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     private final boolean egiHidden;
+    private final String gridViewIcon;
+    private final String gridViewIconStyle;
     private final boolean draggable;
     private final boolean hideCheckboxes;
     private final IToolbarConfig toolbarConfig;
     private final boolean hideToolbar;
     private final IScrollConfig scrollConfig;
+    private final boolean retrieveAll;
     private final int pageCapacity;
     private final int maxPageCapacity;
     private final int visibleRowsCount;
@@ -242,10 +245,11 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         public final Optional<Class<? extends IDynamicColumnBuilder<T>>> dynamicColBuilderType;
         public final Optional<CentreContextConfig> contextConfig;
         public final Optional<BiConsumer> entityPreProcessor;
-        public final Supplier<Optional<EntityActionConfig>> propAction;
         public final Optional<AbstractWidget> widget;
         public final int width;
         public final boolean isFlexible;
+
+        private Supplier<Optional<EntityActionConfig>> propAction = Optional::empty;
 
          public static <T extends AbstractEntity<?>> ResultSetProp<T> propByName(final String propName, final int width, final boolean isFlexible, final Optional<AbstractWidget> widget, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
             return new ResultSetProp<>(propName, empty(), empty(), empty(), width, isFlexible, widget, tooltipProp, null, propAction);
@@ -293,6 +297,14 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             this.dynamicColBuilderType = dynColBuilderType;
             this.contextConfig = contextConfig;
             this.entityPreProcessor = entityPreProcessor;
+        }
+
+        public void setPropAction(final Supplier<Optional<EntityActionConfig>> propAction) {
+            this.propAction = propAction;
+        }
+
+        public Supplier<Optional<EntityActionConfig>> getPropAction() {
+            return propAction;
         }
 
         /**
@@ -391,11 +403,14 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     ///////////////////////////////////
     public EntityCentreConfig(
             final boolean egiHidden,
+            final String gridViewIcon,
+            final String gridViewIconStyle,
             final boolean draggable,
             final boolean hideCheckboxes,
             final IToolbarConfig toolbarConfig,
             final boolean hideToolbar,
             final IScrollConfig scrollConfig,
+            final boolean retrieveAll,
             final int pageCapacity,
             final int maxPageCapacity,
             final int visibleRowsCount,
@@ -461,11 +476,14 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Pair<Class<?>, Class<?>> generatorTypes,
             final IFetchProvider<T> fetchProvider) {
         this.egiHidden = egiHidden;
+        this.gridViewIcon = gridViewIcon;
+        this.gridViewIconStyle = gridViewIconStyle;
         this.draggable = draggable;
         this.hideCheckboxes = hideCheckboxes;
         this.toolbarConfig = toolbarConfig;
         this.hideToolbar = hideToolbar;
         this.scrollConfig = scrollConfig;
+        this.retrieveAll = retrieveAll;
         this.pageCapacity = pageCapacity;
         this.maxPageCapacity = maxPageCapacity;
         this.visibleRowsCount = visibleRowsCount;
@@ -827,10 +845,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
                     .collect(Collectors.toList())
                     .get(actionNumber);
         } else if (INSERTION_POINT == actionKind) {
-            if (!getInsertionPointConfigs().isPresent()) {
+            if (getInsertionPointConfigs().isEmpty()) {
                 throw new IllegalArgumentException("No insertion point exists.");
             }
-            return getInsertionPointConfigs().get().get(actionNumber).getInsertionPointAction();
+            return getInsertionPointConfigs().get(actionNumber).getInsertionPointAction();
         } else if (FRONT == actionKind) {
             if (getFrontActions().isEmpty()) {
                 throw new IllegalArgumentException("No front action exists.");
@@ -874,11 +892,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return Collections.unmodifiableList(frontActions);
     }
 
-    public Optional<List<InsertionPointConfig>> getInsertionPointConfigs() {
-        if (insertionPointConfigs.isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.of(Collections.unmodifiableList(insertionPointConfigs));
+    public List<InsertionPointConfig> getInsertionPointConfigs() {
+        return Collections.unmodifiableList(insertionPointConfigs);
     }
 
     public Optional<String> getSseUri() {
@@ -887,6 +902,14 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public boolean isEgiHidden() {
         return egiHidden;
+    }
+
+    public String getGridViewIcon() {
+        return gridViewIcon;
+    }
+
+    public String getGridViewIconStyle() {
+        return gridViewIconStyle;
     }
 
     public boolean shouldHideCheckboxes() {
@@ -907,6 +930,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public IScrollConfig getScrollConfig() {
         return scrollConfig;
+    }
+
+    public boolean shouldRetrieveAll() {
+        return retrieveAll;
     }
 
     public int getPageCapacity() {

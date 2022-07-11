@@ -39,7 +39,13 @@ public class CentreConfigDuplicateActionProducer extends DefaultEntityProducerWi
             selectionCrit().configDuplicateAction();
             // and after copying of criteria values against default centre compare it with SAVED version of default centre,
             // which always holds empty Centre DSL-configured configuration
-            entity.setCustomObject(getCustomObject(selectionCrit(), appliedCriteriaEntity, of(empty()) /* update with empty uuid indicating default config */));
+            entity.setCustomObject(getCustomObject(
+                selectionCrit(),
+                appliedCriteriaEntity,
+                empty(), // update with empty saveAsName indicating default config
+                of(empty()), // update with empty uuid indicating default config
+                of(appliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer().getPreferredView()) // update with preferred view from selection criteria with applied modifications
+            ));
         }
         return entity;
     }

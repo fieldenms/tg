@@ -12,8 +12,10 @@ import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizabl
 
 import '/resources/images/tg-icons.js';
 import '/resources/components/tg-toast.js';
+import '/resources/egi/tg-responsive-toolbar.js';
 import { TgTooltipBehavior } from '/resources/components/tg-tooltip-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
+import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 
 import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/polymer/@polymer/paper-styles/shadow.js';
@@ -24,69 +26,8 @@ import '/resources/polymer/@polymer/paper-styles/element-styles/paper-material-s
 import '/resources/polymer/@polymer/neon-animation/animations/fade-in-animation.js';
 import '/resources/polymer/@polymer/neon-animation/animations/fade-out-animation.js';
 import '/resources/centre/tg-entity-centre-styles.js';
-import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, getKeyEventTarget } from '/resources/reflection/tg-polymer-utils.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
-
-const customStyle = html`
-    <custom-style>
-        <style>
-            .insertion-point-dialog > #insertionPointContent {
-                background-color: white;
-                @apply --shadow-elevation-2dp;
-            }
-            .insertion-point-dialog .title-bar paper-icon-button {
-                transform: scale(-1, -1);
-            }
-            .insertion-point-dialog paper-icon-button.revers {
-                transform: scale(-1, 1);
-            }
-            #insertionPointContent .truncate {
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            }
-            #insertionPointContent .title-bar {
-                height: 44px;
-                min-height: 44px;
-                font-size: 18px;
-                cursor: default;
-                color: white;
-                min-width: 0;
-                overflow: hidden;
-                -webkit-user-select: none;
-                -moz-user-select: none;
-                -ms-user-select: none;
-                user-select: none;
-                background-color: var(--paper-light-blue-600);
-            }
-            #insertionPointContent paper-icon-button.expand-colapse-button {
-                min-width: 40px;
-                min-height: 40px;
-                stroke: var(--paper-grey-100);
-                fill: var(--paper-grey-100);
-                color: var(--paper-grey-100);
-            }
-            #insertionPointContent paper-icon-button.expand-colapse-button:hover {
-                min-width: 40px;
-                min-height: 40px;
-                stroke: var(--paper-grey-300);
-                fill: var(--paper-grey-300);
-                color: var(--paper-grey-300);
-            }
-            #insertionPointContent #custom_actions_container {
-                position: absolute;
-                background-color: white;
-                top: 44px;
-                right: 0;
-            }
-            #insertionPointContent #loadableContent {
-                z-index:0;
-            }
-        </style>
-    </custom-style>
-`;
-customStyle.setAttribute('style', 'display: none;');
-document.head.appendChild(customStyle.content);
 
 const template = html`
     <style>
@@ -94,10 +35,27 @@ const template = html`
             @apply --layout-vertical;
             overflow: auto;
         }
+
         .truncate {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+
+        #pm {
+            background: white;
+            border-radius: 2px;
+            min-width: fit-content;
+            @apply --shadow-elevation-2dp;
+        }
+
+        #pm[detached] {
+            position: fixed;
+            top: 2%;
+            left: 2%;
+            width: 96%;
+            height: 96%;
+            z-index: 1;
         }
         .title-bar {
             height: 44px;
@@ -112,6 +70,11 @@ const template = html`
             user-select: none;
             background-color: var(--paper-light-blue-600);
         }
+
+        tg-responsive-toolbar {
+            margin: 8px 0;
+        }
+
         paper-icon-button.expand-colapse-button {
             min-width: 40px;
             min-height: 40px;
@@ -119,6 +82,7 @@ const template = html`
             fill: var(--paper-grey-100);
             color: var(--paper-grey-100);
         }
+
         paper-icon-button.expand-colapse-button:hover {
             min-width: 40px;
             min-height: 40px;
@@ -126,32 +90,41 @@ const template = html`
             fill: var(--paper-grey-300);
             color: var(--paper-grey-300);
         }
-        .paper-material {
-            background: white;
-            border-radius: 2px;
+
+        #pm[detached] paper-icon-button.expand-colapse-button {
+            transform: scale(-1, -1);
         }
+
         #loadableContent {
             z-index:0;
         }
-        [flexible] {
-            flex-grow: 1;
+
+        .lock-layer {
+            opacity: 0.5;
+            display: none;
+            background-color: white;
+            @apply --layout-fit;
+        }
+
+        .lock-layer[lock] {
+            display: initial;
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning tg-entity-centre-styles paper-material-styles"></style>
-    <div id="pm" hidden$="[[detachedView]]" class="paper-material layout vertical" elevation="1" flexible$="[[flexible]]">
-        <div hidden>
-            <slot name="insertion-point-child" id="custom_actions_content"></slot>
-        </div>
-        <div id="insertionPointContent" tabindex='0' class="layout vertical flex relative">
-            <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc)]]">
+    <div id="pm" class="layout vertical flex" detached$="[[detachedView]]">
+        <div id="insertionPointContent" tabindex$="[[_getTabIndex(alternativeView)]]" class="layout vertical flex relative">
+            <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]">
                 <span class="title-text truncate" style="margin-left:16px;" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
                 <paper-icon-button class="title-bar-button expand-colapse-button" style="margin-left:10px;margin-right:2px;" icon="icons:open-in-new" on-tap="_expandColapseTap"></paper-icon-button>
             </div>
-            <div id="loadableContent" class="relative">
+            <tg-responsive-toolbar id="viewToolbar" hidden$="[[!_isToolbarVisible(detachedView, alternativeView, isAttached)]]">
+                <slot id="entitySpecificActions" slot="entity-specific-action" name="entity-specific-action"></slot>
+                <slot id="standartActions" slot="standart-action" name="standart-action"></slot>
+            </tg-responsive-toolbar>
+            <div id="loadableContent" class="relative flex">
                 <tg-element-loader id="elementLoader"></tg-element-loader>
             </div>
-            <div id="custom_actions_container" class="layout horizontal center end-justified" style="padding-right:2px" hidden$="[[!detachedView]]">
-            </div>
+            <div class="lock-layer" lock$="[[lock]]"></div>
         </div>
     </div>
     <tg-toast id="toaster"></tg-toast>
@@ -166,22 +139,23 @@ Polymer({
         IronResizableBehavior,
         IronA11yKeysBehavior,
         TgTooltipBehavior,
-        TgShortcutProcessingBehavior
+        TgShortcutProcessingBehavior,
+        TgElementSelectorBehavior
     ],
 
     properties: {
         /**
-         * Indicates whether insertion point fits all visible are or not.
+         * Indicates whether this view is represented as alternative view or side-by-side with main EGI
          */
-        flexible: {
+        alternativeView: {
             type: Boolean,
             value: false,
-            observer: "_flexibilityChanged"
+            reflectToAttribute: true
         },
         
         /**
          * Indicates whether to hide margins around insertion point.
-         * This is typically needed for the case where there is only one flexible insertion point and EGI is hidden.
+         * This is typically needed for the case where this insertion point is separate alternative view.
          */
         hideMargins: {
             type: Boolean,
@@ -201,6 +175,16 @@ Polymer({
             value: false
         },
         /**
+         * The icon for insertion point
+         */
+        icon: String,
+
+        /**
+         * The icon style for insertion point
+         */
+        iconStyle: String,
+        
+        /**
          * The title for insertion point
          */
         shortDesc: String,
@@ -216,11 +200,11 @@ Polymer({
             observer: '_updateElementWithSelectionCriteriaEntity',
         },
         /**
-         * Indicates whether centre was ran or not. Is binded in the entity centre.
+         * Indicates how data for insertion point was change: by run, refresh or navigation.
          */
-        isCentreRunning: {
-            type: Boolean,
-            observer: '_updateElementWithRunIndicator',
+        dataChangeReason: {
+            type: String,
+            observer: '_updateElementWithDataChangeReason'
         },
         /**
          * The entities retrieved when running centre that has this insertion point
@@ -228,6 +212,15 @@ Polymer({
         retrievedEntities: {
             type: Array,
             observer: '_updateElementWithRetrievedEntities',
+            notify: true
+        },
+
+        /**
+         * The entities retrieved when running centre that has this insertion point. It might be either all entities, which should be paginated locally, or only one page. It depends on retrieveAll property of entity centre.
+         */
+        allRetrievedEntities: {
+            type: Array,
+            observer: '_updateElementWithAllRetrievedEntities',
             notify: true
         },
         /**
@@ -243,10 +236,11 @@ Polymer({
             observer: '_centreSelectionChanged'
         },
         /**
-         * Actions provided by entity centre for this insertion point
+         * The state of parent entity centre. This enables locking of alternative view when parent centre is in VIEW state.
          */
-        customActions: {
-            type: Array,
+        centreState: {
+            type: String,
+            observer: "_centreStateChanged"
         },
         /**
          * Provides custom key bindings.
@@ -267,55 +261,40 @@ Polymer({
             notify: true
         },
 
-        keyEventTarget: {
-            type: Object
-        },
-
         contextRetriever: {
             type: Function,
             observer: "_updateElementWithContextRetriever"
+        },
+
+        /**
+         * Need for locking insertion point during data loading.
+         */
+         lock: {
+            type: Boolean,
+            value: false
         },
 
         _element: {
             type: Object,
             value: null
         },
-        /**
-         * The dialog for detachedView insertion point.
-         */
-        _dialog: Object
+
+        _ownKeyBindings: {
+            type: Object
+        }
     },
 
-    observers: ['_adjustView(detachedView)'],
+    observers: ['_adjustView(detachedView, alternativeView)'],
 
     ready: function () {
         this.triggerElement = this.$.insertionPointContent;
-        setTimeout(function() {
-            // Initialising the custom actions' list.
-            const customActionsList = [];
-            Array.prototype.forEach.call(this.$.custom_actions_content.assignedNodes({ flatten: true }), function (item) {
-                customActionsList.push(item);
-            }.bind(this));
-            this.customActions = customActionsList;
-        }.bind(this), 0);
+        this.addEventListener('tg-config-uuid-before-change', tearDownEvent); // prevent propagating of centre config UUID event to the top (tg-view-with-menu) to avoid browser URI change
+        this.addEventListener('tg-config-uuid-changed', tearDownEvent); // prevent propagating of centre config UUID event to the top (tg-view-with-menu) to avoid configUuid change on parent standalone centre
     },
 
     attached: function () {
-        const self = this;
-        this.async(function () {
-            if (!self.egiBindingAdded) {
-                // cache parent result view, that contains this insertion point
-                self.resultView = self.findResultView();
-                if (self.resultView) {
-                    // add all EGI shortcuts to this result view to listen to EGI shotcuts when insertion point is focused
-                    self.addOwnKeyBinding(self.resultView._findParentCentre().$.egi.customShortcuts, '_egiShortcutPressed');
-                    self.egiBindingAdded = true;
-                }
-            }
-            self.keyEventTarget = self.$.insertionPointContent;
-            if (this.customActions) {
-                this.customActions.forEach(elem => this.$.custom_actions_container.appendChild(elem));
-            }
+        this.async(() => {
+            this.keyEventTarget = getKeyEventTarget(this.$.insertionPointContent, this);
         }, 1);
     },
 
@@ -326,42 +305,19 @@ Polymer({
     },
 
     _customShortcutsChanged: function (newValue, oldValue) {
-        this.removeOwnKeyBindings();
-        this.addOwnKeyBinding(newValue, '_shortcutPressed');
-    },
-
-    /**
-     * Creates dynamically the 'dom-bind' template, which hold the dialog for the calendar.
-     */
-    _createDialog: function () {
-        const dialog = document.createElement('div');
-        dialog.classList.toggle('insertion-point-dialog', true);
-        dialog.classList.toggle('layout', true);
-        dialog.classList.toggle('vertical', true);
-        dialog.style.position = 'absolute';
-        dialog.style.top = '2%';
-        dialog.style.left = '2%';
-        dialog.style.width = '96%';
-        dialog.style.height = '96%';
-        dialog.style.zIndex = '1';
-        return dialog;
+        this._ownKeyBindings = {};
+        if (newValue) {
+            this._ownKeyBindings[newValue] = '_shortcutPressed';
+        }
     },
 
     _showDialog: function () {
-        if (!this._dialog) {
-            this._dialog = this._createDialog();
-        }
-
         this.detachedView = true;
-        document.body.appendChild(this._dialog);
-        this._dialog.appendChild(this.$.insertionPointContent);
         this.$.insertionPointContent.focus();
     },
 
     _closeDialog: function () {
-        document.body.removeChild(this._dialog);
         this.detachedView = false;
-        this.$.pm.appendChild(this.$.insertionPointContent);
         if (this.contextRetriever && this.contextRetriever().$.centreResultContainer) {
             this.contextRetriever().$.centreResultContainer.focus();
         }
@@ -385,9 +341,15 @@ Polymer({
         }
     },
 
-    _updateElementWithRunIndicator: function (newValue, oldValue) {
+    _updateElementWithDataChangeReason: function (newValue, oldValue) {
         if (this._element) {
-            this._element.isCentreRunning = newValue;
+            this._element.dataChangeReason = newValue;
+        }
+    },
+
+    _updateElementWithAllRetrievedEntities: function (newValue, oldValue) {
+        if (this._element) {
+            this._element.allRetrievedEntities = newValue;
         }
     },
 
@@ -409,6 +371,13 @@ Polymer({
         }
     },
 
+    _centreStateChanged: function (newValue, oldValue) {
+        if (this._element) {
+            this._element.centreState = newValue;
+        }
+        this.lock = newValue === "VIEW";
+    },
+
     _updateElementWithColumnPropertiesMapper: function (newValue, oldValue) {
         if (this._element) {
             this._element.columnPropertiesMapper = newValue;
@@ -418,16 +387,6 @@ Polymer({
     _updateElementWithContextRetriever: function (newValue, oldValue) {
         if (this._element) {
             this._element.contextRetriever = newValue;
-        }
-    },
-
-    _flexibilityChanged: function (newValue, oldValue) {
-        if (newValue) {
-            this.style["flex-grow"] = "1";
-            this.parentElement.style["flex-grow"] = "1";
-        } else {
-            this.style.removeProperty("flex-grow");
-            this.parentElement.style.removeProperty("flex-grow");
         }
     },
 
@@ -457,12 +416,16 @@ Polymer({
                     self.activated = true;
                     self._element = element;
                     self._element.selectionCriteriaEntity = self.selectionCriteriaEntity;
-                    self._element.isCentreRunning = self.isCentreRunning;
+                    self._element.dataChangeReason = self.dataChangeReason;
                     self._element.contextRetriever = self.contextRetriever;
                     self._element.addEventListener('retrieved-entities-changed', function (ev) {
                         self.retrievedEntities = this.retrievedEntities;
                     });
                     self._element.retrievedEntities = self.retrievedEntities;
+                    self._element.addEventListener('all-retrieved-entities-changed', function (ev) {
+                        self.allRetrievedEntities = this.allRetrievedEntities;
+                    });
+                    self._element.allRetrievedEntities = self.allRetrievedEntities;
                     self._element.addEventListener('retrieved-totals-changed', function (ev) {
                         self.retrievedTotals = this.retrievedTotals;
                     });
@@ -478,13 +441,13 @@ Polymer({
                     if (promise) {
                         return promise
                             .then(function () {
-                                self._adjustView(self.detachedView);
+                                self._adjustView(self.detachedView, self.alternativeView);
                                 customAction.restoreActiveElement();
                             });
                     } else {
                         return Promise.resolve()
                             .then(function () {
-                                self._adjustView(self.detachedView);
+                                self._adjustView(self.detachedView, self.alternativeView);
                                 customAction.restoreActiveElement();
                             });
                     }
@@ -503,16 +466,43 @@ Polymer({
         }
     },
 
-    _adjustView: function (detachedView) {
-        if (this.$.elementLoader.prefDim && detachedView === false) {
-            const prefDim = this.$.elementLoader.prefDim;
-            this.$.pm.style.width = prefDim.width() + prefDim.widthUnit;
-            this.$.loadableContent.style.removeProperty('width');
-            this.$.loadableContent.style.height = prefDim.height() + prefDim.heightUnit;
+    /**
+     * @returns Checks whether this insertion point can be left.
+     */
+    canLeave: function () {
+        if (this._element && typeof this._element.canLeave === 'function') {
+            return this._element.canLeave();
+        }
+    },
+
+    /**
+     * Performs custom tasks before leaving this insertion point. This is stub  right now to conform switching to alternative views API in entity centre behavior.
+     */
+    leave: function () {},
+
+    /**
+     * Assigns sizes for insertion point depending on several states in which it can be: attached / detached (non-alternative view) and alternative view.
+     */
+    _adjustView: function (detachedView, alternativeView) {
+        this.$.loadableContent.style.removeProperty("width");
+        this.$.loadableContent.style.removeProperty("height");
+        this.$.loadableContent.style.removeProperty("min-width");
+        this.$.loadableContent.style.removeProperty("min-height");
+        this.style.removeProperty("width");
+        this.style.removeProperty("height");
+        if (!detachedView) {
+            if (this.$.elementLoader.prefDim) {
+                const prefDim = this.$.elementLoader.prefDim;
+                this.$.loadableContent.style.minWidth = prefDim.width() + prefDim.widthUnit;
+                this.$.loadableContent.style.minHeight = prefDim.height() + prefDim.heightUnit;
+            } 
+            if (alternativeView) {
+                this.style.width = "100%";
+                this.style.height = "100%";
+            }
         } else {
-            this.$.pm.style.removeProperty('width');
-            this.$.loadableContent.style.width = '100%';
-            this.$.loadableContent.style.height = '100%';
+            this.$.loadableContent.style.width = "100%";
+            this.$.loadableContent.style.height = "100%";
         }
         this.updateStyles();
         this.notifyResize();
@@ -527,8 +517,23 @@ Polymer({
         tearDownEvent(event);
     },
 
-    _hasTitleBar: function (shortDesc) {
-        return !!shortDesc;
+    /**
+     * Shows title bar only for non-alternative views with short description defined.
+     */
+    _hasTitleBar: function (shortDesc, alternativeView) {
+        return !alternativeView && !!shortDesc;
+    },
+
+    _isToolbarVisible: function (detachedView, alternativeView, isAttached) {
+        return (detachedView || alternativeView) && (isAttached && (this.$.entitySpecificActions.assignedNodes().length > 0 || this.$.standartActions.assignedNodes().length > 0));
+    },
+
+    /**
+     * As for selection crit / grid views, the tab index for alternative view should be -1 to enable targeting of keyboard events to 'tg-menu-item-view'.
+     * For simple insertion points, target of keyboard events should be this 'tg-entity-centre-insertion-point'.
+     */
+    _getTabIndex: function (alternativeView) {
+        return alternativeView ? '-1' : '0';
     },
 
     _shortcutPressed: function (e) {
@@ -543,15 +548,4 @@ Polymer({
             this.resultView._findParentCentre().$.egi._shortcutPressed(e);
         }
     },
-
-    /**
-     * Finds parent result view for this insertion point. It should be done only in 'attached' insertion point state.
-     */
-    findResultView: function () {
-        let parent = this.parentElement.assignedSlot;
-        while (parent && !parent.classList.contains('centreResultView')) {
-            parent = parent.parentElement || parent.getRootNode().host;
-        }
-        return parent;
-    }
 });

@@ -11,15 +11,27 @@ export const Select = function (_map, _getLayerById, _markerFactory, tgMap, find
 
     self._featureToLeafletIds = {};
     self._prevId = null;
+    self.outsideTapDeselectionListener = () => {
+        if (self._prevId !== null) {
+            self.deselect(self._prevId);
+        }
+    };
+    self._map.on('click', self.outsideTapDeselectionListener);
+
+    /**
+     * Indicates whether previously selected EGI entity should be deselected in case where some different map marker gets selected.
+     */
+    self.deselectPrevEgiEntityOnLayerSelection = false;
     self._tgMap = tgMap;
+    self.getLayerIdByEntity = entity => 
+        entity.properties && entity.properties.layerId 
+            ? entity.properties.layerId
+            : (typeof entity.arcGisId !== 'undefined' ? getLayerByGlobalId(entity.get('arcGisId'))._leaflet_id : null);
 
     self._centreSelectionHandler = function (newSelection) {
         if (newSelection.entities.length == 1) {
             const selectionEntity = newSelection.entities[0];
-            const layerId = 
-                selectionEntity.entity.properties && selectionEntity.entity.properties.layerId 
-                    ? selectionEntity.entity.properties.layerId
-                    : getLayerByGlobalId(selectionEntity.entity.get('arcGisId'))._leaflet_id;
+            const layerId = self.getLayerIdByEntity(selectionEntity.entity);
             if (selectionEntity.select) {
                 self._silentlySelectById(layerId);
             } else {
@@ -30,6 +42,28 @@ export const Select = function (_map, _getLayerById, _markerFactory, tgMap, find
     self._tgMap.centreSelectionHandler = self._centreSelectionHandler;
 };
 
+/**
+ * Deselects layer with 'layerId'.
+ * Also manages EGI selection based on 'deselectPrevEgiEntityOnLayerSelection' option.
+ */
+Select.prototype.deselect = function (layerId) {
+    if (this._prevId !== null && this._prevId === layerId) {
+        const details = [];
+        const prevId = this._prevId;
+        this._prevId = null;
+        this._silentlyDeselect(prevId);
+        const deselectionDetailOpt = this._generateDeselectionDetailOpt(prevId);
+        if (deselectionDetailOpt) {
+            details.push(deselectionDetailOpt);
+        }
+        this._generateSelectionEvent(details, false); // do not scroll EGI when unselection of the entity is performed
+    }
+};
+
+/**
+ * Selects layer with 'layerId'. Performs deselection of previously selected layer, if any.
+ * Also manages EGI selection based on 'deselectPrevEgiEntityOnLayerSelection' option.
+ */
 Select.prototype.select = function (layerId) {
     if (this._prevId !== layerId) {
         const details = [];
@@ -47,42 +81,41 @@ Select.prototype.select = function (layerId) {
         
         if (prevId !== null) {
             this._silentlyDeselect(prevId);
-            const prevEntity = this.findEntityBy(this._getLayerById(prevId).feature);
-            if (_isEntity(prevEntity)) {
-                details.push({
-                    entity: prevEntity,
-                    select: false
-                });
+            const deselectionDetailOpt = this._generateDeselectionDetailOpt(prevId);
+            if (deselectionDetailOpt) {
+                details.push(deselectionDetailOpt);
             }
         }
-        if (details.length > 0) {
-            const event = new CustomEvent('tg-entity-selected', {
-                detail: {
-                    shouldScrollToSelected: true,
-                    entities: details
-                },
-                bubbles: true,
-                composed: true,
-                cancelable: true
-            });
-            this._tgMap.getCustomEventTarget().dispatchEvent(event);
+        this._generateSelectionEvent(details, true); // scroll EGI to new selected entity
+    }
+};
+
+/**
+ * Creates optional deselection detail of 'tg-entity-selected' event for EGI deselection.
+ * Deselection occurs only in case of 'deselectPrevEgiEntityOnLayerSelection' option.
+ */
+Select.prototype._generateDeselectionDetailOpt = function (prevId) {
+    if (this.deselectPrevEgiEntityOnLayerSelection) {
+        const prevEntity = this.findEntityBy(this._getLayerById(prevId).feature);
+        if (_isEntity(prevEntity)) {
+            return {
+                entity: prevEntity,
+                select: false
+            };
         }
     }
-}
+    return null;
+};
 
-Select.prototype._deselect = function (layerId) {
-    const layer = this._getLayerById(layerId);
-    const feature = layer.feature;
-
-    const entity = this.findEntityBy(feature);
-    if (_isEntity(entity)) {
+/**
+ * Generates and dispatches 'tg-entity-selected' event from selection / unselection 'details' with option 'shouldScrollToSelected'.
+ */
+Select.prototype._generateSelectionEvent = function (details, shouldScrollToSelected) {
+    if (details.length > 0) {
         const event = new CustomEvent('tg-entity-selected', {
             detail: {
-                shouldScrollToSelected: true,
-                entities: [{
-                    entity: entity,
-                    select: false
-                }]
+                shouldScrollToSelected: shouldScrollToSelected,
+                entities: details
             },
             bubbles: true,
             composed: true,
@@ -90,7 +123,7 @@ Select.prototype._deselect = function (layerId) {
         });
         this._tgMap.getCustomEventTarget().dispatchEvent(event);
     }
-}
+};
 
 Select.prototype._silentlySelectById = function (layerId) {
     if (this._prevId !== layerId) {
@@ -99,7 +132,7 @@ Select.prototype._silentlySelectById = function (layerId) {
         this._prevId = layerId;
 
         if (prevId !== null) { // at the moment of selecting the feature - there has been other previously selected feature (or, perhaps, the same) 
-            this._deselect(prevId);
+            this._silentlyDeselect(prevId);
         }
     }
 }

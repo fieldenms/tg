@@ -1,11 +1,11 @@
 package ua.com.fielden.platform.domaintree.centre.impl;
 
 import static ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering.ASCENDING;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -31,6 +31,7 @@ import ua.com.fielden.platform.entity.annotation.ResultOnly;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
@@ -63,12 +64,13 @@ public class CentreDomainTreeRepresentation extends AbstractDomainTreeRepresenta
      * <p>
      * Composite entities and entities with entity-typed keys are not ordered by default.<br>
      * Others are ordered ascending by its {@link AbstractEntity#KEY}.
-     * 
+     *
      * @param root
      * @return
      */
     public static List<Pair<String, Ordering>> orderedPropertiesByDefaultFor(final Class<?> root) {
-        final Class<?> keyType = determinePropertyType(root, KEY);
+        final List<Field> keyMembers = Finder.getKeyMembers((Class<AbstractEntity<?>>) root);
+        final Class<?> keyType = keyMembers.size() > 1 ? DynamicEntityKey.class : determinePropertyType(root, keyMembers.get(0).getName());
         final List<Pair<String, Ordering>> pairs = new ArrayList<>();
         if (!isEntityType(keyType) && !DynamicEntityKey.class.isAssignableFrom(keyType)) {
             pairs.add(pair("", ASCENDING));

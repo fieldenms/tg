@@ -7,8 +7,9 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAggregates;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.pagination.IPage.pageCount;
+import static ua.com.fielden.platform.pagination.IPage.realPageCount;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -33,7 +34,6 @@ import ua.com.fielden.platform.entity.query.QueryExecutionContext;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.pagination.IPage;
 import ua.com.fielden.platform.utils.Pair;
@@ -292,7 +292,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
 
         final int resultSize = ((Number) counts.get(0).get("count")).intValue();
 
-        final Integer pageSize = resultSize % pageCapacity == 0 ? resultSize / pageCapacity : resultSize / pageCapacity + 1;
+        final Integer pageSize = realPageCount(resultSize, pageCapacity);
 
         return Pair.pair(pageSize, resultSize);
     }
@@ -346,7 +346,7 @@ public abstract class AbstractEntityReader<T extends AbstractEntity<?>> implemen
             this.numberOfPagesAndCount = numberOfPagesAndCount;
             this.pageNumber = pageNumber;
             this.pageCapacity = pageCapacity;
-            this.numberOfPages = numberOfPagesAndCount.getKey() == 0 ? 1 : numberOfPagesAndCount.getKey();
+            this.numberOfPages = pageCount(numberOfPagesAndCount.getKey());
             this.queryModel = queryModel;
             this.data = numberOfPagesAndCount.getValue() > 0 ? getEntitiesOnPage(queryModel, pageNumber, pageCapacity) : new ArrayList<>();
 

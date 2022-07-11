@@ -17,6 +17,7 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js
 
 import '/resources/actions/tg-ui-action.js';
 import '/resources/egi/tg-entity-grid-inspector.js';
+import '/resources/components/tg-dropdown-switch.js';
 import '/resources/master/actions/tg-action.js';
 import {TgEgiMasterBehavior} from '/resources/egi/tg-egi-master-behavior.js';
 import '/resources/centre/tg-selection-criteria.js';
@@ -56,14 +57,14 @@ const entityCentreTemplate = html`
     <style>
         /*toolbarStyles*/
     </style>
-    <tg-entity-centre id="dom" _selected-view="{{_selectedView}}" _url="[[_url]]" _centre-dirty-or-edited="[[_centreDirtyOrEdited]]" _action-in-progress="{{_actionInProgress}}" _bind-centre-info="[[_bindCentreInfo]]" _process-discarder-response="[[_processDiscarderResponse]]" _process-discarder-error="[[_processDiscarderError]]" _button-disabled="[[_buttonDisabled]]" _viewer-disabled="[[_viewerDisabled]]" save="[[save]]" discard="[[discard]]" run="[[run]]" _activate-result-set-view="[[_activateResultSetView]]" stale-criteria-message="[[staleCriteriaMessage]]" _show-dialog="[[_showDialog]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]">
-        <tg-@mi_type-selection-criteria id="selection_criteria" slot="custom-selection-criteria" _centre-dirty-or-edited="{{_centreDirtyOrEdited}}" _was-run="{{_wasRun}}" _criteria-loaded="{{_criteriaLoaded}}" uuid="[[uuid]]" mi-type="[[miType]]" save-as-name="{{saveAsName}}" config-uuid="{{configUuid}}" query-part="[[queryPart]]" post-run="[[_postRun]]" get-selected-entities="[[_getSelectedEntities]]" get-master-entity="[[getMasterEntity]]" post-retrieved="[[postRetrieved]]" page-number="{{pageNumber}}" page-count="{{pageCount}}" page-number-updated="{{pageNumberUpdated}}" page-count-updated="{{pageCountUpdated}}" is-running="{{isRunning}}" stale-criteria-message="{{staleCriteriaMessage}}" @queryEnhancerContextConfig></tg-@mi_type-selection-criteria>
+    <tg-entity-centre id="dom" _selected-view="[[_selectedView]]" _previous-view="[[_previousView]]" _url="[[_url]]" _centre-dirty-or-edited="[[_centreDirtyOrEdited]]" _action-in-progress="{{_actionInProgress}}" _bind-centre-info="[[_bindCentreInfo]]" _process-discarder-response="[[_processDiscarderResponse]]" _process-discarder-error="[[_processDiscarderError]]" _button-disabled="[[_buttonDisabled]]" _viewer-disabled="[[_viewerDisabled]]" save="[[save]]" discard="[[discard]]" run="[[run]]" _activate-result-set-view="[[_activateResultSetView]]" stale-criteria-message="[[staleCriteriaMessage]]" _show-dialog="[[_showDialog]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" initiate-auto-run="[[initiateAutoRun]]" embedded="[[embedded]]">
+        <tg-@mi_type-selection-criteria id="selection_criteria" slot="custom-selection-criteria" auto-run="{{autoRun}}" _centre-dirty-or-edited="{{_centreDirtyOrEdited}}" _was-run="{{_wasRun}}" _criteria-loaded="{{_criteriaLoaded}}" uuid="[[uuid]]" mi-type="[[miType]]" save-as-name="{{saveAsName}}" config-uuid="{{configUuid}}" preferred-view="{{preferredView}}" query-part="[[queryPart]]" post-run="[[_postRun]]" retrieve-all="[[retrieveAll]]" get-selected-entities="[[_getSelectedEntities]]" get-master-entity="[[getMasterEntity]]" post-retrieved="[[postRetrieved]]" page-number="{{pageNumber}}" page-count="{{pageCount}}" page-number-updated="{{pageNumberUpdated}}" page-count-updated="{{pageCountUpdated}}" data-change-reason="{{dataChangeReason}}" is-running="{{isRunning}}" stale-criteria-message="{{staleCriteriaMessage}}" @queryEnhancerContextConfig></tg-@mi_type-selection-criteria>
         
         <!--@custom-front-actions-->
         
         <!--@custom-share-actions-->
         
-        <tg-entity-grid-inspector id="egi" slot="custom-egi" class="entity-grid-inspector" centre-selection="[[centreSelection]]" column-properties-mapper="{{columnPropertiesMapper}}" custom-shortcuts="@customShortcuts" constant-height="@egiHeight" row-height="@egiRowHeight" @hidden @fitToHeight @canDragFrom @toolbarVisible @checkboxVisible @dragAnchorFixed @checkboxesFixed @checkboxesWithPrimaryActionsFixed num-of-fixed-cols="@numOfFixedCols" @secondaryActionsFixed @headerFixed @summaryFixed @gridLayout>
+        <tg-entity-grid-inspector id="egi" slot="custom-egi" class="entity-grid-inspector" centre-selection="[[centreSelection]]" column-properties-mapper="{{columnPropertiesMapper}}" icon="@egiViewIcon" icon-style="@egiViewStyle" custom-shortcuts="@customShortcuts" constant-height="@egiHeight" row-height="@egiRowHeight" @hidden @fitToHeight @canDragFrom @toolbarVisible @checkboxVisible @dragAnchorFixed @checkboxesFixed @checkboxesWithPrimaryActionsFixed num-of-fixed-cols="@numOfFixedCols" @secondaryActionsFixed @headerFixed @summaryFixed @gridLayout>
             <!-- EGI COLUMNS DOM (GENERATED) -->
             
             <!--@egi_columns-->
@@ -79,6 +80,7 @@ const entityCentreTemplate = html`
                 create-context-holder='[[_createContextHolder]]'
                 dynamic-action
                 attrs='[[_defaultPropertyActionAttrs]]'
+                pre-action='[[navigationPreAction]]'
                 require-selection-criteria='false'
                 require-selected-entities='ONE'
                 require-master-entity='false'
@@ -101,6 +103,7 @@ const entityCentreTemplate = html`
         <div slot="top-insertion-point" class="top-insertion-point">
             <!--@top_insertion_points-->
         </div>
+        <!--@alternative_view_insertion_points-->
     </tg-entity-centre>
 `;
 
@@ -115,6 +118,11 @@ Polymer({
         'class': 'layout vertical',
         'entity-type': '@full_entity_type',
         'mi-type': '@full_mi_type'
+    },
+    
+    created: function () {
+        const self = this;
+        self.retrieveAll = @retrieveAll;
     },
 
     ready: function () {

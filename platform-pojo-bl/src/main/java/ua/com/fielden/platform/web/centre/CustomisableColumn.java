@@ -17,7 +17,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  */
 @KeyType(String.class)
 @KeyTitle(value = "Property Name", desc = "Property name of this customisable column property.")
-@CompanionObject(ICustomisableColumn.class)
+@CompanionObject(CustomisableColumnCo.class)
 @DescTitle(value = "Description", desc = "Description of this customisable column property.")
 public class CustomisableColumn extends AbstractEntity<String> {
     @IsProperty

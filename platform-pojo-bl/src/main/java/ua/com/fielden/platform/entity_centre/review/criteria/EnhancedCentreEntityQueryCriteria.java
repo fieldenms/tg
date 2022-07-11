@@ -3,7 +3,6 @@ package ua.com.fielden.platform.entity_centre.review.criteria;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -13,6 +12,7 @@ import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.IGeneratedEntityController;
+import ua.com.fielden.platform.dashboard.DashboardRefreshFrequency;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -34,11 +34,14 @@ import ua.com.fielden.platform.web.interfaces.DeviceProfile;
  * @param <DAO>
  */
 public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO extends IEntityDao<T>> extends EntityQueryCriteria<ICentreDomainTreeManagerAndEnhancer, T, DAO> {
+    private Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier;
+    private Supplier<ICentreDomainTreeManagerAndEnhancer> savedCentreSupplier;
     private Supplier<ICentreDomainTreeManagerAndEnhancer> previouslyRunCentreSupplier;
     /** IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE. */
     private Function<Map<String, Object>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> freshCentreApplier;
-    private BiFunction<String, String, Map<String, Object>> centreEditor;
-    private BiFunction<String, String, Map<String, Object>> centreSaver;
+    private Function<String, Function<String, Function<Boolean, Function<DashboardRefreshFrequency, Map<String, Object>>>>> centreEditor;
+    private Function<String, Function<String, Function<Boolean, Function<DashboardRefreshFrequency, Map<String, Object>>>>> centreSaver;
+    private Function<Boolean, Map<String, Object>> centreConfigurator;
     private Runnable centreDeleter;
     /** IMPORTANT WARNING: avoids centre config self-conflict checks; ONLY TO BE USED NOT IN ANOTHER SessionRequired TRANSACTION SCOPE. */
     private Runnable freshCentreSaver;
@@ -51,11 +54,15 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
     private Supplier<Optional<String>> saveAsNameSupplier;
     private Consumer<Optional<String>> preferredConfigMaker;
     private Function<Optional<String>, Optional<T2<String, String>>> centreTitleAndDescGetter;
+    private Function<Optional<String>, Boolean> centreDashboardableGetter;
+    private Function<Optional<String>, DashboardRefreshFrequency> centreDashboardRefreshFrequencyGetter;
+    private Function<Optional<String>, Boolean> centreRunAutomaticallyGetter;
+    private Supplier<Boolean> defaultRunAutomaticallySupplier;
     private Function<Optional<String>, Optional<String>> centreConfigUuidGetter;
     private Supplier<Boolean> centreDirtyGetter;
     private Function<Optional<String>, Function<Supplier<ICentreDomainTreeManagerAndEnhancer>, Boolean>> centreDirtyCalculator;
     private Function<Optional<String>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> criteriaValidationPrototypeCreator;
-    private Function<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Function<Optional<String>, Function<Optional<Optional<String>>, Map<String, Object>>>> centreCustomObjectGetter;
+    private Function<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Function<Optional<String>, Function<Optional<Optional<String>>, Function<Optional<Integer>, Map<String, Object>>>>> centreCustomObjectGetter;
     /**
      * This function represents centre query runner for export action which is dependent on configuration of the passed <code>customObject</code>.
      * Running of this fully-fledged query depends on query context (see property centreContextHolder).
@@ -123,6 +130,22 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         centreAdjuster.accept(consumer);
     }
 
+    public void setSavedCentreSupplier(final Supplier<ICentreDomainTreeManagerAndEnhancer> savedCentreSupplier) {
+        this.savedCentreSupplier = savedCentreSupplier;
+    }
+
+    public ICentreDomainTreeManagerAndEnhancer savedCentre() {
+        return savedCentreSupplier.get();
+    }
+
+    public void setFreshCentreSupplier(final Supplier<ICentreDomainTreeManagerAndEnhancer> freshCentreSupplier) {
+        this.freshCentreSupplier = freshCentreSupplier;
+    }
+
+    public ICentreDomainTreeManagerAndEnhancer freshCentre() {
+        return freshCentreSupplier.get();
+    }
+
     public void setPreviouslyRunCentreSupplier(final Supplier<ICentreDomainTreeManagerAndEnhancer> previouslyRunCentreSupplier) {
         this.previouslyRunCentreSupplier = previouslyRunCentreSupplier;
     }
@@ -150,20 +173,28 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return freshCentreApplier.apply(modifHolder);
     }
 
-    public void setCentreEditor(final BiFunction<String, String, Map<String, Object>> centreEditor) {
+    public void setCentreEditor(final Function<String, Function<String, Function<Boolean, Function<DashboardRefreshFrequency, Map<String, Object>>>>> centreEditor) {
         this.centreEditor = centreEditor;
     }
 
-    public Map<String, Object> editCentre(final String title, final String desc) {
-        return centreEditor.apply(title, desc);
+    public Map<String, Object> editCentre(final String title, final String desc, final boolean dashboardable, final DashboardRefreshFrequency dashboardRefreshFrequency) {
+        return centreEditor.apply(title).apply(desc).apply(dashboardable).apply(dashboardRefreshFrequency);
     }
 
-    public void setCentreSaver(final BiFunction<String, String, Map<String, Object>> centreSaver) {
+    public void setCentreConfigurator(final Function<Boolean, Map<String, Object>> centreConfigurator) {
+        this.centreConfigurator = centreConfigurator;
+    }
+
+    public Map<String, Object> configureCentre(final boolean runAutomatically) {
+        return centreConfigurator.apply(runAutomatically);
+    }
+
+    public void setCentreSaver(final Function<String, Function<String, Function<Boolean, Function<DashboardRefreshFrequency, Map<String, Object>>>>> centreSaver) {
         this.centreSaver = centreSaver;
     }
 
-    public Map<String, Object> saveCentre(final String title, final String desc) {
-        return centreSaver.apply(title, desc);
+    public Map<String, Object> saveCentre(final String title, final String desc, final boolean dashboardable, final DashboardRefreshFrequency dashboardRefreshFrequency) {
+        return centreSaver.apply(title).apply(desc).apply(dashboardable).apply(dashboardRefreshFrequency);
     }
 
     public void setDefaultCentreClearer(final Runnable defaultCentreClearer) {
@@ -261,6 +292,38 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return centreTitleAndDescGetter.apply(saveAsName);
     }
 
+    public void setCentreDashboardableGetter(final Function<Optional<String>, Boolean> centreDashboardableGetter) {
+        this.centreDashboardableGetter = centreDashboardableGetter;
+    }
+
+    public boolean centreDashboardable(final Optional<String> saveAsName) {
+        return centreDashboardableGetter.apply(saveAsName);
+    }
+
+    public void setDefaultRunAutomaticallySupplier(final Supplier<Boolean> defaultRunAutomaticallySupplier) {
+        this.defaultRunAutomaticallySupplier = defaultRunAutomaticallySupplier;
+    }
+
+    public boolean defaultRunAutomatically() {
+        return defaultRunAutomaticallySupplier.get();
+    }
+
+    public void setCentreRunAutomaticallyGetter(final Function<Optional<String>, Boolean> centreRunAutomaticallyGetter) {
+        this.centreRunAutomaticallyGetter = centreRunAutomaticallyGetter;
+    }
+
+    public boolean centreRunAutomatically(final Optional<String> saveAsName) {
+        return centreRunAutomaticallyGetter.apply(saveAsName);
+    }
+
+    public void setCentreDashboardRefreshFrequencyGetter(final Function<Optional<String>, DashboardRefreshFrequency> centreDashboardRefreshFrequencyGetter) {
+        this.centreDashboardRefreshFrequencyGetter = centreDashboardRefreshFrequencyGetter;
+    }
+
+    public DashboardRefreshFrequency centreDashboardRefreshFrequency(final Optional<String> saveAsName) {
+        return centreDashboardRefreshFrequencyGetter.apply(saveAsName);
+    }
+
     public void setCentreConfigUuidGetter(final Function<Optional<String>, Optional<String>> centreConfigUuidGetter) {
         this.centreConfigUuidGetter = centreConfigUuidGetter;
     }
@@ -269,12 +332,12 @@ public class EnhancedCentreEntityQueryCriteria<T extends AbstractEntity<?>, DAO 
         return centreConfigUuidGetter.apply(saveAsName);
     }
 
-    public void setCentreCustomObjectGetter(final Function<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Function<Optional<String>, Function<Optional<Optional<String>>, Map<String, Object>>>> centreCustomObjectGetter) {
+    public void setCentreCustomObjectGetter(final Function<EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>, Function<Optional<String>, Function<Optional<Optional<String>>, Function<Optional<Integer>, Map<String, Object>>>>> centreCustomObjectGetter) {
         this.centreCustomObjectGetter = centreCustomObjectGetter;
     }
 
-    public Map<String, Object> centreCustomObject(final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> critEntity, final Optional<String> saveAsName, final Optional<Optional<String>> configUuid) {
-        return centreCustomObjectGetter.apply(critEntity).apply(saveAsName).apply(configUuid);
+    public Map<String, Object> centreCustomObject(final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> critEntity, final Optional<String> saveAsName, final Optional<Optional<String>> configUuid, final Optional<Integer> preferredView) {
+        return centreCustomObjectGetter.apply(critEntity).apply(saveAsName).apply(configUuid).apply(preferredView);
     }
 
     public void setCriteriaValidationPrototypeCreator(final Function<Optional<String>, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>> criteriaValidationPrototypeCreator) {

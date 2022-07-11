@@ -1,3 +1,5 @@
+import { TgReflector } from '/app/tg-reflector.js';
+
 /**
  * Generates the unique identifier.
  */
@@ -12,31 +14,30 @@ export function generateUUID () {
 };
 
 /**
- * Returns the first entity that lies on path of property name and entity
+ * Returns the first entity type and it's property path that lies on path of property name and entity
  */
-export function getFirstEntityValue (reflector, entity, propertyName) {
+export function getFirstEntityTypeAndProperty (entity, propertyName) {
     if (entity && propertyName) {
+        const reflector = new TgReflector();
+        const entityType = entity.constructor.prototype.type.call(entity);
         let currentProperty = propertyName;
-        let currentValue = entity.get(currentProperty);
-        while (currentProperty && !reflector.isEntity(currentValue)) {
+        let currentType = entityType.prop(propertyName).type();
+        while (!(currentType instanceof reflector._getEntityTypePrototype())) {
             const lastDotIndex = currentProperty.lastIndexOf(".");
             currentProperty = lastDotIndex >= 0 ? currentProperty.substring(0, lastDotIndex) : "";
-            currentValue = currentProperty ? entity.get(currentProperty) : entity;
+            currentType = currentProperty ? entityType.prop(currentProperty).type() : entityType;
         }
-        return currentValue; 
+        return [currentType, currentProperty]; 
     } else if (entity) {
-        return entity;
+        return [entity.constructor.prototype.type.call(entity), propertyName];
     }
 };
 
 /**
- * Returns the first entity value type that lies on path of property name and entity.
+ * Returns the first entity type that lies on path of property name and entity.
  */
-export function getFirstEntityValueType (reflector, entity, propertyName) {
-    const firstEntityValue = getFirstEntityValue(reflector, entity, propertyName);
-    if (firstEntityValue) {
-        return firstEntityValue.type().notEnhancedFullClassName();
-    }
+export function getFirstEntityType (entity, propertyName) {
+    return getFirstEntityTypeAndProperty(entity, propertyName)[0];
 };
 
 /**
@@ -214,6 +215,25 @@ export class EntityStub {
 };
 
 /**
+ * Finds the closest parent to startFrom element which can be focused.
+ * 
+ * @param {HTMLElement} startFrom - the element to start search from.
+ * @param {HTMLElement} orElse - the element to which is returned if key event target wasn't found.
+ * @param {Function} doDuringSearch - custom function that allows to perform some tasks during search it receives currently inspected HTMLElement. 
+ * @returns The closest parent to startFrom element with tabindex equal to 0. 
+ */
+export const getKeyEventTarget = function (startFrom, orElse, doDuringSearch) {
+    let parent = startFrom;
+    while (parent && parent.getAttribute('tabindex') !== '0') {
+        if (typeof doDuringSearch === 'function') {
+            doDuringSearch(parent);
+        }
+        parent = parent.parentElement || parent.getRootNode().host;
+    }
+    return parent || orElse;
+}
+
+/**
  * Returns true if specified text contains html tags which are not allowed to be inserted as html text. 
  *  
  */
@@ -254,4 +274,20 @@ export const doWhenDimentionsAttainedAnd = function (self, conditionFun, doFun, 
             doWhenDimentionsAttainedAnd(self, conditionFun, doFun, 100);
         }
     }, time);
+};
+
+/**
+ * Replaces all triangular brackets with appropriate html sign.
+ * 
+ * @param {String} text - the text with html tags 
+ * @returns 
+ */
+export const escapeHtmlText = function(text) {
+    const searchFor = [/</g, />/g];
+    const replaceWith = ['&lt;', '&gt;'];
+    let escapedStr = text;
+    searchFor.forEach((search, i) => {
+        escapedStr = escapedStr.replace(search, replaceWith[i]);
+    });
+    return escapedStr;
 };

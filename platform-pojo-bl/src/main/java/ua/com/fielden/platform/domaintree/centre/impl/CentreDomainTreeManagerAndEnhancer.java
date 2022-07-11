@@ -80,10 +80,10 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
     public CentreDomainTreeManagerAndEnhancer(final EntityFactory entityFactory, final Set<Class<?>> rootTypes) {
         this(entityFactory, new CentreDomainTreeManager(entityFactory, validateRootTypes(rootTypes)), new DomainTreeEnhancer(entityFactory, validateRootTypes(rootTypes)), new HashMap<>(), new HashMap<>(), new HashMap<>());
     }
-    
+
     /**
      * A <i>manager with enhancer</i> constructor for instantiating with calculated / custom properties inside.
-     * 
+     *
      * @param serialiser
      * @param rootTypes
      * @param calculatedAndCustomProperties
@@ -114,7 +114,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
             new HashMap<>()
         );
     }
-    
+
     /**
      * A <i>manager with enhancer</i> constructor with transient analyses (current and freezed).
      */
@@ -689,7 +689,7 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
             base().setNot(enhancer().getManagedType(root), property, not);
             return this;
         }
-        
+
         @Override
         public Integer getOrGroup(final Class<?> root, final String property) {
             // inject an enhanced type into method implementation
@@ -1002,14 +1002,13 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
     }
 
     @Override
-    public boolean isRunAutomatically() {
-        return base().isRunAutomatically();
+    public Integer getPreferredView() {
+        return base().getPreferredView();
     }
 
     @Override
-    public ICentreDomainTreeManager setRunAutomatically(final boolean runAutomatically) {
-        base().setRunAutomatically(runAutomatically);
-        return this;
+    public ICentreDomainTreeManager setPreferredView(final Integer preferredView) {
+        return base().setPreferredView(preferredView);
     }
 
     protected Map<String, IAbstractAnalysisDomainTreeManager> persistentAnalyses() {
@@ -1057,5 +1056,4 @@ public class CentreDomainTreeManagerAndEnhancer extends AbstractDomainTreeManage
         }
         return true;
     }
-
 }

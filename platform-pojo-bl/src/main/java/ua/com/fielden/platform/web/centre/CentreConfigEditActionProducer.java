@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.centre;
 
 import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.getCustomObject;
 
@@ -33,8 +34,11 @@ public class CentreConfigEditActionProducer extends AbstractCentreConfigCommitAc
         if (isDefaultOrLinkOrInherited) {
             throw failure(ERR_CANNOT_BE_EDITED);
         } else {
-            setTitleAndDesc(entity, selectionCrit.saveAsName().get(), selectionCrit);
-            return getCustomObject(selectionCrit, appliedCriteriaEntity, empty()); // not yet transitioned to another config -- do not update configUuid on client-side
+            final String saveAsName = selectionCrit.saveAsName().get();
+            setTitleAndDesc(entity, saveAsName, selectionCrit);
+            entity.setDashboardable(selectionCrit.centreDashboardable(of(saveAsName)));
+            entity.setDashboardRefreshFrequency(selectionCrit.centreDashboardRefreshFrequency(of(saveAsName)));
+            return getCustomObject(selectionCrit, appliedCriteriaEntity, empty()); // not yet transitioned to another config -- do not update configUuid / saveAsName on client-side
         }
     }
     

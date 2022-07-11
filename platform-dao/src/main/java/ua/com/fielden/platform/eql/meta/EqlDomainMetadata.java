@@ -28,10 +28,10 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.isAnnotatio
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.hasLinkProperty;
 import static ua.com.fielden.platform.reflection.Finder.isOne2One_association;
+import static ua.com.fielden.platform.reflection.Finder.streamRealProperties;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isRequiredByDefinition;
 import static ua.com.fielden.platform.utils.CollectionUtil.unmodifiableListOf;
-import static ua.com.fielden.platform.utils.EntityUtils.getRealProperties;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
@@ -100,7 +100,7 @@ public class EqlDomainMetadata {
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EqlEntityMetadata> entityPropsMetadata;
     private final ConcurrentMap<String, Table> tables = new ConcurrentHashMap<>();
 
-    private Injector hibTypesInjector;
+    private final Injector hibTypesInjector;
 
     public EqlDomainMetadata(//
             final Map<Class<?>, Class<?>> hibTypesDefaults, //
@@ -289,7 +289,8 @@ public class EqlDomainMetadata {
     }
 
     public static List<Field> getRestOfProperties(final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo) {
-        return getRealProperties(parentInfo.entityType).stream().filter(propField -> (isAnnotationPresent(propField, Calculated.class) ||
+        return streamRealProperties(parentInfo.entityType)
+                .filter(propField -> (isAnnotationPresent(propField, Calculated.class) ||
                 isAnnotationPresent(propField, MapTo.class) ||
                 isAnnotationPresent(propField, CritOnly.class) ||
                 isOne2One_association(parentInfo.entityType, propField.getName()) ||
@@ -343,7 +344,7 @@ public class EqlDomainMetadata {
         subitems.add(new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).expression(generateUnionEntityPropertyContextualExpression(unionMembersNames, ID, contextPropName)).build());
         subitems.add(new EqlPropertyMetadata.Builder(DESC, String.class, H_STRING).expression(generateUnionCommonDescPropExpressionModel(unionMembers, contextPropName)).build());
 
-        final List<String> commonProps = commonProperties(unionPropType).stream().filter(n -> !DESC.equals(n)).collect(toList());
+        final List<String> commonProps = commonProperties(unionPropType).stream().filter(n -> !DESC.equals(n) && !KEY.equals(n)).collect(toList());
         final Class<?> firstUnionEntityPropType = unionMembers.get(0).getType(); // e.g. WagonSlot in TgBogieLocation
         for (final String commonProp : commonProps) {
             if (unionMembersNames.contains(commonProp)) {

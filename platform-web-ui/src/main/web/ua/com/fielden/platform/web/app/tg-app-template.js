@@ -39,35 +39,24 @@ const template = html`
     <tg-message-panel></tg-message-panel>
     <div class="relative flex">
         <neon-animated-pages id="pages" class="fit" attr-for-selected="name" on-neon-animation-finish="_animationFinished" animate-initial-selection>
-            <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]" app-title="[[appTitle]]">
-                <template is="dom-repeat" items="[[menuConfig.actions]]" as="action">
-                    <tg-ui-action slot$="[[action.moduleName]]" 
-                        show-dialog="[[_showDialog]]"
-                        toaster="[[toaster]]"
-                        short-desc="[[action.desc]]" 
-                        long-desc="[[action.longDesc]]"
-                        icon="[[action.icon]]"
-                        component-uri="[[action.componentUri]]"
-                        element-name="[[action.key]]"
-                        action-kind="[[action.actionKind]]" 
-                        number-of-action="[[action.numberOfAction]]"
-                        dynamic-action="[[action.dynamicAction]]"
-                        attrs="[[action.attrs]]"
-                        create-context-holder="[[_createContextHolder]]" 
-                        require-selection-criteria="[[action.requireSelectionCriteria]]" 
-                        require-selected-entities="[[action.requireSelectedEntities]]" 
-                        require-master-entity="[[action.requireMasterEntity]]"
-                        pre-action="[[action.preAction]]"
-                        post-action-success="[[action.postActionSuccess]]" 
-                        post-action-error="[[action.postActionError]]" 
-                        should-refresh-parent-centre-after-save="[[action.refreshParentCentreAfterSave]]"
-                        ui-role="[[action.uiRole]]"
-                        icon-style="[[action.iconStyle]]">
-                    </tg-ui-action>
-                </template>
-            </tg-app-menu>
+            <tg-app-menu class="fit" name="menu" menu-config="[[menuConfig]]" app-title="[[appTitle]]"></tg-app-menu>
             <template is="dom-repeat" items="[[menuConfig.menu]]" on-dom-change="_modulesRendered">
-                <tg-app-view class="fit hero-animatable" name$="[[item.key]]" menu="[[menuConfig.menu]]" menu-item="[[item]]" can-edit="[[menuConfig.canEdit]]" menu-save-callback="[[_saveMenuVisibilityChanges]]" selected-module="[[_selectedModule]]" selected-submodule="{{_selectedSubmodule}}"></tg-app-view>
+                <tg-app-view class="fit hero-animatable" name$="[[item.key]]" menu="[[menuConfig.menu]]" menu-item="[[item]]" can-edit="[[menuConfig.canEdit]]" menu-save-callback="[[_saveMenuVisibilityChanges]]" selected-module="[[_selectedModule]]" selected-submodule="{{_selectedSubmodule}}">
+                    <tg-ui-action
+                        id="openUserMenuVisibilityAssociatorMaster"
+                        ui-role='ICON'
+                        component-uri='/master_ui/ua.com.fielden.platform.menu.UserMenuVisibilityAssociator'
+                        element-name='tg-UserMenuVisibilityAssociator-master'
+                        show-dialog='[[_showDialog]]'
+                        toaster='[[toaster]]'
+                        create-context-holder='[[_createContextHolder]]'
+                        attrs='[[_openUserMenuVisibilityAssociatorAttrs]]'
+                        require-selection-criteria='false'
+                        require-selected-entities='ONE'
+                        require-master-entity='false'
+                        slot="menuItemAction">
+                    </tg-ui-action>
+                </tg-app-view>
             </template>
         </neon-animated-pages>
     </div>
@@ -99,7 +88,7 @@ const template = html`
             require-master-entity='false'>
         </tg-ui-action>
         <tg-ui-action
-            id="openMasterAction"
+            id="tgOpenMasterAction"
             ui-role='ICON'
             show-dialog='[[_showDialog]]'
             toaster='[[toaster]]'
@@ -245,8 +234,8 @@ Polymer({
         }
     },
 
-    _openMasterAction: function () {
-        if (this.$.openMasterAction.isActionInProgress || this.disableNextHistoryChange) {
+    _tgOpenMasterAction: function () {
+        if (this.$.tgOpenMasterAction.isActionInProgress || this.disableNextHistoryChange) {
             return;
         }
         const entityInfo = this._selectedSubmodule.substring(1).split('/');
@@ -264,13 +253,12 @@ Polymer({
             const entity = this._reflector().newEntity(mainTypeName);
             entity['id'] = parseInt(idStr);
             if (menuItemTypeName) {
-                this.$.openMasterAction.modifyFunctionalEntity = (bindingEntity) => {
+                this.$.tgOpenMasterAction.modifyFunctionalEntity = (bindingEntity) => {
                     bindingEntity.setAndRegisterPropertyTouch('menuToOpen', menuItemTypeName);
-                    delete this.$.openMasterAction.modifyFunctionalEntity;
+                    delete this.$.tgOpenMasterAction.modifyFunctionalEntity;
                 };
             }
-            this.$.openMasterAction.currentEntity = () => entity;
-            this.$.openMasterAction._run();
+            this.$.tgOpenMasterAction._runDynamicAction(() => entity, null);
         }
     },
     
@@ -429,7 +417,7 @@ Polymer({
             if (currentlySelected === moduleToSelect) {
                 if (selected === 'master') {
                     this._selectedSubmodule = this._subroute.path;
-                    this. _openMasterAction();
+                    this._tgOpenMasterAction();
                 } else if (this._selectedSubmodule === this._subroute.path) {
                     if (currentlySelectedElement && currentlySelectedElement.selectSubroute) {
                         currentlySelectedElement.selectSubroute(this._subroute.path.substring(1).split("?")[0]);
@@ -470,12 +458,12 @@ Polymer({
      * @param {Object} source 
      */
     _animationFinished: function (e, detail, source) {
-        var target = e.target || e.srcElement;
+        const target = e.target || e.srcElement;
         if (target === this.$.pages){
             this._selectedModule = this._routeData.moduleName;
             if (this._routeData.moduleName === 'master') {
                 this._selectedSubmodule = this._subroute.path;
-                this. _openMasterAction();
+                this._tgOpenMasterAction();
             } else if (this._selectedSubmodule === this._subroute.path) {
                 if (detail.toPage.selectSubroute) {
                     detail.toPage.selectSubroute(this._subroute.path.substring(1).split("?")[0]);
@@ -539,6 +527,7 @@ Polymer({
         this.uuid = this.is + '/' + generateUUID();
         this._attrs = {entityType: "ua.com.fielden.platform.menu.MenuSaveAction", currentState: "EDIT", centreUuid: this.uuid};
         this._openMasterAttrs = {currentState: "EDIT", centreUuid: this.uuid};
+        this._openUserMenuVisibilityAssociatorAttrs = {entityType: "ua.com.fielden.platform.menu.UserMenuVisibilityAssociator", currentState: "EDIT", centreUuid: this.uuid};
         //Binding to 'this' functions those are used outside the scope of this component.
         this._checkWhetherCanLeave = this._checkWhetherCanLeave.bind(this);
         
@@ -558,17 +547,22 @@ Polymer({
         this.entityType = "ua.com.fielden.platform.menu.Menu";
         //Init master related functions.
         this.postRetrieved = function (entity, bindingEntity, customObject) {
-            entity.actions.forEach(action => {
-                action.preAction = new Function("const self = this;  return " + action.preAction).bind(this)();
-                action.postActionSuccess = new Function("const self = this;  return " + action.postActionSuccess).bind(this)();
-                action.postActionError = new Function("const self = this;  return " + action.postActionError).bind(this)();
-                action.attrs = JSON.parse(action.attrs, (key, value) => {
-                    if (key === 'width' || key === "height") {
-                        return new Function("return " + value)();
-                    } else if (key === "centreUuid") {
-                        return this.uuid;
-                    }
-                    return value;
+            entity.menu.forEach(menuItem => {
+                menuItem.actions.forEach(action => {
+                    action._showDialog = this._showDialog;
+                    action.toaster = this.toaster;
+                    action._createContextHolder = this._createContextHolder;
+                    action.preAction = new Function("const self = this;  return " + action.preAction).bind(this)();
+                    action.postActionSuccess = new Function("const self = this;  return " + action.postActionSuccess).bind(this)();
+                    action.postActionError = new Function("const self = this;  return " + action.postActionError).bind(this)();
+                    action.attrs = JSON.parse(action.attrs, (key, value) => {
+                        if (key === 'width' || key === "height") {
+                            return new Function("return " + value)();
+                        } else if (key === "centreUuid") {
+                            return this.uuid;
+                        }
+                        return value;
+                    });
                 });
             });
             this.menuConfig = entity;
@@ -632,14 +626,16 @@ Polymer({
     /**
      * Provides custom 'state' object for history entries. Updates 'currentHistoryState' property.
      */
-    _replaceStateWithNumber: function () {
-        // the URI for history state rewrite
-        const fullNewUrl = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
-        // currentHistoryState should be updated first. If it is not yet defined then make it 0 otherwise increment it;
-        const newCurrentHistoryIndex = typeof this.currentHistoryState !== "undefined"? this.currentHistoryState.currIndex + 1 : 0;
-        this.currentHistoryState = {currIndex: newCurrentHistoryIndex}
-        // rewrite history state by providing concrete number of last history state
-        window.history.replaceState(this.currentHistoryState, '', fullNewUrl);
+    _replaceStateWithNumber: function (event) {
+        if (!(event && event.detail && event.detail.avoidStateAdjusting)) {
+            // the URI for history state rewrite
+            const fullNewUrl = new URL(this._getUrl(), window.location.protocol + '//' + window.location.host).href;
+            // currentHistoryState should be updated first. If it is not yet defined then make it 0 otherwise increment it;
+            const newCurrentHistoryIndex = typeof this.currentHistoryState !== "undefined"? this.currentHistoryState.currIndex + 1 : 0;
+            this.currentHistoryState = {currIndex: newCurrentHistoryIndex}
+            // rewrite history state by providing concrete number of last history state
+            window.history.replaceState(this.currentHistoryState, '', fullNewUrl);
+        }
     },
     
     _getUrl: function() {
@@ -654,10 +650,10 @@ Polymer({
         const activeElement = deepestActiveElement();
         if (activeElement && (activeElement.nodeName.toLowerCase() === 'input'|| activeElement.nodeName.toLowerCase() === 'textarea')) {
             let node = activeElement;
-            while (node !== null && node.nodeName.toLowerCase() !== 'paper-input-container') {
+            while (node && node.nodeName.toLowerCase() !== 'paper-input-container') {
                 node = node.parentNode || node.getRootNode().host;
             }
-            if (node !== null && !this._isElementInViewport(node)) {
+            if (node && !this._isElementInViewport(node)) {
                 node.scrollIntoView({block: "end", inline: "end", behavior: "smooth"}); // Safari (WebKit) does not support options object (smooth scrolling). We are aiming Chrome for iOS devices at this stage.
             }
         } 

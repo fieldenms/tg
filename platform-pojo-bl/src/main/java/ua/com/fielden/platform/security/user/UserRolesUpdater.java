@@ -19,7 +19,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
  * @author Developers
  *
  */
-@CompanionObject(IUserRolesUpdater.class)
+@CompanionObject(UserRolesUpdaterCo.class)
 @MapEntityTo // TODO check is this is necessary.
 @KeyTitle(value = "User Id", desc = "Id of user, whose 'roles' collection modifies by this functional action.")
 @DenyIntrospection

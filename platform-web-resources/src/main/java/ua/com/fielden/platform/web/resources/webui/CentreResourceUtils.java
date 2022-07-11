@@ -9,6 +9,8 @@ import static java.util.UUID.randomUUID;
 import static ua.com.fielden.platform.criteria.generator.impl.SynchroniseCriteriaWithModelHandler.CRITERIA_ENTITY_ID;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isBooleanCriterion;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isDoubleCriterion;
+import static ua.com.fielden.platform.pagination.IPage.pageCount;
+import static ua.com.fielden.platform.pagination.IPage.realPageCount;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isAndBeforeDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDateMnemonicDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isDatePrefixDefault;
@@ -17,15 +19,18 @@ import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isNotDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isOrGroupDefault;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.isOrNullDefault;
+import static ua.com.fielden.platform.types.either.Either.left;
+import static ua.com.fielden.platform.types.either.Either.right;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.APPLIED_CRITERIA_ENTITY_NAME;
-import static ua.com.fielden.platform.web.centre.AbstractCentreConfigAction.WAS_RUN_NAME;
+import static ua.com.fielden.platform.web.centre.CentreConfigUtils.AUTO_RUN;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isDefaultOrLink;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isInherited;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.FETCH_CONFIG_AND_INSTRUMENT;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOpt;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterUtils.findConfigOptByUuid;
+import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.createQueryEnhancerAndContext;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.enhanceResultEntitiesWithCustomPropertyValues;
 import static ua.com.fielden.platform.web.resources.webui.CriteriaResource.enhanceResultEntitiesWithDynamicPropertyValues;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.restoreMasterFunctionalEntity;
@@ -55,6 +60,7 @@ import org.apache.log4j.Logger;
 import ua.com.fielden.platform.criteria.generator.ICriteriaGenerator;
 import ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector;
 import ua.com.fielden.platform.dao.IEntityDao;
+import ua.com.fielden.platform.data.generator.IGenerator;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancerCache;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToCriteriaTickManager;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddToResultTickManager;
@@ -66,7 +72,6 @@ import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.MetaPropertyFull;
@@ -79,9 +84,12 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.jackson.DefaultValueContract;
+import ua.com.fielden.platform.types.either.Either;
+import ua.com.fielden.platform.types.either.Left;
+import ua.com.fielden.platform.types.either.Right;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
-import ua.com.fielden.platform.ui.config.api.IEntityCentreConfig;
-import ua.com.fielden.platform.ui.config.api.IMainMenuItem;
+import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
+import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.menu.MiType;
 import ua.com.fielden.platform.ui.menu.MiTypeAnnotation;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
@@ -97,6 +105,10 @@ import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
+import ua.com.fielden.platform.web.centre.api.crit.layout.ILayoutConfigWithResultsetSupport;
+import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
+import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
+import ua.com.fielden.platform.web.centre.api.resultset.tooltip.IWithTooltip;
 import ua.com.fielden.platform.web.interfaces.DeviceProfile;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 import ua.com.fielden.snappy.DateRangePrefixEnum;
@@ -110,7 +122,7 @@ import ua.com.fielden.snappy.MnemonicEnum;
  */
 public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtils<T> {
     private static final Logger logger = Logger.getLogger(CentreResourceUtils.class);
-    
+
     /**
      * The key for customObject's value containing save-as name.
      */
@@ -132,9 +144,13 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      */
     static final String META_VALUES = "metaValues";
     /**
-     * The key for customObject's value containing message for stale criteria or empty if not stale.
+     * The key for customObject's value, which either contains a message for stale criteria or is empty if no criteria are stale.
      */
     static final String STALE_CRITERIA_MESSAGE = "staleCriteriaMessage";
+    /**
+     * The key for customObject's value containing the preferred view index.
+     */
+    static final String PREFERRED_VIEW = "preferredView";
 
     /** Private default constructor to prevent instantiation. */
     private CentreResourceUtils() {
@@ -180,8 +196,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param centreDirty
      * @param saveAsName -- represents a configuration title to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      * @param configUuid -- represents uuid of configuration to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
+     * @param autoRun -- represents autoRun parameter of configuration to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      * @param saveAsDesc -- represents a configuration title's tooltip to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      * @param staleCriteriaMessage
+     * @param preferredView -- represents a configuration preferred view index to be updated in UI after returning to client application (if present; otherwise nothing will be updated)
      *
      * @return
      */
@@ -190,8 +208,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final boolean centreDirty,
         final Optional<Optional<String>> saveAsName,
         final Optional<Optional<String>> configUuid,
+        final Optional<Boolean> autoRun,
         final Optional<Optional<String>> saveAsDesc,
-        final Optional<Optional<String>> staleCriteriaMessage
+        final Optional<Optional<String>> staleCriteriaMessage,
+        final Optional<Integer> preferredView
     ) {
         final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(criteriaMetaValues, centreDirty);
         saveAsName.ifPresent(name -> {
@@ -200,11 +220,17 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         configUuid.ifPresent(uuid -> {
             customObject.put(CONFIG_UUID, uuid.orElse(""));
         });
+        autoRun.ifPresent(autoRunning -> {
+            customObject.put(AUTO_RUN, autoRunning);
+        });
         saveAsDesc.ifPresent(desc -> {
             customObject.put(SAVE_AS_DESC, desc.orElse(""));
         });
         staleCriteriaMessage.ifPresent(message -> {
             customObject.put(STALE_CRITERIA_MESSAGE, message.orElse(null));
+        });
+        preferredView.ifPresent(prefView -> {
+            customObject.put(PREFERRED_VIEW, prefView);
         });
         return customObject;
     }
@@ -227,13 +253,23 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
 
     /**
-     * Returns <code>true</code> if 'Run' action is performed represented by specified <code>customObject</code>, otherwise <code>false</code>.
+     * A predicate to determine whether {@code customObject} represents action {@code Run}.
      *
      * @param customObject
      * @return
      */
     public static boolean isRunning(final Map<String, Object> customObject) {
         return RunActions.RUN.toString().equals(customObject.get("@@action"));
+    }
+
+    /**
+     * A predicate to determine whether {@code customObject} represents action {@code Refresh}.
+     *
+     * @param customObject
+     * @return
+     */
+    public static boolean isRefreshing(final Map<String, Object> customObject) {
+        return RunActions.REFRESH.toString().equals(customObject.get("@@action"));
     }
 
     /**
@@ -262,34 +298,13 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      *
      * @param customObject
      * @param updatedPreviouslyRunCriteriaEntity -- criteria entity created from PREVIOUSLY_RUN surrogate centre, which was potentially updated from FRESH (in case of "running" action), but not yet actually used for running
-     * @param additionalFetchProvider
-     * @param additionalFetchProviderForTooltipProperties
-     * @param createdByUserConstraint -- if exists then constraints the query by equality to the property 'createdBy'
      * @return
      */
     static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Pair<Map<String, Object>, List<?>> createCriteriaMetaValuesCustomObjectWithResult(
             final Map<String, Object> customObject,
-            final M updatedPreviouslyRunCriteriaEntity,
-            final Optional<IFetchProvider<T>> additionalFetchProvider,
-            final Optional<IFetchProvider<T>> additionalFetchProviderForTooltipProperties,
-            final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> queryEnhancerAndContext,
-            final Optional<User> createdByUserConstraint) {
+            final M updatedPreviouslyRunCriteriaEntity) {
         final Map<String, Object> resultantCustomObject = new LinkedHashMap<>();
-
-        updatedPreviouslyRunCriteriaEntity.getGeneratedEntityController().setEntityType(updatedPreviouslyRunCriteriaEntity.getEntityClass());
-        if (additionalFetchProvider.isPresent()) {
-            updatedPreviouslyRunCriteriaEntity.setAdditionalFetchProvider(additionalFetchProvider.get());
-        }
-        if (additionalFetchProviderForTooltipProperties.isPresent()) {
-            updatedPreviouslyRunCriteriaEntity.setAdditionalFetchProviderForTooltipProperties(additionalFetchProviderForTooltipProperties.get());
-        }
-        if (queryEnhancerAndContext.isPresent()) {
-            final IQueryEnhancer<T> queryEnhancer = queryEnhancerAndContext.get().getKey();
-            updatedPreviouslyRunCriteriaEntity.setAdditionalQueryEnhancerAndContext(queryEnhancer, queryEnhancerAndContext.get().getValue());
-        }
-        if (createdByUserConstraint.isPresent()) {
-            updatedPreviouslyRunCriteriaEntity.setCreatedByUserConstraint(createdByUserConstraint.get());
-        }
+        final IAddToResultTickManager secondTick = updatedPreviouslyRunCriteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick();
         IPage<T> page = null;
         final List<T> data;
         // At this stage all the necessary validations have succeeded and actual running is about to be performed.
@@ -297,20 +312,34 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         // For refresh / navigate action this instance was not changed from previous run / refresh / navigate action.
         // For run action this instance was already updated from FRESH surrogate centre and includes "fresh" pageCapacity for the purposes of running
         //  (the only way to make FRESH pageCapacity different from PREVIOUSLY_RUN is to change it using Customise Columns and press DISCARD on selection criteria).
-        final Integer pageCapacity = updatedPreviouslyRunCriteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick().getPageCapacity();
         final String action = (String) customObject.get("@@action");
+        final Integer pageNumber = isRunning(customObject) ? 0 : (Integer) customObject.get("@@pageNumber");
+        final boolean retrieveAll = (Boolean) customObject.get("@@retrieveAll");
         if (isRunning(customObject)) {
-            page = updatedPreviouslyRunCriteriaEntity.run(pageCapacity);
-            resultantCustomObject.put("summary", page.summary());
-            data = page.data();
-        } else if (RunActions.REFRESH.toString().equals(action)) {
-            final Integer pageNumber = (Integer) customObject.get("@@pageNumber");
-            final Pair<IPage<T>, T> refreshedData = updatedPreviouslyRunCriteriaEntity.getPageWithSummaries(pageNumber, pageCapacity);
-            page = refreshedData.getKey();
-            data = page.data();
-            resultantCustomObject.put("summary", refreshedData.getValue());
+            final Either<IPage<T>, Pair<List<T>, T>> resultData = run(retrieveAll, updatedPreviouslyRunCriteriaEntity);
+            if (resultData.isLeft()) {
+                page = resultData.asLeft().value;
+                resultantCustomObject.put("summary", page.summary());
+                data = page.data();
+            } else {
+                final Pair<List<T>, T> runData = resultData.asRight().value;
+                data = runData.getKey();
+                resultantCustomObject.put("summary", runData.getValue());
+            }
+        } else if (isRefreshing(customObject)) {
+            final Either<Pair<IPage<T>, T>, Pair<List<T>, T>> resultData = refresh(retrieveAll, pageNumber, updatedPreviouslyRunCriteriaEntity);
+            if (resultData.isLeft()) {
+                final Pair<IPage<T>, T> refreshedData = resultData.asLeft().value;
+                page = refreshedData.getKey();
+                data = page.data();
+                resultantCustomObject.put("summary", refreshedData.getValue());
+            } else {
+                final Pair<List<T>, T> refreshedData = resultData.asRight().value;
+                data = refreshedData.getKey();
+                resultantCustomObject.put("summary", refreshedData.getValue());
+            }
         } else if (RunActions.NAVIGATE.toString().equals(action)) {
-            final Integer pageNumber = (Integer) customObject.get("@@pageNumber");
+            final Integer pageCapacity = secondTick.getPageCapacity();
             try {
                 page = updatedPreviouslyRunCriteriaEntity.getPage(pageNumber, pageCapacity);
             } catch (final Exception e) {
@@ -324,16 +353,46 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             data = new ArrayList<>();
         }
         resultantCustomObject.put("resultEntities", data);
-        resultantCustomObject.put("columnWidths", createColumnWidths(updatedPreviouslyRunCriteriaEntity.getCentreDomainTreeMangerAndEnhancer().getSecondTick(), updatedPreviouslyRunCriteriaEntity.getEntityClass()));
+        resultantCustomObject.put("columnWidths", createColumnWidths(secondTick, updatedPreviouslyRunCriteriaEntity.getEntityClass()));
         resultantCustomObject.put("resultConfig", createResultConfigObject(updatedPreviouslyRunCriteriaEntity));
-        resultantCustomObject.put("pageNumber", page == null ? 0 /* TODO ? */: page.no());
-        resultantCustomObject.put("pageCount", page == null ? 0 /* TODO ? */: page.numberOfPages());
+        final int pageCount = page != null ? page.numberOfPages() : pageCount(realPageCount(data.size(), secondTick.getPageCapacity()));
+        resultantCustomObject.put("pageCount", pageCount);
+        resultantCustomObject.put("pageNumber", page != null ? page.no() : pageCount <= pageNumber ? pageCount - 1 : pageNumber);
         return new Pair<>(resultantCustomObject, data);
     }
 
     /**
-     * Creates custom resultant object containing running configuration (e.g. pageCapacity, visibleRowsCount, visibleColumnsWithOrder etc.) to be sent to the client-side application.
+     * Runs the entity centre with option {@code retrieveAll}. Returns {@link Right} with a list of entities of all matching entities and a summary, if {@code retrieveAll == true}.
+     * Otherwise, returns {@link Left} with {@link IPage}, which should be most common case.
      * 
+     * @param retrieveAll
+     * @param criteria
+     * @return
+     */
+    private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Either<IPage<T>, Pair<List<T>, T>> run(final boolean retrieveAll, final M criteria) {
+        if (retrieveAll) {
+            return right(criteria.getAllEntitiesWithSummary());
+        } else {
+            final Integer pageCapacity = criteria.getCentreDomainTreeMangerAndEnhancer().getSecondTick().getPageCapacity();
+            return left(criteria.run(pageCapacity));
+        }
+    }
+
+    /**
+     * Refreshes current page of entity centre based on {@code retrieveAll} option. Returns {@link Right} with list of entities and summary if true. Otherwise returns {@link Left} with {@link IPage}.
+     */
+    private static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Either<Pair<IPage<T>, T>, Pair<List<T>, T>> refresh(final boolean retrieveAll, final Integer pageNumber, final M criteria) {
+        if (retrieveAll) {
+            return right(criteria.getAllEntitiesWithSummary());
+        } else {
+            final Integer pageCapacity = criteria.getCentreDomainTreeMangerAndEnhancer().getSecondTick().getPageCapacity();
+            return left(criteria.getPageWithSummaries(pageNumber, pageCapacity));
+        }
+    }
+
+    /**
+     * Creates custom resultant object containing running configuration (e.g. pageCapacity, visibleRowsCount, visibleColumnsWithOrder etc.) to be sent to the client-side application.
+     *
      * @param updatedPreviouslyRunCriteriaEntity -- criteria entity created from PREVIOUSLY_RUN surrogate centre, which was potentially updated from FRESH (in case of "running" action)
      * @return
      */
@@ -362,36 +421,14 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      *
      * @param adhocParams
      * @param criteriaEntity
-     * @param additionalFetchProvider
-     * @param additionalFetchProviderForTooltipProperties
-     * @param queryEnhancerAndContext
-     * @param createdByUserConstraint
+     * @param dynamicProperties
      * @return
      */
     static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Stream<T> createCriteriaMetaValuesCustomObjectWithStream(
             final Map<String, Object> adhocParams,
             final M criteriaEntity,
-            final Optional<IFetchProvider<T>> additionalFetchProvider,
-            final Optional<IFetchProvider<T>> additionalFetchProviderForTooltipProperties,
-            final Optional<Pair<IQueryEnhancer<T>, Optional<CentreContext<T, ?>>>> queryEnhancerAndContext,
-            final List<List<DynamicColumnForExport>> dynamicProperties,
-            final Optional<User> createdByUserConstraint) {
-        criteriaEntity.getGeneratedEntityController().setEntityType(criteriaEntity.getEntityClass());
-        if (additionalFetchProvider.isPresent()) {
-            criteriaEntity.setAdditionalFetchProvider(additionalFetchProvider.get());
-        }
-        if (additionalFetchProviderForTooltipProperties.isPresent()) {
-            criteriaEntity.setAdditionalFetchProviderForTooltipProperties(additionalFetchProviderForTooltipProperties.get());
-        }
-        if (queryEnhancerAndContext.isPresent()) {
-            final IQueryEnhancer<T> queryEnhancer = queryEnhancerAndContext.get().getKey();
-            criteriaEntity.setAdditionalQueryEnhancerAndContext(queryEnhancer, queryEnhancerAndContext.get().getValue());
-        }
-        if (createdByUserConstraint.isPresent()) {
-            criteriaEntity.setCreatedByUserConstraint(createdByUserConstraint.get());
-        }
+            final List<List<DynamicColumnForExport>> dynamicProperties) {
         criteriaEntity.setDynamicProperties(dynamicProperties);
-
         final int fetchSize = min(ofNullable((Integer) adhocParams.get("fetchSize")).orElse(100), 100);
         final Long[] ids = adhocParams.get("ids") != null ? (Long[]) adhocParams.get("ids") : new Long[]{};
         return criteriaEntity.streamEntities(fetchSize, ids);
@@ -536,8 +573,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final DeviceProfile device,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
-            final IEntityCentreConfig eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final EntityCentreConfigCo eccCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
         // generates validation prototype
@@ -550,9 +587,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
 
         // Functions for companion implementations:
 
-        // returns an updated version of PREVIOUSLY_RUN centre
+        // returns an updated version of centre
+        validationPrototype.setFreshCentreSupplier(() -> updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder));
+        validationPrototype.setSavedCentreSupplier(() -> updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder));
         validationPrototype.setPreviouslyRunCentreSupplier(() -> updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder));
-        
+
         // returns whether centre (defined by 'specificSaveAsName, freshCentreSupplier' arguments) is changed from previously saved (or the very original) configuration version or it is New (aka default, link or inherited)
         validationPrototype.setCentreDirtyCalculator(specificSaveAsName -> freshCentreSupplier ->
             isDefaultOrLink(specificSaveAsName) // this is very cheap operation
@@ -562,7 +601,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             )
             || isInherited(specificSaveAsName, validationPrototype)
         );
-        
+
         // returns whether centre is changed from previously saved (or the very original) configuration version or it is New (aka default, link or inherited)
         validationPrototype.setCentreDirtyGetter(() -> validationPrototype.centreDirtyCalculator().apply(saveAsName).apply(() -> updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder)));
         // creates criteria validation prototype for concrete saveAsName
@@ -578,7 +617,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             )
         );
         // creates custom object representing centre information for concrete criteriaEntity and saveAsName
-        validationPrototype.setCentreCustomObjectGetter(appliedCriteriaEntity -> customObjectSaveAsName -> configUuid -> {
+        validationPrototype.setCentreCustomObjectGetter(appliedCriteriaEntity -> customObjectSaveAsName -> configUuid -> preferredView -> {
             final ICentreDomainTreeManagerAndEnhancer freshCentre = appliedCriteriaEntity.getCentreDomainTreeMangerAndEnhancer();
             // In both cases (criteria entity valid or not) create customObject with criteriaEntity to be returned and bound into tg-entity-centre after save.
             final Map<String, Object> customObject = createCriteriaMetaValuesCustomObjectWithSaveAsInfo(
@@ -586,10 +625,11 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 validationPrototype.centreDirtyCalculator().apply(customObjectSaveAsName).apply(() -> freshCentre),
                 of(customObjectSaveAsName),
                 configUuid,
+                of(false), // even though configuration can be runAutomatically, do not perform auto-running on any action (except Load, see CentreConfigLoadActionDao)
                 of(validationPrototype.centreTitleAndDesc(customObjectSaveAsName).map(titleDesc -> titleDesc._2)),
-                empty()
+                empty(),
+                preferredView
             );
-            removeWasRunIndication(customObject); // make VIEW button disabled by default; this behaviour can be overridden by removing 'wasRun' customObject's entry
             customObject.put(APPLIED_CRITERIA_ENTITY_NAME, appliedCriteriaEntity);
             return customObject;
         });
@@ -633,13 +673,16 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         validationPrototype.setConfigDuplicateAction(() -> {
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             commitCentreWithoutConflicts(user, miType, FRESH_CENTRE_NAME, empty(), device, freshCentre, null, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+            findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(empty()).apply(device), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("runAutomatically")).ifPresent(config -> {
+                eccCompanion.saveWithoutConflicts(config.setRunAutomatically(validationPrototype.centreRunAutomatically(saveAsName))); // copy runAutomatically from current configuration (saveAsName) into default configuration (empty())
+            });
             // when switching to default configuration we need to make it preferred
-            validationPrototype.makePreferredConfig(empty());
+            validationPrototype.makePreferredConfig(empty()); // 'default' kind -- can be preferred; only 'link / inherited from shared' can not be preferred
         });
         // updates inherited centre with title 'saveAsNameToLoad' from upstream base user's configuration -- just before LOAD action
         validationPrototype.setInheritedFromBaseCentreUpdater(saveAsNameToLoad -> {
             // determine current preferred configuration
-            final Optional<String> preferredConfigName = retrievePreferredConfigName(user, miType, device, companionFinder);
+            final Optional<String> preferredConfigName = retrievePreferredConfigName(user, miType, device, companionFinder, webUiConfig);
             // determine whether inherited configuration is changed
             final boolean centreChanged = isFreshCentreChanged(
                 updateCentre(user, miType, FRESH_CENTRE_NAME, of(saveAsNameToLoad), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
@@ -654,7 +697,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             updateCentre(user, miType, SAVED_CENTRE_NAME, of(saveAsNameToLoad), device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
 
             if (equalsEx(preferredConfigName, of(saveAsNameToLoad))) { // if inherited configuration being updated was preferred
-                makePreferred(user, miType, of(saveAsNameToLoad), device, companionFinder); // then must leave it preferred after deletion
+                makePreferred(user, miType, of(saveAsNameToLoad), device, companionFinder, webUiConfig); // then must leave it preferred after deletion
             }
         });
         // updates inherited centre with title 'saveAsNameToLoad' from upstream shared configuration -- just before LOAD action
@@ -680,40 +723,74 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         validationPrototype.setCentreTitleAndDescGetter(saveAsNameForTitleAndDesc -> {
             return saveAsNameForTitleAndDesc.map(name -> t2(name, updateCentreDesc(user, miType, of(name), device, eccCompanion)));
         });
+        // returns runAutomatically from Centre DSL config
+        validationPrototype.setDefaultRunAutomaticallySupplier(() -> defaultRunAutomatically(miType, webUiConfig));
+        // returns runAutomatically for named (inherited or owned, also link) configuration and unnamed (default) configuration
+        validationPrototype.setCentreRunAutomaticallyGetter(saveAsNameForRunAutomatically -> {
+            return updateCentreRunAutomatically(user, miType, saveAsNameForRunAutomatically, device, eccCompanion, webUiConfig, validationPrototype);
+        });
+        // returns dashboardable indicator for named (inherited or owned) configuration and false for unnamed (default) configuration
+        validationPrototype.setCentreDashboardableGetter(saveAsNameForDashboardable -> {
+            return saveAsNameForDashboardable.map(name -> updateCentreDashboardable(user, miType, of(name), device, eccCompanion)).orElse(false);
+        });
+        // returns dashboard refresh frequency for named (inherited or owned) configuration and null for unnamed (default) configuration
+        validationPrototype.setCentreDashboardRefreshFrequencyGetter(saveAsNameForDashboardable -> {
+            return saveAsNameForDashboardable.map(name -> updateCentreDashboardRefreshFrequency(user, miType, of(name), device, eccCompanion)).orElse(null);
+        });
         // returns configUuid for named (inherited, owned or link) configuration and empty optional for unnamed (default) configuration
         validationPrototype.setCentreConfigUuidGetter(saveAsNameForConfigUuid -> {
             return updateCentreConfigUuid(user, miType, saveAsNameForConfigUuid, device, eccCompanion);
         });
         // changes title / desc for current saveAsName'd configuration; returns custom object containing centre information
-        validationPrototype.setCentreEditor((newName, newDesc) -> {
-            editCentreTitleAndDesc(user, miType, saveAsName, device, newName, newDesc, eccCompanion);
+        validationPrototype.setCentreEditor(newName -> newDesc -> dashboardable -> dashboardRefreshFrequency -> {
+            editCentreTitleAndDesc(user, miType, saveAsName, device, newName, newDesc, dashboardable, dashboardRefreshFrequency, eccCompanion);
             // currently loaded configuration should remain preferred -- no action is required
             return validationPrototype.centreCustomObject(
                 createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, of(newName), user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel),
                 of(newName),
-                empty() // no need to update already existing client-side configUuid
+                empty(), // no need to update already existing client-side configUuid
+                empty() // no need to update already loaded preferredView
+            );
+        });
+        // changes runAutomatically for current saveAsName'd configuration; returns custom object containing centre information
+        validationPrototype.setCentreConfigurator(runAutomatically -> {
+            configureCentre(user, miType, saveAsName, device, runAutomatically, eccCompanion);
+            // currently loaded configuration should remain preferred -- no action is required
+            return validationPrototype.centreCustomObject(
+                createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, saveAsName, user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel),
+                saveAsName,
+                empty(), // no need to update already existing client-side configUuid
+                empty() // no need to update already loaded preferredView
             );
         });
         // performs copying of current configuration with the specified title / desc; makes it preferred; returns custom object containing centre information
-        validationPrototype.setCentreSaver((newName, newDesc) -> {
+        validationPrototype.setCentreSaver(newName -> newDesc -> dashboardable -> dashboardRefreshFrequency -> {
             final Optional<String> newSaveAsName = of(newName);
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             // save 'freshCentre' with a new name into FRESH / SAVED -- button SAVE will be disabled
             final String newConfigUuid = randomUUID().toString();
             final Function<String, Consumer<String>> createAndOverrideUuid = newDescription -> surrogateName -> {
                 commitCentre(user, miType, surrogateName, newSaveAsName, device, freshCentre, newDescription, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
-                findConfigOpt(miType, user, NAME_OF.apply(surrogateName).apply(newSaveAsName).apply(device), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid"))
-                    .ifPresent(config -> eccCompanion.saveWithConflicts(config.setConfigUuid(newConfigUuid))); // update with newConfigUuid
+                findConfigOpt(miType, user, NAME_OF.apply(surrogateName).apply(newSaveAsName).apply(device), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid").with("dashboardable").with("dashboardableDate").with("dashboardRefreshFrequency").with("runAutomatically"))
+                    .ifPresent(config -> {
+                        if (FRESH_CENTRE_NAME.equals(surrogateName)) {
+                            config.setDashboardable(dashboardable);
+                            config.setDashboardRefreshFrequency(dashboardRefreshFrequency);
+                            config.setRunAutomatically(validationPrototype.centreRunAutomatically(saveAsName)); // copy runAutomatically from currently loaded centre configuration being copied
+                        }
+                        eccCompanion.saveWithConflicts(config.setConfigUuid(newConfigUuid));
+                    }); // update with newConfigUuid
             };
             createAndOverrideUuid.apply(newDesc).accept(FRESH_CENTRE_NAME);
             createAndOverrideUuid.apply(null).accept(SAVED_CENTRE_NAME);
-            
+
             // when switching to new configuration we need to make it preferred
-            validationPrototype.makePreferredConfig(newSaveAsName);
+            makePreferred(user, miType, newSaveAsName, device, companionFinder, webUiConfig); // it is of 'own save-as' kind -- can be preferred; only 'link / inherited from shared' can not be preferred
             return validationPrototype.centreCustomObject(
                 createCriteriaEntity(validationPrototype.centreContextHolder().getModifHolder(), companionFinder, critGenerator, miType, newSaveAsName, user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel),
                 newSaveAsName,
-                of(of(newConfigUuid))
+                of(of(newConfigUuid)),
+                empty() // do not update preferredView on client when copying centre configuration
             );
         });
         // returns ordered alphabetically list of 'loadable' configurations for current user
@@ -722,8 +799,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         validationPrototype.setSaveAsNameSupplier(() -> saveAsName);
         // makes 'saveAsNameToBecomePreferred' configuration preferred in case where it differs from currently loaded configuration; does nothing otherwise
         validationPrototype.setPreferredConfigMaker(saveAsNameToBecomePreferred -> {
-            if (!equalsEx(saveAsNameToBecomePreferred, saveAsName) && !webUiConfig.getCentres().get(miType).isRunAutomatically()) { // please note that currently loaded configuration must be preferred at this stage (except autoRun centres for which only default configuration can be preferred, but still named configurations may exist)
-                makePreferred(user, miType, saveAsNameToBecomePreferred, device, companionFinder);
+            if (!equalsEx(saveAsNameToBecomePreferred, saveAsName)) {
+                // please note currently loaded configuration can be preferred (default, own save-as, base) or not (link, shared);
+                // for embedded centres only default configuration can be preferred, but still named configurations may exist
+                makePreferred(user, miType, saveAsNameToBecomePreferred, device, companionFinder, webUiConfig);
             }
         });
 
@@ -765,14 +844,6 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                         EntityResourceUtils.getOriginalManagedType(validationPrototype.getType(), cdtmae)//
                 ), new LinkedHashSet<>()//
         );
-    }
-
-    /**
-     * Removes customObject's 'wasRun' indication even if the centre has actually been running and had some results loaded earlier.
-     */
-    public static Map<String, Object> removeWasRunIndication(final Map<String, Object> customObject) {
-        customObject.put(WAS_RUN_NAME, null);
-        return customObject;
     }
 
     /**
@@ -862,8 +933,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final String chosenProperty,
             final DeviceProfile device,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
-            final IEntityCentreConfig eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final EntityCentreConfigCo eccCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
         if (contextConfig.isPresent()) {
@@ -882,6 +953,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 context.setComputation(config.computation.get());
             }
             context.setChosenProperty(chosenProperty);
+            context.setCustomObject(centreContextHolder != null && !centreContextHolder.proxiedPropertyNames().contains("customObject") ? centreContextHolder.getCustomObject() : new HashMap<>());
             return Optional.of(context);
         } else {
             return Optional.empty();
@@ -907,7 +979,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final List<AbstractEntity<?>> selectedEntities,
             final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity,
             final Optional<EntityActionConfig> config,
-            final String chosenProperty
+            final String chosenProperty,
+            final Map<String, Object> customObject
     ) {
         final CentreContext<T, AbstractEntity<?>> context = new CentreContext<>();
         context.setSelectionCrit(criteriaEntity);
@@ -917,6 +990,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             context.setComputation(config.get().context.get().computation.get());
         }
         context.setChosenProperty(chosenProperty);
+        context.setCustomObject(customObject);
         return context;
     }
 
@@ -937,8 +1011,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final EntityFactory entityFactory,
         final DeviceProfile device,
         final IDomainTreeEnhancerCache domainTreeEnhancerCache,
-        final IEntityCentreConfig eccCompanion,
-        final IMainMenuItem mmiCompanion,
+        final EntityCentreConfigCo eccCompanion,
+        final MainMenuItemCo mmiCompanion,
         final IUser userCompanion,
         final ICentreConfigSharingModel sharingModel) {
 
@@ -987,8 +1061,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final Map<String, Object> adhocParams,
         final DeviceProfile device,
         final IDomainTreeEnhancerCache domainTreeEnhancerCache,
-        final IEntityCentreConfig eccCompanion,
-        final IMainMenuItem mmiCompanion,
+        final EntityCentreConfigCo eccCompanion,
+        final MainMenuItemCo mmiCompanion,
         final IUser userCompanion,
         final ICentreConfigSharingModel sharingModel) {
 
@@ -997,11 +1071,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         adhocParams.putAll(centreContextHolder.getCustomObject());
         // at this stage (during exporting of centre data) appliedCriteriaEntity is valid, because it represents 'previouslyRun' centre criteria which is getting updated only if Run was initiated and selection criteria validation succeeded
         final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> appliedCriteriaEntity = (EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>>) criteriaEntity;
-        // if the export() invocation occurs on the centre that warrants data generation
-        // then for an entity centre configuration check if a generator was provided
-        final boolean createdByConstraintShouldOccur = centre.getGeneratorTypes().isPresent();
 
-      //Build dynamic properties object
+        // Build dynamic properties object
         final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext = CriteriaResource.getDynamicResultProperties(
                 centre,
                 webUiConfig,
@@ -1018,35 +1089,24 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 userCompanion,
                 sharingModel);
 
-        final Stream<AbstractEntity<?>> stream =
-                CentreResourceUtils.createCriteriaMetaValuesCustomObjectWithStream(
-                        adhocParams,
-                        appliedCriteriaEntity,
-                        centre.getAdditionalFetchProvider(),
-                        centre.getAdditionalFetchProviderForTooltipProperties(),
-                        CriteriaResource.createQueryEnhancerAndContext(
-                                webUiConfig,
-                                companionFinder,
-                                user,
-                                critGenerator,
-                                entityFactory,
-                                centreContextHolder,
-                                centre.getQueryEnhancerConfig(),
-                                appliedCriteriaEntity,
-                                device,
-                                domainTreeEnhancerCache,
-                                eccCompanion,
-                                mmiCompanion,
-                                userCompanion,
-                                sharingModel),
-                        createDynamicPropertiesForExport(centre, resPropsWithContext),
-                        // There could be cases where the generated data and the queried data would have different types.
-                        // For example, the queried data could be modelled by a synthesized entity that includes a subquery based on some generated data.
-                        // In such cases, it is unpossible to enhance the final query with a user related condition automatically.
-                        // This should be the responsibility of the application developer to properly construct a subquery that is based on the generated data.
-                        // The query will be enhanced with condition createdBy=currentUser if createdByConstraintShouldOccur and generatorEntityType equal to the type of queried data (otherwise end-developer should do that itself by using queryEnhancer or synthesized model).
-                        createdByConstraintShouldOccur && centre.getGeneratorTypes().get().getKey().equals(getEntityType(miType)) ? of(user) : empty());
-
+        final Stream<AbstractEntity<?>> stream = createCriteriaMetaValuesCustomObjectWithStream(
+            adhocParams,
+            complementCriteriaEntityBeforeRunning( // complements appliedCriteriaEntity instance
+                appliedCriteriaEntity,
+                webUiConfig,
+                companionFinder,
+                user,
+                critGenerator,
+                entityFactory,
+                centreContextHolder,
+                domainTreeEnhancerCache,
+                eccCompanion,
+                mmiCompanion,
+                userCompanion,
+                sharingModel
+            ),
+            createDynamicPropertiesForExport(centre, resPropsWithContext)
+        );
         final Stream<AbstractEntity<?>> entities = enhanceResultEntitiesWithCustomPropertyValues(
                 centre,
                 centre.getCustomPropertiesDefinitions(),
@@ -1056,6 +1116,67 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         return enhanceResultEntitiesWithDynamicPropertyValues(entities, resPropsWithContext);
     }
 
+    /**
+     * Complements {@code criteriaEntity} with some items those are necessary for fully fledged running / exporting.
+     * <p>
+     * The main and most important item is {@link IQueryEnhancer} with its {@link CentreContext}. This item impacts the number of returned instances.
+     * The context restoration will only occur iff there is {@link IQueryEnhancer} assigned to Centre DSL configuration with some context defined (see {@link IQueryEnhancerSetter#setQueryEnhancer(Class, CentreContextConfig)}).
+     * <p>
+     * There is also a similar item impacting returned instances count - {@code createdByUserConstraint}.
+     * This is only applicable iff there is {@link IGenerator} configuration assigned to Centre DSL configuration (see {@link ILayoutConfigWithResultsetSupport#withGenerator(Class, Class)}).
+     * <p>
+     * It is also important to use full fetch model to get proper entities' graph on running / exporting. This should include not only all Centre DSL columns,
+     * but also fetch parts from {@link IExtraFetchProviderSetter#setFetchProvider(ua.com.fielden.platform.entity.fetch.IFetchProvider)} and {@link IWithTooltip#withTooltip(String)} APIs.
+     */
+    public static EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> complementCriteriaEntityBeforeRunning(
+        final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ? extends IEntityDao<AbstractEntity<?>>> criteriaEntity,
+        final IWebUiConfig webUiConfig,
+        final ICompanionObjectFinder companionFinder,
+        final User user,
+        final ICriteriaGenerator critGenerator,
+        final EntityFactory entityFactory,
+        final CentreContextHolder centreContextHolder,
+        final IDomainTreeEnhancerCache domainTreeEnhancerCache,
+        final EntityCentreConfigCo eccCompanion,
+        final MainMenuItemCo mmiCompanion,
+        final IUser userCompanion,
+        final ICentreConfigSharingModel sharingModel
+    ) {
+        final EntityCentre<AbstractEntity<?>> centre = (EntityCentre<AbstractEntity<?>>) webUiConfig.getCentres().get(criteriaEntity.miType()); // get Centre DSL configuration for 'criteriaEntity'
+        criteriaEntity.getGeneratedEntityController().setEntityType(criteriaEntity.getEntityClass()); // provide entity type to be able to run generated centres (with calculated properties, like totals)
+        
+        centre.getAdditionalFetchProvider().ifPresent(fp -> criteriaEntity.setAdditionalFetchProvider(fp)); // additional fetch provider should be set if present in Centre DSL
+        centre.getAdditionalFetchProviderForTooltipProperties().ifPresent(fp -> criteriaEntity.setAdditionalFetchProviderForTooltipProperties(fp)); // tooltip props fetch provider should be set if there are such properties in Centre DSL
+        
+        createQueryEnhancerAndContext(
+            webUiConfig,
+            companionFinder,
+            user,
+            critGenerator,
+            entityFactory,
+            centreContextHolder,
+            centre.getQueryEnhancerConfig(),
+            criteriaEntity,
+            criteriaEntity.device(),
+            domainTreeEnhancerCache,
+            eccCompanion,
+            mmiCompanion,
+            userCompanion,
+            sharingModel
+        ).ifPresent(qeac -> criteriaEntity.setAdditionalQueryEnhancerAndContext(qeac.getKey(), qeac.getValue())); // query enhancer and its optional context should be set if present in Centre DSL
+        
+        // If exporting / running occurs on the centre that warrants data generation, then check if a generator was provided for an entity centre configuration.
+        
+        // There could be cases where the generated data and the queried data would have different types.
+        // For example, the queried data could be modelled by a synthesized entity that includes a subquery based on some generated data.
+        // In such cases, it is not possible to enhance the final query with a user related condition automatically.
+        // This should be the responsibility of the application developer to properly construct a subquery that is based on the generated data.
+        // The query will be enhanced with condition createdBy=currentUser if GeneratorTypes().isPresent() and generatorEntityType equal to the type of queried data (otherwise end-developer should do that manually using queryEnhancer or synthesized model).
+        if (centre.getGeneratorTypes().isPresent() && centre.getGeneratorTypes().get().getKey().equals(getEntityType(criteriaEntity.miType()))) {
+            criteriaEntity.setCreatedByUserConstraint(user);
+        }
+        return criteriaEntity;
+    }
 
     private static List<List<DynamicColumnForExport>> createDynamicPropertiesForExport(final EntityCentre<AbstractEntity<?>> centre, final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext) {
         final List<List<DynamicColumnForExport>> dynamicColumns = new ArrayList<>();
@@ -1084,8 +1205,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final DeviceProfile device,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
-            final IEntityCentreConfig eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final EntityCentreConfigCo eccCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
         final ICentreDomainTreeManagerAndEnhancer updatedPreviouslyRunCentre = updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
@@ -1107,8 +1228,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final DeviceProfile device,
         final IDomainTreeEnhancerCache domainTreeEnhancerCache,
         final IWebUiConfig webUiConfig,
-        final IEntityCentreConfig eccCompanion,
-        final IMainMenuItem mmiCompanion,
+        final EntityCentreConfigCo eccCompanion,
+        final MainMenuItemCo mmiCompanion,
         final IUser userCompanion,
         final ICentreConfigSharingModel sharingModel) {
         return createCriteriaEntity(false, modifiedPropertiesHolder, companionFinder, critGenerator, miType, saveAsName, user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
@@ -1131,8 +1252,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final DeviceProfile device,
         final IDomainTreeEnhancerCache domainTreeEnhancerCache,
         final IWebUiConfig webUiConfig,
-        final IEntityCentreConfig eccCompanion,
-        final IMainMenuItem mmiCompanion,
+        final EntityCentreConfigCo eccCompanion,
+        final MainMenuItemCo mmiCompanion,
         final IUser userCompanion,
         final ICentreConfigSharingModel sharingModel) {
         return createCriteriaEntity(true, modifiedPropertiesHolder, companionFinder, critGenerator, miType, saveAsName, user, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
@@ -1155,8 +1276,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final DeviceProfile device,
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
-            final IEntityCentreConfig eccCompanion,
-            final IMainMenuItem mmiCompanion,
+            final EntityCentreConfigCo eccCompanion,
+            final MainMenuItemCo mmiCompanion,
             final IUser userCompanion,
             final ICentreConfigSharingModel sharingModel) {
         if (isEmpty(modifiedPropertiesHolder)) {
@@ -1222,7 +1343,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * <p>
      * IMPORTANT: In this method saveAsName of inherited configuration may be changed to the one from upstream configuration.<br>
      *   In this case this new saveAsName must be taken from returning argument and used for further calculations and for returning to the client application.
-     * 
+     *
      * @param checkChanges -- optional function to check whether there are local changes; if they are -- not update FRESH from upstream; if no such check is needed i.e. empty function is passed (e.g. when discarding) -- force FRESH centre updating
      */
     public static Optional<EntityCentreConfig> updateInheritedFromShared(
@@ -1231,7 +1352,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final DeviceProfile device,
         final Optional<String> saveAsName,
         final User user,
-        final IEntityCentreConfig eccCompanion,
+        final EntityCentreConfigCo eccCompanion,
         final Optional<Supplier<Boolean>> checkChanges
     ) {
         return findConfigOptByUuid(configUuid, miType, device, SAVED_CENTRE_NAME, eccCompanion)
@@ -1249,19 +1370,20 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * <p>
      * IMPORTANT: In this method saveAsName of inherited configuration may be changed to the one from upstream configuration.<br>
      *   In this case this new saveAsName must be taken from returning argument and used for further calculations and for returning to the client application.
-     * 
+     *
      * @param checkChanges -- optional function to check whether there are local changes; if they are -- not update FRESH from upstream; if no such check is needed i.e. empty function is passed (e.g. when discarding) -- force FRESH centre updating
      */
-    public static EntityCentreConfig updateInheritedFromShared(final EntityCentreConfig upstreamConfig, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final Optional<String> saveAsName, final User user, final IEntityCentreConfig eccCompanion, final Optional<Supplier<Boolean>> checkChanges) {
+    public static EntityCentreConfig updateInheritedFromShared(final EntityCentreConfig upstreamConfig, final Class<? extends MiWithConfigurationSupport<?>> miType, final DeviceProfile device, final Optional<String> saveAsName, final User user, final EntityCentreConfigCo eccCompanion, final Optional<Supplier<Boolean>> checkChanges) {
         final String upstreamTitle = obtainTitleFrom(upstreamConfig.getTitle(), SAVED_CENTRE_NAME, device);
         final Optional<String> changedTitle = !equalsEx(upstreamTitle, saveAsName.get()) ? of(upstreamTitle) : empty();
-        final Function<String, Consumer<Supplier<String>>> overrideConfigBodyFor = name -> calcDesc ->
-            findConfigOpt(miType, user, NAME_OF.apply(name).apply(saveAsName).apply(device), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configBody")) // contains 'title' / 'desc' inside fetch model
+        final Function<String, Function<Supplier<Optional<Boolean>>, Consumer<Supplier<String>>>> overrideConfigBodyFor = name -> calcRunAutomaticallyOpt -> calcDesc ->
+            findConfigOpt(miType, user, NAME_OF.apply(name).apply(saveAsName).apply(device), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configBody").with("runAutomatically")) // contains 'title' / 'desc' inside fetch model
             .ifPresent(config -> {
                 final String desc = calcDesc.get();
                 if (desc != null) {
                     config.setDesc(desc);
                 }
+                calcRunAutomaticallyOpt.get().ifPresent(runAutomatically -> config.setRunAutomatically(runAutomatically));
                 changedTitle.ifPresent(ct -> config.setTitle(NAME_OF.apply(name).apply(of(ct)).apply(device))); // update title of configuration from upstream if it has changed
                 eccCompanion.saveWithConflicts(config.setConfigBody(upstreamConfig.getConfigBody()));
             });
@@ -1270,10 +1392,16 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         );
         final boolean notUpdateFresh = checkChanges.map(check -> check.get()).orElse(FALSE);
         // update SAVED surrogate configuration; always
-        overrideConfigBodyFor.apply(SAVED_CENTRE_NAME).accept(() -> null);
+        overrideConfigBodyFor.apply(SAVED_CENTRE_NAME)
+            .apply(() -> empty())
+            .accept(() -> null);
         if (!notUpdateFresh) {
             // update FRESH surrogate configuration; if there are no local changes or if local changes are irrelevant (DISCARD)
-            overrideConfigBodyFor.apply(FRESH_CENTRE_NAME).accept(() -> updateCentreDesc(upstreamConfig.getOwner(), miType, of(upstreamTitle), device, eccCompanion));
+            overrideConfigBodyFor.apply(FRESH_CENTRE_NAME)
+                // upstreamConfig exists; its FRESH counterpart too -- no need to provide webUiConfig (first 'null') for getting default runAutomatically values;
+                // also no need to provide selectionCrit (second 'null') for checking whether upstreamConfig is inherited - it can never be inherited transitively
+                .apply(() -> of(updateCentreRunAutomatically(upstreamConfig.getOwner(), miType, of(upstreamTitle), device, eccCompanion, null, null)))
+                .accept(() -> updateCentreDesc(upstreamConfig.getOwner(), miType, of(upstreamTitle), device, eccCompanion));
         } else {
             // update FRESH surrogate configuration; only if upstream title has been changed
             changedTitle.ifPresent(ct -> overrideConfigTitleFor.apply(FRESH_CENTRE_NAME).accept(ct));

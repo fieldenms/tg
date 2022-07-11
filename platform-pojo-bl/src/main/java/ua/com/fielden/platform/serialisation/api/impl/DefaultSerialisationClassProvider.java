@@ -3,20 +3,19 @@ package ua.com.fielden.platform.serialisation.api.impl;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.basic.config.IApplicationSettings;
-import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
-import ua.com.fielden.platform.entity.functional.master.PropertyWarning;
+import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.menu.UserMenuInvisibilityAssociationBatchAction;
 import ua.com.fielden.platform.security.SecurityRoleAssociationBatchAction;
 import ua.com.fielden.platform.security.UserAndRoleAssociationBatchAction;
-import ua.com.fielden.platform.security.user.SecurityTokenInfo;
-import ua.com.fielden.platform.security.user.UserRoleTokensUpdater;
-import ua.com.fielden.platform.security.user.UserRolesUpdater;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.jackson.entities.EmptyEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.Entity1WithEntity2;
@@ -42,18 +41,6 @@ import ua.com.fielden.platform.serialisation.jackson.entities.EntityWithString;
 import ua.com.fielden.platform.serialisation.jackson.entities.OtherEntity;
 import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity1;
 import ua.com.fielden.platform.serialisation.jackson.entities.SubBaseEntity2;
-import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
-import ua.com.fielden.platform.web.centre.CentreConfigDeleteAction;
-import ua.com.fielden.platform.web.centre.CentreConfigDuplicateAction;
-import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
-import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
-import ua.com.fielden.platform.web.centre.CentreConfigNewAction;
-import ua.com.fielden.platform.web.centre.CentreConfigSaveAction;
-import ua.com.fielden.platform.web.centre.CentreConfigShareAction;
-import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
-import ua.com.fielden.platform.web.centre.CustomisableColumn;
-import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
-import ua.com.fielden.platform.web.centre.OverrideCentreConfig;
 
 /**
  * Default implementation of {@link ISerialisationClassProvider}, which relies on the application settings to provide the location of classes to be used in serialisation.
@@ -67,32 +54,17 @@ public class DefaultSerialisationClassProvider implements ISerialisationClassPro
 
     @Inject
     public DefaultSerialisationClassProvider(final IApplicationSettings settings, final IApplicationDomainProvider applicationDomain) throws Exception {
+        final Set<Class<?>> types = new LinkedHashSet<>(); // avoid duplicate types, preserve order
         types.add(Exception.class);
         types.add(StackTraceElement[].class);
         types.addAll(typesForSerialisationTesting());
-        types.addAll(applicationDomain.entityTypes());
+        types.addAll(applicationDomain.entityTypes()); // app-specific ApplicationDomain holds all types, potentially with TG platform ones ...
+        types.addAll(PlatformDomainTypes.types); // ... but if not we ensure here that TG platform types will be present
         types.add(UserAndRoleAssociationBatchAction.class);
+        types.add(UserMenuInvisibilityAssociationBatchAction.class);
         types.add(SecurityRoleAssociationBatchAction.class);
-        types.add(UserRolesUpdater.class);
-        types.add(UserRoleTokensUpdater.class);
-        types.add(SecurityTokenInfo.class);
-        types.add(CentreConfigUpdater.class);
-        types.add(CustomisableColumn.class);
-        types.add(CentreColumnWidthConfigUpdater.class);
-        
-        types.add(CentreConfigShareAction.class);
-        types.add(CentreConfigNewAction.class);
-        types.add(CentreConfigDuplicateAction.class);
-        types.add(CentreConfigLoadAction.class);
-        types.add(CentreConfigEditAction.class);
-        types.add(CentreConfigDeleteAction.class);
-        types.add(CentreConfigSaveAction.class);
-        types.add(LoadableCentreConfig.class);
-        types.add(OverrideCentreConfig.class);
-        
         types.add(PropertyDescriptor.class);
-        types.add(AcknowledgeWarnings.class);
-        types.add(PropertyWarning.class);
+        this.types.addAll(types);
     }
 
     private List<Class<?>> typesForSerialisationTesting() {

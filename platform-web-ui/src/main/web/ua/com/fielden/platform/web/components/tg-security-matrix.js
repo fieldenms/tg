@@ -45,6 +45,7 @@ const template = html`
         }
         tg-security-tree-table {
             min-height:0;
+            @apply --layout-flex;
         }
         .filter-panel ::slotted(.filter-element) {
             margin: 0 10px;
@@ -70,7 +71,7 @@ const template = html`
             <div class="filter-panel">
                 <slot name="filter-element"></slot>
             </div>
-            <tg-security-tree-table id="securityMatrix" entities="[[entities]]" hierarchy-column="[[hierarchyColumn]]" columns="[[columns]]"></tg-security-tree-table>
+            <tg-security-tree-table id="securityMatrix" entities="[[entities]]" columns="[[columns]]"></tg-security-tree-table>
             <div id="actionPanel">
                 <slot name="reload-action"></slot>
                 <tg-action id="cancelButton" enabled-states='[[_actions.REFRESH.enabledStates]]' short-desc='CANCEL' long-desc='Cancels all changes after save' current-state='EDIT' shortcut='ctrl+r meta+r' role='refresh' action='[[_resetSecurityMatrix]]' post-action='{{_postResetSecurityMatrix}}' post-action-error='{{_postResetSecurityMatrixError}}' style="margin:10px;"></tg-action>
@@ -85,14 +86,13 @@ class SecurityMatrixEntity extends EntityStub {
 
     constructor(securityTokenEntity, userRoles, tokenRoleMap, columnList, afterCheckCallback, parent) {
         super(securityTokenEntity.get("key"));
-        this.$visible = true;
         this.$columnListMap = {};
         columnList.forEach(column => {
             this.$columnListMap[column.property] = column;
         });
         this.$afterCheckCallback = afterCheckCallback;
         this.$state = {};
-        this.title = securityTokenEntity.get("title");
+        this.key = securityTokenEntity.get("title");
         this.desc = securityTokenEntity.get("desc");
         if (parent) {
             this.parent = parent;
@@ -109,13 +109,13 @@ class SecurityMatrixEntity extends EntityStub {
             this.roleIdMap[roleKey] = role.get("id");
             this.idRoleMap[role.get("id")] = roleKey;
             this[roleKey] = false;
-            if (!this.hasChildren()) {
+            if (!this.hasChildren) {
                 this.$state[roleKey] = "UNCHECKED";
             } else {
                 this.$state[roleKey] = calculateState(this.children.map(child => child.$state[roleKey]));
             }
         });
-        if (!this.hasChildren()) {
+        if (!this.hasChildren) {
             const availTokenList = tokenRoleMap[securityTokenEntity.get("key")];
             if (availTokenList) {
                 availTokenList.forEach(roleId => {
@@ -128,13 +128,12 @@ class SecurityMatrixEntity extends EntityStub {
             this.$state._token = calculateState(this.children.map(child => child.$state._token));
         }
         //Initiate
-        this._tokenRoleAssociationHandler = {};
         this._newAssociations = [];
         this._removedAssociations = [];
     }
     
     set(property, value) {
-        if (!this.hasChildren()) {
+        if (!this.hasChildren) {
             const oldValue = this.get(property);
             super.set(property, value);
             this.$state[property] = value ? "CHECKED" : "UNCHECKED"
@@ -145,9 +144,7 @@ class SecurityMatrixEntity extends EntityStub {
                     updateAssociations(this.roleIdMap[property], this._removedAssociations, this._newAssociations);
                 }
             }
-            if (typeof this._tokenRoleAssociationHandler[property] === "function") {
-                this._tokenRoleAssociationHandler[property](value, this.getState(property));
-            }
+            updateViewFor(this, property, value, this.getState(property));
         }
     }
     
@@ -155,20 +152,20 @@ class SecurityMatrixEntity extends EntityStub {
         if (!visible) {
             return this.$state[property];
         } else {
-            if (this.hasChildren()) {
-                return calculateState(this.children.filter(child => child.$visible).map(child => child.getState(property, visible)));
+            if (this.hasChildren) {
+                return calculateState(this.children.filter(child => child.__model().visible).map(child => child.getState(property, visible)));
             } else {
                 if (property === "_token") {
                     return calculateState(Object.keys(this.roleIdMap).filter(roleKey => visible ? this._isPropertyVisible(roleKey) : true).map(roleKey => this.getState(roleKey)));
                 } else {
-                    return this.$state[property] ? "CHECKED" : "UNCHECKED";
+                    return this.$state[property];
                 }
             }
         }
     }
 
     getAssociationsToSave(objToSave) {
-        if (this.hasChildren()) {
+        if (this.hasChildren) {
             this.children.forEach(child => child.getAssociationsToSave(objToSave));
         } else {
             objToSave[this.get("id")] = this._newAssociations.slice();
@@ -176,7 +173,7 @@ class SecurityMatrixEntity extends EntityStub {
     }
 
     getAssociationsToRemove(objToSave) {
-        if (this.hasChildren()) {
+        if (this.hasChildren) {
             this.children.forEach(child => child.getAssociationsToRemove(objToSave));
         } else {
             objToSave[this.get("id")] = this._removedAssociations.slice();
@@ -184,12 +181,12 @@ class SecurityMatrixEntity extends EntityStub {
     }
 
     isChanged() {
-        return (this.hasChildren() && this.children.some(child => child.isChanged())) || this._isChanged();
+        return (this.hasChildren && this.children.some(child => child.isChanged())) || this._isChanged();
     }
 
     reset() {
         const roleTouched = {};
-        if (this.hasChildren()) {
+        if (this.hasChildren) {
             this.children.forEach(child => {
                 Object.assign(roleTouched, child.reset());
             });
@@ -213,7 +210,7 @@ class SecurityMatrixEntity extends EntityStub {
     }
 
     clearCurrentState() {
-        if (this.hasChildren()) {
+        if (this.hasChildren) {
             this.children.forEach(child => child.clearCurrentState());
         } else {
             this._newAssociations = [];
@@ -221,7 +218,7 @@ class SecurityMatrixEntity extends EntityStub {
         }
     }
     
-    hasChildren() {
+    get hasChildren() {
         return this.children && this.children.length > 0;
     }
 
@@ -235,7 +232,7 @@ class SecurityMatrixEntity extends EntityStub {
     }
 
     _check(property, value) {
-        if (this.$visible && this._isPropertyVisible(property)) {
+        if (this.__model().visible && this._isPropertyVisible(property)) {
             this._checkWithoutParent(property, value);
             this._checkColumnParent(property, value);
             this.$afterCheckCallback();
@@ -255,9 +252,9 @@ class SecurityMatrixEntity extends EntityStub {
     }
 
     _checkWithoutParent(property, value) {
-        if (this.hasChildren()) {
+        if (this.hasChildren) {
             this.children.forEach(child => {
-                if (child.$visible && this._isPropertyVisible(property)) {
+                if (child.__model().visible && this._isPropertyVisible(property)) {
                     child._checkWithoutParent(property, value);
                 }
             });
@@ -295,20 +292,28 @@ class SecurityMatrixEntity extends EntityStub {
         if ("_token" === property) {
             this.$state._token = calculateState(Object.keys(this.roleIdMap).map(roleKey => this.getState(roleKey)));
         } else {
-            if (this.hasChildren()) {
+            if (this.hasChildren) {
                 this.$state[property] = calculateState(this.children.map(child => child.getState(property)));
             } else {
                 this.$state[property] = value ? "CHECKED" : "UNCHECKED";
             }
         }
-        if (typeof this._tokenRoleAssociationHandler[property] === "function") {
-            const newAllState = this.getState(property);
-            const newVisibleState = this.getState(property, true);
-            const newValue  = newAllState === "SEMICHECKED" ? (newVisibleState === "SEMICHECKED" ? !value : newVisibleState === "CHECKED") : newAllState === "CHECKED";
-            this._tokenRoleAssociationHandler[property](newValue, newAllState);
-        }
+        
+        const newAllState = this.getState(property);
+        const newVisibleState = this.getState(property, true);
+        const newValue  = newAllState === "SEMICHECKED" ? (newVisibleState === "SEMICHECKED" ? !value : newVisibleState === "CHECKED") : newAllState === "CHECKED";
+        updateViewFor(this, property, newValue, newAllState);
     }
 };
+
+const updateViewFor = function (entity, property, newState, newAllState) {
+    if (entity.__model().checkBoxes$ && entity.__model().checkBoxes$[property]) {
+        entity.__model().checkBoxes$[property].forEach(checkbox => {
+            checkbox._setState(newState, newAllState);
+        });
+    }
+}
+
 const updateAssociations = function (value, newAssociations, removedAssociations) {
     const roleIndex = removedAssociations.indexOf(value);
     if (roleIndex >= 0) {
@@ -317,12 +322,6 @@ const updateAssociations = function (value, newAssociations, removedAssociations
         newAssociations.push(value);
     }
 }
-const removeValueFrom = function (value, list) {
-    const indexToRemove = list.indexOf(value);
-    if (indexToRemove >= 0) {
-        list.splice(indexToRemove, 1);
-    }
-};
 const calculateState = function (states) {
     if (states.length > 0 && states.every(state => state === "CHECKED")) {
         return "CHECKED";
@@ -331,12 +330,6 @@ const calculateState = function (states) {
     }
     return "SEMICHECKED";
 };
-const calculateNextState = function (state, prevState) {
-    if (!prevState) {
-        return state;
-    }
-    return calculateState([prevState, state]);
-}
 const replaceWhitespacesWithUnderscore = function (str) {
     return str.replace(/\s+/gi, "_");
 };
@@ -358,7 +351,6 @@ Polymer({
             type: Object,
             observer: "_entityChanged"
         },
-        hierarchyColumn: Object,
         columns: Array,
         entities: Array,
         /**
@@ -440,22 +432,23 @@ Polymer({
     _entityChanged: function (newBindingEntity) {
         const newEntity = newBindingEntity ? newBindingEntity['@@origin'] : null;
         if (newEntity && newEntity.calculated) {
-            this.hierarchyColumn = {
-                property: "title",
+            const columnList = [];
+            columnList.push({
+                slot: "hierarchy-column",
+                property: "key",
                 visible: true,
-                childrenProperty: "children",
-                parentProperty: "parent",
                 type: "String",
                 width: 200,
                 minWidth: 200,
                 growFactor: 1,
                 columnTitle: "Security Tokens",
                 columnDesc: "Security Tokens Hierarchy",
+                vertical: false,
                 check: this.check,
-            };
-            const columnList = [];
+            });
             newEntity.get("userRoles").forEach(role => {
                 columnList.push({
+                    slot: "regular-column",
                     property: replaceWhitespacesWithUnderscore(role.get("key")),
                     visible: true,
                     type: "Boolean",
@@ -464,11 +457,20 @@ Polymer({
                     growFactor: 0,
                     columnTitle: role.get("key"),
                     columnDesc: role.get("desc"),
+                    vertical: true,
                     check: this.check,
                 });
             });
+            //In order to reset filter state if reload button was pressed.
+            if (this.columns) {
+                this.filterRoles("");
+            }
+            if (this.entities) {
+                this.filterTokens("");
+            }
+            //Set new columns and entities
             this.columns = columnList;
-            this.entities = newEntity.get("tokens").map(token => new SecurityMatrixEntity(token, newEntity.get("userRoles"), newEntity.get("tokenRoleMap"), columnList, this._toggleButtonStates));
+            this.entities = newEntity.get("tokens").map(token => new SecurityMatrixEntity(token, newEntity.get("userRoles"), newEntity.get("tokenRoleMap"), columnList.slice().splice(1), this._toggleButtonStates));
             this._toggleButtonStates();
         }
     },

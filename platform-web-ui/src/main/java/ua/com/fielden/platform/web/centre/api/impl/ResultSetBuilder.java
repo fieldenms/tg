@@ -13,9 +13,6 @@ import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
 import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp.dynamicProps;
-import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.mkInsertionPoint;
-import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig.configInsertionPoint;
-import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig.configInsertionPointWithPagination;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -50,8 +47,8 @@ import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionCon
 import ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
-import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPoints;
-import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointsFlexible;
+import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointPreferred;
+import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
 import ua.com.fielden.platform.web.centre.api.resultset.IAlsoProp;
@@ -60,11 +57,13 @@ import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHa
 import ua.com.fielden.platform.web.centre.api.resultset.IDynamicColumnBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetAutocompleterConfig;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aHideEgi;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aEgiAppearance;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aEgiIconStyle;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bCheckbox;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cToolbar;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dScroll;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eDraggable;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1efRetrieveAll;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1fPageCapacity;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1gMaxPageCapacity;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1hHeaderWrap;
@@ -77,7 +76,8 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4Orderi
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder4aWidth;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder7SecondaryAction;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder9RenderingCustomiser;
-import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderAlsoDynamicProps;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderDynamicProps;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderDynamicPropsAction;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilderWidgetSelector;
 import ua.com.fielden.platform.web.centre.api.resultset.PropDef;
 import ua.com.fielden.platform.web.centre.api.resultset.layout.ICollapsedCardLayoutConfig;
@@ -110,7 +110,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerW
  *
  * @param <T>
  */
-class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderAlsoDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder1aHideEgi<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T>, IInsertionPointsFlexible<T> {
+class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder1aEgiAppearance<T>, IResultSetBuilder1aEgiIconStyle<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T>{
 
     private static final String ERR_EDITABLE_SUB_PROP_DISALLOWED = "Dot-notated property [%s] cannot be added as editable. Only first-level properties are supported.";
 
@@ -193,10 +193,10 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public <M extends AbstractEntity<?>> IResultSetBuilderAlsoDynamicProps<T> addProps(final String propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<M, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
+    public <M extends AbstractEntity<?>> IResultSetBuilderDynamicPropsAction<T> addProps(final String propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<M, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
         final ResultSetProp<T> prop = dynamicProps(propName, dynColBuilderType, entityPreProcessor, contextConfig);
         this.builder.addToResultSet(prop);
-        return this;
+        return new ResultSetDynamicPropertyBuilder<T>(this, prop);
     }
 
     @Override
@@ -513,38 +513,31 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
 
         @Override
-        public IInsertionPointsFlexible<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
+        public IInsertionPointPreferred<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
             return ResultSetBuilder.this.addInsertionPoint(actionConfig, whereToInsertView);
         }
-
-        @Override
-        public IInsertionPointsFlexible<T> addInsertionPointWithPagination(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
-            return ResultSetBuilder.this.addInsertionPointWithPagination(actionConfig, whereToInsertView);
-        }
-
     }
 
     @Override
-    public IInsertionPointsFlexible<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
-        this.builder.insertionPointConfigs.add(configInsertionPoint(mkInsertionPoint(actionConfig, whereToInsertView)));
-        return this;
-    }
-
-    @Override
-    public IInsertionPointsFlexible<T> addInsertionPointWithPagination(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
-        this.builder.insertionPointConfigs.add(configInsertionPointWithPagination(mkInsertionPoint(actionConfig, whereToInsertView)));
-        return this;
-    }
-
-    @Override
-    public IInsertionPoints<T> flex() {
-        this.builder.insertionPointConfigs.get(this.builder.insertionPointConfigs.size() - 1).setFlex(true);
-        return this;
+    public IInsertionPointPreferred<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
+        return new InsertionPointConfigBuilder<>(this, actionConfig, whereToInsertView);
     }
 
     @Override
     public IResultSetBuilder1bCheckbox<T> hideEgi() {
         this.builder.egiHidden = true;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder1aEgiIconStyle<T> withGridViewIcon(final String icon) {
+        this.builder.gridViewIcon = icon;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder1bCheckbox<T> style(final String iconStyle) {
+        this.builder.gridViewIconStyle = iconStyle;
         return this;
     }
 
@@ -578,6 +571,12 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
+    public IResultSetBuilder1fPageCapacity<T> retrieveAll() {
+        this.builder.retrieveAll = true;
+        return this;
+    }
+
+    @Override
     public IResultSetBuilder1hHeaderWrap<T> setMaxPageCapacity(final int maxPageCapacity) {
         this.builder.maxPageCapacity = maxPageCapacity;
         return this;
@@ -602,7 +601,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder1fPageCapacity<T> draggable() {
+    public IResultSetBuilder1efRetrieveAll<T> draggable() {
         builder.draggable = true;
         return this;
     }
@@ -657,6 +656,11 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public IResultSetBuilder1iVisibleRowsCount<T> wrapHeader(final int headerLineNumber) {
         this.builder.setHeaderLineNumber(headerLineNumber);
+        return this;
+    }
+
+    public ResultSetBuilder<T> addInsertionPoint(final InsertionPointConfig insertionPoint) {
+        this.builder.insertionPointConfigs.add(insertionPoint);
         return this;
     }
 }

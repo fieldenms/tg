@@ -16,7 +16,7 @@ import '/resources/images/tg-icons.js';
 import '/resources/egi/tg-egi-multi-action.js';
 import '/resources/egi/tg-secondary-action-button.js';
 import '/resources/egi/tg-secondary-action-dropdown.js';
-import '/resources/egi/tg-egi-cell.js';
+import {EGI_CELL_PADDING, EGI_CELL_PADDING_TEMPLATE} from '/resources/egi/tg-egi-cell.js';
 import '/resources/egi/tg-responsive-toolbar.js';
 
 import {Polymer} from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
@@ -30,7 +30,10 @@ import { TgElementSelectorBehavior } from '/resources/components/tg-element-sele
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import { getFirstEntityValue, tearDownEvent, getRelativePos, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
+import { getKeyEventTarget, tearDownEvent, getRelativePos, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
+
+const EGI_BOTTOM_MARGIN = "15px";
+const EGI_BOTTOM_MARGIN_TEMPLATE = html`15px`;
 
 const template = html`
     <style>
@@ -57,6 +60,7 @@ const template = html`
             max-height: 100%;
         }
         tg-responsive-toolbar {
+            margin-top: 8px;
             flex-grow: 0;
             flex-shrink: 0;
             z-index: 1;
@@ -262,7 +266,7 @@ const template = html`
             min-width: fit-content;
             flex-grow: 0;
             flex-shrink: 0;
-            padding-bottom: var(--egi-bottom-margin, 15px);
+            padding-bottom: ${EGI_BOTTOM_MARGIN_TEMPLATE};
             @apply --layout-vertical;
         }
         .drag-anchor {
@@ -313,7 +317,7 @@ const template = html`
         .table-master-cell, .table-cell {
             @apply --layout-horizontal;
             @apply --layout-relative;
-            padding: 0 var(--egi-cell-padding, 0.6rem);
+            padding: 0 ${EGI_CELL_PADDING_TEMPLATE};
         }
         .table-cell {
             @apply --layout-center;
@@ -431,9 +435,9 @@ const template = html`
     <slot id="egi_master" name="egi-master" hidden></slot>
     <!--EGI template-->
     <div id="paperMaterial" class="grid-container" style$="[[_calcMaterialStyle(showMarginAround)]]" fit-to-height$="[[fitToHeight]]">
+        <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
         <!--Table toolbar-->
         <tg-responsive-toolbar id="egiToolbar" show-top-shadow$="[[_toolbarShadowVisible(_showTopShadow, headerFixed)]]" style$="[[_calcToolbarStyle(canDragFrom)]]">
-            <paper-progress id="progressBar" hidden$="[[!_showProgress]]"></paper-progress>
             <slot id="top_action_selctor" slot="entity-specific-action" name="entity-specific-action"></slot>
             <slot slot="standart-action" name="standart-action"></slot>
         </tg-responsive-toolbar>
@@ -628,6 +632,8 @@ const template = html`
         </tg-secondary-action-dropdown>
     </div>`;
 
+const MSG_SAVE_OR_CANCEL = "Please save or cancel changes.";
+
 function calculateColumnWidthExcept (egi, columnIndex, columnElements, columnLength, dragAnchor, checkboxes, primaryActions, secondaryActions) {
     let columnWidth = 0;
     if (egi.canDragFrom && dragAnchor()) {
@@ -713,6 +719,16 @@ Polymer({
         columns: {
             type: Array
         },
+
+        /**
+         * The icon for insertion point
+         */
+        icon: String,
+        /**
+         * The icon style for insertion point
+         */
+        iconStyle: String,
+        
         master: Object,
         allColumns: Array,
         fixedColumns: Array,
@@ -987,18 +1003,19 @@ Polymer({
         //Initialising property column mappings
         this.columnPropertiesMapper = (function (entity) {
             const result = [];
-            for (let index = 0; index < this.columns.length; index++) {
-                const column = this.columns[index];
+            for (let index = 0; index < this.allColumns.length; index++) {
+                const column = this.allColumns[index];
                 const entry = {
                     dotNotation: column.property,
-                    value: this.getBindedValue(entity, column)
+                    value: this.getBindedValue(entity, column),
+                    column: column
                 };
                 result.push(entry);
             }
             return result;
         }).bind(this);
         this.async(function () {
-            this.keyEventTarget = this._getKeyEventTarget();
+            this.keyEventTarget = getKeyEventTarget(this, this);
             if (this.master) {
                 this._initMasterEditors();
                 this.appendChild(this.master.saveButton);
@@ -1030,6 +1047,7 @@ Polymer({
         const entityIndex = this._findEntity(entity, this.filteredEntities);
         if (entityIndex >= 0) {
             const egiEntity = this.egiModel[entityIndex];
+            egiEntity.entity.set(propPath, entity.get(propPath));
             egiEntity._propertyChangedHandlers && egiEntity._propertyChangedHandlers[propPath] && egiEntity._propertyChangedHandlers[propPath]();
         }
     },
@@ -1109,12 +1127,22 @@ Polymer({
             column.customAction
             || this.isHyperlinkProp(entity, column) === true
             || this.getAttachmentIfPossible(entity, column)
-            || this.isEntityProperty(entity, column)
+            || this.hasDefaultAction(entity, column)
         );
     },
 
-    isEntityProperty: function (entity, column) {
-        return entity && entity.type && entity.type() && this._reflector.tg_determinePropertyType(entity.type(), column.collectionalProperty || column.property) instanceof this._reflector._getEntityTypePrototype();
+    /**
+     * Indicates the presence of default action for 'entity' in the specified 'column'.
+     */
+    hasDefaultAction: function (entity, column) {
+        const type = entity && entity.constructor.prototype.type && entity.constructor.prototype.type.call(entity);
+        if (type) {
+            const propertyType = this._reflector.tg_determinePropertyType(type, column.collectionalProperty || column.property);
+            if (propertyType instanceof this._reflector._getEntityTypePrototype()) { // only entity-typed columns can have default actions ...
+                return propertyType.entityMaster(); // ... and only those, that have corresponding entity masters
+            }
+        }
+        return false;
     },
 
     isVisible: function (entity) {
@@ -1325,7 +1353,7 @@ Polymer({
      */
     _tapColumn: function (entity, column) {
         // 'this._currentEntity(entity)' returns closure with 'entity' tapped.
-        // This closure returns either 'entity' or the entity navigated to (EntityNavigationAction).
+        // This closure returns either 'entity' or the entity navigated to (EntityEditAction with EntityNavigationPreAction).
         // Each tapping overrides this function to provide proper context of execution.
         // This override should occur on every 'run' of the action so it is mandatory to use 'tg-property-column.runAction' public API.
         if (!column.runAction(this._currentEntity(entity))) {
@@ -1339,7 +1367,7 @@ Polymer({
                 const attachment = this.getAttachmentIfPossible(entity, column);
                 if (attachment && this.downloadAttachment) {
                     this.downloadAttachment(attachment);
-                } else if (this.isEntityProperty(entity, column)) {
+                } else if (this.hasDefaultAction(entity, column)) {
                     column.runDefaultAction(this._currentEntity(entity), this._defaultPropertyAction);
                 }
             } 
@@ -1352,6 +1380,7 @@ Polymer({
     },
 
     _filteredEntitiesChanged: function (newValue) {
+        const noneFilteredOut = newValue.length === this.entities.length;
         const tempEgiModel = [];
         newValue.forEach(newEntity => {
             const selectEntInd = this._findEntity(newEntity, this.selectedEntities);
@@ -1362,9 +1391,9 @@ Polymer({
                 this.editingEntity = newEntity;
             }
         });
-        newValue.forEach(newEntity => {
+        newValue.forEach((newEntity, filteredEntIndex) => {
             const isSelected = this.selectedEntities.indexOf(newEntity) > -1;
-            const index = this.findEntityIndex(newEntity);
+            const index = noneFilteredOut ? filteredEntIndex : this.findEntityIndex(newEntity);
             const newRendHints = (this.renderingHints && this.renderingHints[index]) || {};
             const newPrimaryActionIndex = (this.primaryActionIndices && this.primaryActionIndices[index]) || 0;
             const defaultSecondaryActionIndices = this._secondaryActions.map(action => 0);
@@ -1794,8 +1823,7 @@ Polymer({
     },
 
     _calcSelectCheckBoxStyle: function (canDragFrom) {
-        const cellPadding = this.getComputedStyleValue('--egi-cell-padding').trim() || "0.6rem";
-        return "width:18px; padding-left:" + (canDragFrom ? "0;" : cellPadding);
+        return "width:18px; padding-left:" + (canDragFrom ? "0;" : EGI_CELL_PADDING);
     },
 
     _toolbarShadowVisible: function (_showTopShadow, headerFixed) {
@@ -1965,8 +1993,7 @@ Polymer({
         } else if (visibleRowsCount > 0) { //Set the height or max height for the scroll container so that only specified number of rows become visible.
             this.$.paperMaterial.style["min-height"] = "fit-content";
             const rowCount = visibleRowsCount + (summaryFixed ? _totalsRowCount : 0);
-            const bottomMargin = this.getComputedStyleValue('--egi-bottom-margin').trim() || "15px";
-            const height = "calc(3rem + " + rowCount + " * " + rowHeight + " + " + rowCount + "px" + (summaryFixed && _totalsRowCount > 0 ? (" + " + bottomMargin) : "") + ")";
+            const height = "calc(3rem + " + rowCount + " * " + rowHeight + " + " + rowCount + "px" + (summaryFixed && _totalsRowCount > 0 ? (" + " + EGI_BOTTOM_MARGIN) : "") + ")";
             if (fitToHeight) {
                 this.$.scrollableContainer.style["height"] = height;
             } else {
@@ -1978,8 +2005,9 @@ Polymer({
 
     _renderingHintsChanged: function (newValue) {
         if (this.egiModel) {
-            this.egiModel.forEach((egiEntity) => {
-                egiEntity.renderingHints = (newValue && newValue[this.findEntityIndex(egiEntity.entity)]) || {};
+            const noneFilteredOut = this.egiModel.length === this.entities.length;
+            this.egiModel.forEach((egiEntity, egiEntIndex) => {
+                egiEntity.renderingHints = (newValue && newValue[noneFilteredOut ? egiEntIndex : this.findEntityIndex(egiEntity.entity)]) || {};
                 egiEntity._renderingHintsChangedHandler && egiEntity._renderingHintsChangedHandler();
             });
             this._updateTableSizeAsync();
@@ -1988,16 +2016,18 @@ Polymer({
 
     _primaryActionIndicesChanged: function (newValue) {
         if (this.egiModel) {
+            const noneFilteredOut = this.egiModel.length === this.entities.length;
             this.egiModel.forEach((egiEntity, index) => {
-                this.set("egiModel." + index + ".primaryActionIndex", newValue[this.findEntityIndex(egiEntity.entity)]);
+                this.set("egiModel." + index + ".primaryActionIndex", newValue[noneFilteredOut ? index : this.findEntityIndex(egiEntity.entity)]);
             });
         }
     },
 
     _secondaryActionIndicesChanged: function (newValue) {
         if (this.egiModel) {
+            const noneFilteredOut = this.egiModel.length === this.entities.length;
             this.egiModel.forEach((egiEntity, index) => {
-                this.set("egiModel." + index + ".secondaryActionIndices", newValue[this.findEntityIndex(egiEntity.entity)]);
+                this.set("egiModel." + index + ".secondaryActionIndices", newValue[noneFilteredOut ? index : this.findEntityIndex(egiEntity.entity)]);
             });
         }
     },
@@ -2105,13 +2135,8 @@ Polymer({
                 shortDesc: 'Download',
                 longDesc: 'Click to download attachment.'
             });
-        } else if (!this.isHyperlinkProp(entity, column) && this.isEntityProperty(entity, column)) {
-            const entityValue = getFirstEntityValue(this._reflector, entity, column.collectionalProperty || column.property);
-            const entityTitle = entityValue.type().entityTitle();
-            return this._generateActionTooltip({
-                shortDesc: `Edit ${entityTitle}`,
-                longDesc: `Edit ${entityTitle}`
-            });
+        } else if (!this.isHyperlinkProp(entity, column) && this.hasDefaultAction(entity, column)) {
+            return this._generateActionTooltip(this.hasDefaultAction(entity, column));
         }
         return "";
     },
@@ -2119,7 +2144,8 @@ Polymer({
     _generateEntityTooltip: function (entity, column) {
         const valueToFormat = this.getValueFromEntity(entity, column);
         if (Array.isArray(valueToFormat)) {
-            return this._reflector.tg_toString(valueToFormat, this.getRealEntity(entity, column).type(), this.getRealProperty(column), { collection: true, asTooltip: true });
+            const realEntity = this.getRealEntity(entity, column);
+            return this._reflector.tg_toString(valueToFormat, realEntity.constructor.prototype.type.call(realEntity), this.getRealProperty(column), { collection: true, asTooltip: true });
         } else {
             let desc;
             try {
@@ -2215,14 +2241,6 @@ Polymer({
         }.bind(this), 1);
     },
 
-    _getKeyEventTarget: function () {
-        let parent = this;
-        while (parent && (parent.tagName !== 'TG-CUSTOM-ACTION-DIALOG' && parent.tagName !== 'TG-MENU-ITEM-VIEW')) {
-            parent = parent.parentElement || parent.getRootNode().host;
-        }
-        return parent || this;
-    },
-
     _getHeaderColumns: function () {
         const topLeftCells = this.$.top_left_egi.querySelector(".table-header-row").querySelectorAll(".cell");
         const topCells = this.$.top_egi.querySelector(".table-header-row").querySelectorAll(".cell");
@@ -2264,10 +2282,31 @@ Polymer({
         return {};
     },
 
+    /**
+     * @returns value that indicates whether this EGI is hidden or not.
+     */
+    isHidden: function () {
+        return this.hasAttribute("hidden");
+    },
+
     /************ EGI MASTER RELATED FUNCTIONS ***************/
     isEditing: function () {
         return this.$.centre_egi_master.offsetParent !== null;
     },
+
+    /**
+     * @returns object that explains the reason why this EGI can not be left or undefined.
+     */
+    canLeave: function () {
+        if (this.isEditing()) {
+            return {
+                msg: MSG_SAVE_OR_CANCEL
+            }
+        }
+    },
+
+    //Performs custom tasks before leaving this EGI.
+    leave: function() {},
 
     canOpenMaster: function () {
         return true;

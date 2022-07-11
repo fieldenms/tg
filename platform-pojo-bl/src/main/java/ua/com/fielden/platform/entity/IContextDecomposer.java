@@ -1,7 +1,14 @@
 package ua.com.fielden.platform.entity;
 
+import static java.util.Optional.empty;
+import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toCollection;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.traversePropPath;
+import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -12,6 +19,7 @@ import java.util.Set;
 import java.util.function.BiFunction;
 
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.centre.CentreContext;
 
 /**
@@ -250,6 +258,65 @@ public interface IContextDecomposer {
     }
     
     /**
+     * Determines actual (i.e. not generated / synthetic) type from entity-typed property path ({@code entityTypedPropPath}) in root entity type ({@code rootType}).
+     * 
+     * @param rootType -- root entity type
+     * @param entityTypedPropPath -- dot-notated entity-typed property path defined in {@code rootType}; "" is supported meaning root type itself; the path can be taken from {@link EntityUtils#traversePropPath(AbstractEntity, String)}
+     * @return
+     */
+    default Class<AbstractEntity<?>> determineActualEntityType(final Class<? extends AbstractEntity<?>> rootType, final String entityTypedPropPath) {
+        return determineBaseEntityType(getOriginalType(determinePropertyType(rootType, dslName(entityTypedPropPath))));
+    }
+
+    /**
+     * Returns the base type of {@code entityType} if it is a synthetic entity based on a persistent entity.
+     * Otherwise, returns {@code entityType}.
+     *
+     * @param entityType
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    default Class<AbstractEntity<?>> determineBaseEntityType(final Class<AbstractEntity<?>> entityType) {
+        if (isSyntheticBasedOnPersistentEntityType(entityType)) {
+            // for the cases where EntityEditAction is used for opening SyntheticBasedOnPersistentEntity we explicitly use base type;
+            // however this is not the case for StandardActions.EDIT_ACTION because of computation existence that returns entityType.
+            return (Class<AbstractEntity<?>>) entityType.getSuperclass();
+        }
+        return entityType;
+    }
+    
+    /**
+     * Returns optional type for chosen entity defined by [currentEntity; chosenProperty].
+     */
+    default Optional<Class<AbstractEntity<?>>> chosenEntityType() {
+        return traversePropPath(currentEntity(), chosenProperty()) // traverse entity-typed paths and values
+            .findFirst() // find first (most full) pair, if any
+            .map(pathAndValueOpt -> determineActualEntityType(currentEntity().getType(), pathAndValueOpt._1)); // take the path only and determine actual entity type from that path
+    }
+    
+    /**
+     * Returns optional ID for type-compatible chosen entity defined by [currentEntity; chosenProperty].
+     * 
+     * @param compatibilityType -- the entity type with which chosen entity should be compatible
+     */
+    default Optional<Long> chosenEntityId(final Class<? extends AbstractEntity<?>> compatibilityType) {
+        if (currentEntityEmpty()) {
+            return empty();
+        } else if (chosenPropertyEmpty() && !currentEntityInstanceOf(compatibilityType)) { // for non-compatible currentEntity without chosenProperty (edge-case)
+            return ofNullable(currentEntity().getId()); // we still try to use ID of that current entity (e.g. WaCostDetails to be opened for WorkActivity in primary action -- one-2-one association, the same ID shared by both entities)
+        }
+        // there are couple of possible legitimate cases here:
+        // 1. either currentEntity().get(chosenProperty()) is of type for Entity Master and all is good, or
+        // 2. chosenProperty is a sub property of a property of type for Entity Master, where that "parent" property belongs to the current entity, or
+        // 3. currentEntity() itself is of type for Entity Master (chosenProperty() is "" aka "this" or chosenProperty() is not defined in context configuration)
+        return traversePropPath(currentEntity(), chosenProperty()) // traverse entity-typed paths and values
+            .filter(pathAndValueOpt -> compatibilityType.isAssignableFrom(determineActualEntityType(currentEntity().getType(), pathAndValueOpt._1))) // find only type-compatible paths
+            .findFirst() // find first (most full) type-compatible pair, if any
+            .flatMap(pathAndValueOpt -> pathAndValueOpt._2) // get optional entity value, if any
+            .map(AbstractEntity::getId); // get ID from it, if any
+    }
+    
+    /**
      * Returns the current entity, which could be <code>null</code>.
      * 
      * @return
@@ -413,7 +480,7 @@ public interface IContextDecomposer {
     
         private final IContextDecomposer decomposer;
         
-        private ContextOfMasterEntity(IContextDecomposer decomposer) {
+        private ContextOfMasterEntity(final IContextDecomposer decomposer) {
             this.decomposer = decomposer;
         }
         

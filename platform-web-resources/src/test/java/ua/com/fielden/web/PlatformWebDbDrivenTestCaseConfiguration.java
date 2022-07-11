@@ -21,11 +21,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.functional.master.AcknowledgeWarnings;
 import ua.com.fielden.platform.entity.functional.master.PropertyWarning;
-import ua.com.fielden.platform.entity.meta.DomainMetaPropertyConfig;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
-import ua.com.fielden.platform.entity.validation.DomainValidationConfig;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.persistence.HibernateUtil;
@@ -47,18 +45,6 @@ import ua.com.fielden.platform.serialisation.api.impl.ProvidedSerialisationClass
 import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.test.IDbDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.web.centre.CentreColumnWidthConfigUpdater;
-import ua.com.fielden.platform.web.centre.CentreConfigDeleteAction;
-import ua.com.fielden.platform.web.centre.CentreConfigDuplicateAction;
-import ua.com.fielden.platform.web.centre.CentreConfigEditAction;
-import ua.com.fielden.platform.web.centre.CentreConfigLoadAction;
-import ua.com.fielden.platform.web.centre.CentreConfigNewAction;
-import ua.com.fielden.platform.web.centre.CentreConfigSaveAction;
-import ua.com.fielden.platform.web.centre.CentreConfigShareAction;
-import ua.com.fielden.platform.web.centre.CentreConfigUpdater;
-import ua.com.fielden.platform.web.centre.CustomisableColumn;
-import ua.com.fielden.platform.web.centre.LoadableCentreConfig;
-import ua.com.fielden.platform.web.centre.OverrideCentreConfig;
 
 /**
  * Provides a test specific implementation of {@link IDbDrivenTestCaseConfiguration}.
@@ -98,20 +84,6 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
             domainTypes.add(UserRole.class);
             domainTypes.add(UserRoleTokensUpdater.class);
             domainTypes.add(SecurityTokenInfo.class);
-            domainTypes.add(CentreConfigUpdater.class);
-            domainTypes.add(CustomisableColumn.class);
-            domainTypes.add(CentreColumnWidthConfigUpdater.class);
-            
-            domainTypes.add(CentreConfigShareAction.class);
-            domainTypes.add(CentreConfigNewAction.class);
-            domainTypes.add(CentreConfigDuplicateAction.class);
-            domainTypes.add(CentreConfigLoadAction.class);
-            domainTypes.add(CentreConfigEditAction.class);
-            domainTypes.add(CentreConfigDeleteAction.class);
-            domainTypes.add(CentreConfigSaveAction.class);
-            domainTypes.add(LoadableCentreConfig.class);
-            domainTypes.add(OverrideCentreConfig.class);
-            
             domainTypes.add(UserAndRoleAssociation.class);
             domainTypes.add(UserAndRoleAssociationBatchAction.class);
             domainTypes.add(SecurityRoleAssociation.class);
@@ -164,17 +136,8 @@ public class PlatformWebDbDrivenTestCaseConfiguration implements IDbDrivenTestCa
     }
 
     @Override
-    public DomainMetaPropertyConfig getDomainMetaPropertyConfig() {
-        return hibernateModule.getDomainMetaPropertyConfig();
-    }
-
-    @Override
-    public DomainValidationConfig getDomainValidationConfig() {
-        return hibernateModule.getDomainValidationConfig();
-    }
-
-    @Override
     public List<String> getDdl() {
         return null;
     }
+
 }

@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
+import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.reflection.Finder;
@@ -109,7 +110,13 @@ public class FetchModelReconstructor {
                     // fetch cannot be identified from null, so the fetch id only strategy is the most suitable
                     @SuppressWarnings("unchecked")
                     final Class<AbstractEntity<?>> valueType = (Class<AbstractEntity<?>>) propField.getType();
-                    fetchModel = fetchModel.with(propName, fetchIdOnly(valueType));
+                    if (propField.isAnnotationPresent(Calculated.class)) {
+                        // fetch id-only is not applicable for calculated entity-typed properties if they are used in Entity Masters
+                        // however, at this stage, there is no way to identify that and the default fetch model should be used
+                        fetchModel = fetchModel.with(propName);
+                    } else {
+                        fetchModel = fetchModel.with(propName, fetchIdOnly(valueType));
+                    }
                     exploredFetchModels.put(identity, fetchModel);
                 }
             } else { // handle ordinary type properties
