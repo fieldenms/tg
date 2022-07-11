@@ -15,7 +15,7 @@ import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator.generateCompositeKeyEqlExpression;
-import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSISTED;
+import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSISTENT;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PURE;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.UNION;
@@ -142,7 +142,7 @@ public class EqlDomainMetadata {
                 if (parentInfo.category != PURE) {
                     final List<EqlPropertyMetadata> propsMetadatas = generatePropertyMetadatasForEntity(parentInfo);
                     entityPropsMetadata.put(entityType, new EqlEntityMetadata(parentInfo, propsMetadatas));
-                    if (parentInfo.category == PERSISTED) {
+                    if (parentInfo.category == PERSISTENT) {
                         tables.put(entityType.getName(), generateTable(parentInfo.tableName, propsMetadatas));
                     }
                 }
@@ -201,7 +201,7 @@ public class EqlDomainMetadata {
         final EqlPropertyMetadata idProperty = new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).required().column(id).build();
         final EqlPropertyMetadata idPropertyInOne2One = new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).required().column(id).build();
         switch (parentInfo.category) {
-        case PERSISTED:
+        case PERSISTENT:
             return isOneToOne(parentInfo.entityType) ? of(idPropertyInOne2One) : of(idProperty)/*(entityType)*/;
         case QUERY_BASED:
             if (isSyntheticBasedOnPersistentEntityType(parentInfo.entityType)) {
@@ -227,7 +227,7 @@ public class EqlDomainMetadata {
         final Class<? extends Comparable<?>> keyType = getKeyType(parentInfo.entityType);
         if (isOneToOne(parentInfo.entityType)) {
             switch (parentInfo.category) {
-            case PERSISTED:
+            case PERSISTENT:
                 return new EqlPropertyMetadata.Builder(KEY, keyType, H_LONG).required().column(id).build();
             case QUERY_BASED:
                 return new EqlPropertyMetadata.Builder(KEY, keyType, H_LONG).required().build();
@@ -239,7 +239,7 @@ public class EqlDomainMetadata {
         } else {
             final Object keyHibType = typeResolver.basic(keyType.getName());
             switch (parentInfo.category) {
-            case PERSISTED:
+            case PERSISTENT:
                 return new EqlPropertyMetadata.Builder(KEY, keyType, keyHibType).required().column(key).build();
             case QUERY_BASED:
                 if (isSyntheticBasedOnPersistentEntityType(parentInfo.entityType)) {
@@ -275,7 +275,7 @@ public class EqlDomainMetadata {
 
             restOfPropsFields.stream().filter(p -> DESC.equals(p.getName())).findAny().ifPresent(desc -> result.add(getCommonPropInfo(desc, parentInfo.entityType, null)));
 
-            if (PERSISTED == parentInfo.category) {
+            if (PERSISTENT == parentInfo.category) {
                 result.add(generateVersionPropertyMetadata(parentInfo));
             }
 

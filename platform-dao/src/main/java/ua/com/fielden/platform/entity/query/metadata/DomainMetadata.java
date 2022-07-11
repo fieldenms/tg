@@ -15,7 +15,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.entity.query.metadata.CompositeKeyEqlExpressionGenerator.generateCompositeKeyEqlExpression;
 import static ua.com.fielden.platform.entity.query.metadata.DomainMetadataUtils.extractExpressionModelFromCalculatedProperty;
 import static ua.com.fielden.platform.entity.query.metadata.DomainMetadataUtils.generateUnionEntityPropertyExpression;
-import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSISTED;
+import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSISTENT;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.COLLECTIONAL;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.COMPONENT_HEADER;
 import static ua.com.fielden.platform.entity.query.metadata.PropertyCategory.ENTITY;
@@ -168,7 +168,7 @@ public class DomainMetadata {
             try {
                 EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = new EntityTypeInfo<>(entityType);
                 switch (parentInfo.category) {
-                case PERSISTED:
+                case PERSISTENT:
                     persistedEntityMetadataMap.put(entityType, generatePersistedEntityMetadata(parentInfo));
                     break;
                 case QUERY_BASED:
@@ -289,7 +289,7 @@ public class DomainMetadata {
         final PropertyMetadata idProperty = new PropertyMetadata.Builder(ID, Long.class, false, parentInfo).column(id).hibType(H_LONG).category(PRIMITIVE).build();
         final PropertyMetadata idPropertyInOne2One = new PropertyMetadata.Builder(ID, Long.class, false, parentInfo).column(id).hibType(H_LONG).category(ONE2ONE_ID).build();
         switch (parentInfo.category) {
-        case PERSISTED:
+        case PERSISTENT:
             return isOneToOne(parentInfo.entityType) ? idPropertyInOne2One : idProperty/*(entityType)*/;
         case QUERY_BASED:
             if (isSyntheticBasedOnPersistentEntityType(parentInfo.entityType)) {
@@ -310,14 +310,14 @@ public class DomainMetadata {
     }
 
     private PropertyMetadata generateVersionPropertyMetadata(final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) {
-        return PERSISTED == parentInfo.category ? new PropertyMetadata.Builder(VERSION, Long.class, false, parentInfo).column(version).hibType(H_LONG).category(PRIMITIVE).build() : null;
+        return PERSISTENT == parentInfo.category ? new PropertyMetadata.Builder(VERSION, Long.class, false, parentInfo).column(version).hibType(H_LONG).category(PRIMITIVE).build() : null;
     }
     
     private PropertyMetadata generateKeyPropertyMetadata(final EntityTypeInfo <? extends AbstractEntity<?>> parentInfo) throws Exception {
         final Class<? extends Comparable> keyType = getKeyType(parentInfo.entityType);
         if (isOneToOne(parentInfo.entityType)) {
             switch (parentInfo.category) {
-            case PERSISTED:
+            case PERSISTENT:
                 return new PropertyMetadata.Builder(KEY, keyType, false, parentInfo).column(id).hibType(H_LONG).category(ENTITY_AS_KEY).build();
             case QUERY_BASED:
                 return new PropertyMetadata.Builder(KEY, keyType, false, parentInfo).hibType(H_LONG).category(SYNTHETIC).build();
@@ -328,7 +328,7 @@ public class DomainMetadata {
             return getVirtualPropInfoForDynamicEntityKey((EntityTypeInfo <? extends AbstractEntity<DynamicEntityKey>>) parentInfo);
         } else {
             switch (parentInfo.category) {
-            case PERSISTED:
+            case PERSISTENT:
                 return new PropertyMetadata.Builder(KEY, keyType, false, parentInfo).column(key).hibType(typeResolver.basic(keyType.getName())).category(PRIMITIVE).build();
             case QUERY_BASED:
                 if (isSyntheticBasedOnPersistentEntityType(parentInfo.entityType)) {
