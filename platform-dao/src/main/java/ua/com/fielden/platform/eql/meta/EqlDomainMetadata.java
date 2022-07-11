@@ -140,10 +140,10 @@ public class EqlDomainMetadata {
             try {
                 final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo = new EntityTypeInfo<>(entityType);
                 if (parentInfo.category != PURE) {
-                    final List<EqlPropertyMetadata> propsMetadatas = generatePropertyMetadatasForEntity(parentInfo);
-                    entityPropsMetadata.put(entityType, new EqlEntityMetadata(parentInfo, propsMetadatas));
+                    final List<EqlPropertyMetadata> propsMetadata = generatePropertyMetadataForEntity(parentInfo);
+                    entityPropsMetadata.put(entityType, new EqlEntityMetadata(parentInfo, propsMetadata));
                     if (parentInfo.category == PERSISTENT) {
-                        tables.put(entityType.getName(), generateTable(parentInfo.tableName, propsMetadatas));
+                        tables.put(entityType.getName(), generateTable(parentInfo.tableName, propsMetadata));
                     }
                 }
             } catch (final Exception e) {
@@ -257,7 +257,7 @@ public class EqlDomainMetadata {
         return generateUnionEntityPropertyContextualExpression(unionMembersNames, DESC, contextPropName);
     }
 
-    private List<EqlPropertyMetadata> generatePropertyMetadatasForEntity(final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo) {
+    private List<EqlPropertyMetadata> generatePropertyMetadataForEntity(final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo) {
         final List<EqlPropertyMetadata> result = new ArrayList<>();
         if (UNION == parentInfo.category) {
             result.addAll(generateUnionImplicitCalcSubprops((Class<? extends AbstractUnionEntity>) parentInfo.entityType, null));
