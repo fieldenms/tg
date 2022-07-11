@@ -32,6 +32,7 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
+import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.functions.AbsOfBuilder;
 import ua.com.fielden.platform.eql.stage0.functions.AddDateIntervalBuilder;
 import ua.com.fielden.platform.eql.stage0.functions.AverageOfBuilder;
@@ -325,7 +326,8 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         case COUNT_ALL:
             return CountAll1.INSTANCE;
         case NOW:
-            return new Value1(queryBuilder.nowValue.get());
+            final QueryNowValue qnv = queryBuilder.nowValue;
+            return new Value1(qnv != null ? qnv.get() : null);
         default:
             throw new RuntimeException("Unrecognised zero agrument function: " + function);
         }
