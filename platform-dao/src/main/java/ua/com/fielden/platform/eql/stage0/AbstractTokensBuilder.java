@@ -211,7 +211,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         if (qp == null || qp.isEmptyWithoutMnemonics()) {
             return emptyCondition();
         } else if (props.getKey() instanceof String) {
-            return buildCondition(qp, (String) props.getKey(), false, queryBuilder.dates);
+            return buildCondition(qp, (String) props.getKey(), false, queryBuilder.nowValue.dates);
         } else {
             final T2<ICompoundCondition0<?>, String> args =  (T2<ICompoundCondition0<?>, String>) props.getKey();
             return collectionalCritConditionOperatorModel(args._1, args._2, qp);
@@ -224,7 +224,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         final Boolean originalNot = qp.getNot();
         qp.setOrNull(null);
         qp.setNot(null);
-        final ConditionModel result = qp == null || qp.isEmptyWithoutMnemonics() ? emptyCondition() : buildCondition(qp, propName, false, queryBuilder.dates);
+        final ConditionModel result = qp == null || qp.isEmptyWithoutMnemonics() ? emptyCondition() : buildCondition(qp, propName, false, queryBuilder.nowValue.dates);
         qp.setOrNull(originalOrNull);
         qp.setNot(originalNot);
         return result;
@@ -325,8 +325,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         case COUNT_ALL:
             return CountAll1.INSTANCE;
         case NOW:
-            return new Value1(getParamValue(EntQueryGenerator.NOW)); //new Now1();
-
+            return new Value1(queryBuilder.nowValue.get());
         default:
             throw new RuntimeException("Unrecognised zero agrument function: " + function);
         }

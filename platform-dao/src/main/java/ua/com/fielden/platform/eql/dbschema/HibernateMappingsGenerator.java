@@ -11,6 +11,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.SortedMap;
 
@@ -140,7 +141,7 @@ public class HibernateMappingsGenerator {
      * @return
      * @throws Exception
      */
-    private static <ET extends AbstractEntity<?>> String generateEntityClassMapping(final Class<? extends AbstractEntity<?>> type, final String tableName, final List<EqlPropertyMetadata> propsMetadata, final DbVersion dbVersion) throws Exception {
+    private static <ET extends AbstractEntity<?>> String generateEntityClassMapping(final Class<? extends AbstractEntity<?>> type, final String tableName, final Collection<EqlPropertyMetadata> propsMetadata, final DbVersion dbVersion) throws Exception {
         final StringBuffer sb = new StringBuffer();
         sb.append("<class name=\"" + type.getName() + "\" table=\"" + tableName + "\">\n");
 

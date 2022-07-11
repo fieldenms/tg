@@ -19,4 +19,6 @@ public interface IRetrievalModel<T extends AbstractEntity<?>> {
     boolean containsProp(final String propName);
     
     boolean containsProxy(final String propName);
+    
+    boolean topLevel();
 }

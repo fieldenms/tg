@@ -1,6 +1,5 @@
-package ua.com.fielden.platform.entity.query;
+package ua.com.fielden.platform.eql.retrieval;
 
-import static java.util.Collections.emptyMap;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.lang.reflect.Field;
@@ -18,7 +17,13 @@ import org.joda.time.Period;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
-import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.CollectionContainer;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
+import ua.com.fielden.platform.entity.query.EntityContainer;
+import ua.com.fielden.platform.entity.query.EntityRetrievalModel;
+import ua.com.fielden.platform.entity.query.IRetrievalModel;
+import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
+import ua.com.fielden.platform.entity.query.QueryProcessingModel;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.metadata.PropertyMetadata;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -180,7 +185,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
             final List<EntityContainer<T>> retrievedPropertyInstances = getRetrievedPropertyInstances(entities, propertyName);
             // IMPORTANT: it is assumed that EntityContainer can contain either only id or all props at once. Such assumption relied on fact that once join to property has been made all its columns had been yielded automatically.
             final List<EntityContainer<T>> enhancedPropInstances = (retrievedPropertyInstances.size() == 0) ? //
-            getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel)
+            getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel, paramValues)
                     : //
                     new EntityContainerEnhancer<T>(fetcher, domainMetadataAnalyser, idOnlyProxiedEntityTypeCache).enhance(retrievedPropertyInstances, fetchModel, paramValues);
 
@@ -209,7 +214,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
             final List<EntityContainer<T>> retrievedPropertyInstances = getRetrievedPropertyInstances(entities, propertyName);
             // IMPORTANT: it is assumed that EntityContainer can contain either only id or all props at once. Such assumption relied on fact that once join to property has been made all its columns had been yielded automatically.
             final List<EntityContainer<T>> enhancedPropInstances = (retrievedPropertyInstances.size() == 0) ? //
-            getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel)
+            getDataInBatches(new ArrayList<Long>(propertyValuesIds.keySet()), fetchModel, paramValues)
                     : //
                     new EntityContainerEnhancer<T>(fetcher, domainMetadataAnalyser, idOnlyProxiedEntityTypeCache).enhance(retrievedPropertyInstances, fetchModel, paramValues);
 
@@ -225,7 +230,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         return entities;
     }
 
-    private <T extends AbstractEntity<?>> List<EntityContainer<T>> getDataInBatches(final List<Long> ids, final EntityRetrievalModel<T> fetchModel) {
+    private <T extends AbstractEntity<?>> List<EntityContainer<T>> getDataInBatches(final List<Long> ids, final EntityRetrievalModel<T> fetchModel, final Map<String, Object> paramValues) {
         final List<EntityContainer<T>> result = new ArrayList<EntityContainer<T>>();
         final Long[] allParentIds = new ArrayList<Long>(ids).toArray(new Long[] {});
 
@@ -240,7 +245,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
             }
             final Long[] batch = Arrays.copyOfRange(allParentIds, from, to);
             final EntityResultQueryModel<T> currTypePropertyModel = select(fetchModel.getEntityType()).where().prop(AbstractEntity.ID).in().values(batch).model();
-            final QueryProcessingModel<T, ?> qpm = new QueryProcessingModel<>(currTypePropertyModel, null, fetchModel, emptyMap(), false);
+            final QueryProcessingModel<T, ?> qpm = new QueryProcessingModel<>(currTypePropertyModel, null, fetchModel, paramValues/*emptyMap()*/, false);
             final List<EntityContainer<T>> properties = fetcher.listAndEnhanceContainers(qpm, null, null);
             result.addAll(properties);
             from = to;
