@@ -11,6 +11,7 @@ import static ua.com.fielden.platform.eql.retrieval.EntityResultTreeBuilder.buil
 import static ua.com.fielden.platform.eql.stage3.EqlQueryTransformer.transform;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.SortedSet;
@@ -24,6 +25,7 @@ import org.joda.time.DateTime;
 import org.joda.time.Period;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityContainer;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.QueryExecutionContext;
@@ -43,14 +45,14 @@ import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 public class EntityContainerFetcher {
     private final QueryExecutionContext executionContext;
     private final Logger logger = Logger.getLogger(this.getClass());
-
+    
     public EntityContainerFetcher(final QueryExecutionContext executionContext) {
         this.executionContext = executionContext;
     }
 
     public <E extends AbstractEntity<?>> List<EntityContainer<E>> listAndEnhanceContainers(final QueryProcessingModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
         final DomainMetadataAnalyser domainMetadataAnalyser = new DomainMetadataAnalyser(executionContext.getDomainMetadata());
-        final QueryModelResult<E> modelResult = getModelResult(queryModel, domainMetadataAnalyser, executionContext.getFilter(), executionContext.getUsername());
+        final QueryModelResult<E> modelResult = getModelResult(queryModel, domainMetadataAnalyser.getDbVersion(), executionContext.getFilter(), executionContext.getUsername());
 
         if (modelResult.idOnlyQuery()) {
             return listContainersForIdOnlyQuery(queryModel, modelResult.resultType, pageNumber, pageCapacity);
@@ -63,7 +65,7 @@ public class EntityContainerFetcher {
 
     public <E extends AbstractEntity<?>> Stream<List<EntityContainer<E>>> streamAndEnhanceContainers(final QueryProcessingModel<E, ?> queryModel, final Optional<Integer> fetchSize) {
         final DomainMetadataAnalyser domainMetadataAnalyser = new DomainMetadataAnalyser(executionContext.getDomainMetadata());
-        final QueryModelResult<E> modelResult = getModelResult(queryModel, domainMetadataAnalyser, executionContext.getFilter(), executionContext.getUsername());
+        final QueryModelResult<E> modelResult = getModelResult(queryModel, domainMetadataAnalyser.getDbVersion(), executionContext.getFilter(), executionContext.getUsername());
 
         if (modelResult.idOnlyQuery()) {
             return streamContainersForIdOnlyQuery(queryModel, modelResult.resultType, fetchSize);
@@ -87,7 +89,6 @@ public class EntityContainerFetcher {
 
     private <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainersAsIs(final QueryModelResult<E> modelResult, final Integer pageNumber, final Integer pageCapacity) {
         final EntityTree<E> resultTree = build(modelResult.resultType, modelResult.getSortedYieldedPropsInfo(), executionContext.getDomainMetadata().eqlDomainMetadata);
-        
         final EntityHibernateRetrievalQueryProducer queryProducer = mkQueryProducerWithPagination(modelResult.sql, resultTree.getSortedScalars(), modelResult.getParamValues(), pageNumber, pageCapacity);
 
         final Query query = queryProducer.produceHibernateQuery(executionContext.getSession());
@@ -99,6 +100,7 @@ public class EntityContainerFetcher {
         final List<?> res = query.list();
         final Period pd = new Period(st, new DateTime());
         logger.info(format("Query exec duration: %s m %s s %s ms for type [%s].", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), modelResult.resultType.getSimpleName()));
+        
         return entityRawResultConverter.transformFromNativeResult(resultTree, res);
     }
 
@@ -112,7 +114,6 @@ public class EntityContainerFetcher {
 
     private <E extends AbstractEntity<?>> Stream<List<EntityContainer<E>>> streamContainersAsIs(final QueryModelResult<E> modelResult, final Optional<Integer> fetchSize) {
         final EntityTree<E> resultTree = build(modelResult.resultType, modelResult.getSortedYieldedPropsInfo(), executionContext.getDomainMetadata().eqlDomainMetadata);
-
         final EntityHibernateRetrievalQueryProducer queryProducer = mkQueryProducerWithoutPagination(modelResult.sql, resultTree.getSortedScalars(), modelResult.getParamValues());
         final int batchSize = fetchSize.orElse(100);
         final Query query = queryProducer //
@@ -126,10 +127,10 @@ public class EntityContainerFetcher {
                 .map(group -> entityRawResultConverter.transformFromNativeResult(resultTree, group));
     }
 
-    private <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryProcessingModel<E, ?> qem, final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
+    private <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryProcessingModel<E, ?> qem, final DbVersion dbVersion, final IFilter filter, final String username) {
         final TransformationResult<ResultQuery3> tr = transform(qem, filter, username, executionContext.dates(), executionContext.getDomainMetadata().eqlDomainMetadata);
         final ResultQuery3 entQuery3 = tr.item;
-        final String sql = entQuery3.sql(domainMetadataAnalyser.getDbVersion());
+        final String sql = entQuery3.sql(dbVersion);
         return new QueryModelResult<>((Class<E>) entQuery3.resultType, sql, getResultPropsInfos(entQuery3.yields), tr.updatedContext.getParamValues(), qem.fetchModel);
     }
 
