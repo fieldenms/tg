@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.ui.config;
 
-import static ua.com.fielden.platform.companion.PersistentEntitySaver.ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES;
 import static ua.com.fielden.platform.utils.EntityUtils.isConflicting;
 
 import java.util.Map;
@@ -12,12 +11,12 @@ import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.ioc.session.SessionInterceptor;
 
 /**
  * DAO implementation of {@link EntityCentreConfigCo}.
@@ -33,6 +32,8 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 @EntityType(EntityCentreConfig.class)
 public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> implements EntityCentreConfigCo {
     
+    private static final int SAVING_RETRIES_THRESHOULD = 10;
+
     @Inject
     protected EntityCentreConfigDao(final IFilter filter) {
         super(filter);
@@ -67,11 +68,13 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
      * <p>
      * Implementation details:
      * <p>
-     * This method can not have {@link SessionRequired} scope.
-     * This is due to recursive invocation of the same {@link #saveWithoutConflicts(EntityCentreConfig)} method down inside {@link #refetchReapplyAndSaveWithoutConflicts(EntityCentreConfig)}.
-     * The problem lies in {@link OptimisticLockException} which, when actioned, makes transaction inactive internally; that makes impossible to invoke {@link #saveWithoutConflicts(EntityCentreConfig)} method recursively again.
-     * What we need here is granular {@link SessionRequired} scope, so we have {@link #quickSave(EntityCentreConfig)} with {@link SessionRequired} and when {@link OptimisticLockException} occurs, only little granular transaction ({@link #quickSave(EntityCentreConfig)}) makes inactive (and further rollbacks in SessionInterceptor).
-     * Next recursive invocation of {@link #saveWithoutConflicts(EntityCentreConfig)} method will trigger separate independent {@link SessionRequired} scope for nested call {@link #quickSave(EntityCentreConfig)}.
+     * This method can not have {@link SessionRequired} scope. Method {@link #refetchReapplyAndSaveWithoutConflicts(EntityCentreConfig, int, RuntimeException)} can not have {@link SessionRequired} scope too.
+     * This is due to recursive invocation of the same logic down inside {@link #refetchReapplyAndSaveWithoutConflicts(EntityCentreConfig, int, RuntimeException)}.
+     * The problem lies in {@link OptimisticLockException} (or other conflict-based exceptions) which, when actioned, makes transaction inactive internally;
+     *  that makes impossible to invoke {@link #refetchReapplyAndSaveWithoutConflicts(EntityCentreConfig, int, RuntimeException)} method recursively again.
+     * What we need here is granular {@link SessionRequired} scope, so we have {@link #quickSave(EntityCentreConfig)} with {@link SessionRequired} and when {@link OptimisticLockException} occurs,
+     *  only little granular transaction ({@link #quickSave(EntityCentreConfig)}) makes inactive (and further rollbacks in {@link SessionInterceptor}).
+     * Next recursive invocation of {@link #refetchReapplyAndSaveWithoutConflicts(EntityCentreConfig, int, RuntimeException)} method will trigger separate independent {@link SessionRequired} scope for nested call {@link #quickSave(EntityCentreConfig)}.
      */
     @Override
     public Long saveWithoutConflicts(final EntityCentreConfig entity) {
@@ -89,17 +92,13 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
             // in this situation dao saving would have broken transaction, i.e. if some exception would be thrown after saveWithoutConflicts then full rollback would not be performed
             return quickSave(entity); // must be quickSave(entity), not super.quickSave(entity)!
             // Need to repeat saving of entity in case of "self conflict": in a concurrent environment the same user on the same entity centre configuration can trigger multiple concurrent validations with different parameters.
-        } catch (final EntityCompanionException companionException) {
-            if (companionException.getMessage() != null && companionException.getMessage().contains(ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES)) { // conflict could occur for concrete user, miType and surrogate+saveAs name
-                return refetchReapplyAndSaveWithoutConflicts(entity); // repeat the procedure of 'conflict-aware' saving in cases of subsequent conflicts
-            } else {
-                throw companionException;
-            }
-        } catch (final OptimisticLockException optimisticLockException) {
+        } catch (final RuntimeException exception) {
             // Hibernate StaleStateException can occur in PersistentEntitySaver.saveModifiedEntity during session flushing ('session.get().flush();').
             // It is always wrapped into javax.persistence.OptimisticLockException by Hibernate (see ExceptionConverterImpl.wrapStaleStateException for more details).
             // Exactly the same strategy should be used for Hibernate-based conflicts as for TG-based ones.
-            return refetchReapplyAndSaveWithoutConflicts(entity); // repeat the procedure of 'conflict-aware' saving in cases of subsequent conflicts
+            // We catch all exceptions including ConstraintViolationException, EntityAlreadyExists, ObjectNotFoundException caused by saving conflicts.
+            // If the exception is not legit (non-conflict-nature), then it will be rethrown after several retries.
+            return refetchReapplyAndSaveWithoutConflicts(entity, 1 /* first retry */, exception); // repeat the procedure of 'conflict-aware' saving in cases of subsequent conflicts
         }
     }
     
@@ -107,19 +106,30 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
      * Re-fetches <code>entity</code>, re-applies dirty properties from <code>entity</code> against re-fetched instance and saves it.
      * 
      * @param entity
+     * @param retry
+     * @param exception
      * @return
      */
-    private Long refetchReapplyAndSaveWithoutConflicts(final EntityCentreConfig entity) {
+    private Long refetchReapplyAndSaveWithoutConflicts(final EntityCentreConfig entity, final int retry, final RuntimeException exception) {
+        if (retry > SAVING_RETRIES_THRESHOULD) {
+            throw exception;
+        }
         final EntityCentreConfig persistedEntity = findByEntityAndFetch(null, entity);
-        // several properties can be conflicting, e.g. 'configBody' (most cases), 'desc' (rare, but possible), 'preferred' etc.; other properties are the parts of key and will not conflict;
-        // for the case of new entity saving, all props would be dirty, however only some - conflicting
-        for (final MetaProperty<?> prop : entity.getDirtyProperties()) {
-            final String name = prop.getName();
-            if (isConflicting(prop.getValue(), prop.getOriginalValue(), persistedEntity.get(name))) {
-                persistedEntity.set(name, prop.getValue());
+        if (persistedEntity != null) {
+            // several properties can be conflicting, e.g. 'configBody' (most cases), 'desc' (rare, but possible), 'preferred' etc.; other properties are the parts of key and will not conflict;
+            // for the case of new entity saving, all props would be dirty, however only some - conflicting
+            for (final MetaProperty<?> prop : entity.getDirtyProperties()) {
+                final String name = prop.getName();
+                if (isConflicting(prop.getValue(), prop.getOriginalValue(), persistedEntity.get(name))) {
+                    persistedEntity.set(name, prop.getValue());
+                }
             }
         }
-        return saveWithoutConflicts(persistedEntity);
+        try {
+            return quickSave(persistedEntity != null ? persistedEntity : entity.copyTo(new_()));
+        } catch (final RuntimeException nextException) {
+            return refetchReapplyAndSaveWithoutConflicts(entity, retry + 1, nextException); // repeat the procedure of 'conflict-aware' saving in cases of subsequent conflicts
+        }
     }
     
 }
