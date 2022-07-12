@@ -30,6 +30,44 @@ const rightSplitterKey = function (userName, miType) {
     return `${userName}_${miType}_rightSplitterPosition`;
 };
 
+const splitterPositions = function (width, altWidth, splitterPosition, altSplitterPosition, centreWidth, splitterWidth, altInsertionPointPresent) {
+    const positions = [];
+    positions.push(0);
+    positions.push(parseInt(splitterPosition));
+    positions.push(width);
+    if (altInsertionPointPresent) {
+        positions.push(centreWidth - parseInt(altSplitterPosition) -  2 * splitterWidth);
+        positions.push(centreWidth - altWidth - 2 * splitterWidth);
+    }
+    positions.push(centreWidth - (altInsertionPointPresent ?  2 : 1) * splitterWidth);
+    const uniquePositions = [];
+    positions.forEach(pos => {
+        if (uniquePositions.indexOf(pos) < 0) {
+            uniquePositions.push(pos);
+        }
+    });
+    uniquePositions.sort((a, b => a - b));
+    return uniquePositions;
+};
+
+const nextSplitterPos = function (width, altWidth, splitterPos, altSplitterPos, centreWidth, splitterWidth, altInsertionPointPresent) {
+    const positions = splitterPositions(width, altWidth, splitterPos, altSplitterPos, centreWidth, splitterWidth, altInsertionPointPresent);
+    for (let i = 0; i < positions.length; i++) {
+        if (positions[i] > width) {
+            return positions[i];
+        }
+    }
+};
+
+const previousSplitterPos = function (width, altWidth, splitterPos, altSplitterPos, centreWidth, splitterWidth, altInsertionPointPresent) {
+    const positions = splitterPositions(width, altWidth, splitterPos, altSplitterPos, centreWidth, splitterWidth, altInsertionPointPresent);
+    for (let i = positions.length - 1; i >= 0; i--) {
+        if (positions[i] < width) {
+            return positions[i];
+        }
+    }
+};
+
 const template = html`
     <style>
         .tabs {
@@ -246,7 +284,7 @@ Polymer({
         embedded: Boolean,
         discard: Function,
         run: Function,
-        leftSplitterPosition:{
+        leftSplitterPosition: {
             type: String,
             observer: '_leftSplitterPositionChanged'
         },
@@ -395,19 +433,59 @@ Polymer({
 
     // Splitter functionality
     _expandLeftInsertionPoint: function () {
-        this._expandContainer(this.$.leftInsertionPointContainer, this.leftSplitterPosition);
-    },
-
-    _collapseLeftInsertionPoint: function () {
-        this._collapseContainer(this.$.leftInsertionPointContainer);
+        this._expandContainer(this.leftSplitterPosition, this.rightSplitterPosition, this.$.leftSplitter.offsetWidth, 
+            this.leftInsertionPointPresent, this.rightInsertionPointPresent, 
+            this.$.leftInsertionPointContainer, this.$.rightInsertionPointContainer);
     },
 
     _expandRightInsertionPoint: function () {
-        this._expandContainer(this.$.rightInsertionPointContainer, this.rightSplitterPosition);
+        this._expandContainer(this.rightSplitterPosition, this.leftSplitterPosition, this.$.rightSplitter.offsetWidth, 
+            this.rightInsertionPointPresent, this.leftInsertionPointPresent, 
+            this.$.rightInsertionPointContainer, this.$.leftInsertionPointContainer);
+    },
+
+    _expandContainer: function (splitterPosition, altSplitterPosition, splitterWidth, insertionPointPresent, altInsertionPointPresent, insertionPointContainer, altInsertionPointContainer) {
+            const width = insertionPointPresent ? insertionPointContainer.offsetWidth : 0;
+            const altWidth = altInsertionPointPresent ? altInsertionPointContainer.offsetWidth : 0;
+            const centreWidth = this.$.centreResultContainer.offsetWidth;
+            this._convertPosToPx();
+            const nextPos = nextSplitterPos(width, altWidth, splitterPosition, altSplitterPosition, centreWidth, splitterWidth, altInsertionPointPresent);
+            if (altInsertionPointPresent && centreWidth - altWidth - 2 * splitterWidth  < nextPos) {
+                altInsertionPointContainer.style.width = `${centreWidth - nextPos - 2 * splitterWidth}px`;
+            }
+            insertionPointContainer.style.width = `${nextPos}px`;
+            this.notifyResize();
+    },
+
+    _collapseLeftInsertionPoint: function () {
+        this._collapseContainer(this.leftSplitterPosition, this.rightSplitterPosition, this.$.leftSplitter.offsetWidth, 
+            this.leftInsertionPointPresent, this.rightInsertionPointPresent, 
+            this.$.leftInsertionPointContainer, this.$.rightInsertionPointContainer);
     },
 
     _collapseRightInsertionPoint: function () {
-        this._collapseContainer(this.$.rightInsertionPointContainer);
+        this._collapseContainer(this.rightSplitterPosition, this.leftSplitterPosition, this.$.rightSplitter.offsetWidth, 
+            this.rightInsertionPointPresent, this.leftInsertionPointPresent, 
+            this.$.rightInsertionPointContainer, this.$.leftInsertionPointContainer);
+    },
+
+    _collapseContainer: function (splitterPosition, altSplitterPosition, splitterWidth, insertionPointPresent, altInsertionPointPresent, insertionPointContainer, altInsertionPointContainer) {
+        const width = insertionPointPresent ? insertionPointContainer.offsetWidth : 0;
+        const altWidth = altInsertionPointPresent ? altInsertionPointContainer.offsetWidth : 0;
+        const centreWidth = this.$.centreResultContainer.offsetWidth;
+        this._convertPosToPx();
+        const previousPos = previousSplitterPos(width, altWidth, splitterPosition, altSplitterPosition, centreWidth, splitterWidth, altInsertionPointPresent);
+        insertionPointContainer.style.width = `${previousPos}px`;
+        this.notifyResize();
+    },
+
+    _convertPosToPx() {
+        if (this.leftInsertionPointPresent && this.leftSplitterPosition.endsWith('%')) {
+            this.leftSplitterPosition = `${this.leftInsertionPointContainer.offsetWidth}px`;
+        }
+        if (this.rightInsertionPointPresent && this.rightSplitterPosition.endsWith('%')) {
+            this.rightSplitterPosition = `${this.rightInsertionPointContainer.offsetWidth}px`;
+        }
     },
 
     _makeCentreUnselectable: function (e) {
@@ -515,20 +593,6 @@ Polymer({
         insertionPointContainerUpdater(this.$.fantomSplitter.offsetLeft);
         this.$.fantomSplitter.style.removeProperty("display");
         this.$.fantomSplitter.style.removeProperty("left");
-    },
-
-    _expandContainer: function (element) {
-        element.style.removeProperty("display");
-        //TODO this should be revised and adjusted ask @01es.
-        if (element == this.$.rightInsertionPointContainer && this._rightWidth) {
-            this.$.rightInsertionPointContainer.style.width = this._rightWidth;
-        }
-        this.notifyResize();
-    },
-
-    _collapseContainer: function (element) {
-        element.style.display = 'none';
-        this.notifyResize();
     },
 
     _staleCriteriaMessageChanged: function (newValue, oldValue) {
