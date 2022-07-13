@@ -140,7 +140,7 @@ public class SessionInterceptor implements MethodInterceptor {
     /**
      * Logs centre configuration saving exception with its causes without stack traces.
      * This method hides stack traces as it is legitimate to have saving conflicts.
-     * In the case where saving conflict was not resolved and was proliferated further, then most it will be caught/logged by WebUiResourceUtils and will be reported to the user.
+     * In the case where saving conflict was not resolved and was proliferated further, it will be caught/logged by WebUiResourceUtils and will be reported to the user.
      */
     private static void logCentreConfigSavingException(final Throwable ex) {
         LOGGER.warn(ex);
