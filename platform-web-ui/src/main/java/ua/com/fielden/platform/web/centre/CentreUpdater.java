@@ -587,7 +587,7 @@ public class CentreUpdater {
                     loadableConfigurations.remove(new LoadableCentreConfig().setKey(LINK_CONFIG_TITLE)); // exclude 'link' configuration from load dialog if it is present (aka centre 'link' with criteria parameters was loaded at least once)
                     // collect uuids for not inherited from base configurations, aka own save-as configs or inherited from shared
                     final Set<String> notInheritedFromBaseUuids = loadableConfigurations.stream()
-                        .filter(lcc -> !lcc.isInherited())
+                        .filter(lcc -> lcc != null && !lcc.isInherited() && lcc.getConfig() != null)
                         .map(lcc -> lcc.getConfig().getConfigUuid())
                         .collect(toSet());
                     
@@ -607,7 +607,7 @@ public class CentreUpdater {
                         ).stream()
                         .forEach(ecc -> {
                             if (sharingModel.isSharedWith(ecc.getConfigUuid(), user).isSuccessful()) {
-                                final LoadableCentreConfig foundLcc = loadableConfigurations.stream().filter(lcc -> ecc.getConfigUuid().equals(lcc.getConfig().getConfigUuid())).findAny().get();
+                                final LoadableCentreConfig foundLcc = loadableConfigurations.stream().filter(lcc -> lcc.getConfig() != null && ecc.getConfigUuid().equals(lcc.getConfig().getConfigUuid())).findAny().get();
                                 foundLcc.setInherited(true); // ... and make corresponding configuration inherited (from shared) ...
                                 foundLcc.setSharedByMessage(sharingModel.sharedByMessage(ecc.getOwner())); // ... with appropriate domain-specific message indication about that
                                 foundLcc.setSharedBy(ecc.getOwner());
@@ -624,6 +624,7 @@ public class CentreUpdater {
                     
                     // collect uuids for own save-as configurations
                     final Set<String> ownSaveAsUuids = ownLoadableConfigurationsSupplier.get()
+                        .filter(lcc -> lcc != null && lcc.getConfig() != null)
                         .map(lcc -> lcc.getConfig().getConfigUuid()) // all loadable configs always have configUuids present
                         .collect(toSet());
                     
@@ -640,7 +641,7 @@ public class CentreUpdater {
                         // iterate through own loadable configurations and ...
                         ownLoadableConfigurationsSupplier.get().forEach(lcc -> {
                             final Optional<EntityCentreConfig> creatorConfigOpt = savedConfigsWithCreators.stream()
-                                .filter(savedConfig -> savedConfig.getConfigUuid().equals(lcc.getConfig().getConfigUuid())) // savedConfig.getConfigUuid() always present, also lcc.getConfig() / lcc.getConfig().getConfigUuid() are always present too
+                                .filter(savedConfig -> lcc.getConfig() != null && savedConfig.getConfigUuid().equals(lcc.getConfig().getConfigUuid())) // savedConfig.getConfigUuid() always present, also lcc.getConfig() / lcc.getConfig().getConfigUuid() are always present too
                                 .findAny();
                             if (!creatorConfigOpt.isPresent()) { // ... mark orphaned due to upstream config deleted (either base or shared)
                                 lcc.setOrphanedSharingMessage(UPSTREAM_CONFIG_DISCONNECTED_MESSAGE);
@@ -725,9 +726,16 @@ public class CentreUpdater {
             final List<EntityCentreConfig> prefConfigs = getAllPreferredConfigs(user, miType, device, companionFinder);
             prefConfigs.stream().forEach(ecc -> eccCompanion.saveWithoutConflicts(ecc.setPreferred(false)));
             if (saveAsName.isPresent()) {
-                eccCompanion.saveWithoutConflicts( // not used inside other transaction scopes (e.g. CentreConfigLoadActionDao->makePreferredConfig->makePreferred does not have @SessionRequired) -- saveWithoutConflicts can be used
-                    findConfig(miType, user, deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX, eccCompanion)
-                    .setPreferred(true)
+                findConfigOpt(
+                    miType,
+                    user,
+                    deviceSpecific(saveAsSpecific(FRESH_CENTRE_NAME, saveAsName), device) + DIFFERENCES_SUFFIX,
+                    eccCompanion,
+                    fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").with("configUuid").with("dashboardable").with("dashboardableDate").with("dashboardRefreshFrequency").with("runAutomatically").fetchModel()
+                ).ifPresent(ecc ->
+                    eccCompanion.saveWithoutConflicts( // not used inside other transaction scopes (e.g. CentreConfigLoadActionDao->makePreferredConfig->makePreferred does not have @SessionRequired) -- saveWithoutConflicts can be used
+                        ecc.setPreferred(true)
+                    )
                 );
             }
         }

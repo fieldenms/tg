@@ -68,7 +68,7 @@ public class CentreConfigLoadActionDao extends CommonEntityDao<CentreConfigLoadA
                         selectionCrit.updateInheritedFromBaseCentre(saveAsNameToLoad);
                     } else {
                         // if configuration being loaded is inherited from shared we need to update it from upstream changes
-                        return t2(selectionCrit.updateInheritedFromSharedCentre(saveAsNameToLoad, centreConfig.getConfig().getConfigUuid()), true);
+                        return t2(selectionCrit.updateInheritedFromSharedCentre(saveAsNameToLoad, centreConfig.getConfig() != null ? centreConfig.getConfig().getConfigUuid() : null), true);
                     }
                 }
                 return t2(of(saveAsNameToLoad), false);

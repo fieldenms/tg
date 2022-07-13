@@ -40,8 +40,8 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
-import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
+import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
@@ -138,7 +138,7 @@ public class CentreResource<CRITERIA_TYPE extends AbstractEntity<?>> extends Abs
                     makePreferred(user, miType, saveAsName, device(), companionFinder, webUiConfig);
                     actualSaveAsName = saveAsName;
                 } else { // inherited from shared
-                    final Optional<EntityCentreConfig> upstreamConfig = updateInheritedFromShared(loadableConfig.get().getConfig().getConfigUuid(), miType, device(), saveAsName, user, eccCompanion, empty());
+                    final Optional<EntityCentreConfig> upstreamConfig = updateInheritedFromShared(loadableConfig.get().getConfig() != null ? loadableConfig.get().getConfig().getConfigUuid() : null, miType, device(), saveAsName, user, eccCompanion, empty());
                     if (upstreamConfig.isPresent()) {
                         actualSaveAsName = of(obtainTitleFrom(upstreamConfig.get().getTitle(), SAVED_CENTRE_NAME, device()));
                         newFreshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);

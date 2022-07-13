@@ -208,15 +208,15 @@ public class CentreUpdaterUtils extends CentreUpdater {
     /**
      * Finds {@link EntityCentreConfig} instance to be sufficient for changing 'preferred' / 'title' / 'desc' / 'configUuid' properties.
      * 
-     * @param menuItemType
+     * @param miType
      * @param user
      * @param deviceSpecificDiffName
      * @param eccCompanion
      * @return
      */
-    protected static EntityCentreConfig findConfig(final Class<?> menuItemType, final User user, final String deviceSpecificDiffName, final EntityCentreConfigCo eccCompanion) {
+    protected static EntityCentreConfig findConfig(final Class<?> miType, final User user, final String deviceSpecificDiffName, final EntityCentreConfigCo eccCompanion) {
         return eccCompanion.getEntity(
-            from(modelFor(user, menuItemType.getName(), deviceSpecificDiffName)).with(fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").with("configUuid").with("dashboardable").with("dashboardableDate").with("dashboardRefreshFrequency").with("runAutomatically").fetchModel()).model()
+            from(modelFor(user, miType.getName(), deviceSpecificDiffName)).with(fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").with("configUuid").with("dashboardable").with("dashboardableDate").with("dashboardRefreshFrequency").with("runAutomatically").fetchModel()).model()
         );
     }
     
