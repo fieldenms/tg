@@ -15,6 +15,7 @@ import ua.com.fielden.platform.entity.query.DbVersion;
  * 
  */
 public interface EntityCentreConfigCo extends IEntityDao<EntityCentreConfig> {
+    public static final String SAVE_WITHOUT_CONFLICTS = "saveWithoutConflicts";
     
     /**
      * Saves the entity (quickly) in repeating manner until the process is successfully concluded.<br>
