@@ -42,7 +42,7 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
         final EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
         config.setDesc("desc");
         config.setConfigBody(new byte[] { 1, 2, 3 });
-        dao.saveWithoutConflicts(config); // conflicts not possible
+        dao.saveWithoutConflicts(config); // no conflicts should appear -- initial saving
         
         final EntityResultQueryModel<EntityCentreConfig> query = select(EntityCentreConfig.class).model();
         final OrderingModel orderBy = orderBy().prop(AbstractEntity.ID).asc().model();
@@ -56,11 +56,11 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
         EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
         config.setConfigBody(new byte[] { 1, 2, 3 });
         config.setDesc("desc");
-        config = saveWithoutConflicts(config); // conflicts not possible
+        config = saveWithoutConflicts(config); // no conflicts should appear -- initial saving
         
         assertEquals("Incorrect version.", Long.valueOf("0"), config.getVersion());
         config.setConfigBody(new byte[] { 1, 2, 3, 4 });
-        config = saveWithoutConflicts(config); // conflicts not possible
+        config = saveWithoutConflicts(config); // no conflicts should appear
         assertEquals("Incorrect version.", Long.valueOf("1"), config.getVersion());
         
         final EntityCentreConfig fromDb = dao.findById(config.getId());
@@ -82,7 +82,7 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
         final EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
         config.setConfigBody(new byte[] { 0 });
         config.setDesc("desc0");
-        dao.saveWithoutConflicts(config); // no conflict should appear -- initial saving
+        dao.saveWithoutConflicts(config); // no conflicts should appear -- initial saving
         assertEquals("Incorrect version.", Long.valueOf("0"), config.getVersion());
         
         // |----------------| first
@@ -110,7 +110,7 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
         final EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
         config.setConfigBody(new byte[] { 0 });
         config.setDesc("desc0");
-        dao.saveWithoutConflicts(config); // no conflict should appear -- initial saving
+        dao.saveWithoutConflicts(config); // no conflicts should appear -- initial saving
         assertEquals("Incorrect version.", Long.valueOf("0"), config.getVersion());
         
         // |----------------| first
@@ -138,7 +138,7 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
         final EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
         config.setConfigBody(new byte[] { 0 });
         config.setDesc("desc0");
-        dao.saveWithoutConflicts(config); // no conflict should appear -- initial saving
+        dao.saveWithoutConflicts(config); // no conflicts should appear -- initial saving
         assertEquals("Incorrect version.", Long.valueOf("0"), config.getVersion());
         
         // |----------------------------| first
@@ -166,7 +166,7 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
         final EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
         config.setConfigBody(new byte[] { 0 });
         config.setDesc("desc0");
-        dao.saveWithoutConflicts(config); // no conflict should appear -- initial saving
+        dao.saveWithoutConflicts(config); // no conflicts should appear -- initial saving
         assertEquals("Incorrect version.", Long.valueOf("0"), config.getVersion());
         
         // |----------------| first

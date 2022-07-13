@@ -150,7 +150,7 @@ public class SessionInterceptor implements MethodInterceptor {
 
     private Exception completeTransactionWithError(final Session session, final Transaction tr, final Throwable ex) {
         final String warningMessage = "Transaction completed (rolled back) with error.";
-        if (of(ex.getStackTrace()).anyMatch(l -> SAVE_WITHOUT_CONFLICTS.equals(l.getMethodName()))) { // only consider the exception as centre-config-saving-related if there is 'EntityCentreConfigCo.saveWithoutConflicts' method in the stack trace
+        if (of(ex.getStackTrace()).anyMatch(elem -> SAVE_WITHOUT_CONFLICTS.equals(elem.getMethodName()))) { // only consider the exception as centre-config-saving-related if there is 'EntityCentreConfigCo.saveWithoutConflicts' method in the stack trace
             LOGGER.warn(warningMessage);
             logCentreConfigSavingException(ex);
         } else {
