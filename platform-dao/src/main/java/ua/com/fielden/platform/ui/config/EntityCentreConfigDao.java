@@ -78,15 +78,16 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
     @Override
     public Long saveWithoutConflicts(final EntityCentreConfig entity) {
         try {
-            // we allow nested transaction scopes here intentionally (quickSave allows it);
+            // we allow nested transaction scope here intentionally (quickSave allows it);
             // i.e. there will be rollbacked outer transaction in case of saving conflicts in some rare combinations, but no exception about disallowed nested transaction;
             // the only possible existing combination (very unlikely) is as following:
-            // 1. multiple @SessionRequired dao savings with ICriteriaEntityRestorer restoration occur simultaneously for the same user;
-            // updateDifferences
-            //   updateCentre
-            //     createCriteriaEntityForPaginating
-            //       createCriteriaEntityForContext
-            //         restoreCriteriaEntity
+            // 1. multiple @SessionRequired dao savings with ICriteriaEntityRestorer restoration occur simultaneously for the same user; stack of calls:
+            // saveWithoutConflicts (EntityCentreConfigDao)
+            //   updateDifferences (CentreUpdater)
+            //     updateCentre (CentreUpdater)
+            //       createCriteriaEntityForPaginating (CentreResourceUtils)
+            //         createCriteriaEntityForContext (CentreResourceUtils)
+            //           restoreCriteriaEntity (CriteriaEntityRestorer)
             // 2. somehow FRESH centre configuration was not persisted earlier (extremely unlikely, because action would not be possible to open -- need loaded entity centre configuration on the client);
             // in this situation dao saving would have broken transaction, i.e. if some exception would be thrown after saveWithoutConflicts then full rollback would not be performed
             return quickSave(entity); // must be quickSave(entity), not super.quickSave(entity)!
