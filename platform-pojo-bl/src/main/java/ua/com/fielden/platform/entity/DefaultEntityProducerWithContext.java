@@ -15,6 +15,7 @@ import java.util.Optional;
 import ua.com.fielden.platform.companion.IEntityReader;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.utils.EntityRestorationUtils;
 
@@ -196,6 +197,19 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
     }
 
     /**
+     * The same as {@link #refetch(Long, Class, String), but accepting an argument of type {@link IConvertableToPath} to represent a property.
+     *
+     * @param <M>
+     * @param id
+     * @param entityType
+     * @param property
+     * @return
+     */
+    protected final <M extends AbstractEntity<?>> M refetch(final Long id, final Class<M> entityType, final IConvertableToPath property) {
+        return refetch(id, entityType, property.toPath());
+    }
+
+    /**
      * Re-fetches {@code entity} using {@code property}'s fetch provider for the entity type behind this producer.
      * Returns uninstrumented instance.
      *
@@ -204,6 +218,18 @@ public class DefaultEntityProducerWithContext<T extends AbstractEntity<?>> imple
      */
     protected final <M extends AbstractEntity<?>> M refetch(final M entity, final String property) {
         return refetch(entity.getId(), (Class<M>) entity.getType(), property);
+    }
+
+    /**
+     * The same as {@link #refetch(AbstractEntity, String)}, but accepting an argument of type {@link IConvertableToPath} to represent a property.
+     *
+     * @param <M>
+     * @param entity
+     * @param property
+     * @return
+     */
+    protected final <M extends AbstractEntity<?>> M refetch(final M entity, final IConvertableToPath property) {
+        return refetch(entity, property.toPath());
     }
 
     /**

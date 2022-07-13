@@ -11,6 +11,7 @@ import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 /**
  * Class for collecting all interfaces, which are part of Entity Query
@@ -155,6 +156,8 @@ public interface EntityQueryProgressiveInterfaces {
 		 * @return
 		 */
 		T prop(final Enum<?> propertyName);
+		
+		T prop(final IConvertableToPath propertyName);
 
 		/**
 		 * External property (property from master query(ies).
@@ -169,6 +172,8 @@ public interface EntityQueryProgressiveInterfaces {
 		 * @return
 		 */
 		T extProp(final Enum<?> propertyName);
+		
+		T extProp(final IConvertableToPath propertyName);
 
 		/**
 		 * Value.
@@ -257,6 +262,8 @@ public interface EntityQueryProgressiveInterfaces {
 	interface IMultipleOperand<T, ET extends AbstractEntity<?>> //
 			extends ISingleOperand<T, ET> {
 		T anyOfProps(final String... propertyNames);
+		
+		T anyOfProps(final IConvertableToPath... propertyNames);
 
 		T anyOfValues(final Object... values);
 
@@ -274,6 +281,8 @@ public interface EntityQueryProgressiveInterfaces {
 		T anyOfExpressions(final ExpressionModel... Expressions);
 
 		T allOfProps(final String... propertyNames);
+		
+		T allOfProps(final IConvertableToPath... propertyNames);
 
 		T allOfValues(final Object... values);
 
@@ -374,6 +383,8 @@ public interface EntityQueryProgressiveInterfaces {
 		<E extends Object> T values(final E... values);
 
 		T props(final String... properties);
+		
+		T props(final IConvertableToPath... properties);
 
 		T params(final String... paramNames);
 

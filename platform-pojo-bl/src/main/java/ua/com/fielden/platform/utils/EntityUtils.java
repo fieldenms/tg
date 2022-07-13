@@ -8,9 +8,9 @@ import static java.util.stream.Stream.concat;
 import static java.util.stream.Stream.empty;
 import static java.util.stream.Stream.of;
 import static org.apache.commons.lang.StringUtils.isEmpty;
-import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.apache.commons.lang.StringUtils.lastIndexOf;
 import static org.apache.commons.lang.StringUtils.length;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
@@ -80,6 +80,7 @@ import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -1212,6 +1213,19 @@ public class EntityUtils {
     }
 
     /**
+     * The same as {@link #fetchEntityForPropOf(String, IEntityReader, Object...)}, but accepting {@link IConvertableToPath} to represent a property a property.
+     *
+     * @param <T>
+     * @param propName
+     * @param coOther
+     * @param keyValues
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final IConvertableToPath propName, final IEntityReader<?> coOther, final Object... keyValues) {
+        return fetchEntityForPropOf(propName.toPath(), coOther, keyValues);
+    }
+
+    /**
      * A convenient method to fetch using id an optional instance of entity,
      * which is intended to be used to populate a value of the specified
      * property of some other entity, using the fetch model as defined by the
@@ -1253,6 +1267,19 @@ public class EntityUtils {
      */
     public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final T instance, final String propName, final IEntityReader<?> coOther) {
         return fetchEntityForPropOf(instance.getId(), propName, coOther);
+    }
+
+    /**
+     * The same as {@link #fetchEntityForPropOf(AbstractEntity, String, IEntityReader)}, but accepting an argument of type {@link IConvertableToPath} to represent a property.
+     *
+     * @param <T>
+     * @param instance
+     * @param propPath
+     * @param coOther
+     * @return
+     */
+    public static <T extends AbstractEntity<?>> Optional<T> fetchEntityForPropOf(final T instance, final IConvertableToPath propPath, final IEntityReader<?> coOther) {
+        return fetchEntityForPropOf(instance, propPath.toPath(), coOther);
     }
 
     /**

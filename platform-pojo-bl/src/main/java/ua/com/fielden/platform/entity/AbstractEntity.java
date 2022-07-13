@@ -88,6 +88,7 @@ import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.EntityMetadata;
 import ua.com.fielden.platform.reflection.Finder;
@@ -553,6 +554,16 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     }
 
     /**
+     * Dynamic getter for accessing property value.
+     *
+     * @param propertyName
+     * @return
+     */
+    public <T> T get(final IConvertableToPath propertyName) {
+        return get(propertyName.toPath());
+    }
+
+    /**
      * Dynamic setter for setting property value.
      *
      * @param propertyName
@@ -587,6 +598,16 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                 throw new EntityException(format("Error setting value [%s] into property [%s] for entity [%s]@[%s].", value, propertyName, this, getType().getName()), e);
             }
         }
+    }
+
+    /**
+     * Dynamic setter for setting property value.
+     *
+     * @param propertyName
+     * @param value
+     */
+    public AbstractEntity<K> set(final IConvertableToPath propertyName, final Object value) {
+        return set(propertyName.toPath(), value);
     }
 
     /**
@@ -1020,6 +1041,17 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     }
 
     /**
+     * Guarantees to return an instance of {@link MetaProperty} for the specified property name if it exists.
+     * Otherwise, throws an exception.
+     *
+     * @param name
+     * @return
+     */
+    public final <T> MetaProperty<T> getProperty(final IConvertableToPath name) {
+        return getProperty(name.toPath());
+    }
+
+    /**
      * Returns an empty optional if the specified name represents a proxied property.
      * Throws {@link EntityException} in case of uninstrumeted entity.
      *
@@ -1029,6 +1061,17 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     public final <T> java.util.Optional<MetaProperty<T>> getPropertyIfNotProxy(final String name) {
         final MetaProperty<T> prop = getProperty(name);
         return prop.isProxy() ? empty() : of(prop);
+    }
+
+    /**
+     * Returns an empty optional if the specified name represents a proxied property.
+     * Throws {@link EntityException} in case of uninstrumeted entity.
+     *
+     * @param name
+     * @return
+     */
+    public final <T> java.util.Optional<MetaProperty<T>> getPropertyIfNotProxy(final IConvertableToPath name) {
+        return getPropertyIfNotProxy(name.toPath());
     }
 
     /**
@@ -1044,6 +1087,17 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             return mp != null ? of(mp) : empty();
         }
         return empty();
+    }
+
+    /**
+     * A convenient alternative to {@link #getProperty(String)} that returns an optional value with either an instance of {@link MetaProperty} or without.
+     * An empty optional value indicates that either this entity instance was not instrumented or the specified property does not belong to this entity.
+     *
+     * @param name
+     * @return
+     */
+    public final java.util.Optional<MetaProperty<?>> getPropertyOptionally(final IConvertableToPath name) {
+        return getPropertyOptionally(name.toPath());
     }
 
     /**
@@ -1254,6 +1308,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         return getProperty(propertyName).getType();
     }
 
+    public Class<?> getPropertyType(final IConvertableToPath propertyName) {
+        return getPropertyType(propertyName.toPath());
+    }
+
     /**
      * Restores state of all properties to original, which includes setting original values and removal of all validation errors.
      */
@@ -1357,6 +1415,15 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             throw new EntityException(format("The specified property name [%s] does not represent a valid property for type [%s].", preferredProperty, getType().getName()));
         }
         this.preferredProperty = preferredProperty;
+    }
+
+    /**
+     * Sets the preferred property.
+     *
+     * @param preferredProperty
+     */
+    public void setPreferredProperty(final IConvertableToPath preferredProperty) {
+        setPreferredProperty(preferredProperty.toPath());
     }
 
     /**

@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.mail;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static java.lang.String.format;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
@@ -144,7 +145,8 @@ public class SmtpEmailSender {
             auth = null;
         }
         props.put("mail.smtp.host", host);
-        return Session.getDefaultInstance(props, auth);
+        logger.debug(format("SMTP host is: [%s]", host));
+        return Session.getInstance(props, auth);
     }
 
     /**
