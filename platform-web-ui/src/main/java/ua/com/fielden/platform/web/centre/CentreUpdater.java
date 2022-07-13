@@ -673,10 +673,10 @@ public class CentreUpdater {
     }
     
     /**
-     * Returns {@link List} of preferred {@link EntityCentreConfig} configurations for specified <code>user</code>, <code>device</code> and concrete 
-     * <code>miType</code>'ed menu item.
+     * Returns {@link List} of preferred {@link EntityCentreConfig} configurations for specified {@code user}, {@code device} and concrete
+     * {@code miType}'ed menu item.
      * <p>
-     * Please note that by design this stream should return single or none instance.
+     * Please note that by design this list should return single or none instance.
      * 
      * @param user
      * @param miType

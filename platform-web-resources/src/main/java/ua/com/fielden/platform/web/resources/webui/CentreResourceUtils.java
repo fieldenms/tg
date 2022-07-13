@@ -263,6 +263,16 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
 
     /**
+     * A predicate to determine whether {@code customObject} represents action with 'retrieveAll' option.
+     *
+     * @param customObject
+     * @return
+     */
+    public static boolean isRetrieveAll(final Map<String, Object> customObject) {
+        return Boolean.TRUE.equals(customObject.get("@@retrieveAll"));
+    }
+
+    /**
      * A predicate to determine whether {@code customObject} represents action {@code Refresh}.
      *
      * @param customObject
@@ -314,7 +324,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         //  (the only way to make FRESH pageCapacity different from PREVIOUSLY_RUN is to change it using Customise Columns and press DISCARD on selection criteria).
         final String action = (String) customObject.get("@@action");
         final Integer pageNumber = isRunning(customObject) ? 0 : (Integer) customObject.get("@@pageNumber");
-        final boolean retrieveAll = (Boolean) customObject.get("@@retrieveAll");
+        final boolean retrieveAll = isRetrieveAll(customObject);
         if (isRunning(customObject)) {
             final Either<IPage<T>, Pair<List<T>, T>> resultData = run(retrieveAll, updatedPreviouslyRunCriteriaEntity);
             if (resultData.isLeft()) {

@@ -31,7 +31,6 @@ import ua.com.fielden.platform.ioc.session.SessionInterceptor;
  */
 @EntityType(EntityCentreConfig.class)
 public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> implements EntityCentreConfigCo {
-    
     private static final int SAVING_RETRIES_THRESHOULD = 10;
 
     @Inject
