@@ -220,7 +220,7 @@ const template = html`
             </div>
             <div id="leftSplitter" class="splitter" hidden$="[[!leftInsertionPointPresent]]" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable" on-track="_changeLeftInsertionPointSize">
                 <div class="arrow-left" tooltip-text="Collapse" on-tap="_collapseLeftInsertionPoint"></div>
-                <div class="arrow-right" tooltip-text="Expand to default width" on-tap="_expandLeftInsertionPoint"></div>
+                <div class="arrow-right" tooltip-text="Expand" on-tap="_expandLeftInsertionPoint"></div>
             </div>
             <div id="centreInsertionPointContainer" class="insertion-point-slot layout vertical flex" style="min-width:0">
                 <slot id="topInsertionPointContent" name="top-insertion-point"></slot>
@@ -228,7 +228,7 @@ const template = html`
                 <slot id="bottomInsertionPointContent" name="bottom-insertion-point"></slot>
             </div>
             <div id="rightSplitter" class="splitter" hidden$="[[!rightInsertionPointPresent]]" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable" on-track="_changeRightInsertionPointSize">
-                <div class="arrow-left" tooltip-text="Expand to default width" on-tap="_expandRightInsertionPoint"></div>
+                <div class="arrow-left" tooltip-text="Expand" on-tap="_expandRightInsertionPoint"></div>
                 <div class="arrow-right" tooltip-text="Collapse" on-tap="_collapseRightInsertionPoint"></div>
             </div>
             <div id="rightInsertionPointContainer" class="insertion-point-slot layout vertical">
