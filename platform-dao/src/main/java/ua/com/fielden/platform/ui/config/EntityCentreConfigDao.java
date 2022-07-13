@@ -93,10 +93,10 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
             return quickSave(entity); // must be quickSave(entity), not super.quickSave(entity)!
             // Need to repeat saving of entity in case of "self conflict": in a concurrent environment the same user on the same entity centre configuration can trigger multiple concurrent validations with different parameters.
         } catch (final RuntimeException exception) {
-            // Hibernate StaleStateException can occur in PersistentEntitySaver.saveModifiedEntity during session flushing ('session.get().flush();').
-            // It is always wrapped into javax.persistence.OptimisticLockException by Hibernate (see ExceptionConverterImpl.wrapStaleStateException for more details).
+            // Hibernate StaleStateException/StaleObjectStateException can occur in PersistentEntitySaver.saveModifiedEntity during session flushing ('session.get().flush();').
+            // It is always wrapped into javax.persistence.OptimisticLockException by Hibernate (+LockAcquisitionException in modern TG); see ExceptionConverterImpl.wrapStaleStateException for more details.
             // Exactly the same strategy should be used for Hibernate-based conflicts as for TG-based ones.
-            // We catch all exceptions including ConstraintViolationException, EntityAlreadyExists, ObjectNotFoundException caused by saving conflicts.
+            // We catch all exceptions including EntityCompanionException, [PersistenceException, ConstraintViolationException, SQLServerException], EntityAlreadyExists, ObjectNotFoundException caused by saving conflicts.
             // If the exception is not legit (non-conflict-nature), then it will be rethrown after several retries.
             return refetchReapplyAndSaveWithoutConflicts(entity, 1 /* first retry */, exception); // repeat the procedure of 'conflict-aware' saving in cases of subsequent conflicts
         }
@@ -115,6 +115,7 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
             throw exception;
         }
         final EntityCentreConfig persistedEntity = findByEntityAndFetch(null, entity);
+        final EntityCentreConfig entityToSave;
         if (persistedEntity != null) {
             // several properties can be conflicting, e.g. 'configBody' (most cases), 'desc' (rare, but possible), 'preferred' etc.; other properties are the parts of key and will not conflict;
             // for the case of new entity saving, all props would be dirty, however only some - conflicting
@@ -124,11 +125,14 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
                     persistedEntity.set(name, prop.getValue());
                 }
             }
+            entityToSave = persistedEntity;
+        } else {
+            entityToSave = entity.copyTo(new_());
         }
         try {
-            return quickSave(persistedEntity != null ? persistedEntity : entity.copyTo(new_()));
+            return quickSave(entityToSave);
         } catch (final RuntimeException nextException) {
-            return refetchReapplyAndSaveWithoutConflicts(entity, retry + 1, nextException); // repeat the procedure of 'conflict-aware' saving in cases of subsequent conflicts
+            return refetchReapplyAndSaveWithoutConflicts(entityToSave, retry + 1, nextException); // repeat the procedure of 'conflict-aware' saving in cases of subsequent conflicts
         }
     }
     
