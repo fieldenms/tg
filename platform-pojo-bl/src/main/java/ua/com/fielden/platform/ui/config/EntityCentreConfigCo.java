@@ -8,12 +8,14 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 /**
  * Companion object for entity {@link EntityCentreConfig}.
  * <p>
- * Please, do not use standard {@link #save(EntityCentreConfig)} method in client code, use instead the methods below, deciding whether graceful conflict resolution is needed.
+ * Please, do not use standard {@link #save(EntityCentreConfig)} / {@link #quickSave(EntityCentreConfig)} methods in client code.
+ * Use {@link #saveWithoutConflicts} method instead (for graceful conflict resolution).
  * 
  * @author TG Team
  * 
  */
 public interface EntityCentreConfigCo extends IEntityDao<EntityCentreConfig> {
+    public static final String SAVE_WITHOUT_CONFLICTS = "saveWithoutConflicts";
     
     /**
      * Saves the entity (quickly) in repeating manner until the process is successfully concluded.<br>
@@ -25,14 +27,6 @@ public interface EntityCentreConfigCo extends IEntityDao<EntityCentreConfig> {
      * @return
      */
     Long saveWithoutConflicts(final EntityCentreConfig entity);
-    
-    /**
-     * Saves the entity (quickly) in a regular manner with conflict check. Can be nested inside other transaction scopes.
-     * 
-     * @param entity
-     * @return
-     */
-    Long saveWithConflicts(final EntityCentreConfig entity);
     
     /**
      * Runs function {@code fun} with the {@link DbVersion} as the argument.
