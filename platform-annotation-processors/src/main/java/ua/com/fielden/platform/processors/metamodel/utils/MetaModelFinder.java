@@ -13,7 +13,6 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
-import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.processors.metamodel.MetaModelConstants;
 import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
@@ -66,12 +65,18 @@ public class MetaModelFinder {
                 .collect(Collectors.toSet());
     }
     
+    /**
+     * Finds all methods of a meta-model that model properties of the underlying entity.
+     * @param mme the target meta-model
+     * @param typeUtils an instance of {@link Types} for analyzing the meta-model
+     * @return a set of methods that model properties of the underlying entity
+     */
     public static Set<ExecutableElement> findPropertyMethods(final MetaModelElement mme, final Types typeUtils) {
         return ElementFinder.findMethods(mme.getTypeElement()).stream()
-                .filter(el -> ElementFinder.isSubtype(el.getReturnType(), IConvertableToPath.class, typeUtils))
+                .filter(el -> isPropertyMetaModelMethod(el) || isEntityMetaModelMethod(el, typeUtils))
                 .collect(Collectors.toSet());
     }
-
+    
     /**
      * Returns a set of meta-model elements for each field that is of type {@code Supplier<? extends EntityMetaModel>}.
      * @param mme
@@ -91,20 +96,22 @@ public class MetaModelFinder {
                 .collect(Collectors.toSet());
     }
 
+    /**
+     * Tests whether a given meta-model method metamodels a property of a non-metamodeled type.
+     * @param method
+     * @return true if the method's return type is {@link PropertyMetaModel}, false otherwise
+     */
     public static boolean isPropertyMetaModelMethod(final ExecutableElement method) {
         return ElementFinder.isMethodReturnType(method, PropertyMetaModel.class);
     }
 
-    public static boolean isEntityMetaModelMethod(final ExecutableElement method) {
-        final TypeMirror methodType = method.asType();
-        final TypeKind methodTypeKind = methodType.getKind();
-
-        if (TypeKind.DECLARED == methodTypeKind) {
-            final TypeElement methodTypeElement = (TypeElement) ((DeclaredType) method.asType()).asElement();
-            return ElementFinder.doesExtend(methodTypeElement, EntityMetaModel.class);
-        } else {
-            return false;
-        }
+    /**
+     * Tests whether a given meta-model method metamodels a property of a metamodeled type.
+     * @param method
+     * @return true if the method's return type is a subtype of {@link EntityMetaModel}, false otherwise
+     */
+    public static boolean isEntityMetaModelMethod(final ExecutableElement method, final Types typeUtils) {
+        return ElementFinder.isSubtype(method.getReturnType(), EntityMetaModel.class, typeUtils);
     }
     
     public static boolean isSameMetaModel(final MetaModelConcept mmc, final MetaModelElement mme) {
