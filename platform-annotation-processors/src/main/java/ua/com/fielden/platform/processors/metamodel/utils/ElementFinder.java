@@ -454,7 +454,10 @@ public class ElementFinder {
         if (equals((TypeElement) ((DeclaredType) typeMirror).asElement(), type)) {
             return true;
         }
-        return typeUtils.directSupertypes(typeMirror).stream()
-            .anyMatch(tm -> equals((TypeElement) ((DeclaredType) tm).asElement(), type));
+        final List<? extends TypeMirror> directSupertypes = typeUtils.directSupertypes(typeMirror);
+        if (directSupertypes.isEmpty()) {
+            return false;
+        }
+        return directSupertypes.stream().anyMatch(tm -> isSubtype(tm, type, typeUtils));
     }
 }
