@@ -41,6 +41,7 @@ import javax.tools.ForwardingJavaFileManager;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaCompiler.CompilationTask;
 import javax.tools.JavaFileManager;
+import javax.tools.JavaFileManager.Location;
 import javax.tools.JavaFileObject;
 import javax.tools.JavaFileObject.Kind;
 import javax.tools.SimpleJavaFileObject;
@@ -131,10 +132,8 @@ public class MetaModelStructureTest {
     // ============================ HELPER METHODS ============================
     
     private static List<JavaFileObject> getTestEntities() {
-        final ClassLoader scl = ClassLoader.getSystemClassLoader();
         final String pkgNameSlashed = StringUtils.replaceChars(TEST_ENTITIES_PKG_NAME, '.', '/');
-        final URL entitiesPkgUrl = scl.getResource(pkgNameSlashed);
-        // assume that test entities package exists
+        final URL entitiesPkgUrl = ClassLoader.getSystemResource(pkgNameSlashed);
         if (entitiesPkgUrl == null) {
             // What action should be taken if the package with test entities wasn't found?
             // Should this throw a runtime exception?
@@ -161,10 +160,10 @@ public class MetaModelStructureTest {
      * @author TG Team
      */
     private final static class CompilationRule implements TestRule {
-        private static final JavaFileObject DUMMY = JavaFileObjects.forSourceLines("Dummy", "final class Dummy {}");
+        private static final JavaFileObject DUMMY = InMemoryJavaFileObjects.createJavaSource("Dummy", "final class Dummy {}");
 
-        private Collection<? extends JavaFileObject> javaSources = List.of(DUMMY);
-        private Optional<Processor> processor = Optional.empty();
+        private Collection<? extends JavaFileObject> javaSources;
+        private Optional<Processor> processor;
         private Elements elements;
         private Types types;
 
@@ -175,7 +174,7 @@ public class MetaModelStructureTest {
          * @param processor annotation processor to use during compilation
          */
         public CompilationRule(final Collection<? extends JavaFileObject> javaSources, final Processor processor) {
-            this.javaSources = javaSources;
+            this.javaSources = javaSources.isEmpty() ? List.of(DUMMY) : javaSources;
             this.processor = Optional.ofNullable(processor);
         }
 
@@ -271,135 +270,148 @@ public class MetaModelStructureTest {
                 }
             }
         }
+    }
 
-        /**
-         * Implementation of {@link JavaFileManager} that stores generated java sources in memory and provides access to retrieve them.
-         * <p>
-         * Note: this file manager provides access to java sources exclusively (i.e. {@link JavaFileObject} instances with {@code kind ==} {@link Kind.SOURCE})
-         * 
-         * @author TG Team
-         */
-        private static final class InMemoryJavaFileManager extends ForwardingJavaFileManager<StandardJavaFileManager> {
-            private final Map<URI, JavaFileObject> generatedJavaSources = new HashMap<>();
+    /**
+     * Implementation of {@link JavaFileManager} that stores generated java sources in memory and provides access to retrieve them.
+     * <p>
+     * Note: this file manager provides access to java sources exclusively (i.e. {@link JavaFileObject} instances with {@code kind ==} {@link Kind.SOURCE})
+     * 
+     * @author TG Team
+     */
+    private static final class InMemoryJavaFileManager extends ForwardingJavaFileManager<StandardJavaFileManager> {
+        private final Map<URI, JavaFileObject> generatedJavaSources = new HashMap<>();
 
-            private static URI uriForJavaFileObject(final Location location, final String className, final Kind kind) {
-                return URI.create(format("memory:///%s/%s", location.getName(), className.replace('.', '/') + kind.extension));
+        InMemoryJavaFileManager(StandardJavaFileManager fileManager) {
+            super(fileManager);
+        }
+
+        @Override
+        public JavaFileObject getJavaFileForOutput(Location location, String className, final Kind kind, FileObject sibling) throws IOException {
+            final URI uri = InMemoryJavaFileObjects.uriForJavaFileObject(location, className, kind);
+            final InMemoryJavaFileObject jfo = new InMemoryJavaFileObject(uri, kind);
+            if (kind == Kind.SOURCE) {
+                generatedJavaSources.put(uri, jfo);
             }
+            return jfo;
+        }
 
-            InMemoryJavaFileManager(StandardJavaFileManager fileManager) {
-                super(fileManager);
+        @Override
+        public JavaFileObject getJavaFileForInput(Location location, String className, Kind kind) throws IOException {
+            if (location.isOutputLocation() && kind == Kind.SOURCE) {
+                return generatedJavaSources.get(InMemoryJavaFileObjects.uriForJavaFileObject(location, className, kind));
             }
+            return super.getJavaFileForInput(location, className, kind);
+        }
 
-            @Override
-            public JavaFileObject getJavaFileForOutput(Location location, String className, final Kind kind, FileObject sibling) throws IOException {
-                final URI uri = uriForJavaFileObject(location, className, kind);
-                final InMemoryJavaFileObject jfo = new InMemoryJavaFileObject(uri, kind);
-                if (kind == Kind.SOURCE) {
-                    generatedJavaSources.put(uri, jfo);
-                }
-                return jfo;
+        public List<JavaFileObject> getGeneratedSources() {
+            return List.copyOf(generatedJavaSources.values());
+        }
+    }
+
+    /**
+     * Implementation of {@link JavaFileObject} that is stored in memory.
+     * <p>
+     * Based on {@link com.google.testing.compile.InMemoryJavaFileManager.InMemoryJavaFileObject}.
+     * 
+     * @author TG Team
+     */
+    private static final class InMemoryJavaFileObject extends SimpleJavaFileObject {
+        private long lastModified = 0L;
+        private Optional<ByteSource> data = Optional.empty();
+
+        InMemoryJavaFileObject(final URI uri, final Kind kind) {
+            super(uri, kind);
+        }
+
+        InMemoryJavaFileObject(final URI uri, final Kind kind, final String source) {
+            super(uri, kind);
+            this.data = Optional.of(ByteSource.wrap(source.getBytes()));
+            this.lastModified = System.currentTimeMillis();
+        }
+
+        @Override
+        public InputStream openInputStream() throws IOException {
+            if (data.isPresent()) {
+                return data.get().openStream();
+            } else {
+                throw new FileNotFoundException();
             }
+        }
 
-            @Override
-            public JavaFileObject getJavaFileForInput(Location location, String className, Kind kind) throws IOException {
-                if (location.isOutputLocation() && kind == Kind.SOURCE) {
-                    return generatedJavaSources.get(uriForJavaFileObject(location, className, kind));
+        @Override
+        public OutputStream openOutputStream() throws IOException {
+            return new ByteArrayOutputStream() {
+                @Override
+                public void close() throws IOException {
+                    super.close();
+                    data = Optional.of(ByteSource.wrap(toByteArray()));
+                    lastModified = System.currentTimeMillis();
                 }
-                return super.getJavaFileForInput(location, className, kind);
+            };
+        }
+
+        @Override
+        public Reader openReader(boolean ignoreEncodingErrors) throws IOException {
+            if (data.isPresent()) {
+                return data.get().asCharSource(Charset.defaultCharset()).openStream();
+            } else {
+                throw new FileNotFoundException();
             }
+        }
 
-            public List<JavaFileObject> getGeneratedSources() {
-                return List.copyOf(generatedJavaSources.values());
+        @Override
+        public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
+            if (data.isPresent()) {
+                return data.get().asCharSource(Charset.defaultCharset()).read();
+            } else {
+                throw new FileNotFoundException();
             }
+        }
 
-            /**
-             * Implementation of {@link JavaFileObject} that is stored in memory.
-             * <p>
-             * Based on {@link com.google.testing.compile.InMemoryJavaFileManager.InMemoryJavaFileObject}.
-             * 
-             * @author TG Team
-             */
-            private static final class InMemoryJavaFileObject extends SimpleJavaFileObject {
-                private long lastModified = 0L;
-                private Optional<ByteSource> data = Optional.empty();
-
-                InMemoryJavaFileObject(final URI uri, final Kind kind) {
-                    super(uri, kind);
-                }
-
-                InMemoryJavaFileObject(final String fullyQualifiedName, final String data) {
-                    super(uriForJavaFileObject(StandardLocation.SOURCE_PATH, fullyQualifiedName, Kind.SOURCE), Kind.SOURCE);
-                    this.data = Optional.of(ByteSource.wrap(data.getBytes()));
-                }
-
+        @Override
+        public Writer openWriter() throws IOException {
+            return new StringWriter() {
                 @Override
-                public InputStream openInputStream() throws IOException {
-                    if (data.isPresent()) {
-                        return data.get().openStream();
-                    } else {
-                        throw new FileNotFoundException();
-                    }
+                public void close() throws IOException {
+                    super.close();
+                    data = Optional.of(ByteSource.wrap(toString().getBytes(Charset.defaultCharset())));
+                    lastModified = System.currentTimeMillis();
                 }
+            };
+        }
 
-                @Override
-                public OutputStream openOutputStream() throws IOException {
-                    return new ByteArrayOutputStream() {
-                        @Override
-                        public void close() throws IOException {
-                            super.close();
-                            data = Optional.of(ByteSource.wrap(toByteArray()));
-                            lastModified = System.currentTimeMillis();
-                        }
-                    };
-                }
+        @Override
+        public long getLastModified() {
+            return lastModified;
+        }
 
-                @Override
-                public Reader openReader(boolean ignoreEncodingErrors) throws IOException {
-                    if (data.isPresent()) {
-                        return data.get().asCharSource(Charset.defaultCharset()).openStream();
-                    } else {
-                        throw new FileNotFoundException();
-                    }
-                }
+        @Override
+        public boolean delete() {
+            this.data = Optional.empty();
+            this.lastModified = 0L;
+            return true;
+        }
 
-                @Override
-                public CharSequence getCharContent(boolean ignoreEncodingErrors) throws IOException {
-                    if (data.isPresent()) {
-                        return data.get().asCharSource(Charset.defaultCharset()).read();
-                    } else {
-                        throw new FileNotFoundException();
-                    }
-                }
+        @Override
+        public String toString() {
+            return format("%s{uri=%s, kind=%s}", this.getClass().getSimpleName(), toUri(), kind);
+        }
+    }
 
-                @Override
-                public Writer openWriter() throws IOException {
-                    return new StringWriter() {
-                        @Override
-                        public void close() throws IOException {
-                            super.close();
-                            data = Optional.of(ByteSource.wrap(toString().getBytes(Charset.defaultCharset())));
-                            lastModified = System.currentTimeMillis();
-                        }
-                    };
-                }
+    /**
+     * Utility class for performing operations related to {@link InMemoryJavaFileObject}.
+     * 
+     * @author TG Team
+     */
+    private static final class InMemoryJavaFileObjects {
 
-                @Override
-                public long getLastModified() {
-                    return lastModified;
-                }
+        private static URI uriForJavaFileObject(final Location location, final String className, final Kind kind) {
+            return URI.create(format("memory:///%s/%s", location.getName(), className.replace('.', '/') + kind.extension));
+        }
 
-                @Override
-                public boolean delete() {
-                    this.data = Optional.empty();
-                    this.lastModified = 0L;
-                    return true;
-                }
-
-                @Override
-                public String toString() {
-                    return format("%s{uri=%s, kind=%s}", this.getClass().getSimpleName(), toUri(), kind);
-                }
-            }
+        public static InMemoryJavaFileObject createJavaSource(final String fullyQualifiedName, final String source) {
+            return new InMemoryJavaFileObject(uriForJavaFileObject(StandardLocation.SOURCE_PATH, fullyQualifiedName, Kind.SOURCE), Kind.SOURCE, source);
         }
     }
 }
