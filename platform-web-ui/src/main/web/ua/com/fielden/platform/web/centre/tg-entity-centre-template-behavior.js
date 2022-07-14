@@ -114,33 +114,36 @@ const TgEntityCentreTemplateBehaviorImpl = {
                 delete action.hasPrev;
                 delete action.hasNext;
             }.bind(this);
+            action._propertyHasValue = function (entity, chosenProperty) {
+                typeof entity.get(chosenProperty) !== 'undefined' && entity.get(chosenProperty) !== null
+            }.bind(this);
             action._findNextEntityTo = function (entityIndex) {
                 if (action.chosenProperty) {
-                    return this.$.egi.filteredEntities.slice(entityIndex + 1).find(ent => ent.get(action.chosenProperty) !== null);
+                    return this.$.egi.filteredEntities.slice(entityIndex + 1).find(ent => action._propertyHasValue(ent, action.chosenProperty));
                 }
                 return this.$.egi.filteredEntities[entityIndex + 1];
             }.bind(this);
             action._findPreviousEntityTo = function (entityIndex) {
                 if (action.chosenProperty) {
-                    return this.$.egi.filteredEntities.slice(0, entityIndex).reverse().find(ent => ent.get(action.chosenProperty) !== null);
+                    return this.$.egi.filteredEntities.slice(0, entityIndex).reverse().find(ent => action._propertyHasValue(ent, action.chosenProperty));
                 }
                 return this.$.egi.filteredEntities[entityIndex - 1];
             }.bind(this);
             action._findFirstEntity = function () {
                 if (action.chosenProperty) {
-                    return this.$.egi.filteredEntities.find(ent => ent.get(action.chosenProperty) !== null);
+                    return this.$.egi.filteredEntities.find(ent => action._propertyHasValue(ent, action.chosenProperty));
                 }
                 return this.$.egi.filteredEntities[0];
             }.bind(this);
             action._findLastEntity = function () {
                 if (action.chosenProperty) {
-                    return this.$.egi.filteredEntities.slice().reverse().find(ent => ent.get(action.chosenProperty) !== null);
+                    return this.$.egi.filteredEntities.slice().reverse().find(ent => action._propertyHasValue(ent, action.chosenProperty));
                 }
                 return this.$.egi.filteredEntities[this.$.egi.filteredEntities.length - 1];
             }.bind(this);
             action._countActualEntities = function () {
                 if (action.chosenProperty) {
-                    return this.$.egi.filteredEntities.filter(ent => ent.get(action.chosenProperty) !== null).length;
+                    return this.$.egi.filteredEntities.filter(ent => action._propertyHasValue(ent, action.chosenProperty)).length;
                 }
                 return this.$.egi.filteredEntities.length;
             }.bind(this);
