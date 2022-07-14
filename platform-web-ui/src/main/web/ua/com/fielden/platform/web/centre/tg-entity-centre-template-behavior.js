@@ -115,7 +115,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
                 delete action.hasNext;
             }.bind(this);
             action._propertyHasValue = function (entity, chosenProperty) {
-                typeof entity.get(chosenProperty) !== 'undefined' && entity.get(chosenProperty) !== null
+                return typeof entity.get(chosenProperty) !== 'undefined' && entity.get(chosenProperty) !== null;
             }.bind(this);
             action._findNextEntityTo = function (entityIndex) {
                 if (action.chosenProperty) {
