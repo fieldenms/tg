@@ -89,7 +89,6 @@ import ua.com.fielden.platform.utils.Pair;
 public class MetaModelProcessor extends AbstractProcessor {
 
     private static final String INDENT = "    ";
-    private static final Set<Class<? extends Annotation>> ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION = Set.of(MapEntityTo.class, DomainEntity.class, WithMetaModel.class);
 
     private Filer filer;
     private Elements elementUtils;
@@ -179,7 +178,7 @@ public class MetaModelProcessor extends AbstractProcessor {
      */
     private Stream<MetaModelConcept> collectEntitiesForMetaModelGeneration(final RoundEnvironment roundEnv, final Optional<MetaModelsElement> maybeMetaModelsElement) {
         // find classes annotated with any of DOMAIN_TYPE_ANNOTATIONS
-        final Set<TypeElement> annotatedElements = roundEnv.getElementsAnnotatedWithAny(ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION).stream()
+        final Set<TypeElement> annotatedElements = roundEnv.getElementsAnnotatedWithAny(MetaModelConstants.ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION).stream()
                                                            .filter(element -> element.getKind() == ElementKind.CLASS) // just in case make sure identified elements are classes
                                                            .map(el -> (TypeElement) el).collect(toSet());
         messager.printMessage(Kind.NOTE, format("annotatedElements: [%s]", annotatedElements.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
