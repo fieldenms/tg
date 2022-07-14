@@ -13,6 +13,8 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -60,15 +62,19 @@ import org.junit.runners.model.Statement;
 import com.google.common.io.ByteSource;
 import com.google.testing.compile.JavaFileObjects;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
+import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntityAdjacentToOtherEntities;
 import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntitySinkNodesOnly;
 import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntityWithDescTitle;
 import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntityWithoutDescTitle;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
+import ua.com.fielden.platform.reflection.Finder;
 
 
 /**
@@ -129,6 +135,34 @@ public class MetaModelStructureTest {
         assertTrue(ElementFinder.isSubtype(distinctReturnTypes.get(0), PropertyMetaModel.class, types));
     }
 
+    /**
+     * If a metamodeled entity has properties of metamodeled entity types, then the generated meta-model should capture these relationships modeled by properties of corresponding meta-model types.
+     */
+    @Test
+    public void entity_adjacent_to_other_metamodeled_entities_should_have_properties_metamodeled_with_EntityMetaModel() {
+        final Optional<TypeElement> maybeMetaModelAdjacent = findMetaModelForEntity(TestEntityAdjacentToOtherEntities.class);
+        assertTrue(maybeMetaModelAdjacent.isPresent());
+        
+        final MetaModelElement mmeAdjacent = new MetaModelElement(maybeMetaModelAdjacent.get(), elements);
+        final Set<ExecutableElement> metamodeledProps = MetaModelFinder.findPropertyMethods(mmeAdjacent, types);
+        
+        for (final Field prop: findProperties(TestEntityAdjacentToOtherEntities.class)) {
+            // find the metamodeled prop
+            // TODO the logic handling transformations between entity properties and meta-model properties should be abstracted
+            // consider that transformation of names changes, then this code would have to be modified too
+            final Optional<ExecutableElement> maybeMetamodeledProp = metamodeledProps.stream().filter(el -> el.getSimpleName().toString().equals(prop.getName())).findAny();
+            assertTrue(maybeMetamodeledProp.isPresent());
+            final ExecutableElement metamodeledProp = maybeMetamodeledProp.get();
+
+            if (AbstractEntity.class.isAssignableFrom(prop.getType()) && isEntityMetamodeled((Class<? extends AbstractEntity<?>>) prop.getType())) {
+                assertTrue(MetaModelFinder.isEntityMetaModelMethod(metamodeledProp, types));
+            }
+            else {
+                assertTrue(MetaModelFinder.isPropertyMetaModelMethod(metamodeledProp));
+            }
+        }
+    }
+
     // ============================ HELPER METHODS ============================
     
     private static List<JavaFileObject> getTestEntities() {
@@ -152,6 +186,29 @@ public class MetaModelStructureTest {
         final EntityElement entityElement = new EntityElement(elements.getTypeElement(entityClass.getCanonicalName()), elements);
         final MetaModelConcept mmc = new MetaModelConcept(entityElement);
         return Optional.ofNullable(elements.getTypeElement(mmc.getQualifiedName()));
+    }
+    
+    // TODO this logic should be abstracted by some other class outside the scope of these tests
+    private static boolean isEntityMetamodeled(final Class<? extends AbstractEntity<?>> entityType) {
+        for (final Annotation annot: entityType.getAnnotations()) {
+            if (MetaModelConstants.ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION.contains(annot.annotationType())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Wraps a call to {@link Finder#findProperties(Class)} to make sure that property "desc" isn't included if the given entity is not annotated with {@link DescTitle}.
+     * @param entityType
+     * @return
+     */
+    private static List<Field> findProperties(final Class<? extends AbstractEntity<?>> entityType) {
+        final List<Field> properties = Finder.findProperties(entityType);
+        if (!entityType.isAnnotationPresent(DescTitle.class)) {
+            properties.removeIf(field -> field.getName().equals("desc"));
+        }
+        return properties;
     }
 
     /**
