@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.processors.metamodel.utils;
 
+import static java.util.stream.Collectors.toCollection;
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -66,7 +68,7 @@ public class MetaModelFinder {
     }
     
     /**
-     * Finds all methods of a meta-model that model properties of the underlying entity.
+     * Finds all methods of a meta-model that model properties of the underlying entity. Processes the whole meta-model hierarchy (i.e. meta-models that extend other meta-models).
      * @param mme the target meta-model
      * @param typeUtils an instance of {@link Types} for analyzing the meta-model
      * @return a set of methods that model properties of the underlying entity
@@ -74,9 +76,21 @@ public class MetaModelFinder {
     public static Set<ExecutableElement> findPropertyMethods(final MetaModelElement mme, final Types typeUtils) {
         return ElementFinder.findMethods(mme.getTypeElement()).stream()
                 .filter(el -> isPropertyMetaModelMethod(el) || isEntityMetaModelMethod(el, typeUtils))
-                .collect(Collectors.toSet());
+                .collect(toCollection(LinkedHashSet::new));
     }
-    
+
+    /**
+     * Finds all declared methods of a meta-model that model properties of the underlying entity.
+     * @param mme the target meta-model
+     * @param typeUtils an instance of {@link Types} for analyzing the meta-model
+     * @return a set of methods that model properties of the underlying entity
+     */
+    public static Set<ExecutableElement> findDeclaredPropertyMethods(final MetaModelElement mme, final Types typeUtils) {
+        return ElementFinder.findDeclaredMethods(mme.getTypeElement()).stream()
+                .filter(el -> isPropertyMetaModelMethod(el) || isEntityMetaModelMethod(el, typeUtils))
+                .collect(toCollection(LinkedHashSet::new));
+    }
+
     /**
      * Returns a set of meta-model elements for each field that is of type {@code Supplier<? extends EntityMetaModel>}.
      * @param mme
