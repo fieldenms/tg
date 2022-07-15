@@ -1277,8 +1277,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(INSERTION_POINT_ACTIONS_DOM, insertionPointActionsDom.toString()).
                 replace(LEFT_INSERTION_POINT_DOM, leftInsertionPointsDom.toString()).
                 replace(RIGHT_INSERTION_POINT_DOM, rightInsertionPointsDom.toString()).
-                replace(LEFT_SPLITTER_POSITION, dslDefaultConfig.getLeftSplitterPosition().map(pos -> format("left-splitter-position=\"%s\"", pos + "%")).orElse("")).
-                replace(RIGHT_SPLITTER_POSITION, dslDefaultConfig.getRightSplitterPosition().map(pos -> format("right-splitter-position=\"%s\"", pos + "%")).orElse("")).
+                replace(LEFT_SPLITTER_POSITION, dslDefaultConfig.getLeftSplitterPosition().map(pos -> format("left-splitter-position=\"%s\"", pos/100.0)).orElse("")).
+                replace(RIGHT_SPLITTER_POSITION, dslDefaultConfig.getRightSplitterPosition().map(pos -> format("right-splitter-position=\"%s\"", pos/100.0)).orElse("")).
                 replace(TOP_INSERTION_POINT_DOM, topInsertionPointsDom.toString()).
                 replace(BOTTOM_INSERTION_POINT_DOM, bottomInsertionPointsDom.toString()).
                 replace(ALTERNATIVE_VIEW_INSERTION_POINT_DOM, join(alternativeViewsDom, "\n")).

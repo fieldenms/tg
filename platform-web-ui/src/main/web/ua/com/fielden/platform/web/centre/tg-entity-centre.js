@@ -38,16 +38,46 @@ const actualRightSplitterKey = function (userName, miType) {
     return `${userName}_${miType}_actualRightSplitterPosition`;
 };
 
+/**
+ * Initial save of splitter position and actual splitter position. Also updates the width style of insertion point container to make it's width flexible.
+ * 
+ * @param {String} splitterPosition splitter position specified in configuration.
+ * @param {String} splitterKey key for splitter position to save in localStorage.
+ * @param {String} actualSplitterKey key for actual splitter position to save  in local storage.
+ * @param {Object} insertionPointContaier insertion point container which should be initiated.
+ * @param {Number} centreWidth width of centre.
+ * @param {Number} centreWidthWithoutSplitter width of the centre without splitter width.
+ * @returns New splitter position.
+ */
+const initSplitter = function (splitterPosition, splitterKey, actualSplitterKey, insertionPointContaier, centreWidth, centreWidthWithoutSplitter) {
+    let pos = localStorage.getItem(splitterKey);
+    if (!pos) {
+        pos = splitterPosition || insertionPointContaier.offsetWidth / centreWidthWithoutSplitter + "";
+        localStorage.setItem(splitterKey, pos);
+    }
+
+    let actualPos = localStorage.getItem(actualSplitterKey);
+    if (!actualPos) {
+        actualPos = pos || insertionPointContaier.offsetWidth / centreWidthWithoutSplitter + "";
+        localStorage.setItem(actualSplitterKey, actualPos);
+    }
+
+    insertionPointContaier.style.width = (parseFloat(actualPos) * centreWidthWithoutSplitter / centreWidth * 100) + "%";
+
+    return pos;
+}
+
 const splitterPositions = function (width, altWidth, splitterPosition, altSplitterPosition, centreWidth, splitterWidth, altInsertionPointPresent) {
     const positions = [];
+    const centreWidthWithoutSplitter = centreWidth - (altInsertionPointPresent ? 2 : 1) * splitterWidth;
     positions.push(0);
-    positions.push(parseInt(splitterPosition));
+    positions.push(Math.round(parseFloat(splitterPosition) * centreWidthWithoutSplitter));
     positions.push(width);
     if (altInsertionPointPresent) {
-        positions.push(centreWidth - parseInt(altSplitterPosition) -  2 * splitterWidth);
-        positions.push(centreWidth - altWidth - 2 * splitterWidth);
+        positions.push(Math.round(centreWidthWithoutSplitter * (1 - parseFloat(altSplitterPosition))));
+        positions.push(centreWidthWithoutSplitter - altWidth);
     }
-    positions.push(centreWidth - (altInsertionPointPresent ?  2 : 1) * splitterWidth);
+    positions.push(centreWidthWithoutSplitter);
     const uniquePositions = [];
     positions.forEach(pos => {
         if (uniquePositions.indexOf(pos) < 0) {
@@ -360,6 +390,29 @@ Polymer({
                 });
             }
         });
+
+         //Add iron-resize event listener
+         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+    },
+
+    _resizeEventListener: function (e) {
+        if (this.$.centreResultContainer.offsetWidth > 0 && (this.leftInsertionPointPresent || this.rightInsertionPointPresent)) {
+            const centreWidth = this.$.centreResultContainer.offsetWidth;
+            let splitterCounter = this.leftInsertionPointPresent ? 1 : 0;
+            splitterCounter += this.rightInsertionPointPresent ? 1 : 0;
+            const splitterWidth = splitterCounter > 0 ? (this.leftInsertionPointPresent ? this.$.leftSplitter.offsetWidth : this.$.rightSplitter.offsetWidth) : 0;
+            const centreWidthWithoutSplitter = centreWidth - splitterCounter * splitterWidth;
+
+            if (this.leftInsertionPointPresent) {
+                this.leftSplitterPosition = initSplitter(this.leftSplitterPosition, leftSplitterKey(this.userName, this.miType), actualLeftSplitterKey(this.userName, this.miType),
+                                                            this.$.leftInsertionPointContainer, centreWidth, centreWidthWithoutSplitter);
+            }
+
+            if (this.rightInsertionPointPresent) {
+                this.rightSplitterPosition = initSplitter(this.rightSplitterPosition, rightSplitterKey(this.userName, this.miType), actualRightSplitterKey(this.userName, this.miType),
+                                                            this.$.rightInsertionPointContainer, centreWidth, centreWidthWithoutSplitter);
+            }
+        }
     },
 
     /**
@@ -408,97 +461,58 @@ Polymer({
         self.bottomActions = [
             self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigSaveAction')
         ];
-
-        if (this.userName && this.miType) {
-            const leftSplitterPosition = localStorage.getItem(leftSplitterKey(this.userName, this.miType));
-            if (leftSplitterPosition) {
-                this.leftSplitterPosition = leftSplitterPosition;
-            }
-            const actualLeftSplitterPosition = localStorage.getItem(actualLeftSplitterKey(this.userName, this.miType)) || leftSplitterPosition;
-            if (this.leftInsertionPointPresent && actualLeftSplitterPosition) {
-                this.$.leftInsertionPointContainer.style.width = actualLeftSplitterPosition;
-            }
-           
-            const rightSplitterPosition = localStorage.getItem(rightSplitterKey(this.userName, this.miType));
-            if (rightSplitterPosition) {
-                this.rightSplitterPosition = rightSplitterPosition;
-            }
-            const actualRightSplitterPosition = localStorage.getItem(actualRightSplitterKey(this.userName, this.miType)) || rightSplitterPosition;
-            if (this.rightInsertionPointPresent && actualRightSplitterPosition) {
-                this.$.rightInsertionPointContainer.style.width = actualRightSplitterPosition;
-            }
-            this.notifyResize();
-        }
     },
 
     // Splitter functionality
     _expandLeftInsertionPoint: function () {
-        this._expandContainer(this.leftSplitterPosition, this.rightSplitterPosition, this.$.leftSplitter.offsetWidth, 
-            this.leftInsertionPointPresent, this.rightInsertionPointPresent, 
+        this._expandContainer(this.leftSplitterPosition, this.rightSplitterPosition, this.$.leftSplitter.offsetWidth, this.rightInsertionPointPresent, 
             this.$.leftInsertionPointContainer, this.$.rightInsertionPointContainer,
             actualLeftSplitterKey(this.userName, this.miType), actualRightSplitterKey(this.userName, this.miType));
     },
 
     _expandRightInsertionPoint: function () {
-        this._expandContainer(this.rightSplitterPosition, this.leftSplitterPosition, this.$.rightSplitter.offsetWidth, 
-            this.rightInsertionPointPresent, this.leftInsertionPointPresent, 
+        this._expandContainer(this.rightSplitterPosition, this.leftSplitterPosition, this.$.rightSplitter.offsetWidth, this.leftInsertionPointPresent, 
             this.$.rightInsertionPointContainer, this.$.leftInsertionPointContainer,
             actualRightSplitterKey(this.userName, this.miType), actualLeftSplitterKey(this.userName, this.miType));
     },
 
     _expandContainer: function (splitterPosition, altSplitterPosition, splitterWidth, 
-        insertionPointPresent, altInsertionPointPresent, 
-        insertionPointContainer, altInsertionPointContainer,
+        altInsertionPointPresent, insertionPointContainer, altInsertionPointContainer,
         splitterKey, altSplitterKey) {
-            const width = insertionPointPresent ? insertionPointContainer.offsetWidth : 0;
+            const width = insertionPointContainer.offsetWidth;
             const altWidth = altInsertionPointPresent ? altInsertionPointContainer.offsetWidth : 0;
             const centreWidth = this.$.centreResultContainer.offsetWidth;
-            this._convertPosToPx();
+            const centreWidthWithoutSplitter = centreWidth - (altInsertionPointPresent ? 2 : 1) * splitterWidth;
             const nextPos = nextSplitterPos(width, altWidth, splitterPosition, altSplitterPosition, centreWidth, splitterWidth, altInsertionPointPresent);
-            if (altInsertionPointPresent && centreWidth - altWidth - 2 * splitterWidth  < nextPos) {
-                const altPosText = `${centreWidth - nextPos - 2 * splitterWidth}px`;
-                altInsertionPointContainer.style.width = altPosText;
-                localStorage.setItem(altSplitterKey, altPosText);
+            if (altInsertionPointPresent && centreWidthWithoutSplitter - altWidth < nextPos) {
+                altInsertionPointContainer.style.width = `${(centreWidthWithoutSplitter - nextPos) / centreWidth * 100}%`;
+                localStorage.setItem(altSplitterKey, (centreWidthWithoutSplitter - nextPos) / centreWidthWithoutSplitter);
             }
-            const posText = `${nextPos}px`
-            insertionPointContainer.style.width = posText;
-            localStorage.setItem(splitterKey, posText);
+            insertionPointContainer.style.width = `${nextPos / centreWidth * 100}%`;
+            localStorage.setItem(splitterKey, nextPos / centreWidthWithoutSplitter);
             this.notifyResize();
     },
 
     _collapseLeftInsertionPoint: function () {
-        this._collapseContainer(this.leftSplitterPosition, this.rightSplitterPosition, this.$.leftSplitter.offsetWidth, 
-            this.leftInsertionPointPresent, this.rightInsertionPointPresent, 
+        this._collapseContainer(this.leftSplitterPosition, this.rightSplitterPosition, this.$.leftSplitter.offsetWidth, this.rightInsertionPointPresent, 
             this.$.leftInsertionPointContainer, this.$.rightInsertionPointContainer, actualLeftSplitterKey(this.userName, this.miType));
     },
 
     _collapseRightInsertionPoint: function () {
-        this._collapseContainer(this.rightSplitterPosition, this.leftSplitterPosition, this.$.rightSplitter.offsetWidth, 
-            this.rightInsertionPointPresent, this.leftInsertionPointPresent, 
+        this._collapseContainer(this.rightSplitterPosition, this.leftSplitterPosition, this.$.rightSplitter.offsetWidth, this.leftInsertionPointPresent, 
             this.$.rightInsertionPointContainer, this.$.leftInsertionPointContainer, actualRightSplitterKey(this.userName, this.miType));
     },
 
-    _collapseContainer: function (splitterPosition, altSplitterPosition, splitterWidth, 
-        insertionPointPresent, altInsertionPointPresent, 
+    _collapseContainer: function (splitterPosition, altSplitterPosition, splitterWidth, altInsertionPointPresent, 
         insertionPointContainer, altInsertionPointContainer, splitterKey) {
-        const width = insertionPointPresent ? insertionPointContainer.offsetWidth : 0;
+        const width = insertionPointContainer.offsetWidth;
         const altWidth = altInsertionPointPresent ? altInsertionPointContainer.offsetWidth : 0;
         const centreWidth = this.$.centreResultContainer.offsetWidth;
-        this._convertPosToPx();
+        const centreWidthWithoutSplitter = centreWidth - (altInsertionPointPresent ? 2 : 1) * splitterWidth;
         const previousPos = previousSplitterPos(width, altWidth, splitterPosition, altSplitterPosition, centreWidth, splitterWidth, altInsertionPointPresent);
-        const posText = `${previousPos}px`;
-        insertionPointContainer.style.width = posText;
-        localStorage.setItem(splitterKey, posText);
+        insertionPointContainer.style.width = `${previousPos / centreWidth * 100}%`;
+        localStorage.setItem(splitterKey, previousPos / centreWidthWithoutSplitter);
         this.notifyResize();
-    },
-
-    _convertPosToPx() {
-        if (this.leftInsertionPointPresent && this.leftSplitterPosition.endsWith('%')) {
-            this.leftSplitterPosition = `${this.leftInsertionPointContainer.offsetWidth}px`;
-        }
-        if (this.rightInsertionPointPresent && this.rightSplitterPosition.endsWith('%')) {
-            this.rightSplitterPosition = `${this.rightInsertionPointContainer.offsetWidth}px`;
-        }
     },
 
     _makeCentreUnselectable: function (e) {
@@ -546,11 +560,12 @@ Polymer({
     },
 
     _updateLeftSplitter: function (newWidth) {
-        this.leftSplitterPosition = newWidth;
-        this.$.leftInsertionPointContainer.style.width = newWidth;
-        localStorage.setItem(leftSplitterKey(this.userName, this.miType) ,newWidth);
-        localStorage.setItem(actualLeftSplitterKey(this.userName, this.miType) ,newWidth);
-        this.notifyResize();
+        const centreWidth = this.$.centreResultContainer.offsetWidth;
+        const centreWidthWithoutSplitter = centreWidth - (this.rightInsertionPointPresent ? 2 : 1) * this.$.leftSplitter.offsetWidth;
+        this.leftSplitterPosition = newWidth / centreWidthWithoutSplitter + "";
+        this.$.leftInsertionPointContainer.style.width = `${newWidth / centreWidth * 100}%`;
+        localStorage.setItem(leftSplitterKey(this.userName, this.miType), this.leftSplitterPosition);
+        localStorage.setItem(actualLeftSplitterKey(this.userName, this.miType), this.leftSplitterPosition);
     },
 
     _rightInsertionPointContainerUpdater: function (newPos) {
@@ -560,20 +575,18 @@ Polymer({
     },
 
     _updateRightSplitter: function (newWidth) {
-        this.rightSplitterPosition = newWidth;
-        this.$.rightInsertionPointContainer.style.width = newWidth;
-        localStorage.setItem(rightSplitterKey(this.userName, this.miType) ,newWidth);
-        localStorage.setItem(actualRightSplitterKey(this.userName, this.miType) ,newWidth);
-        this.notifyResize();
+        const centreWidth = this.$.centreResultContainer.offsetWidth;
+        const centreWidthWithoutSplitter = centreWidth - (this.leftInsertionPointPresent ? 2 : 1) * this.$.rightSplitter.offsetWidth;
+        this.rightSplitterPosition = newWidth / centreWidthWithoutSplitter + "";
+        this.$.rightInsertionPointContainer.style.width = `${newWidth / centreWidth * 100}%`;
+        localStorage.setItem(rightSplitterKey(this.userName, this.miType), this.rightSplitterPosition);
+        localStorage.setItem(actualRightSplitterKey(this.userName, this.miType), this.rightSplitterPosition);
     },
 
     _updateInsertionPointContainerWidth: function (newWidth, insertionPointContaier, splitterPositionUpdater) {
         const oldWidth = insertionPointContaier.offsetWidth;
         if (oldWidth !== newWidth) {
-            splitterPositionUpdater(`${newWidth}px`);
-            if (insertionPointContaier.offsetParent === null) {
-                insertionPointContaier.style.removeProperty("display");
-            }
+            splitterPositionUpdater(newWidth);
             this.notifyResize();
         }
     },
