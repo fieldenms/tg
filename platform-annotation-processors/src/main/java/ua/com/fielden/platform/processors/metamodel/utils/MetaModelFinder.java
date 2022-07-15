@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.processors.metamodel.utils;
 
 import static java.util.stream.Collectors.toCollection;
+
 import java.util.LinkedHashSet;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -17,6 +19,7 @@ import javax.lang.model.util.Types;
 
 import ua.com.fielden.platform.processors.metamodel.MetaModelConstants;
 import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
+import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
@@ -130,5 +133,20 @@ public class MetaModelFinder {
     
     public static boolean isSameMetaModel(final MetaModelConcept mmc, final MetaModelElement mme) {
         return mmc.getQualifiedName().equals(mme.getQualifiedName());
+    }
+    
+    /**
+     * Attempts to find a meta-model for a given entity.
+     * @param entityElement
+     * @param elementUtils
+     * @return {@link MetaModelElement} instance wrapped into {@link Optional} if found, else empty optional
+     */
+    public static Optional<MetaModelElement> findMetaModelForEntity(final EntityElement entityElement, final Elements elementUtils) {
+        final MetaModelConcept mmc = new MetaModelConcept(entityElement);
+        final Optional<TypeElement> maybeMmte = Optional.ofNullable(elementUtils.getTypeElement(mmc.getQualifiedName()));
+        if (maybeMmte.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(new MetaModelElement(maybeMmte.get(), elementUtils));
     }
 }

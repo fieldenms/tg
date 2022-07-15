@@ -3,6 +3,7 @@ package ua.com.fielden.platform.processors.metamodel.utils;
 import static java.lang.String.format;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toCollection;
+import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.annotation.Annotation;
@@ -21,8 +22,6 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
-import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
-import ua.com.fielden.platform.annotations.metamodel.WithMetaModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
@@ -45,6 +44,20 @@ public class EntityFinder {
     private EntityFinder() {}
     
     public static final Class<?> ROOT_ENTITY_CLASS = AbstractEntity.class;
+
+    /**
+     * Finds an entity described by {@code entityClass} in the environment provided with {@code elementUtils}.
+     * @param entityClass
+     * @param elementUtils
+     * @return {@link EntityElement} wrapped in an {@link Optional} if found, else an empty optional
+     */
+    public static Optional<EntityElement> findEntity(final Class<? extends AbstractEntity<?>> entityClass, final Elements elementUtils) {
+        final Optional<TypeElement> typeElement = Optional.ofNullable(elementUtils.getTypeElement(entityClass.getCanonicalName()));
+        if (typeElement.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(new EntityElement(typeElement.get(), elementUtils));
+    }
 
    /**
     * Finds properties, which are explicitly declared in an entity, represented by {@code entityElement}.
@@ -233,8 +246,15 @@ public class EntityFinder {
      * @return
      */
     public static boolean isEntityThatNeedsMetaModel(final TypeElement element) {
-        return EntityFinder.isEntityType(element) && 
-               (element.getAnnotation(MapEntityTo.class) != null || element.getAnnotation(DomainEntity.class) != null || element.getAnnotation(WithMetaModel.class) != null);
+        if (!EntityFinder.isEntityType(element)) {
+            return false;
+        }
+        for (final Class<? extends Annotation> annotClass: ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION)  {
+            if (element.getAnnotation(annotClass) != null) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static List<? extends AnnotationMirror> getPropertyAnnotations(final PropertyElement property) {
