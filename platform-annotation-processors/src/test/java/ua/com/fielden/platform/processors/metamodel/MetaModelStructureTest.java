@@ -34,7 +34,6 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -69,6 +68,8 @@ import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
 import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntityAdjacentToOtherEntities;
+import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntityChild;
+import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntityParent;
 import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntitySinkNodesOnly;
 import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntityWithDescTitle;
 import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntityWithoutDescTitle;
@@ -152,6 +153,49 @@ public class MetaModelStructureTest {
             assertTrue(maybeMetamodeledProp.isPresent());
             final ExecutableElement metamodeledProp = maybeMetamodeledProp.get();
 
+            if (prop.hasClassOrInterfaceType() && EntityFinder.isEntityThatNeedsMetaModel(prop.getTypeAsTypeElementOrThrow())) {
+                assertTrue(MetaModelFinder.isEntityMetaModelMethod(metamodeledProp, types));
+            }
+            else {
+                assertTrue(MetaModelFinder.isPropertyMetaModelMethod(metamodeledProp));
+            }
+        }
+    }
+
+    /**
+     * Meta-model of an entity (Child) that extends another metamodeled entity (Parent) should model the hierarchy in a similar way.
+     * <p>
+     * <ul>
+     * <li>Child's meta-model directly extends Parent's meta-model</li>
+     * <li>Only declared properties of Child are explicitly metamodeled.</li>
+     * </ul>
+     */
+    @Test
+    public void meta_model_of_child_entity_extends_meta_model_of_parent_entity_and_metamodels_only_declared_properties() {
+        // find Child
+        final EntityElement child = findEntity(TestEntityChild.class);
+        final MetaModelElement childMetaModel = findMetaModel(child);
+        // find Parent
+        final EntityElement parent = findEntity(TestEntityParent.class);
+        final MetaModelElement parentMetaModel = findMetaModel(parent);
+
+        // Child's meta-model extends Parent's meta-model ?
+        assertTrue(types.isSameType(childMetaModel.getTypeElement().getSuperclass(), parentMetaModel.getTypeElement().asType()));
+        
+        final Set<PropertyElement> childDeclaredProps = EntityFinder.findDeclaredProperties(child);
+        final Set<ExecutableElement> childDeclaredMetamodeledProps = MetaModelFinder.findDeclaredPropertyMethods(childMetaModel, types);
+        assertEquals(childDeclaredProps.size(), childDeclaredMetamodeledProps.size());
+
+        for (final PropertyElement prop: childDeclaredProps) {
+            // find the metamodeled prop by name
+            final Optional<ExecutableElement> maybeMetamodeledProp = childDeclaredMetamodeledProps.stream().filter(el -> el.getSimpleName().toString().equals(prop.getName())).findAny();
+            assertTrue(maybeMetamodeledProp.isPresent());
+            final ExecutableElement metamodeledProp = maybeMetamodeledProp.get();
+
+            // TODO make sure that property types are consistent
+            // for example, consider a case when a child entity redeclares a field with a different type
+            // right now the information about the original property's type is stored in the javadoc
+            // for PropertyMetaModel methods it is impossible to test the consistency of types, since javax.lang.model API discards javadoc
             if (prop.hasClassOrInterfaceType() && EntityFinder.isEntityThatNeedsMetaModel(prop.getTypeAsTypeElementOrThrow())) {
                 assertTrue(MetaModelFinder.isEntityMetaModelMethod(metamodeledProp, types));
             }
