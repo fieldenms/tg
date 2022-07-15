@@ -231,12 +231,16 @@ public class MetaModelStructureTest {
          * @param processor annotation processor to use during compilation
          */
         public CompilationRule(final Collection<? extends JavaFileObject> javaSources, final Processor processor) {
-            this.javaSources = javaSources.isEmpty() ? List.of(DUMMY) : javaSources;
+            this.javaSources = javaSources.isEmpty() || javaSources == null ? List.of(DUMMY) : javaSources;
             this.processor = Optional.ofNullable(processor);
         }
 
         public CompilationRule(final Collection<? extends JavaFileObject> javaSources) {
             this(javaSources, null);
+        }
+        
+        public CompilationRule() {
+            this(List.of(), null);
         }
 
         @Override
