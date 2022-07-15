@@ -322,7 +322,7 @@ public class ElementFinder {
     }
 
     /**
-     * Looks for executable elements, representing all declared and inherited methods.
+     * Looks for executable elements, representing all declared and inherited methods. The order is preserved, giving first priority to declared (important for overriden) methods.
      */
     public static Set<ExecutableElement> findMethods(TypeElement typeElement) {
         final Set<ExecutableElement> fields = findDeclaredMethods(typeElement);

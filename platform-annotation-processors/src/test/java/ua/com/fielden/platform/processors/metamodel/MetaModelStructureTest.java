@@ -64,7 +64,6 @@ import com.google.testing.compile.JavaFileObjects;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
@@ -73,6 +72,7 @@ import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntitySink
 import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntityWithDescTitle;
 import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntityWithoutDescTitle;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
+import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
 import ua.com.fielden.platform.reflection.Finder;
 
@@ -100,7 +100,7 @@ public class MetaModelStructureTest {
         elements = rule.getElements();
         types = rule.getTypes();
     }
-
+    
     @Test
     public void entity_annotated_with_DescTitle_should_have_property_desc_metamodeled() {
         // Meta-model for TestEntityWithDescTitle should have method desc()

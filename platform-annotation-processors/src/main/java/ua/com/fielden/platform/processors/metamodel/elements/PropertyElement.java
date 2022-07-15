@@ -44,10 +44,18 @@ public class PropertyElement {
         return varElement.asType().getKind() == TypeKind.DECLARED;
     }
 
+    /**
+     * Returns the type of this property.
+     * @return
+     */
     public TypeMirror getType() {
         return varElement.asType();
     }
 
+    /**
+     * Returns the type of this property as a {@link TypeElement} instance. Throws a runtime exception if the type is not a declared one (refer to {@link TypeKind}).
+     * @return
+     */
     public TypeElement getTypeAsTypeElement() {
         if (!hasClassOrInterfaceType()) {
             final String message = format("Type of property %s is not a declared type (%s)", getName(), getType().toString());
@@ -56,6 +64,10 @@ public class PropertyElement {
         return getTypeAsTypeElementOrThrow();
     }
 
+    /**
+     * The same as {@link getTypeAsTypeElement} but with unsafe type casting. Use this method only if you are sure that the type of this property is a declared one.
+     * @return
+     */
     public TypeElement getTypeAsTypeElementOrThrow() {
         return (TypeElement) ((DeclaredType) varElement.asType()).asElement();
     }
