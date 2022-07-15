@@ -13,7 +13,6 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URL;
@@ -35,6 +34,7 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -66,6 +66,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
+import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
 import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntityAdjacentToOtherEntities;
 import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntitySinkNodesOnly;
@@ -103,31 +104,30 @@ public class MetaModelStructureTest {
     
     @Test
     public void entity_annotated_with_DescTitle_should_have_property_desc_metamodeled() {
-        // Meta-model for TestEntityWithDescTitle should have method desc()
-        final Optional<TypeElement> maybeMetaModelWithDesc = findMetaModelForEntity(TestEntityWithDescTitle.class);
-        assertTrue(maybeMetaModelWithDesc.isPresent());
+        final EntityElement entityWithDesc = findEntity(TestEntityWithDescTitle.class);
+        final MetaModelElement metaModelWithDesc = findMetaModel(entityWithDesc);
 
-        final MetaModelElement mmeWithDesc = new MetaModelElement(maybeMetaModelWithDesc.get(), elements);
-        assertTrue(MetaModelFinder.findPropertyMethods(mmeWithDesc, types).stream()
+        // Meta-model for TestEntityWithDescTitle should have method desc()
+        assertTrue(MetaModelFinder.findPropertyMethods(metaModelWithDesc, types).stream()
                 .anyMatch(el -> StringUtils.equals(el.getSimpleName(), "desc")));
 
 
-        // Meta-model for TestEntityWithoutDescTitle should NOT have method desc()
-        final Optional<TypeElement> maybeMetaModelWithoutDesc = findMetaModelForEntity(TestEntityWithoutDescTitle.class);
-        assertTrue(maybeMetaModelWithoutDesc.isPresent());
+        final EntityElement entityWithoutDesc = findEntity(TestEntityWithoutDescTitle.class);
+        final MetaModelElement metaModelWithoutDesc = findMetaModel(entityWithoutDesc);
 
-        final MetaModelElement mmeWithoutDesc = new MetaModelElement(maybeMetaModelWithoutDesc.get(), elements);
-        assertTrue(MetaModelFinder.findPropertyMethods(mmeWithoutDesc, types).stream()
+        // Meta-model for TestEntityWithoutDescTitle should NOT have method desc()
+        assertTrue(MetaModelFinder.findPropertyMethods(metaModelWithoutDesc, types).stream()
                 .noneMatch(el -> StringUtils.equals(el.getSimpleName(), "desc")));
     }
     
     @Test
     public void entity_with_sink_node_properties_only_should_have_all_properties_metamodeled_with_PropertyMetaModel() {
-        final Optional<TypeElement> maybeMetaModelSinkNodes = findMetaModelForEntity(TestEntitySinkNodesOnly.class);
-        assertTrue(maybeMetaModelSinkNodes.isPresent());
+        final EntityElement entity = findEntity(TestEntitySinkNodesOnly.class);
+        final MetaModelElement metaModel = findMetaModel(entity);
         
-        final MetaModelElement mmeSinkNodes = new MetaModelElement(maybeMetaModelSinkNodes.get(), elements);
-        final List<TypeMirror> distinctReturnTypes = MetaModelFinder.findPropertyMethods(mmeSinkNodes, types).stream()
+        // find all distinct return types of methods that model properies of an underlying entity
+        // there should be only one such type - PropertyMetaModel
+        final List<TypeMirror> distinctReturnTypes = MetaModelFinder.findPropertyMethods(metaModel, types).stream()
             .map(ExecutableElement::getReturnType)
             .distinct()
             .toList();
@@ -140,13 +140,11 @@ public class MetaModelStructureTest {
      */
     @Test
     public void entity_adjacent_to_other_metamodeled_entities_should_have_properties_metamodeled_with_EntityMetaModel() {
-        final Optional<TypeElement> maybeMetaModelAdjacent = findMetaModelForEntity(TestEntityAdjacentToOtherEntities.class);
-        assertTrue(maybeMetaModelAdjacent.isPresent());
-        
-        final MetaModelElement mmeAdjacent = new MetaModelElement(maybeMetaModelAdjacent.get(), elements);
-        final Set<ExecutableElement> metamodeledProps = MetaModelFinder.findPropertyMethods(mmeAdjacent, types);
-        
-        for (final Field prop: findProperties(TestEntityAdjacentToOtherEntities.class)) {
+        final EntityElement entity = findEntity(TestEntityAdjacentToOtherEntities.class);
+        final MetaModelElement metaModel = findMetaModel(entity);
+
+        final Set<ExecutableElement> metamodeledProps = MetaModelFinder.findPropertyMethods(metaModel, types);
+        for (final PropertyElement prop: EntityFinder.findProperties(entity)) {
             // find the metamodeled prop
             // TODO the logic handling transformations between entity properties and meta-model properties should be abstracted
             // consider that transformation of names changes, then this code would have to be modified too
@@ -154,7 +152,7 @@ public class MetaModelStructureTest {
             assertTrue(maybeMetamodeledProp.isPresent());
             final ExecutableElement metamodeledProp = maybeMetamodeledProp.get();
 
-            if (AbstractEntity.class.isAssignableFrom(prop.getType()) && isEntityMetamodeled((Class<? extends AbstractEntity<?>>) prop.getType())) {
+            if (prop.hasClassOrInterfaceType() && EntityFinder.isEntityThatNeedsMetaModel(prop.getTypeAsTypeElementOrThrow())) {
                 assertTrue(MetaModelFinder.isEntityMetaModelMethod(metamodeledProp, types));
             }
             else {
@@ -181,23 +179,25 @@ public class MetaModelStructureTest {
                 .map(filename -> JavaFileObjects.forResource(String.format("%s/%s", pkgNameSlashed, filename)))
                 .toList();
     }
-
-    private Optional<TypeElement> findMetaModelForEntity(final Class<?> entityClass) {
-        final EntityElement entityElement = new EntityElement(elements.getTypeElement(entityClass.getCanonicalName()), elements);
-        final MetaModelConcept mmc = new MetaModelConcept(entityElement);
-        return Optional.ofNullable(elements.getTypeElement(mmc.getQualifiedName()));
+    
+    /**
+     * Wraps a call to {@link EntityFinder#findEntity} that returns an optional in order to assert the presence of the returned value. 
+     */
+    private static EntityElement findEntity(final Class<? extends AbstractEntity<?>> entityType) {
+        final Optional<EntityElement> maybeEntity = EntityFinder.findEntity(entityType, elements);
+        assertTrue(maybeEntity.isPresent());
+        return maybeEntity.get();
     }
     
-    // TODO this logic should be abstracted by some other class outside the scope of these tests
-    private static boolean isEntityMetamodeled(final Class<? extends AbstractEntity<?>> entityType) {
-        for (final Annotation annot: entityType.getAnnotations()) {
-            if (MetaModelConstants.ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION.contains(annot.annotationType())) {
-                return true;
-            }
-        }
-        return false;
+    /**
+     * Wraps a call to {@link MetaModelFinder#findMetaModelForEntity} that returns an optional in order to assert the presence of the returned value. 
+     */
+    private static MetaModelElement findMetaModel(final EntityElement entityElement) {
+        final Optional<MetaModelElement> maybeMetaModel = MetaModelFinder.findMetaModelForEntity(entityElement, elements);
+        assertTrue(maybeMetaModel.isPresent());
+        return maybeMetaModel.get();
     }
-
+    
     /**
      * Wraps a call to {@link Finder#findProperties(Class)} to make sure that property "desc" isn't included if the given entity is not annotated with {@link DescTitle}.
      * @param entityType
