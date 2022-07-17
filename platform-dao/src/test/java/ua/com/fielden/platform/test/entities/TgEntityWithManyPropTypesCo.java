@@ -1,11 +1,11 @@
-package ua.com.fielden.platform.sample.domain;
+package ua.com.fielden.platform.test.entities;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 
 /**
  * Companion object for entity {@link TgEntityWithManyPropTypes}.
  * 
- * @author Developers
+ * @author TG Team
  * 
  */
 public interface TgEntityWithManyPropTypesCo extends IEntityDao<TgEntityWithManyPropTypes> {

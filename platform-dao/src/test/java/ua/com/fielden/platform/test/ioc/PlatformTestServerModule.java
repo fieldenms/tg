@@ -50,6 +50,8 @@ import ua.com.fielden.platform.test.entities.CompositeEntityKeyDao;
 import ua.com.fielden.platform.test.entities.IComplexKeyEntity;
 import ua.com.fielden.platform.test.entities.ICompositeEntity;
 import ua.com.fielden.platform.test.entities.ICompositeEntityKey;
+import ua.com.fielden.platform.test.entities.TgEntityWithManyPropTypesCo;
+import ua.com.fielden.platform.test.entities.TgEntityWithManyPropTypesDao;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 

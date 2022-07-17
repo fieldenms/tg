@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.sample.domain;
+package ua.com.fielden.platform.test.entities;
 
 import com.google.inject.Inject;
 
@@ -9,7 +9,7 @@ import ua.com.fielden.platform.entity.query.IFilter;
 /**
  * DAO implementation for companion object {@link TgEntityWithManyPropTypesCo}.
  * 
- * @author Developers
+ * @author TG Team
  * 
  */
 @EntityType(TgEntityWithManyPropTypes.class)

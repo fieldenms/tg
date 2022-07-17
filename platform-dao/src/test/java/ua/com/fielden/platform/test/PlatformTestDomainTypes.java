@@ -37,7 +37,6 @@ import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
 import ua.com.fielden.platform.sample.domain.TgDateTestEntity;
 import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummaries;
 import ua.com.fielden.platform.sample.domain.TgEntityWithLoopedCalcProps;
-import ua.com.fielden.platform.sample.domain.TgEntityWithManyPropTypes;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgModelCount;
@@ -75,6 +74,7 @@ import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityDetail;
 import ua.com.fielden.platform.test.entities.ComplexKeyEntity;
 import ua.com.fielden.platform.test.entities.CompositeEntity;
 import ua.com.fielden.platform.test.entities.CompositeEntityKey;
+import ua.com.fielden.platform.test.entities.TgEntityWithManyPropTypes;
 
 /**
  * A class to enlist platform test domain entities. Should be replaced with runtime generation via reflection.

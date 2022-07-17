@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.sample.domain;
+package ua.com.fielden.platform.test.entities;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -12,6 +12,8 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.sample.domain.EntityOne;
+import ua.com.fielden.platform.sample.domain.UnionEntity;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
@@ -22,6 +24,13 @@ import ua.com.fielden.platform.types.markers.ISimplyMoneyWithTaxAmountType;
 import ua.com.fielden.platform.types.markers.ISimplyMoneyWithTaxAndExTaxAmountType;
 import ua.com.fielden.platform.types.markers.IUtcDateTimeType;
 
+/**
+ * An entity for testing purposes, which contains properties with all possible types.
+ * The initial intent for this entity was be used for testing batch-insert operations to ensure that properties of any supported type can be saved correctly.
+ *
+ * @author TG Team
+ *
+ */
 @KeyType(String.class)
 @MapEntityTo
 @CompanionObject(TgEntityWithManyPropTypesCo.class)
