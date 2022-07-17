@@ -417,15 +417,21 @@ public class EqlDomainMetadata {
         return new EqlPropertyMetadata.Builder(propName, javaType, hibType).notRequired().expression(expressionModel).build();
     }
 
-    private final Table generateTable(final String tableName, final List<EqlPropertyMetadata> propsMetadatas) {
+    /**
+     * Generates a DB table representation, an entity is mapped to.
+     *
+     * @param tableName
+     * @param propsMetadata
+     * @return
+     */
+    private final Table generateTable(final String tableName, final List<EqlPropertyMetadata> propsMetadata) {
         final SortedMap<String, PropColumnInfo> columns = new TreeMap<>();
-        for (final EqlPropertyMetadata el : propsMetadatas) {
-
+        for (final EqlPropertyMetadata el : propsMetadata) {
             if (el.column != null) {
                 columns.put(el.name, new PropColumnInfo(el.column.name, el.javaType, el.hibType));
             } else if (!el.subitems().isEmpty()) {
                 for (final EqlPropertyMetadata subitem : el.subitems()) {
-                    if (subitem.expressionModel == null) {
+                    if (subitem.column != null) {
                         columns.put(el.name + "." + subitem.name, new PropColumnInfo(subitem.column.name, subitem.javaType, subitem.hibType));
                     }
                 }
@@ -448,4 +454,5 @@ public class EqlDomainMetadata {
     public Map<Class<? extends AbstractEntity<?>>, EqlEntityMetadata> entityPropsMetadata() {
         return Collections.unmodifiableMap(entityPropsMetadata);
     }
+
 }
