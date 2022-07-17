@@ -146,9 +146,8 @@ public class EqlDomainMetadata {
                         tables.put(entityType.getName(), generateTable(parentInfo.tableName, propsMetadata));
                     }
                 }
-            } catch (final Exception e) {
-                e.printStackTrace();
-                throw new EqlMetadataGenerationException("Couldn't generate persistence metadata for entity [" + entityType + "] due to: " + e);
+            } catch (final Exception ex) {
+                throw new EqlMetadataGenerationException("Couldn't generate persistence metadata for entity [" + entityType + "].", ex);
             }
         });
     }
