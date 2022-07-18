@@ -132,6 +132,7 @@ public class EntityBatchInsertOperation {
     }
 
     private static String generateInsertStmt(final String tableName, final List<String> columns) {
+        // TODO Need to support all DBs in DbVersion... at the very least need to support PostgreSQL in addition to SQL Server and throw a reasonable exception in other cases, advising of no support.
         return format("INSERT INTO %s(_ID, _VERSION, %s) VALUES(NEXT VALUE FOR %s, 0, %s);", //
                 tableName, //
                 columns.stream().collect(joining(", ")), // 
