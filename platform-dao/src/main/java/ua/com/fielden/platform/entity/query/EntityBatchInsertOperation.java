@@ -32,6 +32,7 @@ import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation.TableStructForBatchInsertion.PropColumnInfo;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.StreamUtils;
 
@@ -48,11 +49,11 @@ import ua.com.fielden.platform.utils.StreamUtils;
  *
  */
 public class EntityBatchInsertOperation {
-    private final DomainMetadata dm;
+    private final EqlDomainMetadata eqlDomainMetadata;
     private final Supplier<TransactionalExecution> trExecSupplier;
     
     public EntityBatchInsertOperation(final DomainMetadata dm, final Supplier<TransactionalExecution> trExecSupplier) {
-        this.dm = dm;
+        this.eqlDomainMetadata = dm.eqlDomainMetadata;
         this.trExecSupplier = trExecSupplier;
     }
     
@@ -88,10 +89,10 @@ public class EntityBatchInsertOperation {
             throw new EntityAlreadyExists("Trying to perform batch insert for persisted entities.");
         }
 
-        final TableStructForBatchInsertion table = dm.eqlDomainMetadata.getTableForEntityType(entities.get(0).getType());
+        final TableStructForBatchInsertion table = eqlDomainMetadata.getTableForEntityType(entities.get(0).getType());
         final String tableName = table.name;
         final List<String> columnNames = table.columns.stream().flatMap(x -> x.columnNames().stream()).collect(toList());
-        final String insertStmt = generateInsertStmt(tableName, columnNames);
+        final String insertStmt = generateInsertStmt(tableName, columnNames, eqlDomainMetadata.dbVersion);
 
         final AtomicInteger insertedCount = new AtomicInteger(0);
 
@@ -135,12 +136,13 @@ public class EntityBatchInsertOperation {
         return insertedCount.get(); 
     }
 
-    private static String generateInsertStmt(final String tableName, final List<String> columns) {
-        // TODO Need to support all DBs in DbVersion... at the very least need to support PostgreSQL in addition to SQL Server and throw a reasonable exception in other cases, advising of no support.
-        return format("INSERT INTO %s(_ID, _VERSION, %s) VALUES(NEXT VALUE FOR %s, 0, %s);", //
-                tableName, //
-                columns.stream().collect(joining(", ")), // 
-                ID_SEQUENCE_NAME, //
+    private static String generateInsertStmt(final String tableName, final List<String> columns, final DbVersion dbVersion) {
+        return format("INSERT INTO %s(%s, %s, %s) VALUES(%s, 0, %s);",
+                tableName,
+                dbVersion.idColumnName(),
+                dbVersion.versionColumnName(),
+                columns.stream().collect(joining(", ")),
+                dbVersion.nextSequenceValSql(),
                 join(", ", nCopies(columns.size(), "?")));
     }
     

@@ -138,13 +138,8 @@ public class EqlDomainMetadata {
         this.entityPropsMetadata = new ConcurrentHashMap<>(entityTypes.size());
 
         // initialise meta-data for basic entity properties, which is RDBMS dependent
-        if (dbVersion != DbVersion.ORACLE) {
-            id = new PropColumn("_ID");
-            version = new PropColumn("_VERSION");
-        } else {
-            id = new PropColumn("TG_ID");
-            version = new PropColumn("TG_VERSION");
-        }
+        id = new PropColumn(dbVersion.idColumnName());
+        version = new PropColumn(dbVersion.versionColumnName());
 
         // carry on with other stuff
         if (hibTypesDefaults != null) {
