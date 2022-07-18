@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.type.Type;
@@ -28,7 +29,20 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.eql.meta.Table;
 import ua.com.fielden.platform.eql.meta.Table.PropColumnInfo;
+import ua.com.fielden.platform.utils.StreamUtils;
 
+/**
+ * Provides a way to save new entities using raw JDBC batch insertion.
+ * <p>
+ * <b>Warning:</b>
+ * <ul>
+ * <li>No entity validation takes place. The responsibility for this is with the developer using batch insertion.
+ * <li>Batch insertion should only be used in situations where concurrent saving of the same entities is not possible. For example, generated entities are a good candidate.
+ * </ul>
+ *
+ * @author TG Team
+ *
+ */
 public class EntityBatchInsertOperation {
     private final DomainMetadata dm;
     private final Supplier<TransactionalExecution> trExecSupplier;
@@ -38,20 +52,43 @@ public class EntityBatchInsertOperation {
         this.trExecSupplier = trExecSupplier;
     }
     
-    public int batchInsert(final List<? extends AbstractEntity<?>> entities, final int batchSize) {
+    /**
+     * Inserts streaming entities in batches of {@code batchSize},
+     * Any persisted or non-persistent entities are skipped.
+     * From this point of view, this function is different than {@link #batchInsert(List, int)}, which throws a runtime exception in such cases.
+     *
+     * @param <T>
+     * @param stream
+     * @param batchSize
+     * @return
+     */
+    public <T extends AbstractEntity<?>> int batchInsert(final Stream<T> stream, final int batchSize) {
+        return StreamUtils.windowed(stream.filter(ent -> ent.isPersistent() && !ent.isPersisted()), batchSize).mapToInt(xs -> batchInsert(xs, xs.size())).sum();
+    }
+    
+    /**
+     * Inserts listed entities in batches of {@code batchSize}.
+     * Any persisted entities in {@code entities} lead to runtime exception {@link EntityAlreadyExists}.
+     *
+     * @param <T>
+     * @param entities
+     * @param batchSize
+     * @return
+     */
+    public <T extends AbstractEntity<?>> int batchInsert(final List<T> entities, final int batchSize) {
         if (entities.isEmpty()) {
             return 0;
         }
-        
+
         if (entities.stream().anyMatch(ent -> ent.isPersisted())) {
             throw new EntityAlreadyExists("Trying to perform batch insert for persisted entities.");
         }
-        
+
         final Table table = dm.eqlDomainMetadata.getTableForEntityType(entities.get(0).getType());
         final String tableName = table.name;
         final List<String> columnNames = table.columns.stream().flatMap(x -> x.columnNames.stream()).collect(toList());
         final String insertStmt = generateInsertStmt(tableName, columnNames);
-        
+
         final AtomicInteger insertedCount = new AtomicInteger(0);
 
         final TransactionalExecution trEx = trExecSupplier.get(); // this is a single transaction that will save all batches. 
@@ -90,7 +127,7 @@ public class EntityBatchInsertOperation {
                         }
                     });
                 });
-        
+
         return insertedCount.get(); 
     }
 
@@ -101,6 +138,5 @@ public class EntityBatchInsertOperation {
                 ID_SEQUENCE_NAME, //
                 join(", ", nCopies(columns.size(), "?")));
     }
-
 
 }
