@@ -3,13 +3,17 @@ package ua.com.fielden.platform.entity.query;
 import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.Collections.nCopies;
+import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.dao.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 import java.util.stream.IntStream;
@@ -26,9 +30,9 @@ import ua.com.fielden.platform.dao.exceptions.DbException;
 import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
 import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation.TableStructForBatchInsertion.PropColumnInfo;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
-import ua.com.fielden.platform.eql.meta.Table;
-import ua.com.fielden.platform.eql.meta.Table.PropColumnInfo;
+import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.StreamUtils;
 
 /**
@@ -84,9 +88,9 @@ public class EntityBatchInsertOperation {
             throw new EntityAlreadyExists("Trying to perform batch insert for persisted entities.");
         }
 
-        final Table table = dm.eqlDomainMetadata.getTableForEntityType(entities.get(0).getType());
+        final TableStructForBatchInsertion table = dm.eqlDomainMetadata.getTableForEntityType(entities.get(0).getType());
         final String tableName = table.name;
-        final List<String> columnNames = table.columns.stream().flatMap(x -> x.columnNames.stream()).collect(toList());
+        final List<String> columnNames = table.columns.stream().flatMap(x -> x.columnNames().stream()).collect(toList());
         final String insertStmt = generateInsertStmt(tableName, columnNames);
 
         final AtomicInteger insertedCount = new AtomicInteger(0);
@@ -103,15 +107,15 @@ public class EntityBatchInsertOperation {
                                 try {
                                     int paramIndex = 1; // JDBC parameters start their count from 1
                                     for (final PropColumnInfo propInfo : table.columns) {
-                                        final Object value = entity.get(propInfo.leafPropName);
-                                        if (propInfo.hibType instanceof UserType) {
-                                            ((UserType) propInfo.hibType).nullSafeSet(pst, value, paramIndex, sessionImpl);
-                                        } else if (propInfo.hibType instanceof CompositeUserType) {
-                                            ((CompositeUserType) propInfo.hibType).nullSafeSet(pst, value, paramIndex, sessionImpl);
+                                        final Object value = entity.get(propInfo.leafPropName());
+                                        if (propInfo.hibType() instanceof UserType) {
+                                            ((UserType) propInfo.hibType()).nullSafeSet(pst, value, paramIndex, sessionImpl);
+                                        } else if (propInfo.hibType() instanceof CompositeUserType) {
+                                            ((CompositeUserType) propInfo.hibType()).nullSafeSet(pst, value, paramIndex, sessionImpl);
                                         } else {
-                                            ((Type) propInfo.hibType).nullSafeSet(pst, value, paramIndex, sessionImpl);
+                                            ((Type) propInfo.hibType()).nullSafeSet(pst, value, paramIndex, sessionImpl);
                                         }
-                                        paramIndex = paramIndex + propInfo.columnNames.size();
+                                        paramIndex = paramIndex + propInfo.columnNames().size();
                                     }
 
                                     pst.addBatch();
@@ -138,6 +142,36 @@ public class EntityBatchInsertOperation {
                 columns.stream().collect(joining(", ")), // 
                 ID_SEQUENCE_NAME, //
                 join(", ", nCopies(columns.size(), "?")));
+    }
+    
+    /**
+     * An abstraction for representing a DB table, used to store an entity, which is specific for batch insertion purposes.
+     *
+     * @author TG Team
+     *
+     */
+    public static class TableStructForBatchInsertion {
+        public final String name;
+        public final List<PropColumnInfo> columns;
+
+        public TableStructForBatchInsertion(final String name, final List<PropColumnInfo> columns) {
+            this.name = name;
+            this.columns = unmodifiableList(columns);
+        }
+
+        /**
+         * Represents a table column or columns in case of a component, to which an entity property is mapped.  
+         */
+        public static record PropColumnInfo(String leafPropName, Set<String> columnNames, Object hibType) {
+            public PropColumnInfo(final String leafPropName, final String columnName, final Object hibType) {
+                this (leafPropName, CollectionUtil.unmodifiableSetOf(columnName), hibType);
+            }
+
+            public PropColumnInfo(final String leafPropName, final List<String> columnNames, final Object hibType) {
+                this(leafPropName, unmodifiableSet(new LinkedHashSet<>(columnNames)), hibType);
+            }
+        }
+
     }
 
 }

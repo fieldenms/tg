@@ -78,13 +78,14 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.PersistentType;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.query.DbVersion;
+import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation.TableStructForBatchInsertion;
+import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation.TableStructForBatchInsertion.PropColumnInfo;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 import ua.com.fielden.platform.eql.meta.EqlPropertyMetadata.Builder;
-import ua.com.fielden.platform.eql.meta.Table.PropColumnInfo;
 import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnSubqueries;
@@ -120,7 +121,7 @@ public class EqlDomainMetadata {
     private final ConcurrentMap<Class<?>, Object> hibTypesDefaults;
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EqlEntityMetadata> entityPropsMetadata;
     private final ConcurrentMap<String, Table> tables = new ConcurrentHashMap<>();
-    private final ConcurrentMap<String, ua.com.fielden.platform.eql.meta.Table> tablesWithPropColumnInfo = new ConcurrentHashMap<>();
+    private final ConcurrentMap<String, TableStructForBatchInsertion> tableStructsForBatchInsertion = new ConcurrentHashMap<>();
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo;
     private final EntQueryGenerator gen;
 
@@ -168,9 +169,8 @@ public class EqlDomainMetadata {
                     final List<EqlPropertyMetadata> propsMetadata = generatePropertyMetadatasForEntity(parentInfo, entityType);
                     entityPropsMetadata.put(entityType, new EqlEntityMetadata(parentInfo, propsMetadata));
                     if (parentInfo.category == PERSISTENT) {
-                        //FIXME There is no need for 2 table abstractions -- this needs to be resolved
                         tables.put(entityType.getName(), generateTable(parentInfo.tableName, propsMetadata));
-                        tablesWithPropColumnInfo.put(entityType.getName(), generateTableWithPropColumnInfo(parentInfo.tableName, propsMetadata));
+                        tableStructsForBatchInsertion.put(entityType.getName(), generateTableWithPropColumnInfo(parentInfo.tableName, propsMetadata));
                     }
                 }
             } catch (final Exception ex) {
@@ -573,13 +573,13 @@ public class EqlDomainMetadata {
     }
 
     /**
-     * Generates a DB table representation, an entity is mapped to.
+     * Generates a DB table representation, an entity is mapped to, specific to batch insertion.
      *
      * @param tableName
      * @param propsMetadata
      * @return
      */
-    private final ua.com.fielden.platform.eql.meta.Table generateTableWithPropColumnInfo(final String tableName, final List<EqlPropertyMetadata> propsMetadata) {
+    private final TableStructForBatchInsertion generateTableWithPropColumnInfo(final String tableName, final List<EqlPropertyMetadata> propsMetadata) {
         final List<PropColumnInfo> columns = new ArrayList<>();
         for (final EqlPropertyMetadata el : propsMetadata) {
             if (!el.name.equals(ID) && !el.name.equals(VERSION)) {
@@ -602,7 +602,7 @@ public class EqlDomainMetadata {
             }
         }
 
-        return new ua.com.fielden.platform.eql.meta.Table(tableName, columns);
+        return new TableStructForBatchInsertion(tableName, columns);
     }
 
     public static String removeObsoleteUnderscore(final String name) {
@@ -615,8 +615,8 @@ public class EqlDomainMetadata {
         return unmodifiableMap(tables);
     }
 
-    public ua.com.fielden.platform.eql.meta.Table getTableForEntityType(final Class<? extends AbstractEntity<?>> entityType) {
-        return tablesWithPropColumnInfo.get(entityType.getName());
+    public TableStructForBatchInsertion getTableForEntityType(final Class<? extends AbstractEntity<?>> entityType) {
+        return tableStructsForBatchInsertion.get(entityType.getName());
     }
 
     public Map<Class<? extends AbstractEntity<?>>, EqlEntityMetadata> entityPropsMetadata() {
