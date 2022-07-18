@@ -136,9 +136,9 @@ public class EntityBatchInsertOperation {
         return insertedCount.get(); 
     }
 
-    private static List<PropInsertInfo> generatePropInsertInfos(final List<EqlPropertyMetadata> propsMetadatas) {
+    private static List<PropInsertInfo> generatePropInsertInfo(final List<EqlPropertyMetadata> propsMetadata) {
         final List<PropInsertInfo> result = new ArrayList<>();
-        for (final EqlPropertyMetadata el : propsMetadatas) {
+        for (final EqlPropertyMetadata el : propsMetadata) {
             if (!el.name.equals(ID) && !el.name.equals(VERSION)) {
                 if (el.column != null) {
                     result.add(new PropInsertInfo(isPersistedEntityType(el.javaType) ? el.name + "." + ID : el.name, el.column.name, el.hibType));
@@ -148,7 +148,7 @@ public class EntityBatchInsertOperation {
                         result.add(new PropInsertInfo(el.name, columnNames, el.hibType));
                     } else {
                         for (final EqlPropertyMetadata subitem : el.subitems()) {
-                            if (subitem.expressionModel == null) {
+                            if (subitem.column != null) {
                                 result.add(new PropInsertInfo((el.name + "." + subitem.name + (isPersistedEntityType(subitem.javaType) ? "." + ID : "")), subitem.column.name, subitem.hibType));
                             }
                         }
