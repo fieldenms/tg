@@ -6,7 +6,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.query.metadata.DomainMetadata.specialProps;
-import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSISTED;
+import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSISTENT;
 import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
@@ -43,7 +43,7 @@ public class HibernateMappingsGenerator {
         sb.append("<hibernate-mapping default-access=\"field\">\n");
 
         for (final EqlEntityMetadata entry : domainMetadata.entityPropsMetadata().values()) {
-            if (entry.typeInfo.category == PERSISTED) {
+            if (entry.typeInfo.category == PERSISTENT) {
                 final String typeName = entry.typeInfo.entityType.getName();
                 try {
                     sb.append(generateEntityClassMapping(entry.typeInfo.entityType, domainMetadata.getTables().get(typeName).name, entry.props(), domainMetadata.dbVersion));
