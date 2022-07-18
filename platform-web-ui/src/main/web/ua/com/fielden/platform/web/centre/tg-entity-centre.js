@@ -22,18 +22,38 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
+/**
+ * @param {String} userName - the name of user that opened this entity centre
+ * @param {String} miType - the type of menu item class associated with this centre
+ * @returns The key in local storage for left splitter position configured by developer or specified by user manually by moving splitter.
+ */
 const leftSplitterKey = function (userName, miType) {
     return `${userName}_${miType}_leftSplitterPosition`;
 };
 
+/**
+ * @param {String} userName - the name of user that opened this entity centre
+ * @param {String} miType - the type of menu item class associated with this centre
+ * @returns The key in local storage for left splitter position. This actual left position is different than left position because it contains actual position of splitter after it was moved, collapsed or expanded. 
+ */
 const actualLeftSplitterKey = function (userName, miType) {
     return `${userName}_${miType}_actualLeftSplitterPosition`;
 };
 
+/**
+ * @param {String} userName - the name of user that opened this entity centre
+ * @param {String} miType - the type of menu item class associated with this centre
+ * @returns The key in local storage for right splitter position configured by developer or specified by user manually by moving splitter.
+ */
 const rightSplitterKey = function (userName, miType) {
     return `${userName}_${miType}_rightSplitterPosition`;
 };
 
+/**
+ * @param {String} userName - the name of user that opened this entity centre
+ * @param {String} miType - the type of menu item class associated with this centre
+ * @returns The key in local storage for right splitter position. This actual right position is different than right position because it contains actual position of splitter after it was moved, collapsed or expanded. 
+ */
 const actualRightSplitterKey = function (userName, miType) {
     return `${userName}_${miType}_actualRightSplitterPosition`;
 };
@@ -67,6 +87,16 @@ const initSplitter = function (splitterPosition, splitterKey, actualSplitterKey,
     return pos;
 }
 
+/**
+ * @param {Number} width - the width of insertion point container of interest
+ * @param {Number} altWidth - the width of opposite insertion point container
+ * @param {String} splitterPosition - splitter postion of insertion point container of interest
+ * @param {String} altSplitterPosition - splitter position of opposite insertion point container
+ * @param {Number} centreWidth centre width
+ * @param {Number} splitterWidth width of splitter (usually 9px)
+ * @param {Boolean} altInsertionPointPresent indicates whether opposite insertion point is  present or not
+ * @returns The array of all posible splitter positions.
+ */
 const splitterPositions = function (width, altWidth, splitterPosition, altSplitterPosition, centreWidth, splitterWidth, altInsertionPointPresent) {
     const positions = [];
     const centreWidthWithoutSplitter = centreWidth - (altInsertionPointPresent ? 2 : 1) * splitterWidth;
@@ -88,6 +118,16 @@ const splitterPositions = function (width, altWidth, splitterPosition, altSplitt
     return uniquePositions;
 };
 
+/**
+ * @param {Number} width - the width of insertion point container of interest
+ * @param {Number} altWidth - the width of opposite insertion point container
+ * @param {String} splitterPosition - splitter postion of insertion point container of interest
+ * @param {String} altSplitterPosition - splitter position of opposite insertion point container
+ * @param {Number} centreWidth centre width
+ * @param {Number} splitterWidth width of splitter (usually 9px)
+ * @param {Boolean} altInsertionPointPresent indicates whether opposite insertion point is  present or not
+ * @returns The next splitter position to the current one after expand button was pressed
+ */
 const nextSplitterPos = function (width, altWidth, splitterPos, altSplitterPos, centreWidth, splitterWidth, altInsertionPointPresent) {
     const positions = splitterPositions(width, altWidth, splitterPos, altSplitterPos, centreWidth, splitterWidth, altInsertionPointPresent);
     for (let i = 0; i < positions.length; i++) {
@@ -97,6 +137,16 @@ const nextSplitterPos = function (width, altWidth, splitterPos, altSplitterPos, 
     }
 };
 
+/**
+ * @param {Number} width - the width of insertion point container of interest
+ * @param {Number} altWidth - the width of opposite insertion point container
+ * @param {String} splitterPosition - splitter postion of insertion point container of interest
+ * @param {String} altSplitterPosition - splitter position of opposite insertion point container
+ * @param {Number} centreWidth centre width
+ * @param {Number} splitterWidth width of splitter (usually 9px)
+ * @param {Boolean} altInsertionPointPresent indicates whether opposite insertion point is  present or not
+ * @returns The previous splitter position to the current one after collapse button was pressed
+ */
 const previousSplitterPos = function (width, altWidth, splitterPos, altSplitterPos, centreWidth, splitterWidth, altInsertionPointPresent) {
     const positions = splitterPositions(width, altWidth, splitterPos, altSplitterPos, centreWidth, splitterWidth, altInsertionPointPresent);
     for (let i = positions.length - 1; i >= 0; i--) {
