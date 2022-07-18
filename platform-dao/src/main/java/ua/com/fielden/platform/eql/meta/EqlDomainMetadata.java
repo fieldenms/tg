@@ -50,8 +50,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
@@ -59,6 +57,7 @@ import java.util.stream.Collectors;
 import org.hibernate.type.BasicType;
 import org.hibernate.type.Type;
 import org.hibernate.type.TypeResolver;
+import org.hibernate.usertype.CompositeUserType;
 
 import com.google.inject.Injector;
 
@@ -425,14 +424,23 @@ public class EqlDomainMetadata {
      * @return
      */
     private final Table generateTable(final String tableName, final List<EqlPropertyMetadata> propsMetadata) {
-        final SortedMap<String, PropColumnInfo> columns = new TreeMap<>();
+        final List<PropColumnInfo> columns = new ArrayList<>();
         for (final EqlPropertyMetadata el : propsMetadata) {
-            if (el.column != null) {
-                columns.put(el.name, new PropColumnInfo(el.column.name, el.javaType, el.hibType));
-            } else if (!el.subitems().isEmpty()) {
-                for (final EqlPropertyMetadata subitem : el.subitems()) {
-                    if (subitem.column != null) {
-                        columns.put(el.name + "." + subitem.name, new PropColumnInfo(subitem.column.name, subitem.javaType, subitem.hibType));
+            if (!el.name.equals(ID) && !el.name.equals(VERSION)) {
+                if (el.column != null) {
+                    columns.add(new PropColumnInfo(isPersistedEntityType(el.javaType) ? el.name + "." + ID : el.name, el.column.name, el.hibType));
+                } else if (!el.subitems().isEmpty()) {
+                    if (el.hibType instanceof CompositeUserType) {
+                        final List<String> columnNames = el.subitems().stream().filter(s -> s.column != null /* only relevant for persistent props */).map(s -> s.column.name).collect(toList());
+                        if (!columnNames.isEmpty()) { // there was at least 1 persistent property
+                            columns.add(new PropColumnInfo(el.name, columnNames, el.hibType));
+                        }
+                    } else {
+                        for (final EqlPropertyMetadata subitem : el.subitems()) {
+                            if (subitem.column != null) {
+                                columns.add(new PropColumnInfo((el.name + "." + subitem.name + (isPersistedEntityType(subitem.javaType) ? "." + ID : "")), subitem.column.name, subitem.hibType));
+                            }
+                        }
                     }
                 }
             }
