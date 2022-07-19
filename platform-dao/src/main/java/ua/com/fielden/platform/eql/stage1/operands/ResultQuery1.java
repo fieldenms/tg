@@ -13,8 +13,10 @@ import java.util.Map.Entry;
 import com.google.common.base.Objects;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.EntityRetrievalModel;
 import ua.com.fielden.platform.entity.query.IRetrievalModel;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
+import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
 import ua.com.fielden.platform.eql.stage1.ITransformableToS2;
 import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.TransformationContext;
@@ -88,9 +90,23 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
     private Yields2 enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource) {
         if (yields.getYields().isEmpty() || yieldAll) {
             final List<Yield2> enhancedYields = new ArrayList<>(yields.getYields());
-            for (final Entry<String, AbstractPropInfo<?>> el : mainSource.entityInfo().getProps().entrySet()) {
-                if (fetchModel == null || fetchModel.containsProp(el.getValue().name)) {
-                    enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(el.getValue())), el.getKey(), false));
+
+            final boolean isNotTopFetch = fetchModel == null ? false : !fetchModel.topLevel();
+            for (final Entry<String, AbstractPropInfo<?>> l1Prop : mainSource.entityInfo().getProps().entrySet()) {
+                if (fetchModel == null || fetchModel.containsProp(l1Prop.getValue().name)) {
+                    final EntityRetrievalModel<? extends AbstractEntity<?>> l1PropFm = fetchModel == null ? null : fetchModel.getRetrievalModels().get(l1Prop.getValue().name);
+                    final boolean yieldSubprops = isNotTopFetch && l1PropFm != null && l1Prop.getValue() instanceof EntityTypePropInfo;
+                    
+                    if (!yieldSubprops) {
+                        enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(l1Prop.getValue())), l1Prop.getKey(), false));
+                    } else {
+                        final EntityTypePropInfo<?> l1PropMd = ((EntityTypePropInfo<?>) l1Prop.getValue());
+                        for (final Entry<String, AbstractPropInfo<?>> l2Prop : l1PropMd.propEntityInfo.getProps().entrySet()) {
+                            if (l1PropFm.containsProp(l2Prop.getValue().name)) {
+                                enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(l1Prop.getValue(), l2Prop.getValue())), l1Prop.getKey() + "." + l2Prop.getKey(), false));
+                            }
+                        }
+                    }
                 }
             }
             return new Yields2(enhancedYields);

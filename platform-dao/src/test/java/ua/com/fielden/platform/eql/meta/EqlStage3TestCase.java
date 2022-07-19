@@ -6,7 +6,7 @@ import static java.util.Collections.emptyMap;
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.DbVersion.H2;
-import static ua.com.fielden.platform.entity.query.EntityContainerFetcher.getResultPropsInfos;
+import static ua.com.fielden.platform.eql.retrieval.EntityContainerFetcher.getResultPropsInfos;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;

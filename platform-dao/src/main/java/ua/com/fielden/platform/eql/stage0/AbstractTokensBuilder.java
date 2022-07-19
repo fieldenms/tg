@@ -32,6 +32,7 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
+import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.functions.AbsOfBuilder;
 import ua.com.fielden.platform.eql.stage0.functions.AddDateIntervalBuilder;
 import ua.com.fielden.platform.eql.stage0.functions.AverageOfBuilder;
@@ -211,7 +212,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         if (qp == null || qp.isEmptyWithoutMnemonics()) {
             return emptyCondition();
         } else if (props.getKey() instanceof String) {
-            return buildCondition(qp, (String) props.getKey(), false, queryBuilder.dates);
+            return buildCondition(qp, (String) props.getKey(), false, queryBuilder.nowValue.dates);
         } else {
             final T2<ICompoundCondition0<?>, String> args =  (T2<ICompoundCondition0<?>, String>) props.getKey();
             return collectionalCritConditionOperatorModel(args._1, args._2, qp);
@@ -224,7 +225,7 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         final Boolean originalNot = qp.getNot();
         qp.setOrNull(null);
         qp.setNot(null);
-        final ConditionModel result = qp == null || qp.isEmptyWithoutMnemonics() ? emptyCondition() : buildCondition(qp, propName, false, queryBuilder.dates);
+        final ConditionModel result = qp == null || qp.isEmptyWithoutMnemonics() ? emptyCondition() : buildCondition(qp, propName, false, queryBuilder.nowValue.dates);
         qp.setOrNull(originalOrNull);
         qp.setNot(originalNot);
         return result;
@@ -325,8 +326,8 @@ public abstract class AbstractTokensBuilder implements ITokensBuilder {
         case COUNT_ALL:
             return CountAll1.INSTANCE;
         case NOW:
-            return new Value1(getParamValue(EntQueryGenerator.NOW)); //new Now1();
-
+            final QueryNowValue qnv = queryBuilder.nowValue;
+            return new Value1(qnv != null ? qnv.get() : null);
         default:
             throw new RuntimeException("Unrecognised zero agrument function: " + function);
         }

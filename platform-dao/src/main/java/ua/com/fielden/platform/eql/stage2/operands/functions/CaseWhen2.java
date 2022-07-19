@@ -44,6 +44,10 @@ public class CaseWhen2 extends AbstractFunction2<CaseWhen3> {
             }
         }
         
+        if (types.isEmpty()) {
+           types.add(String.class); // Needed to handle EQL2-legacy workarounds correctly (e.g. caseWhen(...).then().val(null).otherwise().val(null).endAsStr() ..). In EQL3 there is no need to use caseWhen -- just val(null), which will be translated to the SQL NULL literal. 
+        }
+        
         return types;
     }
 

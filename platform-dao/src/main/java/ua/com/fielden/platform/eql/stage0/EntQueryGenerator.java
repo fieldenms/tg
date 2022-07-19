@@ -11,8 +11,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
-import org.joda.time.DateTime;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.IRetrievalModel;
@@ -21,7 +19,7 @@ import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
-import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
+import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.etc.OrderBys1;
@@ -32,28 +30,19 @@ import ua.com.fielden.platform.eql.stage1.operands.TypelessSubQuery1;
 import ua.com.fielden.platform.eql.stage1.sources.ISource1;
 import ua.com.fielden.platform.eql.stage1.sources.ISources1;
 import ua.com.fielden.platform.eql.stage2.sources.ISources2;
-import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQueryGenerator {
-    public static final String NOW = "UC#NOW";
-
-    public final IDates dates;
+    public final QueryNowValue nowValue;
     public final IFilter filter;
     public final String username;
     private final Map<String, Object> paramValues = new HashMap<>();
     
-    public EntQueryGenerator(final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues) {
+    public EntQueryGenerator(final IFilter filter, final String username, final QueryNowValue nowValue, final Map<String, Object> paramValues) {
         this.filter = filter;
         this.username = username;
-        this.dates = dates;
+        this.nowValue = nowValue;
         this.paramValues.putAll(paramValues);
-        if (dates != null) {
-            final DateTime now = dates.now();
-            if (now != null) {
-                this.paramValues.put(NOW, now.toDate());
-            }
-        }
     }
     
     private int sourceId = 0;
