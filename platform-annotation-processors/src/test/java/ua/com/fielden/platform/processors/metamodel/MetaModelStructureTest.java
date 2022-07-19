@@ -67,7 +67,9 @@ import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
 import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntityAdjacentToOtherEntities;
 import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntityChild;
+import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntityNotPersistent;
 import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntityParent;
+import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntityPersistent;
 import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntitySinkNodesOnly;
 import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntityWithDescTitle;
 import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntityWithoutDescTitle;
@@ -200,6 +202,21 @@ public class MetaModelStructureTest {
                 assertTrue(MetaModelFinder.isPropertyMetaModelMethod(metamodeledProp));
             }
         }
+    }
+    
+    @Test
+    public void only_persistent_entities_have_property_id_metamodeled() {
+        final EntityElement entityPersistent = findEntity(TestEntityPersistent.class);
+        final MetaModelElement persistentMetaModel = findMetaModel(entityPersistent);
+        // make sure property "id" is metamodeled
+        assertTrue(MetaModelFinder.findPropertyMethods(persistentMetaModel, types).stream()
+            .anyMatch(el -> el.getSimpleName().toString().equals("id")));
+
+        final EntityElement entityNotPersistent = findEntity(TestEntityNotPersistent.class);
+        final MetaModelElement notPersistentMetaModel = findMetaModel(entityNotPersistent);
+        // make sure property "id" is not metamodeled
+        assertTrue(MetaModelFinder.findPropertyMethods(notPersistentMetaModel, types).stream()
+            .noneMatch(el -> el.getSimpleName().toString().equals("id")));
     }
 
     // ============================ HELPER METHODS ============================
