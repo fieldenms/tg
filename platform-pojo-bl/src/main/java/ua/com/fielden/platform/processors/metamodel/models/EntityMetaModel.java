@@ -17,6 +17,7 @@ import ua.com.fielden.platform.processors.metamodel. exceptions.EntityMetaModelE
  */
 public abstract class EntityMetaModel implements IConvertableToPath {
     private final String path;
+    public String alias = null; // a factory method should be provided by a subclass
     
     public EntityMetaModel(final String path) {
         if (path == null) {
@@ -39,26 +40,25 @@ public abstract class EntityMetaModel implements IConvertableToPath {
     }
     
     /**
-     * Returns the dot-notated path captured in the context. If this entity meta-model has no surrounding context, then this method returns {@code "this"} string constant.
+     * Returns the dot-notated path captured in the context. If this entity meta-model has no surrounding context, then this method returns its alias in case the meta-model was aliased, otherwise {@code "this"} is returned.
      * <p> 
      * Example:
      * 
      * <pre>
-     * public class PersonMetaModel extends EntityMetaModel {
-     *      ...
-     * }
-     * 
-     * PersonMetaModel personBase = new PersonMetaModel();
+     * var personBase = new PersonMetaModel();
      * personBase.toPath(); // "this"
      * 
-     * PersonMetaModel personWithContext = new PersonMetaModel("owner");
+     * var personWithContext = new PersonMetaModel("owner");
      * personWithContext.toPath(); // "owner"
+     * 
+     * var personAliased = PersonMetaModel.withAlias("p");
+     * personAliased.toPath(); // "p"
      * </pre>
      */
     @Override
     public final String toPath() {
         if (path.isEmpty()) {
-            return "this";
+            return alias == null ? "this" : alias;
         }
 
         return this.path;
