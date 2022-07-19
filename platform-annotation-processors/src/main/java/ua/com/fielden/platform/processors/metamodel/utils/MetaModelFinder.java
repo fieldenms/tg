@@ -9,6 +9,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
@@ -119,7 +120,8 @@ public class MetaModelFinder {
      * @return true if the method's return type is {@link PropertyMetaModel}, false otherwise
      */
     public static boolean isPropertyMetaModelMethod(final ExecutableElement method) {
-        return ElementFinder.isMethodReturnType(method, PropertyMetaModel.class);
+        return !method.getModifiers().contains(Modifier.STATIC) &&
+                ElementFinder.isMethodReturnType(method, PropertyMetaModel.class);
     }
 
     /**
@@ -128,7 +130,8 @@ public class MetaModelFinder {
      * @return true if the method's return type is a subtype of {@link EntityMetaModel}, false otherwise
      */
     public static boolean isEntityMetaModelMethod(final ExecutableElement method, final Types typeUtils) {
-        return ElementFinder.isSubtype(method.getReturnType(), EntityMetaModel.class, typeUtils);
+        return !method.getModifiers().contains(Modifier.STATIC) &&
+                ElementFinder.isSubtype(method.getReturnType(), EntityMetaModel.class, typeUtils);
     }
     
     public static boolean isSameMetaModel(final MetaModelConcept mmc, final MetaModelElement mme) {
