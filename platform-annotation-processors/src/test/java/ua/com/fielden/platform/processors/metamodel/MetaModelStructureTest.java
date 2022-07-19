@@ -13,7 +13,6 @@ import java.io.OutputStream;
 import java.io.Reader;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.lang.reflect.Field;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.Charset;
@@ -62,7 +61,6 @@ import com.google.common.io.ByteSource;
 import com.google.testing.compile.JavaFileObjects;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
@@ -76,7 +74,6 @@ import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntityWith
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
-import ua.com.fielden.platform.reflection.Finder;
 
 
 /**
@@ -242,19 +239,6 @@ public class MetaModelStructureTest {
         return maybeMetaModel.get();
     }
     
-    /**
-     * Wraps a call to {@link Finder#findProperties(Class)} to make sure that property "desc" isn't included if the given entity is not annotated with {@link DescTitle}.
-     * @param entityType
-     * @return
-     */
-    private static List<Field> findProperties(final Class<? extends AbstractEntity<?>> entityType) {
-        final List<Field> properties = Finder.findProperties(entityType);
-        if (!entityType.isAnnotationPresent(DescTitle.class)) {
-            properties.removeIf(field -> field.getName().equals("desc"));
-        }
-        return properties;
-    }
-
     /**
      * Implementation of {@link org.junit.rules.TestRule} that compiles java sources at runtime, storing them in memory, and provides access to instances of {@link Elements} and {@link Types} for further analysis of both input java sources and those that were generated during annotation processing.
      * 
