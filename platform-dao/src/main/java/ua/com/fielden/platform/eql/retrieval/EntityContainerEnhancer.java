@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.retrieval;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.lang.reflect.Field;
@@ -11,7 +12,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.SortedSet;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
@@ -34,7 +35,7 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
     private final EntityContainerFetcher fetcher;
     private final DomainMetadataAnalyser domainMetadataAnalyser;
     private final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
-    private static final Logger logger = Logger.getLogger(EntityContainerEnhancer.class);
+    private static final Logger logger = getLogger(EntityContainerEnhancer.class);
 
     protected EntityContainerEnhancer(final EntityContainerFetcher fetcher, final DomainMetadataAnalyser domainMetadataAnalyser, final IdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache) {
         this.fetcher = fetcher;
