@@ -2,6 +2,8 @@ package ua.com.fielden.platform.processors.metamodel.models;
 
 import static java.lang.String.format;
 
+import java.util.Objects;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.processors.metamodel. exceptions.EntityMetaModelException;
@@ -17,7 +19,11 @@ import ua.com.fielden.platform.processors.metamodel. exceptions.EntityMetaModelE
  */
 public abstract class EntityMetaModel implements IConvertableToPath {
     private final String path;
-    public String alias = null; // a factory method should be provided by a subclass
+    /* This field should not be considered an attribute in the sort of sense that `path` is.
+     * It should be used as a substitute for a getter method getAlias().
+     * Because it is prefered to keep all subclasses clean of any instance methods to reduce
+     * the probablity of a name conflict between a metamodeled property and an inherited method. */
+    public String alias = null; // a static factory method should be provided by a subclass
     
     public EntityMetaModel(final String path) {
         if (path == null) {
@@ -69,10 +75,26 @@ public abstract class EntityMetaModel implements IConvertableToPath {
         return toPath();
     }
 
+    @Override
+    public int hashCode() {
+        return 31 + Objects.hashCode(path);
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof EntityMetaModel)) {
+            return false;
+        }
+        final EntityMetaModel that = (EntityMetaModel) obj;
+        return Objects.equals(this.path, that.path);
+    }
+
     /**
      * Returns the underlying entity class of this meta-model.
      * @return
      */
     public abstract Class<? extends AbstractEntity> getEntityClass();
-
 }
