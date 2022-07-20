@@ -16,6 +16,7 @@ import static ua.com.fielden.platform.processors.metamodel.utils.EntityFinder.fi
 import static ua.com.fielden.platform.processors.metamodel.utils.EntityFinder.isEntityThatNeedsMetaModel;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -27,6 +28,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -73,6 +75,7 @@ import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelsElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
+import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
@@ -646,11 +649,11 @@ public class MetaModelProcessor extends AbstractProcessor {
     }
 
     /**
-     * Generates a meta-models collection class that has a field for each meta-model in {@code metaModelConcepts}, as well as the existing fields that are provided by {@code metaModelsElement} apart from those that are inactive ({@code inactiveMetaModelElements}).
+     * Generates a meta-models collection class that acts as a provider of meta-model instances and thus is to be used as an entry point.
      *
-     * @param metaModelConcepts
-     * @param maybeMetaModelsElement
-     * @param inactiveMetaModelElements
+     * @param metaModelConcepts new meta-models that should be added
+     * @param maybeMetaModelsElement optionally provides an existing meta-models class, contents of which should be copied
+     * @param inactiveMetaModelElements inactive meta-models that should be excluded
      */
     private void writeMetaModelsClass(final Collection<MetaModelConcept> metaModelConcepts, final Optional<MetaModelsElement> maybeMetaModelsElement, final Collection<MetaModelElement> inactiveMetaModelElements) {
         messager.printMessage(Kind.NOTE, "Started generating the meta-models entry point...");
@@ -660,19 +663,35 @@ public class MetaModelProcessor extends AbstractProcessor {
         }
         /*
         public final class MetaModels {
-            public static final ${METAMODEL} ${ENTITY_NAME} = new ${METAMODEL}();
+            private static final ConcurrentHashMap<EntityMetaModel, WeakReference<EntityMetaModel>> aliasedMetaModelCache = new ConcurrentHashMap<>();
+
+            public static final ${METAMODEL} ${ENTITY_NAME}_ = new ${METAMODEL}();
+            
+            public static ${METAMODEL} ${ENTITY_NAME}_(String alias) {
+                ${METAMODEL} aliased = PersonMetaModel.withAlias(alias);
+                WeakReference<EntityMetaModel> previous = aliasedMetaModelCache.putIfAbsent(aliased, new WeakReference<>(aliased));
+                return previous == null ? aliased : (PersonMetaModel) previous.get();
+            }
         }
          */
         final SortedSet<FieldSpec> fieldSpecs = new TreeSet<>((f1, f2) -> f1.name.compareTo(f2.name));
+        final SortedSet<MethodSpec> methodSpecs = new TreeSet<>((m1, m2) -> m1.name.compareTo(m2.name));
+        
+        // generate static field for caching aliased meta-models
+        // store it in a separate variable so that it is not sorted and is generated as the first field
+        final FieldSpec aliasedMetaModelCacheField = specFieldAliasedMetaModelCache("aliasedMetaModelCache");
 
-        // generate fields for new meta-models
+        // generate static fields and methods for new meta-models
         for (final MetaModelConcept mmc: metaModelConcepts) {
             final String fieldName = nameFieldForMetaModel(mmc.getEntityElement().getSimpleName());
             messager.printMessage(Kind.NOTE, format("New/Updated meta-model, generating field: %s", fieldName));
             fieldSpecs.add(specFieldForMetaModel(mmc.getMetaModelClassName(), fieldName));
+            
+            final String methodName = fieldName;
+            methodSpecs.add(aliasMethodForMetaModel(mmc.getMetaModelClassName(), methodName));
         }
 
-        // if MetaModels class exists, then collect its fields for the active *unchanged* meta-models 
+        // if MetaModels class exists, then collect its members for the active *unchanged* meta-models 
         if (maybeMetaModelsElement.isPresent()) {
             final MetaModelsElement metaModelsElement = maybeMetaModelsElement.get();
             final List<MetaModelElement> activeUnchangedMetaModels = metaModelsElement.getMetaModels().stream()
@@ -689,8 +708,10 @@ public class MetaModelProcessor extends AbstractProcessor {
             for (final MetaModelElement mme: activeUnchangedMetaModels) {
                 final EntityElement entity = EntityFinder.findEntityForMetaModel(mme, elementUtils);
                 final String fieldName = nameFieldForMetaModel(entity.getSimpleName());
+                final String methodName = fieldName;
                 messager.printMessage(Kind.NOTE, format("Old meta-model, generating field: %s", fieldName));
                 fieldSpecs.add(specFieldForMetaModel(mme.getMetaModelClassName(), fieldName));
+                methodSpecs.add(aliasMethodForMetaModel(mme.getMetaModelClassName(), methodName));
             }
         }
 
@@ -706,7 +727,9 @@ public class MetaModelProcessor extends AbstractProcessor {
                 .addJavadoc(format("Generation datetime: %s\n<p>\n", dateTimeString))
                 .addJavadoc(format("Generated by {@link %s}.", this.getClass().getCanonicalName()))
                 .addAnnotation(generatedAnnotation)
+                .addField(aliasedMetaModelCacheField)
                 .addFields(fieldSpecs)
+                .addMethods(methodSpecs)
                 .build();
 
         // ######################## WRITE TO FILE #####################
@@ -723,7 +746,11 @@ public class MetaModelProcessor extends AbstractProcessor {
 
     /**
      * Creates a {@link FieldSpec} for field with name {@code fieldName} of type {@code metaModelClassName} in {@code MetaModels} for representing a reference to a domain meta-model. 
-     *
+     * <p>
+     * <pre>
+     * public static final ${METAMODEL} ${NAME} = new ${METAMODEL}();
+     * </pre>
+     * 
      * @param metaModelClassName
      * @param fieldName
      * @return
@@ -734,6 +761,59 @@ public class MetaModelProcessor extends AbstractProcessor {
                 .addModifiers(Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
                 .build();
         return fieldSpec;
+    }
+
+    /**
+     * Creates a {@link FieldSpec} for a cache for aliased meta-models.
+     * <p>
+     * <pre>
+     * private static final ConcurrentHashMap&lt;EntityMetaModel, WeakReference&lt;EntityMetaModel>>
+     *     aliasedMetaModelCache = new ConcurrentHashMap<>();
+     * </pre>
+     * @param string name to create the field with
+     * @return
+     */
+    private static FieldSpec specFieldAliasedMetaModelCache(final String fieldName) {
+        // WeakReference<EntityMetaModel>
+        final ParameterizedTypeName paramTypeNameWeakReference = ParameterizedTypeName.get(
+                WeakReference.class, EntityMetaModel.class);
+        // ConcurrentHashMap<EntityMetaModel, WeakReference<EntityMetaModel>>
+        final ParameterizedTypeName fieldTypeName = ParameterizedTypeName.get(
+                ClassName.get(ConcurrentHashMap.class), 
+                ClassName.get(EntityMetaModel.class), paramTypeNameWeakReference);
+
+        final FieldSpec fieldSpec = FieldSpec.builder(fieldTypeName, fieldName)
+                .addModifiers(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL)
+                .initializer("new $T<>()", ConcurrentHashMap.class)
+                .build();
+        return fieldSpec;
+    }
+    
+    /**
+     * Creates a {@link MethodSpec} for the <code>MetaModels</code> class to access aliased meta-models.
+     * <p>
+     * <pre>
+     * public static ${METAMODEL} ${NAME}(String alias) {
+     *     ${METAMODEL} aliased = ${METAMODEL}.withAlias(alias);
+     *     WeakReference&lt;EntityMetaModel&gt; previous = aliasedMetaModelCache.putIfAbsent(aliased, new WeakReference<>(aliased));
+     *     return previous == null ? aliased : (${METAMODEL}) previous.get();
+     * }
+     * 
+     * </pre>
+     * @param metaModelClassName name of the meta-model to be accessed
+     * @param methodName name to create the method with
+     * @return
+     */
+    private static MethodSpec aliasMethodForMetaModel(final ClassName metaModelClassName, final String methodName) {
+        final MethodSpec method = MethodSpec.methodBuilder(methodName)
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .returns(metaModelClassName)
+                .addParameter(String.class, "alias")
+                .addStatement("$T aliased = $T.withAlias(alias)", metaModelClassName, metaModelClassName)
+                .addStatement("$T<$T> previous = aliasedMetaModelCache.putIfAbsent(aliased, new $T<>(aliased))", WeakReference.class, EntityMetaModel.class, WeakReference.class)
+                .addStatement("return previous == null ? aliased : ($T) previous.get()", metaModelClassName)
+                .build();
+        return method;
     }
 
     /**
