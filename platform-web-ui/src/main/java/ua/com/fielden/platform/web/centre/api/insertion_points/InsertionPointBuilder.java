@@ -58,6 +58,8 @@ public class InsertionPointBuilder implements IRenderable, IExecutable {
             insertionPointDom.attr("alternative-view", true);
             insertionPointDom.attr("hide-margins", true);
             insertionPointDom.attr("slot", "alternative-view-insertion-point");
+        } else {
+            insertionPointDom.attr("without-resizing", insertionPointConfig.isWithoutResizing());
         }
         return insertionPointDom;
     }

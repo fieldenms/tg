@@ -142,7 +142,7 @@ const template = html`
             </div>
             <div class="lock-layer" lock$="[[lock]]"></div>
         </div>
-        <iron-icon id="resizer" hidden="[[_resizingDisabled(detachedView, alternativeView)]]" icon="tg-icons:resize-bottom-right" on-track="_resizeInsertionPoint" tooltip-text="Drag to resize"></iron-icon>
+        <iron-icon id="resizer" hidden="[[_resizingDisabled(detachedView, alternativeView, withoutResizing)]]" icon="tg-icons:resize-bottom-right" on-track="_resizeInsertionPoint" tooltip-text="Drag to resize"></iron-icon>
     </div>
     <tg-toast id="toaster"></tg-toast>
 `;
@@ -168,6 +168,14 @@ Polymer({
             type: Boolean,
             value: false,
             reflectToAttribute: true
+        },
+
+        /**
+         * Indicates whether this insertion point should be resizable or not.
+         */
+        withoutResizing: {
+            type: Boolean,
+            value: false
         },
         
         /**
@@ -557,9 +565,10 @@ Polymer({
      * 
      * @param {Boolean} detachedView - is insertion point in detached mode?
      * @param {Boolean} alternativeView - is insertion point an alternative view?
+     * @param {Boolean} withoutResizing - is insertion point is resizable?
      */
-    _resizingDisabled: function (detachedView, alternativeView) {
-        return detachedView || alternativeView;
+    _resizingDisabled: function (detachedView, alternativeView, withoutResizing) {
+        return detachedView || alternativeView || withoutResizing;
     },
 
     /**
@@ -569,7 +578,7 @@ Polymer({
      */
     _resizeInsertionPoint: function (event) {
         const target = event.target || event.srcElement;
-        if (target === this.$.resizer) {
+        if (target === this.$.resizer && !this.withoutResizing) {
             switch (event.detail.state) {
                 case 'start':
                     document.styleSheets[0].insertRule('* { cursor: ns-resize !important; }', 0); // override custom cursors in all application with resizing cursor

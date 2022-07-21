@@ -2000,7 +2000,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                             .prefDimForView(mkDim("''", "'500px'"))
                             .withNoParentCentreRefresh()
                             .build(),
-                    InsertionPoints.RIGHT)
+                    InsertionPoints.RIGHT).withoutResizing()
 //                    .addInsertionPoint(
 //                            action(TgCentreInvokerWithCentreContext.class)
 //                                    .withContext(context().withSelectionCrit().withSelectedEntities().build())

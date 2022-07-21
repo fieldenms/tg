@@ -20,5 +20,5 @@ public interface IInsertionPoints<T extends AbstractEntity<?>> extends IWithLeft
      * @param whereToInsertView
      * @return
      */
-    IInsertionPointPreferred<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView);
+    IInsertionPointConfig0<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView);
 }
