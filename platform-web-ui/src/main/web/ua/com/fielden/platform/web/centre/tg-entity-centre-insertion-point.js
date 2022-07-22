@@ -66,6 +66,7 @@ const template = html`
         .title-bar {
             height: 44px;
             min-height: 44px;
+            padding: 0 8px 0 8px;
             font-size: 18px;
             cursor: default;
             color: white;
@@ -81,17 +82,16 @@ const template = html`
             margin: 8px 0;
         }
 
-        paper-icon-button.expand-colapse-button {
-            min-width: 40px;
-            min-height: 40px;
+        paper-icon-button.title-bar-button {
+            padding: 0;
+            width: 24px;
+            height: 24px;
             stroke: var(--paper-grey-100);
             fill: var(--paper-grey-100);
             color: var(--paper-grey-100);
         }
 
-        paper-icon-button.expand-colapse-button:hover {
-            min-width: 40px;
-            min-height: 40px;
+        paper-icon-button.title-bar-button:hover {
             stroke: var(--paper-grey-300);
             fill: var(--paper-grey-300);
             color: var(--paper-grey-300);
@@ -130,8 +130,11 @@ const template = html`
     <div id="pm" class="layout vertical flex" detached$="[[detachedView]]">
         <div id="insertionPointContent" tabindex$="[[_getTabIndex(alternativeView)]]" class="layout vertical flex relative">
             <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]">
-                <span class="title-text truncate" style="margin-left:16px;" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
-                <paper-icon-button class="title-bar-button expand-colapse-button" style="margin-left:10px;margin-right:2px;" icon="icons:open-in-new" on-tap="_expandColapseTap"></paper-icon-button>
+                <span class="title-text truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
+                <div class="layout horizontal centre">
+                    <paper-icon-button class="title-bar-button" icon="icons:cached" on-tap="_clearLocalStorage"></paper-icon-button>
+                    <paper-icon-button class="title-bar-button expand-colapse-button" icon="icons:open-in-new" on-tap="_expandColapseTap"></paper-icon-button>
+                </div>
             </div>
             <tg-responsive-toolbar id="viewToolbar" hidden$="[[!_isToolbarVisible(detachedView, alternativeView, isAttached)]]">
                 <slot id="entitySpecificActions" slot="entity-specific-action" name="entity-specific-action"></slot>
@@ -310,11 +313,11 @@ Polymer({
 
         _height: {
             type: String,
-            observer: "_hightChanged"
+            observer: "_heightChanged"
         }
     },
 
-    observers: ['_adjustView(detachedView, alternativeView)', '_restoreFromLocalStorage(_element, contextRetriever)'],
+    observers: ['_adjustView(detachedView, alternativeView, _height)', '_restoreFromLocalStorage(_element, contextRetriever)'],
 
     ready: function () {
         this.triggerElement = this.$.insertionPointContent;
@@ -471,13 +474,13 @@ Polymer({
                     if (promise) {
                         return promise
                             .then(function () {
-                                self._adjustView(self.detachedView, self.alternativeView);
+                                self._adjustView(self.detachedView, self.alternativeView, self._height);
                                 customAction.restoreActiveElement();
                             });
                     } else {
                         return Promise.resolve()
                             .then(function () {
-                                self._adjustView(self.detachedView, self.alternativeView);
+                                self._adjustView(self.detachedView, self.alternativeView, self._height);
                                 customAction.restoreActiveElement();
                             });
                     }
@@ -513,7 +516,7 @@ Polymer({
     /**
      * Assigns sizes for insertion point depending on several states in which it can be: attached / detached (non-alternative view) and alternative view.
      */
-    _adjustView: function (detachedView, alternativeView) {
+    _adjustView: function (detachedView, alternativeView, height) {
         this.$.loadableContent.style.removeProperty("width");
         this.$.loadableContent.style.removeProperty("height");
         this.$.loadableContent.style.removeProperty("min-width");
@@ -524,7 +527,7 @@ Polymer({
             if (this.$.elementLoader.prefDim) {
                 const prefDim = this.$.elementLoader.prefDim;
                 this.$.loadableContent.style.minWidth = prefDim.width() + prefDim.widthUnit;
-                this.$.loadableContent.style.minHeight = this._height ? this._height : prefDim.height() + prefDim.heightUnit;
+                this.$.loadableContent.style.minHeight = height ? height : prefDim.height() + prefDim.heightUnit;
             } 
             if (alternativeView) {
                 this.style.width = "100%";
@@ -549,6 +552,11 @@ Polymer({
 
     _saveInsertionPointHeight: function(newHeight) {
         localStorage.setItem(insertionPointKey(this.contextRetriever(), this._element), newHeight);
+    },
+
+    _clearLocalStorage: function (event) {
+        localStorage.removeItem(insertionPointKey(this.contextRetriever(), this._element));
+        this._height = null;
     },
 
     _expandColapseTap: function (event) {
@@ -604,10 +612,9 @@ Polymer({
      * 
      * @param {String} newValue - new insertion point's height
      */
-    _hightChanged: function (newValue) {
+    _heightChanged: function (newValue) {
         if (newValue) {
             this.$.loadableContent.style.minHeight = newValue;
-            this.notifyResize();
         }
     },
 
