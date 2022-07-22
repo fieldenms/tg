@@ -238,12 +238,13 @@ const template = html`
             cursor: pointer;
             border-left: 7px solid white;
         }
-        .centre-result-container {
-            min-height: -webkit-fit-content;
-            min-height: -moz-fit-content;
-            min-height: fit-content;
+        tg-centre-result-view {
+            height: 100%100%;
         }
-        .insertion-point-slot {
+        tg-centre-result-view[centre-scroll] {
+            min-height: 100%
+        }
+        .insertion-point-slot[scroll-container] {
             overflow: auto;
         }
         .noselect {
@@ -294,15 +295,15 @@ const template = html`
                 </tg-selection-view>
             </div>
         </div>
-        <tg-centre-result-view id="centreResultContainer">
-            <div id="leftInsertionPointContainer" class="insertion-point-slot layout vertical">
+        <tg-centre-result-view id="centreResultContainer" centre-scroll$="[[centreScroll]]">
+            <div id="leftInsertionPointContainer" class="insertion-point-slot layout vertical" scroll-container$="[[!centreScroll]]">
                 <slot id="leftInsertionPointContent" name="left-insertion-point"></slot>
             </div>
             <div id="leftSplitter" class="splitter" hidden$="[[!leftInsertionPointPresent]]" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable" on-track="_changeLeftInsertionPointSize">
                 <div class="arrow-left" tooltip-text="Collapse" on-tap="_collapseLeftInsertionPoint"></div>
                 <div class="arrow-right" tooltip-text="Expand" on-tap="_expandLeftInsertionPoint"></div>
             </div>
-            <div id="centreInsertionPointContainer" class="insertion-point-slot layout vertical flex" style="min-width:0">
+            <div id="centreInsertionPointContainer" class="insertion-point-slot layout vertical flex" style="min-width:0" scroll-container$="[[!centreScroll]]">
                 <slot id="topInsertionPointContent" name="top-insertion-point"></slot>
                 <slot id="customEgiSlot" name="custom-egi"></slot>
                 <slot id="bottomInsertionPointContent" name="bottom-insertion-point"></slot>
@@ -311,7 +312,7 @@ const template = html`
                 <div class="arrow-left" tooltip-text="Expand" on-tap="_expandRightInsertionPoint"></div>
                 <div class="arrow-right" tooltip-text="Collapse" on-tap="_collapseRightInsertionPoint"></div>
             </div>
-            <div id="rightInsertionPointContainer" class="insertion-point-slot layout vertical">
+            <div id="rightInsertionPointContainer" class="insertion-point-slot layout vertical" scroll-container$="[[!centreScroll]]">
                 <slot id="rightInsertionPointContent" name="right-insertion-point"></slot>
             </div>
             <div id="fantomSplitter" class="fantom-splitter"></div>
@@ -376,6 +377,13 @@ Polymer({
         rightSplitterPosition: String,
         miType: String,
         userName: String,
+        /**
+         * Indicates whether scrolling is organised by centre or insertion point container.
+         */
+        centreScroll: {
+            type: Boolean,
+            value: false
+        },
         _showDialog: Function,
         saveAsName: {
             type: String,

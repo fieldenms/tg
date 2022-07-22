@@ -8,7 +8,6 @@ import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
 const template = html`
     <style>
         :host {
-            height: 100%;
             @apply --layout-horizontal;
             @apply --layout-justified;
         }
@@ -20,7 +19,6 @@ Polymer({
     _template: template,
 
     is: 'tg-centre-result-view',
-
     ready: function () {
         this.addEventListener("tg-centre-page-was-selected", () => {
             this.$.resultSlots.assignedNodes({ flatten: true }).forEach(node => {

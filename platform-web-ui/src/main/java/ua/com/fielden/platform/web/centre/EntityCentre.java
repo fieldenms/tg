@@ -228,6 +228,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     //centre related  config properties
     private static final String CENTRE_RETRIEVE_ALL_OPTION = "@retrieveAll";
     private static final String CENTRE_USER_NAME = "@userName";
+    private static final String CENTRE_SCROLL="@centreScroll";
     private static final String LEFT_SPLITTER_POSITION = "@leftSplitterPositionPlacehoder";
     private static final String RIGHT_SPLITTER_POSITION = "@rightSplitterPositionPlacehoder";
     // generic custom code
