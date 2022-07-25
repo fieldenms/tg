@@ -958,6 +958,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return retrieveAll;
     }
 
+    public boolean isCentreScroll() {
+        return centreScroll;
+    }
+
     public int getPageCapacity() {
         return pageCapacity;
     }

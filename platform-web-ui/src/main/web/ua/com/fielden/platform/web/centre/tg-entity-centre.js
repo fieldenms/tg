@@ -239,9 +239,10 @@ const template = html`
             border-left: 7px solid white;
         }
         tg-centre-result-view {
-            height: 100%100%;
+            height: 100%;
         }
         tg-centre-result-view[centre-scroll] {
+            height: auto;
             min-height: 100%
         }
         .insertion-point-slot[scroll-container] {
@@ -470,7 +471,20 @@ Polymer({
                 this.rightSplitterPosition = initSplitter(this.rightSplitterPosition, rightSplitterKey(this.userName, this.miType), actualRightSplitterKey(this.userName, this.miType),
                                                             this.$.rightInsertionPointContainer, centreWidth, centreWidthWithoutSplitter);
             }
+            this._notifyDescendantResize();
         }
+    },
+
+    _notifyDescendantResize: function () {
+        if (!this.isAttached) {
+          return;
+        }
+    
+        this._interestedResizables.forEach(function (resizable) {
+          if (this.resizerShouldNotify(resizable)) {
+            this._notifyDescendant(resizable);
+          }
+        }, this);
     },
 
     /**

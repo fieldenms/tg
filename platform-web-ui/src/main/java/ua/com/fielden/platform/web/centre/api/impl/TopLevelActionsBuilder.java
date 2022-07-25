@@ -18,6 +18,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IDynamicColumnBuilder;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aEgiIconStyle;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bCheckbox;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cToolbar;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dCentreScroll;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dScroll;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eDraggable;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1efRetrieveAll;
@@ -122,13 +123,18 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     }
 
     @Override
-    public IResultSetBuilder1eDraggable<T> notScrollable() {
+    public IResultSetBuilder1dCentreScroll<T> notScrollable() {
         return new ResultSetBuilder<>(builder).notScrollable();
     }
 
     @Override
-    public IResultSetBuilder1eDraggable<T> withScrollingConfig(final IScrollConfig scrollConfig) {
+    public IResultSetBuilder1dCentreScroll<T> withScrollingConfig(final IScrollConfig scrollConfig) {
         return new ResultSetBuilder<>(builder).withScrollingConfig(scrollConfig);
+    }
+
+    @Override
+    public IResultSetBuilder1eDraggable<T> withCentreScroll() {
+        return new ResultSetBuilder<>(builder).withCentreScroll();
     }
 
     @Override

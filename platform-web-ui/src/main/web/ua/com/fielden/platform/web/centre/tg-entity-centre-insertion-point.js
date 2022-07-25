@@ -132,8 +132,8 @@ const template = html`
             <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]">
                 <span class="title-text truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
                 <div class="layout horizontal centre">
-                    <paper-icon-button class="title-bar-button" icon="icons:cached" on-tap="_clearLocalStorage"></paper-icon-button>
-                    <paper-icon-button class="title-bar-button expand-colapse-button" icon="icons:open-in-new" on-tap="_expandColapseTap"></paper-icon-button>
+                    <paper-icon-button class="title-bar-button" hidden$="[[!_resetButtonVisible(detachedView, withoutResizing, alternativeView)]]" icon="icons:cached" on-tap="_clearLocalStorage" tooltip-text="Reset height"></paper-icon-button>
+                    <paper-icon-button class="title-bar-button expand-colapse-button" icon="icons:open-in-new" on-tap="_expandColapseTap" tooltip-text$="[[_expandBurronTooltip(detachedView)]]"></paper-icon-button>
                 </div>
             </div>
             <tg-responsive-toolbar id="viewToolbar" hidden$="[[!_isToolbarVisible(detachedView, alternativeView, isAttached)]]">
@@ -623,6 +623,14 @@ Polymer({
      */
     _hasTitleBar: function (shortDesc, alternativeView) {
         return !alternativeView && !!shortDesc;
+    },
+
+    _resetButtonVisible: function (detachedView, withoutResizing, alternativeView) {
+        return !withoutResizing && !detachedView && !alternativeView;
+    },
+
+    _expandBurronTooltip: function (detachedView) {
+        return detachedView ? "Collapse" : "Expand";
     },
 
     _isToolbarVisible: function (detachedView, alternativeView, isAttached) {

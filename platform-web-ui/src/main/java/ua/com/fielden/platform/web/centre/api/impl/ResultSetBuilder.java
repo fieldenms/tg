@@ -63,6 +63,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aEgiAp
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aEgiIconStyle;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bCheckbox;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cToolbar;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dCentreScroll;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dScroll;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eDraggable;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1efRetrieveAll;
@@ -568,7 +569,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder1eDraggable<T> notScrollable() {
+    public IResultSetBuilder1dCentreScroll<T> notScrollable() {
         this.builder.scrollConfig = ScrollConfig.configScroll()
                 .withFixedCheckboxesAndPrimaryActions()
                 .withFixedSecondaryActions()
@@ -603,8 +604,14 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder1eDraggable<T> withScrollingConfig(final IScrollConfig scrollConfig) {
+    public IResultSetBuilder1dCentreScroll<T> withScrollingConfig(final IScrollConfig scrollConfig) {
         this.builder.scrollConfig = scrollConfig;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder1eDraggable<T> withCentreScroll() {
+        this.builder.centreScroll = true;
         return this;
     }
 
