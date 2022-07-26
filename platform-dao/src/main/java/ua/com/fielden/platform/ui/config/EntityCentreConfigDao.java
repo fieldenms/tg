@@ -7,16 +7,20 @@ import java.util.function.Function;
 
 import javax.persistence.OptimisticLockException;
 
+import org.apache.log4j.Logger;
+import org.hibernate.Session;
+
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.ioc.session.SessionInterceptor;
+import ua.com.fielden.platform.ioc.session.exceptions.SessionScopingException;
 
 /**
  * DAO implementation of {@link EntityCentreConfigCo}.
@@ -31,7 +35,12 @@ import ua.com.fielden.platform.ioc.session.SessionInterceptor;
  */
 @EntityType(EntityCentreConfig.class)
 public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> implements EntityCentreConfigCo {
+
     private static final int SAVING_RETRIES_THRESHOULD = 10;
+
+    public static final String ERR_ALREADY_IN_TRANSACTIONAL_SCOPE = "Saving of an Entity Centre should never occur in an existing transactional scope.";
+    public static final String ERR_COULD_NOT_SAVE_CONFIG = "Could not save Entity Centre [%s] after %s retries.";
+    private static final Logger LOGGER = Logger.getLogger(EntityCentreConfigDao.class);
 
     @Inject
     protected EntityCentreConfigDao(final IFilter filter) {
@@ -67,21 +76,34 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
      * <p>
      * Implementation details:
      * <p>
-     * This method can not have {@link SessionRequired} scope. Method {@link #refetchReapplyAndSaveWithoutConflicts(EntityCentreConfig, int, RuntimeException)} can not have {@link SessionRequired} scope too.
-     * This is due to recursive invocation of the same logic down inside {@link #refetchReapplyAndSaveWithoutConflicts(EntityCentreConfig, int, RuntimeException)}.
-     * The problem lies in {@link OptimisticLockException} (or other conflict-based exceptions) which, when actioned, makes transaction inactive internally;
-     *  that makes impossible to invoke {@link #refetchReapplyAndSaveWithoutConflicts(EntityCentreConfig, int, RuntimeException)} method recursively again.
-     * What we need here is granular {@link SessionRequired} scope, so we have {@link #quickSave(EntityCentreConfig)} with {@link SessionRequired} and when {@link OptimisticLockException} occurs,
-     *  only little granular transaction ({@link #quickSave(EntityCentreConfig)}) makes inactive (and further rollbacks in {@link SessionInterceptor}).
-     * Next recursive invocation of {@link #refetchReapplyAndSaveWithoutConflicts(EntityCentreConfig, int, RuntimeException)} method will trigger separate independent {@link SessionRequired} scope for nested call {@link #quickSave(EntityCentreConfig)}.
+     * This method should not manage a transaction scope.
+     * Similarly, method {@link #refetchReapplyAndSaveWithoutConflicts(EntityCentreConfig, int, RuntimeException)} should also not manage a transaction scope.
+     * This is due to a recursive invocation of the same logic inside of method {@link #refetchReapplyAndSaveWithoutConflicts(EntityCentreConfig, int, RuntimeException)}.
+     * The problem lies in {@link OptimisticLockException} (or other conflict-based exceptions) which, when actioned, rolls back the current transaction;
+     * This, in turn, makes it impossible to invoke method {@link #refetchReapplyAndSaveWithoutConflicts(EntityCentreConfig, int, RuntimeException)} recursively.
+     * What we need here is more granular transaction scoping, which is why we have {@link #quickSave(EntityCentreConfig)} with {@link SessionRequired}. If {@link OptimisticLockException} occurs then
+     * only a granular transaction around ({@link #quickSave(EntityCentreConfig)}) is rolled back.
+     * Any subsequent recursive invocation of {@link #refetchReapplyAndSaveWithoutConflicts(EntityCentreConfig, int, RuntimeException)} would create a separate, independent {@link SessionRequired} scope for nested calls to {@link #quickSave(EntityCentreConfig)}.
      */
+    // @SessionRequired -- avoid transaction here; refer the javadoc
     @Override
     public Long saveWithoutConflicts(final EntityCentreConfig entity) {
+        // let's ensure there is no current session – if it exists then throw SessionScopingException
+        try {
+            final Session session = getSession(); // throws EntityCompanionException if there is no session
+            if (session.getTransaction().isActive()) {
+                LOGGER.error(ERR_ALREADY_IN_TRANSACTIONAL_SCOPE);
+                throw new SessionScopingException(ERR_ALREADY_IN_TRANSACTIONAL_SCOPE);
+            }
+        } catch (final EntityCompanionException ex) {
+            // an exception is expected in cases where there is no current session, which is what we need here
+        }
+        // no session is present, we can proceed with saving
         try {
             // we allow nested transaction scope here intentionally (quickSave allows it);
             // i.e. there will be rollbacked outer transaction in case of saving conflicts in some rare combinations, but no exception about disallowed nested transaction;
             // the only possible existing combination (very unlikely) is as following:
-            // 1. multiple @SessionRequired dao savings with ICriteriaEntityRestorer restoration occur simultaneously for the same user; stack of calls:
+            // 1. multiple @SessionRequired DAO savings with ICriteriaEntityRestorer restoration occur simultaneously for the same user; stack of calls:
             // saveWithoutConflicts (EntityCentreConfigDao)
             //   updateDifferences (CentreUpdater)
             //     updateCentre (CentreUpdater)
@@ -89,7 +111,7 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
             //         createCriteriaEntityForContext (CentreResourceUtils)
             //           restoreCriteriaEntity (CriteriaEntityRestorer)
             // 2. somehow FRESH centre configuration was not persisted earlier (extremely unlikely, because action would not be possible to open -- need loaded entity centre configuration on the client);
-            // in this situation dao saving would have broken transaction, i.e. if some exception would be thrown after saveWithoutConflicts then full rollback would not be performed
+            // in this situation DAO saving would have broken transaction, i.e. if some exception would be thrown after saveWithoutConflicts then full rollback would not be performed
             return quickSave(entity); // must be quickSave(entity), not super.quickSave(entity)!
             // Need to repeat saving of entity in case of "self conflict": in a concurrent environment the same user on the same entity centre configuration can trigger multiple concurrent validations with different parameters.
         } catch (final RuntimeException exception) {
@@ -112,6 +134,7 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
      */
     private Long refetchReapplyAndSaveWithoutConflicts(final EntityCentreConfig entity, final int retry, final RuntimeException exception) {
         if (retry > SAVING_RETRIES_THRESHOULD) {
+            LOGGER.debug(String.format(ERR_COULD_NOT_SAVE_CONFIG, entity.getTitle(), SAVING_RETRIES_THRESHOULD), exception);
             throw exception;
         }
         final EntityCentreConfig persistedEntity = findByEntityAndFetch(null, entity);
