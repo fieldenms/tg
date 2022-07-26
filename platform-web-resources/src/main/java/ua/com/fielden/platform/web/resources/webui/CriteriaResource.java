@@ -25,7 +25,6 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME
 import static ua.com.fielden.platform.web.centre.CentreUpdater.NAME_OF;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.commitCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.commitCentreWithoutConflicts;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.defaultRunAutomatically;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.loadableConfigurations;
@@ -220,7 +219,7 @@ public class CriteriaResource extends AbstractWebResource {
                 // empty link config is taken from SAVED surrogate centre (which is always empty);
                 final ICentreDomainTreeManagerAndEnhancer emptyCentre = updateCentre(user, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                 // clear current 'link' surrogate FRESH centre -- this is to make it empty before applying new selection criteria parameters (client-side action after this request's response will be delivered);
-                commitCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), emptyCentre, null /* newDesc */, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                commitCentreWithoutConflicts(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), emptyCentre, null /* newDesc */, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
             } else if (configUuid.isPresent()) {
                 // start loading of configuration defined by concrete uuid;
                 // we look only through [link, own save-as, inherited from base, inherited from shared] set of configurations;
@@ -316,7 +315,6 @@ public class CriteriaResource extends AbstractWebResource {
             // need to determine non-conflicting name for current user from preliminarySaveAsName
             actualSaveAsName = of(determineNonConflictingName(preliminarySaveAsName, -1));
             final Function<String, Function<Boolean, Function<String, Consumer<Optional<String>>>>> createInheritedFromShared = surrogateName -> runAutomatically -> newDescription -> uuid -> saveNewEntityCentreManager(
-                true,
                 upstreamConfig.getConfigBody(),
                 miType,
                 user,
@@ -410,9 +408,9 @@ public class CriteriaResource extends AbstractWebResource {
             updateCentre(user, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             // and update both with newly generated config uuid
             final String newConfigUuid = randomUUID().toString();
-            eccCompanion.saveWithConflicts(freshConfigOpt.get().setConfigUuid(newConfigUuid));
+            eccCompanion.saveWithRetry(freshConfigOpt.get().setConfigUuid(newConfigUuid));
             findConfigOpt(miType, user, NAME_OF.apply(SAVED_CENTRE_NAME).apply(actualSaveAsName).apply(device()), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid"))
-                .ifPresent(savedConfig -> eccCompanion.saveWithConflicts(savedConfig.setConfigUuid(newConfigUuid)));
+                .ifPresent(savedConfig -> eccCompanion.saveWithRetry(savedConfig.setConfigUuid(newConfigUuid)));
             return t2(actualSaveAsName, of(newConfigUuid));
         } else {
             return t2(actualSaveAsName, of(freshConfigOpt.get().getConfigUuid()));
@@ -592,7 +590,7 @@ public class CriteriaResource extends AbstractWebResource {
                     removeCentres(user, miType, device(), saveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
                     final ICentreDomainTreeManagerAndEnhancer emptyFreshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                     findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(saveAsName).apply(device()), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("runAutomatically")).ifPresent(config -> {
-                        eccCompanion.saveWithConflicts(config.setRunAutomatically(true)); // auto-running of default configuration is in progress -- restore runAutomatically as true
+                        eccCompanion.saveWithRetry(config.setRunAutomatically(true)); // auto-running of default configuration is in progress -- restore runAutomatically as true
                     });
 
                     // restore previous non-distracting centre changes; at first apply widths and grow factors
@@ -604,7 +602,7 @@ public class CriteriaResource extends AbstractWebResource {
                     emptyFreshCentre.getSecondTick().setVisibleRowsCount(previousVisibleRowsCount);
                     emptyFreshCentre.getSecondTick().setNumberOfHeaderLines(previousNumberOfHeaderLines);
                     // save the centre into the database (configUuid is not applicable here -- this is default configuration)
-                    updatedFreshCentre = commitCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), emptyFreshCentre, null /* newDesc */, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                    updatedFreshCentre = commitCentreWithoutConflicts(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), emptyFreshCentre, null /* newDesc */, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
 
                     freshCentreAppliedCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, user, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
                 } else {
