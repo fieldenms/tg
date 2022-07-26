@@ -41,21 +41,22 @@ public class EntityBatchDeleteByQueryModelOperation {
             final EntQueryGenerator gen = new EntQueryGenerator(domainMetadataAnalyser, null, null, executionContext.dates());
             final EntQuery entQuery = gen.generateEntQueryAsResultQuery(finalModel, null, finalModel.getResultType(), null, paramValues);
             final String selectionSql = entQuery.sql();
-            final String deletionSql = produceDeletionSql(selectionSql, tableName);
+            final String deletionSql = produceDeletionSql(selectionSql, tableName, domainMetadataAnalyser.getDbVersion());
             final Map<String, Object> sqlParamValues = entQuery.getValuesForSqlParams();
             return new DeletionModel(deletionSql, sqlParamValues);
         } else {
-            final TransformationResult<ResultQuery3> s2tr = transform(new QueryProcessingModel(finalModel, null, null, paramValues, true), null, null, executionContext.dates(), executionContext.getDomainMetadata().eqlDomainMetadata); 
+            final var eqlMetaData = executionContext.getDomainMetadata().eqlDomainMetadata;
+            final TransformationResult<ResultQuery3> s2tr = transform(new QueryProcessingModel(finalModel, null, null, paramValues, true), null, null, executionContext.dates(), eqlMetaData); 
             final ResultQuery3 entQuery3 = s2tr.item;
             final String selectionSql = entQuery3.sql(domainMetadataAnalyser.getDbVersion());
-            final String deletionSql = produceDeletionSql(selectionSql, tableName);
+            final String deletionSql = produceDeletionSql(selectionSql, tableName, eqlMetaData.dbVersion);
             return new DeletionModel(deletionSql, s2tr.updatedContext.getParamValues());
         }
     }
 
-    private String produceDeletionSql(final String selectionSql, final String tableName) {
+    private String produceDeletionSql(final String selectionSql, final String tableName, final DbVersion dbVersion) {
         final int markerStart = selectionSql.indexOf(" IN ");
-        return "DELETE FROM " + tableName + " WHERE _ID " + selectionSql.substring(markerStart);
+        return "DELETE FROM %s WHERE %s %s".formatted(tableName, dbVersion.idColumnName(), selectionSql.substring(markerStart));
     }
 
     private static class DeletionModel {

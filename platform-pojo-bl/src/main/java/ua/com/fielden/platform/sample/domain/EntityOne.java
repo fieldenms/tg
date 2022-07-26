@@ -28,8 +28,9 @@ public class EntityOne extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setStringProperty(final String stringProperty) {
+    public EntityOne setStringProperty(final String stringProperty) {
         this.stringProperty = stringProperty;
+        return this;
     }
 
     public Double getDoubleProperty() {
@@ -37,8 +38,9 @@ public class EntityOne extends AbstractEntity<String> {
     }
 
     @Observable
-    public void setDoubleProperty(final Double doubleProperty) {
+    public EntityOne setDoubleProperty(final Double doubleProperty) {
         this.doubleProperty = doubleProperty;
+        return this;
     }
 
 }
