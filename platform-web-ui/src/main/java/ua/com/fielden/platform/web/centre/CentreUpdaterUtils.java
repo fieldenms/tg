@@ -132,7 +132,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
             logger.error(format("Creating and saving of empty diff %s...", loggingSuffix));
             final Map<String, Object> emptyDiff = createEmptyDifferences();
             ecc.setConfigBody(CENTRE_DIFF_SERIALISER.serialise(emptyDiff));
-            eccCompanion.saveWithoutConflicts(ecc); // this rare saving case should never be conflicted -- however, we still use saveWithoutConflicts here
+            eccCompanion.saveWithRetry(ecc); // this rare saving case should never be conflicted -- however, we still use saveWithRetry here
             logger.error(format("Creating and saving of empty diff %s...done", loggingSuffix));
             logger.error("============================================ CENTRE DESERIALISATION HAS FAILED [END] ============================================");
             return emptyDiff;
@@ -176,7 +176,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
             return mmiCompanion.save(newMainMenuItem);
         });
         final EntityCentreConfig ecc = adjustConfig.apply(eccCompanion.new_().setOwner(user).setTitle(newName).setMenuItem(menuItem).setConfigBody(serialisedDifferences).setDesc(newDesc));
-        return eccCompanion.saveWithoutConflicts(ecc);
+        return eccCompanion.saveWithRetry(ecc);
     }
     
     /**
@@ -200,7 +200,7 @@ public class CentreUpdaterUtils extends CentreUpdater {
                 config.setDesc(newDesc);
             }
             config.setConfigBody(CENTRE_DIFF_SERIALISER.serialise(differences));
-            eccCompanion.saveWithoutConflicts(config);
+            eccCompanion.saveWithRetry(config);
         }
         return differences;
     }

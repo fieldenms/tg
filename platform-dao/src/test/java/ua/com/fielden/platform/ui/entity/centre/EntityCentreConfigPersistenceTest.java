@@ -42,7 +42,7 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
         final EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
         config.setDesc("desc");
         config.setConfigBody(new byte[] { 1, 2, 3 });
-        dao.saveWithoutConflicts(config); // no conflicts should appear -- initial saving
+        dao.saveWithRetry(config); // no conflicts should appear -- initial saving
         
         final EntityResultQueryModel<EntityCentreConfig> query = select(EntityCentreConfig.class).model();
         final OrderingModel orderBy = orderBy().prop(AbstractEntity.ID).asc().model();
@@ -56,11 +56,11 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
         EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
         config.setConfigBody(new byte[] { 1, 2, 3 });
         config.setDesc("desc");
-        config = saveWithoutConflicts(config); // no conflicts should appear -- initial saving
+        config = saveEntityCentre(config); // no conflicts should appear -- initial saving
         
         assertEquals("Incorrect version.", Long.valueOf("0"), config.getVersion());
         config.setConfigBody(new byte[] { 1, 2, 3, 4 });
-        config = saveWithoutConflicts(config); // no conflicts should appear
+        config = saveEntityCentre(config); // no conflicts should appear
         assertEquals("Incorrect version.", Long.valueOf("1"), config.getVersion());
         
         final EntityCentreConfig fromDb = dao.findById(config.getId());
@@ -72,8 +72,8 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
     // ========================================== CONFLICTING CHANGES RESOLUTION ==========================================
     // The following tests are based on the situation of the same 1) user 2) config name 3) menu item. Other conflicts will not be automatically resolved due to composite-key nature of 'owner', 'title' and 'menuItem' properties
     
-    private EntityCentreConfig saveWithoutConflicts(final EntityCentreConfig config) {
-        dao.saveWithoutConflicts(config);
+    private EntityCentreConfig saveEntityCentre(final EntityCentreConfig config) {
+        dao.saveWithRetry(config);
         return dao.findByEntityAndFetch(null, config);
     }
     
@@ -82,7 +82,7 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
         final EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
         config.setConfigBody(new byte[] { 0 });
         config.setDesc("desc0");
-        dao.saveWithoutConflicts(config); // no conflicts should appear -- initial saving
+        dao.saveWithRetry(config); // no conflicts should appear -- initial saving
         assertEquals("Incorrect version.", Long.valueOf("0"), config.getVersion());
         
         // |----------------| first
@@ -95,12 +95,12 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
         secondlyRetrieved.setConfigBody(new byte[] { 2 });
         
         // save firstlyRetrieved
-        final EntityCentreConfig firstlyRetrievedAndSaved = saveWithoutConflicts(firstlyRetrieved);
+        final EntityCentreConfig firstlyRetrievedAndSaved = saveEntityCentre(firstlyRetrieved);
         assertEquals("Incorrect version.", Long.valueOf("1"), firstlyRetrievedAndSaved.getVersion());
         assertTrue("Incorrect value.", Arrays.equals(new byte[] { 1 }, firstlyRetrievedAndSaved.getConfigBody()));
         
         // after that save secondlyRetrieved and it should not give any conflicting error but instead should complete saving successfully
-        final EntityCentreConfig secondlyRetrievedAndSaved = saveWithoutConflicts(secondlyRetrieved);
+        final EntityCentreConfig secondlyRetrievedAndSaved = saveEntityCentre(secondlyRetrieved);
         assertEquals("Incorrect version.", Long.valueOf("2"), secondlyRetrievedAndSaved.getVersion());
         assertTrue("Incorrect value.", Arrays.equals(new byte[] { 2 }, secondlyRetrievedAndSaved.getConfigBody()));
     }
@@ -110,7 +110,7 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
         final EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
         config.setConfigBody(new byte[] { 0 });
         config.setDesc("desc0");
-        dao.saveWithoutConflicts(config); // no conflicts should appear -- initial saving
+        dao.saveWithRetry(config); // no conflicts should appear -- initial saving
         assertEquals("Incorrect version.", Long.valueOf("0"), config.getVersion());
         
         // |----------------| first
@@ -123,12 +123,12 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
         secondlyRetrieved.setDesc("desc2");
         
         // save firstlyRetrieved
-        final EntityCentreConfig firstlyRetrievedAndSaved = saveWithoutConflicts(firstlyRetrieved);
+        final EntityCentreConfig firstlyRetrievedAndSaved = saveEntityCentre(firstlyRetrieved);
         assertEquals("Incorrect version.", Long.valueOf("1"), firstlyRetrievedAndSaved.getVersion());
         assertEquals("Incorrect value.", "desc1", firstlyRetrievedAndSaved.getDesc());
         
         // after that save secondlyRetrieved and it should not give any conflicting error but instead should complete saving successfully
-        final EntityCentreConfig secondlyRetrievedAndSaved = saveWithoutConflicts(secondlyRetrieved);
+        final EntityCentreConfig secondlyRetrievedAndSaved = saveEntityCentre(secondlyRetrieved);
         assertEquals("Incorrect version.", Long.valueOf("2"), secondlyRetrievedAndSaved.getVersion());
         assertEquals("Incorrect value.", "desc2", secondlyRetrievedAndSaved.getDesc());
     }
@@ -138,7 +138,7 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
         final EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
         config.setConfigBody(new byte[] { 0 });
         config.setDesc("desc0");
-        dao.saveWithoutConflicts(config); // no conflicts should appear -- initial saving
+        dao.saveWithRetry(config); // no conflicts should appear -- initial saving
         assertEquals("Incorrect version.", Long.valueOf("0"), config.getVersion());
         
         // |----------------------------| first
@@ -151,12 +151,12 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
         secondlyRetrieved.setDesc("desc2");
         
         // save secondlyRetrieved
-        final EntityCentreConfig secondlyRetrievedAndSaved = saveWithoutConflicts(secondlyRetrieved);
+        final EntityCentreConfig secondlyRetrievedAndSaved = saveEntityCentre(secondlyRetrieved);
         assertEquals("Incorrect version.", Long.valueOf("1"), secondlyRetrievedAndSaved.getVersion());
         assertEquals("Incorrect value.", "desc2", secondlyRetrievedAndSaved.getDesc());
         
         // after that, save firstlyRetrieved and it should not give any conflicting error but instead should complete saving successfully
-        final EntityCentreConfig firstlyRetrievedAndSaved = saveWithoutConflicts(firstlyRetrieved);
+        final EntityCentreConfig firstlyRetrievedAndSaved = saveEntityCentre(firstlyRetrieved);
         assertEquals("Incorrect version.", Long.valueOf("2"), firstlyRetrievedAndSaved.getVersion());
         assertEquals("Incorrect value.", "desc1", firstlyRetrievedAndSaved.getDesc());
     }
@@ -166,7 +166,7 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
         final EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
         config.setConfigBody(new byte[] { 0 });
         config.setDesc("desc0");
-        dao.saveWithoutConflicts(config); // no conflicts should appear -- initial saving
+        dao.saveWithRetry(config); // no conflicts should appear -- initial saving
         assertEquals("Incorrect version.", Long.valueOf("0"), config.getVersion());
         
         // |----------------| first
@@ -180,19 +180,19 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
         secondlyRetrieved.setConfigBody(new byte[] { 2 });
         
         // save firstlyRetrieved
-        final EntityCentreConfig firstlyRetrievedAndSaved = saveWithoutConflicts(firstlyRetrieved);
+        final EntityCentreConfig firstlyRetrievedAndSaved = saveEntityCentre(firstlyRetrieved);
         assertEquals("Incorrect version.", Long.valueOf("1"), firstlyRetrievedAndSaved.getVersion());
         assertTrue("Incorrect value.", Arrays.equals(new byte[] { 1 }, firstlyRetrievedAndSaved.getConfigBody()));
         
         final EntityCentreConfig thirdlyRetrieved = dao.findByEntityAndFetch(null, config);
         thirdlyRetrieved.setConfigBody(new byte[] { 3 });
         // save thirdlyRetrieved
-        final EntityCentreConfig thirdlyRetrievedAndSaved = saveWithoutConflicts(thirdlyRetrieved);
+        final EntityCentreConfig thirdlyRetrievedAndSaved = saveEntityCentre(thirdlyRetrieved);
         assertEquals("Incorrect version.", Long.valueOf("2"), thirdlyRetrievedAndSaved.getVersion());
         assertTrue("Incorrect value.", Arrays.equals(new byte[] { 3 }, thirdlyRetrievedAndSaved.getConfigBody()));
         
         // after that, save secondlyRetrieved and it should not give any conflicting error but instead should complete saving successfully
-        final EntityCentreConfig secondlyRetrievedAndSaved = saveWithoutConflicts(secondlyRetrieved);
+        final EntityCentreConfig secondlyRetrievedAndSaved = saveEntityCentre(secondlyRetrieved);
         assertEquals("Incorrect version.", Long.valueOf("3"), secondlyRetrievedAndSaved.getVersion());
         assertTrue("Incorrect value.", Arrays.equals(new byte[] { 2 }, secondlyRetrievedAndSaved.getConfigBody()));
     }

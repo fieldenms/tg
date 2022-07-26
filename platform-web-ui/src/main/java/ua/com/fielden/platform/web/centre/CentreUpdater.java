@@ -450,10 +450,10 @@ public class CentreUpdater {
         }
         
         // save
-        eccCompanion.saveWithoutConflicts(freshConfig); // editCentreTitleAndDesc is not used inside other transaction scopes (i.e. CentreConfigEditActionDao.performSave and AbstractCentreConfigCommitActionDao.save do not have @SessionRequired) -- saveWithoutConflicts can be used
-        eccCompanion.saveWithoutConflicts(savedConfig);
+        eccCompanion.saveWithRetry(freshConfig); // editCentreTitleAndDesc is not used inside other transaction scopes (i.e. CentreConfigEditActionDao.performSave and AbstractCentreConfigCommitActionDao.save do not have @SessionRequired) -- saveWithRetry can be used
+        eccCompanion.saveWithRetry(savedConfig);
         if (previouslyRunConfig != null) { // previouslyRun centre may not exist
-            eccCompanion.saveWithoutConflicts(previouslyRunConfig);
+            eccCompanion.saveWithRetry(previouslyRunConfig);
         }
     }
     
@@ -477,7 +477,7 @@ public class CentreUpdater {
         final EntityCentreConfig freshConfig = findConfig(miType, user, deviceSpecificName + DIFFERENCES_SUFFIX , eccCompanion);
         if (freshConfig != null) {
             freshConfig.setRunAutomatically(newRunAutomatically);
-            eccCompanion.saveWithoutConflicts(freshConfig); // configureCentre is not used inside other transaction scopes (i.e. CentreConfigConfigureActionDao.save has no @SessionRequired) -- saveWithoutConflicts can be used
+            eccCompanion.saveWithRetry(freshConfig); // configureCentre is not used inside other transaction scopes (i.e. CentreConfigConfigureActionDao.save has no @SessionRequired) -- saveWithRetry can be used
         }
     }
     
@@ -724,7 +724,7 @@ public class CentreUpdater {
         if (!webUiConfig.isEmbeddedCentre(miType)) { // standalone centres only, not embedded
             final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
             final List<EntityCentreConfig> prefConfigs = getAllPreferredConfigs(user, miType, device, companionFinder);
-            prefConfigs.stream().forEach(ecc -> eccCompanion.saveWithoutConflicts(ecc.setPreferred(false)));
+            prefConfigs.stream().forEach(ecc -> eccCompanion.saveWithRetry(ecc.setPreferred(false)));
             if (saveAsName.isPresent()) {
                 findConfigOpt(
                     miType,
@@ -733,7 +733,7 @@ public class CentreUpdater {
                     eccCompanion,
                     fetchWithKeyAndDesc(EntityCentreConfig.class, true).with("preferred").with("configUuid").with("dashboardable").with("dashboardableDate").with("dashboardRefreshFrequency").with("runAutomatically").fetchModel()
                 ).ifPresent(ecc ->
-                    eccCompanion.saveWithoutConflicts( // not used inside other transaction scopes (e.g. CentreConfigLoadActionDao->makePreferredConfig->makePreferred does not have @SessionRequired) -- saveWithoutConflicts can be used
+                    eccCompanion.saveWithRetry( // not used inside other transaction scopes (e.g. CentreConfigLoadActionDao->makePreferredConfig->makePreferred does not have @SessionRequired) -- saveWithRetry can be used
                         ecc.setPreferred(true)
                     )
                 );
@@ -958,7 +958,7 @@ public class CentreUpdater {
                     findConfigOpt(miType, user, deviceSpecificDiffName, eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("runAutomatically"))
                         .ifPresent(freshConfig -> {
                             final boolean upstreamRunAutomatically = of(LINK_CONFIG_TITLE).equals(saveAsName) /* link: always runAutomatically */ || defaultRunAutomatically(miType, webUiConfig) /* default/base: runAutomatically as in Centre DSL */;
-                            eccCompanion.saveWithoutConflicts(freshConfig.setRunAutomatically(upstreamRunAutomatically));
+                            eccCompanion.saveWithRetry(freshConfig.setRunAutomatically(upstreamRunAutomatically));
                         });
                 }
             } else { // non-base user
@@ -977,10 +977,10 @@ public class CentreUpdater {
                 if (FRESH_CENTRE_NAME.equals(name)) { // inherited configs have uuid only in FRESH centre
                     if (upstreamConfigUuid.isPresent()) {
                         findConfigOpt(miType, user, deviceSpecificDiffName, eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid").with("runAutomatically"))
-                            .ifPresent(freshConfig -> eccCompanion.saveWithoutConflicts(freshConfig.setConfigUuid(upstreamConfigUuid.get()).setRunAutomatically(upstreamRunAutomatically)));
+                            .ifPresent(freshConfig -> eccCompanion.saveWithRetry(freshConfig.setConfigUuid(upstreamConfigUuid.get()).setRunAutomatically(upstreamRunAutomatically)));
                     } else {
                         findConfigOpt(miType, user, deviceSpecificDiffName, eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("runAutomatically"))
-                            .ifPresent(freshConfig -> eccCompanion.saveWithoutConflicts(freshConfig.setRunAutomatically(upstreamRunAutomatically)));
+                            .ifPresent(freshConfig -> eccCompanion.saveWithRetry(freshConfig.setRunAutomatically(upstreamRunAutomatically)));
                     }
                 }
             }
