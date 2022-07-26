@@ -132,7 +132,6 @@ const template = html`
             <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]">
                 <span class="title-text truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
                 <div class="layout horizontal centre">
-                    <paper-icon-button class="title-bar-button" hidden$="[[!_resetButtonVisible(detachedView, withoutResizing, alternativeView)]]" icon="icons:cached" on-tap="_clearLocalStorage" tooltip-text="Reset height"></paper-icon-button>
                     <paper-icon-button class="title-bar-button expand-colapse-button" icon="icons:open-in-new" on-tap="_expandColapseTap" tooltip-text$="[[_expandBurronTooltip(detachedView)]]"></paper-icon-button>
                 </div>
             </div>
@@ -145,7 +144,7 @@ const template = html`
             </div>
             <div class="lock-layer" lock$="[[lock]]"></div>
         </div>
-        <iron-icon id="resizer" hidden="[[_resizingDisabled(detachedView, alternativeView, withoutResizing)]]" icon="tg-icons:resize-bottom-right" on-track="_resizeInsertionPoint" tooltip-text="Drag to resize"></iron-icon>
+        <iron-icon id="resizer" hidden="[[_resizingDisabled(detachedView, alternativeView, withoutResizing)]]" icon="tg-icons:resize-bottom-right" on-tap="_clearLocalStorage" on-track="_resizeInsertionPoint" tooltip-text="Drag to resize<br>Double tap to reset height"></iron-icon>
     </div>
     <tg-toast id="toaster"></tg-toast>
 `;
@@ -555,8 +554,10 @@ Polymer({
     },
 
     _clearLocalStorage: function (event) {
-        localStorage.removeItem(insertionPointKey(this.contextRetriever(), this._element));
-        this._height = null;
+        if (event.detail.sourceEvent.detail && event.detail.sourceEvent.detail === 2) {
+            localStorage.removeItem(insertionPointKey(this.contextRetriever(), this._element));
+            this._height = null;
+        }
     },
 
     _expandColapseTap: function (event) {
