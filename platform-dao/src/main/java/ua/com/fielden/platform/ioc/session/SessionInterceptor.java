@@ -2,9 +2,7 @@ package ua.com.fielden.platform.ioc.session;
 
 import static java.lang.String.format;
 import static java.util.UUID.randomUUID;
-import static java.util.stream.Stream.of;
 import static ua.com.fielden.platform.dao.annotations.SessionRequired.ERR_NESTED_SCOPE_INVOCATION_IS_DISALLOWED;
-import static ua.com.fielden.platform.ui.config.EntityCentreConfigCo.SAVE_WITHOUT_CONFLICTS;
 
 import java.util.stream.Stream;
 
@@ -45,6 +43,7 @@ import ua.com.fielden.platform.ioc.session.exceptions.TransactionRollbackDueToTh
 public class SessionInterceptor implements MethodInterceptor {
     private final SessionFactory sessionFactory;
 
+    public static final String WARN_TRANSACTION_ROLLBACK = "Transaction completed (rolled back) with error.";
     private static final Logger LOGGER = Logger.getLogger(SessionInterceptor.class);
     
     private ThreadLocal<String> transactionGuid = new ThreadLocal<>();
@@ -136,26 +135,8 @@ public class SessionInterceptor implements MethodInterceptor {
         return shouldCommit;
     }
 
-    /**
-     * Logs centre configuration saving exception with its causes without stack traces.
-     * This method hides stack traces as it is legitimate to have saving conflicts.
-     * In the case where saving conflict was not resolved and was proliferated further, it will be caught/logged by WebUiResourceUtils and will be reported to the user.
-     */
-    private static void logCentreConfigSavingException(final Throwable ex) {
-        LOGGER.warn(ex);
-        if (ex.getCause() != null) {
-            logCentreConfigSavingException(ex.getCause());
-        }
-    }
-
     private Exception completeTransactionWithError(final Session session, final Transaction tr, final Throwable ex) {
-        final String warningMessage = "Transaction completed (rolled back) with error.";
-        if (of(ex.getStackTrace()).anyMatch(elem -> SAVE_WITHOUT_CONFLICTS.equals(elem.getMethodName()))) { // only consider the exception as centre-config-saving-related if there is 'EntityCentreConfigCo.saveWithoutConflicts' method in the stack trace
-            LOGGER.warn(warningMessage);
-            logCentreConfigSavingException(ex);
-        } else {
-            LOGGER.warn(warningMessage, ex);
-        }
+        LOGGER.warn(WARN_TRANSACTION_ROLLBACK, ex);
         transactionGuid.remove();
         if (tr.isActive()) { // if transaction is active and there was an exception then it should be rollbacked
             LOGGER.debug("Rolling back DB transaction");
