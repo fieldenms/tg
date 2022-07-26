@@ -14,6 +14,7 @@ import java.util.function.Predicate;
 
 import javax.lang.model.AnnotatedConstruct;
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
@@ -459,5 +460,9 @@ public class ElementFinder {
             return false;
         }
         return directSupertypes.stream().anyMatch(tm -> isSubtype(tm, type, typeUtils));
+    }
+
+    public static boolean isTopLevelClass(final Element element) {
+        return element.getEnclosingElement().getKind() == ElementKind.PACKAGE;
     }
 }

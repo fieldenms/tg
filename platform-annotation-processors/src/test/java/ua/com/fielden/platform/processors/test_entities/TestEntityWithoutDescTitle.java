@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.processors.metamodel.test_entities;
+package ua.com.fielden.platform.processors.test_entities;
 
 import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;

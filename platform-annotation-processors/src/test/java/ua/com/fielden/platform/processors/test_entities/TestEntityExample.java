@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.processors.metamodel.test_entities;
+package ua.com.fielden.platform.processors.test_entities;
 
 import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -24,9 +24,9 @@ import ua.com.fielden.platform.utils.Pair;
 @MapEntityTo
 @DomainEntity
 @DescTitle("Description")
-public class TestEntityPersistent extends AbstractEntity<String> {
+public class TestEntityExample extends AbstractEntity<String> {
 
-    private static final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(TestEntityPersistent.class);
+    private static final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(TestEntityExample.class);
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
     public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
     
@@ -36,7 +36,7 @@ public class TestEntityPersistent extends AbstractEntity<String> {
     private int prop1;
     
     @Observable
-    public TestEntityPersistent setProp1(final int prop1) {
+    public TestEntityExample setProp1(final int prop1) {
         this.prop1 = prop1;
         return this;
     }

@@ -28,17 +28,17 @@ import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
-import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntityAdjacentToOtherEntities;
-import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntityChild;
-import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntityNotPersistent;
-import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntityParent;
-import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntityPersistent;
-import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntitySinkNodesOnly;
-import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntityWithDescTitle;
-import ua.com.fielden.platform.processors.metamodel.test_entities.TestEntityWithoutDescTitle;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
+import ua.com.fielden.platform.processors.test_entities.TestEntityAdjacentToOtherEntities;
+import ua.com.fielden.platform.processors.test_entities.TestEntityChild;
+import ua.com.fielden.platform.processors.test_entities.TestEntityNotPersistent;
+import ua.com.fielden.platform.processors.test_entities.TestEntityParent;
+import ua.com.fielden.platform.processors.test_entities.TestEntityPersistent;
+import ua.com.fielden.platform.processors.test_entities.TestEntitySinkNodesOnly;
+import ua.com.fielden.platform.processors.test_entities.TestEntityWithDescTitle;
+import ua.com.fielden.platform.processors.test_entities.TestEntityWithoutDescTitle;
 import ua.com.fielden.platform.processors.test_utils.CompilationRule;
 
 
@@ -51,7 +51,7 @@ import ua.com.fielden.platform.processors.test_utils.CompilationRule;
  * @author TG Team
  */
 public class MetaModelStructureTest {
-    private final static String TEST_ENTITIES_PKG_NAME = "ua.com.fielden.platform.processors.metamodel.test_entities";
+    private static final String TEST_ENTITIES_PKG_NAME = "ua.com.fielden.platform.processors.test_entities";
     
     // this class rule compiles test entities and then executes all tests during the last round of processing so that instances of Elements and Types are available in those tests
     @ClassRule

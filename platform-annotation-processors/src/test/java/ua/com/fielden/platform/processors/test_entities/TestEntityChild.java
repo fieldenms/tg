@@ -1,11 +1,13 @@
-package ua.com.fielden.platform.processors.metamodel.test_entities;
+package ua.com.fielden.platform.processors.test_entities;
 
 import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
-import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.DescRequired;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
+import ua.com.fielden.platform.entity.annotation.DisplayDescription;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
@@ -20,11 +22,12 @@ import ua.com.fielden.platform.utils.Pair;
  */
 @KeyType(String.class)
 @KeyTitle("Key")
+@MapEntityTo
 @DomainEntity
 @DescTitle("Description")
-public class TestEntityNotPersistent extends AbstractEntity<String> {
+public class TestEntityChild extends TestEntityParent {
 
-    private static final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(TestEntityNotPersistent.class);
+    private static final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(TestEntityChild.class);
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
     public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
     
@@ -33,8 +36,23 @@ public class TestEntityNotPersistent extends AbstractEntity<String> {
     @Title(value = "Prop1")
     private int prop1;
     
+    @IsProperty
+    @MapTo
+    @Title(value = "Parent entity", desc = "Extended_description")
+    private TestEntityParent parent;
+
     @Observable
-    public TestEntityNotPersistent setProp1(final int prop1) {
+    public TestEntityChild setParent(final TestEntityParent parent) {
+        this.parent = parent;
+        return this;
+    }
+
+    public TestEntityParent getParent() {
+        return parent;
+    }
+    
+    @Observable
+    public TestEntityChild setProp1(final int prop1) {
         this.prop1 = prop1;
         return this;
     }

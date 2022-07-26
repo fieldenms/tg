@@ -46,7 +46,6 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
@@ -183,8 +182,10 @@ public class MetaModelProcessor extends AbstractProcessor {
     private Stream<MetaModelConcept> collectEntitiesForMetaModelGeneration(final RoundEnvironment roundEnv, final Optional<MetaModelsElement> maybeMetaModelsElement) {
         // find classes annotated with any of DOMAIN_TYPE_ANNOTATIONS
         final Set<TypeElement> annotatedElements = roundEnv.getElementsAnnotatedWithAny(ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION).stream()
-                                                           .filter(element -> element.getKind() == ElementKind.CLASS) // just in case make sure identified elements are classes
-                                                           .map(el -> (TypeElement) el).collect(toSet());
+                // just in case make sure identified elements are top-level classes
+                // TODO support visible nested classes
+                .filter(element -> ElementFinder.isTopLevelClass(element))
+                .map(el -> (TypeElement) el).collect(toSet());
         messager.printMessage(Kind.NOTE, format("annotatedElements: [%s]", annotatedElements.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
         if (annotatedElements.isEmpty()) {
             messager.printMessage(Kind.NOTE, "There is nothing to process.");

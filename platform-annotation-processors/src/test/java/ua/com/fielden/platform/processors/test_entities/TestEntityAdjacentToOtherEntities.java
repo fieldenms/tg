@@ -1,12 +1,7 @@
-package ua.com.fielden.platform.processors.metamodel.test_entities;
-
-import java.util.Date;
+package ua.com.fielden.platform.processors.test_entities;
 
 import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.DescRequired;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.DisplayDescription;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -27,12 +22,9 @@ import ua.com.fielden.platform.utils.Pair;
 @KeyTitle("Key")
 @MapEntityTo
 @DomainEntity
-@DescTitle("Description")
-@DisplayDescription
-@DescRequired
-public class TestEntitySinkNodesOnly extends AbstractEntity<String> {
+public class TestEntityAdjacentToOtherEntities extends AbstractEntity<String> {
 
-    private static final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(TestEntitySinkNodesOnly.class);
+    private static final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(TestEntityAdjacentToOtherEntities.class);
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
     public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
     
@@ -43,26 +35,41 @@ public class TestEntitySinkNodesOnly extends AbstractEntity<String> {
     
     @IsProperty
     @MapTo
-    @Title(value = "Prop2")
-    private Date prop2;
+    @Title(value = "Entity with desc title")
+    private TestEntityWithDescTitle entity1;
+    
+    @IsProperty
+    @MapTo
+    @Title(value = "Entity with sink nodes only")
+    private TestEntitySinkNodesOnly entity2;
 
     @Observable
-    public TestEntitySinkNodesOnly setProp1(final String prop1) {
+    public TestEntityAdjacentToOtherEntities setEntity2(final TestEntitySinkNodesOnly entity2) {
+        this.entity2 = entity2;
+        return this;
+    }
+
+    public TestEntitySinkNodesOnly getEntity2() {
+        return entity2;
+    }
+
+    @Observable
+    public TestEntityAdjacentToOtherEntities setEntity1(final TestEntityWithDescTitle entity1) {
+        this.entity1 = entity1;
+        return this;
+    }
+
+    public TestEntityWithDescTitle getEntity1() {
+        return entity1;
+    }
+
+    @Observable
+    public TestEntityAdjacentToOtherEntities setProp1(final String prop1) {
         this.prop1 = prop1;
         return this;
     }
 
     public String getName() {
         return prop1;
-    }
-
-    @Observable
-    public TestEntitySinkNodesOnly setProp2(final Date prop2) {
-        this.prop2 = prop2;
-        return this;
-    }
-
-    public Date getProp2() {
-        return prop2;
     }
 }

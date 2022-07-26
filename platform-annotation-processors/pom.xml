@@ -92,33 +92,27 @@
                 <executions>
                     <execution>
                         <id>default-compile</id>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
                         <configuration>
                             <compilerArgument>-proc:none</compilerArgument>
                         </configuration>
                     </execution>
                     <execution>
                         <id>default-testCompile</id>
-                        <configuration>
-                            <compilerArgument>-proc:none</compilerArgument>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <version>3.3.0</version>
-                <executions>
-                    <execution>
-                        <id>add-test-source</id>
-                        <phase>generate-test-sources</phase>
                         <goals>
-                            <goal>add-test-source</goal>
+                            <goal>testCompile</goal>
                         </goals>
                         <configuration>
-                            <sources>
-                                <source>src/test/resources</source>
-                            </sources>
+                            <release>16</release>
+                            <encoding>UTF-8</encoding>
+                            <generatedSourcesDirectory>${project.build.directory}/generated-test-sources/test-annotations</generatedSourcesDirectory>
+                            <annotationProcessors>
+                                <annotationProcessor>
+                                    ua.com.fielden.platform.processors.metamodel.MetaModelProcessor
+                                </annotationProcessor>
+                            </annotationProcessors>
                         </configuration>
                     </execution>
                 </executions>
