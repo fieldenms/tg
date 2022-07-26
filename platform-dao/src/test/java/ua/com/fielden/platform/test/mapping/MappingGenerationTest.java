@@ -21,13 +21,13 @@ public class MappingGenerationTest {
         domainTypes.add(EntityCentreConfig.class);
         final DomainMetadata mg = new DomainMetadata(null, null, domainTypes, DbVersion.H2);
         final String tgModelMapping = new HibernateMappingsGenerator().generateMappings(mg);
-        final String expectedMapping = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + "<!DOCTYPE hibernate-mapping PUBLIC\n" + "\"-//Hibernate/Hibernate Mapping DTD 3.0//EN\"\n"
+        final String expectedMapping = String.format("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + "<!DOCTYPE hibernate-mapping PUBLIC\n" + "\"-//Hibernate/Hibernate Mapping DTD 3.0//EN\"\n"
                 + "\"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\">\n" + "<hibernate-mapping default-access=\"field\">\n"
                 + "<class name=\"ua.com.fielden.platform.ui.config.EntityCentreConfig\" table=\"ENTITY_CENTRE_CONFIG\">\n"
                 + "	<id name=\"id\" column=\"_ID\" type=\"org.hibernate.type.LongType\" access=\"property\">\n" 
                 + "	</id>\n" + "	<version name=\"version\" type=\"org.hibernate.type.LongType\" access=\"field\" insert=\"false\">\n"
                 + "		<column name=\"_VERSION\" default=\"0\" />\n" + "	</version>\n"
-                + "	<property name=\"configBody\" column=\"BODY\" type=\"org.hibernate.type.BinaryType\" length=\"1073741824\"/>\n"
+                + "	<property name=\"configBody\" column=\"BODY\" type=\"org.hibernate.type.BinaryType\" length=\"%s\"/>\n"
                 + "	<property name=\"configUuid\" column=\"CONFIGUUID_\" type=\"org.hibernate.type.StringType\"/>\n"
                 + "	<many-to-one name=\"dashboardRefreshFrequency\" class=\"ua.com.fielden.platform.dashboard.DashboardRefreshFrequency\" column=\"DASHBOARDREFRESHFREQUENCY_\"/>\n"
                 + "	<property name=\"dashboardable\" column=\"DASHBOARDABLE_\" type=\"org.hibernate.type.YesNoType\"/>\n"
@@ -38,7 +38,7 @@ public class MappingGenerationTest {
                 + "	<property name=\"preferred\" column=\"PREFERRED_\" type=\"org.hibernate.type.YesNoType\"/>\n"
                 + "	<property name=\"principal\" column=\"IS_PRINCIPAL\" type=\"org.hibernate.type.YesNoType\"/>\n"
                 + "	<property name=\"runAutomatically\" column=\"RUNAUTOMATICALLY_\" type=\"org.hibernate.type.YesNoType\"/>\n"
-                + "	<property name=\"title\" column=\"TITLE\" type=\"org.hibernate.type.StringType\"/>\n" + "</class>\n\n" + "</hibernate-mapping>";
+                + "	<property name=\"title\" column=\"TITLE\" type=\"org.hibernate.type.StringType\"/>\n" + "</class>\n\n" + "</hibernate-mapping>", Integer.MAX_VALUE);
         assertEquals("Incorrect mapping.", expectedMapping, tgModelMapping);
     }
 
