@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.utils;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Spliterator;
@@ -11,6 +12,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 import ua.com.fielden.platform.types.tuples.T2;
 
 /**
@@ -146,6 +148,19 @@ public class StreamUtils {
         return xs.isParallel() && ys.isParallel() // if both streams are parallel then the produced one can also be parallel
                 ? StreamSupport.stream(split, true)
                 : StreamSupport.stream(split, false);
+    }
+
+    /**
+     * Splits stream {@code source} into a windowed stream where elements from {@code source} are placed in groups of size {@code windowSize}.
+     * The last group may have its size less than the {@code windowSize}.
+     *
+     * @param <T> A type over which to stream.
+     * @param source An input stream to be "windowed".
+     * @param windowSize A window size.
+     * @return
+     */
+    public static <T> Stream<List<T>> windowed(final Stream<T> source, final int windowSize){
+        return SequentialGroupingStream.stream(source, (el, group) -> group.size() < windowSize);
     }
 
 }
