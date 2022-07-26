@@ -1392,10 +1392,7 @@ L.Draw.Rectangle = L.Draw.SimpleShape.extend({
 		// TG change: L.Draw.SimpleShape.prototype._onMouseUp.call(this);
 		const x = e.clientX;
 		const y = e.clientY;
-		let elementFromPoint = document.elementFromPoint(x, y);
-		while (elementFromPoint && elementFromPoint.shadowRoot) {
-			elementFromPoint = elementFromPoint.shadowRoot.elementFromPoint(x, y);
-		} // -- finds top-most element under mouse pointer (desktop) or finger (touch devices)
+		const elementFromPoint = this._elementFromPoint(document.elementFromPoint(x, y), x, y);
 		
 		if (this._shape && !(elementFromPoint && elementFromPoint.title && elementFromPoint.title === 'Cancel drawing')) { // if that element is Cancel button then avoid creation of new rectangle;
 			this._fireCreatedEvent();
@@ -1404,6 +1401,22 @@ L.Draw.Rectangle = L.Draw.SimpleShape.extend({
 		this.disable();
 		if (this.options.repeatMode) {
 			this.enable();
+		}
+	},
+
+	/**
+	 * TG addition: finds top-most element under mouse pointer (desktop) or finger (touch devices) starting from 'startElem'.
+	 */
+	_elementFromPoint: function (startElem, x, y) {
+		if (!startElem || !startElem.shadowRoot) {
+			return startElem;
+		} else {
+			const intermediateElem = startElem.shadowRoot.elementFromPoint(x, y);
+			if (startElem === intermediateElem) { // this situation occurs for <iron-icon> element; shadow root for this element contains svg and 'shadowRoot.elementFromPoint(x, y)' returns parent <iron-icon> element
+				return startElem;
+			} else {
+				return this._elementFromPoint(intermediateElem, x, y);
+			}
 		}
 	},
 
