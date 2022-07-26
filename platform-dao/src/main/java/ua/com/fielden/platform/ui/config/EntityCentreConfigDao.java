@@ -8,7 +8,6 @@ import java.util.function.Function;
 
 import javax.persistence.OptimisticLockException;
 
-import org.apache.log4j.Logger;
 import org.hibernate.Session;
 
 import com.google.inject.Inject;
@@ -22,7 +21,6 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.exceptions.EntityCentreExecutionException;
-import ua.com.fielden.platform.ioc.session.exceptions.SessionScopingException;
 
 /**
  * DAO implementation of {@link EntityCentreConfigCo}.
@@ -30,19 +28,17 @@ import ua.com.fielden.platform.ioc.session.exceptions.SessionScopingException;
  * Method {@link #save(EntityCentreConfig)} is intentionally not overridden due to the need to use {@link #quickSave(EntityCentreConfig)}.
  * However, please always use {@link #saveWithRetry(EntityCentreConfig)} instead of save/quickSave.
  * This ensures graceful conflict resolution in cases where simultaneous processes for the same user occur.
- * This method should not be used in another transaction scope.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 @EntityType(EntityCentreConfig.class)
 public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> implements EntityCentreConfigCo {
 
-    private static final int SAVING_RETRIES_THRESHOULD = 10;
+    private static final int SAVING_RETRIES_THRESHOULD = 3;
 
     public static final String ERR_ALREADY_IN_TRANSACTIONAL_SCOPE = "Saving of an Entity Centre should never occur in an existing transactional scope.";
     public static final String ERR_COULD_NOT_SAVE_CONFIG = "Could not save Entity Centre [%s] after %s attempts.";
-    private static final Logger LOGGER = Logger.getLogger(EntityCentreConfigDao.class);
 
     @Inject
     protected EntityCentreConfigDao(final IFilter filter) {
@@ -71,8 +67,7 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
     public <T> T withDbVersion(final Function<DbVersion, T> fun) {
         return fun.apply(getDbVersion());
     }
-    
-    ///////////////////////////////// GRACEFULL CONFLICT RESOLUTION /////////////////////////////////
+
     /**
      * {@inheritDoc}
      * <p>
@@ -90,16 +85,10 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
     // @SessionRequired -- avoid transaction here; refer the javadoc
     @Override
     public Long saveWithRetry(final EntityCentreConfig entity) {
-        // let's ensure there is no current session – if it exists then throw SessionScopingException
-        try {
-            final Session session = getSession(); // throws EntityCompanionException if there is no session
-            if (session.getTransaction().isActive()) {
-                LOGGER.error(ERR_ALREADY_IN_TRANSACTIONAL_SCOPE);
-                throw new SessionScopingException(ERR_ALREADY_IN_TRANSACTIONAL_SCOPE);
-            }
-        } catch (final EntityCompanionException ex) {
-            // an exception is expected in cases where there is no current session, which is what we need here
-        }
+        // let's determine if there is an active session scope, in which saveWithRetry is invoked
+        // if there is then saving should not retry and instead should re-throw an exception in case of a failure during saving to ensure correct transaction handling
+        // otherwise, if there is no an active session scope, it is safe to retry saving
+        final boolean inOuterSessionScope = hasActiveSessionScope();
         // no session is present, we can proceed with saving
         try {
             // we allow nested transaction scope here intentionally (quickSave allows it);
@@ -116,29 +105,57 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
             // in this situation DAO saving would have broken transaction, i.e. if some exception would be thrown after saveWithRetry then full rollback would not be performed
             return quickSave(entity); // must be quickSave(entity), not super.quickSave(entity)!
             // Need to repeat saving of entity in case of "self conflict": in a concurrent environment the same user on the same entity centre configuration can trigger multiple concurrent validations with different parameters.
-        } catch (final RuntimeException exception) {
+        } catch (final RuntimeException ex) {
             // Hibernate StaleStateException/StaleObjectStateException can occur in PersistentEntitySaver.saveModifiedEntity during session flushing ('session.get().flush();').
             // It is always wrapped into javax.persistence.OptimisticLockException by Hibernate (+LockAcquisitionException in modern TG); see ExceptionConverterImpl.wrapStaleStateException for more details.
             // Exactly the same strategy should be used for Hibernate-based conflicts as for TG-based ones.
             // We catch all exceptions including EntityCompanionException, [PersistenceException, ConstraintViolationException, SQLServerException], EntityAlreadyExists, ObjectNotFoundException caused by saving conflicts.
             // If the exception is not legit (non-conflict-nature), then it will be rethrown after several retries.
-            return refetchReapplyAndSaveWithRetry(entity, 1 /* first retry */, exception); // repeat the procedure of 'conflict-aware' saving in cases of subsequent conflicts
+            if (!inOuterSessionScope) {
+                return refetchReapplyAndSaveWithRetry(entity, 1 /* first retry */, 300 /* initial delay in millis */, ex); // repeat the procedure of 'conflict-aware' saving in cases of subsequent conflicts
+            } else {
+                throw ex;
+            }
         }
     }
-    
+
+    /**
+     * Determines if there is an active session associated with DAO instance.
+     *
+     * @return
+     */
+    private boolean hasActiveSessionScope() {
+        try {
+            final Session session = getSession(); // throws EntityCompanionException if there is no session
+            return session.getTransaction().isActive(); // if there is a session, need to return the active flag of its transaction
+        } catch (final EntityCompanionException ex) {
+            // an exception is expected in cases where there is no current session, hence returning false
+            return false;
+        }
+    }
+
     /**
      * Re-fetches Entity Centre configuration based on {@code config}, re-applies dirty properties from {@code config} to the re-fetched instance and saves it.
      * 
      * @param config an Entity Centre Configuration that needs saving.
      * @param retryCount a number of retries to save {@code config} that already took place.
-     * @param exception an exception that was throws during the last attempt, preventing {@code config} from saving successfully.
+     * @param delayMillis a number of milliseconds to wait before saving is attampted again
+     * @param ex an exception that was throws during the last attempt, preventing {@code config} from saving successfully.
      * @return
      */
-    private Long refetchReapplyAndSaveWithRetry(final EntityCentreConfig config, final int retryCount, final RuntimeException exception) {
+    private Long refetchReapplyAndSaveWithRetry(final EntityCentreConfig config, final int retryCount, final long delayMillis, final RuntimeException ex) {
         if (retryCount > SAVING_RETRIES_THRESHOULD) {
             final String msg = format(ERR_COULD_NOT_SAVE_CONFIG, config.getTitle(), SAVING_RETRIES_THRESHOULD);
-            throw new EntityCentreExecutionException(msg, exception);
+            throw new EntityCentreExecutionException(msg, ex);
         }
+        
+        // let's make a small delay before re-attempting the saving
+        // this should hopefully give enough time for any concurrent operations to conclude
+        try {
+            Thread.sleep(delayMillis);
+        } catch (InterruptedException e) {
+        }
+
         final EntityCentreConfig persistedEntity = findByEntityAndFetch(null, config);
         final EntityCentreConfig entityToSave;
         if (persistedEntity != null) {
@@ -157,8 +174,8 @@ public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> i
         try {
             return quickSave(entityToSave);
         } catch (final RuntimeException nextException) {
-            return refetchReapplyAndSaveWithRetry(entityToSave, retryCount + 1, nextException); // repeat the procedure of 'conflict-aware' saving in cases of subsequent conflicts
+            return refetchReapplyAndSaveWithRetry(entityToSave, retryCount + 1, delayMillis + 100, nextException); // repeat the procedure of 'conflict-aware' saving in cases of subsequent conflicts
         }
     }
-    
+
 }

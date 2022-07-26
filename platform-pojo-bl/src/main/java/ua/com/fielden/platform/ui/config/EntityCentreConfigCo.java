@@ -17,10 +17,9 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 public interface EntityCentreConfigCo extends IEntityDao<EntityCentreConfig> {
     
     /**
-     * Saves the entity (quickly) in repeating manner until the process is successfully concluded.<br>
-     * Only conflicting errors will trigger saving again.
+     * Saves Entity Centre {@code config} with retry in case of failure.
      * <p>
-     * VERY IMPORTANT: this must be used outside of another transaction scopes.
+     * The retry mechanism is invoked only if the method call is not within a scope of another active session.
      * 
      * @param entity
      * @return

@@ -3,6 +3,7 @@ package ua.com.fielden.platform.ui.entity.centre;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -12,6 +13,8 @@ import java.util.List;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
@@ -196,8 +199,42 @@ public class EntityCentreConfigPersistenceTest extends AbstractDaoTestCase {
         assertEquals("Incorrect version.", Long.valueOf("3"), secondlyRetrievedAndSaved.getVersion());
         assertTrue("Incorrect value.", Arrays.equals(new byte[] { 2 }, secondlyRetrievedAndSaved.getConfigBody()));
     }
+
+    @Test
+    @SessionRequired
+    public void saving_conflicting_changes_in_EntityCentreConfig_within_outer_scope_does_not_re_attempt_saving() {
+        final EntityCentreConfig config = new_composite(EntityCentreConfig.class, userDao.findByKey("USER"), "CONFIG 1", menuDao.findByKey("type"));
+        config.setConfigBody(new byte[] { 0 });
+        config.setDesc("desc0");
+        dao.saveWithRetry(config); // no conflicts should appear -- initial saving
+
+        // |----------------| first
+        //       |-------------------------| second
+
+        final EntityCentreConfig firstlyRetrieved = dao.findByEntityAndFetch(null, config);
+        assertEquals(Long.valueOf(0), config.getVersion());
+        assertTrue(Arrays.equals(new byte[] { 0 }, firstlyRetrieved.getConfigBody()));
+        firstlyRetrieved.setConfigBody(new byte[] { 1 });
+
+        final EntityCentreConfig secondlyRetrieved = dao.findByEntityAndFetch(null, config);
+        secondlyRetrieved.setConfigBody(new byte[] { 2 });
+
+        // save firstlyRetrieved
+        final EntityCentreConfig firstlyRetrievedAndSaved = saveEntityCentre(firstlyRetrieved);
+        assertEquals(Long.valueOf(1), firstlyRetrievedAndSaved.getVersion());
+        assertTrue(Arrays.equals(new byte[] { 1 }, firstlyRetrievedAndSaved.getConfigBody()));
+                
+        // after that, attempting to save secondlyRetrieved within an outer session scope, which results in a conflicting error, throws an exception instead of being saved through a retry
+        try {
+            saveEntityCentre(secondlyRetrieved);
+            fail("Retry should not have occurred.");
+        } catch (final EntityCompanionException ex) {
+            assertEquals("Could not resolve conflicting changes. Entity Centre Config [USER CONFIG 1 type] could not be saved.", ex.getMessage());
+        }
+    }
+
     // ========================================== CONFLICTING CHANGES RESOLUTION [END] ==========================================
-    
+
     @Override
     protected void populateDomain() {
         super.populateDomain();
