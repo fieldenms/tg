@@ -7,13 +7,15 @@ package ua.com.fielden.platform.ioc.session.exceptions;
  *
  */
 public class SessionScopingException extends RuntimeException {
+
     private static final long serialVersionUID = 1L;
-    
+
     public SessionScopingException(final String msg) {
         super(msg);
     }
-    
+
     public SessionScopingException(final String msg, final Throwable cause) {
         super(msg, cause);
     }
+
 }
