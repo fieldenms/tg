@@ -96,8 +96,8 @@ public class DynamicQueryBuilder {
      */
     public static class QueryProperty {
 
-        private static final String MISSING_CRITONLY_SUBMODEL_ERR = "The @CritOnly %s property in %s entity type has no submodel defined with %s_ name";
-        private static final String INCOMPATIBLE_CRITONLY_SUBMODEL_TYPE_ERR = "The model for @CritOnly %s_ property name in %s entity type should have ICompoundCondition0 type";
+        private static final String ERR_MISSING_CRITONLY_SUBMODEL = "@CritOnly property [%s] in [%s] has no submodel with name [%s_] defined.";
+        private static final String ERR_INCOMPATIBLE_CRITONLY_SUBMODEL_TYPE = "Submodel [%s_] for @CritOnly property [%s] in [%s] should have type ICompoundCondition0.";
         private static final String QP_PREFIX = "QP_";
 
         private Object value = null;
@@ -189,10 +189,10 @@ public class DynamicQueryBuilder {
 
             final CritOnly critAnnotation = analyser.getPropertyFieldAnnotation(CritOnly.class);
             this.critOnly = critAnnotation != null;
-            this.critOnlyWithModel = critOnly && critOnlyWithModel(critAnnotation, analyser.propertyTypes[analyser.propertyTypes.length - 2], analyser.propertyNames[analyser.propertyNames.length - 1]);
+            this.critOnlyWithModel = critOnly && isCritOnlyWithSubmodel(critAnnotation, analyser.propertyTypes[analyser.propertyTypes.length - 2], analyser.propertyNames[analyser.propertyNames.length - 1]);
             if (this.critOnlyWithModel) {
                 this.propertyUnderCondition = critAnnotation.propUnderCondition();
-                this.critOnlyModel = getCritOnlyModel(analyser.propertyTypes[analyser.propertyTypes.length - 2], analyser.propertyNames[analyser.propertyNames.length - 1]);
+                this.critOnlyModel = getCritOnlySubmodel(analyser.propertyTypes[analyser.propertyTypes.length - 2], analyser.propertyNames[analyser.propertyNames.length - 1]);
             } else {
                 this.propertyUnderCondition = "";
                 this.critOnlyModel = null;
@@ -312,7 +312,7 @@ public class DynamicQueryBuilder {
          */
         protected boolean hasEmptyValue() {
             if (EntityUtils.isBoolean(type)) {
-                if (single) {//Boolean single can't have empty value therefore return false
+                if (single) { // boolean single cannot have an empty value, therefore return false
                     return false;
                 }
                 final boolean is = (Boolean) value;
@@ -331,29 +331,37 @@ public class DynamicQueryBuilder {
             return (String.class == type && value == null) || EntityUtils.equalsEx(value, getEmptyValue(type, single));
         }
 
-        private static boolean critOnlyWithModel(final CritOnly critAnnotation, final Class<?> entityType, final String propertyName) {
+        /**
+         * Determines if the crit-only property is defined with a sub-model, which needs to be taken into account when building the final query.
+         *
+         * @param critAnnotation
+         * @param entityType
+         * @param propertyName
+         * @return
+         */
+        private static boolean isCritOnlyWithSubmodel(final CritOnly critAnnotation, final Class<?> entityType, final String propertyName) {
             try {
-                return !StringUtils.isEmpty(critAnnotation.propUnderCondition()) &&
-                        AbstractEntity.class.isAssignableFrom(critAnnotation.entityUnderCondition()) &&
-                        isPropertyPresent(critAnnotation.entityUnderCondition(), critAnnotation.propUnderCondition()) &&
-                        entityType.getDeclaredField(propertyName + "_") != null;
+                return !StringUtils.isEmpty(critAnnotation.propUnderCondition()) /* a property name is specified */ &&
+                       !AbstractEntity.class.equals(critAnnotation.entityUnderCondition()) /* a domain entity is specified */ &&
+                        isPropertyPresent(critAnnotation.entityUnderCondition(), critAnnotation.propUnderCondition()) /* a specified property belongs to a domain entity */ &&
+                        entityType.getDeclaredField(propertyName + "_") != null /* there is a sub-model*/;
             } catch (NoSuchFieldException | SecurityException e) {
                 return false;
             }
         }
 
-        private static ICompoundCondition0<?> getCritOnlyModel(final Class<?> type, final String propertyName) {
+        private static ICompoundCondition0<?> getCritOnlySubmodel(final Class<?> type, final String propertyName) {
             try {
                 final Field exprField = type.getDeclaredField(propertyName + "_");
                 exprField.setAccessible(true);
                 final Object value = exprField.get(null);
                 if (value instanceof ICompoundCondition0) {
-                    return (ICompoundCondition0<?>)value;
+                    return (ICompoundCondition0<?>) value;
                 } else {
-                    throw new EntityCentreExecutionException(format(INCOMPATIBLE_CRITONLY_SUBMODEL_TYPE_ERR, propertyName, type.getSimpleName()));
+                    throw new EntityCentreExecutionException(format(ERR_INCOMPATIBLE_CRITONLY_SUBMODEL_TYPE, propertyName, propertyName, type.getSimpleName()));
                 }
             } catch (final NoSuchFieldException | IllegalAccessException ex) {
-                throw new EntityCentreExecutionException(format(MISSING_CRITONLY_SUBMODEL_ERR, propertyName, type.getSimpleName(), propertyName));
+                throw new EntityCentreExecutionException(format(ERR_MISSING_CRITONLY_SUBMODEL, propertyName, type.getSimpleName(), propertyName));
             }
         }
 
@@ -832,8 +840,8 @@ public class DynamicQueryBuilder {
     }
 
     /**
-     * Adjusts string criteria by changing wildcard <code>*</code> to SQL wildcard <code>%</code> if it exists.
-     * Otherwise prepends and appends these wildcard to specified criteria value.
+     * Adjusts string criteria by changing wildcards {@code *} to SQL wildcards {@code %}, if they exist.
+     * Otherwise, prepends and appends wildcards to specified criteria value to match anywhere.
      *
      * @param criteria
      * @return
@@ -1016,7 +1024,8 @@ public class DynamicQueryBuilder {
     }
 
     /**
-     * Builds atomic condition for some property like "is True", ">= and <", "like" etc. based on property type and assigned parameters.
+     * Builds an atomic condition for {@code propertyName} based on its definition {@code property}. This could be "is True", ">= and <", "like", etc.
+     * This method handles all three kinds of criteria – single, range and multi.
      *
      * @param property
      * @param propertyName
@@ -1030,7 +1039,7 @@ public class DynamicQueryBuilder {
             if (isString(property.getType())) {
                 return cond().prop(propertyName).iLike().val(prepCritValuesForSingleStringTypedProp((String)property.getValue())).model();
             }
-            return propertyEquals(propertyName, property.getValue());
+            return propertyEquals(propertyName, property.getValue()); // this covers the PropertyDescriptor case too
         } else if (isRangeType(property.getType())) {
             final boolean isDate = isDate(property.getType());
             final IStandAloneConditionComparisonOperator<ET> scag1 = EntityQueryUtils.<ET> cond().prop(propertyName);
@@ -1047,7 +1056,9 @@ public class DynamicQueryBuilder {
                 return (TRUE.equals(property.getExclusive2()) ? scag2.lt() : scag2.le())
                         .iVal(paramValue(property.getValue2(), isDate, property)).model();
             }
-        } else if (isBoolean(property.getType())) {
+        }
+        // all other cases are multi-valued criteria, which get processed based on a type of the underlying property
+        else if (isBoolean(property.getType())) {
             final boolean is = (Boolean) property.getValue();
             final boolean isNot = (Boolean) property.getValue2();
             return is && !isNot ? cond().prop(propertyName).eq().val(true).model() : !is && isNot ? cond().prop(propertyName).eq().val(false).model() : null;

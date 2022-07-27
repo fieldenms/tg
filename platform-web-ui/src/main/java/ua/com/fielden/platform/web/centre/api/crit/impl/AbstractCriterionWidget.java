@@ -12,6 +12,7 @@ import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.Q
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotationInHierarchy;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -75,7 +76,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         this.excludeNot = shouldExcludeNot(root, propertyName);
         this.excludeOrGroup = shouldExcludeOrGroup(root, propertyName); // 'or' mnemonic is always visible except when property is crit only without model
         this.mnemonicsVisible = optionalCritOnlyAnnotation.map(val -> critOnlyWithMnemonics(val)).orElse(true) && (!excludeMissing || !excludeNot || !excludeOrGroup);
-        this.editors = new Pair<>(editors[0], null);
+        this.editors = pair(editors[0], null);
         if (editors.length > 1) {
             this.editors.setValue(editors[1]);
         }
@@ -97,7 +98,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
     }
 
     /**
-     * Returns <code>true</code> if or-group mnemonic should be excluded for this criterion, <code>false</code> otherwise.
+     * Returns {@code true} if 'OR-group' mnemonic should be excluded for this criterion.
      *
      * @param root
      * @param propertyName
@@ -116,7 +117,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
     }
 
     /**
-     * Returns <code>true</code> if 'Not' mnemonic should be excluded for this criterion, <code>false</code> otherwise.
+     * Returns {@code true} if 'Not' mnemonic should be excluded for this criterion.
      *
      * @param root
      * @param propertyName
@@ -127,7 +128,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
     }
 
     /**
-     * Returns <code>true</code> if 'Missing' mnemonic should be excluded for this criterion, <code>false</code> otherwise.
+     * Returns {@code true} if 'Missing' mnemonic should be excluded for this criterion.
      *
      * @param root
      * @param propertyName
@@ -184,9 +185,9 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
     }
 
     /**
-     * Creates an attributes that will be used for widget component generation.
+     * Creates attributes that will be used for widget component generation.
      * <p>
-     * Please, implement this method in descendants (for concrete widgets) to extend the attributes set by widget-specific attributes.
+     * This method needs to be overridden in descendants (i.e., concrete widgets) to extend the attributes set with widget-specific attributes.
      *
      * @return
      */
@@ -243,7 +244,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
             firstPropertyName = critName(root, propertyName);
             secondPropertyName = null;
         }
-        return new Pair<>(firstPropertyName, secondPropertyName);
+        return pair(firstPropertyName, secondPropertyName);
     }
 
     public static Pair<Pair<String, String>, Pair<String, String>> generateTitleDesc(final Class<?> root, final Class<?> managedType, final String propertyName) {
@@ -281,7 +282,7 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
 
         final Pair<String, String> _secondTitleDesc = CriteriaReflector.getCriteriaTitleAndDesc(managedType, propertyName);
         final Pair<String, String> secondTitleDesc = Pair.pair(_secondTitleDesc.getKey() + secondSufix, _secondTitleDesc.getValue());
-        return new Pair<>(firstTitleDesc, secondTitleDesc);
+        return pair(firstTitleDesc, secondTitleDesc);
     }
 
     public static String generateSingleName(final Class<?> root, final Class<?> managedType, final String propertyName) {
@@ -295,6 +296,6 @@ public abstract class AbstractCriterionWidget implements IRenderable, IImportabl
         final String title = _first.getKey();
         final int suffixLength = EntityUtils.isBoolean(propertyType) ? sufixYes.length() : sufixFrom.length();
 
-        return Pair.pair(title.substring(0, title.length() - suffixLength), _first.getValue());
+        return pair(title.substring(0, title.length() - suffixLength), _first.getValue());
     }
 }
