@@ -269,7 +269,7 @@
                 centre.retrieve();
             });
             
-             test("crit only properties don't set mnemonics", function (done) {
+             test("crit only boolean without model properties don't set mnemonics", function (done) {
                 centre.postRetrieved = function (entity, bindingEntity, customObject) {
                     const editor = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_critOnlyBooleanProp;
                     const criterion = centre.$.selection_criteria.$.criterion_4_tgPersistentEntityWithProperties_critOnlyBooleanProp;
@@ -282,9 +282,9 @@
                     centre._setQueryParams();
                     //Check equality
                     assert.strictEqual(editor._commValue, "true", "The critonly boolean prop value should be: true");
-                    assert.strictEqual(criterion.not, undefined, "The not mnemonic for critonly boolean prop should be: undefined");
-                    assert.strictEqual(criterion.orNull, undefined, "The orNull mnemonic for critonly boolean prop should be: undefined");
-                    assert.strictEqual(criterion.orGroup, undefined, "The orGroup mnemonic for critonly boolean prop should be: undefined");
+                    assert.strictEqual(criterion.not, false, "The not mnemonic for critonly boolean prop should be: false");
+                    assert.strictEqual(criterion.orNull, false, "The orNull mnemonic for critonly boolean prop should be: false");
+                    assert.strictEqual(criterion.orGroup, null, "The orGroup mnemonic for critonly boolean prop should be: null");
                     //Restoring
                     editor._editingValue = oldValue;
                     editor.commit();
