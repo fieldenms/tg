@@ -224,4 +224,34 @@ public class GreaterEqualAndMaxPropertyValidatorTest {
         assertTrue(mpMoneyProp.isValid());
     }
 
+    @Test
+    public void GreaterValidator_supports_custom_error_meesage() {
+        final EntityWithGreaterAndMaxValidations entity = factory.newEntity(EntityWithGreaterAndMaxValidations.class);
+        entity.setDecimalPropWithGreaterAndGreaterOrEqValidators(new BigDecimal("-1.50"));
+        
+        final MetaProperty<BigDecimal> mp = entity.getProperty("decimalPropWithGreaterAndGreaterOrEqValidators");
+        assertFalse(mp.isValid());
+        assertEquals("Custom error message for GreaterValidator: limit is 0.00.", mp.getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void GreaterOrEqualValidator_supports_custom_error_meesage() {
+        final EntityWithGreaterAndMaxValidations entity = factory.newEntity(EntityWithGreaterAndMaxValidations.class);
+        entity.setDecimalPropWithGreaterAndGreaterOrEqValidators(new BigDecimal("0.50"));
+        
+        final MetaProperty<BigDecimal> mp = entity.getProperty("decimalPropWithGreaterAndGreaterOrEqValidators");
+        assertFalse(mp.isValid());
+        assertEquals("Custom error message for GreaterOrEqualValidator: limit is 1.00.", mp.getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void MaxValueValidator_supports_custom_error_meesage() {
+        final EntityWithGreaterAndMaxValidations entity = factory.newEntity(EntityWithGreaterAndMaxValidations.class);
+        entity.setDecimalPropWithGreaterAndGreaterOrEqValidators(new BigDecimal("20"));
+        
+        final MetaProperty<BigDecimal> mp = entity.getProperty("decimalPropWithGreaterAndGreaterOrEqValidators");
+        assertFalse(mp.isValid());
+        assertEquals("Custom error message for MaxValueValidator: limit is 10.50.", mp.getFirstFailure().getMessage());
+    }
+
 }
