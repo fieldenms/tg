@@ -1,4 +1,7 @@
-<?xml version="1.0" encoding="UTF-8" standalone="no"?><templates><template autoinsert="true" context="java" deleted="false" description="Generates a stub for a calculated property" enabled="true" name="tgprop-calculated">@IsProperty
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<templates>
+<template autoinsert="true" context="java" deleted="false" description="Generates a stub for a calculated property" enabled="true" name="tgprop-calculated">
+@IsProperty
 @Readonly
 @Calculated
 @Title(value = "${Title}", desc = "${Extended_description}")
@@ -203,6 +206,31 @@ ${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
           ua.com.fielden.platform.entity.annotation.CritOnly,
           ua.com.fielden.platform.entity.annotation.CritOnly.Type)}
 </template>
+<template autoinsert="true" context="java" deleted="false" description="Generates a stub for the critOnly property with an EQL sub-model." enabled="true" name="tgprop-critOnly-with-submodel">
+@IsProperty
+@CritOnly(value = Type.${crit_type}, entityUnderCondition = ${entity_under_condition}.class, propUnderCondition = "${property_under_condition}")
+@Title(value = "${Title}", desc = "${Extended_description}")
+private ${type} ${name};${cursor}
+protected static final ICompoundCondition0&lt;${entity_under_condition}&gt; ${name}_ = select(${entity_under_condition}.class).where()
+            .prop("${join_property}").eq().prop(createConditionProperty("id"));
+
+@Observable
+public ${enclosing_type} set${Name}(final ${type} ${name}) {
+    this.${name} = ${name};
+    return this;
+}
+
+public ${type} get${Name}() {
+    return ${name};
+}
+
+${:import(ua.com.fielden.platform.entity.annotation.IsProperty,
+          ua.com.fielden.platform.entity.annotation.Title,
+          ua.com.fielden.platform.entity.annotation.Observable,
+          ua.com.fielden.platform.entity.annotation.CritOnly,
+          ua.com.fielden.platform.entity.annotation.CritOnly.Type,
+          ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0)}
+</template>
 <template autoinsert="true" context="java-statements" deleted="false" description="Query stub for EntityAggregates" enabled="true" name="tgquery-aggregates">
 final AggregatedResultQueryModel query = ${cursor}select(${type}.class).yield().prop("prop1").as("myresult").modelAsAggregate();
 final fetch&lt;EntityAggregates&gt; fetch = fetch(EntityAggregates.class).with("prop1.subprop", "prop2").fetchModel();
@@ -277,4 +305,5 @@ ${:import(ua.com.fielden.platform.entity.query.model.EntityResultQueryModel,
 	  ua.com.fielden.platform.entity.query.fluent.fetch,
 	  ua.com.fielden.platform.dao.QueryExecutionModel
 )}
-</template></templates>
+</template>
+</templates>
