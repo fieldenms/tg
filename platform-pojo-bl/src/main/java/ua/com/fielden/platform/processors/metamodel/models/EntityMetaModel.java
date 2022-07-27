@@ -18,12 +18,7 @@ import ua.com.fielden.platform.processors.metamodel. exceptions.EntityMetaModelE
  *
  */
 public abstract class EntityMetaModel implements IConvertableToPath {
-    private final String path;
-    /* This field should not be considered an attribute in the sort of sense that `path` is.
-     * It should be used as a substitute for a getter method getAlias().
-     * Because it is prefered to keep all subclasses clean of any instance methods to reduce
-     * the probablity of a name conflict between a metamodeled property and an inherited method. */
-    public String alias = null; // a static factory method should be provided by a subclass
+    protected final String path;
     
     public EntityMetaModel(final String path) {
         if (path == null) {
@@ -51,23 +46,15 @@ public abstract class EntityMetaModel implements IConvertableToPath {
      * Example:
      * 
      * <pre>
-     * var personBase = new PersonMetaModel();
-     * personBase.toPath(); // "this"
-     * 
-     * var personWithContext = new PersonMetaModel("owner");
-     * personWithContext.toPath(); // "owner"
-     * 
-     * var personAliased = PersonMetaModel.withAlias("p");
-     * personAliased.toPath(); // "p"
+     * var person = MetaModels.Person_;
+     * person.toPath();                 // "this"
+     * person.user().toPath();          // "user"
+     * person.user().email()>toPath();  // "user.email"
      * </pre>
      */
     @Override
-    public final String toPath() {
-        if (path.isEmpty()) {
-            return alias == null ? "this" : alias;
-        }
-
-        return this.path;
+    public String toPath() {
+        return path.isEmpty() ? "this" : path;
     }
 
     @Override

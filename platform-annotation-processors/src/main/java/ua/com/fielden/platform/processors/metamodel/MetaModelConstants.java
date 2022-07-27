@@ -31,5 +31,6 @@ public abstract class MetaModelConstants {
 
     public static final String META_MODEL_PKG_NAME_SUFFIX = ".meta";
     public static final String META_MODEL_NAME_SUFFIX = "MetaModel";
+    public static final String META_MODEL_ALIASED_NAME_SUFFIX = META_MODEL_NAME_SUFFIX + "Aliased";
 
 }

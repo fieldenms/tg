@@ -24,6 +24,7 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
 import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderException;
@@ -464,5 +465,9 @@ public class ElementFinder {
 
     public static boolean isTopLevelClass(final Element element) {
         return element.getEnclosingElement().getKind() == ElementKind.PACKAGE;
+    }
+    
+    public static String getPackageName(final TypeElement typeElement, final Elements elementUtils) {
+        return elementUtils.getPackageOf(typeElement).getQualifiedName().toString();
     }
 }

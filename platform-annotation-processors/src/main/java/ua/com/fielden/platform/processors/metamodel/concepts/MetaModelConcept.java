@@ -19,12 +19,14 @@ import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 public final class MetaModelConcept {
     private final EntityElement entityElement;
     private final String simpleName;
+    private final String aliasedSimpleName;
     private final String packageName;
     private final String qualifiedName;
 
     public MetaModelConcept(final EntityElement entityElement) {
         this.entityElement = entityElement;
         this.simpleName = entityElement.getSimpleName() + MetaModelConstants.META_MODEL_NAME_SUFFIX;
+        this.aliasedSimpleName = entityElement.getSimpleName() + MetaModelConstants.META_MODEL_ALIASED_NAME_SUFFIX;
         this.packageName = entityElement.getPackageName() + MetaModelConstants.META_MODEL_PKG_NAME_SUFFIX;
         this.qualifiedName = format("%s.%s", packageName, simpleName);
     }
@@ -35,6 +37,10 @@ public final class MetaModelConcept {
 
     public String getSimpleName() {
         return simpleName;
+    }
+    
+    public String getAliasedSimpleName() {
+        return aliasedSimpleName;
     }
 
     public String getPackageName() {
@@ -47,6 +53,10 @@ public final class MetaModelConcept {
 
     public ClassName getMetaModelClassName() {
         return ClassName.get(packageName, simpleName);
+    }
+    
+    public ClassName getMetaModelAliasedClassName() {
+        return ClassName.get(packageName, aliasedSimpleName);
     }
 
     @Override

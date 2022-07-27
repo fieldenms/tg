@@ -152,4 +152,17 @@ public class MetaModelFinder {
         }
         return Optional.of(new MetaModelElement(maybeMmte.get(), elementUtils));
     }
+
+    /**
+     * An aliased meta-model class resides in the same package as the regular meta-model, but with a slightly different name.
+     * @param mme
+     * @param elementUtils
+     * @return
+     */
+    public static TypeElement findMetaModelAliased(final MetaModelElement mme, final Elements elementUtils) {
+        final EntityElement entity = EntityFinder.findEntityForMetaModel(mme, elementUtils);
+        final String qualName = String.format("%s.%s%s", mme.getPackageName(), entity.getSimpleName(), MetaModelConstants.META_MODEL_ALIASED_NAME_SUFFIX);
+
+        return elementUtils.getTypeElement(qualName);
+    }
 }
