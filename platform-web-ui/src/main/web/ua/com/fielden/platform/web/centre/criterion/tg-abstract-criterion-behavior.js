@@ -52,7 +52,7 @@ const TgAbstractCriterionBehaviorImpl = {
          */
          orNull: {
             type: Boolean,
-            notify: true, // TODO val: false
+            notify: true,
             observer: '_orNullChanged'
         },
 
@@ -61,7 +61,7 @@ const TgAbstractCriterionBehaviorImpl = {
          */
         not: {
             type: Boolean,
-            notify: true, // TODO val: false
+            notify: true,
             observer: '_notChanged'
         },
 
