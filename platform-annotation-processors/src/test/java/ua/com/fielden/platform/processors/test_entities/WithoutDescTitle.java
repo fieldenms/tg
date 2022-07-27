@@ -18,9 +18,9 @@ import ua.com.fielden.platform.utils.Pair;
 @KeyTitle("Key")
 @MapEntityTo
 @DomainEntity
-public class TestEntityWithoutDescTitle extends AbstractEntity<String> {
+public class WithoutDescTitle extends AbstractEntity<String> {
 
-    private static final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(TestEntityWithoutDescTitle.class);
+    private static final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(WithoutDescTitle.class);
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
     public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
     

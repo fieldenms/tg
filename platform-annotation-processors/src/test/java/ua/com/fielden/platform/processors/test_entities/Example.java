@@ -2,12 +2,14 @@ package ua.com.fielden.platform.processors.test_entities;
 
 import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.DescRequired;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
-import ua.com.fielden.platform.entity.annotation.DisplayDescription;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
+import ua.com.fielden.platform.entity.annotation.MapTo;
+import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -22,12 +24,24 @@ import ua.com.fielden.platform.utils.Pair;
 @MapEntityTo
 @DomainEntity
 @DescTitle("Description")
-@DisplayDescription
-@DescRequired
-public class TestEntityWithDescTitle extends AbstractEntity<String> {
+public class Example extends AbstractEntity<String> {
 
-    private static final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(TestEntityWithDescTitle.class);
+    private static final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(Example.class);
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
     public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
     
+    @IsProperty
+    @MapTo
+    @Title(value = "Prop1")
+    private int prop1;
+    
+    @Observable
+    public Example setProp1(final int prop1) {
+        this.prop1 = prop1;
+        return this;
+    }
+
+    public int getProp1() {
+        return prop1;
+    }
 }
