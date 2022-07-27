@@ -18,6 +18,6 @@ public abstract class AbstractSingleCriterionWidget extends AbstractCriterionWid
      * @param propertyName
      */
     public AbstractSingleCriterionWidget(final Class<? extends AbstractEntity<?>> root, final String propertyName, final AbstractWidget... editors) {
-        super(root, "centre/criterion/single/tg-single-criterion", propertyName, editors);
+        super(root, "centre/criterion/tg-criterion", propertyName, editors);
     }
 }

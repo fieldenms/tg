@@ -1,6 +1,6 @@
 /**
- * The `tg-multi-criterion-config` contains just the DOM part of all non-single `tg-criterion`s -- 
- * 'Missing value' and 'Not' editors.
+ * The `tg-criterion-config` contains just the DOM part of all `tg-criterion`s -- 
+ * 'Missing value', 'Not' and 'OrGroup' editors.
  */
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
@@ -32,13 +32,13 @@ const template = html`
         </tg-flex-layout>
     </tg-accordion>
     <paper-checkbox checked="{{_orNull}}" hidden$="[[_excludeMissing]]">Missing</paper-checkbox>
-    <paper-checkbox checked="{{_not}}">Not</paper-checkbox>
+    <paper-checkbox checked="{{_not}}" hidden$="[[_excludeNot]]">Not</paper-checkbox>
 `;
 
 Polymer({
     _template: template,
 
-    is: 'tg-multi-criterion-config',
+    is: 'tg-criterion-config',
 
     properties: {
         _orNull: {
@@ -61,8 +61,15 @@ Polymer({
         _excludeMissing: {
             type: Boolean
         },
+        _excludeNot: {
+            type: Boolean
+        },
         _excludeOrGroup: {
             type: Boolean
+        },
+        _orGroupOpened: {
+            type: Boolean,
+            value: false
         },
         _threeColumnLayout: Array,
         _twoColumnLayout: Array,
@@ -82,7 +89,7 @@ Polymer({
             // It surely can be closed if user wants to [after that].
             // Otherwise, if 'orGroup' mnemonic is not assigned, then accordion to be deliberately closed as a minor item for user action.
             const accordion = this.shadowRoot.querySelector('#orGroupAccordion'); // by default the fist accordion should be open
-            accordion.opened = accordion.selected;
+            accordion.opened = accordion.selected || this._orGroupOpened;
         }.bind(this), 1);
     },
 
