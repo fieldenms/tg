@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
@@ -9,6 +10,7 @@ import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentre
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.log4j.Logger;
 import org.restlet.Context;
@@ -105,15 +107,15 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
             }
 
             final String searchStringVal = (String) centreContextHolder.getCustomObject().get("@@searchString"); // custom property inside paramsHolder
-            final String prepSearchString = prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");
-            final String searchString = shouldUpperCase ? prepSearchString.toUpperCase() : prepSearchString;
+            final Optional<String> prepSearchString = ofNullable(prepare(searchStringVal.contains("*") || searchStringVal.contains("%") ? searchStringVal : searchStringVal + "*"));
+            final String searchString = prepSearchString.map(str -> shouldUpperCase ? str.toUpperCase() : str).orElse("%");
             final int dataPage = centreContextHolder.getCustomObject().containsKey("@@dataPage") ? (Integer) centreContextHolder.getCustomObject().get("@@dataPage") : 1;
             // logger.debug(format("SEARCH STRING %s, PAGE %s", searchString, dataPage));
-            final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%", dataPage);
+            final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString, dataPage);
 
             // logger.debug("ENTITY_AUTOCOMPLETION_RESOURCE: search finished.");
             return restUtil.listJsonRepresentationWithoutIdAndVersion(entities);
         }, restUtil);
     }
-    
+
 }
