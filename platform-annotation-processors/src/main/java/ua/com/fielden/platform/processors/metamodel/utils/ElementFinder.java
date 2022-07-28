@@ -232,23 +232,64 @@ public class ElementFinder {
     }
 
     /**
-     * Returns a variable element, representing a field with name {@code fieldName}, or else {@code null}.
-     * The field might either be declared or inherited, with preference for a declared one.
+     * Returns a variable element, representing a field with name {@code fieldName} and matching the given {@code predicate}, or else {@code null}.
+     * <p>
+     * The whole type hierarchy is processed, until a matching field is found.
      *
      * @param typeElement
      * @param fieldName
+     * @param predicate
      * @return
      */
-    public static VariableElement findField(final TypeElement typeElement, final String fieldName) {
+    public static VariableElement findField(final TypeElement typeElement, final String fieldName, final Predicate<VariableElement> predicate) {
         // first search in declared and then inherited fields
         return findDeclaredFields(typeElement).stream()
-               .filter(varEl -> varEl.getSimpleName().toString().equals(fieldName))
+               .filter(varEl -> varEl.getSimpleName().toString().equals(fieldName) && predicate.test(varEl))
                .findFirst()
                .orElseGet(() -> findInheritedFields(typeElement).stream()
                                 .filter(varEl -> varEl.getSimpleName().toString().equals(fieldName))
                                 .findFirst().orElse(null));
     }
 
+    /**
+     * Returns a variable element, representing a field with name {@code fieldName}, or else {@code null}.
+     * <p>
+     * The whole type hierarchy is processed, until a matching field is found.
+     *
+     * @param typeElement
+     * @param fieldName
+     * @return
+     */
+    public static VariableElement findField(final TypeElement typeElement, final String fieldName) {
+        return findField(typeElement, fieldName, (varEl) -> true);
+    }
+
+    /**
+     * Returns a variable element, representing a declared field with name {@code fieldName} and matching the given {@code predicate}, or else {@code null}.
+     *
+     * @param typeElement
+     * @param fieldName
+     * @param predicate
+     * @return
+     */
+    public static VariableElement findDeclaredField(final TypeElement typeElement, final String fieldName, final Predicate<VariableElement> predicate) {
+        return findDeclaredFields(typeElement).stream()
+               .filter(varEl -> varEl.getSimpleName().toString().equals(fieldName) && predicate.test(varEl))
+               .findFirst()
+               .orElse(null);
+    }
+
+    /**
+     * Returns a variable element, representing a declared field with name {@code fieldName}, or else {@code null}.
+     *
+     * @param typeElement
+     * @param fieldName
+     * @return
+     */
+    public static VariableElement findDeclaredField(final TypeElement typeElement, final String fieldName) {
+        return findDeclaredField(typeElement, fieldName, (varEl) -> true);
+    }
+    
     public static Set<VariableElement> findDeclaredFieldsAnnotatedWith(final TypeElement typeElement, final Class<? extends Annotation> annotationClass) {
         return findDeclaredFields(typeElement).stream()
                 .filter(el -> el.getAnnotation(annotationClass) != null)

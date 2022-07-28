@@ -37,6 +37,10 @@ public class MetaModelFinder {
         return ElementFinder.doesExtend(typeElement, MetaModelConstants.METAMODEL_SUPERCLASS);
     }
     
+    public static boolean isMetaModelAliased(final MetaModelElement mme) {
+        return mme.getSimpleName().endsWith(MetaModelConstants.META_MODEL_ALIASED_NAME_SUFFIX);
+    }
+    
     public static Set<VariableElement> findStaticFields(final MetaModelElement mme) {
         return ElementFinder.findDeclaredFields(mme.getTypeElement(), f -> ElementFinder.isStatic(f));
     }

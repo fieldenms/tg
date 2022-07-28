@@ -1,13 +1,21 @@
 package ua.com.fielden.platform.processors.metamodel;
 
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_ALIASED_NAME_SUFFIX;
+import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_NAME_SUFFIX;
 
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -42,6 +50,9 @@ import ua.com.fielden.platform.processors.test_utils.CompilationRule;
  * @author TG Team
  */
 public class MetaModelStructureTest {
+    public static final String TEST_ENTITIES_PKG_NAME = "ua.com.fielden.platform.processors.test_entities";
+    public static final String TEST_META_MODELS_PKG_NAME = TEST_ENTITIES_PKG_NAME + MetaModelConstants.META_MODEL_PKG_NAME_SUFFIX;
+
     @ClassRule
     public static CompilationRule rule = new CompilationRule(List.of(), new MetaModelProcessor());
     public static Elements elements;
@@ -169,6 +180,59 @@ public class MetaModelStructureTest {
         // make sure property "id" is not metamodeled
         assertTrue(MetaModelFinder.findPropertyMethods(notPersistentMetaModel, types).stream()
             .noneMatch(el -> el.getSimpleName().toString().equals("id")));
+    }
+    
+    /**
+     * For a metamodeled entity there are 2 meta-model forms that get generated. One of them is an aliased meta-model.
+     * <p>
+     * An aliased meta-model should extend a regular one.
+     */
+    @Test
+    public void aliased_meta_model_extends_a_regular_one() {
+        final List<MetaModelElement> aliasedMetaModels = elements.getPackageElement(TEST_META_MODELS_PKG_NAME).getEnclosedElements().stream()
+                .filter(el -> el.getKind() == ElementKind.CLASS)
+                .map(el -> (TypeElement) el)
+                .filter(MetaModelFinder::isMetaModel)
+                .map(te -> new MetaModelElement(te, elements))
+                .filter(MetaModelFinder::isMetaModelAliased)
+                .toList();
+        assertFalse(aliasedMetaModels.isEmpty());
+
+        aliasedMetaModels.stream()
+            .forEach(mme -> {
+                final TypeElement superclass = ElementFinder.getSuperclassOrNull(mme.getTypeElement());
+                assertNotNull(superclass);
+                assertTrue(MetaModelFinder.isMetaModel(superclass));
+                // superclass name = name - "MetaModelAliased" + "MetaModel" = name - "Aliased"
+                final String supposedName = format("%s.%s%s", mme.getPackageName(),
+                        StringUtils.substringBeforeLast(mme.getSimpleName(), META_MODEL_ALIASED_NAME_SUFFIX), 
+                        META_MODEL_NAME_SUFFIX);
+                assertEquals(supposedName, superclass.getQualifiedName().toString());
+            });
+    }
+    
+    /**
+     * For a metamodeled entity there are 2 meta-model forms that get generated. One of them is an aliased meta-model.
+     * <p>
+     * An alised meta-model should provide a public read-only field <code>alias</code> of type {@link String}.
+     */
+    @Test
+    public void aliased_meta_model_provides_public_read_only_alias_String() {
+        final List<MetaModelElement> aliasedMetaModels = elements.getPackageElement(TEST_META_MODELS_PKG_NAME).getEnclosedElements().stream()
+                .filter(el -> el.getKind() == ElementKind.CLASS)
+                .map(el -> (TypeElement) el)
+                .filter(MetaModelFinder::isMetaModel)
+                .map(te -> new MetaModelElement(te, elements))
+                .filter(MetaModelFinder::isMetaModelAliased)
+                .toList();
+        assertFalse(aliasedMetaModels.isEmpty());
+        
+        aliasedMetaModels.stream()
+            .forEach(mme -> {
+                assertNotNull(ElementFinder.findDeclaredField(mme.getTypeElement(), "alias", 
+                        varEl -> varEl.getModifiers().containsAll(List.of(Modifier.PUBLIC, Modifier.FINAL)) &&
+                        ElementFinder.isFieldOfType(varEl, String.class)));
+            });
     }
 
     // ============================ HELPER METHODS ============================
