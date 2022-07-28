@@ -3,25 +3,19 @@ package ua.com.fielden.platform.processors.metamodel;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-import java.io.File;
-import java.net.URL;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
-import javax.tools.JavaFileObject;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
-
-import com.google.testing.compile.JavaFileObjects;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
@@ -44,21 +38,15 @@ import ua.com.fielden.platform.processors.test_utils.CompilationRule;
 
 /**
  * Tests that verify the structure of the generated meta-models that are based on a set of categories for structural representation of entities.
- * <p>
- * A setup must be performed before the tests are run in order to generate the meta-models by compiling the input entities.
- * Java sources for the entities themselves must be placed in the {@code src/test/resources} directory so that they are not compiled by default. We want to compile them manually, storing the result in memory, and process them with the {@link MetaModelProcessor}. This directory needs to be included in the build path (classpath).
  * 
  * @author TG Team
  */
 public class MetaModelStructureTest {
-    private static final String TEST_ENTITIES_PKG_NAME = "ua.com.fielden.platform.processors.test_entities";
-    
-    // this class rule compiles test entities and then executes all tests during the last round of processing so that instances of Elements and Types are available in those tests
     @ClassRule
-    public static CompilationRule rule = new CompilationRule(getTestEntities(), new MetaModelProcessor());
+    public static CompilationRule rule = new CompilationRule(List.of(), new MetaModelProcessor());
     public static Elements elements;
     public static Types types;
-
+    
     @BeforeClass
     public static void setupOnce() {
         // these values are guaranteed to have been initialized since the class rule will evaluate this method during the last round of processing
@@ -184,24 +172,6 @@ public class MetaModelStructureTest {
     }
 
     // ============================ HELPER METHODS ============================
-    
-    private static List<JavaFileObject> getTestEntities() {
-        final String pkgNameSlashed = StringUtils.replaceChars(TEST_ENTITIES_PKG_NAME, '.', '/');
-        final URL entitiesPkgUrl = ClassLoader.getSystemResource(pkgNameSlashed);
-        if (entitiesPkgUrl == null) {
-            // What action should be taken if the package with test entities wasn't found?
-            // Should this throw a runtime exception?
-            throw new IllegalStateException(String.format("%s package not found.", TEST_ENTITIES_PKG_NAME));
-        }
-
-        // find all *.java files inside the package
-        return Stream.of(new File(entitiesPkgUrl.getFile()).listFiles())
-                .map(File::getName)
-                .filter(filename -> StringUtils.endsWith(filename, ".java"))
-                .map(filename -> JavaFileObjects.forResource(String.format("%s/%s", pkgNameSlashed, filename)))
-                .toList();
-    }
-    
     /**
      * Wraps a call to {@link EntityFinder#findEntity} that returns an optional in order to assert the presence of the returned value. 
      */
