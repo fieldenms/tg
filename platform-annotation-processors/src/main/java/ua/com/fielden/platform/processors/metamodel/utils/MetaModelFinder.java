@@ -143,10 +143,7 @@ public class MetaModelFinder {
      */
     public static Optional<MetaModelElement> findMetaModelForEntity(final EntityElement entityElement, final Elements elementUtils) {
         final MetaModelConcept mmc = new MetaModelConcept(entityElement);
-        final Optional<TypeElement> maybeMmte = Optional.ofNullable(elementUtils.getTypeElement(mmc.getQualifiedName()));
-        if (maybeMmte.isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.of(new MetaModelElement(maybeMmte.get(), elementUtils));
+        return Optional.ofNullable(elementUtils.getTypeElement(mmc.getQualifiedName()))
+                .map(te -> new MetaModelElement(te, elementUtils));
     }
 }

@@ -52,11 +52,8 @@ public class EntityFinder {
      * @return {@link EntityElement} wrapped in an {@link Optional} if found, else an empty optional
      */
     public static Optional<EntityElement> findEntity(final Class<? extends AbstractEntity<?>> entityClass, final Elements elementUtils) {
-        final Optional<TypeElement> typeElement = Optional.ofNullable(elementUtils.getTypeElement(entityClass.getCanonicalName()));
-        if (typeElement.isEmpty()) {
-            return Optional.empty();
-        }
-        return Optional.of(new EntityElement(typeElement.get(), elementUtils));
+        return Optional.ofNullable(elementUtils.getTypeElement(entityClass.getCanonicalName()))
+                .map(te -> new EntityElement(te, elementUtils));
     }
 
    /**
@@ -249,12 +246,8 @@ public class EntityFinder {
         if (!EntityFinder.isEntityType(element)) {
             return false;
         }
-        for (final Class<? extends Annotation> annotClass: ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION)  {
-            if (element.getAnnotation(annotClass) != null) {
-                return true;
-            }
-        }
-        return false;
+        return ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION.stream()
+                .anyMatch(annotClass -> element.getAnnotation(annotClass) != null);
     }
 
     public static List<? extends AnnotationMirror> getPropertyAnnotations(final PropertyElement property) {
