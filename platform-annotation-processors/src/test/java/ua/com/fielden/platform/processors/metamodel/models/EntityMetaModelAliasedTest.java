@@ -12,6 +12,14 @@ import ua.com.fielden.platform.processors.test_entities.meta.AdjacentToOtherEnti
 import ua.com.fielden.platform.processors.test_entities.meta.ExampleMetaModelAliased;
 
 
+/**
+ * Tests that cover meta-model aliasing capabilities.
+ * <p>
+ * The referenced meta-models must already be generated for this class to compile.
+ * 
+ * @author TG Team
+ *
+ */
 public class EntityMetaModelAliasedTest {
     
     /**
@@ -58,5 +66,4 @@ public class EntityMetaModelAliasedTest {
         final ExampleMetaModelAliased exampleAliased3 = MetaModels.Example_("ex");
         assertTrue(exampleAliased3 != exampleAliased1);
     }
-
 }
