@@ -11,6 +11,7 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelException;
+import ua.com.fielden.platform.processors.metamodel.exceptions.PropertyElementException;
 
 /**
  * A convenient wrapper around {@link VariableElement} to represent a property element.
@@ -22,6 +23,9 @@ public class PropertyElement {
     private final VariableElement varElement;
     
     public PropertyElement(final VariableElement varElement) {
+        if (varElement == null) {
+            throw new PropertyElementException("Constructor received null as an argument.");
+        }
         this.varElement = varElement;
     }
     
