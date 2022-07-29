@@ -66,11 +66,11 @@ public class MetaModelStructureTest {
     }
     
     @Test
-    public void entity_annotated_with_DescTitle_should_have_property_desc_metamodeled() {
+    public void entity_annotated_with_DescTitle_has_property_desc_metamodeled() {
         final EntityElement entityWithDesc = findEntity(WithDescTitle.class);
         final MetaModelElement metaModelWithDesc = findMetaModel(entityWithDesc);
 
-        // Meta-model for TestEntityWithDescTitle should have method desc()
+        // Meta-model for TestEntityWithDescTitle has method desc()
         assertTrue(MetaModelFinder.findPropertyMethods(metaModelWithDesc, types).stream()
                 .anyMatch(el -> StringUtils.equals(el.getSimpleName(), "desc")));
 
@@ -78,18 +78,18 @@ public class MetaModelStructureTest {
         final EntityElement entityWithoutDesc = findEntity(WithoutDescTitle.class);
         final MetaModelElement metaModelWithoutDesc = findMetaModel(entityWithoutDesc);
 
-        // Meta-model for TestEntityWithoutDescTitle should NOT have method desc()
+        // Meta-model for TestEntityWithoutDescTitle does NOT have method desc()
         assertTrue(MetaModelFinder.findPropertyMethods(metaModelWithoutDesc, types).stream()
                 .noneMatch(el -> StringUtils.equals(el.getSimpleName(), "desc")));
     }
     
     @Test
-    public void entity_with_sink_node_properties_only_should_have_all_properties_metamodeled_with_PropertyMetaModel() {
+    public void entity_with_sink_node_properties_only_has_all_properties_metamodeled_with_PropertyMetaModel() {
         final EntityElement entity = findEntity(SinkNodesOnly.class);
         final MetaModelElement metaModel = findMetaModel(entity);
         
         // find all distinct return types of methods that model properies of an underlying entity
-        // there should be only one such type - PropertyMetaModel
+        // there must be only one such type - PropertyMetaModel
         final List<TypeMirror> distinctReturnTypes = MetaModelFinder.findPropertyMethods(metaModel, types).stream()
             .map(ExecutableElement::getReturnType)
             .distinct()
@@ -99,10 +99,10 @@ public class MetaModelStructureTest {
     }
 
     /**
-     * If a metamodeled entity has properties of metamodeled entity types, then the generated meta-model should capture these relationships modeled by properties of corresponding meta-model types.
+     * If a metamodeled entity has properties of metamodeled entity types, then the generated meta-model captures these relationships modeled by properties of corresponding meta-model types.
      */
     @Test
-    public void entity_adjacent_to_other_metamodeled_entities_should_have_properties_metamodeled_with_EntityMetaModel() {
+    public void entity_adjacent_to_other_metamodeled_entities_has_properties_metamodeled_with_EntityMetaModel() {
         final EntityElement entity = findEntity(AdjacentToOtherEntities.class);
         final MetaModelElement metaModel = findMetaModel(entity);
 
@@ -125,7 +125,7 @@ public class MetaModelStructureTest {
     }
 
     /**
-     * Meta-model of an entity (Child) that extends another metamodeled entity (Parent) should model the hierarchy in a similar way.
+     * Meta-model of an entity (Child) that extends another metamodeled entity (Parent) models the hierarchy in a similar way.
      * <p>
      * <ul>
      * <li>Child's meta-model directly extends Parent's meta-model</li>
@@ -185,7 +185,7 @@ public class MetaModelStructureTest {
     /**
      * For a metamodeled entity there are 2 meta-model forms that get generated. One of them is an aliased meta-model.
      * <p>
-     * An aliased meta-model should extend a regular one.
+     * An aliased meta-model extends a regular one.
      */
     @Test
     public void aliased_meta_model_extends_a_regular_one() {
@@ -214,7 +214,7 @@ public class MetaModelStructureTest {
     /**
      * For a metamodeled entity there are 2 meta-model forms that get generated. One of them is an aliased meta-model.
      * <p>
-     * An alised meta-model should provide a public read-only field <code>alias</code> of type {@link String}.
+     * An alised meta-model provides a public read-only field <code>alias</code> of type {@link String}.
      */
     @Test
     public void aliased_meta_model_provides_public_read_only_alias_String() {
