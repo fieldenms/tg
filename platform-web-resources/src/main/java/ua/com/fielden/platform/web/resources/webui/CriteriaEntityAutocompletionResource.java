@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static java.util.Optional.ofNullable;
-import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCentreContext;
@@ -34,6 +32,7 @@ import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntit
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
@@ -185,13 +184,9 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 valueMatcher.setContext(new CentreContext<>());
             }
 
-            // prepare search string
-            final String searchStringVal = (String) centreContextHolder.getCustomObject().get("@@searchString"); // custom property inside customObject
-            final Optional<String> searchString = ofNullable(prepare(searchStringVal.contains("*") || searchStringVal.contains("%") ? searchStringVal : searchStringVal + "*"));
-            final int dataPage = centreContextHolder.getCustomObject().containsKey("@@dataPage") ? (Integer) centreContextHolder.getCustomObject().get("@@dataPage") : 1;
-            // logger.debug(format("SEARCH STRING %s, PAGE %s", searchString, dataPage));
-
-            final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString.orElse("%"), dataPage);
+            // prepare the search string and perform value matching
+            final T2<String, Integer> searchStringAndDataPageNo = EntityAutocompletionResource.prepSearchString(centreContextHolder, false);
+            final List<? extends AbstractEntity<?>> entities =  valueMatcher.findMatchesWithModel(searchStringAndDataPageNo._1, searchStringAndDataPageNo._2);
 
             // logger.debug("CRITERIA_ENTITY_AUTOCOMPLETION_RESOURCE: search finished.");
             return restUtil.listJsonRepresentationWithoutIdAndVersion(entities);
