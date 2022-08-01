@@ -243,6 +243,9 @@ const template = html`
             height: auto;
             min-height: 100%
         }
+        .insertion-point-slot {
+            overflow: hidden;
+        }
         .insertion-point-slot[scroll-container] {
             overflow: auto;
         }
