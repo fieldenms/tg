@@ -73,13 +73,11 @@ const initSplitter = function (splitterPosition, splitterKey, actualSplitterKey,
     let pos = localStorage.getItem(splitterKey);
     if (!pos) {
         pos = splitterPosition || insertionPointContaier.offsetWidth / centreWidthWithoutSplitter + "";
-        localStorage.setItem(splitterKey, pos);
     }
 
     let actualPos = localStorage.getItem(actualSplitterKey);
     if (!actualPos) {
         actualPos = pos || insertionPointContaier.offsetWidth / centreWidthWithoutSplitter + "";
-        localStorage.setItem(actualSplitterKey, actualPos);
     }
 
     insertionPointContaier.style.width = (parseFloat(actualPos) * centreWidthWithoutSplitter / centreWidth * 100) + "%";
