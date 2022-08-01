@@ -8,6 +8,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
+
 /**
  * Indicates that an entity property should only be used as a criterion for dynamic entity reviews (i.e. it cannot be added to the result set). {@link #value()} indicates range or
  * single selection to be used for property. See {@link Type} for more details.
@@ -33,6 +35,12 @@ public @interface CritOnly {
 
     /** Attribute that determines whether to exclude missing mnemonic or not.*/
     boolean excludeMissing() default false;
+
+    /** An entity type for a sub-model that is used for constructing a {@code .critCondition} statement. */
+    Class<? extends AbstractEntity> entityUnderCondition() default AbstractEntity.class;
+
+    /** A property name that is used to bind a {@code .critCondition} model with the main query, which gets built for an Entity Centre. */
+    String propUnderCondition() default "";
 
     /**
      * Mnemonic options for overriding default value deduced from critonly {@link Type}.

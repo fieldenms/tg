@@ -188,7 +188,7 @@ const TgSelectionCriteriaBehaviorImpl = {
         },
 
         /**
-         * Indictes whether all data should be retrived at once or only separate page of data. 
+         * Indicates whether all data should be retrieved at once or only separate page of data.
          */
         retrieveAll: {
             type: Boolean,
