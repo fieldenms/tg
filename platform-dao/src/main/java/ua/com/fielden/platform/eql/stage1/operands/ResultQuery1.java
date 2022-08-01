@@ -83,7 +83,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
         if (!allAggregated) {
             return sourcesTr;
         } else {
-            return sources.transform(context.cloneForAggregates());
+            return new TransformationResult<>(sourcesTr.item, sourcesTr.updatedContext.cloneForAggregates());
         } 
     }
     
