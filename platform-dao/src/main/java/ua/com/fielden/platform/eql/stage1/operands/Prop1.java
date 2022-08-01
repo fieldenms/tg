@@ -75,7 +75,7 @@ public class Prop1 implements ISingleOperand1<Prop2> {
         return asIsResolution.isSuccessful() ? new PropResolution(source, asIsResolution.getResolved()) : null;
     }
     
-    private PropResolution resolveProp(final List<ISource2<? extends ISource3>> sources, final Prop1 prop) {
+    private static PropResolution resolveProp(final List<ISource2<? extends ISource3>> sources, final Prop1 prop) {
         final List<PropResolution> result = new ArrayList<>();
         for (final ISource2<? extends ISource3> source : sources) {
             final PropResolution resolution = resolvePropAgainstSource(source, prop);

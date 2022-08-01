@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.stage1.conditions;
 import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage1.TransformationContext;
-import ua.com.fielden.platform.eql.stage1.operands.SubQuery1;
 import ua.com.fielden.platform.eql.stage1.operands.TypelessSubQuery1;
 import ua.com.fielden.platform.eql.stage2.conditions.ExistenceTest2;
 

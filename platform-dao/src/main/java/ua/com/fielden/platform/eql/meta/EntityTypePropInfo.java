@@ -22,6 +22,12 @@ public class EntityTypePropInfo<T extends AbstractEntity<?>> extends AbstractPro
         this(name, propEntityInfo, hibType, required, null, false);
     }
 
+    public EntityTypePropInfo(final String name, final EntityInfo<T> propEntityInfo, final Object hibType, final boolean required, final ExpressionModel expression, final boolean implicit) {
+        super(name, hibType, expression, implicit);
+        this.propEntityInfo = propEntityInfo;
+        this.required = required;
+    }
+    
     @Override
     public EntityTypePropInfo<T> cloneRenamed(final String newName) {
         return new EntityTypePropInfo<T>(newName, propEntityInfo, hibType, required);
@@ -31,12 +37,6 @@ public class EntityTypePropInfo<T extends AbstractEntity<?>> extends AbstractPro
     public AbstractPropInfo<T> cloneWithoutExpression() {
         return new EntityTypePropInfo<T>(name, propEntityInfo, hibType, required);
     }    
-    
-    public EntityTypePropInfo(final String name, final EntityInfo<T> propEntityInfo, final Object hibType, final boolean required, final ExpressionModel expression, final boolean implicit) {
-        super(name, hibType, expression, implicit);
-        this.propEntityInfo = propEntityInfo;
-        this.required = required;
-    }
     
     @Override
     public PropResolutionProgress resolve(final PropResolutionProgress context) {
