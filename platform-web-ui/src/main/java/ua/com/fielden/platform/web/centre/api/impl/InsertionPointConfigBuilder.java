@@ -36,7 +36,7 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
     private final EntityActionConfig insertionPointAction;
     private final InsertionPoints whereToInsertView;
     private boolean preferred = false;
-    private boolean withoutResizing = false;
+    private boolean noResizing = false;
     private Optional<IToolbarConfig> toolbarConfig = Optional.empty();
 
     public InsertionPointConfigBuilder(final ResultSetBuilder<T> resultSetBuilder, final EntityActionConfig insertionPointAction, final InsertionPoints whereToInsertView) {
@@ -49,7 +49,7 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
     public EntityCentreConfig<T> build() {
         resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView))
                 .setPreferred(preferred)
-                .setWithoutResizing(withoutResizing)
+                .setNoResizing(noResizing)
                 .setToolbar(toolbarConfig));
         return resultSetBuilder.build();
     }
@@ -64,7 +64,7 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
     public IInsertionPointConfig0<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
         resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView))
                 .setPreferred(preferred)
-                .setWithoutResizing(withoutResizing)
+                .setNoResizing(noResizing)
                 .setToolbar(toolbarConfig));
         return new InsertionPointConfigBuilder<>(resultSetBuilder, actionConfig, whereToInsertView);
     }
@@ -84,7 +84,7 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
     public IWithRightSplitterPosition<T> withLeftSplitterPosition(final int percentage) {
         resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView))
                 .setPreferred(preferred)
-                .setWithoutResizing(withoutResizing)
+                .setNoResizing(noResizing)
                 .setToolbar(toolbarConfig));
         return resultSetBuilder.withLeftSplitterPosition(percentage);
     }
@@ -93,7 +93,7 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
     public IEcbCompletion<T> withRightSplitterPosition(final int percentage) {
         resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView))
                 .setPreferred(preferred)
-                .setWithoutResizing(withoutResizing)
+                .setNoResizing(noResizing)
                 .setToolbar(toolbarConfig));
         return resultSetBuilder.withRightSplitterPosition(percentage);
     }
@@ -105,7 +105,7 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
                     format(ALTERNATIVE_VIEW_CAN_NOT_BE_RESIZABLE_ERR,
                             insertionPointAction.functionalEntity.map(type -> type.getSimpleName()).orElse("Default")));
         }
-        this.withoutResizing = true;
+        this.noResizing = true;
         return this;
     }
 }
