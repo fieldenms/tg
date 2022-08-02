@@ -29,8 +29,8 @@ import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
  */
 public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements IInsertionPoints<T>, IInsertionPointConfig0<T> {
 
-    private static final String ALTERNATIVE_VIEW_CAN_NOT_BE_PREFERRED_ERR = "Insertion point for %s action can not be preferred as it is not an alternative view.";
-    private static final String ALTERNATIVE_VIEW_CAN_NOT_BE_RESIZABLE_ERR = "Insertion point for %s action which is an alternative view is not resizable by default. No need to specify this option again.";
+    private static final String ERR_ALTERNATIVE_VIEW_CANNOT_BE_PREFERRED = "Insertion point for action %s cannot be preferred as it is not an alternative view.";
+    private static final String ERR_ALTERNATIVE_VIEW_CANNOT_BE_RESIZABLE = "Insertion point for action %s, which is an alternative view, is not resizable by default. This option should not be specified explicitly.";
 
     private final ResultSetBuilder<T> resultSetBuilder;
     private final EntityActionConfig insertionPointAction;
@@ -73,7 +73,7 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
     public IInsertionPointWithToolbar<T> makePreferred() {
         if  (whereToInsertView != ALTERNATIVE_VIEW) {
             throw new InsertionPointConfigException(
-                    format(ALTERNATIVE_VIEW_CAN_NOT_BE_PREFERRED_ERR,
+                    format(ERR_ALTERNATIVE_VIEW_CANNOT_BE_PREFERRED,
                             insertionPointAction.functionalEntity.map(type -> type.getSimpleName()).orElse("Default")));
         }
         this.preferred = true;
@@ -102,7 +102,7 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
     public IInsertionPointWithToolbar<T> noResizing() {
         if  (whereToInsertView == ALTERNATIVE_VIEW) {
             throw new InsertionPointConfigException(
-                    format(ALTERNATIVE_VIEW_CAN_NOT_BE_RESIZABLE_ERR,
+                    format(ERR_ALTERNATIVE_VIEW_CANNOT_BE_RESIZABLE,
                             insertionPointAction.functionalEntity.map(type -> type.getSimpleName()).orElse("Default")));
         }
         this.noResizing = true;
