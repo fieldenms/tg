@@ -193,7 +193,7 @@ const template = html`
             <tg-element-loader id="elementLoader" class="flex"></tg-element-loader>
         </div>
     </div>
-    <iron-icon id="resizer" hidden=[[_dialogInteractionsDisabled(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-track="resizeDialog" tooltip-text="Drag to resize"></iron-icon>
+    <iron-icon id="resizer" hidden=[[_dialogInteractionsDisabled(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-track="resizeDialog" tooltip-text="Drag to resize<br>Double tap to reset dimensions" on-tap="resetDimensions"></iron-icon>
     <tg-toast id="toaster"></tg-toast>`;
 
 template.setAttribute('strip-whitespace', '');
@@ -812,6 +812,23 @@ Polymer({
             }
         }
         tearDownEvent(event);
+    },
+
+    resetDimensions: function (event) {
+        if (this._wasResized &&  event.detail.sourceEvent.detail && event.detail.sourceEvent.detail === 2) {
+            if (this.prefDim) {
+                const width = (typeof this.prefDim.width === 'function' ? this.prefDim.width() : this.prefDim.width) + this.prefDim.widthUnit;
+                const height = (typeof this.prefDim.height === 'function' ? this.prefDim.height() : this.prefDim.height) + this.prefDim.heightUnit;
+                this.style.width = width;
+                this.style.height = this.prefDim.heightUnit === '%' ? height : ('calc(' + height + ' + 44px)'); // +44px - height of the title bar please see styles for .title-bar selector; applicable only for non-relative units of measure
+                this.style.overflow = 'auto';
+            } else {
+                this.style.width = '';
+                this.style.height = '';
+                this.style.overflow = 'auto';
+            }
+            this._wasResized = false;
+        }
     },
 
     /**
