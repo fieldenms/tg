@@ -115,8 +115,8 @@ import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerW
  */
 class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder1aEgiAppearance<T>, IResultSetBuilder1aEgiIconStyle<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T>{
 
-    private static final String SPLITTER_OVERLAPPING_ERR = "The left and right splitters are overlapping (i.e., left splitter position + right splitter position > 100)";
-    private static final String SPLITTER_POSITION_OUT_OF_BOUNDS_ERR = "The splitter position should be greater than 0 and less than 100";
+    private static final String ERR_SPLITTER_OVERLAPPING = "The left and right splitters are overlapping (i.e., left splitter position + right splitter position > 100).";
+    private static final String ERR_SPLITTER_POSITION_OUT_OF_BOUNDS = "The splitter position should be greater than 0 and less than 100.";
     private static final String ERR_EDITABLE_SUB_PROP_DISALLOWED = "Dot-notated property [%s] cannot be added as editable. Only first-level properties are supported.";
 
     protected final EntityCentreBuilder<T> builder;
@@ -688,7 +688,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public IWithRightSplitterPosition<T> withLeftSplitterPosition(final int percentage) {
         if (percentage < 0 || percentage > 100) {
-            throw new EntityCentreConfigurationException(SPLITTER_POSITION_OUT_OF_BOUNDS_ERR);
+            throw new EntityCentreConfigurationException(ERR_SPLITTER_POSITION_OUT_OF_BOUNDS);
         }
         builder.leftSplitterPosition = Integer.valueOf(percentage);
         return this;
@@ -697,10 +697,10 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     @Override
     public IEcbCompletion<T> withRightSplitterPosition(final int percentage) {
         if (percentage < 0 || percentage > 100) {
-            throw new EntityCentreConfigurationException(SPLITTER_POSITION_OUT_OF_BOUNDS_ERR);
+            throw new EntityCentreConfigurationException(ERR_SPLITTER_POSITION_OUT_OF_BOUNDS);
         }
         if (builder.leftSplitterPosition != null && builder.leftSplitterPosition.intValue() + percentage > 100) {
-            throw new EntityCentreConfigurationException(SPLITTER_OVERLAPPING_ERR);
+            throw new EntityCentreConfigurationException(ERR_SPLITTER_OVERLAPPING);
         }
         builder.rightSplitterPosition = Integer.valueOf(percentage);
         return this;
