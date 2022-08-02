@@ -152,6 +152,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * The key for customObject's value containing the preferred view index.
      */
     static final String PREFERRED_VIEW = "preferredView";
+    /**
+     * The key for customObject's value containing the user name.
+     */
+    static final String USER_NAME = "userName";
 
     /** Private default constructor to prevent instantiation. */
     private CentreResourceUtils() {
@@ -212,7 +216,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final Optional<Boolean> autoRun,
         final Optional<Optional<String>> saveAsDesc,
         final Optional<Optional<String>> staleCriteriaMessage,
-        final Optional<Integer> preferredView
+        final Optional<Integer> preferredView,
+        final User user
     ) {
         final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(criteriaMetaValues, centreDirty);
         saveAsName.ifPresent(name -> {
@@ -233,6 +238,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         preferredView.ifPresent(prefView -> {
             customObject.put(PREFERRED_VIEW, prefView);
         });
+        customObject.put(USER_NAME, user.getKey());
         return customObject;
     }
 
@@ -375,7 +381,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     /**
      * Runs the entity centre with option {@code retrieveAll}. Returns {@link Right} with a list of entities of all matching entities and a summary, if {@code retrieveAll == true}.
      * Otherwise, returns {@link Left} with {@link IPage}, which should be most common case.
-     * 
+     *
      * @param retrieveAll
      * @param criteria
      * @return
@@ -639,7 +645,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 of(false), // even though configuration can be runAutomatically, do not perform auto-running on any action (except Load, see CentreConfigLoadActionDao)
                 of(validationPrototype.centreTitleAndDesc(customObjectSaveAsName).map(titleDesc -> titleDesc._2)),
                 empty(),
-                preferredView
+                preferredView,
+                user
             );
             customObject.put(APPLIED_CRITERIA_ENTITY_NAME, appliedCriteriaEntity);
             return customObject;
@@ -1155,10 +1162,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     ) {
         final EntityCentre<AbstractEntity<?>> centre = (EntityCentre<AbstractEntity<?>>) webUiConfig.getCentres().get(criteriaEntity.miType()); // get Centre DSL configuration for 'criteriaEntity'
         criteriaEntity.getGeneratedEntityController().setEntityType(criteriaEntity.getEntityClass()); // provide entity type to be able to run generated centres (with calculated properties, like totals)
-        
+
         centre.getAdditionalFetchProvider().ifPresent(fp -> criteriaEntity.setAdditionalFetchProvider(fp)); // additional fetch provider should be set if present in Centre DSL
         centre.getAdditionalFetchProviderForTooltipProperties().ifPresent(fp -> criteriaEntity.setAdditionalFetchProviderForTooltipProperties(fp)); // tooltip props fetch provider should be set if there are such properties in Centre DSL
-        
+
         createQueryEnhancerAndContext(
             webUiConfig,
             companionFinder,
@@ -1175,9 +1182,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             userCompanion,
             sharingModel
         ).ifPresent(qeac -> criteriaEntity.setAdditionalQueryEnhancerAndContext(qeac.getKey(), qeac.getValue())); // query enhancer and its optional context should be set if present in Centre DSL
-        
+
         // If exporting / running occurs on the centre that warrants data generation, then check if a generator was provided for an entity centre configuration.
-        
+
         // There could be cases where the generated data and the queried data would have different types.
         // For example, the queried data could be modelled by a synthesized entity that includes a subquery based on some generated data.
         // In such cases, it is not possible to enhance the final query with a user related condition automatically.
