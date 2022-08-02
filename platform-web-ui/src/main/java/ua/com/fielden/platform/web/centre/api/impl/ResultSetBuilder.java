@@ -611,7 +611,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     @Override
     public IResultSetBuilder1eDraggable<T> lockScrollingForInsertionPoints() {
-        this.builder.centreScroll = true;
+        this.builder.lockScrollingForInsertionPoints = true;
         return this;
     }
 

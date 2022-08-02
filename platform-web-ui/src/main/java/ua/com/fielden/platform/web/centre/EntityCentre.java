@@ -1283,7 +1283,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(BOTTOM_INSERTION_POINT_DOM, bottomInsertionPointsDom.toString()).
                 replace(ALTERNATIVE_VIEW_INSERTION_POINT_DOM, join(alternativeViewsDom, "\n")).
                 replace(CENTRE_RETRIEVE_ALL_OPTION, Boolean.toString(dslDefaultConfig.shouldRetrieveAll())).
-                replace(CENTRE_SCROLL, dslDefaultConfig.isCentreScroll() ? "centre-scroll" : "").
+                replace(CENTRE_SCROLL, dslDefaultConfig.isLockScrollingForInsertionPoints() ? "centre-scroll" : "").
                 replace(READY_CUSTOM_CODE, customCode.map(code -> code.toString()).orElse("")).
                 replace(ATTACHED_CUSTOM_CODE, customCodeOnAttach.map(code -> code.toString()).orElse(""));
         logger.debug("Finishing...");
