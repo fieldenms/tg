@@ -99,7 +99,7 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
     }
 
     @Override
-    public IInsertionPointWithToolbar<T> withoutResizing() {
+    public IInsertionPointWithToolbar<T> noResizing() {
         if  (whereToInsertView == ALTERNATIVE_VIEW) {
             throw new InsertionPointConfigException(
                     format(ALTERNATIVE_VIEW_CAN_NOT_BE_RESIZABLE_ERR,

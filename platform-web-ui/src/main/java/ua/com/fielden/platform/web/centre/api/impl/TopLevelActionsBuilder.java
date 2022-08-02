@@ -133,8 +133,8 @@ class TopLevelActionsBuilder<T extends AbstractEntity<?>> implements ICentreTopL
     }
 
     @Override
-    public IResultSetBuilder1eDraggable<T> withCentreScroll() {
-        return new ResultSetBuilder<>(builder).withCentreScroll();
+    public IResultSetBuilder1eDraggable<T> lockScrollingForInsertionPoints() {
+        return new ResultSetBuilder<>(builder).lockScrollingForInsertionPoints();
     }
 
     @Override

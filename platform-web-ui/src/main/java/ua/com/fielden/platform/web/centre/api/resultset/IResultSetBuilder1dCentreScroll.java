@@ -17,5 +17,5 @@ public interface IResultSetBuilder1dCentreScroll<T extends AbstractEntity<?>> ex
      *
      * @return
      */
-    IResultSetBuilder1eDraggable<T> withCentreScroll();
+    IResultSetBuilder1eDraggable<T> lockScrollingForInsertionPoints();
 }

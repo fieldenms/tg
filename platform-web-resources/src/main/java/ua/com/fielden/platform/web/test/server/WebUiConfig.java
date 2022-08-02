@@ -1746,7 +1746,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 .withFixedHeader()
                                 .withFixedSummary()
                                 .done())
-                .withCentreScroll()
+                .lockScrollingForInsertionPoints()
                 //.draggable()
                 //.retrieveAll()
                 .setPageCapacity(20)
@@ -2000,12 +2000,12 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     action(TgCentreInvokerWithCentreContext.class)
                             .withContext(context().withSelectionCrit().withSelectedEntities().build())
                             .icon("assignment-ind")
-                            .shortDesc("Insertion Point")
+                            .shortDesc("Right Insertion Point")
                             .longDesc("Functional context-dependent Insertion Point")
                             .prefDimForView(mkDim("''", "'500px'"))
                             .withNoParentCentreRefresh()
                             .build(),
-                    InsertionPoints.RIGHT).withoutResizing()
+                    InsertionPoints.RIGHT).noResizing()
 //                    .addInsertionPoint(
 //                            action(TgCentreInvokerWithCentreContext.class)
 //                                    .withContext(context().withSelectionCrit().withSelectedEntities().build())
@@ -2020,14 +2020,24 @@ public class WebUiConfig extends AbstractWebUiConfig {
                             action(TgCentreInvokerWithCentreContext.class)
                             .withContext(context().withSelectionCrit().withSelectedEntities().build())
                             .icon("assignment-ind")
-                            .shortDesc("Insertion Point")
+                            .shortDesc("Left1 Insertion Point")
                             .longDesc("Functional context-dependent Insertion Point")
                             .prefDimForView(mkDim("'350px'", "'500px'"))
                             .withNoParentCentreRefresh()
                             .build(),
                     InsertionPoints.LEFT)
-                    .withLeftSplitterPosition(33)
-                    .withRightSplitterPosition(33)
+                    .addInsertionPoint(
+                            action(TgCentreInvokerWithCentreContext.class)
+                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+                            .icon("assignment-ind")
+                            .shortDesc("Left2 Insertion Point")
+                            .longDesc("Functional context-dependent Insertion Point")
+                            .prefDimForView(mkDim("'350px'", "'500px'"))
+                            .withNoParentCentreRefresh()
+                            .build(),
+                    InsertionPoints.LEFT)                 
+                    .withLeftSplitterPosition(40)
+                    .withRightSplitterPosition(30)
                     .build();
         }
         return scl.build();

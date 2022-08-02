@@ -23,5 +23,5 @@ public interface IInsertionPointConfig0<T extends AbstractEntity<?>> extends IIn
      *
      * @return
      */
-    IInsertionPointWithToolbar<T> withoutResizing();
+    IInsertionPointWithToolbar<T> noResizing();
 }
