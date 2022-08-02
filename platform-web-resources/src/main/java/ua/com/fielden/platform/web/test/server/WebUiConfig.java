@@ -1746,7 +1746,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 .withFixedHeader()
                                 .withFixedSummary()
                                 .done())
-                .lockScrollingForInsertionPoints()
+                //.lockScrollingForInsertionPoints()
                 //.draggable()
                 //.retrieveAll()
                 .setPageCapacity(20)
@@ -2036,6 +2036,26 @@ public class WebUiConfig extends AbstractWebUiConfig {
                             .withNoParentCentreRefresh()
                             .build(),
                     InsertionPoints.LEFT)                 
+                    .addInsertionPoint(
+                            action(TgCentreInvokerWithCentreContext.class)
+                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+                            .icon("assignment-ind")
+                            .shortDesc("Top Insertion Point")
+                            .longDesc("Functional context-dependent Insertion Point")
+                            .prefDimForView(mkDim("'350px'", "'500px'"))
+                            .withNoParentCentreRefresh()
+                            .build(),
+                    InsertionPoints.TOP)
+                    .addInsertionPoint(
+                            action(TgCentreInvokerWithCentreContext.class)
+                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+                            .icon("assignment-ind")
+                            .shortDesc("Bottom Insertion Point")
+                            .longDesc("Functional context-dependent Insertion Point")
+                            .prefDimForView(mkDim("'350px'", "'500px'"))
+                            .withNoParentCentreRefresh()
+                            .build(),
+                    InsertionPoints.BOTTOM)
                     .withLeftSplitterPosition(40)
                     .withRightSplitterPosition(30)
                     .build();
