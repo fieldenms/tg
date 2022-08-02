@@ -27,7 +27,7 @@ import '/resources/polymer/@polymer/paper-styles/element-styles/paper-material-s
 import '/resources/polymer/@polymer/neon-animation/animations/fade-in-animation.js';
 import '/resources/polymer/@polymer/neon-animation/animations/fade-out-animation.js';
 import '/resources/centre/tg-entity-centre-styles.js';
-import { tearDownEvent, getKeyEventTarget, allDefined } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, getKeyEventTarget, getRelativePos } from '/resources/reflection/tg-polymer-utils.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
 const insertionPointKey = function(centre, element) {
@@ -593,15 +593,40 @@ Polymer({
                     document.styleSheets[0].insertRule('* { cursor: ns-resize !important; }', 0); // override custom cursors in all application with resizing cursor
                     break;
                 case 'track':
-                    const resizedHeight = this.$.loadableContent.offsetHeight + event.detail.ddy;
-                    const heightNeedsResize = resizedHeight >= 44 /* toolbar height*/ + 14 /* resizer image height */ ;
-                    if (heightNeedsResize) {
-                        this._height = resizedHeight + 'px';
+                    //Chose the container that is scrollable. Which container is scrollable depends on whether scrolling is locked to insertion point or to whole centre.
+                    const scrollingContainer = this.contextRetriever()._dom().centreScroll ? this.contextRetriever()._dom().$.views : this.parentElement.assignedSlot.parentElement;
+                    //Get mouse position relative to scrolling container.
+                    const mousePos = getRelativePos(event.detail.x, event.detail.y, scrollingContainer);
+                    const containerHeight = scrollingContainer.offsetHeight;
+                    const elementHeight = this.$.loadableContent.offsetHeight;
+                    let newHeight = this.$.loadableContent.offsetHeight + event.detail.ddy;
+                    
+                    if (mousePos.y < 0) {
+                        //If mouse pointer is above scrolling container then decrese the insertion point hight by the distance between mouse pointer top edge of scrolling contatiner
+                        newHeight = elementHeight + mousePos.y
+                    } else if (mousePos.y >= containerHeight) {
+                        //If mouse pointer is below scrolling container then increase the insertion point height by distance between mouse pointer and bottom edge of scrolling container
+                        newHeight = elementHeight + mousePos.y - containerHeight;
+                    }
+
+                    if (newHeight < 44 /* toolbar height*/ + 14 /* resizer image height */) {
+                        //If newHeight is less then minimal height of insertion point then don't change the height.
+                        newHeight = elementHeight;
+                    }
+
+                    if (elementHeight !== newHeight) {
+                        this._height = newHeight + 'px';
                         this._saveInsertionPointHeight(this._height);
+                        if (mousePos.y >= scrollingContainer.offsetHeight || mousePos.y < 0) {
+                            //If the mouse pointer is above or below scrolling container then scroll (scrolling distance should be equal to change of insertion point height)
+                            scrollingContainer.scrollTop += newHeight - elementHeight;
+                        }
                     }
                     break;
                 case 'end':
-                    document.styleSheets[0].deleteRule(0);
+                    if (document.styleSheets.length > 0) {
+                        document.styleSheets[0].deleteRule(0);
+                    }
                     break;
             }
         }
