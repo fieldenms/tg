@@ -18,7 +18,6 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.BeforeClass;
@@ -55,23 +54,35 @@ public class MetaModelStructureTest {
 
     @ClassRule
     public static CompilationRule rule = new CompilationRule(List.of(), new MetaModelProcessor());
-    public static Elements elements;
-    public static Types types;
+    private static ElementFinder elementFinder;
+    private static EntityFinder entityFinder;
+    private static MetaModelFinder metaModelFinder;
     
     @BeforeClass
     public static void setupOnce() {
         // these values are guaranteed to have been initialized since the class rule will evaluate this method during the last round of processing
-        elements = rule.getElements();
-        types = rule.getTypes();
+        elementFinder = new ElementFinder(rule.getElements(), rule.getTypes());
+        entityFinder = new EntityFinder(rule.getElements(), rule.getTypes());
+        metaModelFinder = new MetaModelFinder(rule.getElements(), rule.getTypes());
+        validateSetup();
     }
     
+    private static void validateSetup() {
+        if (elementFinder.getElements().getPackageElement(TEST_ENTITIES_PKG_NAME) == null) {
+            throw new RuntimeException("Package with test entities wasn't found");
+        }
+        if (elementFinder.getElements().getPackageElement(TEST_META_MODELS_PKG_NAME) == null) {
+            throw new RuntimeException("Package with test meta-models wasn't found");
+        }
+    }
+
     @Test
     public void entity_annotated_with_DescTitle_has_property_desc_metamodeled() {
         final EntityElement entityWithDesc = findEntity(WithDescTitle.class);
         final MetaModelElement metaModelWithDesc = findMetaModel(entityWithDesc);
 
         // Meta-model for TestEntityWithDescTitle has method desc()
-        assertTrue(MetaModelFinder.findPropertyMethods(metaModelWithDesc, types).stream()
+        assertTrue(metaModelFinder.findPropertyMethods(metaModelWithDesc).stream()
                 .anyMatch(el -> StringUtils.equals(el.getSimpleName(), "desc")));
 
 
@@ -79,7 +90,7 @@ public class MetaModelStructureTest {
         final MetaModelElement metaModelWithoutDesc = findMetaModel(entityWithoutDesc);
 
         // Meta-model for TestEntityWithoutDescTitle does NOT have method desc()
-        assertTrue(MetaModelFinder.findPropertyMethods(metaModelWithoutDesc, types).stream()
+        assertTrue(metaModelFinder.findPropertyMethods(metaModelWithoutDesc).stream()
                 .noneMatch(el -> StringUtils.equals(el.getSimpleName(), "desc")));
     }
     
@@ -90,12 +101,12 @@ public class MetaModelStructureTest {
         
         // find all distinct return types of methods that model properies of an underlying entity
         // there must be only one such type - PropertyMetaModel
-        final List<TypeMirror> distinctReturnTypes = MetaModelFinder.findPropertyMethods(metaModel, types).stream()
+        final List<TypeMirror> distinctReturnTypes = metaModelFinder.findPropertyMethods(metaModel).stream()
             .map(ExecutableElement::getReturnType)
             .distinct()
             .toList();
         assertEquals(1, distinctReturnTypes.size());
-        assertTrue(ElementFinder.isSubtype(distinctReturnTypes.get(0), PropertyMetaModel.class, types));
+        assertTrue(elementFinder.isSubtype(distinctReturnTypes.get(0), PropertyMetaModel.class));
     }
 
     /**
@@ -106,8 +117,8 @@ public class MetaModelStructureTest {
         final EntityElement entity = findEntity(AdjacentToOtherEntities.class);
         final MetaModelElement metaModel = findMetaModel(entity);
 
-        final Set<ExecutableElement> metamodeledProps = MetaModelFinder.findPropertyMethods(metaModel, types);
-        for (final PropertyElement prop: EntityFinder.findProperties(entity)) {
+        final Set<ExecutableElement> metamodeledProps = metaModelFinder.findPropertyMethods(metaModel);
+        for (final PropertyElement prop: entityFinder.findProperties(entity)) {
             // find the metamodeled prop
             // TODO the logic handling transformations between entity properties and meta-model properties should be abstracted
             // consider that transformation of names changes, then this code would have to be modified too
@@ -115,11 +126,11 @@ public class MetaModelStructureTest {
             assertTrue(maybeMetamodeledProp.isPresent());
             final ExecutableElement metamodeledProp = maybeMetamodeledProp.get();
 
-            if (prop.hasClassOrInterfaceType() && EntityFinder.isEntityThatNeedsMetaModel(prop.getTypeAsTypeElementOrThrow())) {
-                assertTrue(MetaModelFinder.isEntityMetaModelMethod(metamodeledProp, types));
+            if (prop.hasClassOrInterfaceType() && entityFinder.isEntityThatNeedsMetaModel(prop.getTypeAsTypeElementOrThrow())) {
+                assertTrue(metaModelFinder.isEntityMetaModelMethod(metamodeledProp));
             }
             else {
-                assertTrue(MetaModelFinder.isPropertyMetaModelMethod(metamodeledProp));
+                assertTrue(metaModelFinder.isPropertyMetaModelMethod(metamodeledProp));
             }
         }
     }
@@ -142,10 +153,10 @@ public class MetaModelStructureTest {
         final MetaModelElement parentMetaModel = findMetaModel(parent);
 
         // Child's meta-model extends Parent's meta-model ?
-        assertTrue(types.isSameType(childMetaModel.getTypeElement().getSuperclass(), parentMetaModel.getTypeElement().asType()));
+        assertTrue(elementFinder.getTypes().isSameType(childMetaModel.getTypeElement().getSuperclass(), parentMetaModel.getTypeElement().asType()));
         
-        final Set<PropertyElement> childDeclaredProps = EntityFinder.findDeclaredProperties(child);
-        final Set<ExecutableElement> childDeclaredMetamodeledProps = MetaModelFinder.findDeclaredPropertyMethods(childMetaModel, types);
+        final Set<PropertyElement> childDeclaredProps = entityFinder.findDeclaredProperties(child);
+        final Set<ExecutableElement> childDeclaredMetamodeledProps = metaModelFinder.findDeclaredPropertyMethods(childMetaModel);
         assertEquals(childDeclaredProps.size(), childDeclaredMetamodeledProps.size());
 
         for (final PropertyElement prop: childDeclaredProps) {
@@ -158,11 +169,11 @@ public class MetaModelStructureTest {
             // for example, consider a case when a child entity redeclares a field with a different type
             // right now the information about the original property's type is stored in the javadoc
             // for PropertyMetaModel methods it is impossible to test the consistency of types, since javax.lang.model API discards javadoc
-            if (prop.hasClassOrInterfaceType() && EntityFinder.isEntityThatNeedsMetaModel(prop.getTypeAsTypeElementOrThrow())) {
-                assertTrue(MetaModelFinder.isEntityMetaModelMethod(metamodeledProp, types));
+            if (prop.hasClassOrInterfaceType() && entityFinder.isEntityThatNeedsMetaModel(prop.getTypeAsTypeElementOrThrow())) {
+                assertTrue(metaModelFinder.isEntityMetaModelMethod(metamodeledProp));
             }
             else {
-                assertTrue(MetaModelFinder.isPropertyMetaModelMethod(metamodeledProp));
+                assertTrue(metaModelFinder.isPropertyMetaModelMethod(metamodeledProp));
             }
         }
     }
@@ -172,13 +183,13 @@ public class MetaModelStructureTest {
         final EntityElement entityPersistent = findEntity(Persistent.class);
         final MetaModelElement persistentMetaModel = findMetaModel(entityPersistent);
         // make sure property "id" is metamodeled
-        assertTrue(MetaModelFinder.findPropertyMethods(persistentMetaModel, types).stream()
+        assertTrue(metaModelFinder.findPropertyMethods(persistentMetaModel).stream()
             .anyMatch(el -> el.getSimpleName().toString().equals("id")));
 
         final EntityElement entityNotPersistent = findEntity(NotPersistent.class);
         final MetaModelElement notPersistentMetaModel = findMetaModel(entityNotPersistent);
         // make sure property "id" is not metamodeled
-        assertTrue(MetaModelFinder.findPropertyMethods(notPersistentMetaModel, types).stream()
+        assertTrue(metaModelFinder.findPropertyMethods(notPersistentMetaModel).stream()
             .noneMatch(el -> el.getSimpleName().toString().equals("id")));
     }
     
@@ -189,20 +200,21 @@ public class MetaModelStructureTest {
      */
     @Test
     public void aliased_meta_model_extends_a_regular_one() {
+        final Elements elements = elementFinder.getElements();
         final List<MetaModelElement> aliasedMetaModels = elements.getPackageElement(TEST_META_MODELS_PKG_NAME).getEnclosedElements().stream()
                 .filter(el -> el.getKind() == ElementKind.CLASS)
                 .map(el -> (TypeElement) el)
-                .filter(MetaModelFinder::isMetaModel)
+                .filter(metaModelFinder::isMetaModel)
                 .map(te -> new MetaModelElement(te, elements))
-                .filter(MetaModelFinder::isMetaModelAliased)
+                .filter(metaModelFinder::isMetaModelAliased)
                 .toList();
         assertFalse(aliasedMetaModels.isEmpty());
 
         aliasedMetaModels.stream()
             .forEach(mme -> {
-                final TypeElement superclass = ElementFinder.getSuperclassOrNull(mme.getTypeElement());
+                final TypeElement superclass = elementFinder.getSuperclassOrNull(mme.getTypeElement());
                 assertNotNull(superclass);
-                assertTrue(MetaModelFinder.isMetaModel(superclass));
+                assertTrue(metaModelFinder.isMetaModel(superclass));
                 // superclass name = name - "MetaModelAliased" + "MetaModel" = name - "Aliased"
                 final String supposedName = format("%s.%s%s", mme.getPackageName(),
                         StringUtils.substringBeforeLast(mme.getSimpleName(), META_MODEL_ALIASED_NAME_SUFFIX), 
@@ -218,20 +230,21 @@ public class MetaModelStructureTest {
      */
     @Test
     public void aliased_meta_model_provides_public_read_only_alias_String() {
+        final Elements elements = elementFinder.getElements();
         final List<MetaModelElement> aliasedMetaModels = elements.getPackageElement(TEST_META_MODELS_PKG_NAME).getEnclosedElements().stream()
                 .filter(el -> el.getKind() == ElementKind.CLASS)
                 .map(el -> (TypeElement) el)
-                .filter(MetaModelFinder::isMetaModel)
+                .filter(metaModelFinder::isMetaModel)
                 .map(te -> new MetaModelElement(te, elements))
-                .filter(MetaModelFinder::isMetaModelAliased)
+                .filter(metaModelFinder::isMetaModelAliased)
                 .toList();
         assertFalse(aliasedMetaModels.isEmpty());
         
         aliasedMetaModels.stream()
             .forEach(mme -> {
-                assertNotNull(ElementFinder.findDeclaredField(mme.getTypeElement(), "alias", 
+                assertNotNull(elementFinder.findDeclaredField(mme.getTypeElement(), "alias", 
                         varEl -> varEl.getModifiers().containsAll(List.of(Modifier.PUBLIC, Modifier.FINAL)) &&
-                        ElementFinder.isFieldOfType(varEl, String.class)));
+                        elementFinder.isFieldOfType(varEl, String.class)));
             });
     }
 
@@ -240,7 +253,7 @@ public class MetaModelStructureTest {
      * Wraps a call to {@link EntityFinder#findEntity} that returns an optional in order to assert the presence of the returned value. 
      */
     private static EntityElement findEntity(final Class<? extends AbstractEntity<?>> entityType) {
-        final Optional<EntityElement> maybeEntity = EntityFinder.findEntity(entityType, elements);
+        final Optional<EntityElement> maybeEntity = entityFinder.findEntity(entityType);
         assertTrue(maybeEntity.isPresent());
         return maybeEntity.get();
     }
@@ -249,7 +262,7 @@ public class MetaModelStructureTest {
      * Wraps a call to {@link MetaModelFinder#findMetaModelForEntity} that returns an optional in order to assert the presence of the returned value. 
      */
     private static MetaModelElement findMetaModel(final EntityElement entityElement) {
-        final Optional<MetaModelElement> maybeMetaModel = MetaModelFinder.findMetaModelForEntity(entityElement, elements);
+        final Optional<MetaModelElement> maybeMetaModel = metaModelFinder.findMetaModelForEntity(entityElement);
         assertTrue(maybeMetaModel.isPresent());
         return maybeMetaModel.get();
     }

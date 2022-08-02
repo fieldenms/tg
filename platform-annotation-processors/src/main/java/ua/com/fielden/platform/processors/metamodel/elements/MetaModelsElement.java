@@ -1,20 +1,12 @@
 package ua.com.fielden.platform.processors.metamodel.elements;
 
 import static java.util.Collections.unmodifiableSet;
-import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.doesExtend;
-import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.findDeclaredFields;
 
-import java.util.LinkedHashSet;
+import java.util.Collection;
 import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
-import javax.lang.model.util.Elements;
-
-import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 
 /**
  * A convenient wrapper around {@code TypeElement}, which represents an entry point to all domain meta-models (i.e., class {@code MetaModels} where all meta-models are referenced
@@ -28,24 +20,9 @@ public final class MetaModelsElement {
     private final TypeElement typeElement;
     private final Set<MetaModelElement> metaModels;
 
-    public MetaModelsElement(final TypeElement typeElement, final Elements elementUtils) {
+    public MetaModelsElement(final TypeElement typeElement, final Collection<MetaModelElement> metaModelElements) {
         this.typeElement = typeElement;
-        this.metaModels = findMetaModels(typeElement, elementUtils);
-    }
-
-    /**
-     * Identifies and collects all declared class-typed fields in the MetaModels element, which represent meta-models (i.e., extend {@link EntityMetaModel}).  
-     *
-     * @param typeElement
-     * @param elementUtils
-     * @return
-     */
-    private static Set<MetaModelElement> findMetaModels(final TypeElement typeElement, final Elements elementUtils) {
-        return findDeclaredFields(typeElement, field -> field.asType().getKind() == TypeKind.DECLARED).stream()
-                .map(field -> (TypeElement) ((DeclaredType) field.asType()).asElement())
-                .filter(te -> doesExtend(te, EntityMetaModel.class))
-                .map(te -> new MetaModelElement(te, elementUtils))
-                .collect(Collectors.toCollection(LinkedHashSet::new));
+        this.metaModels = Set.copyOf(metaModelElements);
     }
 
     public Set<MetaModelElement> getMetaModels() {

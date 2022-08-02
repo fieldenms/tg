@@ -37,9 +37,23 @@ import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelEx
  *
  */
 public class ElementFinder {
-    private ElementFinder() {}
+    protected Elements elements;
+    protected Types types;
 
-    private static final Class<?> DEFAULT_ROOT_CLASS = Object.class;
+    public ElementFinder(final Elements elements, final Types types) {
+        this.elements = elements;
+        this.types = types;
+    }
+
+    public static final Class<?> DEFAULT_ROOT_CLASS = Object.class;
+
+    public Elements getElements() {
+        return this.elements;
+    }
+
+    public Types getTypes() {
+        return this.types;
+    }
 
     /**
      * A {@link TypeElement} instance is equal to a {@link Class} instance if both objects have the same qualified (canonical) name.
@@ -50,7 +64,7 @@ public class ElementFinder {
      * @param typeElement
      * @param type
      */
-    public static boolean equals(final TypeElement typeElement, final Class<?> type) {
+    public boolean equals(final TypeElement typeElement, final Class<?> type) {
         if (typeElement == null || type == null) {
             throw new EntityMetaModelException("Neither typeElement nor type arguments can be null.");
         }
@@ -64,8 +78,8 @@ public class ElementFinder {
      * @param type
      * @return
      */
-    public static boolean doesExtend(final TypeElement typeElement, final Class<?> type) {
-        final List<TypeElement> superclasses = ElementFinder.findSuperclasses(typeElement, true);
+    public boolean doesExtend(final TypeElement typeElement, final Class<?> type) {
+        final List<TypeElement> superclasses = findSuperclasses(typeElement, true);
         return superclasses.stream().anyMatch(sup -> equals(sup, type));
     }
 
@@ -76,7 +90,7 @@ public class ElementFinder {
      * @param rootClass
      * @return
      */
-    public static TypeElement getSuperclassOrNull(final TypeElement typeElement, final Class<?> rootClass) {
+    public TypeElement getSuperclassOrNull(final TypeElement typeElement, final Class<?> rootClass) {
         // if this is a root class then return null
         if (equals(typeElement, rootClass)) {
             return null;
@@ -99,7 +113,7 @@ public class ElementFinder {
      * @param rootClass
      * @return
      */
-    public static TypeElement getSuperclassOrNull(final TypeElement typeElement) {
+    public TypeElement getSuperclassOrNull(final TypeElement typeElement) {
         return getSuperclassOrNull(typeElement, DEFAULT_ROOT_CLASS);
     }
 
@@ -112,7 +126,7 @@ public class ElementFinder {
      * @param includeRootType - controls whether the provided {@code rootType} is included in the list.
      * @return
      */
-    public static List<TypeElement> findSuperclasses(final TypeElement typeElement, final Class<?> rootType, final boolean includeRootType) {
+    public List<TypeElement> findSuperclasses(final TypeElement typeElement, final Class<?> rootType, final boolean includeRootType) {
         final List<TypeElement> superclasses = new ArrayList<>();
 
         TypeMirror superclassTypeMirror = typeElement.getSuperclass();
@@ -146,7 +160,7 @@ public class ElementFinder {
      * @param includeRootClass
      * @return
      */
-    public static List<TypeElement> findSuperclasses(final TypeElement typeElement, final boolean includeRootClass) {
+    public List<TypeElement> findSuperclasses(final TypeElement typeElement, final boolean includeRootClass) {
         return findSuperclasses(typeElement, DEFAULT_ROOT_CLASS, includeRootClass);
     }
 
@@ -157,7 +171,7 @@ public class ElementFinder {
      * @param predicate
      * @return
      */
-    public static Set<VariableElement> findDeclaredFields(final TypeElement typeElement, final Predicate<VariableElement> predicate) {
+    public Set<VariableElement> findDeclaredFields(final TypeElement typeElement, final Predicate<VariableElement> predicate) {
         return typeElement.getEnclosedElements().stream()
                 .filter(el -> el.getKind() == ElementKind.FIELD)
                 .map(el -> (VariableElement) el)
@@ -168,7 +182,7 @@ public class ElementFinder {
     /**
      * Looks for variable elements, representing all explicitly declared fields.
      */
-    public static Set<VariableElement> findDeclaredFields(final TypeElement typeElement) {
+    public Set<VariableElement> findDeclaredFields(final TypeElement typeElement) {
         return findDeclaredFields(typeElement, el -> true);
     }
 
@@ -178,7 +192,7 @@ public class ElementFinder {
      * @param typeElement
      * @return
      */
-    public static Set<VariableElement> findInheritedFields(final TypeElement typeElement) {
+    public Set<VariableElement> findInheritedFields(final TypeElement typeElement) {
         // use LinkedHashSet to store fields so that they appear in their hierarchical order,
         // that is, fields inherited from the root of the type hierarchy will be placed at the end of the set
         final Set<VariableElement> fields = new LinkedHashSet<>();
@@ -195,7 +209,7 @@ public class ElementFinder {
     /**
      * Looks for variable elements, representing all declared and inherited fields.
      */
-    public static Set<VariableElement> findFields(TypeElement typeElement) {
+    public Set<VariableElement> findFields(TypeElement typeElement) {
         final Set<VariableElement> fields = findDeclaredFields(typeElement);
         fields.addAll(findInheritedFields(typeElement));
         return fields;
@@ -207,7 +221,7 @@ public class ElementFinder {
      * @param typeElement - target element which fields are to be found
      * @param rootClass - upper limit (included) of a superclass of typeElement
      */
-    public static Set<VariableElement> findInheritedFields(TypeElement typeElement, Class<?> rootClass) {
+    public Set<VariableElement> findInheritedFields(TypeElement typeElement, Class<?> rootClass) {
         final Set<VariableElement> fields = new LinkedHashSet<>();
 
         TypeElement superclass = getSuperclassOrNull(typeElement, rootClass);
@@ -225,7 +239,7 @@ public class ElementFinder {
      * @param typeElement - target element which fields are to be found
      * @param rootClass - upper limit (included) of a superclass of typeElement
      */
-    public static Set<VariableElement> findFields(final TypeElement typeElement, final Class<?> rootClass) {
+    public Set<VariableElement> findFields(final TypeElement typeElement, final Class<?> rootClass) {
         final Set<VariableElement> fields = findDeclaredFields(typeElement);
         fields.addAll(findInheritedFields(typeElement, rootClass));
         return fields;
@@ -241,7 +255,7 @@ public class ElementFinder {
      * @param predicate
      * @return
      */
-    public static VariableElement findField(final TypeElement typeElement, final String fieldName, final Predicate<VariableElement> predicate) {
+    public VariableElement findField(final TypeElement typeElement, final String fieldName, final Predicate<VariableElement> predicate) {
         // first search in declared and then inherited fields
         return findDeclaredFields(typeElement).stream()
                .filter(varEl -> varEl.getSimpleName().toString().equals(fieldName) && predicate.test(varEl))
@@ -260,7 +274,7 @@ public class ElementFinder {
      * @param fieldName
      * @return
      */
-    public static VariableElement findField(final TypeElement typeElement, final String fieldName) {
+    public VariableElement findField(final TypeElement typeElement, final String fieldName) {
         return findField(typeElement, fieldName, (varEl) -> true);
     }
 
@@ -272,7 +286,7 @@ public class ElementFinder {
      * @param predicate
      * @return
      */
-    public static VariableElement findDeclaredField(final TypeElement typeElement, final String fieldName, final Predicate<VariableElement> predicate) {
+    public VariableElement findDeclaredField(final TypeElement typeElement, final String fieldName, final Predicate<VariableElement> predicate) {
         return findDeclaredFields(typeElement).stream()
                .filter(varEl -> varEl.getSimpleName().toString().equals(fieldName) && predicate.test(varEl))
                .findFirst()
@@ -286,23 +300,23 @@ public class ElementFinder {
      * @param fieldName
      * @return
      */
-    public static VariableElement findDeclaredField(final TypeElement typeElement, final String fieldName) {
+    public VariableElement findDeclaredField(final TypeElement typeElement, final String fieldName) {
         return findDeclaredField(typeElement, fieldName, (varEl) -> true);
     }
     
-    public static Set<VariableElement> findDeclaredFieldsAnnotatedWith(final TypeElement typeElement, final Class<? extends Annotation> annotationClass) {
+    public Set<VariableElement> findDeclaredFieldsAnnotatedWith(final TypeElement typeElement, final Class<? extends Annotation> annotationClass) {
         return findDeclaredFields(typeElement).stream()
                 .filter(el -> el.getAnnotation(annotationClass) != null)
                 .collect(toSet());
     }
 
-    public static Set<VariableElement> findInheritedFieldsAnnotatedWith(final TypeElement typeElement, final Class<? extends Annotation> annotationClass) {
+    public Set<VariableElement> findInheritedFieldsAnnotatedWith(final TypeElement typeElement, final Class<? extends Annotation> annotationClass) {
         return findInheritedFields(typeElement).stream()
                 .filter(el -> el.getAnnotation(annotationClass) != null)
                 .collect(toSet());
     }
 
-    public static Set<VariableElement> findFieldsAnnotatedWith(final TypeElement typeElement, final Class<? extends Annotation> annotationClass) {
+    public Set<VariableElement> findFieldsAnnotatedWith(final TypeElement typeElement, final Class<? extends Annotation> annotationClass) {
         return findFields(typeElement).stream()
                 .filter(el -> el.getAnnotation(annotationClass) != null)
                 .collect(toSet());
@@ -315,7 +329,7 @@ public class ElementFinder {
      * @param vel
      * @return
      */
-    public static List<? extends AnnotationMirror> getFieldAnnotations(final VariableElement vel) {
+    public List<? extends AnnotationMirror> getFieldAnnotations(final VariableElement vel) {
         // return an empty list for non-field elements
         if (vel.getKind() != ElementKind.FIELD) {
             return new ArrayList<>();
@@ -331,7 +345,7 @@ public class ElementFinder {
      * @param predicate
      * @return
      */
-    public static Set<ExecutableElement> findDeclaredMethods(final TypeElement typeElement, final Predicate<ExecutableElement> predicate) {
+    public Set<ExecutableElement> findDeclaredMethods(final TypeElement typeElement, final Predicate<ExecutableElement> predicate) {
         return typeElement.getEnclosedElements().stream()
                 .filter(el -> el.getKind() == ElementKind.METHOD)
                 .map(el -> (ExecutableElement) el)
@@ -342,7 +356,7 @@ public class ElementFinder {
     /**
      * Find methods that are explicitly declared by this {@link TypeElement}.
      */
-    public static Set<ExecutableElement> findDeclaredMethods(TypeElement typeElement) {
+    public Set<ExecutableElement> findDeclaredMethods(TypeElement typeElement) {
         return findDeclaredMethods(typeElement, el -> true);
     }
 
@@ -352,7 +366,7 @@ public class ElementFinder {
      * @param typeElement
      * @return
      */
-    public static Set<ExecutableElement> findInheritedMethods(final TypeElement typeElement) {
+    public Set<ExecutableElement> findInheritedMethods(final TypeElement typeElement) {
         final Set<ExecutableElement> methods = new LinkedHashSet<>();
 
         TypeElement superclass = getSuperclassOrNull(typeElement);
@@ -367,7 +381,7 @@ public class ElementFinder {
     /**
      * Looks for executable elements, representing all declared and inherited methods. The order is preserved, giving first priority to declared (important for overriden) methods.
      */
-    public static Set<ExecutableElement> findMethods(TypeElement typeElement) {
+    public Set<ExecutableElement> findMethods(TypeElement typeElement) {
         final Set<ExecutableElement> fields = findDeclaredMethods(typeElement);
         fields.addAll(findInheritedMethods(typeElement));
         return fields;
@@ -380,7 +394,7 @@ public class ElementFinder {
      * @param ignoredAnnotationsClasses
      * @return
      */
-    public static List<? extends AnnotationMirror> getFieldAnnotationsExcept(final VariableElement field, final List<Class<? extends Annotation>> ignoredAnnotationsClasses) {
+    public List<? extends AnnotationMirror> getFieldAnnotationsExcept(final VariableElement field, final List<Class<? extends Annotation>> ignoredAnnotationsClasses) {
         final List<? extends AnnotationMirror> annotations = getFieldAnnotations(field);
 
         final Set<String> ignoredAnnotationNames = ignoredAnnotationsClasses.stream()
@@ -395,7 +409,7 @@ public class ElementFinder {
                 .collect(toList());
     }
 
-    public static AnnotationMirror getElementAnnotationMirror(final AnnotatedConstruct element, final Class<? extends Annotation> annotationClass) {
+    public AnnotationMirror getElementAnnotationMirror(final AnnotatedConstruct element, final Class<? extends Annotation> annotationClass) {
         for (final AnnotationMirror annotMirror: element.getAnnotationMirrors()) {
             final TypeElement annotTypeElement = (TypeElement) annotMirror.getAnnotationType().asElement();
             if (equals(annotTypeElement, annotationClass)) {
@@ -405,11 +419,11 @@ public class ElementFinder {
         return null;
     }
 
-    public static String getFieldTypeSimpleName(final VariableElement field) {
+    public String getFieldTypeSimpleName(final VariableElement field) {
         return ((DeclaredType) field.asType()).asElement().getSimpleName().toString();
     }
 
-    public static boolean isFieldOfType(final VariableElement field, final Class<?> type) {
+    public boolean isFieldOfType(final VariableElement field, final Class<?> type) {
         final TypeMirror fieldType = field.asType();
         if (fieldType.getKind().equals(TypeKind.DECLARED)) {
             return equals(((TypeElement) ((DeclaredType) fieldType).asElement()), type);
@@ -419,12 +433,12 @@ public class ElementFinder {
         }
     }
 
-    public static boolean isFieldOfType(final VariableElement field, final TypeMirror typeMirror, final Types typeUtils) {
+    public boolean isFieldOfType(final VariableElement field, final TypeMirror typeMirror) {
         final TypeMirror fieldType = field.asType();
         final TypeKind fieldTypeKind = fieldType.getKind();
 
         if (fieldTypeKind.equals(TypeKind.DECLARED)) {
-            return typeUtils.isSameType(fieldType, typeMirror);
+            return types.isSameType(fieldType, typeMirror);
         } else {
             // TODO implement proper type checking for primitives and arrays
             return false;
@@ -436,22 +450,21 @@ public class ElementFinder {
      *
      * @param field
      * @param typeElements
-     * @param typeUtils
      * @return
      */
-    public static boolean isFieldOfType(final VariableElement field, final Collection<TypeMirror> typeMirrors, final Types typeUtils) {
+    public boolean isFieldOfType(final VariableElement field, final Collection<TypeMirror> typeMirrors) {
         final TypeMirror fieldType = field.asType();
         final TypeKind fieldTypeKind = fieldType.getKind();
 
         if (fieldTypeKind.equals(TypeKind.DECLARED)) {
-            return typeMirrors.stream().anyMatch(tm -> typeUtils.isSameType(fieldType, tm));
+            return typeMirrors.stream().anyMatch(tm -> types.isSameType(fieldType, tm));
         } else {
             // TODO implement proper type checking for primitives and arrays
             return false;
         }
     }
 
-    public static boolean isMethodReturnType(final ExecutableElement method, final Class<?> type) {
+    public boolean isMethodReturnType(final ExecutableElement method, final Class<?> type) {
         final TypeMirror returnType = method.getReturnType();
         final TypeKind returnTypeKind = returnType.getKind();
 
@@ -463,18 +476,18 @@ public class ElementFinder {
         }
     }
 
-    public static Name getAnnotationMirrorSimpleName(final AnnotationMirror annotMirror) {
+    public Name getAnnotationMirrorSimpleName(final AnnotationMirror annotMirror) {
         return annotMirror.getAnnotationType().asElement().getSimpleName();
     }
 
-    public static long countDeclaredFields(final TypeElement typeElement) {
+    public long countDeclaredFields(final TypeElement typeElement) {
         return typeElement.getEnclosedElements().stream()
                 .filter(el -> el.getKind() == ElementKind.FIELD)
                 .map(el -> (VariableElement) el)
                 .count();
     }
 
-    public static boolean isStatic(final VariableElement varElement) {
+    public boolean isStatic(final VariableElement varElement) {
         return varElement.getModifiers().contains(Modifier.STATIC);
     }
 
@@ -487,9 +500,9 @@ public class ElementFinder {
      * @return {@code true} if and only if the first type is a subtype
      *          of the second
      */
-    public static boolean isSubtype(final TypeMirror typeMirror, final Class<?> type, final Types typeUtils) {
-        if (typeUtils == null) {
-            throw new ElementFinderException("typeUtils parameter can't be null.");
+    public boolean isSubtype(final TypeMirror typeMirror, final Class<?> type) {
+        if (types == null) {
+            throw new ElementFinderException("types parameter can't be null.");
         }
         if (typeMirror.getKind() != TypeKind.DECLARED) {
             return false;
@@ -497,18 +510,18 @@ public class ElementFinder {
         if (equals((TypeElement) ((DeclaredType) typeMirror).asElement(), type)) {
             return true;
         }
-        final List<? extends TypeMirror> directSupertypes = typeUtils.directSupertypes(typeMirror);
+        final List<? extends TypeMirror> directSupertypes = types.directSupertypes(typeMirror);
         if (directSupertypes.isEmpty()) {
             return false;
         }
-        return directSupertypes.stream().anyMatch(tm -> isSubtype(tm, type, typeUtils));
+        return directSupertypes.stream().anyMatch(tm -> isSubtype(tm, type));
     }
 
-    public static boolean isTopLevelClass(final Element element) {
+    public boolean isTopLevelClass(final Element element) {
         return element.getEnclosingElement().getKind() == ElementKind.PACKAGE;
     }
     
-    public static String getPackageName(final TypeElement typeElement, final Elements elementUtils) {
-        return elementUtils.getPackageOf(typeElement).getQualifiedName().toString();
+    public String getPackageName(final TypeElement typeElement) {
+        return elements.getPackageOf(typeElement).getQualifiedName().toString();
     }
 }

@@ -6,7 +6,6 @@ import static org.junit.Assert.assertEquals;
 import java.util.Set;
 
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.util.Elements;
 
 import org.junit.Before;
 import org.junit.Rule;
@@ -16,6 +15,7 @@ import com.google.testing.compile.CompilationRule;
 
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
+import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
 import ua.com.fielden.platform.security.user.User;
 
 /**
@@ -27,14 +27,14 @@ import ua.com.fielden.platform.security.user.User;
 public class MetaModelsElementTest {
 
     public @Rule CompilationRule rule = new CompilationRule();
-    private Elements elements;
+    private MetaModelFinder metaModelFinder;
     private MetaModelsElement metaModelsElement;
     
     @Before
     public void setup() {
-      elements = rule.getElements();
-      final TypeElement typeElement = elements.getTypeElement(MetaModels.class.getCanonicalName());
-      metaModelsElement = new MetaModelsElement(typeElement, elements);
+        metaModelFinder = new MetaModelFinder(rule.getElements(), rule.getTypes());
+        final TypeElement typeElement = rule.getElements().getTypeElement(MetaModels.class.getCanonicalName());
+        metaModelsElement = new MetaModelsElement(typeElement, metaModelFinder.findMetaModels(typeElement));
     }
 
     @Test

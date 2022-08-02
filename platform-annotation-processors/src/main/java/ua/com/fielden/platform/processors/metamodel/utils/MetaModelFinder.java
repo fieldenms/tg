@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.processors.metamodel.utils;
 
 import static java.util.stream.Collectors.toCollection;
+import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_ALIASED_NAME_SUFFIX;
+import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_NAME_SUFFIX;
 
 import java.util.LinkedHashSet;
 import java.util.Optional;
@@ -18,6 +20,8 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
+import org.apache.commons.lang3.StringUtils;
+
 import ua.com.fielden.platform.processors.metamodel.MetaModelConstants;
 import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
@@ -31,31 +35,35 @@ import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
  * @author TG Team
  *
  */
-public class MetaModelFinder {
+public class MetaModelFinder extends ElementFinder {
     
-    public static boolean isMetaModel(final TypeElement typeElement) {
-        return ElementFinder.doesExtend(typeElement, MetaModelConstants.METAMODEL_SUPERCLASS);
+    public MetaModelFinder(final Elements elements, final Types types) {
+        super(elements, types);
+    }
+
+    public boolean isMetaModel(final TypeElement typeElement) {
+        return doesExtend(typeElement, MetaModelConstants.METAMODEL_SUPERCLASS);
     }
     
-    public static boolean isMetaModelAliased(final MetaModelElement mme) {
+    public boolean isMetaModelAliased(final MetaModelElement mme) {
         return mme.getSimpleName().endsWith(MetaModelConstants.META_MODEL_ALIASED_NAME_SUFFIX);
     }
     
-    public static Set<VariableElement> findStaticFields(final MetaModelElement mme) {
-        return ElementFinder.findDeclaredFields(mme.getTypeElement(), f -> ElementFinder.isStatic(f));
+    public Set<VariableElement> findStaticFields(final MetaModelElement mme) {
+        return findDeclaredFields(mme.getTypeElement(), f -> isStatic(f));
     }
 
-    public static Set<VariableElement> findNonStaticFields(final MetaModelElement mme) {
-        return ElementFinder.findDeclaredFields(mme.getTypeElement(), f -> !ElementFinder.isStatic(f));
+    public Set<VariableElement> findNonStaticFields(final MetaModelElement mme) {
+        return findDeclaredFields(mme.getTypeElement(), f -> !isStatic(f));
     }
     
-    public static Set<VariableElement> findPropertyMetaModelFields(final MetaModelElement mme) {
+    public Set<VariableElement> findPropertyMetaModelFields(final MetaModelElement mme) {
         return findNonStaticFields(mme).stream()
-                .filter(field -> ElementFinder.isFieldOfType(field, PropertyMetaModel.class))
+                .filter(field -> isFieldOfType(field, PropertyMetaModel.class))
                 .collect(Collectors.toSet());
     }
 
-    public static Set<VariableElement> findEntityMetaModelFields(final MetaModelElement mme) {
+    public Set<VariableElement> findEntityMetaModelFields(final MetaModelElement mme) {
         return findNonStaticFields(mme).stream()
                 .filter(field -> {
                     final TypeMirror fieldType = field.asType();
@@ -65,9 +73,9 @@ public class MetaModelFinder {
                         final TypeElement fieldTypeElement = (TypeElement) ((DeclaredType) field.asType()).asElement();
 
                         // EntityMetaModel fields have type Supplier<[METAMODEL]>
-                        if (ElementFinder.equals(fieldTypeElement, Supplier.class)) {
+                        if (equals(fieldTypeElement, Supplier.class)) {
                             final DeclaredType fieldTypeArgument = (DeclaredType) ((DeclaredType) fieldType).getTypeArguments().get(0);
-                            return ElementFinder.doesExtend((TypeElement) fieldTypeArgument.asElement(), EntityMetaModel.class);
+                            return doesExtend((TypeElement) fieldTypeArgument.asElement(), EntityMetaModel.class);
                         }
                     }
                     return false;
@@ -78,24 +86,22 @@ public class MetaModelFinder {
     /**
      * Finds all methods of a meta-model that model properties of the underlying entity. Processes the whole meta-model hierarchy (i.e. meta-models that extend other meta-models).
      * @param mme the target meta-model
-     * @param typeUtils an instance of {@link Types} for analyzing the meta-model
      * @return a set of methods that model properties of the underlying entity
      */
-    public static Set<ExecutableElement> findPropertyMethods(final MetaModelElement mme, final Types typeUtils) {
-        return ElementFinder.findMethods(mme.getTypeElement()).stream()
-                .filter(el -> isPropertyMetaModelMethod(el) || isEntityMetaModelMethod(el, typeUtils))
+    public Set<ExecutableElement> findPropertyMethods(final MetaModelElement mme) {
+        return findMethods(mme.getTypeElement()).stream()
+                .filter(el -> isPropertyMetaModelMethod(el) || isEntityMetaModelMethod(el))
                 .collect(toCollection(LinkedHashSet::new));
     }
 
     /**
      * Finds all declared methods of a meta-model that model properties of the underlying entity.
      * @param mme the target meta-model
-     * @param typeUtils an instance of {@link Types} for analyzing the meta-model
      * @return a set of methods that model properties of the underlying entity
      */
-    public static Set<ExecutableElement> findDeclaredPropertyMethods(final MetaModelElement mme, final Types typeUtils) {
-        return ElementFinder.findDeclaredMethods(mme.getTypeElement()).stream()
-                .filter(el -> isPropertyMetaModelMethod(el) || isEntityMetaModelMethod(el, typeUtils))
+    public Set<ExecutableElement> findDeclaredPropertyMethods(final MetaModelElement mme) {
+        return findDeclaredMethods(mme.getTypeElement()).stream()
+                .filter(el -> isPropertyMetaModelMethod(el) || isEntityMetaModelMethod(el))
                 .collect(toCollection(LinkedHashSet::new));
     }
 
@@ -104,7 +110,7 @@ public class MetaModelFinder {
      * @param mme
      * @return
      */
-    public static Set<MetaModelElement> findReferencedMetaModels(final MetaModelElement mme, final Elements elementUtils) {
+    public Set<MetaModelElement> findReferencedMetaModels(final MetaModelElement mme) {
         return findEntityMetaModelFields(mme).stream()
                 .map(field -> {
                     // casting here is safe, since field is of type Supplier<[METAMODEL]>, thus DeclaredType
@@ -113,7 +119,7 @@ public class MetaModelFinder {
                     // fieldTypeArgument will be the [METAMODEL] type
                     final DeclaredType fieldTypeArgument = (DeclaredType) fieldType.getTypeArguments().get(0);
                     final TypeElement fieldTypeArgumentTypeElement = (TypeElement) fieldTypeArgument.asElement();
-                    return new MetaModelElement(fieldTypeArgumentTypeElement, elementUtils);
+                    return new MetaModelElement(fieldTypeArgumentTypeElement, elements);
                 })
                 .collect(Collectors.toSet());
     }
@@ -123,9 +129,9 @@ public class MetaModelFinder {
      * @param method
      * @return true if the method's return type is {@link PropertyMetaModel}, false otherwise
      */
-    public static boolean isPropertyMetaModelMethod(final ExecutableElement method) {
+    public boolean isPropertyMetaModelMethod(final ExecutableElement method) {
         return !method.getModifiers().contains(Modifier.STATIC) &&
-                ElementFinder.isMethodReturnType(method, PropertyMetaModel.class);
+                isMethodReturnType(method, PropertyMetaModel.class);
     }
 
     /**
@@ -133,37 +139,52 @@ public class MetaModelFinder {
      * @param method
      * @return true if the method's return type is a subtype of {@link EntityMetaModel}, false otherwise
      */
-    public static boolean isEntityMetaModelMethod(final ExecutableElement method, final Types typeUtils) {
+    public boolean isEntityMetaModelMethod(final ExecutableElement method) {
         return !method.getModifiers().contains(Modifier.STATIC) &&
-                ElementFinder.isSubtype(method.getReturnType(), EntityMetaModel.class, typeUtils);
+                isSubtype(method.getReturnType(), EntityMetaModel.class);
     }
     
-    public static boolean isSameMetaModel(final MetaModelConcept mmc, final MetaModelElement mme) {
+    public boolean isSameMetaModel(final MetaModelConcept mmc, final MetaModelElement mme) {
         return mmc.getQualifiedName().equals(mme.getQualifiedName());
     }
     
     /**
      * Attempts to find a meta-model for a given entity.
      * @param entityElement
-     * @param elementUtils
+     * @param elements
      * @return {@link MetaModelElement} instance wrapped into {@link Optional} if found, else empty optional
      */
-    public static Optional<MetaModelElement> findMetaModelForEntity(final EntityElement entityElement, final Elements elementUtils) {
+    public Optional<MetaModelElement> findMetaModelForEntity(final EntityElement entityElement) {
         final MetaModelConcept mmc = new MetaModelConcept(entityElement);
-        return Optional.ofNullable(elementUtils.getTypeElement(mmc.getQualifiedName()))
-                .map(te -> new MetaModelElement(te, elementUtils));
+        return Optional.ofNullable(elements.getTypeElement(mmc.getQualifiedName()))
+                .map(te -> new MetaModelElement(te, elements));
     }
 
     /**
      * An aliased meta-model class resides in the same package as the regular meta-model, but with a slightly different name.
      * @param mme
+     * @param elements
+     * @return
+     */
+    public TypeElement findMetaModelAliased(final MetaModelElement mme) {
+        // aliasedMetaModelName = metaModelName - META_MODEL_NAME_SUFFIX + META_MODEL_ALIASED_NAME_SUFFIX
+        final String entitySimpleName = StringUtils.substringBeforeLast(mme.getSimpleName(), META_MODEL_NAME_SUFFIX);
+        final String qualName = String.format("%s.%s%s", mme.getPackageName(), entitySimpleName, META_MODEL_ALIASED_NAME_SUFFIX);
+        return elements.getTypeElement(qualName);
+    }
+
+    /**
+     * Identifies and collects all declared class-typed fields in the MetaModels element, which represent meta-models (i.e., extend {@link EntityMetaModel}).  
+     *
+     * @param typeElement
      * @param elementUtils
      * @return
      */
-    public static TypeElement findMetaModelAliased(final MetaModelElement mme, final Elements elementUtils) {
-        final EntityElement entity = EntityFinder.findEntityForMetaModel(mme, elementUtils);
-        final String qualName = String.format("%s.%s%s", mme.getPackageName(), entity.getSimpleName(), MetaModelConstants.META_MODEL_ALIASED_NAME_SUFFIX);
-
-        return elementUtils.getTypeElement(qualName);
+    public Set<MetaModelElement> findMetaModels(final TypeElement typeElement) {
+        return findDeclaredFields(typeElement, field -> field.asType().getKind() == TypeKind.DECLARED).stream()
+                .map(field -> (TypeElement) ((DeclaredType) field.asType()).asElement())
+                .filter(te -> doesExtend(te, EntityMetaModel.class))
+                .map(te -> new MetaModelElement(te, elements))
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 }
