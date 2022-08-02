@@ -97,7 +97,7 @@ const template = html`
             color: var(--paper-grey-300);
         }
 
-        #pm[detached] paper-icon-button.expand-colapse-button {
+        #pm[detached] paper-icon-button.expand-collapse-button {
             transform: scale(-1, -1);
         }
 
@@ -132,7 +132,7 @@ const template = html`
             <div class="title-bar layout horizontal justified center" hidden$="[[!_hasTitleBar(shortDesc, alternativeView)]]">
                 <span class="title-text truncate" tooltip-text$="[[longDesc]]">[[shortDesc]]</span>
                 <div class="layout horizontal centre">
-                    <paper-icon-button class="title-bar-button expand-colapse-button" icon="icons:open-in-new" on-tap="_expandColapseTap" tooltip-text$="[[_expandBurronTooltip(detachedView)]]"></paper-icon-button>
+                    <paper-icon-button class="title-bar-button expand-collapse-button" icon="icons:open-in-new" on-tap="_expandCollapseTap" tooltip-text$="[[_expandButtonTooltip(detachedView)]]"></paper-icon-button>
                 </div>
             </div>
             <tg-responsive-toolbar id="viewToolbar" hidden$="[[!_isToolbarVisible(detachedView, alternativeView, isAttached)]]">
@@ -560,7 +560,7 @@ Polymer({
         }
     },
 
-    _expandColapseTap: function (event) {
+    _expandCollapseTap: function (event) {
         if (this.detachedView) {
             this._closeDialog();
         } else {
@@ -630,7 +630,7 @@ Polymer({
         return !withoutResizing && !detachedView && !alternativeView;
     },
 
-    _expandBurronTooltip: function (detachedView) {
+    _expandButtonTooltip: function (detachedView) {
         return detachedView ? "Collapse" : "Expand";
     },
 

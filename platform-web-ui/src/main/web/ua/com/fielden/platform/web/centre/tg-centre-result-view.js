@@ -19,7 +19,7 @@ Polymer({
     _template: template,
 
     is: 'tg-centre-result-view',
-    
+
     ready: function () {
         this.addEventListener("tg-centre-page-was-selected", () => {
             this.$.resultSlots.assignedNodes({ flatten: true }).forEach(node => {
