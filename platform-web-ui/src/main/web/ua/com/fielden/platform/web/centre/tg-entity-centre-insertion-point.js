@@ -593,24 +593,24 @@ Polymer({
                     document.styleSheets[0].insertRule('* { cursor: ns-resize !important; }', 0); // override custom cursors in all application with resizing cursor
                     break;
                 case 'track':
-                    //Chose the container that is scrollable. Which container is scrollable depends on whether scrolling is locked to insertion point or to whole centre.
+                    // Choose the container that is scrollable. Which container is scrollable depends on whether scrolling is locked to insertion point or to the whole centre.
                     const scrollingContainer = this.contextRetriever()._dom().centreScroll ? this.contextRetriever()._dom().$.views : this.parentElement.assignedSlot.parentElement;
-                    //Get mouse position relative to scrolling container.
+                    // Get the mouse position relative to the scrolling container.
                     const mousePos = getRelativePos(event.detail.x, event.detail.y, scrollingContainer);
                     const containerHeight = scrollingContainer.offsetHeight;
                     const elementHeight = this.$.loadableContent.offsetHeight;
                     let newHeight = this.$.loadableContent.offsetHeight + event.detail.ddy;
-                    
+
                     if (mousePos.y < 0) {
-                        //If mouse pointer is above scrolling container then decrese the insertion point hight by the distance between mouse pointer top edge of scrolling contatiner
+                        // If the mouse pointer is above the scrolling container then decrease the insertion point hight by the distance between the mouse pointer and the top edge of scrolling container.
                         newHeight = elementHeight + mousePos.y
                     } else if (mousePos.y >= containerHeight) {
-                        //If mouse pointer is below scrolling container then increase the insertion point height by distance between mouse pointer and bottom edge of scrolling container
+                        // If the mouse pointer is below the scrolling container then increase the insertion point height by the distance between the mouse pointer and the bottom edge of the scrolling container.
                         newHeight = elementHeight + mousePos.y - containerHeight;
                     }
 
-                    if (newHeight < 44 /* toolbar height*/ + 14 /* resizer image height */) {
-                        //If newHeight is less then minimal height of insertion point then don't change the height.
+                    if (newHeight < 44 /* toolbar height */ + 14 /* resizer icon height */) {
+                        // If newHeight is less then the minimum height of an insertion point then no need to change the height.
                         newHeight = elementHeight;
                     }
 
@@ -618,7 +618,7 @@ Polymer({
                         this._height = newHeight + 'px';
                         this._saveInsertionPointHeight(this._height);
                         if (mousePos.y >= scrollingContainer.offsetHeight || mousePos.y < 0) {
-                            //If the mouse pointer is above or below scrolling container then scroll (scrolling distance should be equal to change of insertion point height)
+                            // If the mouse pointer is above or below the scrolling container then perform scrolling (the scrolling distance should be equal to a change of the insertion point height)
                             scrollingContainer.scrollTop += newHeight - elementHeight;
                         }
                     }
