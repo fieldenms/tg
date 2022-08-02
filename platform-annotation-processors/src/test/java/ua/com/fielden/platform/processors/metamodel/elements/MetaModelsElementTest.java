@@ -39,7 +39,7 @@ public class MetaModelsElementTest {
 
     @Test
     public void construction_of_meta_models_element_ignores_non_meta_model_fields() {
-      assertEquals(Set.of(AttachmentMetaModel.class.getSimpleName(), UserMetaModel.class.getSimpleName()), metaModelsElement.getMetaModels().stream().map(MetaModelElement::getSimpleName).collect(toSet()));
+      assertEquals(Set.of(AttachmentMetaModel.class.getSimpleName(), UserMetaModel.class.getSimpleName()), metaModelsElement.getMetaModels().stream().map(mme -> mme.getSimpleName().toString()).collect(toSet()));
     }
 
     @Test

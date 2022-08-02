@@ -153,7 +153,7 @@ public class MetaModelStructureTest {
         final MetaModelElement parentMetaModel = findMetaModel(parent);
 
         // Child's meta-model extends Parent's meta-model ?
-        assertTrue(elementFinder.getTypes().isSameType(childMetaModel.getTypeElement().getSuperclass(), parentMetaModel.getTypeElement().asType()));
+        assertTrue(elementFinder.getTypes().isSameType(childMetaModel.getSuperclass(), parentMetaModel.asType()));
         
         final Set<PropertyElement> childDeclaredProps = entityFinder.findDeclaredProperties(child);
         final Set<ExecutableElement> childDeclaredMetamodeledProps = metaModelFinder.findDeclaredPropertyMethods(childMetaModel);
@@ -205,19 +205,19 @@ public class MetaModelStructureTest {
                 .filter(el -> el.getKind() == ElementKind.CLASS)
                 .map(el -> (TypeElement) el)
                 .filter(metaModelFinder::isMetaModel)
-                .map(te -> new MetaModelElement(te, elements))
+                .map(te -> metaModelFinder.newMetaModelElement(te))
                 .filter(metaModelFinder::isMetaModelAliased)
                 .toList();
         assertFalse(aliasedMetaModels.isEmpty());
 
         aliasedMetaModels.stream()
             .forEach(mme -> {
-                final TypeElement superclass = elementFinder.getSuperclassOrNull(mme.getTypeElement());
+                final TypeElement superclass = elementFinder.getSuperclassOrNull(mme);
                 assertNotNull(superclass);
                 assertTrue(metaModelFinder.isMetaModel(superclass));
                 // superclass name = name - "MetaModelAliased" + "MetaModel" = name - "Aliased"
                 final String supposedName = format("%s.%s%s", mme.getPackageName(),
-                        StringUtils.substringBeforeLast(mme.getSimpleName(), META_MODEL_ALIASED_NAME_SUFFIX), 
+                        StringUtils.substringBeforeLast(mme.getSimpleName().toString(), META_MODEL_ALIASED_NAME_SUFFIX), 
                         META_MODEL_NAME_SUFFIX);
                 assertEquals(supposedName, superclass.getQualifiedName().toString());
             });
@@ -235,14 +235,14 @@ public class MetaModelStructureTest {
                 .filter(el -> el.getKind() == ElementKind.CLASS)
                 .map(el -> (TypeElement) el)
                 .filter(metaModelFinder::isMetaModel)
-                .map(te -> new MetaModelElement(te, elements))
+                .map(te -> metaModelFinder.newMetaModelElement(te))
                 .filter(metaModelFinder::isMetaModelAliased)
                 .toList();
         assertFalse(aliasedMetaModels.isEmpty());
         
         aliasedMetaModels.stream()
             .forEach(mme -> {
-                assertNotNull(elementFinder.findDeclaredField(mme.getTypeElement(), "alias", 
+                assertNotNull(elementFinder.findDeclaredField(mme, "alias", 
                         varEl -> varEl.getModifiers().containsAll(List.of(Modifier.PUBLIC, Modifier.FINAL)) &&
                         elementFinder.isFieldOfType(varEl, String.class)));
             });

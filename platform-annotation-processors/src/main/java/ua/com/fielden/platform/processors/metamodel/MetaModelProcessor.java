@@ -202,9 +202,9 @@ public class MetaModelProcessor extends AbstractProcessor {
         // let's process each type element representing a domain entity
         // all relevant types will have a meta-model concept created for them and their properties explored for the purpose of meta-modelling 
         final Set<MetaModelConcept> metaModelConcepts = new HashSet<>();
-        final var existingMetaModels = maybeMetaModelsElement.map(mme -> mme.getMetaModels().stream().map(MetaModelElement::getQualifiedName).collect(toSet())).orElse(Collections.emptySet());
+        final var existingMetaModels = maybeMetaModelsElement.map(mme -> mme.getMetaModels().stream().map(m -> m.getQualifiedName().toString()).collect(toSet())).orElse(Collections.emptySet());
         for (final TypeElement typeElement: annotatedElements) {
-            final EntityElement entityElement = newEntityElement(typeElement);
+            final EntityElement entityElement = entityFinder.newEntityElement(typeElement);
             final MetaModelConcept mmc = new MetaModelConcept(entityElement);
             if (!allGeneratedMetaModels.contains(mmc)) {
                 // domain entities that came in the round environment should have their meta-models generated always.
@@ -232,7 +232,7 @@ public class MetaModelProcessor extends AbstractProcessor {
     private void explorePropsOf(final EntityElement entityElement, final Set<String> existingMetaModels, final Set<MetaModelConcept> metaModelConcepts) {
         final Set<MetaModelConcept> metaModelConceptsFromProps = entityFinder.findProperties(entityElement).stream()
                 .filter(entityFinder::isPropertyOfDomainEntityType)
-                .map(pel -> new MetaModelConcept(new EntityElement(pel.getTypeAsTypeElementOrThrow(), elementUtils)))
+                .map(pel -> new MetaModelConcept(entityFinder.newEntityElement(pel.getTypeAsTypeElementOrThrow())))
                 // we should not include types that already have their meta-models generated or meta-model concepts included for processing
                 .filter(mmc -> !existingMetaModels.contains(mmc.getQualifiedName()) && !metaModelConcepts.contains(mmc))
                 .collect(toSet());
@@ -254,7 +254,7 @@ public class MetaModelProcessor extends AbstractProcessor {
      * @return
      */
     private boolean writeInactiveMetaModel(final MetaModelElement mme) {
-        final TypeSpec.Builder emptyMetaModelBuilder = TypeSpec.interfaceBuilder(mme.getSimpleName());
+        final TypeSpec.Builder emptyMetaModelBuilder = TypeSpec.interfaceBuilder(mme.getSimpleName().toString());
 
         // @Generated annotation
         final AnnotationSpec generatedAnnotation = AnnotationSpec.builder(ClassName.get(Generated.class))
@@ -291,7 +291,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             return false;
         }
 
-        messager.printMessage(Kind.NOTE, format("Generated empty meta-model %s.", mme.getSimpleName()));
+        messager.printMessage(Kind.NOTE, format("Generated empty meta-model %s.", mme.getSimpleName().toString()));
         return true;
     }
 
@@ -302,15 +302,15 @@ public class MetaModelProcessor extends AbstractProcessor {
      * @return a set of inactive meta-models; could be empty
      */
     private Set<MetaModelElement> findInactiveMetaModels(final MetaModelsElement metaModelsElement) {
-        messager.printMessage(Kind.NOTE, format("Verifying %s.", metaModelsElement.getSimpleName()));
+        messager.printMessage(Kind.NOTE, format("Verifying %s.", metaModelsElement.getSimpleName().toString()));
         final Set<MetaModelElement> inactive = new LinkedHashSet<>();
         for (final MetaModelElement mme: metaModelsElement.getMetaModels()) {
             final EntityElement entity = entityFinder.findEntityForMetaModel(mme);
             if (entity == null || !entityFinder.isEntityThatNeedsMetaModel(entity.getTypeElement())) {
                 if (entity != null) {
-                    messager.printMessage(Kind.NOTE, format("Entity %s is no longer a domain entity.", entity.getSimpleName()));
+                    messager.printMessage(Kind.NOTE, format("Entity %s is no longer a domain entity.", entity.getSimpleName().toString()));
                 } else {
-                    messager.printMessage(Kind.NOTE, format("Entity for %s does not exist anymore.", mme.getSimpleName()));
+                    messager.printMessage(Kind.NOTE, format("Entity for %s does not exist anymore.", mme.getSimpleName().toString()));
                 }
                 inactive.add(mme);
             }
@@ -387,7 +387,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             // ### instance property ###
             final FieldSpec.Builder fieldSpecBuilder;
             if (propertyTypeMetamodeledTest.test(prop)) {
-                final MetaModelConcept propTypeMmc = new MetaModelConcept(newEntityElement(prop.getTypeAsTypeElementOrThrow()));
+                final MetaModelConcept propTypeMmc = new MetaModelConcept(entityFinder.newEntityElement(prop.getTypeAsTypeElementOrThrow()));
                 final ClassName propTypeMmcClassName = propTypeMmc.getMetaModelClassName();
                 // property type is target for meta-model generation
                 // private Supplier<${METAMODEL}> ${PROPERTY};
@@ -411,7 +411,7 @@ public class MetaModelProcessor extends AbstractProcessor {
 
             final ClassName propTypeMmcClassName;
             if (propertyTypeMetamodeledTest.test(prop)) {
-                final MetaModelConcept propTypeMmc = new MetaModelConcept(newEntityElement(prop.getTypeAsTypeElementOrThrow()));
+                final MetaModelConcept propTypeMmc = new MetaModelConcept(entityFinder.newEntityElement(prop.getTypeAsTypeElementOrThrow()));
                 propTypeMmcClassName = propTypeMmc.getMetaModelClassName();
                 /* property type is target for meta-model generation
 
@@ -475,7 +475,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             final var propName = prop.getName();
             final var propName_ = propName + "_";
             if (propertyTypeMetamodeledTest.test(prop)) {
-                final MetaModelConcept propTypeMmc = new MetaModelConcept(newEntityElement(prop.getTypeAsTypeElementOrThrow()));
+                final MetaModelConcept propTypeMmc = new MetaModelConcept(entityFinder.newEntityElement(prop.getTypeAsTypeElementOrThrow()));
                 final ClassName propTypeMetaModelClassName = propTypeMmc.getMetaModelClassName();
 
                 /* property type is target for meta-model generation
@@ -630,7 +630,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             return false;
         }
 
-        messager.printMessage(Kind.NOTE, format("Generated %s for entity %s.", metaModelSpec.name, entityElement.getSimpleName()));
+        messager.printMessage(Kind.NOTE, format("Generated %s for entity %s.", metaModelSpec.name, entityElement.getSimpleName().toString()));
         return true;
     }
 
@@ -742,7 +742,7 @@ public class MetaModelProcessor extends AbstractProcessor {
 
         // generate static fields and methods for new meta-models
         for (final MetaModelConcept mmc: metaModelConcepts) {
-            final String fieldName = nameFieldForMetaModel(mmc.getEntityElement().getSimpleName());
+            final String fieldName = nameFieldForMetaModel(mmc.getEntityElement().getSimpleName().toString());
             messager.printMessage(Kind.NOTE, format("New/Updated meta-model, generating field: %s", fieldName));
             fieldSpecs.add(specFieldForMetaModel(mmc.getMetaModelClassName(), fieldName));
             
@@ -761,13 +761,13 @@ public class MetaModelProcessor extends AbstractProcessor {
                     .toList();
 
             messager.printMessage(Kind.NOTE, format("Inactive meta-models: [%s]", inactiveMetaModelElements.stream()
-                    .map(mm -> mm.getSimpleName())
+                    .map(mm -> mm.getSimpleName().toString())
                     .sorted().collect(joining(", "))));
             
             for (final MetaModelElement mme: activeUnchangedMetaModels) {
                 final EntityElement entity = entityFinder.findEntityForMetaModel(mme);
                 // add a field for a meta-model
-                final String fieldName = nameFieldForMetaModel(entity.getSimpleName());
+                final String fieldName = nameFieldForMetaModel(entity.getSimpleName().toString());
                 messager.printMessage(Kind.NOTE, format("Old meta-model, generating field: %s", fieldName));
                 fieldSpecs.add(specFieldForMetaModel(mme.getMetaModelClassName(), fieldName));
                 // add a method for the aliased meta-model type
@@ -887,10 +887,6 @@ public class MetaModelProcessor extends AbstractProcessor {
      */
     private static String nameFieldForMetaModel(final String simpleName) {
         return simpleName + "_";
-    }
-
-    private EntityElement newEntityElement(final TypeElement typeElement) {
-        return new EntityElement(typeElement, elementUtils);
     }
 
     @Override

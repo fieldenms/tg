@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 
@@ -243,6 +244,14 @@ public class ElementFinder {
         final Set<VariableElement> fields = findDeclaredFields(typeElement);
         fields.addAll(findInheritedFields(typeElement, rootClass));
         return fields;
+    }
+
+    public Set<VariableElement> findStaticFields(final TypeElement typeElement) {
+        return findDeclaredFields(typeElement, f -> isStatic(f));
+    }
+
+    public Set<VariableElement> findNonStaticFields(final TypeElement typeElement) {
+        return findDeclaredFields(typeElement, f -> !isStatic(f));
     }
 
     /**
@@ -522,6 +531,8 @@ public class ElementFinder {
     }
     
     public String getPackageName(final TypeElement typeElement) {
-        return elements.getPackageOf(typeElement).getQualifiedName().toString();
+        return Optional.ofNullable(elements.getPackageOf(typeElement))
+                .map(pkgEl -> pkgEl.getQualifiedName().toString())
+                .orElse(null);
     }
 }

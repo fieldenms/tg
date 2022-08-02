@@ -54,7 +54,7 @@ public class EntityFinder extends ElementFinder {
      */
     public Optional<EntityElement> findEntity(final Class<? extends AbstractEntity<?>> entityClass) {
         return Optional.ofNullable(elements.getTypeElement(entityClass.getCanonicalName()))
-                .map(te -> new EntityElement(te, elements));
+                .map(te -> newEntityElement(te));
     }
 
    /**
@@ -132,7 +132,7 @@ public class EntityFinder extends ElementFinder {
         final AnnotationMirror entityTitleAnnotMirror = getElementAnnotationMirror(entityElement.getTypeElement(), EntityTitle.class);
 
         if (entityTitleAnnotMirror == null) {
-            final var title = TitlesDescsGetter.breakClassName(entityElement.getSimpleName());
+            final var title = TitlesDescsGetter.breakClassName(entityElement.getSimpleName().toString());
             return pair(title, title + " entity");
         }
 
@@ -263,7 +263,7 @@ public class EntityFinder extends ElementFinder {
             return null;
         }
 
-        return new EntityElement(superclass, elements);
+        return newEntityElement(superclass);
     }
     
     /**
@@ -317,12 +317,16 @@ public class EntityFinder extends ElementFinder {
             return null;
         }
         final TypeElement typeElement = elements.getTypeElement(entityQualName);
-        return typeElement == null ? null : new EntityElement(typeElement, elements);
+        return typeElement == null ? null : newEntityElement(typeElement);
     }
 
     public boolean hasPropertyOfType(final EntityElement entityElement, final TypeMirror type, final Types typeUtils) {
         return findProperties(entityElement).stream()
                .anyMatch(prop -> typeUtils.isSameType(prop.getType(), type));
+    }
+
+    public EntityElement newEntityElement(final TypeElement typeElement) {
+        return new EntityElement(typeElement, getPackageName(typeElement));
     }
 
 }
