@@ -8,7 +8,6 @@ import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.annotation.Annotation;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -119,7 +118,7 @@ public class EntityFinder extends ElementFinder {
 
     public Pair<String, String> getPropTitleAndDesc(final PropertyElement propElement) {
         // TODO need to replicate the logic from TitlesDescsGetter in application to the Mirror types.
-        final AnnotationMirror titleAnnotationMirror = getElementAnnotationMirror(propElement.getVariableElement(), Title.class);
+        final AnnotationMirror titleAnnotationMirror = getElementAnnotationMirror(propElement, Title.class);
 
         if (titleAnnotationMirror == null) {
             return null;
@@ -251,10 +250,6 @@ public class EntityFinder extends ElementFinder {
                 .anyMatch(annotClass -> element.getAnnotation(annotClass) != null);
     }
 
-    public List<? extends AnnotationMirror> getPropertyAnnotations(final PropertyElement property) {
-        return getFieldAnnotations(property.getVariableElement());
-    }
-    
     public EntityElement getParent(final EntityElement element) {
         // superclass should not be null, because every entity extends AbstractEntity
         final TypeElement superclass = getSuperclassOrNull(element.getTypeElement(), ROOT_ENTITY_CLASS);

@@ -376,7 +376,7 @@ public class MetaModelProcessor extends AbstractProcessor {
                 .build());
         // now let's process all properties
         for (final PropertyElement prop: properties) {
-            final var propName = prop.getName();
+            final var propName = prop.getSimpleName().toString();
             final var propName_ = propName + "_";
             // ### static property holding the property's name ###
             // private static final String ${PROPERTY}_ = "${PROPERTY}";
@@ -406,7 +406,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         // methods to access property meta-models
         final List<MethodSpec> methodSpecs = new ArrayList<>();
         for (final PropertyElement prop: properties) {
-            final var propName = prop.getName();
+            final var propName = prop.getSimpleName().toString();
             final MethodSpec.Builder methodSpecBuilder = MethodSpec.methodBuilder(propName);
 
             final ClassName propTypeMmcClassName;
@@ -472,7 +472,7 @@ public class MetaModelProcessor extends AbstractProcessor {
 
         final CodeBlock.Builder constructorStatementsBuilder = CodeBlock.builder();
         for (final PropertyElement prop: properties) {
-            final var propName = prop.getName();
+            final var propName = prop.getSimpleName().toString();
             final var propName_ = propName + "_";
             if (propertyTypeMetamodeledTest.test(prop)) {
                 final MetaModelConcept propTypeMmc = new MetaModelConcept(entityFinder.newEntityElement(prop.getTypeAsTypeElementOrThrow()));
@@ -682,7 +682,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         }
 
         // javadoc: property annotations
-        final List<String> annotationsStrings = elementFinder.getFieldAnnotations(prop.getVariableElement()).stream()
+        final List<String> annotationsStrings = elementFinder.getFieldAnnotations(prop).stream()
                 .map(annotMirror -> {
                     final StringBuilder builder = new StringBuilder();
                     builder.append(format("{@literal @}{@link %s}", elementFinder.getAnnotationMirrorSimpleName(annotMirror)));

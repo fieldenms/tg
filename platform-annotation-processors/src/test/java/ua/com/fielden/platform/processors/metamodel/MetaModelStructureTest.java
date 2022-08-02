@@ -122,7 +122,7 @@ public class MetaModelStructureTest {
             // find the metamodeled prop
             // TODO the logic handling transformations between entity properties and meta-model properties should be abstracted
             // consider that transformation of names changes, then this code would have to be modified too
-            final Optional<ExecutableElement> maybeMetamodeledProp = metamodeledProps.stream().filter(el -> el.getSimpleName().toString().equals(prop.getName())).findAny();
+            final Optional<ExecutableElement> maybeMetamodeledProp = metamodeledProps.stream().filter(el -> el.getSimpleName().toString().equals(prop.getSimpleName().toString())).findAny();
             assertTrue(maybeMetamodeledProp.isPresent());
             final ExecutableElement metamodeledProp = maybeMetamodeledProp.get();
 
@@ -161,7 +161,7 @@ public class MetaModelStructureTest {
 
         for (final PropertyElement prop: childDeclaredProps) {
             // find the metamodeled prop by name
-            final Optional<ExecutableElement> maybeMetamodeledProp = childDeclaredMetamodeledProps.stream().filter(el -> el.getSimpleName().toString().equals(prop.getName())).findAny();
+            final Optional<ExecutableElement> maybeMetamodeledProp = childDeclaredMetamodeledProps.stream().filter(el -> el.getSimpleName().toString().equals(prop.getSimpleName().toString())).findAny();
             assertTrue(maybeMetamodeledProp.isPresent());
             final ExecutableElement metamodeledProp = maybeMetamodeledProp.get();
 

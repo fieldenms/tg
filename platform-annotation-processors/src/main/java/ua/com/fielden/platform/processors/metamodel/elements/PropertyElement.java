@@ -2,6 +2,7 @@ package ua.com.fielden.platform.processors.metamodel.elements;
 
 import static java.lang.String.format;
 
+import java.math.BigDecimal;
 import java.util.Objects;
 
 import javax.lang.model.element.TypeElement;
@@ -11,7 +12,6 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelException;
-import ua.com.fielden.platform.processors.metamodel.exceptions.PropertyElementException;
 
 /**
  * A convenient wrapper around {@link VariableElement} to represent a property element.
@@ -19,22 +19,10 @@ import ua.com.fielden.platform.processors.metamodel.exceptions.PropertyElementEx
  * @author TG Team
  *
  */
-public class PropertyElement {
-    private final VariableElement varElement;
+public class PropertyElement extends ForwardingVariableElement {
     
     public PropertyElement(final VariableElement varElement) {
-        if (varElement == null) {
-            throw new PropertyElementException("Constructor received null as an argument.");
-        }
-        this.varElement = varElement;
-    }
-    
-    public VariableElement getVariableElement() {
-        return varElement;
-    }
-    
-    public String getName() {
-        return varElement.getSimpleName().toString();
+        super(varElement);
     }
     
     /**
@@ -45,7 +33,7 @@ public class PropertyElement {
      * @return
      */
     public boolean hasClassOrInterfaceType() {
-        return varElement.asType().getKind() == TypeKind.DECLARED;
+        return element.asType().getKind() == TypeKind.DECLARED;
     }
 
     /**
@@ -53,7 +41,7 @@ public class PropertyElement {
      * @return
      */
     public TypeMirror getType() {
-        return varElement.asType();
+        return element.asType();
     }
 
     /**
@@ -62,7 +50,7 @@ public class PropertyElement {
      */
     public TypeElement getTypeAsTypeElement() {
         if (!hasClassOrInterfaceType()) {
-            final String message = format("Type of property %s is not a declared type (%s)", getName(), getType().toString());
+            final String message = format("Type of property %s is not a declared type (%s)", getSimpleName(), getType());
             throw new EntityMetaModelException(message);
         }
         return getTypeAsTypeElementOrThrow();
@@ -73,12 +61,12 @@ public class PropertyElement {
      * @return
      */
     public TypeElement getTypeAsTypeElementOrThrow() {
-        return (TypeElement) ((DeclaredType) varElement.asType()).asElement();
+        return (TypeElement) ((DeclaredType) asType()).asElement();
     }
 
     @Override
     public int hashCode() {
-        return 31 + Objects.hash(varElement.getSimpleName().toString());
+        return 31 + Objects.hash(getSimpleName().toString());
     }
 
     @Override
@@ -90,7 +78,7 @@ public class PropertyElement {
             return false;
         }
         final PropertyElement that = (PropertyElement) obj;
-        return Objects.equals(this.varElement.getSimpleName().toString(), that.varElement.getSimpleName().toString());
+        return Objects.equals(getSimpleName().toString(), that.getSimpleName().toString());
     }
 
 }

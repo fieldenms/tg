@@ -117,7 +117,7 @@ public class EntityFinderTest {
       final Set<PropertyElement> props = entityFinder.findDeclaredProperties(entityElement);
       assertEquals(7, props.size());
       final String expectedProps = "key, roles, base, basedOnUser, email, active, ssoOnly";
-      assertEquals(expectedProps, props.stream().map(p -> p.getName()).collect(joining(", "))); 
+      assertEquals(expectedProps, props.stream().map(p -> p.getSimpleName().toString()).collect(joining(", "))); 
     }
 
     @Test
@@ -130,7 +130,7 @@ public class EntityFinderTest {
       // more specifically, properties "active" and "key" appear as both declared and inherited
       // property "desc" is missing as it was @DescTitle was not declared for either User or its supertypes
       final String expectedProps = "active, refCount, createdBy, createdDate, createdTransactionGuid, lastUpdatedBy, lastUpdatedDate, lastUpdatedTransactionGuid, key, id";
-      assertEquals(expectedProps, props.stream().map(p -> p.getName()).collect(joining(", "))); 
+      assertEquals(expectedProps, props.stream().map(p -> p.getSimpleName().toString()).collect(joining(", "))); 
     }
 
     @Test
@@ -141,7 +141,7 @@ public class EntityFinderTest {
       assertEquals(15, props.size());
       // property "desc" is missing as it was @DescTitle was not declared for either User or its supertypes
       final String expectedProps = "key, roles, base, basedOnUser, email, active, ssoOnly, refCount, createdBy, createdDate, createdTransactionGuid, lastUpdatedBy, lastUpdatedDate, lastUpdatedTransactionGuid, id";
-      assertEquals(expectedProps, props.stream().map(p -> p.getName()).collect(joining(", "))); 
+      assertEquals(expectedProps, props.stream().map(p -> p.getSimpleName().toString()).collect(joining(", "))); 
     }
 
     @Test
@@ -152,7 +152,7 @@ public class EntityFinderTest {
       assertEquals(16, props.size());
       // unlike User, SuperUser has property "desc" due to @DescTitle
       final String expectedProps = "key, roles, base, basedOnUser, email, active, ssoOnly, refCount, createdBy, createdDate, createdTransactionGuid, lastUpdatedBy, lastUpdatedDate, lastUpdatedTransactionGuid, desc, id";
-      assertEquals(expectedProps, props.stream().map(p -> p.getName()).collect(joining(", "))); 
+      assertEquals(expectedProps, props.stream().map(p -> p.getSimpleName().toString()).collect(joining(", "))); 
     }
 
     @Test
@@ -163,14 +163,14 @@ public class EntityFinderTest {
       assertEquals(16, props.size());
       // unlike User, SuperUserWithDeclaredDesc has property "desc" declared explicitly
       final String expectedProps = "desc, key, roles, base, basedOnUser, email, active, ssoOnly, refCount, createdBy, createdDate, createdTransactionGuid, lastUpdatedBy, lastUpdatedDate, lastUpdatedTransactionGuid, id";
-      assertEquals(expectedProps, props.stream().map(p -> p.getName()).collect(joining(", "))); 
+      assertEquals(expectedProps, props.stream().map(p -> p.getSimpleName().toString()).collect(joining(", "))); 
     }
 
     @Test
     public void isPropertyOfEntityType_correctly_distiguishes_between_properties_of_an_entity_type_and_other_types() {
         final TypeElement typeElement = elements.getTypeElement(User.class.getCanonicalName());
         final EntityElement entityElement = EntityElement.wrapperFor(typeElement);
-        final Map<String, PropertyElement> props = entityFinder.findProperties(entityElement).stream().collect(Collectors.toMap(PropertyElement::getName, Function.identity()));
+        final Map<String, PropertyElement> props = entityFinder.findProperties(entityElement).stream().collect(Collectors.toMap(pel -> pel.getSimpleName().toString(), Function.identity()));
         assertFalse(entityFinder.isPropertyOfEntityType(props.get("key")));
         assertFalse(entityFinder.isPropertyOfEntityType(props.get("roles")));
         assertFalse(entityFinder.isPropertyOfEntityType(props.get("base")));
@@ -193,7 +193,7 @@ public class EntityFinderTest {
     public void isPropertyOfEntityType_correctly_identifies_entity_typed_key_as_an_entity_typed_property() {
         final TypeElement typeElement = elements.getTypeElement(UserSecret.class.getCanonicalName());
         final EntityElement entityElement = EntityElement.wrapperFor(typeElement);
-        assertTrue(entityFinder.isPropertyOfEntityType(entityFinder.findProperties(entityElement).stream().filter(p -> "key".equals(p.getName())).findFirst().get()));
+        assertTrue(entityFinder.isPropertyOfEntityType(entityFinder.findProperties(entityElement).stream().filter(p -> "key".equals(p.getSimpleName().toString())).findFirst().get()));
     }
 
     @Test
