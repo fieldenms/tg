@@ -904,7 +904,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     TgSelectedEntitiesExampleAction.class,
                     TgSelectedEntitiesExampleActionProducer.class,
                     injector())).
-            addMaster(userWebUiConfig.master).
+            addMaster(userWebUiConfig.compoundMaster).
             addMaster(userWebUiConfig.rolesUpdater).
             addMaster(userRoleWebUiConfig.master).
             addMaster(userRoleWebUiConfig.tokensUpdater).

@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static java.util.Optional.empty;
+import static ua.com.fielden.platform.dao.AbstractOpenCompoundMasterDao.enhanceEmbededCentreQuery;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.createConditionProperty;
 import static ua.com.fielden.platform.security.user.User.EMAIL;
 import static ua.com.fielden.platform.security.user.User.SSO_ONLY;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
@@ -18,25 +20,41 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityNewAction;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
 import ua.com.fielden.platform.security.user.ReUser;
 import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.security.user.UserRolesUpdater;
 import ua.com.fielden.platform.security.user.UserRolesUpdaterProducer;
 import ua.com.fielden.platform.security.user.locator.UserLocator;
+import ua.com.fielden.platform.security.user.master.menu.actions.UserMaster_OpenMain_MenuItem;
+import ua.com.fielden.platform.security.user.master.menu.actions.UserMaster_OpenUserAndRoleAssociation_MenuItem;
+import ua.com.fielden.platform.security.user.ui_actions.OpenUserMasterAction;
+import ua.com.fielden.platform.security.user.ui_actions.producers.OpenUserMasterActionProducer;
 import ua.com.fielden.platform.security.user.value_matchers.UserMasterBaseUserMatcher;
 import ua.com.fielden.platform.ui.menu.sample.MiUser;
+import ua.com.fielden.platform.ui.menu.sample.MiUserMaster_UserAndRoleAssociation;
+import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.PrefDim.Unit;
+import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
+import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.EntityCentre;
+import ua.com.fielden.platform.web.centre.IQueryEnhancer;
+import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.layout.api.impl.LayoutComposer;
+import ua.com.fielden.platform.web.test.server.config.StandardActions;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
+import ua.com.fielden.platform.web.view.master.api.compound.Compound;
+import ua.com.fielden.platform.web.view.master.api.compound.impl.CompoundMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 
 /**
@@ -47,18 +65,47 @@ import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
  */
 public class UserWebUiConfig {
 
+    public static final String USER_TITLE = "User";
+
     public final EntityMaster<UserRolesUpdater> rolesUpdater;
     public final EntityCentre<ReUser> centre;
     public final EntityMaster<User> master;
+    public final EntityMaster<OpenUserMasterAction> compoundMaster;
+    public final EntityActionConfig editUserAction; // should be used on embedded centres instead of a standard EDIT action
+    //    public final EntityActionConfig newUserWithMasterAction; // should be used on embedded centres instead of a standrad NEW action
+    private final EntityActionConfig newUserAction;
 
     public static UserWebUiConfig register(final Injector injector, final IWebUiBuilder builder) {
         return new UserWebUiConfig(injector, builder);
     }
 
     private UserWebUiConfig(final Injector injector, final IWebUiBuilder builder) {
+        final PrefDim dims = mkDim(960, 640, Unit.PX);
+        editUserAction = Compound.openEdit(OpenUserMasterAction.class, USER_TITLE, "Edit " + USER_TITLE, dims);
+        //        newUserWithMasterAction = Compound.openNewWithMaster(OpenUserMasterAction.class, "add-circle-outline", "Application User", "Add Application User", dims);
+        newUserAction = Compound.openNew(OpenUserMasterAction.class, "add-circle-outline", USER_TITLE, "Add " + USER_TITLE, dims);
+        builder.registerOpenMasterAction(User.class, editUserAction);
+
         centre = createCentre(injector, builder, mkLocator(builder, injector, UserLocator.class, "user"));
         master = createMaster(injector);
         rolesUpdater = createRolesUpdater(injector);
+        
+        compoundMaster = CompoundMasterBuilder.<User, OpenUserMasterAction>create(injector, builder)
+                .forEntity(OpenUserMasterAction.class)
+                .withProducer(OpenUserMasterActionProducer.class)
+                .addMenuItem(UserMaster_OpenMain_MenuItem.class)
+                    .icon("icons:picture-in-picture")
+                    .shortDesc(OpenUserMasterAction.MAIN)
+                    .longDesc("Application User" + " main")
+                    .withView(master)
+                .also()
+                .addMenuItem(UserMaster_OpenUserAndRoleAssociation_MenuItem.class)
+                    .icon("icons:view-module")
+                    .shortDesc(OpenUserMasterAction.ROLES)
+                    .longDesc("Application User" + " " + OpenUserMasterAction.ROLES)
+                    .withView(createUserAndRoleAssociationCentre(injector))
+                .done();
+
     }
 
     /**
@@ -66,18 +113,14 @@ public class UserWebUiConfig {
      *
      * @return
      */
-    private static EntityCentre<ReUser> createCentre(final Injector injector, final IWebUiBuilder builder, final EntityActionConfig locator) {
+    private EntityCentre<ReUser> createCentre(final Injector injector, final IWebUiBuilder builder, final EntityActionConfig locator) {
         final String layout = LayoutComposer.mkVarGridForCentre(2, 2, 2, 1);
-
-        final EntityActionConfig userNewAction = UserActions.NEW_ACTION.mkAction();
-        final EntityActionConfig userEditAction = UserActions.EDIT_ACTION.mkAction();
-        builder.registerOpenMasterAction(User.class, userEditAction);
 
         final EntityCentre<ReUser> userCentre = new EntityCentre<>(MiUser.class,
                 EntityCentreBuilder.centreFor(ReUser.class)
-                .addFrontAction(userNewAction).also()
+                .addFrontAction(newUserAction).also()
                 .addFrontAction(locator)
-                .addTopAction(userNewAction).also()
+                .addTopAction(newUserAction).also()
                 .addTopAction(UserActions.DELETE_ACTION.mkAction()).also()
                 .addTopAction(locator)
                 .addCrit("this").asMulti().autocompleter(User.class).also()
@@ -99,7 +142,7 @@ public class UserWebUiConfig {
                 .addProp(ACTIVE).width(50).also()
                 .addProp(SSO_ONLY).width(50).also()
                 .addProp("roles").minWidth(70).withAction(UserActions.MANAGE_ROLES_SECONDARY_ACTION.mkAction())
-                .addPrimaryAction(userEditAction).also()
+                .addPrimaryAction(editUserAction).also()
                 .addSecondaryAction(UserActions.MANAGE_ROLES_SECONDARY_ACTION.mkAction())
                 .build(), injector);
         return userCentre;
@@ -110,7 +153,7 @@ public class UserWebUiConfig {
      *
      * @return
      */
-    private static EntityMaster<User> createMaster(final Injector injector) {
+    private EntityMaster<User> createMaster(final Injector injector) {
         final String layout = LayoutComposer.mkVarGridForMasterFitWidth(2, 2, 2, 1);
 
         final IMaster<User> masterConfigForUser = new SimpleMasterBuilder<User>()
@@ -148,6 +191,45 @@ public class UserWebUiConfig {
                 .done();
         return new EntityMaster<>(UserRolesUpdater.class, UserRolesUpdaterProducer.class, masterConfig, injector);
     }
+    
+    private EntityCentre<UserAndRoleAssociation> createUserAndRoleAssociationCentre(final Injector injector) {
+        final Class<UserAndRoleAssociation> root = UserAndRoleAssociation.class;
+        final String layout = LayoutComposer.mkVarGridForCentre(1);
+
+        final EntityActionConfig standardEditAction = StandardActions.EDIT_ACTION.mkAction(UserAndRoleAssociation.class);
+        final EntityActionConfig standardNewAction = StandardActions.NEW_WITH_MASTER_ACTION.mkAction(UserAndRoleAssociation.class);
+        final EntityActionConfig standardDeleteAction = StandardActions.DELETE_ACTION.mkAction(UserAndRoleAssociation.class);
+        final EntityActionConfig standardExportAction = StandardActions.EXPORT_EMBEDDED_CENTRE_ACTION.mkAction(UserAndRoleAssociation.class);
+        final EntityActionConfig standardSortAction = CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction();
+
+        final EntityCentreConfig<UserAndRoleAssociation> ecc = EntityCentreBuilder.centreFor(root)
+                .runAutomatically()
+                .addTopAction(standardNewAction).also()
+                .addTopAction(standardDeleteAction).also()
+                .addTopAction(standardSortAction).also()
+                .addTopAction(standardExportAction)
+                .addCrit("userRole").asMulti().autocompleter(UserRole.class)
+                .setLayoutFor(Device.DESKTOP, Optional.empty(), layout)
+                .setLayoutFor(Device.TABLET, Optional.empty(), layout)
+                .setLayoutFor(Device.MOBILE, Optional.empty(), layout)
+                // TODO.withScrollingConfig(standardEmbeddedScrollingConfig(0))
+                .addProp("userRole").order(1).asc().minWidth(80)
+                    .withSummary("total_count_", "COUNT(SELF)", "Count:The total number of matching Roles.").also()
+                .addProp("userRole.desc").minWidth(80)
+                .addPrimaryAction(standardEditAction)
+                .setQueryEnhancer(UserMaster_UserAndRoleAssociationCentre_QueryEnhancer.class, context().withMasterEntity().build())
+                .build();
+
+        return new EntityCentre<>(MiUserMaster_UserAndRoleAssociation.class, ecc, injector);
+    }
+
+    private static class UserMaster_UserAndRoleAssociationCentre_QueryEnhancer implements IQueryEnhancer<UserAndRoleAssociation> {
+        @Override
+        public ICompleted<UserAndRoleAssociation> enhanceQuery(final IWhere0<UserAndRoleAssociation> where, final Optional<CentreContext<UserAndRoleAssociation, ?>> context) {
+            return enhanceEmbededCentreQuery(where, createConditionProperty("user"), context.get().getMasterEntity().getKey());
+        }
+    }
+    
 
     private static enum UserActions {
 
