@@ -32,10 +32,6 @@ public class EntityElement extends ForwardingTypeElement {
         return packageName;
     }
 
-    public TypeElement getTypeElement() {
-        return element;
-    }
-
     public ClassName getEntityClassName() {
         return ClassName.get(packageName, getSimpleName().toString());
     }

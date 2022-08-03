@@ -306,7 +306,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         final Set<MetaModelElement> inactive = new LinkedHashSet<>();
         for (final MetaModelElement mme: metaModelsElement.getMetaModels()) {
             final EntityElement entity = entityFinder.findEntityForMetaModel(mme);
-            if (entity == null || !entityFinder.isEntityThatNeedsMetaModel(entity.getTypeElement())) {
+            if (entity == null || !entityFinder.isEntityThatNeedsMetaModel(entity)) {
                 if (entity != null) {
                     messager.printMessage(Kind.NOTE, format("Entity %s is no longer a domain entity.", entity.getSimpleName().toString()));
                 } else {
@@ -354,7 +354,7 @@ public class MetaModelProcessor extends AbstractProcessor {
 
         final EntityElement entityElement = mmc.getEntityElement();
         final EntityElement entityParent = entityFinder.getParent(entityElement);
-        final boolean isEntitySuperclassMetamodeled = entityFinder.isEntityThatNeedsMetaModel(entityParent.getTypeElement());
+        final boolean isEntitySuperclassMetamodeled = entityFinder.isEntityThatNeedsMetaModel(entityParent);
         // collect properties to process
         final Set<PropertyElement> properties = new LinkedHashSet<>();
         if (isEntitySuperclassMetamodeled) {

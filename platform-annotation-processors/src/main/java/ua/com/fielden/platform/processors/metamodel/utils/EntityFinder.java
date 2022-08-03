@@ -68,8 +68,7 @@ public class EntityFinder extends ElementFinder {
     * @param entityElement
     */
     public Set<PropertyElement> findDeclaredProperties(final EntityElement entityElement) {
-        final TypeElement typeElement = entityElement.getTypeElement();
-        return findDeclaredFields(typeElement).stream()
+        return findDeclaredFields(entityElement).stream()
                 .filter(this::isProperty)
                 .map(PropertyElement::new)
                 .collect(toCollection(LinkedHashSet::new));
@@ -88,19 +87,18 @@ public class EntityFinder extends ElementFinder {
      * @return
      */
     public Set<PropertyElement> findInheritedProperties(final EntityElement entityElement) {
-        final TypeElement typeElement = entityElement.getTypeElement();
-        final Set<PropertyElement> props = findInheritedFields(typeElement, ROOT_ENTITY_CLASS).stream()
+        final Set<PropertyElement> props = findInheritedFields(entityElement, ROOT_ENTITY_CLASS).stream()
                 .filter(this::isProperty)
                 .map(PropertyElement::new)
                 .collect(toCollection(LinkedHashSet::new));
         // let's see if we need to include "id" as a property -- only persistent entities are of interest
         if (isPersistentEntityType(entityElement) || doesExtendPersistentEntity(entityElement)) {
-            final var idProp = findField(entityElement.getTypeElement(), AbstractEntity.ID);
+            final var idProp = findField(entityElement, AbstractEntity.ID);
             props.add(new PropertyElement(idProp));
         }
         // and now similar for property "desc", which may need to be removed
         if (findAnnotation(entityElement, DescTitle.class).isEmpty()) {
-            final var descProp = findField(entityElement.getTypeElement(), AbstractEntity.DESC);
+            final var descProp = findField(entityElement, AbstractEntity.DESC);
             props.remove(new PropertyElement(descProp));
         }
         return props;
@@ -128,7 +126,7 @@ public class EntityFinder extends ElementFinder {
     }
 
     public Pair<String, String> getEntityTitleAndDesc(final EntityElement entityElement) {
-        final AnnotationMirror entityTitleAnnotMirror = getElementAnnotationMirror(entityElement.getTypeElement(), EntityTitle.class);
+        final AnnotationMirror entityTitleAnnotMirror = getElementAnnotationMirror(entityElement, EntityTitle.class);
 
         if (entityTitleAnnotMirror == null) {
             final var title = TitlesDescsGetter.breakClassName(entityElement.getSimpleName().toString());
@@ -179,7 +177,7 @@ public class EntityFinder extends ElementFinder {
      * @return
      */
     public boolean isPersistentEntityType(final EntityElement element) {
-        return isEntityType(element.getTypeElement()) && element.getTypeElement().getAnnotation(MapEntityTo.class) != null;
+        return isEntityType(element) && element.getAnnotation(MapEntityTo.class) != null;
     }
     
     /**
@@ -190,7 +188,7 @@ public class EntityFinder extends ElementFinder {
      * @return
      */
     public boolean doesExtendPersistentEntity(final EntityElement element) {
-        final TypeElement superclass = element.getTypeElement();
+        final TypeElement superclass = element;
         return Stream.iterate(getSuperclassOrNull(superclass), el -> !equals(el, Object.class) , el -> getSuperclassOrNull(el))
                .filter(el -> isPersistentEntityType(EntityElement.wrapperFor(el)))
                .findFirst().isPresent();
@@ -252,7 +250,7 @@ public class EntityFinder extends ElementFinder {
 
     public EntityElement getParent(final EntityElement element) {
         // superclass should not be null, because every entity extends AbstractEntity
-        final TypeElement superclass = getSuperclassOrNull(element.getTypeElement(), ROOT_ENTITY_CLASS);
+        final TypeElement superclass = getSuperclassOrNull(element, ROOT_ENTITY_CLASS);
         
         if (!isEntityType(superclass)) {
             return null;
@@ -269,10 +267,10 @@ public class EntityFinder extends ElementFinder {
      * @return
      */
     public <A extends Annotation> Optional<A> findAnnotation(final EntityElement element, final Class<A> annotationClass) {
-        if (element.getTypeElement().getAnnotation(annotationClass) != null) {
-            return of(element.getTypeElement().getAnnotation(annotationClass));
+        if (element.getAnnotation(annotationClass) != null) {
+            return of(element.getAnnotation(annotationClass));
         }
-        return findSuperclasses(element.getTypeElement(), ROOT_ENTITY_CLASS, true).stream()
+        return findSuperclasses(element, ROOT_ENTITY_CLASS, true).stream()
                 .filter(superEl -> superEl.getAnnotation(annotationClass) != null)
                 .map(superEl -> superEl.getAnnotation(annotationClass))
                 .findFirst();
