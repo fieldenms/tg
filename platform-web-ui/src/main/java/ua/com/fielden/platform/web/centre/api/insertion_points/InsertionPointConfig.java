@@ -18,6 +18,7 @@ public class InsertionPointConfig {
 
     private final EntityActionConfig insertionPointAction;
     private boolean preferred = false;
+    private boolean noResizing = false;
     private Optional<IToolbarConfig> toolbar = empty();
 
     /**
@@ -50,6 +51,15 @@ public class InsertionPointConfig {
 
     public boolean isPreferred() {
         return preferred;
+    }
+
+    public InsertionPointConfig setNoResizing(final boolean noResizing) {
+        this.noResizing = noResizing;
+        return this;
+    }
+
+    public boolean isNoResizing() {
+        return noResizing;
     }
 
     public InsertionPointConfig setToolbar(final Optional<IToolbarConfig> toolbar) {

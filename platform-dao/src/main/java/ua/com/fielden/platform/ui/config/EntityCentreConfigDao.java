@@ -35,7 +35,7 @@ import ua.com.fielden.platform.entity_centre.exceptions.EntityCentreExecutionExc
 @EntityType(EntityCentreConfig.class)
 public class EntityCentreConfigDao extends CommonEntityDao<EntityCentreConfig> implements EntityCentreConfigCo {
 
-    private static final int SAVING_RETRIES_THRESHOULD = 3;
+    private static final int SAVING_RETRIES_THRESHOULD = 5;
 
     public static final String ERR_ALREADY_IN_TRANSACTIONAL_SCOPE = "Saving of an Entity Centre should never occur in an existing transactional scope.";
     public static final String ERR_COULD_NOT_SAVE_CONFIG = "Could not save Entity Centre [%s] after %s attempts.";
