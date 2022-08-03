@@ -5,7 +5,6 @@ import java.util.Map;
 
 import ua.com.fielden.platform.continuation.NeedMoreData;
 import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.error.Result;
@@ -27,7 +26,7 @@ public abstract class AbstractCentreConfigCommitActionDao<T extends AbstractCent
     }
     
     @Override
-    @SessionRequired
+    // @SessionRequired -- avoid transaction here; see EntityCentreConfigDao for more details
     public final T save(final T entity) {
         if (!entity.isSkipUi()) {
             // validate centre configuration action entity before performing actual edit / saveAs

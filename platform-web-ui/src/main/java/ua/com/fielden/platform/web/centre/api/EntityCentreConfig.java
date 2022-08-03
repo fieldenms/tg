@@ -82,6 +82,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     private final boolean hideToolbar;
     private final IScrollConfig scrollConfig;
     private final boolean retrieveAll;
+    private final boolean lockScrollingForInsertionPoints;
     private final int pageCapacity;
     private final int maxPageCapacity;
     private final int visibleRowsCount;
@@ -205,6 +206,12 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      * Determines whether centre should run automatically or not.
      */
     private final boolean runAutomatically;
+
+    /**
+     * Determines the position of left and right splitters.
+     */
+    private final Integer leftSplitterPosition;
+    private final Integer rightSplitterPosition;
 
     /**
      * Determines whether centre should forcibly refresh the current page upon a successful save of a related entity (regardless of the presence of that entity on the current page).
@@ -411,6 +418,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final boolean hideToolbar,
             final IScrollConfig scrollConfig,
             final boolean retrieveAll,
+            final boolean lockScrollingForInsertionPoints,
             final int pageCapacity,
             final int maxPageCapacity,
             final int visibleRowsCount,
@@ -458,6 +466,9 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final boolean runAutomatically,
             final boolean enforcePostSaveRefresh,
 
+            final Integer leftSplitterPosition,
+            final Integer rightSplitterPosition,
+
             final String sseUri,
 
             final FlexLayout selectionCriteriaLayout,
@@ -484,6 +495,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.hideToolbar = hideToolbar;
         this.scrollConfig = scrollConfig;
         this.retrieveAll = retrieveAll;
+        this.lockScrollingForInsertionPoints = lockScrollingForInsertionPoints;
         this.pageCapacity = pageCapacity;
         this.maxPageCapacity = maxPageCapacity;
         this.visibleRowsCount = visibleRowsCount;
@@ -535,6 +547,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
         this.runAutomatically = runAutomatically;
         this.enforcePostSaveRefresh = enforcePostSaveRefresh;
+        this.leftSplitterPosition = leftSplitterPosition;
+        this.rightSplitterPosition = rightSplitterPosition;
 
         this.sseUri = sseUri;
 
@@ -586,6 +600,14 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public boolean isRunAutomatically() {
         return runAutomatically;
+    }
+
+    public Optional<Integer> getLeftSplitterPosition() {
+        return ofNullable(leftSplitterPosition);
+    }
+
+    public Optional<Integer> getRightSplitterPosition() {
+        return ofNullable(rightSplitterPosition);
     }
 
     public boolean shouldEnforcePostSaveRefresh() {
@@ -934,6 +956,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public boolean shouldRetrieveAll() {
         return retrieveAll;
+    }
+
+    public boolean isLockScrollingForInsertionPoints() {
+        return lockScrollingForInsertionPoints;
     }
 
     public int getPageCapacity() {

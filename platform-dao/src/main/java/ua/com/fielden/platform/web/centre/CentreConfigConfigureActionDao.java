@@ -3,7 +3,6 @@ package ua.com.fielden.platform.web.centre;
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
-import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.error.Result;
@@ -26,7 +25,7 @@ public class CentreConfigConfigureActionDao extends CommonEntityDao<CentreConfig
     }
     
     @Override
-    @SessionRequired
+    // @SessionRequired -- avoid transaction here; see EntityCentreConfigDao for more details
     public CentreConfigConfigureAction save(final CentreConfigConfigureAction action) {
         // validate action entity before performing actual action
         action.isValid().ifFailure(Result::throwRuntime);
