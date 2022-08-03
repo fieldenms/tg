@@ -352,12 +352,12 @@ svg.leaflet-image-layer.leaflet-interactive path {
     border-radius: 5px;
     }
 .leaflet-control-layers-toggle {
-    background-image: url(resources/gis/leaflet/images/layers.png);
+    background-image: url(resources/gis/leaflet/images/layers.png); /* TG change */
     width: 36px;
     height: 36px;
     }
 .leaflet-retina .leaflet-control-layers-toggle {
-    background-image: url(resources/gis/leaflet/images/layers-2x.png);
+    background-image: url(resources/gis/leaflet/images/layers-2x.png); /* TG change */
     background-size: 26px 26px;
     }
 .leaflet-touch .leaflet-control-layers-toggle {
@@ -400,7 +400,7 @@ svg.leaflet-image-layer.leaflet-interactive path {
 
 /* Default icon URLs */
 .leaflet-default-icon-path { /* used only in path-guessing heuristic, see L.Icon.Default */
-    background-image: url(resources/gis/leaflet/images/marker-icon.png);
+    background-image: url(resources/gis/leaflet/images/marker-icon.png); /* TG change */
     }
 
 

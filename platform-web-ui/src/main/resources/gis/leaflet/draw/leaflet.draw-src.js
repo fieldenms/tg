@@ -1390,8 +1390,8 @@ L.Draw.Rectangle = L.Draw.SimpleShape.extend({
 
 		// TG change: change behaviour of finishing of rectangle drawing: if it is finished above Cancel button then do not _fireCreatedEvent
 		// TG change: L.Draw.SimpleShape.prototype._onMouseUp.call(this);
-		const x = e.clientX;
-		const y = e.clientY;
+		const x = typeof e.clientX !== 'undefined' ? e.clientX : e.changedTouches[0].clientX; // used for 'mouseup' and 'touchend' events
+		const y = typeof e.clientY !== 'undefined' ? e.clientY : e.changedTouches[0].clientY;
 		const elementFromPoint = this._elementFromPoint(document.elementFromPoint(x, y), x, y);
 		
 		if (this._shape && !(elementFromPoint && elementFromPoint.title && elementFromPoint.title === 'Cancel drawing')) { // if that element is Cancel button then avoid creation of new rectangle;

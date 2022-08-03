@@ -16,6 +16,21 @@ import { TgAppConfig } from '/app/tg-app-config.js';
 import { RunActions } from '/resources/centre/tg-selection-criteria-behavior.js';
 
 const tgGisComponentStyles = `
+    .leaflet-container {
+        /* 
+         * Was '"Helvetica Neue", Arial, Helvetica, sans-serif' in leaflet.css.js.
+         * Changed it to be exactly as in index.html.
+         */
+        font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    .leaflet-control-zoom-in,
+    .leaflet-control-zoom-out {
+        /* 
+         * Was 'bold 18px 'Lucida Console', Monaco, monospace' in leaflet.css.js.
+         * Changed it to use 'Roboto Mono' instead with previous fonts as a fallback. This ensures slightly more consistent L&F for +/- buttons.
+         */
+        font: bold 18px 'Roboto Mono', 'Lucida Console', Monaco, monospace;
+    }
     .bool-true-icon {
         --iron-icon-height: 16px;
         --iron-icon-width: 16px;

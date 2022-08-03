@@ -10026,7 +10026,12 @@
   			closeButton.href = '#close';
   			closeButton.innerHTML = '<span aria-hidden="true">&#215;</span>';
 
-  			on(closeButton, 'click', this.close, this);
+  			on(closeButton, 'click', function (ev) {
+  				// TG change: ported https://github.com/Leaflet/Leaflet/pull/8160 (Fix regression about popup close button modifying the URL) into 1.8.0;
+  				//            can, probably, be removed once migrated to 1.8.1 or later.
+				DomEvent.preventDefault(ev);
+				this.close();
+			}, this);
   		}
   	},
 
