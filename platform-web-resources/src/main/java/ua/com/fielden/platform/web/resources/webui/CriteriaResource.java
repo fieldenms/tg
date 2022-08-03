@@ -269,7 +269,7 @@ public class CriteriaResource extends AbstractWebResource {
             return createCriteriaRetrievalEnvelope(updatedFreshCentre, miType, actualSaveAsName, user, restUtil, companionFinder, critGenerator, device(), customDesc, resolvedConfigUuid, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
         }, restUtil);
     }
-    
+
     /**
      * Validates {@code configUuid} on the subject of configuration existence and general ability to share it with current {@code user}.
      */
@@ -373,7 +373,7 @@ public class CriteriaResource extends AbstractWebResource {
                     }
                     updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                     updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
-                    
+
                     makePreferred(user, miType, saveAsName, device(), companionFinder, webUiConfig); // inherited from base always gets preferred on loading; must leave it preferred after deletion
                 } else {
                     if (sharingModel.isSharedWith(configUuid, user).isSuccessful()) {
@@ -409,9 +409,9 @@ public class CriteriaResource extends AbstractWebResource {
             updateCentre(user, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             // and update both with newly generated config uuid
             final String newConfigUuid = randomUUID().toString();
-            eccCompanion.saveWithoutConflicts(freshConfigOpt.get().setConfigUuid(newConfigUuid));
+            eccCompanion.saveWithRetry(freshConfigOpt.get().setConfigUuid(newConfigUuid));
             findConfigOpt(miType, user, NAME_OF.apply(SAVED_CENTRE_NAME).apply(actualSaveAsName).apply(device()), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid"))
-                .ifPresent(savedConfig -> eccCompanion.saveWithoutConflicts(savedConfig.setConfigUuid(newConfigUuid)));
+                .ifPresent(savedConfig -> eccCompanion.saveWithRetry(savedConfig.setConfigUuid(newConfigUuid)));
             return t2(actualSaveAsName, of(newConfigUuid));
         } else {
             return t2(actualSaveAsName, of(freshConfigOpt.get().getConfigUuid()));
@@ -483,7 +483,8 @@ public class CriteriaResource extends AbstractWebResource {
                 of(appliedCriteriaEntity.centreRunAutomatically(saveAsName)), // in case if configuration is runAutomatically perform client-side auto-running (first time loading, changing browser's URI e.g by tapping Back / Forward buttons)
                 of(ofNullable(saveAsDesc)),
                 empty(),
-                of(updatedFreshCentre.getPreferredView())
+                of(updatedFreshCentre.getPreferredView()),
+                user
             )
         );
     }
@@ -516,7 +517,8 @@ public class CriteriaResource extends AbstractWebResource {
                         of(false), // even though configuration can be runAutomatically, do not perform auto-running on Discard action
                         saveAsDesc,
                         of(ofNullable(staleCriteriaMessage)),
-                        of(updatedFreshCentre.getPreferredView())
+                        of(updatedFreshCentre.getPreferredView()),
+                        user
                 )//
         );
     }
@@ -591,7 +593,7 @@ public class CriteriaResource extends AbstractWebResource {
                     removeCentres(user, miType, device(), saveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
                     final ICentreDomainTreeManagerAndEnhancer emptyFreshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                     findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(saveAsName).apply(device()), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("runAutomatically")).ifPresent(config -> {
-                        eccCompanion.saveWithoutConflicts(config.setRunAutomatically(true)); // auto-running of default configuration is in progress -- restore runAutomatically as true
+                        eccCompanion.saveWithRetry(config.setRunAutomatically(true)); // auto-running of default configuration is in progress -- restore runAutomatically as true
                     });
 
                     // restore previous non-distracting centre changes; at first apply widths and grow factors
@@ -731,7 +733,7 @@ public class CriteriaResource extends AbstractWebResource {
 
     /**
      * Calculates indices of active secondary actions for {@code entities}.
-     * 
+     *
      * @param entities
      * @return
      */
@@ -747,7 +749,7 @@ public class CriteriaResource extends AbstractWebResource {
 
     /**
      * Calculates indices of active primary action for {@code entities}.
-     * 
+     *
      * @param entities
      * @return
      */
@@ -759,7 +761,7 @@ public class CriteriaResource extends AbstractWebResource {
 
     /**
      * Calculates rendering hints for {@code entities}.
-     * 
+     *
      * @param entities
      * @return
      */

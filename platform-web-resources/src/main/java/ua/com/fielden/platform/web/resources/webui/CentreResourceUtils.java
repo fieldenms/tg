@@ -152,6 +152,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * The key for customObject's value containing the preferred view index.
      */
     static final String PREFERRED_VIEW = "preferredView";
+    /**
+     * The key for customObject's value containing the user name.
+     */
+    static final String USER_NAME = "userName";
 
     /** Private default constructor to prevent instantiation. */
     private CentreResourceUtils() {
@@ -212,7 +216,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final Optional<Boolean> autoRun,
         final Optional<Optional<String>> saveAsDesc,
         final Optional<Optional<String>> staleCriteriaMessage,
-        final Optional<Integer> preferredView
+        final Optional<Integer> preferredView,
+        final User user
     ) {
         final Map<String, Object> customObject = createCriteriaMetaValuesCustomObject(criteriaMetaValues, centreDirty);
         saveAsName.ifPresent(name -> {
@@ -233,6 +238,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         preferredView.ifPresent(prefView -> {
             customObject.put(PREFERRED_VIEW, prefView);
         });
+        customObject.put(USER_NAME, user.getKey());
         return customObject;
     }
 
@@ -375,7 +381,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     /**
      * Runs the entity centre with option {@code retrieveAll}. Returns {@link Right} with a list of entities of all matching entities and a summary, if {@code retrieveAll == true}.
      * Otherwise, returns {@link Left} with {@link IPage}, which should be most common case.
-     * 
+     *
      * @param retrieveAll
      * @param criteria
      * @return
@@ -639,7 +645,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 of(false), // even though configuration can be runAutomatically, do not perform auto-running on any action (except Load, see CentreConfigLoadActionDao)
                 of(validationPrototype.centreTitleAndDesc(customObjectSaveAsName).map(titleDesc -> titleDesc._2)),
                 empty(),
-                preferredView
+                preferredView,
+                user
             );
             customObject.put(APPLIED_CRITERIA_ENTITY_NAME, appliedCriteriaEntity);
             return customObject;
@@ -685,7 +692,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final ICentreDomainTreeManagerAndEnhancer freshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             commitCentreWithoutConflicts(user, miType, FRESH_CENTRE_NAME, empty(), device, freshCentre, null, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
             findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(empty()).apply(device), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("runAutomatically")).ifPresent(config -> {
-                eccCompanion.saveWithoutConflicts(config.setRunAutomatically(validationPrototype.centreRunAutomatically(saveAsName))); // copy runAutomatically from current configuration (saveAsName) into default configuration (empty())
+                eccCompanion.saveWithRetry(config.setRunAutomatically(validationPrototype.centreRunAutomatically(saveAsName))); // copy runAutomatically from current configuration (saveAsName) into default configuration (empty())
             });
             // when switching to default configuration we need to make it preferred
             validationPrototype.makePreferredConfig(empty()); // 'default' kind -- can be preferred; only 'link / inherited from shared' can not be preferred
@@ -789,7 +796,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                             config.setDashboardRefreshFrequency(dashboardRefreshFrequency);
                             config.setRunAutomatically(validationPrototype.centreRunAutomatically(saveAsName)); // copy runAutomatically from currently loaded centre configuration being copied
                         }
-                        eccCompanion.saveWithoutConflicts(config.setConfigUuid(newConfigUuid));
+                        eccCompanion.saveWithRetry(config.setConfigUuid(newConfigUuid));
                     }); // update with newConfigUuid
             };
             createAndOverrideUuid.apply(newDesc).accept(FRESH_CENTRE_NAME);
@@ -1155,10 +1162,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     ) {
         final EntityCentre<AbstractEntity<?>> centre = (EntityCentre<AbstractEntity<?>>) webUiConfig.getCentres().get(criteriaEntity.miType()); // get Centre DSL configuration for 'criteriaEntity'
         criteriaEntity.getGeneratedEntityController().setEntityType(criteriaEntity.getEntityClass()); // provide entity type to be able to run generated centres (with calculated properties, like totals)
-        
+
         centre.getAdditionalFetchProvider().ifPresent(fp -> criteriaEntity.setAdditionalFetchProvider(fp)); // additional fetch provider should be set if present in Centre DSL
         centre.getAdditionalFetchProviderForTooltipProperties().ifPresent(fp -> criteriaEntity.setAdditionalFetchProviderForTooltipProperties(fp)); // tooltip props fetch provider should be set if there are such properties in Centre DSL
-        
+
         createQueryEnhancerAndContext(
             webUiConfig,
             companionFinder,
@@ -1175,9 +1182,9 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             userCompanion,
             sharingModel
         ).ifPresent(qeac -> criteriaEntity.setAdditionalQueryEnhancerAndContext(qeac.getKey(), qeac.getValue())); // query enhancer and its optional context should be set if present in Centre DSL
-        
+
         // If exporting / running occurs on the centre that warrants data generation, then check if a generator was provided for an entity centre configuration.
-        
+
         // There could be cases where the generated data and the queried data would have different types.
         // For example, the queried data could be modelled by a synthesized entity that includes a subquery based on some generated data.
         // In such cases, it is not possible to enhance the final query with a user related condition automatically.
@@ -1351,10 +1358,10 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
                 }
                 calcRunAutomaticallyOpt.get().ifPresent(runAutomatically -> config.setRunAutomatically(runAutomatically));
                 changedTitle.ifPresent(ct -> config.setTitle(NAME_OF.apply(name).apply(of(ct)).apply(device))); // update title of configuration from upstream if it has changed
-                eccCompanion.saveWithoutConflicts(config.setConfigBody(upstreamConfig.getConfigBody()));
+                eccCompanion.saveWithRetry(config.setConfigBody(upstreamConfig.getConfigBody()));
             });
         final Function<String, Consumer<String>> overrideConfigTitleFor = name -> ct -> findConfigOpt(miType, user, NAME_OF.apply(name).apply(saveAsName).apply(device), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT /*contains 'title' inside fetch model*/).ifPresent(config ->
-            eccCompanion.saveWithoutConflicts(config.setTitle(NAME_OF.apply(name).apply(of(ct)).apply(device)))
+            eccCompanion.saveWithRetry(config.setTitle(NAME_OF.apply(name).apply(of(ct)).apply(device)))
         );
         final boolean notUpdateFresh = checkChanges.map(check -> check.get()).orElse(FALSE);
         // update SAVED surrogate configuration; always

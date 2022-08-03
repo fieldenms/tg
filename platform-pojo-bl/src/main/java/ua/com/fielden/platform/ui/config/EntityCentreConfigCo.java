@@ -9,24 +9,22 @@ import ua.com.fielden.platform.entity.query.DbVersion;
  * Companion object for entity {@link EntityCentreConfig}.
  * <p>
  * Please, do not use standard {@link #save(EntityCentreConfig)} / {@link #quickSave(EntityCentreConfig)} methods in client code.
- * Use {@link #saveWithoutConflicts} method instead (for graceful conflict resolution).
+ * Use {@link #saveWithRetry(EntityCentreConfig)} method instead (for graceful conflict resolution).
  * 
  * @author TG Team
  * 
  */
 public interface EntityCentreConfigCo extends IEntityDao<EntityCentreConfig> {
-    public static final String SAVE_WITHOUT_CONFLICTS = "saveWithoutConflicts";
     
     /**
-     * Saves the entity (quickly) in repeating manner until the process is successfully concluded.<br>
-     * Only conflicting errors will trigger saving again.
+     * Saves Entity Centre {@code config} with retry in case of failure.
      * <p>
-     * VERY IMPORTANT: this must be used outside of another transaction scopes.
+     * The retry mechanism is invoked only if the method call is not within a scope of another active session.
      * 
      * @param entity
      * @return
      */
-    Long saveWithoutConflicts(final EntityCentreConfig entity);
+    Long saveWithRetry(final EntityCentreConfig config);
     
     /**
      * Runs function {@code fun} with the {@link DbVersion} as the argument.
