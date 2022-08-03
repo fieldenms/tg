@@ -301,7 +301,10 @@ Polymer({
 
     _closeToast: function () {
         this.$.toast.close();
-        this.$.toast._autoCloseCallBack = null;
+        if (this.$.toast._autoCloseCallBack !== null) {
+            this.$.toast.cancelAsync(this.$.toast._autoCloseCallBack);
+            this.$.toast._autoCloseCallBack = null;
+        }
         this.$.toast.error = false;
     }
 });
