@@ -19,20 +19,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.Set;
 
-import javax.annotation.processing.AbstractProcessor;
-import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.Processor;
-import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.SourceVersion;
-import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 import javax.tools.FileObject;
-import javax.tools.ForwardingJavaFileManager;
 import javax.tools.JavaCompiler;
-import javax.tools.JavaCompiler.CompilationTask;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileManager.Location;
 import javax.tools.JavaFileObject;
@@ -47,6 +39,7 @@ import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 
 import com.google.common.io.ByteSource;
+import com.google.testing.compile.ForwardingStandardJavaFileManager;
 
 /**
  * Implementation of {@link org.junit.rules.TestRule} that compiles java sources at runtime, storing them in memory, and provides access to instances of {@link Elements} and {@link Types} for further analysis of both input java sources and those that were generated during annotation processing.
@@ -57,7 +50,7 @@ public final class CompilationRule implements TestRule {
     private static final JavaFileObject DUMMY = InMemoryJavaFileObjects.createJavaSource("Dummy", "final class Dummy {}");
 
     private Collection<? extends JavaFileObject> javaSources;
-    private Optional<Processor> processor;
+    private Processor processor;
     private Elements elements;
     private Types types;
 
@@ -69,7 +62,7 @@ public final class CompilationRule implements TestRule {
      */
     public CompilationRule(final Collection<? extends JavaFileObject> javaSources, final Processor processor) {
         this.javaSources = javaSources.isEmpty() || javaSources == null ? List.of(DUMMY) : javaSources;
-        this.processor = Optional.ofNullable(processor);
+        this.processor = processor;
     }
 
     public CompilationRule(final Collection<? extends JavaFileObject> javaSources) {
@@ -85,88 +78,24 @@ public final class CompilationRule implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                final EvaluatingProcessor evaluatingProcessor = new EvaluatingProcessor(base);
-                boolean success = compile(evaluatingProcessor);
-                if (!success) {
-                    throw new IllegalStateException("Compilation failed.");
-                }
-                System.out.println("Compilation completed successfully.");
-                evaluatingProcessor.throwIfStatementThrew();
+                final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+                final InMemoryJavaFileManager fileManager = new InMemoryJavaFileManager(compiler.getStandardFileManager(null, Locale.getDefault(), StandardCharsets.UTF_8)); 
+                final Compilation compilation = new Compilation(javaSources, processor, compiler, fileManager);
+                compilation.compileAndEvaluatef((procEnv) -> {
+                    elements = procEnv.getElementUtils();
+                    types = procEnv.getTypeUtils();
+                    base.evaluate();
+                });
             }
         };
     }
-
-    private boolean compile(final EvaluatingProcessor processor) {
-        //        System.out.println(format("Compiling %s", javaSources.stream().map(JavaFileObject::getName).collect(joining(","))));
-        final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        final InMemoryJavaFileManager fileManager = new InMemoryJavaFileManager(compiler.getStandardFileManager(null, Locale.getDefault(), StandardCharsets.UTF_8)); 
-        final CompilationTask task = compiler.getTask(
-                null, // Writer for additional output from the compiler (null => System.err)                
-                fileManager,
-                null, // diagnostic listener
-                null, // compiler options
-                null, // names of classes to be processed by annotation processing (?)
-                javaSources);
-        task.setProcessors(List.of(processor));
-        return task.call();
-    }
-
+    
     public Elements getElements() {
         return elements;
     }
-
+    
     public Types getTypes() {
         return types;
-    }
-
-    private final class EvaluatingProcessor extends AbstractProcessor {
-
-        final Statement base;
-        Throwable thrown;
-
-        EvaluatingProcessor(Statement base) {
-            this.base = base;
-        }
-
-        @Override
-        public SourceVersion getSupportedSourceVersion() {
-            return SourceVersion.latest();
-        }
-
-        @Override
-        public Set<String> getSupportedAnnotationTypes() {
-            return Set.of("*");
-        }
-
-        @Override
-        public synchronized void init(ProcessingEnvironment processingEnv) {
-            super.init(processingEnv);
-            processor.ifPresent(p -> p.init(processingEnv));
-            elements = processingEnv.getElementUtils();
-            types = processingEnv.getTypeUtils();
-        }
-
-        @Override
-        public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-            processor.ifPresent(p -> p.process(annotations, roundEnv));
-            if (roundEnv.processingOver()) {
-                try {
-                    base.evaluate();
-                } catch (Throwable e) {
-                    thrown = e;
-                }
-            }
-            return false;
-        }
-
-        /** 
-         * Throws what {@code base} {@link Statement} threw, if anything. 
-         */
-        void throwIfStatementThrew() throws Throwable {
-            if (thrown != null) {
-                throw thrown;
-            }
-        }
     }
 
     /**
@@ -176,7 +105,7 @@ public final class CompilationRule implements TestRule {
      * 
      * @author TG Team
      */
-    private static final class InMemoryJavaFileManager extends ForwardingJavaFileManager<StandardJavaFileManager> {
+    private static final class InMemoryJavaFileManager extends ForwardingStandardJavaFileManager {
         private final Map<URI, JavaFileObject> generatedJavaSources = new HashMap<>();
 
         InMemoryJavaFileManager(StandardJavaFileManager fileManager) {
@@ -213,7 +142,7 @@ public final class CompilationRule implements TestRule {
      * 
      * @author TG Team
      */
-    private static final class InMemoryJavaFileObject extends SimpleJavaFileObject {
+    public static final class InMemoryJavaFileObject extends SimpleJavaFileObject {
         private long lastModified = 0L;
         private Optional<ByteSource> data = Optional.empty();
 
@@ -301,7 +230,7 @@ public final class CompilationRule implements TestRule {
      * 
      * @author TG Team
      */
-    private static final class InMemoryJavaFileObjects {
+    public static final class InMemoryJavaFileObjects {
 
         private static URI uriForJavaFileObject(final Location location, final String className, final Kind kind) {
             return URI.create(format("memory:///%s/%s", location.getName(), className.replace('.', '/') + kind.extension));
