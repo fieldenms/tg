@@ -17,10 +17,12 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
+import ua.com.fielden.platform.annotations.metamodel.ForType;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
@@ -304,13 +306,22 @@ public class EntityFinder extends ElementFinder {
         return format("%s.%s", entityPackageName, entitySimpleName);
     }
     
+    /**
+     * Finds the entity on which a given meta-model is based by looking at its {@link ForType} annotation.
+     * @param mme
+     * @return
+     */
     public EntityElement findEntityForMetaModel(final MetaModelElement mme) {
-        final String entityQualName = getEntityQualifiedName(mme.getQualifiedName().toString());
-        if (entityQualName == null) {
-            return null;
+        // in this case the annotation value containts a Class object
+        // the information to load or locate a class is not available, since we are in the realm of source code
+        // therefore MirroredTypeException should be caught, which provides TypeMirror of that Class object
+        try {
+            mme.getAnnotation(ForType.class).value();
+        } catch (MirroredTypeException e) {
+            final TypeMirror entityTypeMiror = e.getTypeMirror();
+            return newEntityElement(toTypeElement(entityTypeMiror));
         }
-        final TypeElement typeElement = elements.getTypeElement(entityQualName);
-        return typeElement == null ? null : newEntityElement(typeElement);
+        return null;
     }
 
     public boolean hasPropertyOfType(final EntityElement entityElement, final TypeMirror type, final Types typeUtils) {
