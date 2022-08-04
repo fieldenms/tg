@@ -278,18 +278,6 @@ public class MetaModelProcessor extends AbstractProcessor {
             messager.printMessage(Kind.WARNING, ex.getMessage());
             return false;
         }
-        
-        // Also regenerate the aliased meta-model type
-        final TypeElement metaModelAliased = metaModelFinder.findMetaModelAliased(mme);
-        final TypeSpec emptyMetaModelAliased = TypeSpec.interfaceBuilder(metaModelAliased.getSimpleName().toString()).build();
-        try {
-            JavaFile.builder(mme.getPackageName(), emptyMetaModelAliased)
-                .indent(INDENT).build()
-                .writeTo(filer);
-        } catch (final IOException ex) {
-            messager.printMessage(Kind.WARNING, ex.getMessage());
-            return false;
-        }
 
         messager.printMessage(Kind.NOTE, format("Generated empty meta-model %s.", mme.getSimpleName().toString()));
         return true;
@@ -746,8 +734,8 @@ public class MetaModelProcessor extends AbstractProcessor {
             messager.printMessage(Kind.NOTE, format("New/Updated meta-model, generating field: %s", fieldName));
             fieldSpecs.add(specFieldForMetaModel(mmc.getMetaModelClassName(), fieldName));
             
-            final String methodName = fieldName;
-            methodSpecs.add(aliasMethodForMetaModel(mmc.getMetaModelAliasedClassName(), methodName));
+            messager.printMessage(Kind.NOTE, format("New/Updated aliased meta-model, generating method: %s", fieldName));
+            methodSpecs.add(aliasMethodForMetaModel(mmc.getMetaModelAliasedClassName(), fieldName));
         }
 
         // if MetaModels class exists, then collect its members for the active *unchanged* meta-models 
@@ -766,16 +754,17 @@ public class MetaModelProcessor extends AbstractProcessor {
             
             for (final MetaModelElement mme: activeUnchangedMetaModels) {
                 final EntityElement entity = entityFinder.findEntityForMetaModel(mme);
-                // add a field for a meta-model
                 final String fieldName = nameFieldForMetaModel(entity.getSimpleName().toString());
-                messager.printMessage(Kind.NOTE, format("Old meta-model, generating field: %s", fieldName));
-                fieldSpecs.add(specFieldForMetaModel(mme.getMetaModelClassName(), fieldName));
-                // add a method for the aliased meta-model type
-                final TypeElement aliased = metaModelFinder.findMetaModelAliased(mme);
-                final ClassName aliasedClassName = ClassName.get(elementUtils.getPackageOf(aliased).getQualifiedName().toString(),
-                        aliased.getSimpleName().toString());
-                final String methodName = fieldName;
-                methodSpecs.add(aliasMethodForMetaModel(aliasedClassName, methodName));
+                // add a method for an aliased meta-model
+                if (metaModelFinder.isMetaModelAliased(mme)) {
+                    messager.printMessage(Kind.NOTE, format("Old aliased meta-model, generating method: %s", fieldName));
+                    methodSpecs.add(aliasMethodForMetaModel(mme.getMetaModelClassName(), fieldName));
+                }
+                // add a field for a regular meta-model
+                else {
+                    messager.printMessage(Kind.NOTE, format("Old meta-model, generating field: %s", fieldName));
+                    fieldSpecs.add(specFieldForMetaModel(mme.getMetaModelClassName(), fieldName));
+                }
             }
         }
 

@@ -1,16 +1,20 @@
 package ua.com.fielden.platform.processors.metamodel.utils;
 
 import static java.util.stream.Collectors.toCollection;
+import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.METAMODELS_CLASS_QUAL_NAME;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.METAMODEL_SUPERCLASS;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_ALIASED_NAME_SUFFIX;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_NAME_SUFFIX;
 
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
@@ -26,6 +30,7 @@ import org.apache.commons.lang3.StringUtils;
 import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
+import ua.com.fielden.platform.processors.metamodel.elements.MetaModelsElement;
 import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
 
@@ -137,7 +142,8 @@ public class MetaModelFinder extends ElementFinder {
     }
     
     public boolean isSameMetaModel(final MetaModelConcept mmc, final MetaModelElement mme) {
-        return mmc.getQualifiedName().equals(mme.getQualifiedName());
+        return mmc.getQualifiedName().equals(mme.getQualifiedName().toString()) ||
+                mmc.getAliasedQualifiedName().equals(mme.getQualifiedName().toString());
     }
     
     /**
@@ -158,29 +164,46 @@ public class MetaModelFinder extends ElementFinder {
      * @param elements
      * @return
      */
-    public TypeElement findMetaModelAliased(final MetaModelElement mme) {
+    public Optional<MetaModelElement> findMetaModelAliased(final MetaModelElement mme) {
         // aliasedMetaModelName = metaModelName - META_MODEL_NAME_SUFFIX + META_MODEL_ALIASED_NAME_SUFFIX
         final String entitySimpleName = StringUtils.substringBeforeLast(mme.getSimpleName().toString(), META_MODEL_NAME_SUFFIX);
         final String qualName = String.format("%s.%s%s", mme.getPackageName(), entitySimpleName, META_MODEL_ALIASED_NAME_SUFFIX);
-        return elements.getTypeElement(qualName);
+        return Optional.ofNullable(elements.getTypeElement(qualName)).map(this::newMetaModelElement);
     }
 
     /**
-     * Identifies and collects all declared class-typed fields in the MetaModels element, which represent meta-models (i.e., extend {@link EntityMetaModel}).  
+     * Identifies and collects all declared members in the MetaModels element, which represent meta-models (i.e., extend {@link EntityMetaModel}).  
      *
      * @param typeElement
      * @param elementUtils
      * @return
      */
     public Set<MetaModelElement> findMetaModels(final TypeElement typeElement) {
-        return findDeclaredFields(typeElement, field -> field.asType().getKind() == TypeKind.DECLARED).stream()
-                .map(field -> (TypeElement) ((DeclaredType) field.asType()).asElement())
-                .filter(te -> doesExtend(te, EntityMetaModel.class))
-                .map(te -> newMetaModelElement(te))
-                .collect(Collectors.toCollection(LinkedHashSet::new));
+        final Set<MetaModelElement> metaModels = new HashSet<>();
+        // find regular meta-models that are declared as fields
+        findDeclaredFields(typeElement).stream()
+                .filter(field -> isSubtype(field.asType(), EntityMetaModel.class))
+                .map(field -> newMetaModelElement(toTypeElement(field.asType())))
+                .forEach(mme -> metaModels.add(mme));
+        // find aliased meta-models that are declared as methods
+        findDeclaredMethods(typeElement).stream()
+                .filter(method -> isSubtype(method.getReturnType(), EntityMetaModel.class))
+                .map(method -> newMetaModelElement(toTypeElement(method.getReturnType())))
+                .forEach(mme -> metaModels.add(mme));
+        
+        return Collections.unmodifiableSet(metaModels);
     }
     
     public MetaModelElement newMetaModelElement(final TypeElement typeElement) {
         return new MetaModelElement(typeElement, getPackageName(typeElement));
+    }
+    
+    public boolean isActive(final MetaModelElement mme) {
+        return mme.getKind() == ElementKind.CLASS;
+    }
+    
+    public Optional<MetaModelsElement> findMetaModelsElement() {
+        return Optional.ofNullable(elements.getTypeElement(METAMODELS_CLASS_QUAL_NAME))
+                .map(te -> new MetaModelsElement(te, findMetaModels(te)));
     }
 }
