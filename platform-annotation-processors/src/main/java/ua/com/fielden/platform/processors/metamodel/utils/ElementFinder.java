@@ -20,6 +20,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
@@ -28,6 +29,8 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
+import javassist.compiler.ast.Symbol;
+import ua.com.fielden.platform.processors.metamodel.elements.ForwardingElement;
 import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderException;
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelException;
 
@@ -530,9 +533,34 @@ public class ElementFinder {
         return element.getEnclosingElement().getKind() == ElementKind.PACKAGE;
     }
     
-    public String getPackageName(final TypeElement typeElement) {
-        return Optional.ofNullable(elements.getPackageOf(typeElement))
+    /**
+     * Wraps {@link Elements#getPackageOf} in order to avoid ClassCastException, since Sun's internal implementation of {@link Elements} expects a {@link Symbol} instance.
+     * <p>
+     * In order to enable support for {@link ForwardingElement} we have to dynamically check the type of <code>element</code>.
+     * 
+     * @param element
+     * @return
+     */
+    public PackageElement getPackageOf(final Element element) {
+        if (ForwardingElement.class.isAssignableFrom(element.getClass())) {
+            return elements.getPackageOf(((ForwardingElement<Element>) element).element());
+        }
+        return elements.getPackageOf(element);
+    }
+    
+    public String getPackageName(final Element element) {
+        return Optional.ofNullable(getPackageOf(element))
                 .map(pkgEl -> pkgEl.getQualifiedName().toString())
                 .orElse(null);
     }
+
+    /**
+     * Converts {@link TypeMirror} to {@link TypeElement}.
+     * @param typeMirror
+     * @return a {@link TypeElement} if conversion was successful, otherwise null
+     */
+    public TypeElement toTypeElement(final TypeMirror typeMirror) {
+        return typeMirror.getKind() == TypeKind.DECLARED ? (TypeElement) ((DeclaredType) typeMirror).asElement() : null;
+    }
+
 }

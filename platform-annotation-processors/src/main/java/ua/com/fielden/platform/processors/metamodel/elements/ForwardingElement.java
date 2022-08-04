@@ -20,7 +20,7 @@ import ua.com.fielden.platform.processors.metamodel.exceptions.ForwardingElement
  *
  * @param <E> the implementation of {@link Element} to forward calls to
  */
-class ForwardingElement<E extends Element> implements Element {
+public class ForwardingElement<E extends Element> implements Element {
     protected final E element;
     
     /**
@@ -32,6 +32,10 @@ class ForwardingElement<E extends Element> implements Element {
             throw new ForwardingElementException("Constructor received null as an argument.");
         }
         this.element = element;
+    }
+    
+    public E element() {
+        return element;
     }
     
     @Override
