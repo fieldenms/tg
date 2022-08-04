@@ -8,6 +8,7 @@ import '/resources/polymer/@polymer/paper-tabs/paper-tab.js';
 import '/resources/polymer/@polymer/paper-styles/element-styles/paper-material-styles.js';
 
 import '/resources/components/tg-confirmation-dialog.js';
+import '/resources/components/tg-delayed-action-toast.js';
 import '/resources/centre/tg-selection-view.js';
 import '/resources/centre/tg-centre-result-view.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
@@ -183,7 +184,8 @@ const template = html`
             <div id="fantomSplitter" class="fantom-splitter"></div>
         </tg-centre-result-view>
         <slot id="alternativeViewSlot" name="alternative-view-insertion-point"></slot>
-    </iron-pages>`;
+    </iron-pages>
+    <tg-delayed-action-toast></tg-delayed-action-toast>`;
 
 Polymer({
     _template: template,
