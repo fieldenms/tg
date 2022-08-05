@@ -8,12 +8,14 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
+import ua.com.fielden.platform.web.centre.api.IEcbCompletion;
+import ua.com.fielden.platform.web.centre.api.IWithRightSplitterPosition;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.exceptions.CentreConfigException;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
-import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointPreferred;
+import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointConfig0;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
 import ua.com.fielden.platform.web.centre.api.resultset.IAlsoSecondaryAction;
@@ -95,7 +97,7 @@ public class ResultSetDynamicPropertyBuilder<T extends AbstractEntity<?>> implem
     }
 
     @Override
-    public IInsertionPointPreferred<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
+    public IInsertionPointConfig0<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
         return builder.addInsertionPoint(actionConfig, whereToInsertView);
     }
 
@@ -127,6 +129,16 @@ public class ResultSetDynamicPropertyBuilder<T extends AbstractEntity<?>> implem
 
         resultSetProp.setPropAction(actionConfigSupplier);
         return this;
+    }
+
+    @Override
+    public IWithRightSplitterPosition<T> withLeftSplitterPosition(final int percentage) {
+        return builder.withLeftSplitterPosition(percentage);
+    }
+
+    @Override
+    public IEcbCompletion<T> withRightSplitterPosition(final int percentage) {
+        return builder.withRightSplitterPosition(percentage);
     }
 
 }

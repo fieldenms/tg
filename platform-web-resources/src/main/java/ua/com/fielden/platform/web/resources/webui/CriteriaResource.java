@@ -268,7 +268,7 @@ public class CriteriaResource extends AbstractWebResource {
             return createCriteriaRetrievalEnvelope(updatedFreshCentre, miType, actualSaveAsName, user, restUtil, companionFinder, critGenerator, device(), customDesc, resolvedConfigUuid, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
         }, restUtil);
     }
-    
+
     /**
      * Validates {@code configUuid} on the subject of configuration existence and general ability to share it with current {@code user}.
      */
@@ -372,7 +372,7 @@ public class CriteriaResource extends AbstractWebResource {
                     }
                     updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                     updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
-                    
+
                     makePreferred(user, miType, saveAsName, device(), companionFinder, webUiConfig); // inherited from base always gets preferred on loading; must leave it preferred after deletion
                 } else {
                     if (sharingModel.isSharedWith(configUuid, user).isSuccessful()) {
@@ -482,7 +482,8 @@ public class CriteriaResource extends AbstractWebResource {
                 of(appliedCriteriaEntity.centreRunAutomatically(saveAsName)), // in case if configuration is runAutomatically perform client-side auto-running (first time loading, changing browser's URI e.g by tapping Back / Forward buttons)
                 of(ofNullable(saveAsDesc)),
                 empty(),
-                of(updatedFreshCentre.getPreferredView())
+                of(updatedFreshCentre.getPreferredView()),
+                user
             )
         );
     }
@@ -515,7 +516,8 @@ public class CriteriaResource extends AbstractWebResource {
                         of(false), // even though configuration can be runAutomatically, do not perform auto-running on Discard action
                         saveAsDesc,
                         of(ofNullable(staleCriteriaMessage)),
-                        of(updatedFreshCentre.getPreferredView())
+                        of(updatedFreshCentre.getPreferredView()),
+                        user
                 )//
         );
     }
@@ -730,7 +732,7 @@ public class CriteriaResource extends AbstractWebResource {
 
     /**
      * Calculates indices of active secondary actions for {@code entities}.
-     * 
+     *
      * @param entities
      * @return
      */
@@ -746,7 +748,7 @@ public class CriteriaResource extends AbstractWebResource {
 
     /**
      * Calculates indices of active primary action for {@code entities}.
-     * 
+     *
      * @param entities
      * @return
      */
@@ -758,7 +760,7 @@ public class CriteriaResource extends AbstractWebResource {
 
     /**
      * Calculates rendering hints for {@code entities}.
-     * 
+     *
      * @param entities
      * @return
      */

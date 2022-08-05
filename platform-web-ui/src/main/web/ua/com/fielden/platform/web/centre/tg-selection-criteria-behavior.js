@@ -56,6 +56,14 @@ const TgSelectionCriteriaBehaviorImpl = {
         },
 
         /**
+         * The user name that opened this centre it comes with centre configuration.
+         */
+        userName: {
+            type: String,
+            notify: true
+        },
+
+        /**
          * The 'saveAs' name, which identifies this centre; or empty string if the centre represents unnamed configuration.
          * This parameter could be changed during centre's lifecycle in case where user loads different centre or copies currently loaded centre.
          */
@@ -432,6 +440,7 @@ const TgSelectionCriteriaBehaviorImpl = {
         if (typeof customObject.preferredView !== 'undefined') {
             this.preferredView = customObject.preferredView;
         }
+        this.userName = customObject.userName;
     },
 
     _configUuidChanged: function (newConfigUuid, oldConfigUuid) {
