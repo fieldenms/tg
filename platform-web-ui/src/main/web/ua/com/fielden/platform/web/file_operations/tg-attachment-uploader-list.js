@@ -55,6 +55,13 @@ const template = html`
             color: var(--paper-grey-400);
         }
 
+        .dropHereContainer {
+            color: var(--paper-grey-400);
+            border-style: dashed none;
+            margin-left: 4px;
+            margin-right: 4px;
+        }
+
         .with-shadow {
             box-shadow: 0px -3px 6px -2px rgba(0, 0, 0, 0.7);
             z-index: 1;
@@ -72,8 +79,8 @@ const template = html`
                 process-uploading-stopped="[[_perUploaderListenerOnUploadingStopped]]"></tg-attachment-uploader>
         </template>
     </div>
-    <div id="openDialogOrDrop" on-tap="_openFileDialog">
-        <span id="dropAreaTitle" class="dropHere">Click here to select files or Drop files for upload...</span>
+    <div id="openDialogOrDrop" class="dropHereContainer" on-tap="_openFileDialog">
+        <span id="dropAreaTitle" class="dropHere">Tap here to select files or Drop files for upload...</span>
     </div>
 `;
 

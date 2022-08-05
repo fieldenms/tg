@@ -118,9 +118,10 @@ const TgFileProcessingBehaviorImpl = {
         // wait 1 second before the next try for SSE error reconnection
         this.errorReconnectionDelay = 1000;
 
-        // let's create a dummy file input element to be used for opening a file dialog
-        this._uploadInput = document.createElement('input');
-        this._uploadInput.type = 'file';
+        // let's create an invisible file input element to be used for opening a file dialog
+        this._uploadInput = document.createElement("input");
+        this._uploadInput.type = "file";
+        this._uploadInput.capture="environment"; // this is to indicate a preference for the outward-facing camera on mobile devices
         this._uploadInput.onchange = function () {
             this._handleFiles(this._uploadInput.files);
         }.bind(this);

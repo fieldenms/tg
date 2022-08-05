@@ -68,8 +68,8 @@ const template = html`
             <slot name="criterion-editors" id="components"></slot>
             <slot name="date-mnemonic"></slot>
             <div id ="or_null_layer" class="fit mnemonic-layer or-null" hidden$="[[!_orNullVisible(mnemonicsVisible, excludeMissing, _orNull)]]"></div>
-            <div id ="not_layer" class="fit mnemonic-layer not" hidden$="[[!_notVisible(mnemonicsVisible, _not)]]"></div>
-            <div id ="crossed_layer" class="fit mnemonic-layer crossed" hidden$="[[!_notVisible(mnemonicsVisible, _not)]]"></div>
+            <div id ="not_layer" class="fit mnemonic-layer not" hidden$="[[!_notVisible(mnemonicsVisible, excludeNot, _not)]]"></div>
+            <div id ="crossed_layer" class="fit mnemonic-layer crossed" hidden$="[[!_notVisible(mnemonicsVisible, excludeNot, _not)]]"></div>
         </div>
         <paper-icon-button id="iconButton" on-tap="_showMetaValuesEditor" icon="more-horiz" tooltip-text="Show additional criteria constraints"></paper-icon-button>
     </div>
@@ -112,6 +112,14 @@ Polymer({
         },
 
         /**
+         * Indicates whether to exclude 'Not' mnemonic.
+         */
+        excludeNot: {
+            type: Boolean,
+            value: false
+        },
+
+        /**
          * Indicates whether to exclude missing value mnemonic. 
          */
         excludeMissing: {
@@ -124,8 +132,8 @@ Polymer({
     attached: function () {
         // we need to use this trick to enforce invisibility after component has been attached... simple attribute binding does not work
         this.$.or_null_layer.hidden = !this._orNullVisible(this.mnemonicsVisible, this.excludeMissing, this._orNull);
-        this.$.not_layer.hidden = !this._notVisible(this.mnemonicsVisible, this._not);
-        this.$.crossed_layer.hidden = !this._notVisible(this.mnemonicsVisible, this._not);
+        this.$.not_layer.hidden = !this._notVisible(this.mnemonicsVisible, this.excludeNot, this._not);
+        this.$.crossed_layer.hidden = !this._notVisible(this.mnemonicsVisible, this.excludeNot, this._not);
     },
 
     /**
@@ -138,7 +146,7 @@ Polymer({
     /**
      * Returns 'true' if 'not' meta value exists and date layer should be present, 'false' otherwise.
      */
-    _notVisible: function (mnemonicsVisible, _not) {
-        return mnemonicsVisible && _not === true;
+    _notVisible: function (mnemonicsVisible, excludeNot, _not) {
+        return mnemonicsVisible && !excludeNot && _not === true;
     }
 });

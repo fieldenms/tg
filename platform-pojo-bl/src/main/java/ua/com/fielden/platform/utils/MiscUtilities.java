@@ -105,9 +105,8 @@ public class MiscUtilities {
         if ("*".equals(autocompleterExp.trim())) {
             return null;
         }
-        return autocompleterExp.replaceAll("\\*", "%").trim();
+        return autocompleterExp.replace("*", "%").trim();
     }
-
 
     /**
      * Converts the content of the input stream into a string.
