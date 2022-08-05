@@ -158,8 +158,9 @@ public class VulcanizingUtility {
                 "/resources/manifest.webmanifest",
                 "/resources/icons/tg-icon192x192.png",
                 "/resources/icons/tg-icon144x144.png",
-                // Other page trees (logout.html, login.html, login-initiate-reset.html, login-initiated-reset.html). Please note that login.html can not go through service worker caching due to the need to redirect to index.html when authenticator appears.
-                "/app/logout.html",
+                // Other page trees (logout.html, login.html, login-initiate-reset.html, login-initiated-reset.html).
+                // Please note that login.html cannot go through service worker caching due to the need to redirect to index.html when authenticator appears.
+                // And logout.html cannot go through service worker to support request redirection during Single Log-Out lifecycle.
                 "/resources/zxcvbn/zxcvbn.js",
                 "/resources/login-startup-resources-vulcanized.js",
                 "/resources/icons/tg-icon.png",
@@ -326,7 +327,6 @@ public class VulcanizingUtility {
     private static void downloadGeneratedResources(final IWebUiConfig webUiConfig, final IWebResourceLoader webResourceLoader) {
         LOGGER.info("\tDownloading generated resources...");
         downloadSource("app", "tg-app-index.html", webResourceLoader); // used for checksum generation
-        downloadSource("app", "logout.html", webResourceLoader); // used for checksum generation
         downloadSource("app", "login-initiate-reset.html", webResourceLoader); // used for checksum generation
         downloadSource("app", "tg-reflector.js", webResourceLoader);
         for (final Class<? extends AbstractEntity<?>> masterType : webUiConfig.getMasters().keySet()) {
