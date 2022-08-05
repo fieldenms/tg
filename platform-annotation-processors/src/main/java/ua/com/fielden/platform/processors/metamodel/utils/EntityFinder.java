@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.processors.metamodel.utils;
 
-import static java.lang.String.format;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toCollection;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION;
@@ -17,7 +16,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.MirroredTypeException;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -29,7 +28,6 @@ import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.processors.metamodel.MetaModelConstants;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
@@ -278,50 +276,14 @@ public class EntityFinder extends ElementFinder {
                 .findFirst();
     }
 
-    private static String getEntitySimpleName(final String metaModelSimpleName) {
-        final int index = metaModelSimpleName.lastIndexOf(MetaModelConstants.META_MODEL_NAME_SUFFIX);
-        return index == -1 ? null : metaModelSimpleName.substring(0, index);
-    }
-
-    private static String getEntityPackageName(final String metaModelPackageName) {
-        final int index = metaModelPackageName.lastIndexOf(MetaModelConstants.META_MODEL_PKG_NAME_SUFFIX);
-        return index == -1 ? null : metaModelPackageName.substring(0, index);
-    }
-
-    private static String getEntityQualifiedName(final String metaModelQualName) {
-        final int lastDot = metaModelQualName.lastIndexOf('.');
-        final String metaModelSimpleName = metaModelQualName.substring(lastDot + 1);
-        final String metaModelPackageName = metaModelQualName.substring(0, lastDot);
-
-        final String entitySimpleName = getEntitySimpleName(metaModelSimpleName);
-        if (entitySimpleName == null) {
-            return null;
-        }
-
-        final String entityPackageName = getEntityPackageName(metaModelPackageName);
-        if (entityPackageName == null) {
-            return null;
-        }
-
-        return format("%s.%s", entityPackageName, entitySimpleName);
-    }
-    
     /**
      * Finds the entity on which a given meta-model is based by looking at its {@link ForType} annotation.
      * @param mme
      * @return
      */
     public EntityElement findEntityForMetaModel(final MetaModelElement mme) {
-        // in this case the annotation value containts a Class object
-        // the information to load or locate a class is not available, since we are in the realm of source code
-        // therefore MirroredTypeException should be caught, which provides TypeMirror of that Class object
-        try {
-            mme.getAnnotation(ForType.class).value();
-        } catch (MirroredTypeException e) {
-            final TypeMirror entityTypeMiror = e.getTypeMirror();
-            return newEntityElement(toTypeElement(entityTypeMiror));
-        }
-        return null;
+        final TypeMirror entityType = mme.getEntityType();
+        return entityType == null || entityType.getKind() == TypeKind.ERROR ? null : newEntityElement(toTypeElement(entityType));
     }
 
     public boolean hasPropertyOfType(final EntityElement entityElement, final TypeMirror type, final Types typeUtils) {
