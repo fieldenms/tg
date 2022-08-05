@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.processors.metamodel.utils;
 
+import static java.lang.String.format;
 import static java.util.stream.Collectors.toCollection;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.METAMODELS_CLASS_QUAL_NAME;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.METAMODEL_SUPERCLASS;
@@ -27,6 +28,7 @@ import javax.lang.model.util.Types;
 
 import org.apache.commons.lang3.StringUtils;
 
+import ua.com.fielden.platform.processors.metamodel.MetaModelConstants;
 import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
@@ -206,4 +208,41 @@ public class MetaModelFinder extends ElementFinder {
         return Optional.ofNullable(elements.getTypeElement(METAMODELS_CLASS_QUAL_NAME))
                 .map(te -> new MetaModelsElement(te, findMetaModels(te)));
     }
+
+    public String resolveMetaModelPkgName(final String entityPkgName) {
+        return entityPkgName + MetaModelConstants.META_MODEL_PKG_NAME_SUFFIX;
+    }
+    
+    public String resolveMetaModelSimpleName(final String entitySimpleName) {
+        return entitySimpleName + MetaModelConstants.META_MODEL_NAME_SUFFIX;
+    }
+
+    public String resolveAliasedMetaModelSimpleName(final String entitySimpleName) {
+        return entitySimpleName + MetaModelConstants.META_MODEL_ALIASED_NAME_SUFFIX;
+    }
+
+    /**
+     * Resolves the FQN of a meta-model from the FQN of its underlying entity.
+     * <p>
+     * FQN - fully-qualified name
+     * @param entityPkgName
+     * @param entitySimpleName
+     * @return FQN of this entity's meta-model
+     */
+    public String resolveMetaModelName(final String entityPkgName, final String entitySimpleName) {
+        return format("%s.%s", resolveMetaModelPkgName(entityPkgName), resolveMetaModelSimpleName(entitySimpleName));
+    }
+
+    /**
+     * Resolves the FQN of an aliased meta-model from the FQN of its underlying entity.
+     * <p>
+     * FQN - fully-qualified name
+     * @param entityPkgName
+     * @param entitySimpleName
+     * @return FQN of this entity's aliased meta-model
+     */
+    public String resolveAliasedMetaModelName(final String entityPkgName, final String entitySimpleName) {
+        return format("%s.%s", resolveMetaModelPkgName(entityPkgName), resolveAliasedMetaModelSimpleName(entitySimpleName));
+    }
+
 }
