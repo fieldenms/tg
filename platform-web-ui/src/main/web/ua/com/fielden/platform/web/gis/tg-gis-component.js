@@ -16,9 +16,43 @@ import { TgAppConfig } from '/app/tg-app-config.js';
 import { RunActions } from '/resources/centre/tg-selection-criteria-behavior.js';
 
 const tgGisComponentStyles = `
+    .leaflet-container {
+        /* 
+         * Was '"Helvetica Neue", Arial, Helvetica, sans-serif' in leaflet.css.js.
+         * Changed it to be exactly as in index.html.
+         */
+        font-family: 'Roboto', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    }
+    .leaflet-control-zoom-in,
+    .leaflet-control-zoom-out {
+        /* 
+         * Was 'bold 18px 'Lucida Console', Monaco, monospace' in leaflet.css.js.
+         * Changed it to use 'Roboto Mono' instead with previous fonts as a fallback. This ensures slightly more consistent L&F for +/- buttons.
+         */
+        font: bold 18px 'Roboto Mono', 'Lucida Console', Monaco, monospace;
+    }
     .bool-true-icon {
         --iron-icon-height: 16px;
         --iron-icon-width: 16px;
+    }
+    .popup-button {
+        background: none!important;
+        border: none;
+        padding: 0!important;
+        color: #069;
+        text-decoration: underline;
+        cursor: pointer;
+    }
+`;
+export const tgGisRectangleSelectActionStyles = `
+    .leaflet-draw-actions li:last-child a { /* make Leaflet Draw Cancel button equally rounded in all four corners */
+        -webkit-border-radius: 4px;
+        border-radius: 4px;
+    }
+`;
+export const tgGisEditLocateActionStyles = `
+    .leaflet-container.crosshair-cursor-enabled {
+        cursor: crosshair;
     }
 `;
 const tgGisComponentStylesName = 'tg-gis-component-styles';
@@ -282,6 +316,23 @@ export const GisComponent = function (mapDiv, progressDiv, progressBarDiv, tgMap
     self.initialise();
 
     self._map.fire('dataload');
+
+    // observe visibility of map...
+    const observer = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+            if (entry.intersectionRatio > 0) {
+                // ... and initiate zoom event when made visible; this is to update permanent tooltip positions
+                this.initiateZoomEventAsync();
+                // also, map size was probably changed when map was invisible;
+                // need to invalidate its size to update tiles properly;
+                // this method does nothing if the size was not altered
+                this._map.invalidateSize(true /* use animating pan */);
+            }
+        });
+    }, {
+        root: document.documentElement
+    });
+    observer.observe(tgMap);
 };
 
 GisComponent.prototype.featureType = _featureType;
@@ -363,6 +414,20 @@ GisComponent.prototype.createEntityStyling = function () {
     return new EntityStyling();
 };
 
+/**
+ * Initiates non-distracting zoom event that triggers updating of markers and their descendant tooltips / popups.
+ */
+GisComponent.prototype.initiateZoomEventAsync = function () {
+    const self = this;
+    setTimeout(function () {
+        self._map.fire('zoomanim', { // trick map with zoom event to properly update marker cluster tooltip positions; in some cases they get shifted to the left, particularly in cases where application gets reloaded and only marker clusters (not simple markers) are present on the map
+            center: self._map.getCenter(),
+            zoom: self._map.getZoom(),
+            noUpdate: false
+        });
+    }, 100);
+};
+
 GisComponent.prototype.initReload = function () {
     console.debug("initReload");
     this._map.fire('dataloading');
@@ -371,6 +436,7 @@ GisComponent.prototype.initReload = function () {
 GisComponent.prototype.finishReload = function () {
     console.debug("finishReload");
     this._map.fire('dataload');
+    this.initiateZoomEventAsync(); // ensures good tooltip positions
 };
 
 GisComponent.prototype.clearAll = function () {
@@ -681,4 +747,84 @@ GisComponent.prototype.valueToString = function (value) {
         throw "unknown value:" + (typeof value);
     }
     return value;
+}
+
+/**
+ * Utility method that initiates 'Show Labels' action button marked with 'toggle-button' CSS class.
+ */
+GisComponent.prototype.initiateShowLabelsAction = function (tgMap, getParentAnd) {
+    // find parent insertion point
+    const insertionPoint = getParentAnd(tgMap, parent => parent.matches('tg-entity-centre-insertion-point'));
+    // find button for show/hide labels action;
+    const showLabelsButton = insertionPoint.querySelector('.toggle-button');
+    // and provide action implementation
+    showLabelsButton.addEventListener('change', event => {
+        const target = event.target || event.srcElement;
+        this._map.getPane('tooltipPane').hidden = !target.active; // shows / hides tooltip pane; this does not require processing of any particular marker or marker cluster
+        this.initiateZoomEventAsync(); // trick map with zoom event to properly update tooltip positions; in some cases they get shifted to the right, particularly after hiding labels + zooming + showing them again
+    });
+}
+
+/**
+ * Utility method that initiates 'Rectangle Select' action button marked with 'rectangle-button' CSS class.
+ *
+ * @param miTypeSimpleName -- simple name of miType for parent centre
+ * @param editorPropPrefix -- prefix for 'latitude_from/to' and 'longitude_from/to' editors in selection criteria;
+ *                            e.g. editor with 'editor_4_location_gisInfo_latitude_from' name has prefix 'location_gisInfo'
+ */
+GisComponent.prototype.initiateRectangleSelectAction = function (tgMap, getParentAnd, LeafletDraw, miTypeSimpleName, editorPropPrefix) {
+    const self = this;
+    // add invisible Leaflet Draw control for rectangle editing
+    const drawControl = new LeafletDraw({
+        position: 'topleft',
+        edit: {
+            featureGroup: self._markerCluster.getGisMarkerClusterGroup(), // drawnItems
+            edit: false,
+            remove: false
+        },
+        draw: {
+            polygon: false,
+            polyline: false,
+            rectangle: true,
+            circle: false,
+            marker: false,
+            circlemarker: false
+        }
+    });
+    self._map.addControl(drawControl);
+    drawControl._toolbars.draw._toolbarContainer.style.visibility = 'hidden'; // make toolbar buttons invisible; Cancel button is not affected when opened
+    self._map.on('draw:created', function (e) { // when rectangle gets created (and not getting canceled), assign new selection criteria based on rectangle bounds; then re-run centre
+        const layer = e.layer;
+        const bounds = layer.getBounds();
+        const centre = getParentAnd(tgMap, parent => parent.matches(`tg-${miTypeSimpleName}-centre`));
+        const selectionCrit = centre.$.selection_criteria;
+        const latitudeFromEditor = selectionCrit.$[`editor_4_${editorPropPrefix}_latitude_from`];
+        const latitudeToEditor = selectionCrit.$[`editor_4_${editorPropPrefix}_latitude_to`];
+        const longitudeFromEditor = selectionCrit.$[`editor_4_${editorPropPrefix}_longitude_from`];
+        const longitudeToEditor = selectionCrit.$[`editor_4_${editorPropPrefix}_longitude_to`];
+        latitudeFromEditor._editingValue = '' + bounds.getSouthWest().lat;
+        latitudeFromEditor.commit();
+        latitudeToEditor._editingValue = '' + bounds.getNorthEast().lat;
+        latitudeToEditor.commit();
+        longitudeFromEditor._editingValue = '' + bounds.getSouthWest().lng;
+        longitudeFromEditor.commit();
+        longitudeToEditor._editingValue = '' + bounds.getNorthEast().lng;
+        longitudeToEditor.commit();
+        centre.run();
+    });
+    // find top-action button for rectangle filtering;
+    const insertionPoint = getParentAnd(tgMap, parent => parent.matches('tg-entity-centre-insertion-point'));
+    const rectangleButton = insertionPoint.querySelector('.rectangle-button');
+    // and provide action implementation by generating 'click' event on invisible Leaflet Draw rectangle button
+    rectangleButton.addEventListener('tap', event => {
+        drawControl._toolbars.draw._toolbarContainer.children[0].dispatchEvent(new Event('click'));
+    });
+    // need to place invisible draw toolbar on top-left corner to make corresponding Cancel button positioned there when opened using top action
+    const leafletDrawContainer = tgMap.shadowRoot.querySelector('.leaflet-draw');
+    leafletDrawContainer.style.position = 'absolute'; // absolutely positioned to place drawContainer on top left corner where fitToBounds button is also placed
+    leafletDrawContainer.style.zIndex = 0; // put drawContainer behind fitToBounds button to leave it actionable
+    leafletDrawContainer.style.top = '2px'; // move invisible draw container to adjust its Cancel button position (to be exactly in the middle of 'fitToBounds' button vertically and on the same distance as between 'fitToBounds' and '+' button horisontally)
+    leafletDrawContainer.style.left = '12px';
+    leafletDrawContainer.style.width = '34px'; // made invisible draw container of the same width as fitToBounds container
+    leafletDrawContainer.style.height = '34px';
 }
