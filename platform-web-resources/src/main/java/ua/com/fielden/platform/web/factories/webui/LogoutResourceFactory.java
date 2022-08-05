@@ -19,7 +19,6 @@ import com.google.inject.Injector;
 import com.google.inject.Key;
 
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
-import ua.com.fielden.platform.security.annotations.SsoClientId;
 import ua.com.fielden.platform.security.annotations.SsoRedirectUriSignOut;
 import ua.com.fielden.platform.security.session.IUserSession;
 import ua.com.fielden.platform.security.user.IUser;
@@ -48,7 +47,7 @@ public class LogoutResourceFactory extends Restlet {
         this.domainName = domainName;
         this.path = path;
         this.injector = injector;
-        // let's try to obtain SLO redirection URI and process it by replacing $clientId with the actual clientId
+        // let's try to obtain SLO redirection URI and process by attaching and encoding the post_logout_redirect_uri parameter
         // the result could be an empty result, which is expected if either SSO or SLO are not configured
         this.maybeSsoRedirectUriSignOut = getSsoParam(SsoRedirectUriSignOut.class, injector)
                                           .map(uri -> {
