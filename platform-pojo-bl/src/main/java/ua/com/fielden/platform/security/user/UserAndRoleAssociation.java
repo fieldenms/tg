@@ -9,6 +9,7 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 
 /**
  * Entity that represents the association between {@link User} and {@link UserRole} entities.
@@ -24,11 +25,13 @@ public class UserAndRoleAssociation extends AbstractPersistentEntity<DynamicEnti
     @IsProperty
     @CompositeKeyMember(1)
     @MapTo("ID_CRAFT")
+    @SkipEntityExistsValidation(skipActiveOnly = true)
     private User user;
 
     @IsProperty
     @CompositeKeyMember(2)
     @MapTo("ID_USER_ROLE")
+    @SkipEntityExistsValidation(skipActiveOnly = true)
     private UserRole userRole;
 
     protected UserAndRoleAssociation() {
