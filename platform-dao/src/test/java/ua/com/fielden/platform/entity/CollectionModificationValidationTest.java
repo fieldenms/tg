@@ -44,7 +44,6 @@ import ua.com.fielden.platform.security.tokens.open_simple_master.TgGeneratedEnt
 import ua.com.fielden.platform.security.tokens.open_simple_master.TgMessageMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.TgPersistentCompositeEntityMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.TgPersistentEntityWithPropertiesMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.UserMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.UserRoleMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequencyUnit_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequencyUnit_CanRead_Token;
@@ -89,6 +88,7 @@ import ua.com.fielden.platform.security.user.UserRolesUpdater;
 import ua.com.fielden.platform.security.user.UserRolesUpdaterProducer;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.web.centre.CentreContext;
+import ua.com.fielden.security.tokens.open_compound_master.OpenUserMasterAction_CanOpen_Token;
 
 /**
  * This test case is intended to check correctness of existing collection modification validation logic.
@@ -372,7 +372,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
             domainExplorer_CanRead, domainExplorer_CanReadModel,
             graphiQL_CanExecute,
             keyNumber_CanRead, keyNumber_CanReadModel,
-            user_CanDelete, user_CanSave, user_CanRead, user_CanReadModel, reUser_CanRead, reUser_CanReadModel, createTokenInfo.apply(UserMaster_CanOpen_Token.class),
+            user_CanDelete, user_CanSave, user_CanRead, user_CanReadModel, reUser_CanRead, reUser_CanReadModel, createTokenInfo.apply(OpenUserMasterAction_CanOpen_Token.class),
             userRole_CanDelete, userRole_CanSave, userRole_CanRead, userRole_CanReadModel, createTokenInfo.apply(UserRoleMaster_CanOpen_Token.class),
             userRoleAssociation_CanRead, userRoleAssociation_CanReadModel,
             userRolesUpdater_CanExecute, userRoleTokensUpdater_CanExecute,

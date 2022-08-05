@@ -26,7 +26,6 @@ import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanRead_Tok
 import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanSave_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.AttachmentMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.DashboardRefreshFrequencyMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.UserMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.UserRoleMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequencyUnit_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequencyUnit_CanRead_Token;
@@ -52,6 +51,10 @@ import ua.com.fielden.platform.security.tokens.user.User_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.user.User_CanSave_Token;
 import ua.com.fielden.platform.security.tokens.web_api.GraphiQL_CanExecute_Token;
 import ua.com.fielden.platform.utils.CollectionUtil;
+import ua.com.fielden.security.tokens.compound_master_menu.UserMaster_OpenMain_MenuItem_CanAccess_Token;
+import ua.com.fielden.security.tokens.compound_master_menu.UserMaster_OpenUserAndRoleAssociation_MenuItem_CanAccess_Token;
+import ua.com.fielden.security.tokens.open_compound_master.OpenUserMasterAction_CanOpen_Token;
+import ua.com.fielden.security.tokens.open_simple_master.UserAndRoleAssociationMaster_CanOpen_Token;
 
 /**
  * Searches for all available security tokens in the application based on the provided path and package name.
@@ -97,7 +100,9 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
                 User_CanRead_Token.class,
                 User_CanReadModel_Token.class,
                 User_CanDelete_Token.class,
-                UserMaster_CanOpen_Token.class,
+                OpenUserMasterAction_CanOpen_Token.class,
+                UserMaster_OpenMain_MenuItem_CanAccess_Token.class,
+                UserMaster_OpenUserAndRoleAssociation_MenuItem_CanAccess_Token.class,
                 UserRole_CanSave_Token.class,
                 UserRole_CanRead_Token.class,
                 UserRole_CanReadModel_Token.class,
@@ -105,6 +110,7 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
                 UserRoleMaster_CanOpen_Token.class,
                 UserAndRoleAssociation_CanRead_Token.class,
                 UserAndRoleAssociation_CanReadModel_Token.class,
+                UserAndRoleAssociationMaster_CanOpen_Token.class,
                 UserRolesUpdater_CanExecute_Token.class,
                 UserRoleTokensUpdater_CanExecute_Token.class,
                 Attachment_CanSave_Token.class,
