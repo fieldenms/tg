@@ -15,28 +15,55 @@ const TgEntityCentreTemplateBehaviorImpl = {
         pageCountUpdated: Number,
         staleCriteriaMessage: String,
         _centreDirtyOrEdited: Boolean,
-        _defaultPropertyActionAttrs: Object
+        _defaultPropertyActionAttrs: Object,
+        _pendingRefresh : {
+            type: Boolean,
+            value: false
+        },
+        _entityToRefresh: Object
     },
 
     created: function () {
         // bind SSE event handling method regardless of the fact whether this particulare
         // centre is bound to some SSE url or not.
         this.dataHandler = function (msg) {
-            const self = this;
-            let needsFullRefresh = true;
+            
+            let entityToRefresh = null;
             if (msg.id) {
                 // let's search for an item to update...
                 // if the current EGI model does not contain an updated entity then there is no need for a refresh...
                 // TODO such update strategy might need to be revisited in future...
-                const entry = this.$.egi.egiModel.find(entry => entry.entity.get('id') === msg.id);
-                if (entry) {
-                    needsFullRefresh = false;
-                    self.refreshEntities([entry.entity]);
+                entityToRefresh = this.$.egi.egiModel.find(entry => entry.entity.get('id') === msg.id);
+            }
+
+            if (this._pendingRefresh) {
+                if (this._entityToRefresh && !entityToRefresh) {
+                    this._entityToRefresh = null;
                 }
+            } else {
+                this._pendingRefresh = true;
+                this._entityToRefresh = entityToRefresh;
+                this._dom().showRefreshToast();
             }
-            if (needsFullRefresh === true) {
-                self.refreshEntities([]);
+            
+        }.bind(this);
+
+        this.sseRefresh = function () {
+            if (this._pendingRefresh) {
+                let refreshPromise;
+                if (this._entityToRefresh) {
+                    refreshPromise = this.refreshEntities([this._entityToRefresh.entity]);
+                } else {
+                    refreshPromise = this.refreshEntities([]);
+                }
+                this._pendingRefresh = false;
+                this._entityToRefresh = null;
             }
+        }.bind(this);
+
+        this.cancelSseRefresh = function () {
+            this._pendingRefresh = false;
+            this._entityToRefresh = null;
         }.bind(this);
     },
 
