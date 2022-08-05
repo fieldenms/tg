@@ -51,7 +51,6 @@ public class LogoutResourceFactory extends Restlet {
         // let's try to obtain SLO redirection URI and process it by replacing $clientId with the actual clientId
         // the result could be an empty result, which is expected if either SSO or SLO are not configured
         this.maybeSsoRedirectUriSignOut = getSsoParam(SsoRedirectUriSignOut.class, injector)
-                                          .flatMap(uri -> getSsoParam(SsoClientId.class, injector).map(clientId -> uri.replace("$clientId", clientId)))
                                           .map(uri -> {
                                               final String redirectUrl = "https://" + domainName + LogoutResource.BINDING_PATH;
                                               return uri + "?post_logout_redirect_uri=" + encodeUrl(redirectUrl);
