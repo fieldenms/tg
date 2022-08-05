@@ -101,6 +101,7 @@ public class LogoutResource extends AbstractWebResource {
             // in cases were Single Log-Out (SLO) is supported and the logout request arrived with session authenticator present, it is necessary to initiate SLO redirection
             if (maybeSsoRedirectUriSignOut.isPresent() && oAuth.isPresent()) {
                 getResponse().redirectSeeOther(maybeSsoRedirectUriSignOut.get());
+                return new EmptyRepresentation();
             }
 
             // otherwise return the response as if the logout actually happened
