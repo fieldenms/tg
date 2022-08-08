@@ -44,6 +44,7 @@ import ua.com.fielden.platform.ioc.session.exceptions.TransactionRollbackDueToTh
 public class SessionInterceptor implements MethodInterceptor {
     private final SessionFactory sessionFactory;
 
+    public static final String WARN_TRANSACTION_ROLLBACK = "Transaction completed (rolled back) with error.";
     private static final Logger LOGGER = getLogger(SessionInterceptor.class);
     
     private ThreadLocal<String> transactionGuid = new ThreadLocal<>();
@@ -136,7 +137,7 @@ public class SessionInterceptor implements MethodInterceptor {
     }
 
     private Exception completeTransactionWithError(final Session session, final Transaction tr, final Throwable ex) {
-        LOGGER.warn("Transaction completed (rolled back) with error.", ex);
+        LOGGER.warn(WARN_TRANSACTION_ROLLBACK, ex);
         transactionGuid.remove();
         if (tr.isActive()) { // if transaction is active and there was an exception then it should be rollbacked
             LOGGER.debug("Rolling back DB transaction");

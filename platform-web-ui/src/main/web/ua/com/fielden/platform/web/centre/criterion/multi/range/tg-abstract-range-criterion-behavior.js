@@ -1,4 +1,4 @@
-import { TgAbstractMultiCriterionBehavior } from '/resources/centre/criterion/multi/tg-abstract-multi-criterion-behavior.js';
+import { TgAbstractCriterionBehavior } from '/resources/centre/criterion/tg-abstract-criterion-behavior.js';
 import '/resources/centre/criterion/multi/range/tg-range-criterion-config.js';
 
 const TgAbstractRangeCriterionBehaviorImpl = {
@@ -54,13 +54,13 @@ const TgAbstractRangeCriterionBehaviorImpl = {
         this.exclusive = this._exclusive;
         this.exclusive2 = this._exclusive2;
 
-        TgAbstractMultiCriterionBehavior[1]._acceptMetaValues.call(this, validate);
+        TgAbstractCriterionBehavior[1]._acceptMetaValues.call(this, validate);
     },
     _cancelMetaValues: function () {
         this._exclusive = this.exclusive;
         this._exclusive2 = this.exclusive2;
 
-        TgAbstractMultiCriterionBehavior[1]._cancelMetaValues.call(this);
+        TgAbstractCriterionBehavior[1]._cancelMetaValues.call(this);
     },
 
     /**
@@ -68,7 +68,7 @@ const TgAbstractRangeCriterionBehaviorImpl = {
      */
     _createMetaValueEditors: function () {
         console.log("tg-abstract-range-criterion-behavior: _createMetaValueEditors");
-        return TgAbstractMultiCriterionBehavior[1]._createMetaValueEditors.call(this) +
+        return TgAbstractCriterionBehavior[1]._createMetaValueEditors.call(this) +
             '<tg-range-criterion-config class="layout vertical" _exclusive="{{_exclusiveBind}}" _exclusive2="{{_exclusive2Bind}}"></tg-range-criterion-config>';
     },
 
@@ -83,12 +83,12 @@ const TgAbstractRangeCriterionBehaviorImpl = {
      * Returns 'true' if criterion has no meta values assigned, 'false' otherwise.
      */
     _hasNoMetaValues: function (orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) {
-        return TgAbstractMultiCriterionBehavior[1]._hasNoMetaValues.call(this, orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) &&
+        return TgAbstractCriterionBehavior[1]._hasNoMetaValues.call(this, orNull, not, orGroup, exclusive, exclusive2, datePrefix, dateMnemonic, andBefore) &&
             exclusive === false && exclusive2 === false;
     }
 };
 
 export const TgAbstractRangeCriterionBehavior = [
-    TgAbstractMultiCriterionBehavior,
+    TgAbstractCriterionBehavior,
     TgAbstractRangeCriterionBehaviorImpl
 ];

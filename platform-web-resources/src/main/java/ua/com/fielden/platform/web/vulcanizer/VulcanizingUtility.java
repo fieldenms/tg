@@ -157,8 +157,9 @@ public class VulcanizingUtility {
                 "/resources/manifest.webmanifest",
                 "/resources/icons/tg-icon192x192.png",
                 "/resources/icons/tg-icon144x144.png",
-                // Other page trees (logout.html, login.html, login-initiate-reset.html, login-initiated-reset.html). Please note that login.html can not go through service worker caching due to the need to redirect to index.html when authenticator appears.
-                "/app/logout.html",
+                // Other page trees (logout.html, login.html, login-initiate-reset.html, login-initiated-reset.html).
+                // Please note that login.html cannot go through service worker caching due to the need to redirect to index.html when authenticator appears.
+                // And logout.html cannot go through service worker to support request redirection during Single Log-Out lifecycle.
                 "/resources/zxcvbn/zxcvbn.js",
                 "/resources/login-startup-resources-vulcanized.js",
                 "/resources/icons/tg-icon.png",
@@ -289,6 +290,12 @@ public class VulcanizingUtility {
      * Removes all intermediate files after vulcanisation.
      */
     private static void clearObsoleteResources() {
+        // As described in Java bug JDK-4715154, Windows does not allow a mapped file to be deleted, and the mapped memory buffer is only released when the GC decides to invoke finalize(), or something like that.
+        // Therefore, in order to have a reasonable chance to delete all intermediate files after vulcanization, it is necessary to force System.gc() here.
+        // While this is only significant for Windows, there should be no ill effects on other operating systems.
+        LOGGER.info("\tForce System.gc()...");
+        System.gc();
+        
         LOGGER.info("\tClear obsolete files...");
         try {
             deleteDirectory(new File("vulcan"));
@@ -319,7 +326,6 @@ public class VulcanizingUtility {
     private static void downloadGeneratedResources(final IWebUiConfig webUiConfig, final IWebResourceLoader webResourceLoader) {
         LOGGER.info("\tDownloading generated resources...");
         downloadSource("app", "tg-app-index.html", webResourceLoader); // used for checksum generation
-        downloadSource("app", "logout.html", webResourceLoader); // used for checksum generation
         downloadSource("app", "login-initiate-reset.html", webResourceLoader); // used for checksum generation
         downloadSource("app", "tg-reflector.js", webResourceLoader);
         for (final Class<? extends AbstractEntity<?>> masterType : webUiConfig.getMasters().keySet()) {
