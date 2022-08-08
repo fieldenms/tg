@@ -27,7 +27,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
         // bind SSE event handling method regardless of the fact whether this particulare
         // centre is bound to some SSE url or not.
         this.dataHandler = function (msg) {
-            
+
             let entityToRefresh = null;
             if (msg.id) {
                 // let's search for an item to update...
@@ -50,14 +50,13 @@ const TgEntityCentreTemplateBehaviorImpl = {
 
         this.sseRefresh = function () {
             if (this._pendingRefresh) {
-                let refreshPromise;
+                this._pendingRefresh = false;
                 if (this._entityToRefresh) {
                     refreshPromise = this.refreshEntities([this._entityToRefresh.entity]);
+                    this._entityToRefresh = null;
                 } else {
                     refreshPromise = this.refreshEntities([]);
                 }
-                this._pendingRefresh = false;
-                this._entityToRefresh = null;
             }
         }.bind(this);
 

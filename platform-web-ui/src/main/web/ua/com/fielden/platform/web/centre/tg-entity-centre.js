@@ -322,7 +322,7 @@ const template = html`
         </tg-centre-result-view>
         <slot id="alternativeViewSlot" name="alternative-view-insertion-point"></slot>
     </iron-pages>
-    <tg-delayed-action-toast count-down="[[sseRefreshCountDown]]" action-text='REFRESH' cancel-text='SKIP' text-for-count-down-action="Centre will be refreshed for:" text-for-prompt-action="Should refresh centre?" action-handler="[[refreshCentre]]" cancel-handler="[[cencelCentreRefresh]]"></tg-delayed-action-toast>`;
+    <tg-delayed-action-toast id="refreshToast" count-down="[[sseRefreshCountDown]]" action-text='REFRESH' cancel-text='SKIP' text-for-count-down-action="Centre will be refreshed for:" text-for-prompt-action="Should refresh centre?" action-handler="[[refreshCentre]]" cancel-handler="[[cencelCentreRefresh]]"></tg-delayed-action-toast>`;
 
 Polymer({
     _template: template,
@@ -847,5 +847,19 @@ Polymer({
      */
     _computeSaveButtonStyle: function (_buttonDisabled, _centreDirtyOrEdited) {
         return 'width:70px; margin-right:8px; ' + (this._computeSaveButtonDisabled(_buttonDisabled, _centreDirtyOrEdited) ? 'cursor:initial' : '');
+    },
+
+    /**
+     * Shows the delayed action toast of this centre. 
+     */
+    showRefreshToast: function () {
+        this.$.refreshToast.show();
+    },
+
+    /**
+     * Canccels the delayed action toast of this centre.
+     */
+    cancelRefreshToast: function () {
+        this.$.refreshToast.cancel();
     }
 });

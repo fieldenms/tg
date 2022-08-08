@@ -1227,6 +1227,7 @@ const TgEntityCentreBehaviorImpl = {
     currentPage: function (excludeInsertionPoints) {
         const self = this;
         if (!self.$.egi.isEditing()) {
+            this._dom().cancelRefreshToast();
             return self.$.selection_criteria.currentPage()
                 .then(function () {
                     self.runInsertionPointActions(excludeInsertionPoints);
@@ -1238,8 +1239,7 @@ const TgEntityCentreBehaviorImpl = {
     currentPageTap: function () {
         this.persistActiveElement();
         this.currentPage()
-            .then(() => this.restoreActiveElement())
-            .catch(() => this.restoreActiveElement());
+            .finally(() => this.restoreActiveElement());
     },
 
     /**

@@ -104,22 +104,28 @@ class TgDelayedActionToast extends mixinBehaviors([TgToastBehavior], PolymerElem
         this._clearTimeoutID();
     }
 
+    cancel () {
+        if (this.$.actionToast.opened) {
+            this._cancelHandler();
+        }
+    }
+
     _actionVisible (countDown) {
         return countDown <= 0;
     }
     
     _actionHandler (event) {
+        this.hide();
         if (typeof this.actionHandler === 'function') {
             this.actionHandler();
         }
-        this.hide();
     }
 
     _cancelHandler (event) {
+        this.hide();
         if (typeof this.cancelHandler === 'function') {
             this.cancelHandler();
         }
-        this.hide();
     }
 
     _clearTimeoutID () {
