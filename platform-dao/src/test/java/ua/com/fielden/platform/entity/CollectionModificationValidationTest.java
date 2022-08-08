@@ -88,7 +88,10 @@ import ua.com.fielden.platform.security.user.UserRolesUpdater;
 import ua.com.fielden.platform.security.user.UserRolesUpdaterProducer;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.web.centre.CentreContext;
+import ua.com.fielden.security.tokens.compound_master_menu.UserMaster_OpenMain_MenuItem_CanAccess_Token;
+import ua.com.fielden.security.tokens.compound_master_menu.UserMaster_OpenUserAndRoleAssociation_MenuItem_CanAccess_Token;
 import ua.com.fielden.security.tokens.open_compound_master.OpenUserMasterAction_CanOpen_Token;
+import ua.com.fielden.security.tokens.open_simple_master.UserAndRoleAssociationMaster_CanOpen_Token;
 
 /**
  * This test case is intended to check correctness of existing collection modification validation logic.
@@ -367,14 +370,19 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         final Function<Class<? extends ISecurityToken>, SecurityTokenInfo> createTokenInfo = (token) -> newPlainEntity(SecurityTokenInfo.class, null).setKey(token.getName());
 
         final UserRoleTokensUpdater updater = createUpdater(userRole);
+        System.out.println("updater.getTokens() = " + updater.getTokens().toString());
         final HashSet<SecurityTokenInfo> expectedTokens = setOf(
             alwaysAccessible,
             domainExplorer_CanRead, domainExplorer_CanReadModel,
             graphiQL_CanExecute,
             keyNumber_CanRead, keyNumber_CanReadModel,
             user_CanDelete, user_CanSave, user_CanRead, user_CanReadModel, reUser_CanRead, reUser_CanReadModel, createTokenInfo.apply(OpenUserMasterAction_CanOpen_Token.class),
-            userRole_CanDelete, userRole_CanSave, userRole_CanRead, userRole_CanReadModel, createTokenInfo.apply(UserRoleMaster_CanOpen_Token.class),
+            userRole_CanDelete, userRole_CanSave, userRole_CanRead, userRole_CanReadModel, 
+            createTokenInfo.apply(UserRoleMaster_CanOpen_Token.class),
+            createTokenInfo.apply(UserMaster_OpenMain_MenuItem_CanAccess_Token.class),
+            createTokenInfo.apply(UserMaster_OpenUserAndRoleAssociation_MenuItem_CanAccess_Token.class),
             userRoleAssociation_CanRead, userRoleAssociation_CanReadModel,
+            createTokenInfo.apply(UserAndRoleAssociationMaster_CanOpen_Token.class),
             userRolesUpdater_CanExecute, userRoleTokensUpdater_CanExecute,
             attachment_CanSave, attachment_CanRead, attachment_CanReadModel, attachment_CanDelete, createTokenInfo.apply(AttachmentMaster_CanOpen_Token.class), attachmentDownload_CanExecute,
             createTokenInfo.apply(DashboardRefreshFrequencyUnit_CanRead_Token.class),
@@ -404,6 +412,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
             compoundModule, tgComoundEntity_CanDelete, tgCompoundEntity_CanSave, tgCompoundEntityChild_CanDelete, tgCompoundEntityChild_CanSave, tgCompoundEntityDetail_CanSave, openTgCompoundEntityMasterAction_CanOpen, 
             tgCompoundEntityMaster_OpenMain_MenuItem_CanAccess, tgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem_CanAccess, tgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem_CanAccess
         );
+        System.out.println("expectedTokens = " + expectedTokens.toString());
         assertEquals(expectedTokens, updater.getTokens());
         
         updater.setAddedIds(linkedSetOf(user_CanDelete.getKey(), userRole_CanSave.getKey()));

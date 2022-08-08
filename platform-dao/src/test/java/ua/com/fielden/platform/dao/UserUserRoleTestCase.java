@@ -14,15 +14,15 @@ import java.util.Set;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
 import ua.com.fielden.platform.security.user.IUser;
-import ua.com.fielden.platform.security.user.UserAndRoleAssociationCo;
-import ua.com.fielden.platform.security.user.UserRoleCo;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociationDao;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
+import ua.com.fielden.platform.security.user.UserAndRoleAssociationCo;
 import ua.com.fielden.platform.security.user.UserRole;
+import ua.com.fielden.platform.security.user.UserRoleCo;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
 /**
@@ -87,35 +87,44 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
 
     @Test
     public void various_manipulations_with_user_and_roles_works_as_expected() {
-        // retrieving the user, modifying it's password and saving changes
-        User user = coUser.findUserByKeyWithRoles("user1");
-        user.setEmail("new_email@gmail.com");
-        UserAndRoleAssociation userAssociation = new_composite(UserAndRoleAssociation.class, user, new_(UserRole.class, "role1", ""));
+        // retrieving the user, modifying it's email
+        final User userBefore = coUser.findUserByKeyWithRoles("user1");
+        // we have two associations for user1: role1 and role2
+        assertEquals(2, userBefore.getRoles().size());
+        userBefore.setEmail("new_email@gmail.com");
+
+        // looking for association between user1 and role1
+        final UserRole role1 = co(UserRole.class).findByKey("role1");
+        final UserAndRoleAssociation userAssociation = co(UserAndRoleAssociation.class).findByKey(userBefore, role1);
+        assertNotNull(userAssociation);
+
+        // removing this association between user1 and role1
         final Set<UserAndRoleAssociation> associations = new HashSet<>();
-        for (final UserAndRoleAssociation roleAssociation : user.getRoles()) {
+        for (final UserAndRoleAssociation roleAssociation : userBefore.getRoles()) {
             if (roleAssociation.equals(userAssociation)) {
                 associations.add(roleAssociation);
             }
         }
+        assertEquals(1, associations.size());
         coUserAndRoleAssociation.removeAssociation(associations);
-        coUser.save(user);
+        coUser.save(userBefore);
 
         // retrieving saved user and checking it
-        user = coUser.findUserByKeyWithRoles("user1");
-        assertEquals("incorrect key of the first person in the testWhetherTheSaveWorksProperlyForUsers", "user" + Integer.toString(1), user.getKey());
-        assertEquals("incorrect password of the first person in the testWhetherTheSaveWorksProperlyForUsers", "new_email@gmail.com", user.getEmail());
+        final User userAfter = coUser.findUserByKeyWithRoles("user1");
+        assertEquals("incorrect key of the first person in the testWhetherTheSaveWorksProperlyForUsers", "user" + Integer.toString(1), userAfter.getKey());
+        assertEquals("incorrect password of the first person in the testWhetherTheSaveWorksProperlyForUsers", "new_email@gmail.com", userAfter.getEmail());
 
         // checking whether the user role1 was removed or not
-        final Set<UserAndRoleAssociation> userRoleAssociations = user.getRoles();
+        final Set<UserAndRoleAssociation> userRoleAssociations = userAfter.getRoles();
         assertEquals("the first person has wrong number of user roles, please check the testWhetherTheSaveWorksProperlyForUsers", 1, userRoleAssociations.size());
-        userAssociation = new_composite(UserAndRoleAssociation.class, user, new_(UserRole.class, "role2", ""));
-        assertTrue("the " + 1 + "-th person doesn't have the second user role", userRoleAssociations.contains(userAssociation));
-
+        final UserRole role2 = co(UserRole.class).findByKey("role2");
+        final UserAndRoleAssociation userAssociationRole2 = co(UserAndRoleAssociation.class).findByKey(userAfter, role2);
+        assertTrue("the 1st person doesn't have the second user role", userRoleAssociations.contains(userAssociationRole2));
     }
 
     @Test
     public void created_user_are_saved_together_with_their_roles() {
-        // creating new person and user roles for it. Saving person
+        // creating new person
         final UserRole userRole1 = save(new_(UserRole.class, "nrole1", "nrole desc 1"));
         final UserRole userRole2 = save(new_(UserRole.class, "nrole2", "nrole desc 2"));
         final UserRole userRole3 = save(new_(UserRole.class, "nrole3", "nrole desc 3"));
@@ -123,6 +132,7 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
         final String newUserName = "new_user";
         User user = save(new_(User.class, newUserName, "new user desc").setBase(true).setEmail("new_email@gmail.com"));
 
+        // assigning 3 roles for this new_user and saving them
         Set<UserAndRoleAssociation> userRolesAssociation = new HashSet<>();
         userRolesAssociation.add(new_composite(UserAndRoleAssociation.class, user, userRole1));
         userRolesAssociation.add(new_composite(UserAndRoleAssociation.class, user, userRole2));
@@ -132,7 +142,7 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
             coUserAndRoleAssociation.save(association);
         }
 
-        // final checking weather the final person was saved final correctly with user final roles
+        // finally checking whether the person was saved correctly with all it's user roles
         user = coUser.findUserByKeyWithRoles(newUserName);
         assertNotNull("Saved user should have been found.", user);
         assertEquals("incorrect password of the 'new user' person in the testWhetherTheCreatedUserWereCorrectlySaved", "new_email@gmail.com", user.getEmail());
@@ -141,7 +151,7 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
         userRolesAssociation = user.getRoles();
         assertEquals("the 'new user' person has wrong number of user roles, please check the testWhetherTheCreatedUserWereCorrectlySaved", 3, userRolesAssociation.size());
         for (int userRoleIndex = 0; userRoleIndex < 3; userRoleIndex++) {
-            final UserAndRoleAssociation userRoleAssociation = new_composite(UserAndRoleAssociation.class, user, new_(UserRole.class, "nrole" + Integer.toString(userRoleIndex + 1), ""));
+            final UserAndRoleAssociation userRoleAssociation = co(UserAndRoleAssociation.class).findByKey(user, co(UserRole.class).findByKey("nrole" + Integer.toString(userRoleIndex + 1)));
             assertTrue("the 'new user'-th person doesn't have the " + userRoleAssociation.getUserRole().getKey() + "-th user role", userRolesAssociation.contains(userRoleAssociation));
         }
     }
@@ -150,7 +160,7 @@ public class UserUserRoleTestCase extends AbstractDaoTestCase {
     public void security_associations_can_be_retrieved() {
         final EntityResultQueryModel<SecurityRoleAssociation> model = select(SecurityRoleAssociation.class).model();
         final List<SecurityRoleAssociation> associations = coSecurityRoleAssociation.firstPage(from(model).with(fetch(SecurityRoleAssociation.class).with("role")).model(), Integer.MAX_VALUE).data();
-        assertEquals("incorrect number of security token - role associations", 72, associations.size());
+        assertEquals("incorrect number of security token - role associations", 75, associations.size());
         final List<SecurityRoleAssociation> roles = coSecurityRoleAssociation.findAssociationsFor(FirstLevelSecurityToken1.class);
         assertEquals("Incorrect number of user roles for the " + FirstLevelSecurityToken1.class.getName() + " security token", 2, roles.size());
         UserRole role = new_(UserRole.class, "role1");
