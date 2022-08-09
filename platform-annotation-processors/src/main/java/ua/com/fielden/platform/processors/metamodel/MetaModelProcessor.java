@@ -11,7 +11,7 @@ import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.AN
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.METAMODELS_CLASS_PKG_NAME;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.METAMODELS_CLASS_QUAL_NAME;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.METAMODELS_CLASS_SIMPLE_NAME;
-import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.METAMODEL_SUPERCLASS_CLASSNAME;
+import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_SUPERCLASS_CLASSNAME;
 
 import java.io.IOException;
 import java.lang.ref.WeakReference;
@@ -643,7 +643,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             final MetaModelConcept parentMmc = new MetaModelConcept(entityParent);
             return ClassName.get(parentMmc.getPackageName(), parentMmc.getSimpleName());
         } else {
-            return METAMODEL_SUPERCLASS_CLASSNAME;
+            return META_MODEL_SUPERCLASS_CLASSNAME;
         }
     }
 

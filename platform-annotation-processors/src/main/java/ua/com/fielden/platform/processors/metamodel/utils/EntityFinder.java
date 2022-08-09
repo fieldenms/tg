@@ -165,7 +165,7 @@ public class EntityFinder extends ElementFinder {
      * @return
      */
     public boolean isEntityType(final TypeElement element) {
-        return Stream.iterate(element, el -> !equals(el, Object.class) , el -> getSuperclassOrNull(el))
+        return Stream.iterate(element, el -> !equals(el, Object.class) , el -> findSuperclass(el))
                .filter(el -> equals(el, ROOT_ENTITY_CLASS))
                .findFirst().isPresent();
     }
@@ -189,7 +189,7 @@ public class EntityFinder extends ElementFinder {
      */
     public boolean doesExtendPersistentEntity(final EntityElement element) {
         final TypeElement superclass = element;
-        return Stream.iterate(getSuperclassOrNull(superclass), el -> !equals(el, Object.class) , el -> getSuperclassOrNull(el))
+        return Stream.iterate(findSuperclass(superclass), el -> !equals(el, Object.class) , el -> findSuperclass(el))
                .filter(el -> isPersistentEntityType(EntityElement.wrapperFor(el)))
                .findFirst().isPresent();
     }
@@ -250,13 +250,8 @@ public class EntityFinder extends ElementFinder {
 
     public EntityElement getParent(final EntityElement element) {
         // superclass should not be null, because every entity extends AbstractEntity
-        final TypeElement superclass = getSuperclassOrNull(element, ROOT_ENTITY_CLASS);
-        
-        if (!isEntityType(superclass)) {
-            return null;
-        }
-
-        return newEntityElement(superclass);
+        final TypeElement superclass = findSuperclass(element);
+        return isEntityType(superclass) ? newEntityElement(superclass) : null;
     }
     
     /**
@@ -270,7 +265,7 @@ public class EntityFinder extends ElementFinder {
         if (element.getAnnotation(annotationClass) != null) {
             return of(element.getAnnotation(annotationClass));
         }
-        return findSuperclasses(element, ROOT_ENTITY_CLASS, true).stream()
+        return findSuperclasses(element, ROOT_ENTITY_CLASS).stream()
                 .filter(superEl -> superEl.getAnnotation(annotationClass) != null)
                 .map(superEl -> superEl.getAnnotation(annotationClass))
                 .findFirst();

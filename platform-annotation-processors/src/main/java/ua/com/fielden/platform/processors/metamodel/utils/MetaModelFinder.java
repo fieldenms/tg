@@ -3,7 +3,7 @@ package ua.com.fielden.platform.processors.metamodel.utils;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toCollection;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.METAMODELS_CLASS_QUAL_NAME;
-import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.METAMODEL_SUPERCLASS;
+import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_SUPERCLASS;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_ALIASED_NAME_SUFFIX;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_NAME_SUFFIX;
 
@@ -49,7 +49,7 @@ public class MetaModelFinder extends ElementFinder {
     }
 
     public boolean isMetaModel(final TypeElement typeElement) {
-        return doesExtend(typeElement, METAMODEL_SUPERCLASS);
+        return isSubtype(typeElement.asType(), META_MODEL_SUPERCLASS);
     }
     
     public boolean isMetaModelAliased(final MetaModelElement mme) {
@@ -73,8 +73,8 @@ public class MetaModelFinder extends ElementFinder {
 
                         // EntityMetaModel fields have type Supplier<[METAMODEL]>
                         if (equals(fieldTypeElement, Supplier.class)) {
-                            final DeclaredType fieldTypeArgument = (DeclaredType) ((DeclaredType) fieldType).getTypeArguments().get(0);
-                            return doesExtend((TypeElement) fieldTypeArgument.asElement(), EntityMetaModel.class);
+                            final TypeMirror fieldTypeArgument = ((DeclaredType) fieldType).getTypeArguments().get(0);
+                            return isSubtype(fieldTypeArgument, META_MODEL_SUPERCLASS);
                         }
                     }
                     return false;
