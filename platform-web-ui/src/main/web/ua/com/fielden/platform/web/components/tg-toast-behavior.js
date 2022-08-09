@@ -10,7 +10,7 @@ const paperToastStyle = html`
                 left:0;
                 bottom:0;
             }
-            .more {
+            .toast-btn {
                 padding-left: 8px;
                 color: #03A9F4;
                 font-weight: 800;

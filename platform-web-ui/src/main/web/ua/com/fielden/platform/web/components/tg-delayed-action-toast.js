@@ -87,7 +87,7 @@ class TgDelayedActionToast extends mixinBehaviors([TgToastBehavior], PolymerElem
             //Init interval to update text and if the countdown is 0 then run inoke actionHandler (e.a. run action).
             this._countDownTimerID = setInterval(() => {
                 seconds -= 1;
-                this._centreRefreshText = `${this.textForCountDownAction} ${seconds} seconds`;
+                this._text = `${this.textForCountDownAction} ${seconds} seconds`;
                 if (seconds === 0) {
                     this._actionHandler();
                 }

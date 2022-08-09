@@ -322,7 +322,7 @@ const template = html`
         </tg-centre-result-view>
         <slot id="alternativeViewSlot" name="alternative-view-insertion-point"></slot>
     </iron-pages>
-    <tg-delayed-action-toast id="refreshToast" count-down="[[sseRefreshCountDown]]" action-text='REFRESH' cancel-text='SKIP' text-for-count-down-action="Centre will be refreshed for:" text-for-prompt-action="Should refresh centre?" action-handler="[[refreshCentre]]" cancel-handler="[[cencelCentreRefresh]]"></tg-delayed-action-toast>`;
+    <tg-delayed-action-toast id="refreshToast" count-down="[[sseRefreshCountDown]]" action-text='REFRESH' cancel-text='SKIP' text-for-count-down-action="Centre will be refreshed for:" text-for-prompt-action="Should refresh centre?" action-handler="[[refreshCentre]]" cancel-handler="[[cancelCentreRefresh]]"></tg-delayed-action-toast>`;
 
 Polymer({
     _template: template,

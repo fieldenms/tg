@@ -24,6 +24,14 @@ const TgEntityCentreTemplateBehaviorImpl = {
     },
 
     created: function () {
+
+        const refreshCentre = (entityToRefresh) => {
+            if (entityToRefresh) {
+                this.refreshEntities([entityToRefresh.entity]);
+            } else {
+                this.refreshEntities([]);
+            }
+        }
         // bind SSE event handling method regardless of the fact whether this particulare
         // centre is bound to some SSE url or not.
         this.dataHandler = function (msg) {
@@ -36,7 +44,10 @@ const TgEntityCentreTemplateBehaviorImpl = {
                 entityToRefresh = this.$.egi.egiModel.find(entry => entry.entity.get('id') === msg.id);
             }
 
-            if (this._pendingRefresh) {
+
+            if (typeof this._dom().sseRefreshCountDown === 'undefined') {
+                refreshCentre(entityToRefresh);
+            } else if (this._pendingRefresh) {
                 if (this._entityToRefresh && !entityToRefresh) {
                     this._entityToRefresh = null;
                 }
@@ -51,12 +62,8 @@ const TgEntityCentreTemplateBehaviorImpl = {
         this.sseRefresh = function () {
             if (this._pendingRefresh) {
                 this._pendingRefresh = false;
-                if (this._entityToRefresh) {
-                    refreshPromise = this.refreshEntities([this._entityToRefresh.entity]);
-                    this._entityToRefresh = null;
-                } else {
-                    refreshPromise = this.refreshEntities([]);
-                }
+                refreshCentre(this._entityToRefresh);
+                this._entityToRefresh = null;
             }
         }.bind(this);
 
