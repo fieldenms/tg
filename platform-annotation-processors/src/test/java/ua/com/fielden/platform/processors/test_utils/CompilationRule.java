@@ -80,7 +80,9 @@ public final class CompilationRule implements TestRule {
             public void evaluate() throws Throwable {
                 final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
                 final InMemoryJavaFileManager fileManager = new InMemoryJavaFileManager(compiler.getStandardFileManager(null, Locale.getDefault(), StandardCharsets.UTF_8)); 
-                final Compilation compilation = new Compilation(javaSources, processor, compiler, fileManager);
+                // perform only annotation processing, without subsequent compilation
+                final List<String> options = List.of("-proc:only");
+                final Compilation compilation = new Compilation(javaSources, processor, compiler, fileManager, options);
                 compilation.compileAndEvaluatef((procEnv) -> {
                     elements = procEnv.getElementUtils();
                     types = procEnv.getTypeUtils();

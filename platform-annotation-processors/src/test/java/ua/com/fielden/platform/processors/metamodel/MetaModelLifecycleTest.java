@@ -232,7 +232,9 @@ public class MetaModelLifecycleTest {
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        final Compilation compilation = new Compilation(compilationTargets, new MetaModelProcessor(), compiler, fileManager);
+        // perform only annotation processing, without subsequent compilation
+        final List<String> options = List.of("-proc:only");
+        final Compilation compilation = new Compilation(compilationTargets, new MetaModelProcessor(), compiler, fileManager, options);
         try {
             return compilation.compileAndEvaluate(consumer);
         } catch (Throwable e) {
