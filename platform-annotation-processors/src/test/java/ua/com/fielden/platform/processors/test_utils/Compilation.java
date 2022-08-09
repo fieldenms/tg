@@ -36,6 +36,7 @@ public final class Compilation {
     private Processor processor;
     private JavaCompiler compiler;
     private JavaFileManager fileManager;
+    private Iterable<String> options;
 
     /**
      * Only a single annotation processor is allowed to ensure that the processing environment is not shared with other processors, which could lead to unexpected behaviour.
@@ -44,16 +45,18 @@ public final class Compilation {
      * @param processor annotation processor to use during compilation
      * @param compiler
      * @param fileManager
+     * @param options
      */
-    public Compilation(final Collection<? extends JavaFileObject> javaSources, final Processor processor, final JavaCompiler compiler, final JavaFileManager fileManager) {
+    public Compilation(final Collection<? extends JavaFileObject> javaSources, final Processor processor, final JavaCompiler compiler, final JavaFileManager fileManager, final Iterable<String> options) {
         this.javaSources = javaSources;
         this.processor = processor;
         this.compiler = compiler == null ? ToolProvider.getSystemJavaCompiler() : compiler;
         this.fileManager = fileManager == null ? this.compiler.getStandardFileManager(null, Locale.getDefault(), StandardCharsets.UTF_8) : fileManager;
+        this.options = options;
     }
 
     public Compilation(final Collection<? extends JavaFileObject> javaSources) {
-        this(javaSources, null, null, null);
+        this(javaSources, null, null, null, null);
     }
 
     /**
@@ -86,7 +89,7 @@ public final class Compilation {
                 null, // Writer for additional output from the compiler (null => System.err)                
                 fileManager,
                 null, // diagnostic listener
-                null, // compiler options
+                options,
                 null, // names of classes to be processed by annotation processing (?)
                 javaSources);
         task.setProcessors(List.of(processor));
