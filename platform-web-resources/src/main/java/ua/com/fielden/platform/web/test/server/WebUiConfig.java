@@ -1391,6 +1391,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final ICentreTopLevelActionsWithRunConfig<TgPersistentEntityWithProperties> partialCentre = EntityCentreBuilder.centreFor(TgPersistentEntityWithProperties.class);
         final ICentreTopLevelActionsInGroup<TgPersistentEntityWithProperties> actionConf = (runAutomatically ? partialCentre.runAutomatically() : partialCentre)
                 .hasEventSourceAt("/sse/entity-centre-events")
+                //.withPromptForRefresh(0)
                 .enforcePostSaveRefresh()
                 .addFrontAction(action(EntityNewAction.class).
                         withContext(context().withSelectionCrit().build()).
@@ -2035,7 +2036,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                             .prefDimForView(mkDim("'350px'", "'500px'"))
                             .withNoParentCentreRefresh()
                             .build(),
-                    InsertionPoints.LEFT)                 
+                    InsertionPoints.LEFT)
                     .addInsertionPoint(
                             action(TgCentreInvokerWithCentreContext.class)
                             .withContext(context().withSelectionCrit().withSelectedEntities().build())

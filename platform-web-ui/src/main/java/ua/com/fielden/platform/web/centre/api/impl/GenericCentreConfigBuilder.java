@@ -8,23 +8,30 @@ import ua.com.fielden.platform.web.centre.api.crit.ISelectionCritKindSelector;
 import ua.com.fielden.platform.web.centre.api.front_actions.IAlsoFrontActions;
 import ua.com.fielden.platform.web.centre.api.front_actions.IFrontWithTopActions;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.IAlsoCentreTopLevelActions;
+import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreSseWithPromptRefresh;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsInGroup;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithEnforcePostSaveRefreshConfig;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithSse;
 
-public class GenericCentreConfigBuilder<T extends AbstractEntity<?>> extends ResultSetBuilder<T> implements ICentreTopLevelActionsWithRunConfig<T>{
+public class GenericCentreConfigBuilder<T extends AbstractEntity<?>> extends ResultSetBuilder<T> implements ICentreSseWithPromptRefresh<T>,  ICentreTopLevelActionsWithRunConfig<T>{
 
     public GenericCentreConfigBuilder(final EntityCentreBuilder<T> builder) {
         super(builder);
     }
 
     @Override
-    public ICentreTopLevelActionsWithEnforcePostSaveRefreshConfig<T> hasEventSourceAt(final String uri) {
+    public ICentreSseWithPromptRefresh<T> hasEventSourceAt(final String uri) {
         if (StringUtils.isEmpty(uri)) {
             throw new IllegalArgumentException("Server-Side Eventing URI should not be empty.");
         }
         builder.sseUri = uri;
+        return this;
+    }
+
+    @Override
+    public ICentreTopLevelActionsWithEnforcePostSaveRefreshConfig<T> withPromptForRefresh(final int seconds) {
+        builder.refreshCountdown = Integer.valueOf(seconds);
         return this;
     }
 

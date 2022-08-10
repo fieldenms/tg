@@ -156,6 +156,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected Integer leftSplitterPosition = null;
     protected Integer rightSplitterPosition = null;
     protected String sseUri;
+    protected Integer refreshCountdown = null;
 
     private EntityCentreBuilder() {
     }
@@ -233,6 +234,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 leftSplitterPosition,
                 rightSplitterPosition,
                 sseUri,
+                refreshCountdown,
                 selectionCriteriaLayout,
                 resultsetCollapsedCardLayout,
                 resultsetExpansionCardLayout,

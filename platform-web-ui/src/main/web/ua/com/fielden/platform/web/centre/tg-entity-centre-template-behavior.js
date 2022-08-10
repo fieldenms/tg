@@ -45,7 +45,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
             }
 
 
-            if (typeof this._dom().sseRefreshCountDown === 'undefined') {
+            if (typeof this._dom().sseRefreshCountdown === 'undefined') {
                 refreshCentre(entityToRefresh);
             } else if (this._pendingRefresh) {
                 if (this._entityToRefresh && !entityToRefresh) {

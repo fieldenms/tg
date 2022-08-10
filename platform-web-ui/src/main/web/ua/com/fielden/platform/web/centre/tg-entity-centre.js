@@ -322,7 +322,7 @@ const template = html`
         </tg-centre-result-view>
         <slot id="alternativeViewSlot" name="alternative-view-insertion-point"></slot>
     </iron-pages>
-    <tg-delayed-action-toast id="refreshToast" count-down="[[sseRefreshCountDown]]" action-text='REFRESH' cancel-text='SKIP' text-for-count-down-action="Centre will be refreshed for:" text-for-prompt-action="Should refresh centre?" action-handler="[[refreshCentre]]" cancel-handler="[[cancelCentreRefresh]]"></tg-delayed-action-toast>`;
+    <tg-delayed-action-toast id="refreshToast" countdown="[[sseRefreshCountdown]]" action-text='REFRESH' cancel-text='SKIP' text-for-countdown-action="Centre will be refreshed for:" text-for-prompt-action="Should refresh centre?" action-handler="[[refreshCentre]]" cancel-handler="[[cancelCentreRefresh]]"></tg-delayed-action-toast>`;
 
 Polymer({
     _template: template,
@@ -342,7 +342,7 @@ Polymer({
          * If the value is 0 then user will see the prompt asking whether to refresh centre or skip refreshing.
          * If the value is greater than 0 then user will see the prompt saying that centre will be refreshed for number of seconds.
          */
-        sseRefreshCountDown: Number,
+        sseRefreshCountdown: Number,
 
         /**
          * Action handler for action delayed toast.

@@ -14,10 +14,10 @@ public interface ICentreTopLevelActionsWithSse<T extends AbstractEntity<?>> exte
 	/**
 	 * Accepts URI that is used at the server side to connect to the associated with it event source.
 	 * Only non-empty and non-null value is acceptable.
-	 * 
+	 *
 	 * @param uri
 	 * @return
 	 */
-    ICentreTopLevelActionsWithEnforcePostSaveRefreshConfig<T> hasEventSourceAt(final String uri);
+    ICentreSseWithPromptRefresh<T> hasEventSourceAt(final String uri);
 
 }

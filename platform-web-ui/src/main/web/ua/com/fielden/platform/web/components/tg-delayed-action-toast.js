@@ -5,7 +5,7 @@ import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/c
 
 const template = html`
     <paper-toast id="actionToast" class="paper-toast" text="[[_text]]" allow-click-through always-on-top duration="0">
-        <div id='btnAction' hidden$="[[!_actionVisible(countDown)]]" class="toast-btn" on-tap="_actionHandler">[[actionText]]</div>
+        <div id='btnAction' hidden$="[[!_actionVisible(countdown)]]" class="toast-btn" on-tap="_actionHandler">[[actionText]]</div>
         <div id='btnCancel' class="toast-btn" on-tap="_cancelHandler">[[cancelText]]</div>
     </paper-toast>`; 
 
@@ -17,7 +17,7 @@ class TgDelayedActionToast extends mixinBehaviors([TgToastBehavior], PolymerElem
 
     static get properties() {
         return {
-            countDown: {
+            countdown: {
                 type: Number,
                 value: 0
             },
@@ -32,7 +32,7 @@ class TgDelayedActionToast extends mixinBehaviors([TgToastBehavior], PolymerElem
                 value: 'CANCEL'
             },
 
-            textForCountDownAction: {
+            textForCountdownAction: {
                 type: String,
                 value: 'Action will run for:'
             },
@@ -51,7 +51,7 @@ class TgDelayedActionToast extends mixinBehaviors([TgToastBehavior], PolymerElem
                 value: ''
             },
 
-            _countDownTimerID: {
+            _countdownTimerID: {
                 type: Number,
                 value: null
             }
@@ -77,26 +77,28 @@ class TgDelayedActionToast extends mixinBehaviors([TgToastBehavior], PolymerElem
             document.body.appendChild(this.$.actionToast);
         }
 
-        //Clear timeout if it is present and working to create new one.
-        this._clearTimeoutID();
+        if (!previousToast.opened) {
+            //Clear timeout if it is present and working to create new one.
+            this._clearTimeoutID();
 
-        if (this.countDown > 0) {
-            //Init count down and toast text.
-            let seconds = this.countDown;
-            this._text = `${this.textForCountDownAction} ${seconds} seconds`;
-            //Init interval to update text and if the countdown is 0 then run inoke actionHandler (e.a. run action).
-            this._countDownTimerID = setInterval(() => {
-                seconds -= 1;
-                this._text = `${this.textForCountDownAction} ${seconds} seconds`;
-                if (seconds === 0) {
-                    this._actionHandler();
-                }
-            }, 1000);
-        } else {
-            this._text = this.textForPromptAction;
+            if (this.countdown > 0) {
+                //Init count down and toast text.
+                let seconds = this.countdown;
+                this._text = `${this.textForCountdownAction} ${seconds} seconds`;
+                //Init interval to update text and if the countdown is 0 then run inoke actionHandler (e.a. run action).
+                this._countdownTimerID = setInterval(() => {
+                    seconds -= 1;
+                    this._text = `${this.textForCountdownAction} ${seconds} seconds`;
+                    if (seconds === 0) {
+                        this._actionHandler();
+                    }
+                }, 1000);
+            } else {
+                this._text = this.textForPromptAction;
+            }
+
+            this.$.actionToast.show();
         }
-
-        this.$.actionToast.show();
     }
 
     hide() {
@@ -110,8 +112,8 @@ class TgDelayedActionToast extends mixinBehaviors([TgToastBehavior], PolymerElem
         }
     }
 
-    _actionVisible (countDown) {
-        return countDown <= 0;
+    _actionVisible (countdown) {
+        return countdown <= 0;
     }
     
     _actionHandler (event) {
@@ -129,9 +131,9 @@ class TgDelayedActionToast extends mixinBehaviors([TgToastBehavior], PolymerElem
     }
 
     _clearTimeoutID () {
-        if (this._countDownTimerID) {
-            clearInterval(this._countDownTimerID);
-            this._countDownTimerID = null;
+        if (this._countdownTimerID) {
+            clearInterval(this._countdownTimerID);
+            this._countdownTimerID = null;
         }
     }
 
