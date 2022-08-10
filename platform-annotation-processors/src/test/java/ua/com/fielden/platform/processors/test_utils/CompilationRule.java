@@ -144,7 +144,7 @@ public final class CompilationRule implements TestRule {
      * 
      * @author TG Team
      */
-    public static final class InMemoryJavaFileObject extends SimpleJavaFileObject {
+    private static final class InMemoryJavaFileObject extends SimpleJavaFileObject {
         private long lastModified = 0L;
         private Optional<ByteSource> data = Optional.empty();
 
@@ -232,7 +232,7 @@ public final class CompilationRule implements TestRule {
      * 
      * @author TG Team
      */
-    public static final class InMemoryJavaFileObjects {
+    private static final class InMemoryJavaFileObjects {
 
         private static URI uriForJavaFileObject(final Location location, final String className, final Kind kind) {
             return URI.create(format("memory:///%s/%s", location.getName(), className.replace('.', '/') + kind.extension));
