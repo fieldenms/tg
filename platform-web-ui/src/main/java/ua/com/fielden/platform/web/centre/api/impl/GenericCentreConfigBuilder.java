@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
+import static java.lang.String.format;
+
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -13,8 +15,11 @@ import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelA
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithEnforcePostSaveRefreshConfig;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithSse;
+import ua.com.fielden.platform.web.centre.exceptions.EntityCentreConfigurationException;
 
 public class GenericCentreConfigBuilder<T extends AbstractEntity<?>> extends ResultSetBuilder<T> implements ICentreSseWithPromptRefresh<T>,  ICentreTopLevelActionsWithRunConfig<T>{
+
+    private static final String ERR_COUNTDOWN_SECONDS_LESS_THAN_ZERO = "The countdown seconds [%s] should be greater than zero.";
 
     public GenericCentreConfigBuilder(final EntityCentreBuilder<T> builder) {
         super(builder);
@@ -31,6 +36,9 @@ public class GenericCentreConfigBuilder<T extends AbstractEntity<?>> extends Res
 
     @Override
     public ICentreTopLevelActionsWithEnforcePostSaveRefreshConfig<T> withPromptForRefresh(final int seconds) {
+        if (seconds < 0) {
+            throw new EntityCentreConfigurationException(format(ERR_COUNTDOWN_SECONDS_LESS_THAN_ZERO, seconds));
+        }
         builder.refreshCountdown = Integer.valueOf(seconds);
         return this;
     }
