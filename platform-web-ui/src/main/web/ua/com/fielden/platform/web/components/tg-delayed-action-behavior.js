@@ -1,0 +1,74 @@
+import '/resources/components/tg-delayed-action-toast.js';
+
+//Creates single delayed action toast to insert into document
+const toastElement = document.createElement("tg-delayed-action-toast");
+
+//Adds tooltip element to document's body so that it only one for all tooltips.
+document.body.appendChild(toastElement);
+
+export const TgDelayedActionBehavior = {
+
+    properties: {
+
+        countdown: Number,
+
+        actionText: {
+            type: String,
+            value: 'RUN'
+        },
+
+        cancelText: {
+            type: String,
+            value: 'CANCEL'
+        },
+
+        textForCountdownAction: {
+            type: String,
+            value: 'Action will run for:'
+        },
+
+        textForPromptAction: {
+            type: String,
+            value: 'Should run action?'
+        },
+
+        actionHandler: Function,
+
+        cancelHandler: Function,
+    },
+
+    showRefreshToast: function () {
+        this._bindToast();
+        toastElement.show();
+    },
+
+    hideRefreshToast: function () {
+        this._resetToast();
+        toastElement.hide();
+    },
+
+    cancelRefreshToast: function () {
+        this._resetToast();
+        toastElement.cancel();
+    },
+
+    _bindToast() {
+        toastElement.countdown = this.countdown;
+        toastElement.actionText = this.actionText;
+        toastElement.cancelText = this.cancelText;
+        toastElement.textForCountdownAction = this.textForCountdownAction;
+        toastElement.textForPromptAction = this.textForCountdownAction;
+        toastElement.actionHandler = this.actionHandler;
+        toastElement.cancelHandler = this.cancelHandler;
+    },
+
+    _resetToast() {
+        delete toastElement.countdown;
+        toastElement.actionText = 'RUN';
+        toastElement.cancelText = 'CANCEL';
+        toastElement.textForCountdownAction = 'Action will run for:';
+        toastElement.textForPromptAction = 'Should run action?';
+        delete toastElement.actionHandler;
+        delete toastElement.cancelHandler;
+    }
+};

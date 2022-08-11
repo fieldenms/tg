@@ -54,12 +54,18 @@ const TgEntityCentreTemplateBehaviorImpl = {
             } else {
                 this._pendingRefresh = true;
                 this._entityToRefresh = entityToRefresh;
-                this._dom().showRefreshToast();
+                this.showRefreshToast();
             }
             
         }.bind(this);
 
-        this.sseRefresh = function () {
+        /////////////////TgDelayedActionBehavior related properties//////////////////////
+        this.actionText = 'REFRESH';
+        this.cancelText = 'SKIP';
+        this.TextForCountdownAction = "Centre will be refreshed for:";
+        this.TextForPromptAction = "Should refresh centre?";
+        
+        this.actionHandler = function () {
             if (this._pendingRefresh) {
                 this._pendingRefresh = false;
                 refreshCentre(this._entityToRefresh);
@@ -67,10 +73,11 @@ const TgEntityCentreTemplateBehaviorImpl = {
             }
         }.bind(this);
 
-        this.cancelSseRefresh = function () {
+        this.cancelHandler = function () {
             this._pendingRefresh = false;
             this._entityToRefresh = null;
         }.bind(this);
+        /////////////////////////////////////////////////////////////////////////////////
     },
 
     /**

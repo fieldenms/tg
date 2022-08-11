@@ -8,6 +8,7 @@ import { tearDownEvent, isInHierarchy, deepestActiveElement, FOCUSABLE_ELEMENTS_
 import {createDialog} from '/resources/egi/tg-dialog-util.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgElementSelectorBehavior, queryElements } from '/resources/components/tg-element-selector-behavior.js';
+import { TgDelayedActionBehavior } from '/resources/components/tg-delayed-action-behavior.js';
 
 const generateCriteriaName = function (root, property, suffix) {
     const rootName = root.substring(0, 1).toLowerCase() + root.substring(1) + "_";
@@ -1227,7 +1228,7 @@ const TgEntityCentreBehaviorImpl = {
     currentPage: function (excludeInsertionPoints) {
         const self = this;
         if (!self.$.egi.isEditing()) {
-            this._dom().cancelRefreshToast();
+            this.cancelRefreshToast();
             return self.$.selection_criteria.currentPage()
                 .then(function () {
                     self.runInsertionPointActions(excludeInsertionPoints);
@@ -1482,5 +1483,6 @@ export const TgEntityCentreBehavior = [
     TgEntityCentreBehaviorImpl,
     TgSseBehavior,
     TgFocusRestorationBehavior,
-    TgElementSelectorBehavior
+    TgElementSelectorBehavior,
+    TgDelayedActionBehavior
 ];

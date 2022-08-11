@@ -321,8 +321,7 @@ const template = html`
             <div id="fantomSplitter" class="fantom-splitter"></div>
         </tg-centre-result-view>
         <slot id="alternativeViewSlot" name="alternative-view-insertion-point"></slot>
-    </iron-pages>
-    <tg-delayed-action-toast id="refreshToast" countdown="[[sseRefreshCountdown]]" action-text='REFRESH' cancel-text='SKIP' text-for-countdown-action="Centre will be refreshed for:" text-for-prompt-action="Should refresh centre?" action-handler="[[refreshCentre]]" cancel-handler="[[cancelCentreRefresh]]"></tg-delayed-action-toast>`;
+    </iron-pages>`
 
 Polymer({
     _template: template,
@@ -336,13 +335,6 @@ Polymer({
         // These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
         // No default values are allowed in this case.														   //
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        /**
-         * The number of seconds to the next centre refresh on sse event. If this value is undenfined then centre will be refreshed without any prompt.
-         * If the value is 0 then user will see the prompt asking whether to refresh centre or skip refreshing.
-         * If the value is greater than 0 then user will see the prompt saying that centre will be refreshed for number of seconds.
-         */
-        sseRefreshCountdown: Number,
 
         /**
          * Action handler for action delayed toast.
@@ -847,19 +839,5 @@ Polymer({
      */
     _computeSaveButtonStyle: function (_buttonDisabled, _centreDirtyOrEdited) {
         return 'width:70px; margin-right:8px; ' + (this._computeSaveButtonDisabled(_buttonDisabled, _centreDirtyOrEdited) ? 'cursor:initial' : '');
-    },
-
-    /**
-     * Shows the delayed action toast of this centre. 
-     */
-    showRefreshToast: function () {
-        this.$.refreshToast.show();
-    },
-
-    /**
-     * Canccels the delayed action toast of this centre.
-     */
-    cancelRefreshToast: function () {
-        this.$.refreshToast.cancel();
     }
 });
