@@ -20,7 +20,11 @@ const TgEntityCentreTemplateBehaviorImpl = {
             type: Boolean,
             value: false
         },
-        _entityToRefresh: Object
+        _entityToRefresh: Object,
+        _visible: {
+            type: Boolean,
+            value: false
+        }
     },
 
     created: function () {
@@ -44,17 +48,16 @@ const TgEntityCentreTemplateBehaviorImpl = {
                 entityToRefresh = this.$.egi.egiModel.find(entry => entry.entity.get('id') === msg.id);
             }
 
-
-            if (typeof this._dom().sseRefreshCountdown === 'undefined') {
-                refreshCentre(entityToRefresh);
-            } else if (this._pendingRefresh) {
+            if (this._pendingRefresh) {
                 if (this._entityToRefresh && !entityToRefresh) {
                     this._entityToRefresh = null;
                 }
             } else {
                 this._pendingRefresh = true;
                 this._entityToRefresh = entityToRefresh;
-                this.showRefreshToast();
+                if (this._visible) {
+                    this.showRefreshToast();
+                }
             }
             
         }.bind(this);
@@ -62,8 +65,8 @@ const TgEntityCentreTemplateBehaviorImpl = {
         /////////////////TgDelayedActionBehavior related properties//////////////////////
         this.actionText = 'REFRESH';
         this.cancelText = 'SKIP';
-        this.TextForCountdownAction = "Centre will be refreshed for:";
-        this.TextForPromptAction = "Should refresh centre?";
+        this.textForCountdownAction = "Centre will be refreshed for:";
+        this.textForPromptAction = "Should refresh centre?";
         
         this.actionHandler = function () {
             if (this._pendingRefresh) {
@@ -77,6 +80,27 @@ const TgEntityCentreTemplateBehaviorImpl = {
             this._pendingRefresh = false;
             this._entityToRefresh = null;
         }.bind(this);
+        /////////////////////////////////////////////////////////////////////////////////
+
+        //////////////////Event handler to determine centre visibility///////////////////
+        const observer = new IntersectionObserver((entries, observer) => {
+            entries.forEach(entry => {
+                if (entry.intersectionRatio > 0) {
+                    this._visible = true;
+                    if (this._pendingRefresh) {
+                        this.showRefreshToast();
+                    }
+                } else {
+                    this._visible = false;
+                    if (this._pendingRefresh) {
+                        this.hideRefreshToast();
+                    }
+                }
+            });
+        }, {
+            root: document.documentElement
+        });
+        observer.observe(this);
         /////////////////////////////////////////////////////////////////////////////////
     },
 

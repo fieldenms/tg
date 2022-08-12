@@ -14,7 +14,7 @@ import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 const template = html`
-    <paper-toast id="toast" class="paper-toast" text="[[_text]]" on-tap="_showMoreIfPossible" allow-click-through always-on-top duration="0">
+    <paper-toast id="toast" text="[[_text]]" on-tap="_showMoreIfPossible" allow-click-through always-on-top duration="0">
         <!-- TODO responsive-width="250px" -->
         <paper-spinner id="spinner" hidden$="[[_skipShowProgress]]" active alt="in progress..." tabIndex="-1"></paper-spinner>
         <div id='btnMore' hidden$="[[_skipShowMore(_showProgress, _hasMore)]]" class="toast-btn" on-tap="_showMessageDlg">MORE</div>

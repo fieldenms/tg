@@ -4,7 +4,7 @@ import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polyme
 import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 
 const template = html`
-    <paper-toast id="actionToast" class="paper-toast" text="[[_text]]" allow-click-through always-on-top duration="0">
+    <paper-toast id="actionToast" text="[[_text]]" allow-click-through always-on-top duration="0">
         <div id='btnAction' hidden$="[[!_actionVisible(countdown)]]" class="toast-btn" on-tap="_actionHandler">[[actionText]]</div>
         <div id='btnCancel' class="toast-btn" on-tap="_cancelHandler">[[cancelText]]</div>
     </paper-toast>`; 
@@ -17,10 +17,7 @@ class TgDelayedActionToast extends mixinBehaviors([TgToastBehavior], PolymerElem
 
     static get properties() {
         return {
-            countdown: {
-                type: Number,
-                value: 0
-            },
+            countdown: Number,
 
             actionText: {
                 type: String,
@@ -59,12 +56,6 @@ class TgDelayedActionToast extends mixinBehaviors([TgToastBehavior], PolymerElem
         };
     }
 
-    static get observers() {
-        return [
-          
-        ];
-    }
-
     ready() {
         super.ready();
         this.$.actionToast.refit = function(){};
@@ -72,16 +63,21 @@ class TgDelayedActionToast extends mixinBehaviors([TgToastBehavior], PolymerElem
 
     show() {
         //Append action toast if it is not yet present
-        const previousToast = this.getDocumentToast('actionToast');
-        if (!previousToast) {
+        const paperToast = this.getDocumentToast('actionToast');
+        if (!paperToast) {
             document.body.appendChild(this.$.actionToast);
         }
 
-        if (!previousToast.opened) {
+        if (!this.$.actionToast.opened) {
             //Clear timeout if it is present and working to create new one.
             this._clearTimeoutID();
 
-            if (this.countdown > 0) {
+            if (typeof this.countdown === 'undefined' || this.countdown === null) {
+                this._actionHandler();
+            } else if (this.countdown === 0) {
+                this._text = this.textForPromptAction;
+                this.$.actionToast.show();
+            } else if (this.countdown > 0) {
                 //Init count down and toast text.
                 let seconds = this.countdown;
                 this._text = `${this.textForCountdownAction} ${seconds} seconds`;
@@ -93,11 +89,10 @@ class TgDelayedActionToast extends mixinBehaviors([TgToastBehavior], PolymerElem
                         this._actionHandler();
                     }
                 }, 1000);
+                this.$.actionToast.show();
             } else {
-                this._text = this.textForPromptAction;
+                throw new Error(`The countdown seconds [${this.countdown}] should be greater than zero`);
             }
-
-            this.$.actionToast.show();
         }
     }
 
@@ -107,9 +102,7 @@ class TgDelayedActionToast extends mixinBehaviors([TgToastBehavior], PolymerElem
     }
 
     cancel () {
-        if (this.$.actionToast.opened) {
-            this._cancelHandler();
-        }
+        this._cancelHandler();
     }
 
     _actionVisible (countdown) {

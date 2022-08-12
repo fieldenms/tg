@@ -43,13 +43,13 @@ export const TgDelayedActionBehavior = {
     },
 
     hideRefreshToast: function () {
-        this._resetToast();
         toastElement.hide();
+        this._resetToast();
     },
 
     cancelRefreshToast: function () {
-        this._resetToast();
         toastElement.cancel();
+        this._resetToast();
     },
 
     _bindToast() {
@@ -57,7 +57,7 @@ export const TgDelayedActionBehavior = {
         toastElement.actionText = this.actionText;
         toastElement.cancelText = this.cancelText;
         toastElement.textForCountdownAction = this.textForCountdownAction;
-        toastElement.textForPromptAction = this.textForCountdownAction;
+        toastElement.textForPromptAction = this.textForPromptAction;
         toastElement.actionHandler = this.actionHandler;
         toastElement.cancelHandler = this.cancelHandler;
     },

@@ -16,7 +16,7 @@ const paperToastStyle = html`
                 font-weight: 800;
                 cursor: pointer;
             }
-            #toast paper-spinner {
+            paper-toast paper-spinner {
                 width: 1.5em;
                 height: 1.5em;
                 min-width: 1em;
