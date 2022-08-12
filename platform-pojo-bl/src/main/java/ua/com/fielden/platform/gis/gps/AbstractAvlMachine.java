@@ -20,6 +20,7 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.TransactionEntity;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+//TODO import ua.com.fielden.platform.entity.validation.annotation.NotNull;
 
 @KeyType(String.class)
 @EntityTitle(value = "Машина", desc = "Автомобіль, або спецтехніка.")
@@ -56,6 +57,21 @@ public abstract class AbstractAvlMachine<T extends AbstractAvlMessage> extends A
     @Title(value = "Title", desc = "Desc")
     private boolean ignitionTracked;
 
+    @IsProperty
+    // just a calculated manually @MapTo
+    @Title(value = "Last Server State", desc = "Last Server State")
+    private MachineServerState lastServerState;
+
+    @Observable
+    public AbstractAvlMachine<T> setLastServerState(final MachineServerState lastServerState) {
+        this.lastServerState = lastServerState;
+        return this;
+    }
+
+    public MachineServerState getLastServerState() {
+        return lastServerState;
+    }
+
     @Observable
     public AbstractAvlMachine<T> setIgnitionTracked(final boolean ignitionTracked) {
         this.ignitionTracked = ignitionTracked;
@@ -78,7 +94,7 @@ public abstract class AbstractAvlMachine<T extends AbstractAvlMessage> extends A
 
     // TODO @IsProperty(value = Message.class, linkProperty="machine")
     @Title(value = "Останні GPS повідомлення", desc = "Містить інформацію про останні GPS повідомлення, починаючи з деякого часу")
-    private List<T> lastMessages = new ArrayList<T>();
+    private final List<T> lastMessages = new ArrayList<T>();
 
     @Observable
     protected AbstractAvlMachine<T> setLastMessages(final List<T> lastMessages) {
@@ -97,6 +113,7 @@ public abstract class AbstractAvlMachine<T extends AbstractAvlMessage> extends A
     public abstract T getLastMessage();
 
     @Override
+    // TODO @NotNull
     @Observable
     public AbstractAvlMachine<T> setKey(final String key) {
         super.setKey(key);
