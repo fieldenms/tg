@@ -39,6 +39,12 @@ class TgDelayedActionToast extends mixinBehaviors([TgToastBehavior], PolymerElem
                 value: 'Should run action?'
             },
 
+            //The element that opened this toast
+            context: {
+                type: Object,
+                value: null
+            },
+
             actionHandler: Function,
 
             cancelHandler: Function,
@@ -61,14 +67,16 @@ class TgDelayedActionToast extends mixinBehaviors([TgToastBehavior], PolymerElem
         this.$.actionToast.refit = function(){};
     }
 
-    show() {
+    show(context) {
         //Append action toast if it is not yet present
         const paperToast = this.getDocumentToast('actionToast');
         if (!paperToast) {
             document.body.appendChild(this.$.actionToast);
         }
 
-        if (!this.$.actionToast.opened) {
+        if (this.context !== context || !this.$.actionToast.opened) {
+            //Set the context first to identify what element has opened the toast.
+            this.context = context;
             //Clear timeout if it is present and working to create new one.
             this._clearTimeoutID();
 
@@ -96,13 +104,12 @@ class TgDelayedActionToast extends mixinBehaviors([TgToastBehavior], PolymerElem
         }
     }
 
-    hide() {
-        this.$.actionToast.close();
-        this._clearTimeoutID();
-    }
-
-    cancel () {
-        this._cancelHandler();
+    hide(context) {
+        if (this.context === context) {
+            this.$.actionToast.close();
+            this._clearTimeoutID();
+            this.context = null;
+        }
     }
 
     _actionVisible (countdown) {
@@ -110,14 +117,14 @@ class TgDelayedActionToast extends mixinBehaviors([TgToastBehavior], PolymerElem
     }
     
     _actionHandler (event) {
-        this.hide();
+        this.hide(this.context);
         if (typeof this.actionHandler === 'function') {
             this.actionHandler();
         }
     }
 
     _cancelHandler (event) {
-        this.hide();
+        this.hide(this.context);
         if (typeof this.cancelHandler === 'function') {
             this.cancelHandler();
         }

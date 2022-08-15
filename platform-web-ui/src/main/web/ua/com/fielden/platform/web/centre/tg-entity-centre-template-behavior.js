@@ -81,6 +81,15 @@ const TgEntityCentreTemplateBehaviorImpl = {
             this._entityToRefresh = null;
         }.bind(this);
         /////////////////////////////////////////////////////////////////////////////////
+    },
+
+    /**
+     * Initialisation block. It has all children web components already initialised.
+     */
+    ready: function () {
+        this.classList.add("canLeave");
+        this._defaultPropertyActionAttrs = {currentState: "EDIT", centreUuid: this.uuid};
+        this.navigationPreAction = this.navigationPreAction.bind(this);
 
         //////////////////Event handler to determine centre visibility///////////////////
         const observer = new IntersectionObserver((entries, observer) => {
@@ -100,17 +109,8 @@ const TgEntityCentreTemplateBehaviorImpl = {
         }, {
             root: document.documentElement
         });
-        observer.observe(this);
+        observer.observe(this._dom().$.centreResultContainer);
         /////////////////////////////////////////////////////////////////////////////////
-    },
-
-    /**
-     * Initialisation block. It has all children web components already initialised.
-     */
-    ready: function () {
-        this.classList.add("canLeave");
-        this._defaultPropertyActionAttrs = {currentState: "EDIT", centreUuid: this.uuid};
-        this.navigationPreAction = this.navigationPreAction.bind(this);
     },
 
     ////////////// Template related method are here in order to reduce the template size ///////////////

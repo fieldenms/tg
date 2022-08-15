@@ -772,7 +772,10 @@ const TgEntityCentreBehaviorImpl = {
                        propOrder.property = "";
                    }
                    return propOrder;
-                }))
+                }));
+                //If user received sse refresh event but moved to selection criteria and pressed run then refresh toast should be also canceled.
+                this.cancelRefreshToast();
+
                 if (this._triggerRun) {
                     if (this._selectedView === 0) {
                         this.async(function () {
