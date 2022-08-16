@@ -1333,7 +1333,11 @@ Polymer({
         if (this.master && this.master.editors.length > 0 && this._tapOnce && this.canOpenMaster()) {
             delete this._tapOnce;
             this.master._lastFocusedEditor = this.master.editors.find(editor => editor.propertyName === column.property);
+            const prevEditing = this.isEditing();
             this._makeRowEditable(entityIndex);
+            if (!prevEditing && this.isEditing()) {
+                this._fireStartEditing();
+            }
         } else if (this.master && this.master.editors.length > 0 && this.canOpenMaster()) {
             this._tapOnce = true;
             this.async(() => {
@@ -2312,6 +2316,14 @@ Polymer({
         return true;
     },
 
+    _fireStartEditing: function () {
+        this.fire("tg-egi-start-editing", this);
+    },
+
+    _fireFinishEditing: function () {
+        this.fire("tg-egi-finish-editing", this);
+    },
+
     _scrollToVisibleLeftMaster: function (e) {
         const topEgiBox = this.$.top_egi.getBoundingClientRect();
         const bottomEgiBox = this.$.bottom_egi.getBoundingClientRect();
@@ -2377,6 +2389,8 @@ Polymer({
                 this.master.retrieve();
             } else {
                 this._closeMaster();
+                //At this point fireing finish-edit event is needed because row with entityIndex can not be editable because entityIndex is out of bounds.
+                this._fireFinishEditing();
             }
         }
     },

@@ -24,6 +24,10 @@ const TgEntityCentreTemplateBehaviorImpl = {
         _visible: {
             type: Boolean,
             value: false
+        },
+        _isEgiEditing : {
+            type: Boolean,
+            value : false
         }
     },
 
@@ -55,7 +59,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
             } else {
                 this._pendingRefresh = true;
                 this._entityToRefresh = entityToRefresh;
-                if (this._visible) {
+                if (this._visible && !this._isEgiEditing) {
                     this.showRefreshToast();
                 }
             }
@@ -110,6 +114,21 @@ const TgEntityCentreTemplateBehaviorImpl = {
             root: document.documentElement
         });
         observer.observe(this._dom().$.centreResultContainer);
+        /////////////////////////////////////////////////////////////////////////////////
+
+        //////////////////Event handler for egi editing//////////////////////////////////
+        this.addEventListener("tg-egi-start-editing", (event) => {
+            this._isEgiEditing = true;
+            if (this._pendingRefresh) {
+                this.hideRefreshToast();
+            }
+        });
+        this.addEventListener("tg-egi-finish-editing", (event) => {
+            this._isEgiEditing = false;
+            if (this._pendingRefresh) {
+                this.showRefreshToast();
+            }
+        });
         /////////////////////////////////////////////////////////////////////////////////
     },
 
