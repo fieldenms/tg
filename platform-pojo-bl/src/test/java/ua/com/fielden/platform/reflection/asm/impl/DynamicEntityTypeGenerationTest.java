@@ -95,15 +95,16 @@ public class DynamicEntityTypeGenerationTest {
         assertEquals("Incorrect setter return type.", Reflector.obtainPropertySetter(Entity.class, "firstProperty").getReturnType(), Entity.class);
         assertEquals("Incorrect setter argument type.", Reflector.obtainPropertySetter(Entity.class, "entity").getParameterTypes()[0], Entity.class);
         
+        final String newTypeName = Entity.class.getName() + "_enhanced1";
         final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>)
                 cl.startModification(Entity.class)
-                .modifyTypeName(Entity.class.getName() + "_enhanced1")
-                .modifySupertypeName(Entity.class.getName().replace('.', '/'))
+                .modifyTypeName(newTypeName)
                 .endModification();
         assertTrue("Incorrect type name.", 
-                newType.getName().equals(Entity.class.getName() + "_enhanced1"));
+                newType.getName().equals(newTypeName));
+        // expect superclass of Entity, since modifySupertypeName wasn't used
         assertEquals("Incorrect inheritance.", 
-                Entity.class,
+                Entity.class.getSuperclass(),
                 newType.getSuperclass());
         assertEquals("Incorrect setter return type.",
                 Reflector.obtainPropertySetter(newType, "firstProperty").getReturnType(),
@@ -114,7 +115,7 @@ public class DynamicEntityTypeGenerationTest {
                 newType);
         
         assertEquals("The type of properties (previously of root type) also becomes changed.", 
-                Entity.class.getName() + "_enhanced1", 
+                newTypeName, 
                 newType.getDeclaredField("entity").getType().getName());
     }
 
