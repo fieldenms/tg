@@ -54,8 +54,8 @@ public class DynamicEntityClassLoader extends ClassLoader {
      * @return
      * @throws ClassNotFoundException
      */
-    public TypeMaker startModification(final Class<?> origType) throws ClassNotFoundException {
-        return new TypeMaker(this, origType).startModification();
+    public <T> TypeMaker<T> startModification(final Class<T> origType) throws ClassNotFoundException {
+        return new TypeMaker<T>(origType).startModification();
     }
 
     protected final Class<?> defineType(final String name, final byte[] b, final int off, final int len) {

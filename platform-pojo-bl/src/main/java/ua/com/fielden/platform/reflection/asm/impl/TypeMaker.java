@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
-import java.io.InputStream;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -15,27 +14,49 @@ import org.apache.commons.lang.StringUtils;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 
+import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.description.modifier.Ownership;
+import net.bytebuddy.description.modifier.Visibility;
+import net.bytebuddy.dynamic.DynamicType;
+import net.bytebuddy.implementation.FixedValue;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
-import ua.com.fielden.platform.utils.Pair;
 
 /**
- * A class that is responsible for creation for a single new class based on the provided API.
+ * This class provides an API for modifying types at runtime by means of bytecode manipulation.
+ * <p>
+ * To use this API start with {@link #startModification()}, then perform any other modifications, and end with {@link #endModification()}
+ * which loads the modified type and returns a corresponding {@link Class}.
+ * <p>
+ * <i>Notes on specific parts of the API</i>:
+ * <p>
+ * If {@link #modifyTypeName(String)} is not called, then {@link #endModification()} will most likely fail due to a name conflict 
+ * with the original type.
+ * <p>
+ * {@link #modifyTypeName(String)} should be called, if needed, <b>only after all other modifications</b>, in order to guarantee
+ * correct renaming of all occurences of the previous type name.
+ * 
+ * @param <T> The original type, on which the modified type is based on.
  * 
  * @author TG Team
  *
  */
-public class TypeMaker {
+public class TypeMaker<T> {
 
     private static final String NEW_SUPERTYPE_NAME_IS_NULL_OR_EMPTY = "New supertype name is 'null' or empty.";
-    private static final String CURRENT_TYPE_OR_NAME_ARE_NOT_SPECIFIED = "Current type or name are not specified.";
+    private static final String CURRENT_BUILDER_IS_NOT_SPECIFIED = "Current builder is not specified.";
     public static final String GET_ORIG_TYPE_METHOD_NAME = "_GET_ORIG_TYPE_METHOD_";
-    private final DynamicEntityClassLoader cl;
-    private byte[] currentType;
-    private String currentName;
-    private final Class<?> origType;
+    private final DynamicEntityClassLoader cl = null; // TODO remove
+    private byte[] currentType; // TODO remove
+    private String currentName; // TODO remove
+    private final Class<T> origType;
+    private DynamicType.Builder<T> builder;
 
-    public TypeMaker(final DynamicEntityClassLoader loader, final Class<?> origType) {
-        this.cl = loader;
+    // TODO remove
+    public TypeMaker(final DynamicEntityClassLoader loader, final Class<T> origType) {
+        this(origType);
+    }
+
+    public TypeMaker(final Class<T> origType) {
         this.origType = origType;
     }
     
@@ -46,28 +67,18 @@ public class TypeMaker {
      * @return
      * @throws ClassNotFoundException
      */
-    public TypeMaker startModification() throws ClassNotFoundException {
-        final String typeName = origType.getName();
-        if (skipAdaptation(typeName)) {
+    public TypeMaker<T> startModification() throws ClassNotFoundException {
+        if (skipAdaptation(origType.getName())) {
             throw new IllegalArgumentException("Java system classes should not be enhanced.");
         }
-        // try loading the specified type by either actually loading from disk or finding it in cache
-        if (cl.getTypeByNameFromCache(typeName).isPresent()) {
-            currentType = cl.getCachedByteArray(typeName);
-            currentName = typeName;
-        } else {
-            final String resource = typeName.replace('.', '/') + ".class";
-            try (final InputStream is = cl.getResourceAsStream(resource)) {
-                final ClassReader cr = new ClassReader(is);
-                final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-                final DoNothingAdapter cv = new DoNothingAdapter(cw);
-                cr.accept(cv, ClassReader.SKIP_FRAMES);
-                currentType = cw.toByteArray();
-                currentName = typeName;
-            } catch (final Exception e) {
-                throw new ClassNotFoundException(typeName, e);
-            }
-        }
+        // no need for looking up the specified type in cache,
+        // which was useful before, since ASM operates on byte[] directly
+
+        // we want to redefine instead of subclass because:
+        // 1) it makes type renaming simpler
+        // 2) it is intuitive - we base the new type on the original one (make a bytecode-equivalent copy)
+        // to preserve polymorphism with the origType use modifySupertypeName(String)
+        builder = new ByteBuddy().redefine(origType);
         
         return this;
     }
@@ -79,9 +90,9 @@ public class TypeMaker {
      * @param properties
      * @return
      */
-    public TypeMaker addProperties(final NewProperty... properties) {
-        if (currentType == null || currentName == null) {
-            throw new IllegalStateException(CURRENT_TYPE_OR_NAME_ARE_NOT_SPECIFIED);
+    public TypeMaker<T> addProperties(final NewProperty... properties) {
+        if (builder == null) {
+            throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
         }
 
         if (properties == null || properties.length == 0) {
@@ -117,9 +128,9 @@ public class TypeMaker {
     * @param annotations
     * @return
     */
-   public TypeMaker addClassAnnotations(final Annotation... annotations) {
-       if (currentType == null || currentName == null) {
-           throw new IllegalStateException(CURRENT_TYPE_OR_NAME_ARE_NOT_SPECIFIED);
+   public TypeMaker<T> addClassAnnotations(final Annotation... annotations) {
+       if (builder == null) {
+           throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
        }
 
        if (annotations == null || annotations.length == 0) {
@@ -157,49 +168,46 @@ public class TypeMaker {
    }
 
    /**
-    * Modifies type's name with the specified <code>newTypeName</code>. Note that, if type name is needed to be changed, it should be made after all other modifications
-    * (properties adding / adapting etc.).
-    *
-    * @param newTypeName
+    * Modifies type's name with the specified <code>newTypeName</code>. 
+    * <p>
+    * <i><b>NOTE</b></i>: this method should be called, if needed, only after all other modifications, in order to guarantee
+    * correct renaming of all occurences.
+    * 
+    * @param newTypeName - must be fully-qualified in a binary format 
+    * (e.g. <code>foo.Bar</code> )
     * @return
     */
-   public TypeMaker modifyTypeName(final String newTypeName) {
+   public TypeMaker<T> modifyTypeName(final String newTypeName) {
        if (StringUtils.isEmpty(newTypeName)) {
            throw new IllegalStateException("New type name is 'null' or empty.");
        }
-       if (currentType == null || currentName == null) {
-           throw new IllegalStateException(CURRENT_TYPE_OR_NAME_ARE_NOT_SPECIFIED);
+       if (builder == null) {
+           throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
        }
-       try {
-           final ClassReader cr = new ClassReader(currentType);
-           final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-           final AdvancedChangeNameAdapter cv = new AdvancedChangeNameAdapter(cw, currentName.replace('.', '/'), newTypeName.replace('.', '/')); //
-           cr.accept(cv, ClassReader.SKIP_FRAMES); //  EXPAND_FRAMES
-           currentType = cw.toByteArray();
-           currentName = cv.getNewTypeName().replace('/', '.');
-       } catch (final Exception e) {
-           throw new IllegalStateException(e);
-       }
+       builder = builder.name(newTypeName);
+       
        return this;
    }
-    
-    
-   public TypeMaker modifySupertypeName(final String newSupertypeName) {
+
+   /**
+    * Modifies the supertype's name with the specified <code>newSupertypeName</code>. 
+    * <p>
+    * 
+    * @param newSupertypeName - must be fully-qualified in a binary format 
+    * (e.g. <code>foo.Bar</code> )
+    * @return
+    */
+   public TypeMaker<T> modifySupertypeName(final String newSupertypeName) {
        if (StringUtils.isEmpty(newSupertypeName)) {
            throw new IllegalStateException(NEW_SUPERTYPE_NAME_IS_NULL_OR_EMPTY);
        }
-       if (currentType == null || currentName == null) {
-           throw new IllegalStateException(CURRENT_TYPE_OR_NAME_ARE_NOT_SPECIFIED);
+       if (builder == null) {
+           throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
        }
-       try {
-           final ClassReader cr = new ClassReader(currentType);
-           final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-           final AdvancedChangeSupertypeAdapter cv = new AdvancedChangeSupertypeAdapter(newSupertypeName.replace('.', '/'), cw); //
-           cr.accept(cv, ClassReader.SKIP_FRAMES); //ClassReader.EXPAND_FRAMES
-           currentType = cw.toByteArray();
-       } catch (final Exception e) {
-           throw new IllegalStateException(e);
-       }
+       // DynamicType.Builder does not provide supertype modification capabilities
+       // so we have to use an ASM wrapper
+       builder = builder.visit(AdvancedChangeSupertypeAdapter.asAsmVisitorWrapper(newSupertypeName));
+       
        return this;
    }
 
@@ -209,9 +217,9 @@ public class TypeMaker {
     * @param propertyReplacements
     * @return
     */
-   public TypeMaker modifyProperties(final NewProperty... propertyReplacements) {
-       if (currentType == null || currentName == null) {
-           throw new IllegalStateException(CURRENT_TYPE_OR_NAME_ARE_NOT_SPECIFIED);
+   public TypeMaker<T> modifyProperties(final NewProperty... propertyReplacements) {
+       if (builder == null) {
+           throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
        }
 
        if (propertyReplacements == null || propertyReplacements.length == 0) {
@@ -241,16 +249,8 @@ public class TypeMaker {
     * Generates code to capture the original type.
     */
    private void recordOrigType() {
-       try {
-           final ClassReader cr = new ClassReader(currentType);
-           final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-           final AdvancedRecordOriginalTypeAdapter cv = new AdvancedRecordOriginalTypeAdapter(cw, origType);
-           cr.accept(cv, ClassReader.SKIP_FRAMES);
-           currentType = cw.toByteArray();
-       } catch (final Exception e) {
-           throw new IllegalStateException(e);
-       }
-
+       builder = builder.defineMethod(GET_ORIG_TYPE_METHOD_NAME, origType.getClass(), Visibility.PUBLIC, Ownership.STATIC)
+               .intercept(FixedValue.value(origType));
    }
    
    public Class<?> endModification() {
@@ -258,12 +258,9 @@ public class TypeMaker {
            recordOrigType();
        }
        
-       final Class<?> klass = cl.defineType(currentName, currentType, 0, currentType.length);
-       cl.registerClass(new Pair<Class<?>, byte[]>(klass, currentType));
-
-       currentType = null;
-       currentName = null;
-       return klass;
+       return builder.make().load(origType.getClassLoader()).getLoaded();
+//        more like cache class (in the parent class loader)
+//       cl.registerClass(new Pair<Class<?>, byte[]>(klass, currentType));
    }
    
     private boolean skipAdaptation(final String name) {
