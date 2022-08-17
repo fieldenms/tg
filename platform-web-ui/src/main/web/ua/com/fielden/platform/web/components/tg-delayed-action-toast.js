@@ -1,13 +1,15 @@
+import '/resources/components/tg-paper-toast.js';
+
 import { TgToastBehavior } from '/resources/components/tg-toast-behavior.js';
 
 import { html, PolymerElement } from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import { mixinBehaviors } from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 
 const template = html`
-    <paper-toast id="actionToast" text="[[_text]]" allow-click-through always-on-top duration="0">
+    <tg-paper-toast id="actionToast" text="[[_text]]" allow-click-through always-on-top duration="0">
         <div id='btnAction' hidden$="[[!_actionVisible(countdown)]]" class="toast-btn" on-tap="_actionHandler">[[actionText]]</div>
         <div id='btnCancel' class="toast-btn" on-tap="_cancelHandler">[[cancelText]]</div>
-    </paper-toast>`; 
+    </tg-paper-toast>`; 
 
 class TgDelayedActionToast extends mixinBehaviors([TgToastBehavior], PolymerElement) {
 
@@ -71,7 +73,7 @@ class TgDelayedActionToast extends mixinBehaviors([TgToastBehavior], PolymerElem
         //Append action toast if it is not yet present
         const paperToast = this.getDocumentToast('actionToast');
         if (!paperToast) {
-            document.body.appendChild(this.$.actionToast);
+            this.getToastContainer().prepend(this.$.actionToast);
         }
 
         if (this.context !== context || !this.$.actionToast.opened) {
@@ -84,7 +86,7 @@ class TgDelayedActionToast extends mixinBehaviors([TgToastBehavior], PolymerElem
                 this._actionHandler();
             } else if (this.countdown === 0) {
                 this._text = this.textForPromptAction;
-                this.$.actionToast.show();
+                this._prependAndShow();
             } else if (this.countdown > 0) {
                 //Init count down and toast text.
                 let seconds = this.countdown;
@@ -97,11 +99,18 @@ class TgDelayedActionToast extends mixinBehaviors([TgToastBehavior], PolymerElem
                         this._actionHandler();
                     }
                 }, 1000);
-                this.$.actionToast.show();
+                this._prependAndShow();
             } else {
                 throw new Error(`The countdown seconds [${this.countdown}] should be greater than zero`);
             }
         }
+    }
+
+    _prependAndShow() {
+        if (this.getToastContainer().firstChild !== this.$.actionToast) {
+            this.getToastContainer().prepend(this.$.actionToast);
+        }
+        this.$.actionToast.show();
     }
 
     hide(context) {

@@ -3,12 +3,11 @@ import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js'
 const paperToastStyle = html`
     <custom-style>
         <style>
-            paper-toast {
+            tg-paper-toast {
+                position: static;
+                background: black;
                 @apply --layout-horizontal;
                 @apply --layout-center;
-                max-width: 256px;
-                left:0;
-                bottom:0;
             }
             .toast-btn {
                 padding-left: 8px;
@@ -16,7 +15,7 @@ const paperToastStyle = html`
                 font-weight: 800;
                 cursor: pointer;
             }
-            paper-toast paper-spinner {
+            tg-paper-toast paper-spinner {
                 width: 1.5em;
                 height: 1.5em;
                 min-width: 1em;
@@ -57,24 +56,36 @@ export const TgToastBehavior = {
     },
 
     getDocumentToast: function (toastId) {
-        const toasts = document.querySelectorAll('#' + toastId);
-        let toast = null;
-        let existingToastCount = 0;
-        for (let index = 0; index < toasts.length; index++) {
-            const currToast = toasts.item(index);
-            if (currToast.parentNode === document.body) {
-                existingToastCount++;
-                if (existingToastCount > 1) {
-                    throw 'More than one toast exist in body direct children.';
+        const toastContainer = document.getElementById('toastContainer');
+        if (toastContainer) {
+            const toasts = toastContainer.querySelectorAll('#' + toastId);
+            let toast = null;
+            let existingToastCount = 0;
+            for (let index = 0; index < toasts.length; index++) {
+                const currToast = toasts.item(index);
+                if (currToast.parentNode === toastContainer) {
+                    existingToastCount++;
+                    if (existingToastCount > 1) {
+                        throw new Error('More than one toast exist in body direct children.');
+                    }
+                    toast = currToast;
                 }
-                toast = currToast;
             }
+            return toast;
         }
-        return toast;
+        throw new Error('Toast container should be in document body.');
+    },
+
+    getToastContainer: function () {
+        const toastContainer = document.getElementById('toastContainer');
+        if (toastContainer) {
+            return toastContainer;
+        }
+        throw new Error('Toast container should be in document body.');
     },
 
     /**
-     * Overrode this to provide reference on paper-toast element 
+     * Overrode this to provide reference on tg-paper-toast element 
      */
     _toast: function () {}
 

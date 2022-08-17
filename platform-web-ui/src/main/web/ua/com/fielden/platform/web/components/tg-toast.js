@@ -3,9 +3,10 @@ import '/resources/polymer/@polymer/paper-dialog/paper-dialog.js'
 import '/resources/polymer/@polymer/paper-dialog-scrollable/paper-dialog-scrollable.js'
 import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/polymer/@polymer/paper-button/paper-button.js';
-import '/resources/polymer/@polymer/paper-toast/paper-toast.js';
 import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';
 import '/resources/polymer/@polymer/polymer/lib/elements/dom-bind.js';
+
+import '/resources/components/tg-paper-toast.js';
 
 import { tearDownEvent, containsRestictedTags } from '/resources/reflection/tg-polymer-utils.js';
 import { TgToastBehavior } from '/resources/components/tg-toast-behavior.js';
@@ -14,11 +15,11 @@ import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
 const template = html`
-    <paper-toast id="toast" text="[[_text]]" on-tap="_showMoreIfPossible" allow-click-through always-on-top duration="0">
+    <tg-paper-toast id="toast" text="[[_text]]" on-tap="_showMoreIfPossible" allow-click-through always-on-top duration="0">
         <!-- TODO responsive-width="250px" -->
         <paper-spinner id="spinner" hidden$="[[_skipShowProgress]]" active alt="in progress..." tabIndex="-1"></paper-spinner>
         <div id='btnMore' hidden$="[[_skipShowMore(_showProgress, _hasMore)]]" class="toast-btn" on-tap="_showMessageDlg">MORE</div>
-    </paper-toast>
+    </tg-paper-toast>
 `;
 
 const PROGRESS_DURATION = 3600000; // 1 hour
@@ -175,7 +176,7 @@ Polymer({
             this.$.toast._autoCloseCallBack = null; // must NOT interfere with _autoClose of paper-toast
             // Override refit function for paper-toast which behaves really weird (Maybe next releas of paper-toast iron-fit-behavior and iron-overlay-behavior will change this weird behaviour).
             this.$.toast.refit = function () { };
-            document.body.appendChild(this.$.toast);
+            this.getToastContainer().prepend(this.$.toast);
             this._showNewToast();
         } else if (previousToast.error === true && previousToast.opened && this.isCritical === false) { // discard new toast if existing toast is critical and new one is not; however if new one is critical -- do not discard it -- show overridden information
             console.warn('    toast show: DISCARDED: text = ', this.text + ', critical = ' + this.isCritical);
@@ -190,6 +191,9 @@ Polymer({
                 previousTgToast.showProgress = this.showProgress;
                 previousTgToast.hasMore = this.hasMore;
                 previousTgToast.isCritical = this.isCritical;
+            }
+            if (this.getToastContainer().firstChild !== previousToast) {
+                this.getToastContainer().prepend(previousToast);
             }
             previousTgToast._showNewToast();
         }
