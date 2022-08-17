@@ -1107,7 +1107,7 @@ const TgEntityCentreBehaviorImpl = {
 
     _saveOrCancelPromise: function () {
         this._showToastWithMessage(MSG_SAVE_OR_CANCEL);
-        return Promise.reject(MSG_SAVE_OR_CANCEL);
+        return Promise.reject(MSG_SAVE_OR_CANCEL).catch(e => {});
     },
 
     _focusView: function (e, forward) {
@@ -1243,7 +1243,8 @@ const TgEntityCentreBehaviorImpl = {
     currentPageTap: function () {
         this.persistActiveElement();
         this.currentPage()
-            .finally(() => this.restoreActiveElement());
+            .then(() => this.restoreActiveElement())
+            .catch(() => this.restoreActiveElement());
     },
 
     /**
