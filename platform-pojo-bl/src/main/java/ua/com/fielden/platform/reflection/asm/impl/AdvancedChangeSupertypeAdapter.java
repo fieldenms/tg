@@ -40,7 +40,8 @@ public class AdvancedChangeSupertypeAdapter extends ClassVisitor {
            public ClassVisitor wrap(TypeDescription instrumentedType, ClassVisitor classVisitor, 
                    Context implementationContext, TypePool typePool, 
                    FieldList<InDefinedShape> fields, MethodList<?> methods, 
-                   int writerFlags, int readerFlags) {
+                   int writerFlags, int readerFlags) 
+           {
                // wrap this adapter
                return new AdvancedChangeSupertypeAdapter(supertype.replace('.', '/'), classVisitor);
            }

@@ -32,14 +32,16 @@ public final class NewProperty {
         return new NewProperty(name, type, true, null, null, new Annotation[0]);
     }
 
-    public NewProperty(final String name, final Class<?> type, final boolean changeSignature, final String title, final String desc, final Annotation... annotations) {
+    public NewProperty(final String name, final Class<?> type, final boolean changeSignature, final String title, final String desc, 
+            final Annotation... annotations) 
+    {
         this.name = name;
         this.type = type;
         this.changeSignature = changeSignature;
         this.title = title;
         this.desc = desc;
         this.annotations.addAll(Arrays.asList(annotations));
-        this.addAnnotation(DEFAULT_IS_PROPERTY_ANNOTATION); // add just in case if it was not already provided
+        addAnnotation(DEFAULT_IS_PROPERTY_ANNOTATION); // add in case it wasn't provided
     }
 
     /**
@@ -59,13 +61,7 @@ public final class NewProperty {
      * @return
      */
     public Annotation getAnnotationByType(final Class<? extends Annotation> annotationType) {
-        for (final Annotation ad : annotations) {
-            final Class<? extends Annotation> thisType = ad.annotationType();
-            if (thisType == annotationType) {
-                return ad;
-            }
-        }
-        return null;
+        return annotations.stream().filter(annot -> annot.annotationType() == annotationType).findAny().orElse(null);
     }
 
     /**
