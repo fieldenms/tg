@@ -18,7 +18,9 @@ import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.modifier.Ownership;
 import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.dynamic.DynamicType;
+import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import net.bytebuddy.implementation.FixedValue;
+import net.bytebuddy.pool.TypePool;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 
 /**
@@ -45,21 +47,17 @@ public class TypeMaker<T> {
     private static final String NEW_SUPERTYPE_NAME_IS_NULL_OR_EMPTY = "New supertype name is 'null' or empty.";
     private static final String CURRENT_BUILDER_IS_NOT_SPECIFIED = "Current builder is not specified.";
     public static final String GET_ORIG_TYPE_METHOD_NAME = "_GET_ORIG_TYPE_METHOD_";
-    private final DynamicEntityClassLoader cl = null; // TODO remove
+    private final DynamicEntityClassLoader cl;
     private byte[] currentType; // TODO remove
     private String currentName; // TODO remove
     private final Class<T> origType;
     private DynamicType.Builder<T> builder;
 
-    // TODO remove
     public TypeMaker(final DynamicEntityClassLoader loader, final Class<T> origType) {
-        this(origType);
-    }
-
-    public TypeMaker(final Class<T> origType) {
+        this.cl = loader;
         this.origType = origType;
     }
-    
+
     /**
      * Initiates adaptation of the specified by name type. This could be either dynamic or static type (created manually by developer).
      *
@@ -84,8 +82,9 @@ public class TypeMaker<T> {
     }
 
     /**
-     * Adds the specified properties to the type. The provided properties are checked for conflicts with the type being modified -- only non-conflicting ones are added. Also,
-     * duplicate properties are eliminated.
+     * Adds the specified properties to the type. 
+     * The provided properties are checked for conflicts with the type being modified -- only non-conflicting ones are added. 
+     * Also, duplicate properties are eliminated.
      *
      * @param properties
      * @return
@@ -258,9 +257,14 @@ public class TypeMaker<T> {
            recordOrigType();
        }
        
-       return builder.make().load(origType.getClassLoader()).getLoaded();
-//        more like cache class (in the parent class loader)
-//       cl.registerClass(new Pair<Class<?>, byte[]>(klass, currentType));
+       // provide a TypePool that uses the class loader of the original type
+       // if origType is a dynamic one, then this will be DynamicEntityClassLoader, which will be able to locate origType
+       return builder.make(TypePool.ClassLoading.of(origType.getClassLoader()))
+               // provide DynamicEntityClassLoader to be injected with the new dynamic type
+               // this allows us to use a single class loader for all dynamically created types,
+               // instead of making ByteBuddy create a separate class loader for each
+               .load(cl)
+               .getLoaded();
    }
    
     private boolean skipAdaptation(final String name) {

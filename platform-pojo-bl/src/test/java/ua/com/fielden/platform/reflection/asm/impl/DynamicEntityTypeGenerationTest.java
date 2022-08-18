@@ -89,6 +89,19 @@ public class DynamicEntityTypeGenerationTest {
         cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
         Reflector.cleanUp();
     }
+    
+    @Test
+    public void dynamically_created_types_have_the_same_class_loader() throws Exception {
+        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>)
+                cl.startModification(Entity.class)
+                .modifyTypeName(Entity.class.getName() + "_enhanced")
+                .endModification();
+        final Class<? extends AbstractEntity<String>> newType0 = (Class<? extends AbstractEntity<String>>)
+                cl.startModification(Entity.class)
+                .modifyTypeName(Entity.class.getName() + "_enhanced0")
+                .endModification();
+        assertEquals(newType.getClassLoader(), newType0.getClassLoader());
+    }
 
     @Test
     public void types_can_be_renamed() throws Exception {
