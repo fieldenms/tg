@@ -1230,14 +1230,24 @@ const TgEntityCentreBehaviorImpl = {
      */
     currentPage: function (excludeInsertionPoints) {
         const self = this;
-        if (!self.$.egi.isEditing()) {
-            this.cancelRefreshToast();
-            return self.$.selection_criteria.currentPage()
-                .then(function () {
-                    self.runInsertionPointActions(excludeInsertionPoints);
-                });
-        }
-        return self._saveOrCancelPromise();
+        return new Promise((resolve, reject) => {
+            self.debounce('centre-refresh', () => {
+                // cancel the 'centre-refresh' debouncer if there is any active one:
+                self.cancelDebouncer('centre-refresh');
+
+                if (!self.$.egi.isEditing()) {
+                    this.cancelRefreshToast();
+                    return self.$.selection_criteria.currentPage()
+                        .then(function () {
+                            self.runInsertionPointActions(excludeInsertionPoints);
+                            resolve();
+                        }).catch (error => {
+                            reject(e);
+                        }) ;
+                }
+                self._saveOrCancelPromise().then(() => resolve()).catch(e => reject(e));
+            }, 50);
+        });
     },
 
     currentPageTap: function () {
