@@ -85,6 +85,8 @@ public class DynamicEntityTypeGenerationTest {
             calculated);
     private final NewProperty pdBool = new NewProperty(NEW_PROPERTY_BOOL, boolean.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC,
             boolCalculated);
+    
+    private static final Class<Entity> DEFAULT_ORIG_TYPE = Entity.class;
 
     @Before
     public void setUp() {
@@ -96,32 +98,34 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void dynamically_created_types_have_the_same_class_loader() throws Exception {
         final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>)
-                cl.startModification(Entity.class)
-                .modifyTypeName(Entity.class.getName() + "_enhanced")
+                cl.startModification(DEFAULT_ORIG_TYPE)
+                .modifyTypeName(DEFAULT_ORIG_TYPE.getName() + "_enhanced")
                 .endModification();
         final Class<? extends AbstractEntity<String>> newType0 = (Class<? extends AbstractEntity<String>>)
-                cl.startModification(Entity.class)
-                .modifyTypeName(Entity.class.getName() + "_enhanced0")
+                cl.startModification(DEFAULT_ORIG_TYPE)
+                .modifyTypeName(DEFAULT_ORIG_TYPE.getName() + "_enhanced0")
                 .endModification();
         assertEquals(newType.getClassLoader(), newType0.getClassLoader());
     }
 
     @Test
     public void types_can_be_renamed() throws Exception {
-        assertEquals("Incorrect setter return type.", Reflector.obtainPropertySetter(Entity.class, "firstProperty").getReturnType(), Entity.class);
-        assertEquals("Incorrect setter argument type.", Reflector.obtainPropertySetter(Entity.class, "entity").getParameterTypes()[0], Entity.class);
+        assertEquals("Incorrect setter return type.", 
+                Reflector.obtainPropertySetter(DEFAULT_ORIG_TYPE, "firstProperty").getReturnType(),
+                DEFAULT_ORIG_TYPE);
+        assertEquals("Incorrect setter argument type.",
+                Reflector.obtainPropertySetter(DEFAULT_ORIG_TYPE, "entity").getParameterTypes()[0],
+                DEFAULT_ORIG_TYPE);
         
-        final String newTypeName = Entity.class.getName() + "_enhanced1";
+        final String newTypeName = DEFAULT_ORIG_TYPE.getName() + "_enhanced1";
         final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>)
-                cl.startModification(Entity.class)
+                cl.startModification(DEFAULT_ORIG_TYPE)
                 .modifyTypeName(newTypeName)
                 .endModification();
         assertTrue("Incorrect type name.", 
                 newType.getName().equals(newTypeName));
-        // expect superclass of Entity, since modifySupertypeName wasn't used
-        assertEquals("Incorrect inheritance.", 
-                Entity.class.getSuperclass(),
-                newType.getSuperclass());
+        // expect superclass of the original type, since modifySupertypeName wasn't used
+        assertEquals("Incorrect inheritance.", DEFAULT_ORIG_TYPE.getSuperclass(), newType.getSuperclass());
         assertEquals("Incorrect setter return type.",
                 Reflector.obtainPropertySetter(newType, "firstProperty").getReturnType(),
                 newType);
@@ -137,14 +141,14 @@ public class DynamicEntityTypeGenerationTest {
 
     @Test
     public void should_support_supertype_modification() throws Exception {
-        final String newTypeName = Entity.class.getName() + "_enhanced2";
+        final String newTypeName = DEFAULT_ORIG_TYPE.getName() + "_enhanced2";
         final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>)
-                cl.startModification(Entity.class)
+                cl.startModification(DEFAULT_ORIG_TYPE)
                 .modifyTypeName(newTypeName)
-                .modifySupertypeName(Entity.class.getName())
+                .modifySupertypeName(DEFAULT_ORIG_TYPE.getName())
                 .endModification();
         assertTrue("Incorrect type name.", newType.getName().equals(newTypeName));
-        assertEquals("Incorrect inheritance.", Entity.class, newType.getSuperclass());
+        assertEquals("Incorrect inheritance.", DEFAULT_ORIG_TYPE, newType.getSuperclass());
 
         assertEquals("Incorrect setter return type.", 
                 Reflector.obtainPropertySetter(newType, "firstProperty").getReturnType(),
@@ -154,20 +158,24 @@ public class DynamicEntityTypeGenerationTest {
                 newType.getDeclaredField("entity").getType().getName());
     }
 
-    @Ignore
     @Test
-    public void generated_types_can_be_renamed_after_additing_new_properties() throws Exception {
-        assertEquals("Incorrect setter return type.", Reflector.obtainPropertySetter(Entity.class, "firstProperty").getReturnType(), Entity.class);
-        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.//
-        /*     */startModification(Entity.class).//
-        /*          */addProperties(pd1).//
-        /*          */modifyTypeName(Entity.class.getName() + "_enhanced3").//
-        /*     */endModification();
-        assertTrue("Incorrect type name.", newType.getName().equals(Entity.class.getName() + "_enhanced3"));
-        assertEquals("Incorrect inheritance.", AbstractEntity.class, newType.getSuperclass());
+    public void generated_types_can_be_renamed_after_adding_new_properties() throws Exception {
+        final String newTypeName = DEFAULT_ORIG_TYPE.getName() + "_enhanced3";
+        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) 
+                cl.startModification(DEFAULT_ORIG_TYPE)
+                .addProperties(pd1)
+                .modifyTypeName(newTypeName)
+                .extendOriginalType()
+                .endModification();
+        assertTrue("Incorrect type name.", newType.getName().equals(newTypeName));
+        assertEquals("Incorrect inheritance.", DEFAULT_ORIG_TYPE, newType.getSuperclass());
 
-        assertEquals("Incorrect number of properties.", Finder.getPropertyDescriptors(Entity.class).size() + 1, Finder.getPropertyDescriptors(newType).size());
-        assertEquals("Incorrect setter return type.", Reflector.obtainPropertySetter(newType, "firstProperty").getReturnType(), newType);
+        assertEquals("Incorrect number of properties.", 
+                Finder.getPropertyDescriptors(DEFAULT_ORIG_TYPE).size() + 1,
+                Finder.getPropertyDescriptors(newType).size());
+        assertEquals("Incorrect setter return type.", 
+                Reflector.obtainPropertySetter(newType, "firstProperty").getReturnType(),
+                newType);
     }
 
     @Ignore

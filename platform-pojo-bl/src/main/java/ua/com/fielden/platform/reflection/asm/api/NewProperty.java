@@ -6,6 +6,7 @@ import java.util.Arrays;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
 
 /**
@@ -75,5 +76,24 @@ public final class NewProperty {
             annotations.add(annotation);
         }
         return this;
+    }
+    
+    public Title titleAnnotation() {
+        return new Title() {
+            @Override
+            public Class<Title> annotationType() {
+                return Title.class;
+            }
+
+            @Override
+            public String value() {
+                return title;
+            }
+
+            @Override
+            public String desc() {
+                return desc;
+            }
+        };
     }
 }

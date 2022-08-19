@@ -1,13 +1,16 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -15,12 +18,19 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 
 import net.bytebuddy.ByteBuddy;
+import net.bytebuddy.description.modifier.FieldManifestation;
 import net.bytebuddy.description.modifier.Ownership;
+import net.bytebuddy.description.modifier.ParameterManifestation;
 import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.dynamic.DynamicType;
-import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
+import net.bytebuddy.dynamic.TargetType;
+import net.bytebuddy.dynamic.DynamicType.Unloaded;
+import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.pool.TypePool;
+import ua.com.fielden.platform.entity.annotation.Generated;
+import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.factory.ObservableAnnotation;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 
 /**
@@ -44,6 +54,12 @@ import ua.com.fielden.platform.reflection.asm.api.NewProperty;
  */
 public class TypeMaker<T> {
 
+    private static final Generated GENERATED_ANNOTATION = new Generated() {
+        @Override
+        public Class<Generated> annotationType() {
+            return Generated.class;
+        }
+    };
     private static final String NEW_SUPERTYPE_NAME_IS_NULL_OR_EMPTY = "New supertype name is 'null' or empty.";
     private static final String CURRENT_BUILDER_IS_NOT_SPECIFIED = "Current builder is not specified.";
     public static final String GET_ORIG_TYPE_METHOD_NAME = "_GET_ORIG_TYPE_METHOD_";
@@ -83,7 +99,7 @@ public class TypeMaker<T> {
 
     /**
      * Adds the specified properties to the type. 
-     * The provided properties are checked for conflicts with the type being modified -- only non-conflicting ones are added. 
+     * Those properties that conflict with the existing ones are discarded (i.e. old properties are not overwritten).
      * Also, duplicate properties are eliminated.
      *
      * @param properties
@@ -97,22 +113,24 @@ public class TypeMaker<T> {
         if (properties == null || properties.length == 0) {
             return this;
         }
-
-        final Map<String, NewProperty> propertiesToAdd = new LinkedHashMap<>();
-        for (final NewProperty prop : properties) {
-            propertiesToAdd.put(prop.name, prop);
-        }
-
-        try {
-            final ClassReader cr = new ClassReader(currentType);
-            final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-            final AdvancedAddPropertyAdapter cv = new AdvancedAddPropertyAdapter(cw, propertiesToAdd);
-            cr.accept(cv, ClassReader.SKIP_FRAMES);
-            currentType = cw.toByteArray();
-            currentName = cv.getEnhancedName().replace('/', '.');
-        } catch (final Exception e) {
-            throw new IllegalStateException(e);
-        }
+        final List<String> existingProperties = Arrays.asList(origType.getDeclaredFields()).stream().map(Field::getName).toList();
+        final List<NewProperty> propertiesToAdd = Arrays.asList(properties).stream()
+                .filter(prop -> !existingProperties.contains(prop.name))
+                .toList();
+        propertiesToAdd.forEach(prop -> {
+            builder = builder.defineField(prop.name, prop.type, Visibility.PRIVATE)
+                    // annotations
+                    .annotateField(prop.annotations)
+                    .annotateField(prop.titleAnnotation(), GENERATED_ANNOTATION)
+                    // getter
+                    .defineMethod("get" + StringUtils.capitalize(prop.name), prop.type, Visibility.PUBLIC)
+                    .intercept(FieldAccessor.ofField(prop.name))
+                    // setter
+                    .defineMethod("set" + StringUtils.capitalize(prop.name), TargetType.DESCRIPTION, Visibility.PUBLIC)
+                    .withParameter(prop.type, "obj", ParameterManifestation.FINAL)
+                    .intercept(FieldAccessor.ofField(prop.name).setsArgumentAt(0).andThen(FixedValue.self()))
+                    .annotateMethod(ObservableAnnotation.newInstance());
+        });
 
         return this;
     }
@@ -172,8 +190,7 @@ public class TypeMaker<T> {
     * <i><b>NOTE</b></i>: this method should be called, if needed, only after all other modifications, in order to guarantee
     * correct renaming of all occurences.
     * 
-    * @param newTypeName - must be fully-qualified in a binary format 
-    * (e.g. <code>foo.Bar</code> )
+    * @param newTypeName - must be fully-qualified in a binary format (e.g. <code>foo.Bar</code> )
     * @return
     */
    public TypeMaker<T> modifyTypeName(final String newTypeName) {
@@ -184,7 +201,6 @@ public class TypeMaker<T> {
            throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
        }
        builder = builder.name(newTypeName);
-       
        return this;
    }
 
@@ -208,6 +224,16 @@ public class TypeMaker<T> {
        builder = builder.visit(AdvancedChangeSupertypeAdapter.asAsmVisitorWrapper(newSupertypeName));
        
        return this;
+   }
+   
+   /**
+    * Sets the supertype's name to the name of the original type.
+    * A shortcut for {@link #modifySupertypeName(String)} where the argument is the original type's name.
+    * @return
+    */
+   public TypeMaker<T> extendOriginalType() {
+      modifySupertypeName(origType.getName());
+      return this;
    }
 
    /**
