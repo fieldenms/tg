@@ -321,7 +321,7 @@ const template = html`
             <div id="fantomSplitter" class="fantom-splitter"></div>
         </tg-centre-result-view>
         <slot id="alternativeViewSlot" name="alternative-view-insertion-point"></slot>
-    </iron-pages>`
+    </iron-pages>`;
 
 Polymer({
     _template: template,
@@ -335,16 +335,6 @@ Polymer({
         // These mandatory properties must be specified in attributes, when constructing <tg-*-editor>s.       //
         // No default values are allowed in this case.														   //
         /////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        /**
-         * Action handler for action delayed toast.
-         */
-        refreshCentre: Function,
-
-        /**
-         * Cancel handler  for action delayed toast.
-         */
-        cancelCentreRefresh: Function,
 
         _selectedView: {
             type: Number

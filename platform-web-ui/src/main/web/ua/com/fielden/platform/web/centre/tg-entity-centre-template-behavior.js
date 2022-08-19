@@ -20,7 +20,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
             type: Boolean,
             value: false
         },
-        _entityToRefresh: Object,
+        _entitiesToRefresh: Array,
         _visible: {
             type: Boolean,
             value: false
@@ -33,13 +33,8 @@ const TgEntityCentreTemplateBehaviorImpl = {
 
     created: function () {
 
-        const refreshCentre = (entityToRefresh) => {
-            if (entityToRefresh) {
-                this.refreshEntities([entityToRefresh.entity]);
-            } else {
-                this.refreshEntities([]);
-            }
-        }
+        this._entitiesToRefresh = [];
+
         // bind SSE event handling method regardless of the fact whether this particulare
         // centre is bound to some SSE url or not.
         this.dataHandler = function (msg) {
@@ -52,13 +47,16 @@ const TgEntityCentreTemplateBehaviorImpl = {
                 entityToRefresh = this.$.egi.egiModel.find(entry => entry.entity.get('id') === msg.id);
             }
 
-            if (this._pendingRefresh) {
-                if (this._entityToRefresh && !entityToRefresh) {
-                    this._entityToRefresh = null;
-                }
+            //Initialise entities to refresh: If sse event with id and egi has entity with that id then add to the list of entites to refresh.
+            //Otherwise if sse event is without id or egi doesn't have an entity with that id then clear entities to refresh list to refresh whole centre.
+            if (entityToRefresh) {
+                this._entitiesToRefresh.push(entityToRefresh.entity);
             } else {
+                this._entitiesToRefresh = [];
+            }
+
+            if (!this._pendingRefresh) {
                 this._pendingRefresh = true;
-                this._entityToRefresh = entityToRefresh;
                 if (this._visible && !this._isEgiEditing) {
                     this.showRefreshToast();
                 }
@@ -75,14 +73,14 @@ const TgEntityCentreTemplateBehaviorImpl = {
         this.actionHandler = function () {
             if (this._pendingRefresh) {
                 this._pendingRefresh = false;
-                refreshCentre(this._entityToRefresh);
-                this._entityToRefresh = null;
+                this.refreshEntities(this._entitiesToRefresh);
+                this._entitiesToRefresh = [];
             }
         }.bind(this);
 
         this.cancelHandler = function () {
             this._pendingRefresh = false;
-            this._entityToRefresh = null;
+            this._entitiesToRefresh = [];
         }.bind(this);
         /////////////////////////////////////////////////////////////////////////////////
     },

@@ -15,6 +15,7 @@ public interface ICentreSseWithPromptRefresh<T extends AbstractEntity<?>> extend
      * Configures centre to show prompt on sse event before refresh. Allows one to specify the number of countdown seconds to refresh.
      * If countdown seconds is zero then prompt will have to options: refresh and skip without any countdown.
      * If countdown seconds is greater than zero then prompt will have only one option - skip. Centre will be refreshed after countdown.
+     * If countdown seconds is less then zero then exceptiion will be thrown.
      *
      * @param seconds - countdown seconds
      * @return

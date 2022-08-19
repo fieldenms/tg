@@ -36,6 +36,13 @@ const paperToastStyle = html`
             .toast-dialog paper-button:hover {
                 background: var(--paper-light-blue-50);
             }
+            #toastContainer {
+                position: fixed;
+                width: 256px;
+                left:0;
+                bottom:0;
+                @apply --layout-vertical;
+            }
         </style>
     </custom-style>`;
 paperToastStyle.setAttribute('style', 'display: none;');
@@ -56,32 +63,31 @@ export const TgToastBehavior = {
     },
 
     getDocumentToast: function (toastId) {
-        const toastContainer = document.getElementById('toastContainer');
-        if (toastContainer) {
-            const toasts = toastContainer.querySelectorAll('#' + toastId);
-            let toast = null;
-            let existingToastCount = 0;
-            for (let index = 0; index < toasts.length; index++) {
-                const currToast = toasts.item(index);
-                if (currToast.parentNode === toastContainer) {
-                    existingToastCount++;
-                    if (existingToastCount > 1) {
-                        throw new Error('More than one toast exist in body direct children.');
-                    }
-                    toast = currToast;
+        const toastContainer = this.getToastContainer();
+        const toasts = toastContainer.querySelectorAll('#' + toastId);
+        let toast = null;
+        let existingToastCount = 0;
+        for (let index = 0; index < toasts.length; index++) {
+            const currToast = toasts.item(index);
+            if (currToast.parentNode === toastContainer) {
+                existingToastCount++;
+                if (existingToastCount > 1) {
+                    throw new Error('More than one toast exist in body direct children.');
                 }
+                toast = currToast;
             }
-            return toast;
         }
-        throw new Error('Toast container should be in document body.');
+        return toast;
     },
 
     getToastContainer: function () {
-        const toastContainer = document.getElementById('toastContainer');
-        if (toastContainer) {
-            return toastContainer;
+        let toastContainer = document.getElementById('toastContainer');
+        if (!toastContainer) {
+            toastContainer = document.createElement('div');
+            toastContainer.setAttribute("id", "toastContainer");
+            document.body.appendChild(toastContainer);
         }
-        throw new Error('Toast container should be in document body.');
+        return toastContainer;
     },
 
     /**

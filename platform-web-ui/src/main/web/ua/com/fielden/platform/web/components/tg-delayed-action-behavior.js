@@ -55,7 +55,7 @@ export const TgDelayedActionBehavior = {
             //Clear timeout if it is present and working to create new one.
             this._clearTimeoutID();
 
-            //Bind static titles for tast
+            //Bind static titles for toast
             this._bindToast();
 
             if (typeof this.countdown === 'undefined' || this.countdown === null) {
