@@ -100,12 +100,12 @@ const TgEntityCentreTemplateBehaviorImpl = {
             entries.forEach(entry => {
                 if (entry.intersectionRatio > 0) {
                     this._visible = true;
-                    if (this._pendingRefresh) {
+                    if (this._pendingRefresh && !this._isEgiEditing) {
                         this.showRefreshToast();
                     }
                 } else {
                     this._visible = false;
-                    if (this._pendingRefresh) {
+                    if (this._pendingRefresh && !this._isEgiEditing) {
                         this.hideRefreshToast();
                     }
                 }
@@ -119,13 +119,13 @@ const TgEntityCentreTemplateBehaviorImpl = {
         //////////////////Event handler for egi editing//////////////////////////////////
         this.addEventListener("tg-egi-start-editing", (event) => {
             this._isEgiEditing = true;
-            if (this._pendingRefresh) {
+            if (this._pendingRefresh && this._visible) {
                 this.hideRefreshToast();
             }
         });
         this.addEventListener("tg-egi-finish-editing", (event) => {
             this._isEgiEditing = false;
-            if (this._pendingRefresh) {
+            if (this._pendingRefresh && this._visible) {
                 this.showRefreshToast();
             }
         });
