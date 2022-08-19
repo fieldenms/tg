@@ -90,11 +90,11 @@ class TgDelayedActionToast extends mixinBehaviors([TgToastBehavior], PolymerElem
             } else if (this.countdown > 0) {
                 //Init count down and toast text.
                 let seconds = this.countdown;
-                this._text = `${this.textForCountdownAction} ${seconds} seconds`;
+                this._text = `${this.textForCountdownAction} ${seconds}`;
                 //Init interval to update text and if the countdown is 0 then run inoke actionHandler (e.a. run action).
                 this._countdownTimerID = setInterval(() => {
                     seconds -= 1;
-                    this._text = `${this.textForCountdownAction} ${seconds} seconds`;
+                    this._text = `${this.textForCountdownAction} ${seconds}`;
                     if (seconds === 0) {
                         this._actionHandler();
                     }

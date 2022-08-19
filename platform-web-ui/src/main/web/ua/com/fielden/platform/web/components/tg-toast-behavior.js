@@ -10,7 +10,7 @@ const paperToastStyle = html`
                 @apply --layout-center;
             }
             .toast-btn {
-                padding-left: 8px;
+                margin-left: 16px;
                 color: #03A9F4;
                 font-weight: 800;
                 cursor: pointer;
