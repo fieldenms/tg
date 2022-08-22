@@ -35,7 +35,7 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
     private final List<SourceQuery1> models = new ArrayList<>();
     private final boolean isSyntheticEntity;
 
-    public Source1BasedOnSubqueries(final String alias, final List<SourceQuery1> models, final int id, final boolean isSyntheticEntity) {
+    public Source1BasedOnSubqueries(final String alias, final List<SourceQuery1> models, final Integer id, final boolean isSyntheticEntity) {
         super(alias, id);
         this.isSyntheticEntity = isSyntheticEntity;
         this.models.addAll(models);
@@ -45,7 +45,7 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
     public Source2BasedOnSubqueries transform(final TransformationContext context) {
         final List<SourceQuery2> transformedQueries = models.stream().map(m -> m.transform(context)).collect(toList());
         validateYields(transformedQueries);
-        return new Source2BasedOnSubqueries(transformedQueries, alias, transformId(context), produceEntityInfo(context.domainInfo, transformedQueries, sourceType(), isSyntheticEntity));
+        return new Source2BasedOnSubqueries(transformedQueries, alias, id, produceEntityInfo(context.domainInfo, transformedQueries, sourceType(), isSyntheticEntity));
     }
     
     @Override

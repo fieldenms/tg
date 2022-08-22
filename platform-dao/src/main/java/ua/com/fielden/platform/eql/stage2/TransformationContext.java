@@ -19,7 +19,7 @@ import ua.com.fielden.platform.types.tuples.T2;
 public class TransformationContext {
 
     private final TablesAndSourceChildren tablesAndSourceChildren;
-    private final Map<String, Map<String, T2<ISource3, Object>>> resolutions = new HashMap<>();
+    private final Map<Integer, Map<String, T2<ISource3, Object>>> resolutions = new HashMap<>(); // TODO consider replacing Object with 2 concrete types  
     private final Map<String, Object> paramValuesByNames = new HashMap<>();
     private final Map<Object, String> paramNamesByValues = new HashMap<>();
     public final int sqlId;
@@ -30,7 +30,7 @@ public class TransformationContext {
     }
 
     private TransformationContext(final TablesAndSourceChildren tablesAndSourceChildren, 
-            final Map<String, Map<String, T2<ISource3, Object>>> resolutions,
+            final Map<Integer, Map<String, T2<ISource3, Object>>> resolutions,
             final Map<String, Object> paramValuesByNames,
             final Map<Object, String> paramNamesByValues,
             final int sqlId, final int paramId) {
@@ -64,7 +64,7 @@ public class TransformationContext {
         }
     }
 
-    public List<ChildGroup> getSourceChildren(final String sourceId) {
+    public List<ChildGroup> getSourceChildren(final Integer sourceId) {
         final List<ChildGroup> result = tablesAndSourceChildren.getSourceChildren().get(sourceId);
         return result != null ? result : emptyList();
     }
@@ -77,7 +77,7 @@ public class TransformationContext {
         final TransformationContext result = new TransformationContext(tablesAndSourceChildren, resolutions, paramValuesByNames, paramNamesByValues, sqlId, paramId);
         
         for (final ChildGroup fc : children) {
-            for (final Entry<String, String> el : fc.paths().entrySet()) {
+            for (final Entry<String, Integer> el : fc.paths().entrySet()) {
                 final Map<String, T2<ISource3, Object>> existing = result.resolutions.get(el.getValue());
                 if (existing != null) {
                     existing.put(el.getKey(), t2(source, fc.expr == null ? fc.name : fc.expr));
@@ -91,7 +91,7 @@ public class TransformationContext {
         return result;
     }
 
-    public T2<ISource3, Object> resolve(final String sourceId, final String path) {
-        return resolutions.get(sourceId).get(path);
+    public T2<ISource3, Object> resolve(final Integer sourceId, final String path) {
+    	return resolutions.get(sourceId).get(path);
     }
 }

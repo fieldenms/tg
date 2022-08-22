@@ -18,7 +18,7 @@ import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnSubqueries;
 public class Source2BasedOnSubqueries extends AbstractSource2 implements ISource2<Source3BasedOnSubqueries> {
     private final List<SourceQuery2> models = new ArrayList<>();
 
-    public Source2BasedOnSubqueries(final List<SourceQuery2> models, final String alias, final String id, final EntityInfo<?> entityInfo) {
+    public Source2BasedOnSubqueries(final List<SourceQuery2> models, final String alias, final Integer id, final EntityInfo<?> entityInfo) {
         super(id, alias, entityInfo);
         this.models.addAll(models);
     }

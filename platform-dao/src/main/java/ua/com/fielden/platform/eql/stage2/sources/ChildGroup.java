@@ -16,11 +16,11 @@ public class ChildGroup {
     public final boolean required;
     private final List<ChildGroup> items;
     
-    private final Map<String, String> paths; //prop ExplicitSourceId by its full path
+    private final Map<String, Integer> paths; //prop ExplicitSourceId and its full resolution path (i.e. explicit dot.notated prop representation)
     
     public final Expression2 expr;
     
-    public ChildGroup(final String name, final List<ChildGroup> items, final Map<String, String> paths, final boolean required, final Source2BasedOnPersistentType source, final Expression2 expr) {
+    public ChildGroup(final String name, final List<ChildGroup> items, final Map<String, Integer> paths, final boolean required, final Source2BasedOnPersistentType source, final Expression2 expr) {
         this.name = name;
         this.items = items;
         this.required = required;
@@ -35,7 +35,7 @@ public class ChildGroup {
 //                );
     }
     
-    public Map<String, String> paths() {
+    public Map<String, Integer> paths() {
         return unmodifiableMap(paths);
     }
 
@@ -55,7 +55,7 @@ public class ChildGroup {
         final StringBuffer sb = new StringBuffer();
         sb.append("\n" + currentOffset + "**** CHILDGROUP **** name : " + name + (expr != null ? " [CALC]" : ""));
         if (!paths.isEmpty()) {
-            for (Entry<String, String> path : paths.entrySet()) {
+            for (Entry<String, Integer> path : paths.entrySet()) {
                 sb.append("\n" + currentOffset + "-------- absolutePropPath : [" + path.getValue() + "]*[" +path.getKey()+ "]");    
             }
         }

@@ -91,7 +91,7 @@ import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage1.sources.YieldInfoNode;
 import ua.com.fielden.platform.eql.stage1.sources.YieldInfoNodesGenerator;
-import ua.com.fielden.platform.eql.stage2.PathsToTreeTransformator;
+import ua.com.fielden.platform.eql.stage2.PathsToTreeTransformer;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
@@ -205,14 +205,14 @@ public class EqlDomainMetadata {
     }
 
     private void validateCalcProps() {
-        final PathsToTreeTransformator p2tt = new PathsToTreeTransformator(this, gen);
+        final PathsToTreeTransformer p2tt = new PathsToTreeTransformer(this, gen);
         for (final EntityInfo<?> et : domainInfo.values()) {
             if (et.getCategory() != UNION) {
-                final Source2BasedOnPersistentType source = new Source2BasedOnPersistentType(et.javaType(), et, "dummy_id");
+                final Source2BasedOnPersistentType source = new Source2BasedOnPersistentType(et.javaType(), et, gen.nextSourceId() /*"dummy_id"*/); //TODO analyze
                 for (final AbstractPropInfo<?> prop : et.getProps().values()) {
                     if (prop.expression != null && !prop.name.equals(KEY)) {
                        try {
-                            p2tt.groupChildren(setOf(new Prop2(source, asList(prop))));    
+                            p2tt.transform(setOf(new Prop2(source, asList(prop))));    
                         } catch (final Exception e) {
                             throw new EqlException("There is an error in expression of calculated property [" + et.javaType().getSimpleName() + ":" + prop.name + "]: " + e.getMessage());
                         }
@@ -220,7 +220,7 @@ public class EqlDomainMetadata {
                         for (final AbstractPropInfo<?> subprop : ((ComponentTypePropInfo<?>) prop).getProps().values()) {
                             if (subprop.expression != null) {
                                 try {
-                                    p2tt.groupChildren(setOf(new Prop2(source, asList(prop, subprop))));    
+                                    p2tt.transform(setOf(new Prop2(source, asList(prop, subprop))));    
                                 } catch (final Exception e) {
                                     throw new EqlException("There is an error in expression of calculated property [" + et.javaType().getSimpleName() + ":" + prop.name  + "." + subprop.name + "]: " + e.getMessage());
                                 }

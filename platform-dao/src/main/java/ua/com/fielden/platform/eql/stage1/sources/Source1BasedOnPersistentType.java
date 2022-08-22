@@ -9,7 +9,7 @@ import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
 public class Source1BasedOnPersistentType extends AbstractSource1<Source2BasedOnPersistentType> {
     private final Class<? extends AbstractEntity<?>> sourceType;
 
-    public Source1BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final String alias, final int id) {
+    public Source1BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final String alias, final Integer id) {
         super(alias, id);
         this.sourceType = Objects.requireNonNull(sourceType);
     }
@@ -21,7 +21,7 @@ public class Source1BasedOnPersistentType extends AbstractSource1<Source2BasedOn
 
     @Override
     public Source2BasedOnPersistentType transform(final TransformationContext context) {
-        return new Source2BasedOnPersistentType(sourceType(), context.domainInfo.getEntityInfo(sourceType()), alias, transformId(context));
+        return new Source2BasedOnPersistentType(sourceType(), context.domainInfo.getEntityInfo(sourceType()), alias, id);
     }
 
     @Override

@@ -10,7 +10,7 @@ import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.PathsToTreeTransformator;
+import ua.com.fielden.platform.eql.stage2.PathsToTreeTransformer;
 import ua.com.fielden.platform.eql.stage2.TablesAndSourceChildren;
 import ua.com.fielden.platform.eql.stage2.TransformationResult;
 import ua.com.fielden.platform.eql.stage2.operands.ResultQuery2;
@@ -28,8 +28,8 @@ public class EqlQueryTransformer {
         final EntQueryGenerator gen = new EntQueryGenerator(filter, username, new QueryNowValue(dates), qem.getParamValues());
         final TransformationContext context = new TransformationContext(eqlDomainMetadata);
         final ResultQuery2 query2 = gen.generateAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel).transform(context);
-        final PathsToTreeTransformator p2tt = new PathsToTreeTransformator(eqlDomainMetadata, gen);
-        final Map<String, List<ChildGroup>> childGroupsMap = p2tt.groupChildren(query2.collectProps());
+        final PathsToTreeTransformer p2tt = new PathsToTreeTransformer(eqlDomainMetadata, gen);
+        final Map<Integer, List<ChildGroup>> childGroupsMap = p2tt.transform(query2.collectProps());
         return query2.transform(new ua.com.fielden.platform.eql.stage2.TransformationContext(new TablesAndSourceChildren(eqlDomainMetadata.getTables(), childGroupsMap)));
     }
 }

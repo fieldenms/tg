@@ -126,20 +126,12 @@ public class EqlStage3TestCase extends EqlTestCase {
     }
 
     
-    protected static Source3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final String sourceForContextId) {
+    protected static Source3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final Integer sourceForContextId) {
         return new Source3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId, nextSqlId());
     }
 
-    protected static Source3BasedOnSubqueries source(final String sourceForContextId, final SourceQuery3... sourceQueries) {
+    protected static Source3BasedOnSubqueries source(final Integer sourceForContextId, final SourceQuery3... sourceQueries) {
         return new Source3BasedOnSubqueries(Arrays.asList(sourceQueries), sourceForContextId, nextSqlId());
-    }
-
-    protected static Source3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final String sourceForContextId, final String subcontextId) {
-        return new Source3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId + "_" + subcontextId, nextSqlId());
-    }
-
-    protected static Source3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final Source3BasedOnTable sourceForContextId, final String subcontextId) {
-        return new Source3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId.id + "_" + subcontextId, nextSqlId());
     }
 
     protected static Expression3 expr(final ISingleOperand3 op1, final Class<?> type, final Object hibType) {

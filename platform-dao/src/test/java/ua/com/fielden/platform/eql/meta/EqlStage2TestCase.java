@@ -252,15 +252,15 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new Prop1(name, false);
     }
 
-    protected static Source2BasedOnPersistentType source(final String id, final Class<? extends AbstractEntity<?>> sourceType, final String alias) {
+    protected static Source2BasedOnPersistentType source(final Integer id, final Class<? extends AbstractEntity<?>> sourceType, final String alias) {
         return new Source2BasedOnPersistentType(sourceType, DOMAIN_METADATA.eqlDomainMetadata.getEntityInfo(sourceType), alias, id);
     }
 
-    protected static Source2BasedOnPersistentType source(final String id, final Class<? extends AbstractEntity<?>> sourceType) {
+    protected static Source2BasedOnPersistentType source(final Integer id, final Class<? extends AbstractEntity<?>> sourceType) {
         return new Source2BasedOnPersistentType(sourceType, DOMAIN_METADATA.eqlDomainMetadata.getEntityInfo(sourceType), id);
     }
 
-    protected static Source2BasedOnSubqueries source(final EntityInfo<?> entityInfo, final String id, final SourceQuery2... queries) {
+    protected static Source2BasedOnSubqueries source(final EntityInfo<?> entityInfo, final Integer id, final SourceQuery2... queries) {
         return new Source2BasedOnSubqueries(Arrays.asList(queries), null, id, entityInfo);
     }
 

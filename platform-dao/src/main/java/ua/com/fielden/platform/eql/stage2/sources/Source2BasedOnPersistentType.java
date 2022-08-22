@@ -16,12 +16,12 @@ import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnTable;
 public class Source2BasedOnPersistentType extends AbstractSource2 implements ISource2<Source3BasedOnTable> {
     private final Class<? extends AbstractEntity<?>> sourceType;
 
-    public Source2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final EntityInfo<?> entityInfo, final String alias, final String id) {
+    public Source2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final EntityInfo<?> entityInfo, final String alias, final Integer id) {
         super(id, alias, entityInfo);
         this.sourceType = sourceType;
     }
 
-    public Source2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final EntityInfo<?> entityInfo, final String id) {
+    public Source2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final EntityInfo<?> entityInfo, final Integer id) {
         this(sourceType, entityInfo, null, id);               
     }
 

@@ -14,18 +14,16 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 public class TransformationContext {
     private final List<List<ISource2<? extends ISource3>>> sources;
     public final EqlDomainMetadata domainInfo;
-    public final String sourceIdPrefix; //used for ensuring query sources ids uniqueness within calc-prop expression queries
     public final boolean shouldIncludeCalcProps;
 
-    public TransformationContext(final EqlDomainMetadata domainInfo, final List<List<ISource2<? extends ISource3>>> sources, final String sourceIdPrefix, final boolean shouldIncludeCalcProps) {
+    public TransformationContext(final EqlDomainMetadata domainInfo, final List<List<ISource2<? extends ISource3>>> sources, final boolean shouldIncludeCalcProps) {
         this.domainInfo = domainInfo;
         this.sources = sources;
-        this.sourceIdPrefix = sourceIdPrefix;
         this.shouldIncludeCalcProps = shouldIncludeCalcProps;
     }
 
     public TransformationContext(final EqlDomainMetadata domainInfo) {
-        this(domainInfo, buildSourcesStackForNewQuery(emptyList()), null, false);
+        this(domainInfo, buildSourcesStackForNewQuery(emptyList()), false);
     }
     
     private static List<List<ISource2<? extends ISource3>>> buildSourcesStackForNewQuery(final List<List<ISource2<? extends ISource3>>> existingSources) {
@@ -36,26 +34,26 @@ public class TransformationContext {
     }
 
     public TransformationContext produceForCorrelatedSubquery() {
-        return new TransformationContext(domainInfo, buildSourcesStackForNewQuery(sources), sourceIdPrefix, false);
+        return new TransformationContext(domainInfo, buildSourcesStackForNewQuery(sources), false);
     }
 
     public TransformationContext produceForCorrelatedSourceQuery() {
-        return new TransformationContext(domainInfo, buildSourcesStackForNewQuery(sources.subList(1, sources.size())), sourceIdPrefix, false);
+        return new TransformationContext(domainInfo, buildSourcesStackForNewQuery(sources.subList(1, sources.size())), false);
     }
     
     public TransformationContext produceForUncorrelatedSourceQuery() {
-        return new TransformationContext(domainInfo, buildSourcesStackForNewQuery(emptyList()), sourceIdPrefix, false);
+        return new TransformationContext(domainInfo, buildSourcesStackForNewQuery(emptyList()), false);
     }
     
     public TransformationContext cloneWithAdded(final ISource2<? extends ISource3> transformedSource) {
         final List<List<ISource2<? extends ISource3>>> newSources = sources.stream().map(el -> new ArrayList<>(el)).collect(toList()); // making deep copy of old list of sources
         newSources.get(0).add(transformedSource); // adding source to current query list of sources
-        return new TransformationContext(domainInfo, newSources, sourceIdPrefix, false);
+        return new TransformationContext(domainInfo, newSources, false);
     }
     
     public TransformationContext cloneForAggregates() {
         final List<List<ISource2<? extends ISource3>>> newSources = sources.stream().map(el -> new ArrayList<>(el)).collect(toList()); // making deep copy of old list of sources
-        return new TransformationContext(domainInfo, newSources, sourceIdPrefix, true);
+        return new TransformationContext(domainInfo, newSources, true);
     }
 
     public List<List<ISource2<? extends ISource3>>> getSources() {

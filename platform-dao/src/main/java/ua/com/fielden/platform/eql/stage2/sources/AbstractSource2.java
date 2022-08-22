@@ -5,11 +5,11 @@ import java.util.Objects;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
 
 public abstract class AbstractSource2 {
-    public final String id;
+    public final Integer id;
     public final String alias;
     public final EntityInfo<?> entityInfo;
     
-    protected AbstractSource2(final String id, final String alias, final EntityInfo<?> entityInfo) {
+    protected AbstractSource2(final Integer id, final String alias, final EntityInfo<?> entityInfo) {
         this.id = Objects.requireNonNull(id);
         this.alias = alias;
         this.entityInfo = Objects.requireNonNull(entityInfo);
@@ -19,7 +19,7 @@ public abstract class AbstractSource2 {
         return alias;
     }
     
-    public String id() {
+    public Integer id() {
         return id;
     }
     
