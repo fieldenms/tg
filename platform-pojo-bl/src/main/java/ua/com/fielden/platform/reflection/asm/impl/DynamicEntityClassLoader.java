@@ -12,6 +12,9 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+
 import net.bytebuddy.dynamic.loading.InjectionClassLoader;
 import ua.com.fielden.platform.classloader.TgSystemClassLoader;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -24,26 +27,63 @@ import ua.com.fielden.platform.utils.Pair;
  * The role of {@link InjectionClassLoader} as a parent type is to allow this class loader to be used by ByteBuddy for injecting new types.
  * <p>
  * <b><i>Note:</i></b> This class is NOT thread safe!!! Nor should it be!
+ * <p>
+ * <b>2022-08-23</b> {@link TgSystemClassLoader} is no longer used as a parent class loader. Caching is implemented directly by this class.
  *
  * @author TG Team
  */
 public class DynamicEntityClassLoader extends InjectionClassLoader {
 
-    private final TgSystemClassLoader parent;
-    
+    private final Cache<Class<?>, byte[]> cache = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).concurrencyLevel(50).build();
+
     public static DynamicEntityClassLoader getInstance(final ClassLoader parent) {
-        if (parent instanceof TgSystemClassLoader) {
-            return new DynamicEntityClassLoader(parent);
-        }
-        
-        throw new IllegalArgumentException("The parent class loader can only be of type TgSystemClassLoader.");
+        return new DynamicEntityClassLoader(parent);
     }
     
     private DynamicEntityClassLoader(final ClassLoader parent) {
         super(parent, /*sealed*/ false);
-        this.parent = (TgSystemClassLoader) parent;
+    }
+    
+    /**
+     * Clears class cache.
+     */
+    public void clearCache() {
+        cache.cleanUp();
+        cache.invalidateAll();
     }
 
+    /**
+     * Tries to retrieve a type with <code>typeName</code> from cache.
+     * @param typeName - fully-qualified name in binary form (i.e. the result of {@link Class#getName()}.
+     * @return
+     */
+    public Optional<Pair<Class<?>, byte[]>> lookupCache(final String typeName) {
+        return cache.asMap().entrySet().stream()
+                .filter(entry -> entry.getKey().getName().equals(typeName))
+                .findFirst()
+                    .map(entry -> pair(entry.getKey(), entry.getValue()));
+    }
+    
+    /**
+     * Creates a new cache entry that maps {@link Class} to its byte representation.
+     * If an entry for the given {@link Class} already exists, it will be overwritten.
+     * @param typePair
+     * @return
+     */
+    public DynamicEntityClassLoader cacheClass(final Pair<Class<?>, byte[]> typePair) {
+        cache.put(typePair.getKey(), typePair.getValue());
+        return this;
+    }
+
+    /**
+     * Returns an array of bytes for a cached {@link Class} with binary name equal to <code>name</code>.
+     * @param name binary name of a class
+     * @return byte array representing a cached class or <code>null</code> if the class wasn't found
+     */
+    public byte[] getCachedByteArray(final String name) {
+        return lookupCache(name).map(Pair::getValue).orElse(null);
+    }
+    
     /**
      * {@inheritDoc}
      */
@@ -55,10 +95,10 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
     }
     
     protected Class<?> doDefineClass(final String name, final byte[] bytes) {
-        return getTypeByNameFromCache(name).map(Pair::getKey).orElseGet(() -> {
+        return lookupCache(name).map(Pair::getKey).orElseGet(() -> {
             // the class hasn't been defined, so load it and cache for later reuse
             final Class klass = defineClass(name, bytes, 0, bytes.length);
-            registerClass(pair(klass, bytes));
+            cacheClass(pair(klass, bytes));
             return klass;
         });
     }
@@ -66,27 +106,13 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
     @Override
     public InputStream getResourceAsStream(final String name) {
         // name is a resource name so convert it to binary form
-        return getTypeByNameFromCache(toBinaryName(name))
+        return lookupCache(toBinaryName(name))
                 .map(pair -> (InputStream) new ByteArrayInputStream(pair.getValue()))
                 .orElseGet(() -> super.getResourceAsStream(name));
     }
     
     /**
-     * Tries to retrieve a type with <code>typeName</code> from cache.
-     * @param typeName - fully-qualified name in binary form (i.e. the result of {@link Class#getName()}.
-     * @return
-     */
-    public Optional<Pair<Class<?>, byte[]>> getTypeByNameFromCache(final String typeName) {
-        return parent.classByName(typeName);
-    }
-    
-    public DynamicEntityClassLoader registerClass(final Pair<Class<?>, byte[]> typePair) {
-        parent.cacheClassDefinition(typePair.getKey(), typePair.getValue());
-        return this;
-    }
-    
-    /**
-     * Initiates adaptation of the specified by name type. This could be either dynamic or static type (created manually by developer).
+     * Initiates modification of the given type. This could be either a dynamic or a static type (created manually by a developer).
      *
      * @param origType
      * @return
@@ -97,21 +123,16 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
     }
 
     /**
-     * Returns <code>true</code> in case when the type is generated using ASM in TG platform from other (statically defined) entity type, <code>false</code> otherwise.
+     * Determines whether <code>type</code> is a generated type.
      * <p>
-     * Most likely, generated types have one or more calculated (or custom) property. But there are also edge-cases
-     * (for example, in tests like SerialisationTestResource) when generated type have no calculated properties, but just have changed the type name.
+     * Most likely, generated types have one or more calculated (or custom) property. 
+     * But there are also edge-cases. For example, in tests like SerialisationTestResource when a generated type simply has a modified name.
      * 
      * @param type
      * @return
      */
     public static boolean isGenerated(final Class<?> type) {
         return type.getName().contains(DynamicTypeNamingService.APPENDIX);
-    }
-
-    @Override
-    public Class<?> findClass(final String name) throws ClassNotFoundException {
-        return parent.findClass(name);
     }
 
     /**
@@ -137,10 +158,6 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
         }
     }
 
-    public byte[] getCachedByteArray(final String name) {
-        return getTypeByNameFromCache(name).map(Pair::getValue).orElse(null);
-    }
-    
     /**
      * Converts a resource name of a java class to its binary form.
      * @param resourceName
