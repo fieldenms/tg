@@ -217,11 +217,15 @@ public class DynamicEntityTypeGenerationTest {
         }
     }
 
-    @Ignore
     @Test
     public void test_to_ensure_primitive_boolean_new_property_can_be_added() throws Exception {
-        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class).addProperties(pdBool).endModification();
-        assertEquals("Incorrect number of properties.", Finder.getPropertyDescriptors(Entity.class).size() + 1, Finder.getPropertyDescriptors(newType).size());
+        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>)
+                cl.startModification(DEFAULT_ORIG_TYPE)
+                .addProperties(pdBool)
+                .endModification();
+        assertEquals("Incorrect number of properties.", 
+                Finder.getPropertyDescriptors(DEFAULT_ORIG_TYPE).size() + 1,
+                Finder.getPropertyDescriptors(newType).size());
 
         final Field field = Finder.findFieldByName(newType, NEW_PROPERTY_BOOL);
         assertNotNull("The field should exist.", field);
@@ -248,10 +252,13 @@ public class DynamicEntityTypeGenerationTest {
         assertEquals("The last - 2 field of class should correspond to a last - 2 'freshly added' property.", pd1.name, newType.getDeclaredFields()[size - 3].getName());
     }
 
-    @Ignore
     @Test
     public void precision_and_scale_are_generated_correctly_when_specified_as_part_of_new_property_definition() throws Exception {
-        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class).addProperties(pd1, pd2).endModification();
+        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>)
+                cl.startModification(DEFAULT_ORIG_TYPE)
+                .modifyTypeName(DEFAULT_ORIG_TYPE.getName() + "_enhanced")
+                .addProperties(pd1, pd2)
+                .endModification();
         
         final IsProperty pd1PropAnnot = AnnotationReflector.getPropertyAnnotation(IsProperty.class, newType, pd1.name); 
         assertEquals(19, pd1PropAnnot.precision());
@@ -260,7 +267,7 @@ public class DynamicEntityTypeGenerationTest {
         final IsProperty pd2PropAnnot = AnnotationReflector.getPropertyAnnotation(IsProperty.class, newType, pd2.name); 
         assertEquals(IsProperty.DEFAULT_PRECISION, pd2PropAnnot.precision());
         assertEquals(IsProperty.DEFAULT_SCALE, pd2PropAnnot.scale());
-}
+    }
 
     @Ignore
     @Test

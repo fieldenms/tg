@@ -68,6 +68,7 @@ public class TypeMaker<T> {
     private String currentName; // TODO remove
     private final Class<T> origType;
     private DynamicType.Builder<T> builder;
+    private boolean nameModified = false;
 
     public TypeMaker(final DynamicEntityClassLoader loader, final Class<T> origType) {
         this.cl = loader;
@@ -200,6 +201,7 @@ public class TypeMaker<T> {
        if (builder == null) {
            throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
        }
+       nameModified = true;
        builder = builder.name(newTypeName);
        return this;
    }
@@ -278,6 +280,13 @@ public class TypeMaker<T> {
                .intercept(FixedValue.value(origType));
    }
    
+   /**
+    * Finalizes type modification and loads the resulting class.
+    * <p>
+    * If the type name wasn't modified prior to this stage, then it is performed here according to {@link DynamicTypeNamingService}.
+    * 
+    * @return a loaded class representing the modified type
+    */
    public Class<?> endModification() {
        if (!DynamicEntityClassLoader.isGenerated(origType)) {
            recordOrigType();
@@ -291,6 +300,9 @@ public class TypeMaker<T> {
                // instead of making ByteBuddy create a separate class loader for each
                .load(cl)
                .getLoaded();
+       if (!nameModified) {
+           modifyTypeName(DynamicTypeNamingService.nextTypeName(origType.getName()));
+       }
    }
    
     private boolean skipAdaptation(final String name) {
