@@ -235,21 +235,25 @@ public class DynamicEntityTypeGenerationTest {
         assertEquals("Incorrect expression.", NEW_PROPERTY_EXPRESSION_BOOL, calcAnno.value());
     }
 
-    @Ignore
     @Test
     public void test_to_ensure_that_duplicate_new_properties_are_eliminated() throws Exception {
         final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class).addProperties(pd1, pd1, pd1).endModification();
         assertEquals("Incorrect number of properties.", Finder.getPropertyDescriptors(Entity.class).size() + 1, Finder.getPropertyDescriptors(newType).size());
     }
 
-    @Ignore
     @Test
-    public void test_to_ensure_that_order_of_new_properties_are_exactly_the_same_as_provided_and_properties_appear_in_the_end_of_class() throws Exception {
-        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class).addProperties(pd1, pd2, pdBool).endModification();
+    public void new_properties_are_ordered_as_provided_appearing_at_the_end_of_the_class() throws Exception {
+        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>)
+                cl.startModification(DEFAULT_ORIG_TYPE)
+                .addProperties(pd1, pd2, pdBool)
+                .endModification();
         final int size = newType.getDeclaredFields().length;
-        assertEquals("The last field of class should correspond to a last 'freshly added' property.", pdBool.name, newType.getDeclaredFields()[size - 1].getName());
-        assertEquals("The last - 1 field of class should correspond to a last - 1 'freshly added' property.", pd2.name, newType.getDeclaredFields()[size - 2].getName());
-        assertEquals("The last - 2 field of class should correspond to a last - 2 'freshly added' property.", pd1.name, newType.getDeclaredFields()[size - 3].getName());
+        assertEquals("The last field of class should correspond to a last 'freshly added' property.", 
+                pdBool.name, newType.getDeclaredFields()[size - 1].getName());
+        assertEquals("The last - 1 field of class should correspond to a last - 1 'freshly added' property.",
+                pd2.name, newType.getDeclaredFields()[size - 2].getName());
+        assertEquals("The last - 2 field of class should correspond to a last - 2 'freshly added' property.",
+                pd1.name, newType.getDeclaredFields()[size - 3].getName());
     }
 
     @Test

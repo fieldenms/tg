@@ -10,6 +10,7 @@ import java.lang.annotation.Target;
 import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -18,7 +19,6 @@ import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 
 import net.bytebuddy.ByteBuddy;
-import net.bytebuddy.description.modifier.FieldManifestation;
 import net.bytebuddy.description.modifier.Ownership;
 import net.bytebuddy.description.modifier.ParameterManifestation;
 import net.bytebuddy.description.modifier.Visibility;
@@ -29,7 +29,6 @@ import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.pool.TypePool;
 import ua.com.fielden.platform.entity.annotation.Generated;
-import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.factory.ObservableAnnotation;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 
@@ -114,11 +113,17 @@ public class TypeMaker<T> {
         if (properties == null || properties.length == 0) {
             return this;
         }
-        final List<String> existingProperties = Arrays.asList(origType.getDeclaredFields()).stream().map(Field::getName).toList();
-        final List<NewProperty> propertiesToAdd = Arrays.asList(properties).stream()
-                .filter(prop -> !existingProperties.contains(prop.name))
-                .toList();
-        propertiesToAdd.forEach(prop -> {
+
+        final List<String> existingPropNames = Arrays.asList(origType.getDeclaredFields()).stream().map(Field::getName).toList();
+        // LinkedHashMap preserves the order of properties
+        final LinkedHashMap<String, NewProperty> propsToAdd = new LinkedHashMap<>();
+        Arrays.stream(properties)
+            // skip existing properties
+            .filter(prop -> !existingPropNames.contains(prop.name))
+            // the resulting map will contain no duplicates
+            .forEach(np -> propsToAdd.putIfAbsent(np.name, np));
+
+        propsToAdd.values().forEach(prop -> {
             builder = builder.defineField(prop.name, prop.type, Visibility.PRIVATE)
                     // annotations
                     .annotateField(prop.annotations)
@@ -131,8 +136,8 @@ public class TypeMaker<T> {
                     .withParameter(prop.type, "obj", ParameterManifestation.FINAL)
                     .intercept(FieldAccessor.ofField(prop.name).setsArgumentAt(0).andThen(FixedValue.self()))
                     .annotateMethod(ObservableAnnotation.newInstance());
+                    ;
         });
-
         return this;
     }
     
