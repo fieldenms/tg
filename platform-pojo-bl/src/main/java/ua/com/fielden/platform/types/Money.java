@@ -255,7 +255,7 @@ public class Money implements Comparable<Money> {
             return Arrays.asList(this); // returns immutable List instance
         } else {
             // dividing into more than one part
-            final List<Money> parts = new ArrayList<Money>();
+            final List<Money> parts = new ArrayList<>();
             // defining index of happy man who may receive larger part
             final int luckyIndex = random.nextInt(value);
             // calculating amount of money for each
@@ -304,7 +304,9 @@ public class Money implements Comparable<Money> {
 
     @Override
     public String toString() {
-        return NumberFormat.getCurrencyInstance().format(getAmount().setScale(2, HALF_UP).doubleValue());
+        final NumberFormat currencyInstance = NumberFormat.getCurrencyInstance();
+        currencyInstance.setMaximumFractionDigits(4);
+        return currencyInstance.format(getAmount());
     }
 
     /**
