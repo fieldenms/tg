@@ -13,7 +13,7 @@ const eventSources = {};
 const registerEventSource = function (uri) {
     let source = eventSources[uri];
     if (!source) {
-        source = {initialised: true, uri: uri, shouldReconnectWhenError: true, errorReconnectionDelay: 15000};
+        source = {initialised: false, uri: uri, shouldReconnectWhenError: true, errorReconnectionDelay: 15000};
         eventSources[uri] = source;
         console.log('Determine if EventSrouce needs polyfilling: ', window.EventSource)
         if (window.EventSource == undefined) {
@@ -34,6 +34,7 @@ const registerEventSourceHandlers = function (sourceObj) {
 
     const source = new EventSource(sourceObj.uri);
     sourceObj.source = source;
+    sourceObj.initialised = true;
 
     source.addEventListener('message', function (e) {
 
@@ -76,7 +77,7 @@ const registerEventSourceHandlers = function (sourceObj) {
         // this is because the decision to reconnect can be made in the custom error handler
         if (sourceObj.shouldReconnectWhenError === true && e.eventPhase === EventSource.CLOSED) {
             // connection was closed by the server;
-            // ensure client-side EventSource to be closed and _initialised flag to be false;
+            // ensure client-side EventSource to be closed and initialised flag to be false;
             // ensure also that previous reconnection timeout is cancelled and made null;
             // previous reconnection timeout should not be possible here because SSE EventSource (and server side resource) will be closed prior to this;
             // however it is not harmful to check -- see closeEventSource() method
@@ -127,6 +128,12 @@ export const TgSseBehavior = {
             type: Function
         },
 
+        /**postal subcription on sse message event */
+        _messageSubscription: Object,
+
+        /**postal subscription on sse error event */
+        _errorSubscription: Object,
+
         /* A timer ID to delay reactions to SSE events in case a delay was requested. */
         _timerIdForDataHandling: {
             type: Number,
@@ -141,84 +148,78 @@ export const TgSseBehavior = {
 
     },
 
+    attached: function () {
+        if (this.uri && this.source && !this._messageSubscription && !this._errorSubscription) {
+            this._subscribeToSseEvent();
+        }
+    },
+
+    detached: function () {
+        this._unsubscribeFromSseEvents();
+    },
+
     /** EventSource registration happens as the result of assiging the value to property uri. */
     _uriChanged: function (newUri, oldUri) {
-        
-        //Make sure that previous event source assoiciated with oldUri is closed otherwise throw an error.
-        const source = eventSources[oldUri];
-        if (source) {
-            throw new Error('EventSource for URI [' + oldUri + '] should not be initialised to [' + newUri + '] without closing an existing event source connection.');
+        //Unsubscribe from old sse evnts.
+        if (oldUri) {
+            this._unsubscribeFromSseEvents();
+            this._source = null;
         }
 
         // if uri value is missing then skip EvenSource registration
         if (newUri) {
             this._source = registerEventSource(newUri);
+            this._subscribeToSseEvent();
         }
+
     },
 
-    _registerEventSourceHandlers: function () {
-        const self = this;
-        console.log("Registering EventSrouce handlers for URI ", self.uri);
+    _subscribeToSseEvent: function () {
+        if (this._messageSubscription) {
+            throw new Error("Unsubscribe from sse message event first in order to subscribe to the new one");
+        }
 
-        self._source = new EventSource(self.uri);
-        const source = self._source;
+        if (this._errorSubscription) {
+            throw new Error("Unsubscribe from sse error event first in order to subscribe to the new one");
+        }
 
-        source.addEventListener('message', function (e) {
-            if (self.useTimerBasedScheduling) {
-                // Ensures that if there is a pending data handling request then new requests are ignored
-                if (self._timerIdForDataHandling) {
-                    return;
-                }
-                const msg = JSON.parse(e.data);
-                const minDelay = msg.minDelay ? msg.minDelay : 0;
-                const rndDelay = msg.delay ? random(msg.delay) + 1 : 1;
-                console.log("min delay: ", minDelay, " rnd delay: ", rndDelay);
-                self._execDataHandlerWithDelay(msg, minDelay + rndDelay);
-            } else {
-                self.dataHandler(JSON.parse(e.data));
-            }
-        }, false);
-
-        source.addEventListener('completed', function (e) {
-            console.log('the observable at the server-side completed');
-        }, false);
-
-        source.addEventListener('connection', function (e) {
-            console.log('connection message received from server');
-        }, false);
-
-        source.addEventListener('open', function (e) {
-            console.log('opened connection');
-        }, false);
-
-        source.addEventListener('error', function (e) {
-            console.log('an error occurred: ', e);
-
-            // invoke error handler if provided
-            if (self.errorHandler) {
-                self.errorHandler(e);
-            }
-
-            // only after custom error handling should we attempt to reconnect
-            // this is because the decision to reconnect can be made in the custom error handler
-            if (self.shouldReconnectWhenError === true && e.eventPhase === EventSource.CLOSED) {
-                // connection was closed by the server;
-                // ensure client-side EventSource to be closed and _initialised flag to be false;
-                // ensure also that previous reconnection timeout is cancelled and made null;
-                // previous reconnection timeout should not be possible here because SSE EventSource (and server side resource) will be closed prior to this;
-                // however it is not harmful to check -- see closeEventSource() method
-                self.closeEventSource();
-                // Let's kick a timer for reconnection...
-                self._timerIdForReconnection = setTimeout(() => {
-                    try {
-                        self._registerEventSourceHandlers();
-                    } finally {
-                        self._timerIdForReconnection = null;
+        this._messageSubscription = postal.subscribe({
+            channel: "sse-event",
+            topic: this.uri + "/message",
+            callback: (data, envelope) => {
+                const msg = data.msg;
+                if (this.useTimerBasedScheduling) {
+                    // Ensures that if there is a pending data handling request then new requests are ignored
+                    if (this._timerIdForDataHandling) {
+                        return;
                     }
-                }, self.errorReconnectionDelay);
+                    const minDelay = msg.minDelay ? msg.minDelay : 0;
+                    const rndDelay = msg.delay ? random(msg.delay) + 1 : 1;
+                    console.log("min delay: ", minDelay, " rnd delay: ", rndDelay);
+                    this._execDataHandlerWithDelay(msg, minDelay + rndDelay);
+                } else {
+                    this.dataHandler(msg);
+                }
             }
+        });
 
-        }, false);
+        this._errorSubscription = postal.subscribe({
+            channel: "sse-event",
+            topic: this.uri + "/error",
+            callback: (data, envelope) => {
+                // invoke error handler if provided
+                if (this.errorHandler) {
+                    this.errorHandler(data.event, data.source);
+                }
+            }
+        });
+    },
+
+    _unsubscribeFromSseEvents: function () {
+        this._messageSubscription && this._messageSubscription.unsubscribe();
+        this._errorSubscription && this._errorSubscription.unsubscribe();
+        delete this._messageSubscription;
+        delete this._errorSubscription;
     },
 
     /** Executes dataHandler with delay. */
