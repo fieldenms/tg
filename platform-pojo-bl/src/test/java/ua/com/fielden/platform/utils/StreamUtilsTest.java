@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.utils.StreamUtils.ERR_FIRST_STREAM_ELEM_CANNOT_BE_NULL;
 import static ua.com.fielden.platform.utils.StreamUtils.head_and_tail;
 import static ua.com.fielden.platform.utils.StreamUtils.stopAfter;
@@ -162,6 +163,25 @@ public class StreamUtilsTest {
         final List<Integer> prefix = stopAfter(numbers.stream(), e -> e >= 7).toList();
 
         assertTrue(numbers.containsAll(prefix) && numbers.size() == prefix.size());
+    }
+    
+    public void distinct_returns_a_stream_whose_elements_are_distinct_according_to_mapper() {
+        final List<Pair<String, Integer>> elements = List.of(pair("one", 1), pair("two", 2), pair("one", 3), pair("three", 1));
+
+        // distinct by key
+        assertEquals(List.of(pair("one", 1), pair("two", 2), pair("three", 1)), 
+                StreamUtils.distinct(elements.stream(), Pair::getKey).toList());
+        // distinct by value
+        assertEquals(List.of(pair("one", 1), pair("two", 2), pair("one", 3)), 
+                StreamUtils.distinct(elements.stream(), Pair::getValue).toList());
+    }
+
+    @Test
+    public void distinct_returns_a_stream_with_order_preserved() {
+        final List<Pair<String, Integer>> elements = List.of(pair("one", 1), pair("two", 2), pair("two", 22), pair("one", 11));
+
+        assertEquals(List.of(pair("one", 1), pair("two", 2)), 
+                StreamUtils.distinct(elements.stream(), Pair::getKey).toList());
     }
     
     @Test

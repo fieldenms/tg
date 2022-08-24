@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.utils;
 
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -8,6 +9,7 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -136,6 +138,38 @@ public class StreamUtils {
                     return hadNext && stillGoing;
                 }
                 return false;
+            }
+        };
+    }
+
+    /**
+     * Returns a stream of distinct elements from <code>stream</code>, where uniqueness of an element is determined by <code>uniquenessMapper</code>.
+     * <p>
+     * It is assumed that the return type of <code>uniquenessMapper</code> will have a proper implementation of <code>hashCode()</code>, otherwise the resulting stream may still contain duplicates.
+     * <p>
+     * The order of the original stream's elements is preserved.
+     *
+     * @param stream
+     * @param uniquenessMapper a function that maps the original element to its unique representation
+     * @return
+     */
+    public static <T, R> Stream<T> distinct(final Stream<T> stream, final Function<T, R> uniquenessMapper) {
+        return StreamSupport.stream(distinct(stream.spliterator(), uniquenessMapper), false);
+    }
+
+    private static <T, R> Spliterator<T> distinct(final Spliterator<T> splitr, final Function<T, R> mapper) {
+        return new Spliterators.AbstractSpliterator<T>(splitr.estimateSize(), 0) {
+            final LinkedHashSet<R> uniqs = new LinkedHashSet<>();
+
+            @Override
+            public boolean tryAdvance(final Consumer<? super T> consumer) {
+                return splitr.tryAdvance(elem -> {
+                    final R uniqRepr = mapper.apply(elem);
+                    if (!uniqs.contains(uniqRepr)) {
+                        consumer.accept(elem);
+                        uniqs.add(uniqRepr);
+                    }
+                });
             }
         };
     }
