@@ -8,9 +8,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -23,14 +24,16 @@ import net.bytebuddy.description.modifier.Ownership;
 import net.bytebuddy.description.modifier.ParameterManifestation;
 import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.dynamic.DynamicType;
-import net.bytebuddy.dynamic.TargetType;
 import net.bytebuddy.dynamic.DynamicType.Unloaded;
+import net.bytebuddy.dynamic.TargetType;
 import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.pool.TypePool;
 import ua.com.fielden.platform.entity.annotation.Generated;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.factory.ObservableAnnotation;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
+import ua.com.fielden.platform.utils.StreamUtils;
 
 /**
  * This class provides an API for modifying types at runtime by means of bytecode manipulation.
@@ -115,28 +118,31 @@ public class TypeMaker<T> {
         }
 
         final List<String> existingPropNames = Arrays.asList(origType.getDeclaredFields()).stream().map(Field::getName).toList();
-        // LinkedHashMap preserves the order of properties
-        final LinkedHashMap<String, NewProperty> propsToAdd = new LinkedHashMap<>();
-        Arrays.stream(properties)
-            // skip existing properties
-            .filter(prop -> !existingPropNames.contains(prop.name))
-            // the resulting map will contain no duplicates
-            .forEach(np -> propsToAdd.putIfAbsent(np.name, np));
-
-        propsToAdd.values().forEach(prop -> {
-            builder = builder.defineField(prop.name, prop.type, Visibility.PRIVATE)
-                    // annotations
-                    .annotateField(prop.annotations)
-                    .annotateField(prop.titleAnnotation(), GENERATED_ANNOTATION)
-                    // getter
-                    .defineMethod("get" + StringUtils.capitalize(prop.name), prop.type, Visibility.PUBLIC)
-                    .intercept(FieldAccessor.ofField(prop.name))
-                    // setter
-                    .defineMethod("set" + StringUtils.capitalize(prop.name), TargetType.DESCRIPTION, Visibility.PUBLIC)
-                    .withParameter(prop.type, "obj", ParameterManifestation.FINAL)
-                    .intercept(FieldAccessor.ofField(prop.name).setsArgumentAt(0).andThen(FixedValue.self()))
-                    .annotateMethod(ObservableAnnotation.newInstance());
-                    ;
+        StreamUtils.distinct(
+                Arrays.stream(properties).filter(prop -> !existingPropNames.contains(prop.name)), 
+                prop -> prop.name) // distinguish properties by name
+            .forEach(prop -> {
+                // NewProperty representing a collectional property may have a raw type, such as List
+                // so it's necessary to look at the value of @IsProperty to determine the type argument
+                final IsProperty adIsProperty = (IsProperty) prop.getAnnotationByType(IsProperty.class);
+                final Class<?> typeArg = adIsProperty != null ? adIsProperty.value() : null;
+                final Type propType = (typeArg != null && typeArg == Void.class) ? prop.type : new ParameterizedType() {
+                    @Override public Type getRawType() { return prop.type; }
+                    @Override public Type getOwnerType() { return null; } // top-level type
+                    @Override public Type[] getActualTypeArguments() { return new Type[] {typeArg}; }
+                };
+                builder = builder.defineField(prop.name, propType, Visibility.PRIVATE)
+                        // annotations
+                        .annotateField(prop.annotations)
+                        .annotateField(prop.titleAnnotation(), GENERATED_ANNOTATION)
+                        // getter
+                        .defineMethod("get" + StringUtils.capitalize(prop.name), propType, Visibility.PUBLIC)
+                        .intercept(FieldAccessor.ofField(prop.name))
+                        // setter
+                        .defineMethod("set" + StringUtils.capitalize(prop.name), TargetType.DESCRIPTION, Visibility.PUBLIC)
+                        .withParameter(propType, "obj", ParameterManifestation.FINAL)
+                        .intercept(FieldAccessor.ofField(prop.name).setsArgumentAt(0).andThen(FixedValue.self()))
+                        .annotateMethod(ObservableAnnotation.newInstance());
         });
         return this;
     }
