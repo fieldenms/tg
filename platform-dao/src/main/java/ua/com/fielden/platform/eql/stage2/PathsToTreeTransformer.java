@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.stage2;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
-import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.joining;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
@@ -34,7 +33,6 @@ import ua.com.fielden.platform.eql.stage2.sources.ChildGroup;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.types.tuples.T3;
 
 public class PathsToTreeTransformer {
 
@@ -52,7 +50,7 @@ public class PathsToTreeTransformer {
         for (final SourceAndItsProps sourceProps : groupBySource(props).values()) {
             final T2<List<ChildGroup>, Map<Integer, List<ChildGroup>>> genRes = generateQrySourceChildren( //
                     sourceProps.source, //
-                    sourceProps.propPathesByFullNames);
+                    sourceProps.propPathsByFullNames);
             sourceChildren.put(sourceProps.source.id(), genRes._1);
             sourceChildren.putAll(genRes._2);
         }
@@ -65,7 +63,7 @@ public class PathsToTreeTransformer {
         for (final Prop2 prop : props) {
             final SourceAndItsProps existing = result.get(prop.source.id());
             if (existing != null) {
-                existing.propPathesByFullNames.add(new PendingTail(prop.name, prop.source.id(), prop.getPath())); // NOTE: for rare cases where two EntProp2 are identical except isId value, replacement can occur, but with identical value of path 
+                existing.propPathsByFullNames.add(new PendingTail(prop.name, prop.source.id(), prop.getPath())); // NOTE: for rare cases where two EntProp2 are identical except isId value, replacement can occur, but with identical value of path 
             } else {
                 final List<PendingTail> added = new ArrayList<>();
                 added.add(new PendingTail(prop.name, prop.source.id(), prop.getPath()));
@@ -84,7 +82,7 @@ public class PathsToTreeTransformer {
     	mapExpressionByNames.putAll(existingMapExpressionByNames); // key is the same as FirstPropInfoAndItsPathes.firstPropName
     	final List<PendingTail> addedPropPathesByFullNames = new ArrayList<>();
     
-    	for (final FirstPropInfoAndItsPathes pe : groupByFirstProp(incomingPropPathesByFullNames).values()) {
+    	for (final FirstPropInfoAndItsPaths pe : groupByFirstProp(incomingPropPathesByFullNames).values()) {
     		
     		if (pe.firstPropInfo.expression != null && !mapExpressionByNames.containsKey(pe.firstPropName)) {
     	        final TransformationContext prc = new TransformationContext(domainInfo, asList(asList(sourceForCalcPropResolution)), false);
@@ -124,18 +122,18 @@ public class PathsToTreeTransformer {
     	return T2.t2(recRes._1, fullListPropPathesByFullNames);
     }
    
-    private static SortedMap<String, FirstPropInfoAndItsPathes> groupByFirstProp(final List<PendingTail> props) {
-        final SortedMap<String, FirstPropInfoAndItsPathes> result = new TreeMap<>();
+    private static SortedMap<String, FirstPropInfoAndItsPaths> groupByFirstProp(final List<PendingTail> props) {
+        final SortedMap<String, FirstPropInfoAndItsPaths> result = new TreeMap<>();
 
         for (final PendingTail propEntry : props) {
             final T2<String, List<AbstractPropInfo<?>>> pp = getFirstPropData(propEntry.tail);
-            FirstPropInfoAndItsPathes existing = result.get(pp._1);
+            FirstPropInfoAndItsPaths existing = result.get(pp._1);
             if (existing == null) {
-                existing = new FirstPropInfoAndItsPathes(pp._2.get(0), pp._1);
+                existing = new FirstPropInfoAndItsPaths(pp._2.get(0), pp._1);
                 result.put(pp._1, existing);
             }
 
-            existing.itsPropPathesByFullNames.add(new PendingTail(propEntry.fullPathName, propEntry.sourceId, pp._2));
+            existing.itsPropPathsByFullNames.add(new PendingTail(propEntry.fullPathName, propEntry.sourceId, pp._2));
         }
 
         return result;
@@ -165,7 +163,6 @@ public class PathsToTreeTransformer {
             final List<PendingTail> propPathesByFullNames
     ) {
         final Map<String, ChildGroup> result = new HashMap<>();
-    	//final List<ChildGroup> result = new ArrayList<>();
         final Map<Integer, List<ChildGroup>> other = new HashMap<>();
 
         // here need to S2 each calc prop and add its props resolved to parent to "propPathesByFullNames" and 
@@ -181,19 +178,18 @@ public class PathsToTreeTransformer {
         final T2<Map<String, CalcPropData>, List<PendingTail>> procRes = enhanceWithCalcProps(sourceForCalcPropResolution, emptyMap(), propPathesByFullNames);
         
         final Map<String, CalcPropData> propData = procRes._1;
-        for (final FirstPropInfoAndItsPathes propEntry : groupByFirstProp(procRes._2).values()) {
-        	T3<FirstPropInfoAndItsPathes, Expression2, Set<String>> propChildInput;
-        	final CalcPropData b = propData.get(propEntry.firstPropName);
-        	if (b != null) {
-        		other.putAll(b.internals);
-        		propChildInput = T3.t3(propEntry, b.expr, b.dependencies);
+        for (final FirstPropInfoAndItsPaths propEntry : groupByFirstProp(procRes._2).values()) {
+        	final T2<FirstPropInfoAndItsPaths, Expression2> propChildInput;
+        	final CalcPropData cpd = propData.get(propEntry.firstPropName);
+        	if (cpd != null) {
+        		other.putAll(cpd.internals);
+        		propChildInput = T2.t2(propEntry, cpd.expr);
         	} else {
-        		propChildInput = T3.t3(propEntry, null, emptySet());
+        		propChildInput = T2.t2(propEntry, null);
         	}
             final T2<ChildGroup, Map<Integer, List<ChildGroup>>> genRes = generateChild(propChildInput);
 
             result.put(genRes._1.name, genRes._1);
-            //result.add(genRes._1);
             other.putAll(genRes._2);
         }
 
@@ -240,8 +236,8 @@ public class PathsToTreeTransformer {
         return orderedItems;
     }
     
-    private T2<ChildGroup, Map<Integer, List<ChildGroup>>> generateChild(final T3<FirstPropInfoAndItsPathes, Expression2, Set<String>> firstPropInfoAndItsPathes) {
-        final T2<Map<String, Integer>, List<PendingTail>> next = getLeafPathsOrNextPendingTails(firstPropInfoAndItsPathes._1.itsPropPathesByFullNames);
+    private T2<ChildGroup, Map<Integer, List<ChildGroup>>> generateChild(final T2<FirstPropInfoAndItsPaths, Expression2> firstPropInfoAndItsPathes) {
+        final T2<Map<String, Integer>, List<PendingTail>> next = getLeafPathsOrNextPendingTails(firstPropInfoAndItsPathes._1.itsPropPathsByFullNames);
         final String propName = firstPropInfoAndItsPathes._1.firstPropName;
         
         if (next._2.isEmpty()) {
@@ -282,20 +278,20 @@ public class PathsToTreeTransformer {
 
     private static class SourceAndItsProps {
         private final ISource2<?> source;
-        private final List<PendingTail> propPathesByFullNames;
+        private final List<PendingTail> propPathsByFullNames;
 
         private SourceAndItsProps(final ISource2<?> source, final List<PendingTail> propPathesByFullNames) {
             this.source = source;
-            this.propPathesByFullNames = propPathesByFullNames;
+            this.propPathsByFullNames = propPathesByFullNames;
         }
     }
 
-    private static class FirstPropInfoAndItsPathes {
+    private static class FirstPropInfoAndItsPaths {
         private final AbstractPropInfo<?> firstPropInfo; //first API from path
         private final String firstPropName; // can contain dots (in case of union type or composite value type props) 
-        private final List<PendingTail> itsPropPathesByFullNames = new ArrayList<>(); // long names and their pathes that all start from 'propInfo'
+        private final List<PendingTail> itsPropPathsByFullNames = new ArrayList<>(); // long names and their pathes that all start from 'propInfo'
 
-        private FirstPropInfoAndItsPathes(final AbstractPropInfo<?> firstPropInfo, final String firstPropName) {
+        private FirstPropInfoAndItsPaths(final AbstractPropInfo<?> firstPropInfo, final String firstPropName) {
             this.firstPropInfo = firstPropInfo;
             this.firstPropName = firstPropName;
         }

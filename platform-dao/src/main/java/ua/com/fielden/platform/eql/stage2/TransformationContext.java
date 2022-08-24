@@ -76,14 +76,14 @@ public class TransformationContext {
     public TransformationContext cloneWithResolutions(final ISource3 source, final List<ChildGroup> children) {
         final TransformationContext result = new TransformationContext(tablesAndSourceChildren, resolutions, paramValuesByNames, paramNamesByValues, sqlId, paramId);
         
-        for (final ChildGroup fc : children) {
-            for (final Entry<String, Integer> el : fc.paths().entrySet()) {
+        for (final ChildGroup child : children) {
+            for (final Entry<String, Integer> el : child.paths().entrySet()) {
                 final Map<String, T2<ISource3, Object>> existing = result.resolutions.get(el.getValue());
                 if (existing != null) {
-                    existing.put(el.getKey(), t2(source, fc.expr == null ? fc.name : fc.expr));
+                    existing.put(el.getKey(), t2(source, child.expr == null ? child.name : child.expr));
                 } else {
                     final Map<String, T2<ISource3, Object>> created = new HashMap<>();
-                    created.put(el.getKey(), t2(source, fc.expr == null ? fc.name : fc.expr));
+                    created.put(el.getKey(), t2(source, child.expr == null ? child.name : child.expr));
                     result.resolutions.put(el.getValue(), created);
                 }
             }

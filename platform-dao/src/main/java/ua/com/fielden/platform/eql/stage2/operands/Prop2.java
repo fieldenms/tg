@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import ua.com.fielden.platform.eql.exceptions.EqlStage2ProcessingException;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.stage2.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.TransformationResult;
@@ -44,11 +45,13 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
         
         final T2<ISource3, Object> resolution = context.resolve(source.id(), name);
 
-        if (resolution._2 instanceof String) {
-            return new TransformationResult<>(new Prop3((String) resolution._2, resolution._1, type, hibType), context);
-        } else {
-            final TransformationResult<Expression3> exprTr = ((Expression2) resolution._2).transform(context);
+        if (resolution._2 instanceof String propName) {
+            return new TransformationResult<>(new Prop3(propName, resolution._1, type, hibType), context);
+        } else if (resolution._2 instanceof Expression2 expr) {
+            final TransformationResult<Expression3> exprTr = expr.transform(context);
             return new TransformationResult<>(exprTr.item.isSingle() ? exprTr.item.first : exprTr.item, exprTr.updatedContext);
+        } else {
+        	throw new EqlStage2ProcessingException("Unexpected type [%s] while resolving property.".formatted(resolution._2 != null ? resolution._2.getClass().getSimpleName() : null));
         }
     }
 
