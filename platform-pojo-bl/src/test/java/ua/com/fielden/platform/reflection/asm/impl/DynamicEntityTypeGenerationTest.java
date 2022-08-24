@@ -3,6 +3,7 @@ package ua.com.fielden.platform.reflection.asm.impl;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -584,66 +585,64 @@ public class DynamicEntityTypeGenerationTest {
         }
     }
 
-    @Ignore
     @Test
-    public void valid_annotations_can_be_added_to_class() throws Exception {
-        final Class<? extends AbstractEntity<?>> newType = (Class<? extends AbstractEntity<?>>) cl
-                .startModification(TopLevelEntity.class)
-                .addClassAnnotations(new DescTitleAnnotation("Title", "Description").newInstance())
+    public void valid_class_annotations_can_be_added() throws Exception {
+        final DescTitle newAnnot = new DescTitleAnnotation("Title", "Description").newInstance();
+        final Class<? extends AbstractEntity<?>> newType = (Class<? extends AbstractEntity<?>>) 
+                cl.startModification(TopLevelEntity.class)
+                .addClassAnnotations(newAnnot)
                 .endModification();
 
         final DescTitle annot = newType.getAnnotation(DescTitle.class);
         assertNotNull(annot);
-        assertEquals("Title", annot.value());
-        assertEquals("Description", annot.desc());
+        assertEquals(newAnnot.value(), annot.value());
+        assertEquals(newAnnot.desc(), annot.desc());
     }
 
-    @Ignore
     @Test
-    public void class_level_annotaton_replacement_is_no_supported_retaining_original_annotation() throws Exception {
-        final Class<? extends AbstractEntity<?>> newType = (Class<? extends AbstractEntity<?>>) cl
-                .startModification(Entity.class)
-                .addClassAnnotations(new DescTitleAnnotation("Title", "Description").newInstance())
+    public void existing_class_annotations_are_not_replaced() throws Exception {
+        final DescTitle newAnnot = new DescTitleAnnotation("Title", "Description").newInstance();
+        final DescTitle oldAnnot = DEFAULT_ORIG_TYPE.getAnnotation(DescTitle.class);
+        final Class<? extends AbstractEntity<?>> newType = (Class<? extends AbstractEntity<?>>)
+                cl.startModification(DEFAULT_ORIG_TYPE)
+                .addClassAnnotations(newAnnot)
                 .endModification();
         final DescTitle annot = newType.getAnnotation(DescTitle.class);
         assertNotNull(annot);
-        assertEquals("Description", annot.value());
-        assertEquals("Description Property", annot.desc());
+        assertEquals(oldAnnot.value(), annot.value());
+        assertEquals(oldAnnot.desc(), annot.desc());
     }
 
-    @Ignore
     @Test
-    public void adding_inappropriate_annotaton_to_class_fails() throws Exception {
-        try {
-            cl.startModification(TopLevelEntity.class)
+    public void adding_inappropriate_annotaton_to_a_class_fails() throws Exception {
+        assertThrows("The provided annotation IsProperty should have 'type' target.", 
+                IllegalArgumentException.class, 
+                () -> {
+                    cl.startModification(TopLevelEntity.class)
                     .addClassAnnotations(new IsPropertyAnnotation().newInstance())
                     .endModification();
-            fail();
-        } catch (final IllegalArgumentException ex) {
-            assertEquals("The provided annotation IsProperty should have 'type' target.", ex.getMessage());
-        }
-
+                });
     }
 
-    @Ignore
     @Test
-    public void can_add_class_level_annotation_after_adding_properties() throws Exception {
-        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.//
-        /*     */startModification(TopLevelEntity.class).//
-        /*          */addProperties(pd1).//
-        /*          */addClassAnnotations(new DescTitleAnnotation("Title", "Description").newInstance()).//
-        /*     */endModification();
-
-        assertEquals("Incorrect inheritance.", AbstractEntity.class, newType.getSuperclass());
+    public void can_add_class_annotations_after_adding_properties() throws Exception {
+        final DescTitle newAnnot = new DescTitleAnnotation("Title", "Description").newInstance();
+        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>)
+                cl.startModification(TopLevelEntity.class)
+                .addProperties(pd1)
+                .addClassAnnotations(newAnnot)
+                .endModification();
 
         final DescTitle annot = newType.getAnnotation(DescTitle.class);
         assertNotNull(annot);
-        assertEquals("Title", annot.value());
-        assertEquals("Description", annot.desc());
+        assertEquals(newAnnot.value(), annot.value());
+        assertEquals(newAnnot.desc(), annot.desc());
 
-        assertEquals(3, Finder.getPropertyDescriptors(TopLevelEntity.class).size());
-        assertEquals(5, Finder.getPropertyDescriptors(newType).size()); // The new type has new properties 'desc' and 'pd1', with the expected total number of properties to be grater than in the original type by 2.
-        assertEquals("Incorrect setter return type.", Void.TYPE, Reflector.obtainPropertySetter(newType, pd1.name).getReturnType());
+        // The new type has new properties 'desc' and 'pd1'
+        // so the total number of properties must be greater than in the original type by 2
+        assertEquals("Incorrect number of properties",
+                Finder.getPropertyDescriptors(TopLevelEntity.class).size() + 2,
+                Finder.getPropertyDescriptors(newType).size());
     }
 
     @Ignore

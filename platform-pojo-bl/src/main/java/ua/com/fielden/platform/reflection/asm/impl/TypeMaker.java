@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
+import static java.lang.String.format;
+
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -12,8 +14,10 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 import org.objectweb.asm.ClassReader;
@@ -117,7 +121,7 @@ public class TypeMaker<T> {
             return this;
         }
 
-        final List<String> existingPropNames = Arrays.asList(origType.getDeclaredFields()).stream().map(Field::getName).toList();
+        final List<String> existingPropNames = Arrays.stream(origType.getDeclaredFields()).map(Field::getName).toList();
         StreamUtils.distinct(
                 Arrays.stream(properties).filter(prop -> !existingPropNames.contains(prop.name)), 
                 prop -> prop.name) // distinguish properties by name
@@ -148,11 +152,10 @@ public class TypeMaker<T> {
     }
     
     /**
-    *
-    * Adds the specified class level annotation to the class.
+    * Adds the specified class level annotation to the class. Existing annotations are not replaced.
     * <p>
-    * It is important that these annotation have their target specified as <code>TYPE</code> and retention as <code>RUNTIME</code>. Otherwise, method throws an illegal argument
-    * exception.
+    * It is important that these annotation have their target specified as <code>TYPE</code> and retention as <code>RUNTIME</code>. 
+    * Otherwise, a runtime exception is thrown.
     *
     * @param annotations
     * @return
@@ -166,33 +169,31 @@ public class TypeMaker<T> {
            return this;
        }
 
+       final HashSet<String> existingAnnotationNames = Arrays.stream(origType.getDeclaredAnnotations())
+               .map(annot -> annot.annotationType().getName())
+               .collect(Collectors.toCollection(() -> new HashSet<String>()));
+       final List<Annotation> annotationsToAdd = Arrays.stream(annotations)
+               .filter(annot -> !existingAnnotationNames.contains(annot.annotationType().getName()))
+               .toList();
        // let's validate provided annotations
-       for (final Annotation annot : annotations) {
+       annotationsToAdd.forEach(annot -> {
            // check retention policy
            final Retention retention = annot.annotationType().getAnnotation(Retention.class);
            if (retention == null || retention.value() != RetentionPolicy.RUNTIME) {
-               throw new IllegalArgumentException(String.format("The provided annotation %s should have runtime retention policy.", annot.annotationType().getSimpleName()));
+               throw new IllegalArgumentException(format("The provided annotation %s should have runtime retention policy.",
+                       annot.annotationType().getSimpleName()));
            }
 
            // check target
            final Target target = annot.annotationType().getAnnotation(Target.class);
-           if (target == null || Arrays.stream(target.value()).filter(t -> t == ElementType.TYPE).count() == 0) {
-               throw new IllegalArgumentException(String.format("The provided annotation %s should have 'type' target.", annot.annotationType().getSimpleName()));
-           }
-       }
+           if (target == null || !Arrays.stream(target.value()).anyMatch(t -> t == ElementType.TYPE)) {
+               throw new IllegalArgumentException(format("The provided annotation %s should have 'type' target.",
+                       annot.annotationType().getSimpleName()));
+           }          
+       });
 
        // proceed with type construction
-       try {
-           final ClassReader cr = new ClassReader(currentType);
-           final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-           final AdvancedAddClassAnnotationAdapter cv = new AdvancedAddClassAnnotationAdapter(cw, annotations);
-           cr.accept(cv, ClassReader.SKIP_FRAMES);
-           currentType = cw.toByteArray();
-           currentName = cv.getEnhancedName().replace('/', '.');
-       } catch (final Exception e) {
-           throw new IllegalStateException(e);
-       }
-
+       builder = builder.annotateType(annotationsToAdd);
        return this;
    }
 
