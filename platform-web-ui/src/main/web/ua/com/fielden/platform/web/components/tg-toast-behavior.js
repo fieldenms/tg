@@ -6,6 +6,7 @@ const paperToastStyle = html`
             tg-paper-toast {
                 position: static;
                 background: black;
+                max-width: 256px;
                 @apply --layout-horizontal;
                 @apply --layout-center;
             }
@@ -38,9 +39,9 @@ const paperToastStyle = html`
             }
             #toastContainer {
                 position: absolute;
-                width: 256px;
                 left:0;
                 bottom:0;
+                overflow: hidden;
                 @apply --layout-vertical;
             }
         </style>
