@@ -28,18 +28,24 @@ public class GenericCentreConfigBuilder<T extends AbstractEntity<?>> extends Res
     @Override
     public ICentreSseWithPromptRefresh<T> hasEventSourceAt(final String uri) {
         if (StringUtils.isEmpty(uri)) {
-            throw new IllegalArgumentException("Server-Side Eventing URI should not be empty.");
+            throw new EntityCentreConfigurationException("Server-Side Eventing URI should not be empty.");
         }
         builder.sseUri = uri;
         return this;
     }
 
     @Override
-    public ICentreTopLevelActionsWithEnforcePostSaveRefreshConfig<T> withPromptForRefresh(final int seconds) {
-        if (seconds < 0) {
+    public ICentreTopLevelActionsWithEnforcePostSaveRefreshConfig<T> withCountdownRefreshPrompt(final int seconds) {
+        if (seconds <= 0) {
             throw new EntityCentreConfigurationException(format(ERR_COUNTDOWN_SECONDS_LESS_THAN_ZERO, seconds));
         }
         builder.refreshCountdown = Integer.valueOf(seconds);
+        return this;
+    }
+
+    @Override
+    public ICentreTopLevelActionsWithEnforcePostSaveRefreshConfig<T> withRefreshPrompt() {
+        builder.refreshCountdown = 0;
         return this;
     }
 
