@@ -67,8 +67,8 @@ const TgEntityCentreTemplateBehaviorImpl = {
         /////////////////TgDelayedActionBehavior related properties//////////////////////
         this.actionText = 'REFRESH';
         this.cancelText = 'SKIP';
-        this.textForCountdownAction = "Refreshing in:";
-        this.textForPromptAction = "Refresh centre?";
+        this.textForCountdownAction = "Refreshing in ";
+        this.textForPromptAction = "Data changed.";
         
         this.actionHandler = function () {
             if (this._pendingRefresh) {

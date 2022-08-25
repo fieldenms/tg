@@ -2299,7 +2299,7 @@ Polymer({
     },
 
     /**
-     * @returns object that explains the reason why this EGI can not be left or undefined.
+     * @returns object that explains the reason why this EGI cannot be left or undefined.
      */
     canLeave: function () {
         if (this.isEditing()) {
@@ -2389,7 +2389,7 @@ Polymer({
                 this.master.retrieve();
             } else {
                 this._closeMaster();
-                //At this point fireing finish-edit event is needed because row with entityIndex can not be editable because entityIndex is out of bounds.
+                //At this point firing finish-edit event is needed because row with entityIndex cannot be editable due to entityIndex being out of bounds.
                 this._fireFinishEditing();
             }
         }
