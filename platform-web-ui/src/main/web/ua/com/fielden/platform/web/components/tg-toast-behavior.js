@@ -37,6 +37,7 @@ const paperToastStyle = html`
                 background: var(--paper-light-blue-50);
             }
             #toastContainer {
+                z-index: 107;
                 position: fixed;
                 width: 256px;
                 left:0;
