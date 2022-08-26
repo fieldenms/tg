@@ -46,6 +46,29 @@ class TgDelayedActionToast extends mixinBehaviors([TgToastBehavior], PolymerElem
     ready() {
         super.ready();
         this.$.actionToast.refit = function(){};
+        this.$.actionToast.addEventListener
+
+        this._onCaptureClick = this._onCaptureClick.bind(this);
+    }
+
+    connectedCallback () {
+        super.connectedCallback();
+        const clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
+        this.$.actionToast.addEventListener(clickEvent, this._onCaptureClick, true);
+    }
+
+    disconnectedCallback() {
+        super.disconnectedCallback();
+        const clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
+        this.$.actionToast.removeEventListener(clickEvent, this._onCaptureClick, true);
+    }
+
+    _onCaptureClick (event) {
+        const manager = this.$.actionToast._manager;
+        // bring current toast to front if it is not in front already
+        if (manager.currentOverlay() !== this.$.actionToast) {
+            manager.addOverlay(this.$.actionToast);
+        }
     }
 
     get opened() {
