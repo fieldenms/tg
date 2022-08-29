@@ -94,24 +94,29 @@ const TgEntityCentreTemplateBehaviorImpl = {
         this.navigationPreAction = this.navigationPreAction.bind(this);
 
         //////////////////Event handler to determine centre visibility///////////////////
+        const observableNodes = [this._dom().$.centreResultContainer, ...this._dom().$.alternativeViewSlot.assignedNodes({ flatten: true })];
         const observer = new IntersectionObserver((entries, observer) => {
-            entries.forEach(entry => {
-                if (entry.intersectionRatio > 0) {
-                    this._visible = true;
-                    if (this._pendingRefresh && !this._isEgiEditing) {
-                        this.showRefreshToast();
-                    }
-                } else {
-                    this._visible = false;
+
+            const anyViewVisibility = entries.some(entry => entry.intersectionRatio > 0 && observableNodes.indexOf(entry.target) >= 0);
+
+            if (anyViewVisibility && !this._visible) {
+                this._visible = true;
+                if (this._pendingRefresh && !this._isEgiEditing) {
+                    this.showRefreshToast();
+                }
+            } else if (!anyViewVisibility && this._visible) {
+                this._visible = false;
                     if (this._pendingRefresh && !this._isEgiEditing) {
                         this.hideRefreshToast();
                     }
-                }
-            });
+            }
+            
         }, {
             root: document.documentElement
         });
-        observer.observe(this._dom().$.centreResultContainer);
+        observableNodes.forEach(altView => {
+            observer.observe(altView);
+        });
         /////////////////////////////////////////////////////////////////////////////////
 
         //////////////////Event handler for egi editing//////////////////////////////////
