@@ -97,7 +97,7 @@ const TgEntityCentreTemplateBehaviorImpl = {
         const observableNodes = [this._dom().$.centreResultContainer, ...this._dom().$.alternativeViewSlot.assignedNodes({ flatten: true })];
         const observer = new IntersectionObserver((entries, observer) => {
 
-            const anyViewVisibility = entries.some(entry => entry.intersectionRatio > 0 && observableNodes.indexOf(entry.target) >= 0);
+            const anyViewVisibility = entries.some(entry => entry.intersectionRatio > 0);
 
             if (anyViewVisibility && !this._visible) {
                 this._visible = true;
