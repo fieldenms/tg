@@ -106,9 +106,9 @@ const TgEntityCentreTemplateBehaviorImpl = {
                 }
             } else if (!anyViewVisibility && this._visible) {
                 this._visible = false;
-                    if (this._pendingRefresh && !this._isEgiEditing) {
-                        this.hideRefreshToast();
-                    }
+                if (this._pendingRefresh && !this._isEgiEditing) {
+                    this.hideRefreshToast();
+                }
             }
             
         }, {
