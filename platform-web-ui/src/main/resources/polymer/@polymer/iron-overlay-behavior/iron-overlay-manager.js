@@ -46,7 +46,8 @@ export const IronOverlayManagerClass = function () {
   // https://github.com/Microsoft/ChakraCore/issues/3863
 
   gestures.add(document.documentElement, 'tap', function () {});
-  document.addEventListener('tap', this._onCaptureClick.bind(this), true);
+  const clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
+  document.addEventListener(clickEvent, this._onCaptureClick.bind(this), true);
   document.addEventListener('focus', this._onCaptureFocus.bind(this), true);
   document.addEventListener('keydown', this._onCaptureKeyDown.bind(this), true);
 };
