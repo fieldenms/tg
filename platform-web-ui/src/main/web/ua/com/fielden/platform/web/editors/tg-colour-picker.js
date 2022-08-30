@@ -131,7 +131,7 @@ export class TgColourPicker extends TgEditor {
     static get template() { 
         return createEditorTemplate(additionalTemplate, customPrefixTemplate, customInputTemplate, html``, html``, propertyActionTemplate);
     }
-    
+
     _calcColourTextStyle (editingValue) {
         if (editingValue === "" || editingValue.length === 3 || editingValue.length === 6) {
             return "margin-left: 1px; color: #212121";
@@ -151,7 +151,7 @@ export class TgColourPicker extends TgEditor {
             };
         }
     }
-    
+
     _openColourPicker () {
         if (this._disabled === false) {
             if (!this._colourPalette) {
@@ -163,14 +163,15 @@ export class TgColourPicker extends TgEditor {
     }
 
     _createDialog () {
-        var self = this;
-        var domBind = document.createElement('dom-bind');
+        const self = this;
+        const domBind = document.createElement('dom-bind');
         
         domBind.colourSelected = function (e, detail) {
             this._acceptColourBind();
             var target = e.target || e.srcElement;
             self._editingValue = ((rgbToHex(target.style['background-color'])).substring(1)).toUpperCase();
             this.$.dropdown.close();
+            self.decoratedInput().focus();
         }.bind(domBind);
 
         domBind.nonColourSelected = function () {
@@ -187,18 +188,14 @@ export class TgColourPicker extends TgEditor {
         domBind.open = function () {
             this.$.dropdown.open();
         }.bind(domBind);
-        
-        domBind._colorPickerClosed = function () {
-            self.decoratedInput().focus();
-        }.bind(domBind);
-        
+
         domBind._colorPickerOpened = function (event) {
             tearDownEvent(event);
         }.bind(domBind);
 
         var template = document.createElement('template');
         template.innerHTML =
-            '<iron-dropdown id="dropdown" always-on-top on-iron-overlay-closed="_colorPickerClosed" on-iron-overlay-opened="_colorPickerOpened">' + // tabindex="0" on-iron-overlay-opened="_colorPickerOpened" 
+            '<iron-dropdown id="dropdown" always-on-top on-iron-overlay-opened="_colorPickerOpened">' + // tabindex="0" on-iron-overlay-opened="_colorPickerOpened" 
             '<div slot="dropdown-content" class="dropdown-content">' +
             '<div class="layout vertical" style="margin:10px 10px 10px 10px;">' +
             '<div class="layout horizontal">' +

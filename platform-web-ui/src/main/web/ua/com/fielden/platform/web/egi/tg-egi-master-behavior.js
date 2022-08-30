@@ -76,6 +76,7 @@ const TgEgiMasterBehaviorImpl = {
 
     closeMaster: function () {
         this.egi._closeMaster();
+        this.egi._fireFinishEditing();
         this._postClose();
     },
 
@@ -160,6 +161,9 @@ const TgEgiMasterBehaviorImpl = {
         } else if (this._shouldEditPreviousRow && typeof this._previousEditRow !== 'undefined') {
             this.editableRow = this._previousEditRow;
             this.egi._makeRowEditable(this.editableRow - 1);
+        } else {
+            //This event should be fired because master was closed before refreshing and at this point it won't be opened again. 
+            this.egi._fireFinishEditing();
         }
         delete this._previousEditRow;
         this.egi.removeEventListener("tg-egi-entities-loaded", this._egiRefreshed);
@@ -243,6 +247,7 @@ const TgEgiMasterBehaviorImpl = {
     _cancelMaster: function() {
         const activeElement = deepestActiveElement();
         this.egi._closeMaster();
+        this.egi._fireFinishEditing();
         this._focusNextEgiElementTo(event, true, activeElement);
     },
 
