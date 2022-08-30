@@ -231,6 +231,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     private static final String CENTRE_SCROLL="@centreScroll";
     private static final String LEFT_SPLITTER_POSITION = "@leftSplitterPositionPlacehoder";
     private static final String RIGHT_SPLITTER_POSITION = "@rightSplitterPositionPlacehoder";
+    private static final String SSE_REFRESH_COUNTDOWN = "@sseRefreshCountdown";
     // generic custom code
     private static final String READY_CUSTOM_CODE = "//@centre-is-ready-custom-code";
     private static final String ATTACHED_CUSTOM_CODE = "//@centre-has-been-attached-custom-code";
@@ -1284,6 +1285,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 replace(BOTTOM_INSERTION_POINT_DOM, bottomInsertionPointsDom.toString()).
                 replace(ALTERNATIVE_VIEW_INSERTION_POINT_DOM, join(alternativeViewsDom, "\n")).
                 replace(CENTRE_RETRIEVE_ALL_OPTION, Boolean.toString(dslDefaultConfig.shouldRetrieveAll())).
+                replace(SSE_REFRESH_COUNTDOWN, dslDefaultConfig.getRefreshCountdown().map(seconds -> format("self.countdown=%s;", seconds)).orElse("")).
                 replace(CENTRE_SCROLL, dslDefaultConfig.isLockScrollingForInsertionPoints() ? "centre-scroll" : "").
                 replace(READY_CUSTOM_CODE, customCode.map(code -> code.toString()).orElse("")).
                 replace(ATTACHED_CUSTOM_CODE, customCodeOnAttach.map(code -> code.toString()).orElse(""));
