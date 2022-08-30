@@ -87,12 +87,12 @@ public final class NewProperty {
 
             @Override
             public String value() {
-                return title;
+                return title == null ? "" : title;
             }
 
             @Override
             public String desc() {
-                return desc;
+                return desc == null ? "" : desc;
             }
         };
     }
