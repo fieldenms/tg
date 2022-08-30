@@ -52,7 +52,7 @@ document.head.appendChild(paperToastStyle.content);
 export const TgToastBehavior = {
 
     ready: function () {
-         //Indicates whether toast overlay can be closed via history (back button or not)
+         // Indicates whether toast overlay can be closed via history (back button or not)
          this._toast().skipHistoryAction = true;
 
          // Styles to truncate the toast text.
@@ -73,7 +73,7 @@ export const TgToastBehavior = {
             if (currToast.parentNode === toastContainer) {
                 existingToastCount++;
                 if (existingToastCount > 1) {
-                    throw new Error('More than one toast exist in body direct children.');
+                    throw new Error("Unexpected situation. Only one toast with the specified 'id' should exist.");
                 }
                 toast = currToast;
             }
@@ -92,7 +92,7 @@ export const TgToastBehavior = {
     },
 
     /**
-     * Overrode this to provide reference on tg-paper-toast element 
+     * Needs to be overridden to provide a reference to a toast element.
      */
     _toast: function () {}
 
