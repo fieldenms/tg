@@ -1241,9 +1241,7 @@ const TgEntityCentreBehaviorImpl = {
                         .then(function () {
                             self.runInsertionPointActions(excludeInsertionPoints);
                             resolve();
-                        }).catch (error => {
-                            reject(e);
-                        }) ;
+                        }).catch (e => reject(e));
                 }
                 self._saveOrCancelPromise().then(() => resolve()).catch(e => reject(e));
             }, 50);
