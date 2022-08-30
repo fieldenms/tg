@@ -47,8 +47,9 @@ const TgEntityCentreTemplateBehaviorImpl = {
                 entityToRefresh = this.$.egi.egiModel.find(entry => entry.entity.get('id') === msg.id);
             }
 
-            //Initialise entities to refresh: If sse event with id and egi has entity with that id then add to the list of entites to refresh.
-            //Otherwise if sse event is without id or egi doesn't have an entity with that id then clear entities to refresh list to refresh whole centre.
+            // Initialise entities to refresh:
+            // 1. If an SSE event with id and egi has entity with the same id, then add it to the list of entities to refresh.
+            // 2. Otherwise, if an SSE event is without an id or egi doesn't contain an entity with the same id, then clear a list of entities to refresh, and refresh the whole centre.
             if (entityToRefresh) {
                 this._entitiesToRefresh.push(entityToRefresh.entity);
             } else {
