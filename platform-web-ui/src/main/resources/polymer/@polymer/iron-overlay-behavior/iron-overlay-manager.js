@@ -93,7 +93,7 @@ IronOverlayManagerClass.prototype = {
    * @private
    */
   _bringOverlayAtIndexToFront: function (i) {
-    var overlay = this._overlays[i];
+    const overlay = this._overlays[i];
 
     if (!overlay) {
       return;
@@ -112,15 +112,15 @@ IronOverlayManagerClass.prototype = {
       return;
     } 
 
-    var minimumZ = Math.max(this._getZ(this._overlays[lastI]), this._minimumZ);
+    const minimumZ = Math.max(this._getZ(this._overlays[lastI]), this._minimumZ);
 
-    //Get smallest z index to replace z-index for next overlay in the list
+    // Get the smallest z-index to replace z-index for the next overlay in the list
     let lastZ = this._getZ(overlay);
     while (i < lastI) {
-      //Shift overley to left
+      // Shift overlay to left
       this._overlays[i] = this._overlays[i + 1];
       i++;
-      //Replace z-index for shifted overlay by that last smallest z index. But before doing this please save z index for the  next overlay
+      // Replace z-index a for shifted overlay by that last smallest z-index. But before doing this capture z-index for the next overlay.
       let tempZ = this._getZ(this._overlays[i])
       this._setZ(this._overlays[i], lastZ);
       lastZ = tempZ;
