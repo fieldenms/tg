@@ -773,7 +773,7 @@ const TgEntityCentreBehaviorImpl = {
                    }
                    return propOrder;
                 }));
-                //If user received sse refresh event but moved to selection criteria and pressed run then refresh toast should be also canceled.
+                // If a user received an SSE refresh event, but switched to a selection criteria pane and pressed RUN, then the refresh prompt (a toast) should be canceled.
                 this.cancelRefreshToast();
 
                 if (this._triggerRun) {
