@@ -6,6 +6,8 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -39,7 +41,7 @@ public final class EventSourceEmitter implements IEmitter, Runnable {
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private int heartBeatPeriod = 5;
 
-    private final IEventSource eventSource;
+    private final List<IEventSource> eventSources = new ArrayList<>();
     private final AsyncContext async;
     private final ServletOutputStream output;
     private Future<?> heartBeat;
@@ -56,9 +58,9 @@ public final class EventSourceEmitter implements IEmitter, Runnable {
      * @param async
      * @throws IOException
      */
-    public EventSourceEmitter(final AtomicBoolean shouldResourceThreadBeBlocked, final IEventSource eventSource, final AsyncContext async, final RequestInfo info) throws IOException {
+    public EventSourceEmitter(final AtomicBoolean shouldResourceThreadBeBlocked, final List<IEventSource> eventSources, final AsyncContext async, final RequestInfo info) throws IOException {
         this.shouldResourceThreadBeBlocked = shouldResourceThreadBeBlocked;
-        this.eventSource = eventSource;
+        this.eventSources.addAll(eventSources);
         this.async = async;
         this.output = async.getResponse().getOutputStream();
         this.info = info;
@@ -147,7 +149,7 @@ public final class EventSourceEmitter implements IEmitter, Runnable {
                 }
             }
             async.complete();
-            eventSource.onClose();
+            eventSources.forEach(eventSource -> eventSource.onClose());
         } finally {
             logger.info(format("Closed event source emitter: %s", info.toString()));
             shouldResourceThreadBeBlocked.set(false);

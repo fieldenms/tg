@@ -2,6 +2,8 @@ package ua.com.fielden.platform.web.sse.resources;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.servlet.AsyncContext;
@@ -19,6 +21,7 @@ import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.application.RequestInfo;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebResource;
+import ua.com.fielden.platform.web.sse.AbstractEventSource;
 import ua.com.fielden.platform.web.sse.EventSourceEmitter;
 import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.utils.ServletUtils;
@@ -32,17 +35,17 @@ public class EventSourcingResource extends AbstractWebResource {
 
     private final Logger logger = Logger.getLogger(this.getClass());
     private final AtomicBoolean shouldKeepGoing = new AtomicBoolean(true);
-    private final IEventSource eventSource;
+    private final List<IEventSource> eventSources = new ArrayList<>();
 
     public EventSourcingResource(
-            final IEventSource eventSource,
+            final List<AbstractEventSource<?,?>> eventSources,
             final IDeviceProvider deviceProvider,
             final IDates dates,
             final Context context,
             final Request request,
             final Response response) {
         super(context, request, response, deviceProvider, dates);
-        this.eventSource = eventSource;
+        this.eventSources.addAll(eventSources);
     }
 
     /**
@@ -61,9 +64,11 @@ public class EventSourcingResource extends AbstractWebResource {
             // Infinite timeout because the continuation is never resumed,
             // but only completed on close
             async.setTimeout(0);
-            final EventSourceEmitter emitter = new EventSourceEmitter(shouldKeepGoing, eventSource, async, new RequestInfo(getRequest()));
+            final EventSourceEmitter emitter = new EventSourceEmitter(shouldKeepGoing, eventSources, async, new RequestInfo(getRequest()));
             emitter.scheduleHeartBeat();
-            eventSource.onOpen(emitter);
+            for (final IEventSource eventSource: eventSources) {
+                eventSource.onOpen(emitter);
+            }
         } catch (final IOException ex) {
             logger.error(ex);
             throw new ResourceException(ex);

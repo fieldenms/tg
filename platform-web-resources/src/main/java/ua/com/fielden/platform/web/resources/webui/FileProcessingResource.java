@@ -35,9 +35,9 @@ import ua.com.fielden.platform.web.sse.resources.EventSourcingResourceFactory;
 
 /**
  * This is a multi-purpose file-processing resource that can be used for uploading files to be processed with the specified functional entity.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> extends AbstractWebResource {
 
@@ -56,17 +56,17 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
     private final IDates dates;
 
     public FileProcessingResource(
-            final Router router, 
-            final IEntityDao<T> companion, 
-            final EntityFactory factory, 
-            final Function<EntityFactory, T> entityCreator, 
-            final RestServerUtil restUtil, 
-            final long fileSizeLimitBytes, 
-            final Set<MediaType> types, 
+            final Router router,
+            final IEntityDao<T> companion,
+            final EntityFactory factory,
+            final Function<EntityFactory, T> entityCreator,
+            final RestServerUtil restUtil,
+            final long fileSizeLimitBytes,
+            final Set<MediaType> types,
             final IDeviceProvider deviceProvider,
             final IDates dates,
-            final Context context, 
-            final Request request, 
+            final Context context,
+            final Request request,
             final Response response) {
         super(context, request, response, deviceProvider, dates);
         this.router = router;
@@ -81,14 +81,14 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
 
         try {
             this.jobUid = request.getHeaders().getFirstValue("jobUid", /*ignore case*/ true);
-    
+
             try {
                 this.origFileName = URLDecoder.decode(request.getHeaders().getFirstValue("origFileName", /*ignore case*/ true), StandardCharsets.UTF_8.toString());
             } catch (final UnsupportedEncodingException ex) {
                 throw new IllegalArgumentException("Could not decode the value for origFileName.", ex);
             }
             this.mimeAsProvided = request.getHeaders().getFirstValue("mime", /*ignore case*/ true);
-    
+
             final long lastModified = Long.parseLong(request.getHeaders().getFirstValue("lastModified", /*ignore case*/ true));
             this.fileLastModified = new Date(lastModified);
         } catch (final Exception ex) {
@@ -107,7 +107,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         String msg = "Successful processing.";
         try {
             final Representation rep;
-            
+
             if (isEmpty(jobUid)) {
                 getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
                 rep =  restUtil.errorJsonRepresentation(msg = "jobUid is required.");
@@ -152,7 +152,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         try {
             input.exhaust();
         } catch (final Exception ex) {
-            // TODO There can be an IO or some other exceptions when exhausting the entity, so just in case let's log any exception if it occurs 
+            // TODO There can be an IO or some other exceptions when exhausting the entity, so just in case let's log any exception if it occurs
         }
     }
 
@@ -170,7 +170,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         final String[] mime1Parts = mime1.split("/");
         final String[] mime2Parts = mime2.split("/");
         final boolean anySubtype = "*".equals(mime1Parts[1]);
-        return equalsEx(mime1Parts[0], mime2Parts[0]) && (equalsEx(mime1Parts[1], mime2Parts[1]) || anySubtype); 
+        return equalsEx(mime1Parts[0], mime2Parts[0]) && (equalsEx(mime1Parts[1], mime2Parts[1]) || anySubtype);
     }
 
     /**
@@ -182,10 +182,10 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
      */
     private Representation tryToProcess(final InputStream stream, final String mime) {
         final ProcessingProgressSubject subject = new ProcessingProgressSubject();
-        final EventSourcingResourceFactory eventSource = new EventSourcingResourceFactory(new ProcessingProgressEventSource(subject), deviceProvider, dates);
+        final EventSourcingResourceFactory eventSource = new EventSourcingResourceFactory(deviceProvider, dates, new ProcessingProgressEventSource(subject));
         final String baseUri = getRequest().getResourceRef().getPath(true);
         router.attach(baseUri + "/sse/" + jobUid, eventSource);
-        
+
         try {
             final T entity = entityCreator.apply(factory);
             entity.setOrigFileName(origFileName);

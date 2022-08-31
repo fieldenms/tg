@@ -73,7 +73,7 @@ public class WebUiResources extends AbstractWebUiResources {
                 20 * 1024 * 1024, // Kilobytes
                 // image/png,image/jpeg,
                 // .csv,.txt,text/plain,text/csv,
-                // application/pdf,application/zip, 
+                // application/pdf,application/zip,
                 // application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,
                 // application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
                 MediaType.IMAGE_JPEG, MediaType.IMAGE_PNG,
@@ -88,7 +88,7 @@ public class WebUiResources extends AbstractWebUiResources {
 
         // register some server-side eventing
         // router.attach("/sse/events",  new _EventSourcingResourceFactory()); -- some experimental stuff, which should be kept here for the moment
-        router.attach("/sse/entity-centre-events",  new EventSourcingResourceFactory(injector, TgPersistentEntityWithPropertiesEventSrouce.class, deviceProvider, dates));
-        router.attach("/sse/message-update-events", new EventSourcingResourceFactory(injector, TgMessageEventSource.class, deviceProvider, dates));
+        router.attach("/sse/entity-centre-events",  new EventSourcingResourceFactory(injector, deviceProvider, dates, TgPersistentEntityWithPropertiesEventSrouce.class));
+        router.attach("/sse/message-update-events", new EventSourcingResourceFactory(injector, deviceProvider, dates, TgMessageEventSource.class));
     }
 }

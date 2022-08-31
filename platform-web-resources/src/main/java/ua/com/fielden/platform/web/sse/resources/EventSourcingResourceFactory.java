@@ -1,5 +1,11 @@
 package ua.com.fielden.platform.web.sse.resources;
 
+import static java.util.stream.Collectors.toList;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import org.restlet.Request;
 import org.restlet.Response;
 import org.restlet.Restlet;
@@ -25,23 +31,23 @@ import ua.com.fielden.platform.web.sse.exceptions.InvalidSseUriException;
 public class EventSourcingResourceFactory extends Restlet {
 
     private final Injector injector;
-    private final Class<? extends AbstractEventSource<?, ?>> eventSourceType;
-    private final AbstractEventSource<?, ?> eventSource;
+    private final List<Class<? extends AbstractEventSource<?, ?>>> eventSourceTypes = new ArrayList<>();
+    private final List<AbstractEventSource<?, ?>> eventSources = new ArrayList<>();
     private final IDeviceProvider deviceProvider;
     private final IDates dates;
 
-    public EventSourcingResourceFactory(final Injector injector, final Class<? extends AbstractEventSource<?, ?>> eventSourceType, final IDeviceProvider deviceProvider, final IDates dates) {
+    public EventSourcingResourceFactory(final Injector injector, final IDeviceProvider deviceProvider, final IDates dates, final Class<? extends AbstractEventSource<?, ?>> eventSourceType, final Class<? extends AbstractEventSource<?, ?>>... otherEventSourceTypes) {
         this.injector = injector;
-        this.eventSourceType = eventSourceType;
-        this.eventSource = null;
+        this.eventSourceTypes.add(eventSourceType);
+        this.eventSourceTypes.addAll(listOf(otherEventSourceTypes));
         this.deviceProvider = deviceProvider;
         this.dates = dates;
     }
 
-    public EventSourcingResourceFactory(final AbstractEventSource<?, ?> eventSource, final IDeviceProvider deviceProvider, final IDates dates) {
+    public EventSourcingResourceFactory(final IDeviceProvider deviceProvider, final IDates dates, final AbstractEventSource<?, ?> eventSource, final AbstractEventSource<?, ?>... otherEventSources) {
         this.injector = null;
-        this.eventSource = eventSource;
-        this.eventSourceType = null;
+        this.eventSources.add(eventSource);
+        this.eventSources.addAll(listOf(otherEventSources));
         this.deviceProvider = deviceProvider;
         this.dates = dates;
     }
@@ -53,10 +59,10 @@ public class EventSourcingResourceFactory extends Restlet {
             if (!SseUtils.isEventSourceRequest(request)) {
                 throw new InvalidSseUriException(String.format("URI [%s] is not valid for SSE.", request.getResourceRef().toString()));
             }
-            if (this.eventSource != null) {
-                new EventSourcingResource(eventSource, deviceProvider, dates, getContext(), request, response).handle();
+            if (!eventSources.isEmpty()) {
+                new EventSourcingResource(eventSources, deviceProvider, dates, getContext(), request, response).handle();
             } else {
-                new EventSourcingResource(injector.getInstance(eventSourceType), deviceProvider, dates, getContext(), request, response).handle();
+                new EventSourcingResource(eventSourceTypes.stream().map(eventSourceType -> injector.getInstance(eventSourceType)).collect(toList()), deviceProvider, dates, getContext(), request, response).handle();
             }
         }
     }
