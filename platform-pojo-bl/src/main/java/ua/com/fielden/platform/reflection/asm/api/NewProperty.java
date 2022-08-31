@@ -27,9 +27,12 @@ public final class NewProperty {
     public final String title;
     public final String desc;
     public final List<Annotation> annotations = new ArrayList<Annotation>();
+    private Type genericType;
     
     public static NewProperty fromField(final Field field) {
         final Title titleAnnot = field.getDeclaredAnnotation(Title.class);
+        // exclude Title annotation from the list of declared annotations
+        // instead pass its value() and desc() attributes
         final Annotation[] restAnnotations = titleAnnot == null ? 
                 field.getDeclaredAnnotations() : 
                 Arrays.stream(field.getDeclaredAnnotations()).filter(annot -> !annot.equals(titleAnnot)).toArray(Annotation[]::new);
@@ -115,17 +118,18 @@ public final class NewProperty {
      * Similar to {@link Field#getGenericType()}.
      * <p>
      * {@link NewProperty} representing a collectional property may have a raw type, such as {@link List}, so it's necessary to look at the value of {@link IsProperty} annotation to try to determine the type argument. Otherwise, current property type is returned as is.
-     * <p>
-     * <i>Note:</i> this method returns a new instance of {@link Type} every time it's called.
      * @return
      */
     public Type getGenericType() {
-        final IsProperty adIsProperty = (IsProperty) getAnnotationByType(IsProperty.class);
-        final Class<?> typeArg = adIsProperty != null ? adIsProperty.value() : null;
-        return (typeArg == null || typeArg.equals(Void.class)) ? type : new ParameterizedType() {
-            @Override public Type getRawType() { return type; }
-            @Override public Type getOwnerType() { return null; } // top-level type
-            @Override public Type[] getActualTypeArguments() { return new Type[] {typeArg}; }
-        };
+        if (genericType == null) {
+            final IsProperty adIsProperty = (IsProperty) getAnnotationByType(IsProperty.class);
+            final Class<?> typeArg = adIsProperty != null ? adIsProperty.value() : null;
+            genericType = (typeArg == null || typeArg.equals(Void.class)) ? type : new ParameterizedType() {
+                @Override public Type getRawType() { return type; }
+                @Override public Type getOwnerType() { return null; } // top-level type
+                @Override public Type[] getActualTypeArguments() { return new Type[] {typeArg}; }
+            };
+        }
+        return genericType;
     }
 }
