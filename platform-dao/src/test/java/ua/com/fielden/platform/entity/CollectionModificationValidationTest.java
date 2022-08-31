@@ -42,7 +42,6 @@ import ua.com.fielden.platform.security.tokens.open_simple_master.TgEntityWithPr
 import ua.com.fielden.platform.security.tokens.open_simple_master.TgEntityWithTimeZoneDatesMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.TgGeneratedEntityForTrippleDecAnalysisMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.TgGeneratedEntityMaster_CanOpen_Token;
-import ua.com.fielden.platform.security.tokens.open_simple_master.TgMessageMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.TgPersistentCompositeEntityMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.TgPersistentEntityWithPropertiesMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.UserMaster_CanOpen_Token;
@@ -397,7 +396,6 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
             createTokenInfo.apply(TgEntityWithTimeZoneDatesMaster_CanOpen_Token.class),
             createTokenInfo.apply(TgGeneratedEntityForTrippleDecAnalysisMaster_CanOpen_Token.class),
             createTokenInfo.apply(TgGeneratedEntityMaster_CanOpen_Token.class),
-            createTokenInfo.apply(TgMessageMaster_CanOpen_Token.class),
             createTokenInfo.apply(TgPersistentCompositeEntityMaster_CanOpen_Token.class),
             createTokenInfo.apply(TgPersistentEntityWithPropertiesMaster_CanOpen_Token.class),
             
