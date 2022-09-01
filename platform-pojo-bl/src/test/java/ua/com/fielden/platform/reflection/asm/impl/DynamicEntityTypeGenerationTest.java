@@ -124,8 +124,7 @@ public class DynamicEntityTypeGenerationTest {
                 .endModification();
         assertTrue("Incorrect type name.", 
                 newType.getName().equals(newTypeName));
-        // expect superclass of the original type, since modifySupertypeName wasn't used
-        assertEquals("Incorrect inheritance.", DEFAULT_ORIG_TYPE.getSuperclass(), newType.getSuperclass());
+        assertEquals("Incorrect inheritance.", DEFAULT_ORIG_TYPE, newType.getSuperclass());
         assertEquals("Incorrect setter return type.",
                 DEFAULT_ORIG_TYPE,
                 Reflector.obtainPropertySetter(newType, "firstProperty").getReturnType());
@@ -134,9 +133,6 @@ public class DynamicEntityTypeGenerationTest {
                 DEFAULT_ORIG_TYPE,
                 Reflector.obtainPropertySetter(newType, "entity").getParameterTypes()[0]);
         
-        assertEquals("The type of properties (previously of root type) also becomes changed.", 
-                newTypeName, 
-                newType.getDeclaredField("entity").getType().getName());
     }
 
     @Test
@@ -151,11 +147,8 @@ public class DynamicEntityTypeGenerationTest {
         assertEquals("Incorrect inheritance.", DEFAULT_ORIG_TYPE, newType.getSuperclass());
 
         assertEquals("Incorrect setter return type.", 
-                Reflector.obtainPropertySetter(newType, "firstProperty").getReturnType(),
-                newType);
-        assertEquals("The type of properties (previously of root type) also becomes changed.",
-                newTypeName,
-                newType.getDeclaredField("entity").getType().getName());
+                DEFAULT_ORIG_TYPE,
+                Reflector.obtainPropertySetter(newType, "firstProperty").getReturnType());
     }
 
     @Test
@@ -165,7 +158,6 @@ public class DynamicEntityTypeGenerationTest {
                 cl.startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(pd1)
                 .modifyTypeName(newTypeName)
-                .extendOriginalType()
                 .endModification();
         assertTrue("Incorrect type name.", newType.getName().equals(newTypeName));
         assertEquals("Incorrect inheritance.", DEFAULT_ORIG_TYPE, newType.getSuperclass());
@@ -174,20 +166,26 @@ public class DynamicEntityTypeGenerationTest {
                 Finder.getPropertyDescriptors(DEFAULT_ORIG_TYPE).size() + 1,
                 Finder.getPropertyDescriptors(newType).size());
         assertEquals("Incorrect setter return type.", 
-                Reflector.obtainPropertySetter(newType, "firstProperty").getReturnType(),
-                newType);
+                DEFAULT_ORIG_TYPE,
+                Reflector.obtainPropertySetter(newType, "firstProperty").getReturnType());
     }
 
-    @Ignore
     @Test
     public void test_type_name_modification_after_properties_modification() throws Exception {
-        assertEquals("Incorrect setter return type.", Reflector.obtainPropertySetter(Entity.class, "firstProperty").getReturnType(), Entity.class);
-        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class).//
-        modifyProperties(NewProperty.changeType("firstProperty", BigDecimal.class)).//
-        modifyTypeName(Entity.class.getName() + "_enhanced4").endModification();
-        assertTrue("Incorrect type name.", newType.getName().equals(Entity.class.getName() + "_enhanced4"));
-        assertEquals("Incorrect inheritance.", AbstractEntity.class, newType.getSuperclass());
-        assertEquals("Incorrect setter return type.", Reflector.obtainPropertySetter(newType, "firstProperty").getReturnType(), newType);
+        final String newTypeName = DEFAULT_ORIG_TYPE.getName() + "_enhanced4";
+        final NewProperty np = NewProperty.changeType("firstProperty", BigDecimal.class);
+        final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>)
+                cl.startModification(DEFAULT_ORIG_TYPE)
+                .modifyTypeName(newTypeName)
+                .modifyProperties(np)
+                .endModification();
+        assertTrue("Incorrect type name.", newType.getName().equals(newTypeName));
+        assertEquals("Incorrect inheritance.", DEFAULT_ORIG_TYPE, newType.getSuperclass());
+        final AbstractEntity<?> entity = factory.newByKey(newType, "key");
+        Reflector.getMethod(entity, "getFirstProperty").invoke(entity);
+        assertEquals("Incorrect setter return type.", 
+                newType,
+                Reflector.obtainPropertySetter(newType, np.name).getReturnType());
     }
 
     @Test
@@ -197,7 +195,7 @@ public class DynamicEntityTypeGenerationTest {
                 .addProperties(pd1)
                 .endModification();
         assertTrue("Incorrect type name.", newType.getName().startsWith(DEFAULT_ORIG_TYPE.getName() + DynamicTypeNamingService.APPENDIX + "_"));
-        assertEquals("Incorrect inheritance.", DEFAULT_ORIG_TYPE.getSuperclass(), newType.getSuperclass());
+        assertEquals("Incorrect inheritance.", DEFAULT_ORIG_TYPE, newType.getSuperclass());
         assertEquals("Incorrect number of properties.", 
                 Finder.getPropertyDescriptors(DEFAULT_ORIG_TYPE).size() + 1,
                 Finder.getPropertyDescriptors(newType).size());
