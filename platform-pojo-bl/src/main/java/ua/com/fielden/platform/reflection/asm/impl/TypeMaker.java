@@ -283,7 +283,7 @@ public class TypeMaker<T> {
     * 
     * @return a loaded class representing the modified type
     */
-   public Class<?> endModification() {
+   public Class<? extends T> endModification() {
        if (!DynamicEntityClassLoader.isGenerated(origType)) {
            recordOrigType(origType);
        }
