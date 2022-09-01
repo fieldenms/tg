@@ -111,11 +111,11 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void types_can_be_renamed() throws Exception {
         assertEquals("Incorrect setter return type.", 
-                Reflector.obtainPropertySetter(DEFAULT_ORIG_TYPE, "firstProperty").getReturnType(),
-                DEFAULT_ORIG_TYPE);
+                DEFAULT_ORIG_TYPE,
+                Reflector.obtainPropertySetter(DEFAULT_ORIG_TYPE, "firstProperty").getReturnType());
         assertEquals("Incorrect setter argument type.",
-                Reflector.obtainPropertySetter(DEFAULT_ORIG_TYPE, "entity").getParameterTypes()[0],
-                DEFAULT_ORIG_TYPE);
+                DEFAULT_ORIG_TYPE,
+                Reflector.obtainPropertySetter(DEFAULT_ORIG_TYPE, "entity").getParameterTypes()[0]);
         
         final String newTypeName = DEFAULT_ORIG_TYPE.getName() + "_enhanced1";
         final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>)
@@ -127,12 +127,12 @@ public class DynamicEntityTypeGenerationTest {
         // expect superclass of the original type, since modifySupertypeName wasn't used
         assertEquals("Incorrect inheritance.", DEFAULT_ORIG_TYPE.getSuperclass(), newType.getSuperclass());
         assertEquals("Incorrect setter return type.",
-                Reflector.obtainPropertySetter(newType, "firstProperty").getReturnType(),
-                newType);
+                DEFAULT_ORIG_TYPE,
+                Reflector.obtainPropertySetter(newType, "firstProperty").getReturnType());
 
         assertEquals("Incorrect setter argument type.",
-                Reflector.obtainPropertySetter(newType, "entity").getParameterTypes()[0],
-                newType);
+                DEFAULT_ORIG_TYPE,
+                Reflector.obtainPropertySetter(newType, "entity").getParameterTypes()[0]);
         
         assertEquals("The type of properties (previously of root type) also becomes changed.", 
                 newTypeName, 
@@ -239,7 +239,9 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void test_to_ensure_that_duplicate_new_properties_are_eliminated() throws Exception {
         final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl.startModification(Entity.class).addProperties(pd1, pd1, pd1).endModification();
-        assertEquals("Incorrect number of properties.", Finder.getPropertyDescriptors(Entity.class).size() + 1, Finder.getPropertyDescriptors(newType).size());
+        assertEquals("Incorrect number of properties.", 
+                Finder.getPropertyDescriptors(Entity.class).size() + 1,
+                Finder.getPropertyDescriptors(newType).size());
     }
 
     @Test
@@ -645,26 +647,26 @@ public class DynamicEntityTypeGenerationTest {
                 Finder.getPropertyDescriptors(newType).size());
     }
 
-    @Ignore
     @Test
-    public void original_type_for_generated_one_based_on_that_original_type_is_the_original_type() throws Exception {
+    public void original_type_of_a_generated_one_is_its_base_type() throws Exception {
         final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl
-                    .startModification(TopLevelEntity.class)
-                    .addProperties(pd1)
-                    .addClassAnnotations(new DescTitleAnnotation("Title", "Description").newInstance())
-                    .endModification();
+                .startModification(TopLevelEntity.class)
+                .addProperties(pd1)
+                .addClassAnnotations(new DescTitleAnnotation("Title", "Description").newInstance())
+                .endModification();
         assertEquals(TopLevelEntity.class, DynamicEntityClassLoader.getOriginalType(newType));
     }
 
-    @Ignore
     @Test
-    public void original_type_for_generated_based_on_another_generated_type_is_the_same_as_for_base_type() throws Exception {
+    public void original_type_of_a_generated_one_based_on_another_generated_type_is_the_same_for_both_generated_types() throws Exception {
         final Class<? extends AbstractEntity<String>> newBaseType = (Class<? extends AbstractEntity<String>>) cl
-                    .startModification(TopLevelEntity.class)
-                    .addClassAnnotations(new DescTitleAnnotation("Title", "Description").newInstance())
-                    .endModification();
+                .startModification(TopLevelEntity.class)
+                .addClassAnnotations(new DescTitleAnnotation("Title", "Description").newInstance())
+                .endModification();
         final Class<? extends AbstractEntity<String>> newType = (Class<? extends AbstractEntity<String>>) cl
-                .startModification(newBaseType).addProperties(pd1).endModification();
+                .startModification(newBaseType)
+                .addProperties(pd1)
+                .endModification();
 
         assertEquals(TopLevelEntity.class, DynamicEntityClassLoader.getOriginalType(newBaseType));
         assertEquals(TopLevelEntity.class, DynamicEntityClassLoader.getOriginalType(newType));
