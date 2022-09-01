@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
 import static java.lang.String.format;
+import static java.util.stream.Collectors.toCollection;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,18 +11,13 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
-import org.objectweb.asm.ClassReader;
-import org.objectweb.asm.ClassWriter;
 
 import net.bytebuddy.ByteBuddy;
 import net.bytebuddy.description.modifier.Ownership;
@@ -35,6 +31,7 @@ import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.pool.TypePool;
 import ua.com.fielden.platform.entity.annotation.Generated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.factory.ObservableAnnotation;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.utils.StreamUtils;
@@ -70,11 +67,10 @@ public class TypeMaker<T> {
     private static final String CURRENT_BUILDER_IS_NOT_SPECIFIED = "Current builder is not specified.";
     public static final String GET_ORIG_TYPE_METHOD_NAME = "_GET_ORIG_TYPE_METHOD_";
     private final DynamicEntityClassLoader cl;
-    private byte[] currentType; // TODO remove
-    private String currentName; // TODO remove
     private final Class<T> origType;
     private DynamicType.Builder<T> builder;
     private boolean nameModified = false;
+    private List<Field> origTypeDeclaredProperties; // lazy access
 
     public TypeMaker(final DynamicEntityClassLoader loader, final Class<T> origType) {
         this.cl = loader;
@@ -95,11 +91,9 @@ public class TypeMaker<T> {
         // no need for looking up the specified type in cache,
         // which was useful before, since ASM operates on byte[] directly
 
-        // we want to redefine instead of subclass because:
-        // 1) it makes type renaming simpler
-        // 2) it is intuitive - we base the new type on the original one (make a bytecode-equivalent copy)
-        // to preserve polymorphism with the origType use modifySupertypeName(String)
-        builder = new ByteBuddy().redefine(origType);
+        builder = new ByteBuddy().subclass(origType)
+                // grab all declared annotations
+                .annotateType(origType.getDeclaredAnnotations());
         
         return this;
     }
@@ -108,6 +102,8 @@ public class TypeMaker<T> {
      * Adds the specified properties to the type. 
      * Those properties that conflict with the existing ones are discarded (i.e. old properties are not overwritten).
      * Also, duplicate properties are eliminated.
+     * <p>
+     * <i>Note:</i> Some annotations, such as {@link Title} and {@link Generated}, are explicitly added for each property. Therefore, elements of <code>properties</code> should not contain these annotations in {@link NewProperty#annotations}.
      *
      * @param properties
      * @return
@@ -121,34 +117,38 @@ public class TypeMaker<T> {
             return this;
         }
 
-        final List<String> existingPropNames = Arrays.stream(origType.getDeclaredFields()).map(Field::getName).toList();
+        final HashSet<String> existingPropNames = getOrigTypeDeclaredProperties().stream().map(Field::getName).collect(toCollection(HashSet::new));
         StreamUtils.distinct(
                 Arrays.stream(properties).filter(prop -> !existingPropNames.contains(prop.name)), 
                 prop -> prop.name) // distinguish properties by name
-            .forEach(prop -> {
-                // NewProperty representing a collectional property may have a raw type, such as List
-                // so it's necessary to look at the value of @IsProperty to determine the type argument
-                final IsProperty adIsProperty = (IsProperty) prop.getAnnotationByType(IsProperty.class);
-                final Class<?> typeArg = adIsProperty != null ? adIsProperty.value() : null;
-                final Type propType = (typeArg != null && typeArg == Void.class) ? prop.type : new ParameterizedType() {
-                    @Override public Type getRawType() { return prop.type; }
-                    @Override public Type getOwnerType() { return null; } // top-level type
-                    @Override public Type[] getActualTypeArguments() { return new Type[] {typeArg}; }
-                };
-                builder = builder.defineField(prop.name, propType, Visibility.PRIVATE)
-                        // annotations
-                        .annotateField(prop.annotations)
-                        .annotateField(prop.titleAnnotation(), GENERATED_ANNOTATION)
-                        // getter
-                        .defineMethod("get" + StringUtils.capitalize(prop.name), propType, Visibility.PUBLIC)
-                        .intercept(FieldAccessor.ofField(prop.name))
-                        // setter
-                        .defineMethod("set" + StringUtils.capitalize(prop.name), TargetType.DESCRIPTION, Visibility.PUBLIC)
-                        .withParameter(propType, "obj", ParameterManifestation.FINAL)
-                        .intercept(FieldAccessor.ofField(prop.name).setsArgumentAt(0).andThen(FixedValue.self()))
-                        .annotateMethod(ObservableAnnotation.newInstance());
-        });
+            .forEach(this::addProperty);
         return this;
+    }
+
+    private void addProperty(final NewProperty property) {
+        builder = builder.defineField(property.name, property.getGenericType(), Visibility.PRIVATE)
+                // annotations
+                .annotateField(property.annotations)
+                // Generated annotation might already be present
+                .annotateField(property.containsAnnotationDescriptorFor(GENERATED_ANNOTATION.annotationType()) ? 
+                        List.of(property.titleAnnotation()) :
+                        List.of(property.titleAnnotation(), GENERATED_ANNOTATION));
+
+        addGetter(property.name, property.getGenericType());
+        addSetter(property.name, property.getGenericType());
+    }
+    
+    private void addGetter(final String propName, final Type propType) {
+        final String prefix = propType.equals(Boolean.class) ? "is" : "get";
+        builder = builder.defineMethod(prefix + StringUtils.capitalize(propName), propType, Visibility.PUBLIC)
+                .intercept(FieldAccessor.ofField(propName));
+    }
+
+    private void addSetter(final String propName, final Type propType) {
+        builder = builder.defineMethod("set" + StringUtils.capitalize(propName), TargetType.DESCRIPTION, Visibility.PUBLIC)
+                .withParameter(propType, propName, ParameterManifestation.FINAL)
+                .intercept(FieldAccessor.ofField(propName).setsArgumentAt(0).andThen(FixedValue.self()))
+                .annotateMethod(ObservableAnnotation.newInstance());
     }
     
     /**
@@ -175,6 +175,7 @@ public class TypeMaker<T> {
        final List<Annotation> annotationsToAdd = Arrays.stream(annotations)
                .filter(annot -> !existingAnnotationNames.contains(annot.annotationType().getName()))
                .toList();
+
        // let's validate provided annotations
        annotationsToAdd.forEach(annot -> {
            // check retention policy
@@ -199,9 +200,6 @@ public class TypeMaker<T> {
 
    /**
     * Modifies type's name with the specified <code>newTypeName</code>. 
-    * <p>
-    * <i><b>NOTE</b></i>: this method should be called, if needed, only after all other modifications, in order to guarantee
-    * correct renaming of all occurences.
     * 
     * @param newTypeName - must be fully-qualified in a binary format (e.g. <code>foo.Bar</code> )
     * @return
@@ -217,7 +215,7 @@ public class TypeMaker<T> {
        builder = builder.name(newTypeName);
        return this;
    }
-
+   
    /**
     * Modifies the supertype's name with the specified <code>newSupertypeName</code>. 
     * <p>
@@ -236,7 +234,6 @@ public class TypeMaker<T> {
        // DynamicType.Builder does not provide supertype modification capabilities
        // so we have to use an ASM wrapper
        builder = builder.visit(AdvancedChangeSupertypeAdapter.asAsmVisitorWrapper(newSupertypeName));
-       
        return this;
    }
    
@@ -251,7 +248,7 @@ public class TypeMaker<T> {
    }
 
    /**
-    * Modifies type's properties with the specified information.
+    * Modifies type's properties with the specified properties.
     *
     * @param propertyReplacements
     * @return
@@ -265,31 +262,18 @@ public class TypeMaker<T> {
            return this;
        }
 
-       final Map<String, NewProperty> propertiesToAdapt = new HashMap<>();
-       for (final NewProperty prop : propertyReplacements) {
-           propertiesToAdapt.put(prop.name, prop);
-       }
-
-       try {
-           final ClassReader cr = new ClassReader(currentType);
-           final ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES);
-           final AdvancedModifyPropertyAdapter cv = new AdvancedModifyPropertyAdapter(cw, propertiesToAdapt);
-           cr.accept(cv, ClassReader.SKIP_FRAMES);
-           currentType = cw.toByteArray();
-           currentName = cv.getEnhancedName().replace('/', '.');
-       } catch (final Exception e) {
-           throw new IllegalStateException(e);
-       }
-
+       StreamUtils.distinct(Arrays.stream(propertyReplacements), prop -> prop.name) // distinguish properties by name
+           .forEach(this::addProperty); 
        return this;
    }
-
+   
    /**
-    * Generates code to capture the original type.
+    * Generates code to capture the original type, which is provided via <code>type</code>.
+    * @param type - the type to be recorded
     */
-   private void recordOrigType() {
-       builder = builder.defineMethod(GET_ORIG_TYPE_METHOD_NAME, origType.getClass(), Visibility.PUBLIC, Ownership.STATIC)
-               .intercept(FixedValue.value(origType));
+   private void recordOrigType(final Class<?> type) {
+       builder = builder.defineMethod(GET_ORIG_TYPE_METHOD_NAME, type.getClass(), Visibility.PUBLIC, Ownership.STATIC)
+               .intercept(FixedValue.value(type));
    }
    
    /**
@@ -301,7 +285,7 @@ public class TypeMaker<T> {
     */
    public Class<?> endModification() {
        if (!DynamicEntityClassLoader.isGenerated(origType)) {
-           recordOrigType();
+           recordOrigType(origType);
        }
        
        // provide a TypePool that uses the class loader of the original type
@@ -320,5 +304,12 @@ public class TypeMaker<T> {
     private boolean skipAdaptation(final String name) {
         return name.startsWith("java.");
     }
-
+    
+    private List<Field> getOrigTypeDeclaredProperties() {
+        if (origTypeDeclaredProperties == null) {
+           origTypeDeclaredProperties = Arrays.stream(origType.getDeclaredFields()).filter(field -> field.isAnnotationPresent(IsProperty.class)).toList(); 
+        }
+        return origTypeDeclaredProperties;
+    }
+    
 }
