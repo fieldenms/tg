@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import org.apache.commons.lang.StringUtils;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.rx.IObservableKind;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCritKindSelector;
 import ua.com.fielden.platform.web.centre.api.front_actions.IAlsoFrontActions;
@@ -26,11 +27,12 @@ public class GenericCentreConfigBuilder<T extends AbstractEntity<?>> extends Res
     }
 
     @Override
-    public ICentreSseWithPromptRefresh<T> hasEventSourceAt(final String uri) {
+    public ICentreSseWithPromptRefresh<T> hasEventSourceAt(final String uri, final Class<? extends IObservableKind<?>> observableClass) {
         if (StringUtils.isEmpty(uri)) {
             throw new EntityCentreConfigurationException("Server-Side Eventing URI should not be empty.");
         }
         builder.sseUri = uri;
+        builder.observableClass = observableClass;
         return this;
     }
 

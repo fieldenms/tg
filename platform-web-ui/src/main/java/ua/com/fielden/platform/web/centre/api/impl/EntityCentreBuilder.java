@@ -20,6 +20,7 @@ import com.google.common.collect.ListMultimap;
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.rx.IObservableKind;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
@@ -156,6 +157,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected Integer leftSplitterPosition = null;
     protected Integer rightSplitterPosition = null;
     protected String sseUri;
+    protected Class<? extends IObservableKind<?>> observableClass;
     protected Integer refreshCountdown = null;
 
     private EntityCentreBuilder() {
@@ -234,6 +236,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 leftSplitterPosition,
                 rightSplitterPosition,
                 sseUri,
+                observableClass,
                 refreshCountdown,
                 selectionCriteriaLayout,
                 resultsetCollapsedCardLayout,

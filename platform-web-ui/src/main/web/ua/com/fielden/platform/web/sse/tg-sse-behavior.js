@@ -118,6 +118,10 @@ export const TgSseBehavior = {
             observer: '_uriChanged'
         },
 
+        observableClass: {
+            type: String
+        },
+
         /* A function that takes a single String arugment representing the push event data. */
         dataHandler: {
             type: Function
