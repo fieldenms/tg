@@ -3,14 +3,13 @@ package ua.com.fielden.platform.reflection.asm.impl;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toCollection;
 
-import java.io.File;
-import java.io.IOException;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -24,7 +23,6 @@ import net.bytebuddy.description.modifier.Ownership;
 import net.bytebuddy.description.modifier.ParameterManifestation;
 import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.dynamic.DynamicType;
-import net.bytebuddy.dynamic.DynamicType.Unloaded;
 import net.bytebuddy.dynamic.TargetType;
 import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.implementation.FixedValue;
@@ -33,6 +31,7 @@ import ua.com.fielden.platform.entity.annotation.Generated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.factory.ObservableAnnotation;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.utils.StreamUtils;
 
@@ -306,6 +305,10 @@ public class TypeMaker<T> {
            recordOrigType(origType);
        }
        
+       if (!nameModified) {
+           modifyTypeName(DynamicTypeNamingService.nextTypeName(origType.getName()));
+       }
+
        // provide a TypePool that uses the class loader of the original type
        // if origType is a dynamic one, then this will be DynamicEntityClassLoader, which will be able to locate origType
        return builder.make(TypePool.ClassLoading.of(origType.getClassLoader()))
@@ -314,9 +317,6 @@ public class TypeMaker<T> {
                // instead of making ByteBuddy create a separate class loader for each
                .load(cl)
                .getLoaded();
-       if (!nameModified) {
-           modifyTypeName(DynamicTypeNamingService.nextTypeName(origType.getName()));
-       }
    }
    
     private boolean skipAdaptation(final String name) {
