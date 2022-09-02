@@ -119,23 +119,23 @@ public class TypeMaker<T> {
 
         final HashSet<String> existingPropNames = getOrigTypeDeclaredProperties().stream().map(Field::getName).collect(toCollection(HashSet::new));
         StreamUtils.distinct(
-                Arrays.stream(properties).filter(prop -> !existingPropNames.contains(prop.name)), 
-                prop -> prop.name) // distinguish properties by name
+                Arrays.stream(properties).filter(prop -> !existingPropNames.contains(prop.getName())), 
+                prop -> prop.getName()) // distinguish properties by name
             .forEach(this::addProperty);
         return this;
     }
 
     private void addProperty(final NewProperty property) {
-        builder = builder.defineField(property.name, property.getGenericType(), Visibility.PRIVATE)
+        builder = builder.defineField(property.getName(), property.getGenericType(), Visibility.PRIVATE)
                 // annotations
-                .annotateField(property.annotations)
+                .annotateField(property.getAnnotations())
                 // Generated annotation might already be present
                 .annotateField(property.containsAnnotationDescriptorFor(GENERATED_ANNOTATION.annotationType()) ? 
                         List.of(property.titleAnnotation()) :
                         List.of(property.titleAnnotation(), GENERATED_ANNOTATION));
 
-        addGetter(property.name, property.getGenericType());
-        addSetter(property.name, property.getGenericType());
+        addGetter(property.getName(), property.getGenericType());
+        addSetter(property.getName(), property.getGenericType());
     }
     
     private void addGetter(final String propName, final Type propType) {
@@ -150,7 +150,6 @@ public class TypeMaker<T> {
                 .intercept(FieldAccessor.ofField(propName).setsArgumentAt(0).andThen(FixedValue.self()))
                 .annotateMethod(ObservableAnnotation.newInstance());
     }
-    
     /**
     * Adds the specified class level annotation to the class. Existing annotations are not replaced.
     * <p>
@@ -261,9 +260,8 @@ public class TypeMaker<T> {
        if (propertyReplacements == null || propertyReplacements.length == 0) {
            return this;
        }
-
-       StreamUtils.distinct(Arrays.stream(propertyReplacements), prop -> prop.name) // distinguish properties by name
            .forEach(this::addProperty); 
+       StreamUtils.distinct(Arrays.stream(propertyReplacements), prop -> prop.getName()) // distinguish properties by name
        return this;
    }
    
