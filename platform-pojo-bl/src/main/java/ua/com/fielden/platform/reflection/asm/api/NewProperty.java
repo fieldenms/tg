@@ -265,16 +265,27 @@ public final class NewProperty {
      * Similar to {@link Field#getGenericType()}.
      * <p>
      * {@link NewProperty} representing a collectional property may have a raw type, such as {@link List}, so it's necessary to look at the value of {@link IsProperty} annotation to try to determine the type argument. Otherwise, current property type is returned as is.
-     * @return
+     * @return the declared type of this property reflecting the actual type arguments if any are present
      */
     public Type getGenericType() {
+        if (type == null) return null;
+
         if (genericType == null) {
-            final IsProperty adIsProperty = (IsProperty) getAnnotationByType(IsProperty.class);
-            final Class<?> typeArg = adIsProperty != null ? adIsProperty.value() : null;
-            genericType = (typeArg == null || typeArg.equals(Void.class)) ? type : new ParameterizedType() {
+            final Type[] typeArgs;
+            // prioritize the actual type arguments over the value of @IsProperty
+            if (hasTypeArguments()) {
+                typeArgs = typeArguments;
+            }
+            else {
+                final IsProperty adIsProperty = (IsProperty) getAnnotationByType(IsProperty.class);
+                final Class<?> value = adIsProperty == null ? null : adIsProperty.value();
+                typeArgs = (value == null || value.equals(Void.class)) ? null : new Type[] { adIsProperty.value() };
+            }
+            // found any type arguments?
+            genericType = typeArgs == null ? type : new ParameterizedType() {
                 @Override public Type getRawType() { return type; }
-                @Override public Type getOwnerType() { return null; } // top-level type
-                @Override public Type[] getActualTypeArguments() { return new Type[] {typeArg}; }
+                @Override public Type getOwnerType() { return type.getDeclaringClass(); }
+                @Override public Type[] getActualTypeArguments() { return typeArgs; }
             };
         }
 
