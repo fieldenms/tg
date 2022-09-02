@@ -36,17 +36,28 @@ public final class NewProperty {
     private Type genericType; // lazy access
     public final boolean deprecated;
     
+    /**
+     * Constructs a property from the given <code>field</code>.
+     * @param field
+     * @return
+     */
     public static NewProperty fromField(final Field field) {
         final Title titleAnnot = field.getDeclaredAnnotation(Title.class);
+        final String title = titleAnnot == null ? null : titleAnnot.value();
+        final String desc = titleAnnot == null ? null : titleAnnot.desc();
         // exclude Title annotation from the list of declared annotations
-        // instead pass its value() and desc() attributes
+        // instead we will pass its value() and desc() attributes
         final Annotation[] restAnnotations = titleAnnot == null ? 
                 field.getDeclaredAnnotations() : 
                 Arrays.stream(field.getDeclaredAnnotations()).filter(annot -> !annot.equals(titleAnnot)).toArray(Annotation[]::new);
-        return new NewProperty(field.getName(), field.getType(), false,
-                titleAnnot == null ? null : titleAnnot.value(),
-                titleAnnot == null ? null : titleAnnot.desc(),
-                restAnnotations);
+
+        final Type genericType = field.getGenericType();
+        // explicit check is needed to be able to store the information about type arguments
+        if (ParameterizedType.class.isInstance(genericType)) {
+            return new NewProperty(field.getName(), (ParameterizedType) genericType, title, desc, restAnnotations);
+        }
+        // only raw type information is available
+        return new NewProperty(field.getName(), PropertyTypeDeterminator.classFrom(genericType), title, desc, restAnnotations);
     }
 
     // TODO remove
