@@ -21,13 +21,17 @@ import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
 public final class NewProperty {
     public static final IsProperty DEFAULT_IS_PROPERTY_ANNOTATION = new IsPropertyAnnotation().newInstance();
 
+    // TODO make fields private
     public final String name;
-    public final Class<?> type;
-    public final boolean changeSignature;
+    public final Class<?> type; // TODO rename to rawType
+    private final Type[] typeArguments;
+    @Deprecated
+    public final boolean changeSignature; // TODO remove
     public final String title;
     public final String desc;
     public final List<Annotation> annotations = new ArrayList<Annotation>();
-    private Type genericType;
+    private Type genericType; // lazy access
+    public final boolean deprecated;
     
     public static NewProperty fromField(final Field field) {
         final Title titleAnnot = field.getDeclaredAnnotation(Title.class);
@@ -42,24 +46,90 @@ public final class NewProperty {
                 restAnnotations);
     }
 
+    // TODO remove
+    @Deprecated
     public static NewProperty changeType(final String name, final Class<?> type) {
         return new NewProperty(name, type, false, null, null, new Annotation[0]);
     }
 
+    // TODO remove
+    @Deprecated
     public static NewProperty changeTypeSignature(final String name, final Class<?> type) {
         return new NewProperty(name, type, true, null, null, new Annotation[0]);
     }
 
+    // TODO obsolete constructor
+    @Deprecated
     public NewProperty(final String name, final Class<?> type, final boolean changeSignature, final String title, final String desc, 
             final Annotation... annotations) 
     {
         this.name = name;
         this.type = type;
+        this.typeArguments = new Type[0];
         this.changeSignature = changeSignature;
         this.title = title;
         this.desc = desc;
         this.annotations.addAll(Arrays.asList(annotations));
         addAnnotation(DEFAULT_IS_PROPERTY_ANNOTATION); // add in case it wasn't provided
+        this.deprecated = true;
+    }
+    
+    /**
+     * Creates a new property representation with a raw type and type arguments.
+     * <p>
+     * <i>Note:</i> <code>annotations</code> parameter - {@link Title} <b>should be</b> omitted and later accessed with {@link #titleAnnotation()};
+     *  {@link IsProperty} <b>can be</b> omitted.
+     * @param name simple name of the property
+     * @param rawType rawType of the property
+     * @param typeArguments actual typeArguments if any, otherwise pass <code>null</code> or use another constructor
+     * @param title property title as in {@link Title} annotation
+     * @param desc property description as in {@link Title} annotation
+     * @param annotations annotations directly present on this property (see note)
+     */
+    public NewProperty(final String name, final Class<?> rawType, final Type[] typeArguments, final String title, final String desc, 
+            final Annotation... annotations) 
+    {
+        this.name = name;
+        this.type = rawType;
+        this.typeArguments = typeArguments;
+        this.changeSignature = false;
+        this.title = title;
+        this.desc = desc;
+        this.annotations.addAll(Arrays.asList(annotations));
+        addAnnotation(DEFAULT_IS_PROPERTY_ANNOTATION); // add in case it wasn't provided
+        this.deprecated = false;
+    }
+
+    /**
+     * Creates a new property representation with a raw type.
+     * <p>
+     * <i>Note:</i> <code>annotations</code> parameter - {@link Title} <b>should be</b> omitted and later accessed with {@link #titleAnnotation()};
+     *  {@link IsProperty} <b>can be</b> omitted.
+     * @param name simple name of the property
+     * @param rawType raw type of the property
+     * @param title property title as in {@link Title} annotation
+     * @param desc property description as in {@link Title} annotation
+     * @param annotations annotations directly present on this property (see note)
+     */
+    public NewProperty(final String name, final Class<?> rawType, final String title, final String desc, final Annotation... annotations) {
+        this(name, rawType, new Type[0], title, desc, annotations);
+    }
+
+    /**
+     * Creates a new property representation with a parameterized type.
+     * <p>
+     * <i>Note:</i> <code>type</code> - the raw type ({@link ParameterizedType#getRawType()}) must be an instance of {@link Class}, otherwise a runtime exception is thrown.
+     * <p>
+     * <i>Note:</i> <code>annotations</code> - {@link Title} <b>should be</b> omitted and later accessed with {@link #titleAnnotation()};
+     *  {@link IsProperty} <b>can be</b> omitted.
+     * @param name simple name of the property
+     * @param type parameterized type of the property
+     * @param title property title as in {@link Title} annotation
+     * @param desc property description as in {@link Title} annotation
+     * @param annotations annotations directly present on this property (see note)
+     */
+    public NewProperty(final String name, final ParameterizedType type, final String title, final String desc, final Annotation... annotations) {
+        this(name, PropertyTypeDeterminator.classFrom(type.getRawType()), type.getActualTypeArguments(), title, desc, annotations);
     }
 
     /**
