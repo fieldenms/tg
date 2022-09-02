@@ -169,4 +169,21 @@ public class IsPropertyAnnotation {
             }
         };
     }
+    
+    /**
+     * Creates a new instance based on the given {@link IsProperty} annotation.
+     * <p>
+     * This method differs from {@link #copyFrom(IsProperty)} in that it returns {@link IsPropertyAnnotation} which allows further modification of <code>original</code>.
+     * <p>
+     * For example:
+     * <pre>
+     * IsPropertyAnnotation.from(original).value(String.class).newInstance();
+     * </pre>
+     * @param original
+     * @return
+     */
+    public static IsPropertyAnnotation from(final IsProperty original) {
+        return new IsPropertyAnnotation(original.value(), original.linkProperty(), original.assignBeforeSave(), original.length(),
+                original.precision(), original.scale(), original.trailingZeros(), original.displayAs());
+    }
 }
