@@ -6,11 +6,14 @@ import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
 /**
  * A convenient abstraction for representing data needed for dynamic construction of properties.
@@ -130,6 +133,71 @@ public final class NewProperty {
      */
     public NewProperty(final String name, final ParameterizedType type, final String title, final String desc, final Annotation... annotations) {
         this(name, PropertyTypeDeterminator.classFrom(type.getRawType()), type.getActualTypeArguments(), title, desc, annotations);
+    }
+    /**
+     * Returns a new instance that is similar to this one, but with a changed raw type.
+     * @param rawType
+     * @return
+     */
+    public NewProperty changeType(final Class<?> rawType) {
+        return new NewProperty(name, rawType, title, desc, annotations.toArray(Annotation[]::new));
+    }
+
+    /**
+     * Returns a new instance that is similar to this one, but with its raw type and type arguments changed.
+     * <p>
+     * If <code>rawType</code> represents a property descriptor or a collection, then {@link IsProperty#value()} is replaced by <code>typeArguments[0]</code> if present, otherwise by {@link Void}.
+     * @param rawType
+     * @param typeArguments
+     * @return
+     */
+    public NewProperty changeType(final Class<?> rawType, final Type[] typeArguments) {
+        return changeType(new ParameterizedType() {
+            @Override
+            public Type getRawType() { return rawType; }
+            @Override
+            public Type getOwnerType() { return rawType.getDeclaringClass(); }
+            @Override
+            public Type[] getActualTypeArguments() { return typeArguments; }
+        });
+    }
+
+    /**
+     * Returns a new instance that is similar to this one, but with its raw type and type arguments changed.
+     * <p>
+     * If the raw type represents a property descriptor or a collection, then {@link IsProperty#value()} is replaced by <code>typeArguments[0]</code> if present, otherwise by {@link Void}.
+     * @param type
+     * @return
+     */
+    public NewProperty changeType(final ParameterizedType type) {
+        final Type[] newTypeArgs = type.getActualTypeArguments();
+        // determine new raw type
+        final Class<?> newRawClass = PropertyTypeDeterminator.classFrom(type.getRawType());
+
+        final Class<?> newIsPropertyValue;
+
+        // we have to set value() of @IsProperty to the 1st type argument if type arguments are present AND 
+        // the raw type is either a property descriptor or a collection
+        if (newTypeArgs != null && newTypeArgs.length > 0 &&
+                (PropertyDescriptor.class.isAssignableFrom(newRawClass) || Collection.class.isAssignableFrom(newRawClass))) 
+        {
+            newIsPropertyValue = PropertyTypeDeterminator.classFrom(newTypeArgs[0]);
+        }
+        // otherwise replace the previous value() by Void
+        else {
+            newIsPropertyValue = Void.class;
+        }
+
+        // copy IsProperty and replace its value(), retain all other annotations
+        // TODO create a separate accessor for @IsProperty for better performance
+        final Annotation[] changedAnnotations = annotations.stream().map(annot -> {
+            if (annot.annotationType().equals(IsProperty.class)) {
+                return IsPropertyAnnotation.from((IsProperty) annot).value(newIsPropertyValue).newInstance();
+            }
+            return annot;
+        }).toArray(Annotation[]::new);
+
+        return new NewProperty(name, newRawClass, newTypeArgs, title, desc, changedAnnotations);
     }
 
     /**
