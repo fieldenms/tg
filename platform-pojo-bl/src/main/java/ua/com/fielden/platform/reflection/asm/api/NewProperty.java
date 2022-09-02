@@ -134,6 +134,11 @@ public final class NewProperty {
     public NewProperty(final String name, final ParameterizedType type, final String title, final String desc, final Annotation... annotations) {
         this(name, PropertyTypeDeterminator.classFrom(type.getRawType()), type.getActualTypeArguments(), title, desc, annotations);
     }
+    
+    public boolean hasTypeArguments() {
+        return typeArguments != null && typeArguments.length > 0;
+    }
+
     /**
      * Returns a new instance that is similar to this one, but with a changed raw type.
      * @param rawType
@@ -233,6 +238,10 @@ public final class NewProperty {
         return this;
     }
     
+    public boolean hasTitle() {
+        return title != null;
+    }
+    
     public Title titleAnnotation() {
         return new Title() {
             @Override
@@ -268,6 +277,23 @@ public final class NewProperty {
                 @Override public Type[] getActualTypeArguments() { return new Type[] {typeArg}; }
             };
         }
+
         return genericType;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public Class<?> getRawType() {
+        return type;
+    }
+
+    public Type[] getTypeArguments() {
+        return typeArguments;
+    }
+
+    public List<Annotation> getAnnotations() {
+        return annotations;
     }
 }
