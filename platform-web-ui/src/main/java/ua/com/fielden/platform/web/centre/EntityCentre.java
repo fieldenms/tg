@@ -885,6 +885,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     /**
+     * Returns class name of observer that is used for triggering Server source event. This event should be used on client to send/subscribe to postal event to refresh centre.
+     *
+     * @return
+     */
+    public Optional<String> observableClass() {
+        return dslDefaultConfig.getObservableClass().map(clazz -> clazz.getName());
+    }
+    /**
      * Returns the instance of rendering customiser for this entity centre.
      *
      * @return

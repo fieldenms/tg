@@ -3,12 +3,12 @@ package ua.com.fielden.platform.web.test.eventsources;
 import java.math.BigDecimal;
 import java.util.Date;
 
+import com.google.inject.Inject;
+
 import rx.Observable;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.observables.TgPersistentEntityWithPropertiesChangeSubject;
 import ua.com.fielden.platform.web.sse.AbstractEventSource;
-
-import com.google.inject.Inject;
 
 /**
  * This is a demo event source listening to changes and creation of new instance of type {@link TgPersistentEntityWithProperties}.
@@ -38,7 +38,7 @@ public class TgPersistentEntityWithPropertiesEventSrouce extends AbstractEventSo
 
     @Override
     protected String eventToData(final TgPersistentEntityWithProperties event) {
-        return String.format("{\"id\": %s, \"key\": \"%s\", \"changeDate\": \"%s\"}", event.getId(), event.getKey(), new Date());
+        return String.format("{\"observableClass\": %s, \"id\": %s, \"key\": \"%s\", \"changeDate\": \"%s\"}", TgPersistentEntityWithPropertiesChangeSubject.class.getName(), event.getId(), event.getKey(), new Date());
     }
 
 }

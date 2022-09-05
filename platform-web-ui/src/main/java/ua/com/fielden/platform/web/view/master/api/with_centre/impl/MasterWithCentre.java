@@ -46,6 +46,7 @@ public class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T>
         if (entityCentre.eventSourceUri().isPresent()) {
             attrs.append(format("\"uri\": \"%s\", ", entityCentre.eventSourceUri().get()));
         }
+        attrs.append(format("observableClass: \"%s\",", entityCentre.observableClass().orElse("")));
 
         // let's make sure that uuid is defined from the embedded centre, which is required
         // for proper communication of the centre with related actions

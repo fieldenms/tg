@@ -38,11 +38,13 @@ const registerEventSourceHandlers = function (sourceObj) {
 
     source.addEventListener('message', function (e) {
 
+        const data = JSON.parse(e.data);
+
         postal.publish({
             channel: "sse-event",
-            topic: sourceObj.uri + "/message",
+            topic: `${sourceObj.uri}${data.observableClass ? "/" + data.observableClass : ""}/message`,
             data: {
-                msg: JSON.parse(e.data)
+                msg: data
             }
         });
 
@@ -189,7 +191,7 @@ export const TgSseBehavior = {
 
         this._messageSubscription = postal.subscribe({
             channel: "sse-event",
-            topic: this.uri + "/message",
+            topic: `${this.uri}${this.observableClass ? "/" + this.observableClass : ""}/message`,
             callback: (data, envelope) => {
                 const msg = data.msg;
                 if (this.useTimerBasedScheduling) {

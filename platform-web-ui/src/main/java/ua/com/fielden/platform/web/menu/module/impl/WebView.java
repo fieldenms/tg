@@ -70,6 +70,7 @@ public class WebView implements IExecutable {
                 if (entityCentre.eventSourceUri().isPresent()) {
                 	attrs.append(format("uri: \"%s\",", entityCentre.eventSourceUri().get()));
                 }
+                attrs.append(format("observableClass: \"%s\",", entityCentre.observableClass().orElse("")));
                 attrs.append("}");
             } else {
                 attrs.append("{}");
@@ -117,6 +118,7 @@ public class WebView implements IExecutable {
                 if (entityCentre.eventSourceUri().isPresent()) {
                     entityCentreView.setUri(entityCentre.eventSourceUri().get());
                 }
+                entityCentreView.setObservableClass(entityCentre.observableClass().orElse(""));
                 view.setAttrs(entityCentreView);
             } else {
                 view.setAttrs(new CustomView());

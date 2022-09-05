@@ -27,6 +27,20 @@ public class EntityCentreView extends AbstractView {
     @IsProperty
     private String uri;
 
+    @IsProperty
+    @Title(value = "Class of observer", desc = "SSE observer class")
+    private String observableClass;
+
+    @Observable
+    public EntityCentreView setObservableClass(final String observableClass) {
+        this.observableClass = observableClass;
+        return this;
+    }
+
+    public String getObservableClass() {
+        return observableClass;
+    }
+
     @Observable
     public EntityCentreView setUri(final String uri) {
         this.uri = uri;
