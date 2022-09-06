@@ -12,6 +12,7 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.sample.domain.TgMachine;
 import ua.com.fielden.platform.sample.domain.TgMachineRealtimeMonitorMap;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit;
+import ua.com.fielden.platform.sample.domain.observables.TgMessageChangeSubject;
 import ua.com.fielden.platform.ui.menu.sample.MiTgMachineRealtimeMonitor;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
@@ -22,9 +23,9 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 
-/** 
+/**
  * {@link TgMachine} Web UI configuration.
- * 
+ *
  * @author Developers
  *
  */
@@ -39,7 +40,7 @@ public class TgMachineRealtimeMonitorWebUiConfig {
     private TgMachineRealtimeMonitorWebUiConfig(final Injector injector, final IWebUiBuilder builder) {
         centre = createCentre(injector);
         builder.register(centre);
-        
+
         builder.register(createTgMachineRealtimeMonitorMapMaster(injector));
     }
 
@@ -52,7 +53,7 @@ public class TgMachineRealtimeMonitorWebUiConfig {
     private EntityCentre<TgMachine> createCentre(final Injector injector) {
         final EntityCentreConfig<TgMachine> centre = centreFor(TgMachine.class)
                 .runAutomatically()
-                .hasEventSourceAt("/sse/message-update-events")
+                .hasEventSourceAt("/sse/message-update-events", TgMessageChangeSubject.class)
                 .addCrit("this").asMulti().autocompleter(TgMachine.class).also()
                 .addCrit("orgUnit").asMulti().autocompleter(TgOrgUnit.class)
                 .setLayoutFor(Device.DESKTOP, empty(), "[['center-justified', 'start', ['margin-right: 40px', 'flex'], ['flex']]]")
@@ -90,7 +91,7 @@ public class TgMachineRealtimeMonitorWebUiConfig {
         final EntityCentre<TgMachine> entityCentre = new EntityCentre<>(MiTgMachineRealtimeMonitor.class, "MiTgMachineRealtimeMonitor", centre, injector, null);
         return entityCentre;
     }
-    
+
     public static EntityMaster<TgMachineRealtimeMonitorMap> createTgMachineRealtimeMonitorMapMaster(final Injector injector) {
         final IMaster<TgMachineRealtimeMonitorMap> config = new TgMachineRealtimeMonitorMapMaster();
         return new EntityMaster<>(

@@ -17,6 +17,7 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -34,7 +35,7 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
     protected final Function<EntityFactory, T> entityCreator;
     protected final ICompanionObjectFinder companionFinder;
     protected final Router router;
-    
+
     protected final long fileSizeLimitBytes;
     protected final Set<MediaType> types = new HashSet<>();
     protected final IDeviceProvider deviceProvider;
@@ -48,7 +49,7 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
             final IDeviceProvider deviceProvider,
             final IDates dates,
             final long fileSizeLimitKb,
-            final MediaType type, // at least one type is required 
+            final MediaType type, // at least one type is required
             final MediaType... types) {
         this.router = router;
         this.injector = injector;
@@ -70,13 +71,14 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
             new FileProcessingResource<>(
                     router,
                     companionFinder.find(entityType),
-                    injector.getInstance(EntityFactory.class), 
-                    entityCreator, 
-                    injector.getInstance(RestServerUtil.class), 
-                    fileSizeLimitBytes, 
-                    types, 
+                    injector.getInstance(EntityFactory.class),
+                    entityCreator,
+                    injector.getInstance(RestServerUtil.class),
+                    fileSizeLimitBytes,
+                    types,
                     deviceProvider,
                     dates,
+                    injector.getInstance(ISerialiser.class),
                     getContext(), request, response).handle();
         }
     }

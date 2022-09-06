@@ -56,6 +56,7 @@ public final class EventSourceEmitter implements IEmitter, Runnable {
      * @param shouldResourceThreadBeBlocked
      * @param eventSource
      * @param async
+     * @param serialiser
      * @throws IOException
      */
     public EventSourceEmitter(final AtomicBoolean shouldResourceThreadBeBlocked, final List<IEventSource> eventSources, final AsyncContext async, final RequestInfo info) throws IOException {

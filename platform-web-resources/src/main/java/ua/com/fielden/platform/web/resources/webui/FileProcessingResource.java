@@ -27,6 +27,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.rx.observables.ProcessingProgressSubject;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -45,6 +46,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
     private final EntityFactory factory;
     private final Function<EntityFactory, T> entityCreator;
     private final RestServerUtil restUtil;
+    private final ISerialiser serialiser;
     private final long sizeLimitBytes;
     private final Set<MediaType> types;
     private final Router router;
@@ -65,6 +67,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             final Set<MediaType> types,
             final IDeviceProvider deviceProvider,
             final IDates dates,
+            final ISerialiser serialiser,
             final Context context,
             final Request request,
             final Response response) {
@@ -74,6 +77,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         this.factory = factory;
         this.entityCreator = entityCreator;
         this.restUtil = restUtil;
+        this.serialiser = serialiser;
         this.sizeLimitBytes = fileSizeLimitBytes;
         this.deviceProvider = deviceProvider;
         this.dates = dates;
@@ -182,7 +186,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
      */
     private Representation tryToProcess(final InputStream stream, final String mime) {
         final ProcessingProgressSubject subject = new ProcessingProgressSubject();
-        final EventSourcingResourceFactory eventSource = new EventSourcingResourceFactory(deviceProvider, dates, new ProcessingProgressEventSource(subject));
+        final EventSourcingResourceFactory eventSource = new EventSourcingResourceFactory(deviceProvider, dates, new ProcessingProgressEventSource(subject, serialiser));
         final String baseUri = getRequest().getResourceRef().getPath(true);
         router.attach(baseUri + "/sse/" + jobUid, eventSource);
 

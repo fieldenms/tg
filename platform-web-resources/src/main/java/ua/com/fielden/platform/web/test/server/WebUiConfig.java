@@ -106,6 +106,7 @@ import ua.com.fielden.platform.sample.domain.TgSelectedEntitiesExampleActionProd
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntityProducer;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityLocator;
+import ua.com.fielden.platform.sample.domain.observables.TgPersistentEntityWithPropertiesChangeSubject;
 import ua.com.fielden.platform.sample.domain.ui_actions.MakeCompletedAction;
 import ua.com.fielden.platform.sample.domain.ui_actions.producers.MakeCompletedActionProducer;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -1389,7 +1390,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
         final ICentreTopLevelActionsWithRunConfig<TgPersistentEntityWithProperties> partialCentre = EntityCentreBuilder.centreFor(TgPersistentEntityWithProperties.class);
         final ICentreTopLevelActionsInGroup<TgPersistentEntityWithProperties> actionConf = (runAutomatically ? partialCentre.runAutomatically() : partialCentre)
-                .hasEventSourceAt("/sse/entity-centre-events")
+                .hasEventSourceAt("/sse/entity-centre-events", TgPersistentEntityWithPropertiesChangeSubject.class)
                 .withRefreshPrompt() // or .withCountdownRefreshPrompt(5)
                 .enforcePostSaveRefresh()
                 .addFrontAction(action(EntityNewAction.class).
