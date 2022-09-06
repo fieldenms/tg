@@ -159,7 +159,15 @@ public final class NewProperty {
     public boolean hasTypeArguments() {
         return typeArguments != null && !typeArguments.isEmpty();
     }
-
+    
+    public boolean isCollectional() {
+        return Collection.class.isAssignableFrom(type);
+    }
+    
+    public boolean isPropertyDescriptor() {
+        return PropertyDescriptor.class.isAssignableFrom(type);
+    }
+    
     /**
      * Tests whether an annotation is present for a specific annotation type.
      * 
@@ -217,34 +225,67 @@ public final class NewProperty {
     }
     
     /**
-     * Similar to {@link Field#getGenericType()}.
+     * Similar to {@link Field#getGenericType()} determines the generic type of this property taking into account its raw type and type arguments.
      * <p>
-     * {@link NewProperty} representing a collectional property may have a raw type, such as {@link List}, so it's necessary to look at the value of {@link IsProperty} annotation to try to determine the type argument. Otherwise, current property type is returned as is.
-     * @return the declared type of this property reflecting the actual type arguments if any are present
+     * There is a special case when the raw type is either {@link Collection} or {@link PropertyDescriptor}, 
+     * which allows the property type to be a raw one, while the type argument information is represented by the value of 
+     * {@link IsProperty} annotation. For example:
+     * <pre>
+     * &#64;IsProperty(Vehicle.class)
+     * private List vehicles;
+     * </pre>
+     * In such case the value of {@link IsProperty} is recorded in the form of type arguments. However, if a type argument is present,
+     * then it's prioritized over the value of  {@link IsProperty}.
+     * Refer to {@link #getGenericTypeAsDeclared()} to get a precise representation (which would simply return a raw {@link List}).
+     * The same rules apply to {@link PropertyDescriptor} which also accepts a single type argument.
+     * <p>
+     * <i>Note:</i> This method tries to determine the correct generic type on every call, so use it sparingly.
+     * 
+     * @return the generic type of this property (either {@link Class} or {@link ParameterizedType})
      */
-    public Type getGenericType() {
+    public Type genericType() {
         if (type == null) return null;
 
-        if (genericType == null) {
-            final List<Type> typeArgs;
-            // prioritize the actual type arguments over the value of @IsProperty
-            if (hasTypeArguments()) {
-                typeArgs = typeArguments;
-            }
-            else {
-                final IsProperty adIsProperty = (IsProperty) getAnnotationByType(IsProperty.class);
-                final Class<?> value = adIsProperty == null ? null : adIsProperty.value();
-                typeArgs = (value == null || value.equals(Void.class)) ? null : List.of(adIsProperty.value());
-            }
-            // found any type arguments?
-            genericType = typeArgs == null ? type : new ParameterizedType() {
-                @Override public Type getRawType() { return type; }
-                @Override public Type getOwnerType() { return type.getDeclaringClass(); }
-                @Override public Type[] getActualTypeArguments() { return typeArgs.toArray(Type[]::new); }
-            };
+        final List<Type> typeArgs;
+        // prioritize the actual type arguments
+        if (hasTypeArguments()) {
+            typeArgs = typeArguments;
         }
+        // special case? look at the value of @IsProperty
+        else if (isCollectional() || isPropertyDescriptor()) {
+            final IsProperty adIsProperty = (IsProperty) getAnnotationByType(IsProperty.class);
+            final Class<?> value = adIsProperty == null ? null : adIsProperty.value();
+            typeArgs = (value == null || value.equals(Void.class)) ? null : List.of(adIsProperty.value());
+        }
+        else {
+            typeArgs = null;
+        }
+        // found any type arguments?
+        genericType = typeArgs == null ? type : new ParameterizedType() {
+            @Override public Type getRawType() { return type; }
+            @Override public Type getOwnerType() { return type.getDeclaringClass(); }
+            @Override public Type[] getActualTypeArguments() { return typeArgs.toArray(Type[]::new); }
+        };
 
         return genericType;
+    }
+    
+    /**
+     * Returns the generic type of this property exactly like it's declared. As opposed to {@link #genericType()}, 
+     * this method does not take the value of {@link IsProperty} into account.
+     * <p>
+     * Should be used when a precise generic type is needed.
+     * 
+     * @return declared generic type of this property (either {@link Class} or {@link ParameterizedType})
+     */
+    public Type genericTypeAsDeclared() {
+        if (type == null) return null;
+
+        return !hasTypeArguments() ? type : new ParameterizedType() {
+            @Override public Type getRawType() { return type; }
+            @Override public Type getOwnerType() { return type.getDeclaringClass(); }
+            @Override public Type[] getActualTypeArguments() { return typeArguments.toArray(Type[]::new); }
+        };
     }
 
     public String getName() {
