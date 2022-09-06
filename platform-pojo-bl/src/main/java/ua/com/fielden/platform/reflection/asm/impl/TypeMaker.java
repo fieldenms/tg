@@ -272,7 +272,7 @@ public class TypeMaker<T> {
 
        if (property.changeSignature) {
            // NewProperty.type represents a type argument
-           return NewProperty.fromField(origField).changeType(new ParameterizedType() {
+           return NewProperty.fromField(origField).setType(new ParameterizedType() {
                @Override
                public Type[] getActualTypeArguments() { return new Type[] { property.getRawType() }; }
                @Override
@@ -281,7 +281,7 @@ public class TypeMaker<T> {
                public Type getOwnerType() { return origField.getType().getDeclaringClass(); }
            });
        }
-       return NewProperty.fromField(origField).changeType(property.getRawType());
+       return NewProperty.fromField(origField).setRawType(property.getRawType());
    }
    
    /**

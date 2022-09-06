@@ -13,6 +13,7 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 
 /**
@@ -25,13 +26,13 @@ public final class NewProperty {
     public static final IsProperty DEFAULT_IS_PROPERTY_ANNOTATION = new IsPropertyAnnotation().newInstance();
 
     // TODO make fields private
-    public final String name;
-    public final Class<?> type; // TODO rename to rawType
-    private final Type[] typeArguments;
-    @Deprecated
-    public final boolean changeSignature; // TODO remove
-    public final String title;
-    public final String desc;
+    public String name;
+    public Class<?> type; // TODO rename to rawType
+    private List<Type> typeArguments = new ArrayList<Type>();
+    @Deprecated public final boolean changeSignature; // TODO remove
+    public String title;
+    public String desc;
+    // TODO use ordered set
     public final List<Annotation> annotations = new ArrayList<Annotation>();
     private Type genericType; // lazy access
     public final boolean deprecated;
@@ -79,7 +80,6 @@ public final class NewProperty {
     {
         this.name = name;
         this.type = type;
-        this.typeArguments = new Type[0];
         this.changeSignature = changeSignature;
         this.title = title;
         this.desc = desc;
@@ -105,7 +105,7 @@ public final class NewProperty {
     {
         this.name = name;
         this.type = rawType;
-        this.typeArguments = typeArguments;
+        if (typeArguments.length > 0) this.typeArguments.addAll(Arrays.asList(typeArguments));
         this.changeSignature = false;
         this.title = title;
         this.desc = desc;
@@ -147,73 +147,7 @@ public final class NewProperty {
     }
     
     public boolean hasTypeArguments() {
-        return typeArguments != null && typeArguments.length > 0;
-    }
-
-    /**
-     * Returns a new instance that is similar to this one, but with a changed raw type.
-     * @param rawType
-     * @return
-     */
-    public NewProperty changeType(final Class<?> rawType) {
-        return new NewProperty(name, rawType, title, desc, annotations.toArray(Annotation[]::new));
-    }
-
-    /**
-     * Returns a new instance that is similar to this one, but with its raw type and type arguments changed.
-     * <p>
-     * If <code>rawType</code> represents a property descriptor or a collection, then {@link IsProperty#value()} is replaced by <code>typeArguments[0]</code> if present, otherwise by {@link Void}.
-     * @param rawType
-     * @param typeArguments
-     * @return
-     */
-    public NewProperty changeType(final Class<?> rawType, final Type[] typeArguments) {
-        return changeType(new ParameterizedType() {
-            @Override
-            public Type getRawType() { return rawType; }
-            @Override
-            public Type getOwnerType() { return rawType.getDeclaringClass(); }
-            @Override
-            public Type[] getActualTypeArguments() { return typeArguments; }
-        });
-    }
-
-    /**
-     * Returns a new instance that is similar to this one, but with its raw type and type arguments changed.
-     * <p>
-     * If the raw type represents a property descriptor or a collection, then {@link IsProperty#value()} is replaced by <code>typeArguments[0]</code> if present, otherwise by {@link Void}.
-     * @param type
-     * @return
-     */
-    public NewProperty changeType(final ParameterizedType type) {
-        final Type[] newTypeArgs = type.getActualTypeArguments();
-        // determine new raw type
-        final Class<?> newRawClass = PropertyTypeDeterminator.classFrom(type.getRawType());
-
-        final Class<?> newIsPropertyValue;
-
-        // we have to set value() of @IsProperty to the 1st type argument if type arguments are present AND 
-        // the raw type is either a property descriptor or a collection
-        if (newTypeArgs != null && newTypeArgs.length > 0 &&
-                (PropertyDescriptor.class.isAssignableFrom(newRawClass) || Collection.class.isAssignableFrom(newRawClass))) 
-        {
-            newIsPropertyValue = PropertyTypeDeterminator.classFrom(newTypeArgs[0]);
-        }
-        // otherwise replace the previous value() by Void
-        else {
-            newIsPropertyValue = Void.class;
-        }
-
-        // copy IsProperty and replace its value(), retain all other annotations
-        // TODO create a separate accessor for @IsProperty for better performance
-        final Annotation[] changedAnnotations = annotations.stream().map(annot -> {
-            if (annot.annotationType().equals(IsProperty.class)) {
-                return IsPropertyAnnotation.from((IsProperty) annot).value(newIsPropertyValue).newInstance();
-            }
-            return annot;
-        }).toArray(Annotation[]::new);
-
-        return new NewProperty(name, newRawClass, newTypeArgs, title, desc, changedAnnotations);
+        return typeArguments != null && !typeArguments.isEmpty();
     }
 
     /**
@@ -282,7 +216,7 @@ public final class NewProperty {
         if (type == null) return null;
 
         if (genericType == null) {
-            final Type[] typeArgs;
+            final List<Type> typeArgs;
             // prioritize the actual type arguments over the value of @IsProperty
             if (hasTypeArguments()) {
                 typeArgs = typeArguments;
@@ -290,13 +224,13 @@ public final class NewProperty {
             else {
                 final IsProperty adIsProperty = (IsProperty) getAnnotationByType(IsProperty.class);
                 final Class<?> value = adIsProperty == null ? null : adIsProperty.value();
-                typeArgs = (value == null || value.equals(Void.class)) ? null : new Type[] { adIsProperty.value() };
+                typeArgs = (value == null || value.equals(Void.class)) ? null : List.of(adIsProperty.value());
             }
             // found any type arguments?
             genericType = typeArgs == null ? type : new ParameterizedType() {
                 @Override public Type getRawType() { return type; }
                 @Override public Type getOwnerType() { return type.getDeclaringClass(); }
-                @Override public Type[] getActualTypeArguments() { return typeArgs; }
+                @Override public Type[] getActualTypeArguments() { return typeArgs.toArray(Type[]::new); }
             };
         }
 
@@ -306,16 +240,101 @@ public final class NewProperty {
     public String getName() {
         return name;
     }
+    
+    public NewProperty setName(final String name) {
+        this.name = name;
+        return this;
+    }
 
     public Class<?> getRawType() {
         return type;
     }
 
-    public Type[] getTypeArguments() {
+    public NewProperty setRawType(final Class<?> rawType) {
+        this.type = rawType;
+        return this;
+    }
+
+    public List<Type> getTypeArguments() {
         return typeArguments;
+    }
+
+    public NewProperty setTypeArguments(final List<Type> typeArguments) {
+        this.typeArguments.clear();
+        this.typeArguments.addAll(typeArguments);
+        return this;
     }
 
     public List<Annotation> getAnnotations() {
         return annotations;
     }
+
+    public NewProperty setAnnotations(final List<Annotation> annotations) {
+        this.annotations.clear();
+        annotations.forEach(this::addAnnotation);
+        return this;
+    }
+
+    /**
+     * Modifies this instance by changing its raw type and type arguments.
+     * <p>
+     * If <code>rawType</code> represents a property descriptor or a collection, then {@link IsProperty#value()} is replaced by <code>typeArguments[0]</code> if present, otherwise by {@link Void}.
+     * @param rawType
+     * @param typeArguments
+     * @return
+     */
+    public NewProperty setType(final Class<?> rawType, final Type[] typeArguments) {
+        return setType(new ParameterizedType() {
+            @Override
+            public Type getRawType() { return rawType; }
+            @Override
+            public Type getOwnerType() { return rawType.getDeclaringClass(); }
+            @Override
+            public Type[] getActualTypeArguments() { return typeArguments; }
+        });
+    }
+
+    /**
+     * Modifies this instance by changing its raw type and type arguments that are derived from <code>type</code>.
+     * <p>
+     * If the raw type represents a property descriptor or a collection, then {@link IsProperty#value()} is replaced by <code>typeArguments[0]</code> if present, otherwise by {@link Void}.
+     * @param type
+     * @return
+     */
+    public NewProperty setType(final ParameterizedType type) {
+        final Type[] newTypeArgs = type.getActualTypeArguments();
+        // determine new raw type
+        final Class<?> newRawClass = PropertyTypeDeterminator.classFrom(type.getRawType());
+
+        final Class<?> newIsPropertyValue;
+
+        // we have to set value() of @IsProperty to the 1st type argument if type arguments are present AND 
+        // the raw type is either a property descriptor or a collection
+        if (newTypeArgs != null && newTypeArgs.length > 0 &&
+                (PropertyDescriptor.class.isAssignableFrom(newRawClass) || Collection.class.isAssignableFrom(newRawClass))) 
+        {
+            newIsPropertyValue = PropertyTypeDeterminator.classFrom(newTypeArgs[0]);
+        }
+        // otherwise replace the previous value() by Void
+        else {
+            newIsPropertyValue = Void.class;
+        }
+
+        // copy IsProperty and replace its value(), retain all other annotations
+        // TODO create a separate accessor for @IsProperty for better performance
+        final List<Annotation> newAnnotations = annotations.stream().map(annot -> {
+            if (annot.annotationType().equals(IsProperty.class)) {
+                return IsPropertyAnnotation.from((IsProperty) annot).value(newIsPropertyValue).newInstance();
+            }
+            return annot;
+        }).toList();
+        
+        // perform modifications
+        setRawType(newRawClass);
+        setTypeArguments(Arrays.asList(newTypeArgs));
+        setAnnotations(newAnnotations);
+        
+        return this;
+    }
+
 }
