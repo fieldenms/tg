@@ -61,6 +61,16 @@ public final class NewProperty {
         return new NewProperty(field.getName(), PropertyTypeDeterminator.classFrom(genericType), title, desc, restAnnotations);
     }
 
+    /**
+     * Constructs a property from a field with <code>name</code> found in <code>type</code>'s hierarchy.
+     * @param type
+     * @param name
+     * @return
+     */
+    public static NewProperty fromField(final Class<?> type, final String name) {
+        return NewProperty.fromField(Finder.getFieldByName(type, name));
+    }
+
     // TODO remove
     @Deprecated
     public static NewProperty changeType(final String name, final Class<?> type) {
