@@ -34,6 +34,7 @@ import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.titles.Subtitles;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -124,6 +125,16 @@ public class TitlesDescsGetter {
             return processSubtitles(propPath, entityType).orElseGet(() -> processTitles(propPath, entityType));
     }
 
+    /**
+     * The same as {@link #getTitleAndDesc(String, Class)}, but with {@link IConvertableToPath} {@code prop} argument.
+     *
+     * @param prop
+     * @param entityType
+     * @return
+     */
+    public static Pair<String, String> getTitleAndDesc(final IConvertableToPath prop, final Class<?> entityType) {
+        return getTitleAndDesc(prop.toPath(), entityType);
+    }
     /**
      * Determines property titles and desc without analysing {@link Subtitles}. Effectively this represents the logic before subtitles were introduced.
      * This method should not be used directly and therefore it is private.
