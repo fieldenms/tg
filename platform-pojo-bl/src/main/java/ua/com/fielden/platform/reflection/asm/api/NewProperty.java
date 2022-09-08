@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Title;
@@ -386,6 +387,20 @@ public final class NewProperty {
         setAnnotations(newAnnotations);
         
         return this;
+    }
+    
+    @Override
+    public String toString() {
+        return toString(true);
+    }
+    
+    public String toString(final boolean withAnnotations) {
+        final StringBuilder strBuilder = new StringBuilder();
+        if (withAnnotations) {
+            strBuilder.append(annotations.stream().map(Annotation::toString).collect(Collectors.joining(" ")));
+            strBuilder.append(' ');
+        }
+        return strBuilder.append(String.format("%s %s", genericTypeAsDeclared().getTypeName(), name)).toString();
     }
 
 }
