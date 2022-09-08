@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -262,11 +263,7 @@ public final class NewProperty {
             typeArgs = null;
         }
         // found any type arguments?
-        genericType = typeArgs == null ? type : new ParameterizedType() {
-            @Override public Type getRawType() { return type; }
-            @Override public Type getOwnerType() { return type.getDeclaringClass(); }
-            @Override public Type[] getActualTypeArguments() { return typeArgs.toArray(Type[]::new); }
-        };
+        genericType = typeArgs == null ? type : newParameterizedType(type, typeArgs.toArray(Type[]::new));
 
         return genericType;
     }
@@ -282,11 +279,7 @@ public final class NewProperty {
     public Type genericTypeAsDeclared() {
         if (type == null) return null;
 
-        return !hasTypeArguments() ? type : new ParameterizedType() {
-            @Override public Type getRawType() { return type; }
-            @Override public Type getOwnerType() { return type.getDeclaringClass(); }
-            @Override public Type[] getActualTypeArguments() { return typeArguments.toArray(Type[]::new); }
-        };
+        return !hasTypeArguments() ? type : newParameterizedType(type, typeArguments.toArray(Type[]::new));
     }
 
     public String getName() {
@@ -336,14 +329,7 @@ public final class NewProperty {
      * @return
      */
     public NewProperty setType(final Class<?> rawType, final Type[] typeArguments) {
-        return setType(new ParameterizedType() {
-            @Override
-            public Type getRawType() { return rawType; }
-            @Override
-            public Type getOwnerType() { return rawType.getDeclaringClass(); }
-            @Override
-            public Type[] getActualTypeArguments() { return typeArguments; }
-        });
+        return setType(newParameterizedType(rawType, typeArguments));
     }
 
     /**
@@ -402,5 +388,40 @@ public final class NewProperty {
         }
         return strBuilder.append(String.format("%s %s", genericTypeAsDeclared().getTypeName(), name)).toString();
     }
+    
+    /**
+     * Creates a new anonymous class implementing {@link ParameterizedType}.
+     * 
+     * @param rawType
+     * @param typeArguments
+     * @return
+     */
+    private static ParameterizedType newParameterizedType(final Class<?> rawType, final Type... typeArguments) {
+        final Type owner = rawType.getDeclaringClass();
 
+        return new ParameterizedType() {
+            @Override public Class<?> getRawType() { return rawType; }
+            @Override public Type getOwnerType() { return owner; }
+            @Override public Type[] getActualTypeArguments() { return typeArguments; }
+            @Override
+            public String toString() {
+                final StringBuilder sb = new StringBuilder();
+                if (owner != null) {
+                    sb.append(owner.getTypeName());
+                    sb.append('$');
+                    sb.append(rawType.getSimpleName());
+                }
+                else {
+                    sb.append(rawType.getName());
+                }
+
+                final StringJoiner sj = new StringJoiner(", ", "<", ">").setEmptyValue("");
+                for (final Type arg : typeArguments) {
+                    sj.add(arg.getTypeName());
+                }
+
+                return sb.append(sj.toString()).toString();
+            }
+        };
+    }
 }
