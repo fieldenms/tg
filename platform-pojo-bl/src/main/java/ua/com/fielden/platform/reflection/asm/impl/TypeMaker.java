@@ -23,15 +23,22 @@ import net.bytebuddy.description.modifier.Ownership;
 import net.bytebuddy.description.modifier.ParameterManifestation;
 import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.dynamic.DynamicType;
+import net.bytebuddy.dynamic.DynamicType.Builder.MethodDefinition.ReceiverTypeDefinition;
 import net.bytebuddy.dynamic.TargetType;
 import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.implementation.FixedValue;
+import net.bytebuddy.implementation.MethodDelegation;
+import net.bytebuddy.implementation.bind.annotation.Argument;
+import net.bytebuddy.implementation.bind.annotation.This;
 import net.bytebuddy.pool.TypePool;
+import ua.com.fielden.platform.entity.Accessor;
+import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.Generated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.factory.ObservableAnnotation;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.utils.StreamUtils;
 
@@ -117,38 +124,78 @@ public class TypeMaker<T> {
         }
 
         final HashSet<String> existingPropNames = getOrigTypeDeclaredProperties().stream().map(Field::getName).collect(toCollection(HashSet::new));
+
         StreamUtils.distinct(
                 Arrays.stream(properties).filter(prop -> !existingPropNames.contains(prop.getName())), 
                 prop -> prop.getName()) // distinguish properties by name
             .forEach(this::addProperty);
+
         return this;
     }
-
-    private void addProperty(final NewProperty property) {
-        builder = builder.defineField(property.getName(), property.getGenericType(), Visibility.PRIVATE)
+    
+    private void addProperty(final NewProperty prop) {
+        final Type genericType = prop.genericType();
+        builder = builder.defineField(prop.getName(), genericType, Visibility.PRIVATE)
                 // annotations
-                .annotateField(property.getAnnotations())
+                .annotateField(prop.getAnnotations())
                 // Generated annotation might already be present
-                .annotateField(property.containsAnnotationDescriptorFor(GENERATED_ANNOTATION.annotationType()) ? 
-                        List.of(property.titleAnnotation()) :
-                        List.of(property.titleAnnotation(), GENERATED_ANNOTATION));
-
-        addGetter(property.getName(), property.getGenericType());
-        addSetter(property.getName(), property.getGenericType());
+                .annotateField(prop.containsAnnotationDescriptorFor(GENERATED_ANNOTATION.annotationType()) ? 
+                        List.of(prop.titleAnnotation()) :
+                        List.of(prop.titleAnnotation(), GENERATED_ANNOTATION));
+        
+        addGetter(prop.getName(), genericType);
+        addSetter(prop.getName(), genericType, prop.isCollectional());
     }
     
     private void addGetter(final String propName, final Type propType) {
-        final String prefix = propType.equals(Boolean.class) ? "is" : "get";
+        final String prefix = propType.equals(Boolean.class) ? Accessor.IS.startsWith : Accessor.GET.startsWith;
         builder = builder.defineMethod(prefix + StringUtils.capitalize(propName), propType, Visibility.PUBLIC)
                 .intercept(FieldAccessor.ofField(propName));
     }
 
-    private void addSetter(final String propName, final Type propType) {
-        builder = builder.defineMethod("set" + StringUtils.capitalize(propName), TargetType.DESCRIPTION, Visibility.PUBLIC)
-                .withParameter(propType, propName, ParameterManifestation.FINAL)
-                .intercept(FieldAccessor.ofField(propName).setsArgumentAt(0).andThen(FixedValue.self()))
-                .annotateMethod(ObservableAnnotation.newInstance());
+    private void addSetter(final String propName, final Type propType, final boolean collectional) {
+        final var building = builder.defineMethod(Mutator.SETTER.startsWith + StringUtils.capitalize(propName), TargetType.DESCRIPTION, Visibility.PUBLIC)
+                .withParameter(propType, propName, ParameterManifestation.FINAL);
+
+        final ReceiverTypeDefinition<T> building1;
+        if (collectional) {
+            // collectional setters are implemented as:
+            /*
+             this.${propName}.clear();
+             this.${propName}.addAll(${arg});
+             return this;
+             */
+            building1 = building.intercept(MethodDelegation.to(new CollectionalSetterInterceptor(propName)).andThen(FixedValue.self()));
+        }
+        else {
+            // regular setters:
+            /* 
+             this.${propName} = ${arg};  
+             return this;
+             */
+            building1 = building.intercept(FieldAccessor.ofField(propName).setsArgumentAt(0).andThen(FixedValue.self()));
+        }
+
+        builder = building1.annotateMethod(ObservableAnnotation.newInstance());
     }
+    
+    public static class CollectionalSetterInterceptor {
+        private final String propName;
+        
+        public CollectionalSetterInterceptor(final String propName) {
+            this.propName = propName;
+        }
+        
+        public void intercept(@This final Object instrumentedInstance, @Argument(0) final Object arg) throws Exception {
+            final Field prop = Finder.getFieldByName(instrumentedInstance.getClass(), propName);
+            final Object propValue = Finder.getFieldValue(prop, instrumentedInstance);
+            // this.${propName}.clear();
+            Reflector.getMethod(prop.getType(), "clear").invoke(propValue);
+            // this.${propname}.addAll(${arg}): 
+            Reflector.getMethod(prop.getType(), "addAll").invoke(propValue, arg);
+        }
+    }
+
     /**
     * Adds the specified class level annotation to the class. Existing annotations are not replaced.
     * <p>
@@ -263,6 +310,7 @@ public class TypeMaker<T> {
        StreamUtils.distinct(Arrays.stream(propertyReplacements), prop -> prop.getName()) // distinguish properties by name
            .map(prop -> prop.deprecated ? modifyProperty(prop) : prop)
            .forEach(this::addProperty);
+
        return this;
    }
    

@@ -454,15 +454,16 @@ public class DynamicEntityTypeGenerationTest {
                 .addProperties(pd)
                 .endModification();
 
-        final Method setter = Reflector.obtainPropertySetter(enhancedType, "collectionalProperty");
+        final Method setter = Reflector.obtainPropertySetter(enhancedType, pd.getName());
         final Type[] types = setter.getGenericParameterTypes();
         assertEquals("Incorrect number of generic parameters", 1, types.length);
         assertEquals("Incorrect parameter type", "java.util.List<java.lang.String>", types[0].toString());
 
         final AbstractEntity<String> instance = factory.newByKey(enhancedType, "new");
         final List<String> list = new ArrayList<String>();
+        // NPE here, since it had been assumed that a collectional setter worked like a regular one
         setter.invoke(instance, list);
-        final Method getter = Reflector.obtainPropertyAccessor(enhancedType, "collectionalProperty");
+        final Method getter = Reflector.obtainPropertyAccessor(enhancedType, pd.getName());
         assertNotNull("Collectional property should not be null once assigned.", getter.invoke(instance));
         assertEquals("Incorrect getter return value", list, getter.invoke(instance));
     }
