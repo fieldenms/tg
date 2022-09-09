@@ -11,9 +11,12 @@ import java.lang.annotation.Target;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
@@ -28,8 +31,10 @@ import net.bytebuddy.dynamic.TargetType;
 import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.implementation.MethodDelegation;
+import net.bytebuddy.implementation.SuperMethodCall;
 import net.bytebuddy.implementation.bind.annotation.Argument;
 import net.bytebuddy.implementation.bind.annotation.This;
+import net.bytebuddy.matcher.ElementMatchers;
 import net.bytebuddy.pool.TypePool;
 import ua.com.fielden.platform.entity.Accessor;
 import ua.com.fielden.platform.entity.Mutator;
@@ -40,6 +45,7 @@ import ua.com.fielden.platform.entity.annotation.factory.ObservableAnnotation;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
+import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.StreamUtils;
 
 /**
@@ -77,6 +83,7 @@ public class TypeMaker<T> {
     private DynamicType.Builder<T> builder;
     private boolean nameModified = false;
     private List<Field> origTypeDeclaredProperties; // lazy access
+    private List<Pair<String, Object>> propertyInitializers = new ArrayList<>();
 
     public TypeMaker(final DynamicEntityClassLoader loader, final Class<T> origType) {
         this.cl = loader;
@@ -123,7 +130,9 @@ public class TypeMaker<T> {
             return this;
         }
 
-        final HashSet<String> existingPropNames = getOrigTypeDeclaredProperties().stream().map(Field::getName).collect(toCollection(HashSet::new));
+        final HashSet<String> existingPropNames = getOrigTypeDeclaredProperties().stream()
+                .map(Field::getName)
+                .collect(toCollection(HashSet::new));
 
         StreamUtils.distinct(
                 Arrays.stream(properties).filter(prop -> !existingPropNames.contains(prop.getName())), 
@@ -140,13 +149,42 @@ public class TypeMaker<T> {
                 .annotateField(prop.getAnnotations())
                 // Generated annotation might already be present
                 .annotateField(prop.containsAnnotationDescriptorFor(GENERATED_ANNOTATION.annotationType()) ? 
-                        List.of(prop.titleAnnotation()) :
-                        List.of(prop.titleAnnotation(), GENERATED_ANNOTATION));
-        
+                               List.of(prop.titleAnnotation()) :
+                               List.of(prop.titleAnnotation(), GENERATED_ANNOTATION));
+
+        final boolean collectional = prop.isCollectional();
+        // try to determine an initializer for a collectional property
+        if (collectional) {
+            final Object initValue;
+            try {
+                initValue = collectionalInitValue(prop.getRawType());
+            } catch (Exception e) {
+                throw new CollectionalPropertyInitializationException(
+                        String.format("Failed to initialize new property %s", prop.toString(IsProperty.class)),
+                        e);
+            }
+            if (initValue != null) {
+                propertyInitializers.add(Pair.pair(prop.getName(), initValue));
+            }
+        }
+
         addGetter(prop.getName(), genericType);
-        addSetter(prop.getName(), genericType, prop.isCollectional());
+        addSetter(prop.getName(), genericType, collectional);
     }
-    
+
+    private Object collectionalInitValue(final Class<?> rawType) throws Exception {
+        if (rawType == Collection.class || rawType == List.class) {
+            return new ArrayList<Object>();
+        }
+        else if (rawType == Set.class) {
+            return new HashSet<Object>();
+        }
+        else {
+            // look for an accessible default constructor
+            return rawType.getConstructor().newInstance();
+        }
+    }
+
     private void addGetter(final String propName, final Type propType) {
         final String prefix = propType.equals(Boolean.class) ? Accessor.IS.startsWith : Accessor.GET.startsWith;
         builder = builder.defineMethod(prefix + StringUtils.capitalize(propName), propType, Visibility.PUBLIC)
@@ -192,7 +230,7 @@ public class TypeMaker<T> {
             // this.${propName}.clear();
             Reflector.getMethod(prop.getType(), "clear").invoke(propValue);
             // this.${propname}.addAll(${arg}): 
-            Reflector.getMethod(prop.getType(), "addAll").invoke(propValue, arg);
+            Reflector.getMethod(prop.getType(), "addAll", Collection.class).invoke(propValue, arg);
         }
     }
 
@@ -298,7 +336,7 @@ public class TypeMaker<T> {
      * @param propertyReplacements
      * @return
      */
-    public TypeMaker<T> modifyProperties(final NewProperty... propertyReplacements) throws Exception {
+    public TypeMaker<T> modifyProperties(final NewProperty... propertyReplacements) {
         if (builder == null) {
             throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
         }
@@ -357,16 +395,42 @@ public class TypeMaker<T> {
             modifyTypeName(DynamicTypeNamingService.nextTypeName(origType.getName()));
         }
 
-       // provide a TypePool that uses the class loader of the original type
-       // if origType is a dynamic one, then this will be DynamicEntityClassLoader, which will be able to locate origType
-       return builder.make(TypePool.ClassLoading.of(origType.getClassLoader()))
-               // provide DynamicEntityClassLoader to be injected with the new dynamic type
-               // this allows us to use a single class loader for all dynamically created types,
-               // instead of making ByteBuddy create a separate class loader for each
-               .load(cl)
-               .getLoaded();
-   }
-   
+        if (!propertyInitializers.isEmpty()) {
+            // initialize all fields in this.propertyInitializers by intercepting the default constructor
+            // which calls its parent constructor and then does the initialization
+            builder = builder.constructor(ElementMatchers.isDefaultConstructor())
+                    .intercept(SuperMethodCall.INSTANCE.andThen(MethodDelegation.to(new ConstructorInterceptor(propertyInitializers))));
+        }
+        
+        // provide a TypePool that uses the class loader of the original type
+        // if origType is a dynamic one, then this will be DynamicEntityClassLoader, which will be able to locate origType
+        return builder.make(TypePool.ClassLoading.of(origType.getClassLoader()))
+                // provide DynamicEntityClassLoader to be injected with the new dynamic type
+                // this allows us to use a single class loader for all dynamically created types,
+                // instead of making ByteBuddy create a separate class loader for each
+                .load(cl)
+                .getLoaded();
+
+    public static class ConstructorInterceptor {
+        private final List<Pair<String, Object>> fieldInitializers = new ArrayList<>();
+
+        ConstructorInterceptor(final List<Pair<String, Object>> fieldInitializers) {
+            if (fieldInitializers != null) {
+                this.fieldInitializers.addAll(fieldInitializers);
+            }
+        }
+
+        public void intercept(@This final Object instrumentedInstance) throws Exception {
+            for (final Pair<String, Object> nameAndValue : fieldInitializers) {
+                final Field prop = Finder.getFieldByName(instrumentedInstance.getClass(), nameAndValue.getKey());
+                final boolean accessible = prop.canAccess(instrumentedInstance);
+                prop.setAccessible(true);
+                prop.set(instrumentedInstance, nameAndValue.getValue());
+                prop.setAccessible(accessible);
+            }
+        }
+    }
+
     private boolean skipAdaptation(final String name) {
         return name.startsWith("java.");
     }
