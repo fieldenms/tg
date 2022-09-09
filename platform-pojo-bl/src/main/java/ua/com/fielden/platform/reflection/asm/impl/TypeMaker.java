@@ -100,7 +100,7 @@ public class TypeMaker<T> {
         builder = new ByteBuddy().subclass(origType)
                 // grab all declared annotations
                 .annotateType(origType.getDeclaredAnnotations());
-        
+
         return this;
     }
 
@@ -132,7 +132,7 @@ public class TypeMaker<T> {
 
         return this;
     }
-    
+
     private void addProperty(final NewProperty prop) {
         final Type genericType = prop.genericType();
         builder = builder.defineField(prop.getName(), genericType, Visibility.PRIVATE)
@@ -178,14 +178,14 @@ public class TypeMaker<T> {
 
         builder = building1.annotateMethod(ObservableAnnotation.newInstance());
     }
-    
+
     public static class CollectionalSetterInterceptor {
         private final String propName;
-        
+
         public CollectionalSetterInterceptor(final String propName) {
             this.propName = propName;
         }
-        
+
         public void intercept(@This final Object instrumentedInstance, @Argument(0) final Object arg) throws Exception {
             final Field prop = Finder.getFieldByName(instrumentedInstance.getClass(), propName);
             final Object propValue = Finder.getFieldValue(prop, instrumentedInstance);
@@ -197,165 +197,165 @@ public class TypeMaker<T> {
     }
 
     /**
-    * Adds the specified class level annotation to the class. Existing annotations are not replaced.
-    * <p>
-    * It is important that these annotation have their target specified as <code>TYPE</code> and retention as <code>RUNTIME</code>. 
-    * Otherwise, a runtime exception is thrown.
-    *
-    * @param annotations
-    * @return
-    */
-   public TypeMaker<T> addClassAnnotations(final Annotation... annotations) {
-       if (builder == null) {
-           throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
-       }
+     * Adds the specified class level annotation to the class. Existing annotations are not replaced.
+     * <p>
+     * It is important that these annotation have their target specified as <code>TYPE</code> and retention as <code>RUNTIME</code>. 
+     * Otherwise, a runtime exception is thrown.
+     *
+     * @param annotations
+     * @return
+     */
+    public TypeMaker<T> addClassAnnotations(final Annotation... annotations) {
+        if (builder == null) {
+            throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
+        }
 
-       if (annotations == null || annotations.length == 0) {
-           return this;
-       }
+        if (annotations == null || annotations.length == 0) {
+            return this;
+        }
 
-       final HashSet<String> existingAnnotationNames = Arrays.stream(origType.getDeclaredAnnotations())
-               .map(annot -> annot.annotationType().getName())
-               .collect(Collectors.toCollection(() -> new HashSet<String>()));
-       final List<Annotation> annotationsToAdd = Arrays.stream(annotations)
-               .filter(annot -> !existingAnnotationNames.contains(annot.annotationType().getName()))
-               .toList();
+        final HashSet<String> existingAnnotationNames = Arrays.stream(origType.getDeclaredAnnotations())
+                .map(annot -> annot.annotationType().getName())
+                .collect(Collectors.toCollection(() -> new HashSet<String>()));
+        final List<Annotation> annotationsToAdd = Arrays.stream(annotations)
+                .filter(annot -> !existingAnnotationNames.contains(annot.annotationType().getName()))
+                .toList();
 
-       // let's validate provided annotations
-       annotationsToAdd.forEach(annot -> {
-           // check retention policy
-           final Retention retention = annot.annotationType().getAnnotation(Retention.class);
-           if (retention == null || retention.value() != RetentionPolicy.RUNTIME) {
-               throw new IllegalArgumentException(format("The provided annotation %s should have runtime retention policy.",
-                       annot.annotationType().getSimpleName()));
-           }
+        // let's validate provided annotations
+        annotationsToAdd.forEach(annot -> {
+            // check retention policy
+            final Retention retention = annot.annotationType().getAnnotation(Retention.class);
+            if (retention == null || retention.value() != RetentionPolicy.RUNTIME) {
+                throw new IllegalArgumentException(format("The provided annotation %s should have runtime retention policy.",
+                        annot.annotationType().getSimpleName()));
+            }
 
-           // check target
-           final Target target = annot.annotationType().getAnnotation(Target.class);
-           if (target == null || !Arrays.stream(target.value()).anyMatch(t -> t == ElementType.TYPE)) {
-               throw new IllegalArgumentException(format("The provided annotation %s should have 'type' target.",
-                       annot.annotationType().getSimpleName()));
-           }          
-       });
+            // check target
+            final Target target = annot.annotationType().getAnnotation(Target.class);
+            if (target == null || !Arrays.stream(target.value()).anyMatch(t -> t == ElementType.TYPE)) {
+                throw new IllegalArgumentException(format("The provided annotation %s should have 'type' target.",
+                        annot.annotationType().getSimpleName()));
+            }          
+        });
 
-       // proceed with type construction
-       builder = builder.annotateType(annotationsToAdd);
-       return this;
-   }
+        // proceed with type construction
+        builder = builder.annotateType(annotationsToAdd);
+        return this;
+    }
 
-   /**
-    * Modifies type's name with the specified <code>newTypeName</code>. 
-    * 
-    * @param newTypeName - must be fully-qualified in a binary format (e.g. <code>foo.Bar</code> )
-    * @return
-    */
-   public TypeMaker<T> modifyTypeName(final String newTypeName) {
-       if (StringUtils.isEmpty(newTypeName)) {
-           throw new IllegalStateException("New type name is 'null' or empty.");
-       }
-       if (builder == null) {
-           throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
-       }
-       nameModified = true;
-       builder = builder.name(newTypeName);
-       return this;
-   }
-   
-   /**
-    * Modifies the supertype's name with the specified <code>newSupertypeName</code>. 
-    * <p>
-    * 
-    * @param newSupertypeName - must be fully-qualified in a binary format 
-    * (e.g. <code>foo.Bar</code> )
-    * @return
-    */
-   public TypeMaker<T> modifySupertypeName(final String newSupertypeName) {
-       if (StringUtils.isEmpty(newSupertypeName)) {
-           throw new IllegalStateException(NEW_SUPERTYPE_NAME_IS_NULL_OR_EMPTY);
-       }
-       if (builder == null) {
-           throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
-       }
-       // DynamicType.Builder does not provide supertype modification capabilities
-       // so we have to use an ASM wrapper
-       builder = builder.visit(AdvancedChangeSupertypeAdapter.asAsmVisitorWrapper(newSupertypeName));
-       return this;
-   }
-   
-   /**
-    * Sets the supertype's name to the name of the original type.
-    * A shortcut for {@link #modifySupertypeName(String)} where the argument is the original type's name.
-    * @return
-    */
-   public TypeMaker<T> extendOriginalType() {
-      modifySupertypeName(origType.getName());
-      return this;
-   }
+    /**
+     * Modifies type's name with the specified <code>newTypeName</code>. 
+     * 
+     * @param newTypeName - must be fully-qualified in a binary format (e.g. <code>foo.Bar</code> )
+     * @return
+     */
+    public TypeMaker<T> modifyTypeName(final String newTypeName) {
+        if (StringUtils.isEmpty(newTypeName)) {
+            throw new IllegalStateException("New type name is 'null' or empty.");
+        }
+        if (builder == null) {
+            throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
+        }
+        nameModified = true;
+        builder = builder.name(newTypeName);
+        return this;
+    }
 
-   /**
-    * Modifies type's properties with the specified properties.
-    *
-    * @param propertyReplacements
-    * @return
-    */
-   public TypeMaker<T> modifyProperties(final NewProperty... propertyReplacements) {
-       if (builder == null) {
-           throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
-       }
+    /**
+     * Modifies the supertype's name with the specified <code>newSupertypeName</code>. 
+     * <p>
+     * 
+     * @param newSupertypeName - must be fully-qualified in a binary format 
+     * (e.g. <code>foo.Bar</code> )
+     * @return
+     */
+    public TypeMaker<T> modifySupertypeName(final String newSupertypeName) {
+        if (StringUtils.isEmpty(newSupertypeName)) {
+            throw new IllegalStateException(NEW_SUPERTYPE_NAME_IS_NULL_OR_EMPTY);
+        }
+        if (builder == null) {
+            throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
+        }
+        // DynamicType.Builder does not provide supertype modification capabilities
+        // so we have to use an ASM wrapper
+        builder = builder.visit(AdvancedChangeSupertypeAdapter.asAsmVisitorWrapper(newSupertypeName));
+        return this;
+    }
 
-       if (propertyReplacements == null || propertyReplacements.length == 0) {
-           return this;
-       }
-       
-       StreamUtils.distinct(Arrays.stream(propertyReplacements), prop -> prop.getName()) // distinguish properties by name
-           .map(prop -> prop.deprecated ? modifyProperty(prop) : prop)
-           .forEach(this::addProperty);
+    /**
+     * Sets the supertype's name to the name of the original type.
+     * A shortcut for {@link #modifySupertypeName(String)} where the argument is the original type's name.
+     * @return
+     */
+    public TypeMaker<T> extendOriginalType() {
+        modifySupertypeName(origType.getName());
+        return this;
+    }
 
-       return this;
-   }
-   
-   private NewProperty modifyProperty(final NewProperty property) {
-       // operates on deprecated NewProperty; only name and raw type information
-       final Field origField = Finder.findFieldByName(origType, property.getName());
+    /**
+     * Modifies type's properties with the specified properties.
+     *
+     * @param propertyReplacements
+     * @return
+     */
+    public TypeMaker<T> modifyProperties(final NewProperty... propertyReplacements) throws Exception {
+        if (builder == null) {
+            throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
+        }
 
-       if (property.changeSignature) {
-           // NewProperty.type represents a type argument
-           return NewProperty.fromField(origField).setType(new ParameterizedType() {
-               @Override
-               public Type[] getActualTypeArguments() { return new Type[] { property.getRawType() }; }
-               @Override
-               public Type getRawType() { return origField.getType(); }
-               @Override
-               public Type getOwnerType() { return origField.getType().getDeclaringClass(); }
-           });
-       }
-       return NewProperty.fromField(origField).setRawType(property.getRawType());
-   }
-   
-   /**
-    * Generates code to capture the original type, which is provided via <code>type</code>.
-    * @param type - the type to be recorded
-    */
-   private void recordOrigType(final Class<?> type) {
-       builder = builder.defineMethod(GET_ORIG_TYPE_METHOD_NAME, type.getClass(), Visibility.PUBLIC, Ownership.STATIC)
-               .intercept(FixedValue.value(type));
-   }
-   
-   /**
-    * Finalizes type modification and loads the resulting class.
-    * <p>
-    * If the type name wasn't modified prior to this stage, then it is performed here according to {@link DynamicTypeNamingService}.
-    * 
-    * @return a loaded class representing the modified type
-    */
-   public Class<? extends T> endModification() {
-       if (!DynamicEntityClassLoader.isGenerated(origType)) {
-           recordOrigType(origType);
-       }
-       
-       if (!nameModified) {
-           modifyTypeName(DynamicTypeNamingService.nextTypeName(origType.getName()));
-       }
+        if (propertyReplacements == null || propertyReplacements.length == 0) {
+            return this;
+        }
+
+        StreamUtils.distinct(Arrays.stream(propertyReplacements), prop -> prop.getName()) // distinguish properties by name
+            .map(prop -> prop.deprecated ? modifyProperty(prop) : prop)
+            .forEach(this::addProperty);
+
+        return this;
+    }
+
+    private NewProperty modifyProperty(final NewProperty property) {
+        // operates on deprecated NewProperty; only name and raw type information
+        final Field origField = Finder.findFieldByName(origType, property.getName());
+
+        if (property.changeSignature) {
+            // NewProperty.type represents a type argument
+            return NewProperty.fromField(origField).setType(new ParameterizedType() {
+                @Override
+                public Type[] getActualTypeArguments() { return new Type[] { property.getRawType() }; }
+                @Override
+                public Type getRawType() { return origField.getType(); }
+                @Override
+                public Type getOwnerType() { return origField.getType().getDeclaringClass(); }
+            });
+        }
+        return NewProperty.fromField(origField).setRawType(property.getRawType());
+    }
+
+    /**
+     * Generates code to capture the original type, which is provided via <code>type</code>.
+     * @param type - the type to be recorded
+     */
+    private void recordOrigType(final Class<?> type) {
+        builder = builder.defineMethod(GET_ORIG_TYPE_METHOD_NAME, type.getClass(), Visibility.PUBLIC, Ownership.STATIC)
+                .intercept(FixedValue.value(type));
+    }
+
+    /**
+     * Finalizes type modification and loads the resulting class.
+     * <p>
+     * If the type name wasn't modified prior to this stage, then it is performed here according to {@link DynamicTypeNamingService}.
+     * 
+     * @return a loaded class representing the modified type
+     */
+    public Class<? extends T> endModification() {
+        if (!DynamicEntityClassLoader.isGenerated(origType)) {
+            recordOrigType(origType);
+        }
+
+        if (!nameModified) {
+            modifyTypeName(DynamicTypeNamingService.nextTypeName(origType.getName()));
+        }
 
        // provide a TypePool that uses the class loader of the original type
        // if origType is a dynamic one, then this will be DynamicEntityClassLoader, which will be able to locate origType
@@ -370,12 +370,12 @@ public class TypeMaker<T> {
     private boolean skipAdaptation(final String name) {
         return name.startsWith("java.");
     }
-    
+
     private List<Field> getOrigTypeDeclaredProperties() {
         if (origTypeDeclaredProperties == null) {
-           origTypeDeclaredProperties = Arrays.stream(origType.getDeclaredFields()).filter(field -> field.isAnnotationPresent(IsProperty.class)).toList(); 
+            origTypeDeclaredProperties = Arrays.stream(origType.getDeclaredFields()).filter(field -> field.isAnnotationPresent(IsProperty.class)).toList(); 
         }
         return origTypeDeclaredProperties;
     }
-    
+
 }
