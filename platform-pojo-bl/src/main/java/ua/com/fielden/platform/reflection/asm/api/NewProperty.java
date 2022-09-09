@@ -378,6 +378,14 @@ public final class NewProperty {
     }
     
     /**
+     * Returns a newly created copy of this instance. However, the annotation instances are not copied, which means that you shouldn't modify them.
+     * @return
+     */
+    public NewProperty copy() {
+        return new NewProperty(name, type, typeArguments.toArray(Type[]::new), title, desc, annotations.toArray(Annotation[]::new));
+    }
+    
+    /**
      * Returns a string representation of this property in its fullest form (with all annotations included).
      * For shorter representations see {@link #toString(boolean)} and {@link #toString(Class...)}.
      */
