@@ -7,7 +7,9 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
 
@@ -375,17 +377,43 @@ public final class NewProperty {
         return this;
     }
     
+    /**
+     * Returns a string representation of this property in its fullest form (with all annotations included).
+     * For shorter representations see {@link #toString(boolean)} and {@link #toString(Class...)}.
+     */
     @Override
     public String toString() {
         return toString(true);
     }
     
-    public String toString(final boolean withAnnotations) {
+    /**
+     * Returns a string representation of this property without any annotations.
+     * @param ommitAnnotations - controls whether to omit annotations
+     * @return
+     */
+    public String toString(final boolean ommitAnnotations) {
         final StringBuilder strBuilder = new StringBuilder();
-        if (withAnnotations) {
+        if (!ommitAnnotations) {
             strBuilder.append(annotations.stream().map(Annotation::toString).collect(Collectors.joining(" ")));
             strBuilder.append(' ');
         }
+        return strBuilder.append(String.format("%s %s", genericTypeAsDeclared().getTypeName(), name)).toString();
+    }
+    
+    /**
+     * Returns a string representation of this property including the provided annotations only.
+     * @param withAnnotations - annotation types to include
+     * @return
+     */
+    public String toString(final Class<?>... withAnnotations) {
+        final Set<Class<?>> withAnnotationsSet = new HashSet<>(Arrays.asList(withAnnotations));
+
+        final StringBuilder strBuilder = new StringBuilder();
+        strBuilder.append(annotations.stream()
+                .filter(annot -> withAnnotationsSet.contains(annot.annotationType()))
+                .map(Annotation::toString)
+                .collect(Collectors.joining(" ")));
+        if (!strBuilder.isEmpty()) strBuilder.append(' ');
         return strBuilder.append(String.format("%s %s", genericTypeAsDeclared().getTypeName(), name)).toString();
     }
     
