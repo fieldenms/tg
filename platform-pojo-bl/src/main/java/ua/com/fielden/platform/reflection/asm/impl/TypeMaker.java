@@ -45,6 +45,7 @@ import ua.com.fielden.platform.entity.annotation.factory.ObservableAnnotation;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
+import ua.com.fielden.platform.reflection.asm.exceptions.CollectionalPropertyInitializationException;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.StreamUtils;
 

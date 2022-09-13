@@ -1,4 +1,6 @@
-package ua.com.fielden.platform.reflection.asm.impl;
+package ua.com.fielden.platform.reflection.asm.exceptions;
+
+import ua.com.fielden.platform.reflection.asm.impl.TypeMaker;
 
 /**
  * Exception related to initialization of a collectional property during dynamic type generation/modification.
