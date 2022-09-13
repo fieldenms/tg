@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
+import ua.com.fielden.platform.reflection.asm.exceptions.NewPropertyException;
 
 /**
  * A convenient abstraction for representing data needed for dynamic construction of properties.
@@ -306,10 +307,29 @@ public final class NewProperty {
         return typeArguments;
     }
 
+    /**
+     * Updates type arguments of this instance.
+     * <p>
+     * If the raw type represents {@link PropertyDescriptor} or {@link Collection}, then {@link IsProperty#value()} is updated by
+     * the first type argument. If no type arguments are present, then for {@link Collection} {@link Object} is chosen, but for
+     * {@link PropertyDescriptor} a runtime exception is thrown.
+     * <p>
+     * For other types, {@link IsProperty#value()} is unchanged.
+     */
     public NewProperty setTypeArguments(final List<Type> typeArguments) {
         this.typeArguments.clear();
         this.typeArguments.addAll(typeArguments);
+        updateIsProperty();
         return this;
+    }
+    
+    /**
+     * Updates type arguments of this instance.
+     * <p>
+     * Might also update {@link IsProperty} - see {@link #setTypeArguments(List)}.
+     */
+    public NewProperty setTypeArguments(final Type... typeArguments) {
+        return setTypeArguments(Arrays.asList(typeArguments));
     }
 
     public List<Annotation> getAnnotations() {
@@ -322,10 +342,14 @@ public final class NewProperty {
         return this;
     }
 
+    public NewProperty setAnnotations(final Annotation... annotations) {
+        return setAnnotations(Arrays.asList(annotations));
+    }
+
     /**
      * Modifies this instance by changing its raw type and type arguments.
      * <p>
-     * If <code>rawType</code> represents a property descriptor or a collection, then {@link IsProperty#value()} is replaced by <code>typeArguments[0]</code> if present, otherwise by {@link Void}.
+     * Might also update {@link IsProperty} - see {@link #setType(ParameterizedType)}.
      * @param rawType
      * @param typeArguments
      * @return
@@ -337,43 +361,21 @@ public final class NewProperty {
     /**
      * Modifies this instance by changing its raw type and type arguments that are derived from <code>type</code>.
      * <p>
-     * If the raw type represents a property descriptor or a collection, then {@link IsProperty#value()} is replaced by <code>typeArguments[0]</code> if present, otherwise by {@link Void}.
+     * If the raw type represents {@link PropertyDescriptor} or {@link Collection}, then {@link IsProperty#value()} is updated by
+     * the first type argument. If no type arguments are present, then for {@link Collection} {@link Object} is chosen, but for
+     * {@link PropertyDescriptor} a runtime exception is thrown.
+     * <p>
+     * For other types, {@link IsProperty#value()} is unchanged.
      * @param type
      * @return
      */
     public NewProperty setType(final ParameterizedType type) {
-        final Type[] newTypeArgs = type.getActualTypeArguments();
+        typeArguments = Arrays.asList(type.getActualTypeArguments());
         // determine new raw type
-        final Class<?> newRawClass = PropertyTypeDeterminator.classFrom(type.getRawType());
+        this.type = PropertyTypeDeterminator.classFrom(type.getRawType());
+        // update @IsProperty
+        updateIsProperty();
 
-        final Class<?> newIsPropertyValue;
-
-        // we have to set value() of @IsProperty to the 1st type argument if type arguments are present AND 
-        // the raw type is either a property descriptor or a collection
-        if (newTypeArgs != null && newTypeArgs.length > 0 &&
-                (PropertyDescriptor.class.isAssignableFrom(newRawClass) || Collection.class.isAssignableFrom(newRawClass))) 
-        {
-            newIsPropertyValue = PropertyTypeDeterminator.classFrom(newTypeArgs[0]);
-        }
-        // otherwise replace the previous value() by Void
-        else {
-            newIsPropertyValue = Void.class;
-        }
-
-        // copy IsProperty and replace its value(), retain all other annotations
-        // TODO create a separate accessor for @IsProperty for better performance
-        final List<Annotation> newAnnotations = annotations.stream().map(annot -> {
-            if (annot.annotationType().equals(IsProperty.class)) {
-                return IsPropertyAnnotation.from((IsProperty) annot).value(newIsPropertyValue).newInstance();
-            }
-            return annot;
-        }).toList();
-        
-        // perform modifications
-        setRawType(newRawClass);
-        setTypeArguments(Arrays.asList(newTypeArgs));
-        setAnnotations(newAnnotations);
-        
         return this;
     }
     
@@ -423,6 +425,47 @@ public final class NewProperty {
                 .collect(Collectors.joining(" ")));
         if (!strBuilder.isEmpty()) strBuilder.append(' ');
         return strBuilder.append(String.format("%s %s", genericTypeAsDeclared().getTypeName(), name)).toString();
+    }
+
+    private void updateIsProperty() {
+        final Class<?> newValue = determineIsPropertyValue();
+        if (newValue == null) return;
+
+        // copy IsProperty and replace its value(), retain all other annotations
+        // TODO create a separate accessor for @IsProperty for better performance
+        setAnnotations(annotations.stream().map(annot -> {
+            if (annot.annotationType().equals(IsProperty.class)) {
+                return IsPropertyAnnotation.from((IsProperty) annot).value(newValue).newInstance();
+            }
+            return annot;
+        }).toList());
+    }
+
+    private Class<?> determineIsPropertyValue() {
+        if (isCollectional()) {
+            // collectional property and empty type arguments -> set IsProperty.value() to Object
+            if (typeArguments == null || typeArguments.isEmpty()) {
+                return Object.class;
+            }
+            else {
+                return PropertyTypeDeterminator.classFrom(typeArguments.get(0));
+            }
+        }
+        else if (isPropertyDescriptor()) {
+            // property descriptor MUST BE parameterized
+            if (typeArguments == null || typeArguments.isEmpty()) {
+                throw new NewPropertyException("PropertyDescriptor must be parameterized, got empty type arguments instead.");
+            }
+            else {
+                return PropertyTypeDeterminator.classFrom(typeArguments.get(0));
+            }
+        }
+        else {
+            final Annotation isProperty = getAnnotationByType(IsProperty.class);
+            if (isProperty == null) return null;
+
+            return ((IsProperty) isProperty).value();
+        }
     }
     
     /**
