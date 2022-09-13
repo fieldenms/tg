@@ -38,8 +38,10 @@ public final class NewProperty {
     public String title;
     public String desc;
     // TODO use ordered set
+    // store all property's annotations except for @IsProperty
     public final List<Annotation> annotations = new ArrayList<Annotation>();
-    private Type genericType; // lazy access
+    // IsProperty annotation requires frequent access; is never null
+    private IsProperty atIsProperty;
     public final boolean deprecated;
     
     /**
@@ -118,15 +120,35 @@ public final class NewProperty {
     public NewProperty(final String name, final Class<?> rawType, final Type[] typeArguments, final String title, final String desc, 
             final Annotation... annotations) 
     {
+        this.deprecated = false;
         this.name = name;
         this.type = rawType;
         if (typeArguments.length > 0) this.typeArguments.addAll(Arrays.asList(typeArguments));
         this.changeSignature = false;
         this.title = title;
         this.desc = desc;
-        this.annotations.addAll(Arrays.asList(annotations));
-        addAnnotation(DEFAULT_IS_PROPERTY_ANNOTATION); // add in case it wasn't provided
-        this.deprecated = false;
+
+        // is @IsProperty provided? 
+        final Annotation atIsProp = Arrays.stream(annotations)
+                .filter(annot -> annot.annotationType() == IsProperty.class)
+                .findAny().orElse(null);
+        if (atIsProp != null) {
+            this.annotations.addAll(Arrays.stream(annotations)
+                    .filter(annot -> annot.annotationType() != IsProperty.class)
+                    .toList());
+            this.atIsProperty = (IsProperty) atIsProp;
+        }
+        else {
+            this.annotations.addAll(Arrays.asList(annotations));
+
+            // determine value() argument
+            final IsPropertyAnnotation isPropAnnot = new IsPropertyAnnotation();
+            final Class<?> value = determineIsPropertyValue();
+            if (value != null) {
+                isPropAnnot.value(value);
+            }
+            this.atIsProperty = isPropAnnot.newInstance();
+        }
     }
 
     /**
@@ -190,7 +212,10 @@ public final class NewProperty {
      * @return
      */
     public Annotation getAnnotationByType(final Class<? extends Annotation> annotationType) {
-        return annotations.stream().filter(annot -> annot.annotationType() == annotationType).findAny().orElse(null);
+        if (annotationType == IsProperty.class) return atIsProperty;
+        else {
+            return getAnnotations().stream().filter(annot -> annot.annotationType() == annotationType).findAny().orElse(null);
+        }
     }
 
     /**
@@ -200,9 +225,15 @@ public final class NewProperty {
      * @return
      */
     public NewProperty addAnnotation(final Annotation annotation) {
-        if (!containsAnnotationDescriptorFor(annotation.annotationType())) {
+        final Class<? extends Annotation> type = annotation.annotationType();
+
+        if (type == IsProperty.class && this.atIsProperty == null) {
+            this.atIsProperty = (IsProperty) annotation;
+        }
+        else if (!containsAnnotationDescriptorFor(type)) {
             annotations.add(annotation);
         }
+
         return this;
     }
     
@@ -251,24 +282,20 @@ public final class NewProperty {
     public Type genericType() {
         if (type == null) return null;
 
-        final List<Type> typeArgs;
+        final Type[] typeArgs;
         // prioritize the actual type arguments
         if (hasTypeArguments()) {
-            typeArgs = typeArguments;
+            typeArgs = typeArguments.toArray(Type[]::new);
         }
         // special case? look at the value of @IsProperty
         else if (isCollectional() || isPropertyDescriptor()) {
-            final IsProperty adIsProperty = (IsProperty) getAnnotationByType(IsProperty.class);
-            final Class<?> value = adIsProperty == null ? null : adIsProperty.value();
-            typeArgs = (value == null || value.equals(Void.class)) ? null : List.of(adIsProperty.value());
+            final Class<?> value = atIsProperty.value();
+            typeArgs = (value == Void.class) ? null : new Type[] {value};
         }
-        else {
-            typeArgs = null;
-        }
-        // found any type arguments?
-        genericType = typeArgs == null ? type : newParameterizedType(type, typeArgs.toArray(Type[]::new));
+        else typeArgs = null;
 
-        return genericType;
+        // found any type arguments?
+        return typeArgs == null ? type : newParameterizedType(type, typeArgs);
     }
     
     /**
@@ -332,8 +359,15 @@ public final class NewProperty {
         return setTypeArguments(Arrays.asList(typeArguments));
     }
 
+    /**
+     * Returns all annotations present on this property. The returned list is unmodifiable.
+     * @return
+     */
     public List<Annotation> getAnnotations() {
-        return annotations;
+        final List<Annotation> all = new ArrayList<>(annotations);
+        all.add(atIsProperty);
+
+        return Collections.unmodifiableList(all);
     }
 
     public NewProperty setAnnotations(final List<Annotation> annotations) {
@@ -380,6 +414,17 @@ public final class NewProperty {
     }
     
     /**
+     * Sets the value of this property to <code>value</code>. No validation is performed by this class. 
+     * It is up to the caller to make sure that the type of this property is compatible with its value.
+     * @param value
+     * @return
+     */
+    public NewProperty setValue(final Object value) {
+        this.value = value;
+        return this;
+    }
+    
+    /**
      * Returns a newly created copy of this instance. However, the annotation instances are not copied, which means that you shouldn't modify them.
      * @return
      */
@@ -407,6 +452,7 @@ public final class NewProperty {
             strBuilder.append(annotations.stream().map(Annotation::toString).collect(Collectors.joining(" ")));
             strBuilder.append(' ');
         }
+
         return strBuilder.append(String.format("%s %s", genericTypeAsDeclared().getTypeName(), name)).toString();
     }
     
@@ -424,48 +470,45 @@ public final class NewProperty {
                 .map(Annotation::toString)
                 .collect(Collectors.joining(" ")));
         if (!strBuilder.isEmpty()) strBuilder.append(' ');
+
         return strBuilder.append(String.format("%s %s", genericTypeAsDeclared().getTypeName(), name)).toString();
     }
 
     private void updateIsProperty() {
         final Class<?> newValue = determineIsPropertyValue();
-        if (newValue == null) return;
-
-        // copy IsProperty and replace its value(), retain all other annotations
-        // TODO create a separate accessor for @IsProperty for better performance
-        setAnnotations(annotations.stream().map(annot -> {
-            if (annot.annotationType().equals(IsProperty.class)) {
-                return IsPropertyAnnotation.from((IsProperty) annot).value(newValue).newInstance();
-            }
-            return annot;
-        }).toList());
+        atIsProperty = IsPropertyAnnotation.from(atIsProperty).value(newValue).newInstance();
     }
 
+    /**
+     * Determines the correct value for {@link IsProperty#value()} based on the raw type of this property.
+     * <ol>
+	 *  <li>{@link Collection} - 1st type argument if exists, otherwise <code>Object.class</code>.</li>
+	 *  <li>{@link PropertyDescriptor} - 1st type argument if exists, otherwise throws a runtime exception.</li>
+	 *  <li>Other - current <code>value()</code> if {@link IsProperty} is present, otherwise <code>null</code>.</li>
+	 * </ol>
+	 * 
+     * @return best match for {@link IsProperty#value()} or <code>null</code> if <code>atIsProperty == null</code>.
+     */
     private Class<?> determineIsPropertyValue() {
         if (isCollectional()) {
-            // collectional property and empty type arguments -> set IsProperty.value() to Object
-            if (typeArguments == null || typeArguments.isEmpty()) {
-                return Object.class;
-            }
-            else {
+            if (hasTypeArguments()) {
                 return PropertyTypeDeterminator.classFrom(typeArguments.get(0));
             }
+            // collectional property and empty type arguments -> set IsProperty.value() to Object
+            else return Object.class;
         }
         else if (isPropertyDescriptor()) {
             // property descriptor MUST BE parameterized
-            if (typeArguments == null || typeArguments.isEmpty()) {
-                throw new NewPropertyException("PropertyDescriptor must be parameterized, got empty type arguments instead.");
-            }
-            else {
+            if (hasTypeArguments()) {
                 return PropertyTypeDeterminator.classFrom(typeArguments.get(0));
             }
+            else throw new NewPropertyException("PropertyDescriptor must be parameterized, got empty type arguments instead.");
         }
-        else {
-            final Annotation isProperty = getAnnotationByType(IsProperty.class);
-            if (isProperty == null) return null;
-
-            return ((IsProperty) isProperty).value();
+        // for other types - leave unchanged
+        else if (atIsProperty != null) {
+            return this.atIsProperty.value();
         }
+        else return null;
     }
     
     /**
