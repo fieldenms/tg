@@ -14,6 +14,8 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
+import ua.com.fielden.platform.web.sse.IEmitterManager;
+import ua.com.fielden.platform.web.sse.IEventSourceManager;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
@@ -89,6 +91,20 @@ public interface IWebUiConfig extends IMenuRetriever {
     String genWebUiPreferences();
 
     /**
+     * Returns the instance of {@link IEmitterManager} that will is created for this web application to manage registered clients.
+     *
+     * @return
+     */
+    IEmitterManager getEmitterManager();
+
+    /**
+     * Returns instance of {@link IEventSourceManager} to manage all resource which send data to clients via SSE.
+     *
+     * @return
+     */
+    IEventSourceManager getEventSourceManager();
+
+    /**
      * Returns the map of entity masters for this web application.
      *
      * @return
@@ -126,7 +142,7 @@ public interface IWebUiConfig extends IMenuRetriever {
 
     /**
      * Determines whether the centre, represented by {@code miType}, is embedded.
-     * 
+     *
      * @param miType
      * @return
      */
@@ -151,7 +167,7 @@ public interface IWebUiConfig extends IMenuRetriever {
      * @return
      */
     Workflows workflow();
-    
+
     /**
      * Loads checksum for resource if available. Otherwise, returns empty {@link Optional}.
      * <p>
@@ -159,25 +175,24 @@ public interface IWebUiConfig extends IMenuRetriever {
      * Client-side Service Worker script intercepts requests to get checksum first to compare whether resource has changed.
      * If that is true then full resource will be re-downloaded and re-cached on the client side.
      * Otherwise the cached resource will be used straight away.
-     * 
+     *
      * @param resourceURI
      * @return
      */
     Optional<String> checksum(final String resourceURI);
-    
+
     /**
      * Returns true if server and client applications operate in the same time-zone, otherwise false.
      * The only exception is handling of 'now': it calculates based on real user time-zone (and later converts to server time-zone).
-     * 
+     *
      * @return
      */
     boolean independentTimeZone();
-    
+
     /**
      * A set of domain-specific actions for centre configurations sharing.
-     * 
+     *
      * @return
      */
     List<EntityActionConfig> centreConfigShareActions();
-    
 }

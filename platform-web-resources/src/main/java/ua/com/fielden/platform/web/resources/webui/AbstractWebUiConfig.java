@@ -57,6 +57,9 @@ import ua.com.fielden.platform.web.ioc.exceptions.MissingWebResourceException;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
 import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
+import ua.com.fielden.platform.web.sse.CompoundEmitter;
+import ua.com.fielden.platform.web.sse.IEmitterManager;
+import ua.com.fielden.platform.web.sse.IEventSourceManager;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
@@ -73,6 +76,8 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private final String title;
     private WebUiBuilder webUiBuilder;
     private Injector injector;
+
+    private final CompoundEmitter compoundEmitter;
 
     protected MainMenuBuilder desktopMainMenuConfig;
     protected MainMenuBuilder mobileMainMenuConfig;
@@ -102,6 +107,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         this.title = title;
         this.independentTimeZone = independentTimeZone;
         this.webUiBuilder = new WebUiBuilder(this);
+        this.compoundEmitter = new CompoundEmitter();
         this.desktopMainMenuConfig = new MainMenuBuilder(this);
         this.mobileMainMenuConfig = new MainMenuBuilder(this);
 
@@ -209,6 +215,16 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
             return indexSource.replace("@startupResources", "startup-resources-vulcanized");
         }
 
+    }
+
+    @Override
+    public IEmitterManager getEmitterManager() {
+        return compoundEmitter;
+    }
+
+    @Override
+    public IEventSourceManager getEventSourceManager() {
+        return compoundEmitter;
     }
 
     private static boolean isDevelopmentWorkflow(final Workflows workflow) {

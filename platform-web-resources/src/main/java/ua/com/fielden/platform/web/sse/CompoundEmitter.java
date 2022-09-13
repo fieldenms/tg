@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.web.sse;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 import com.google.common.collect.BiMap;
 import com.google.common.collect.HashBiMap;
@@ -8,54 +11,81 @@ import com.google.common.collect.Maps;
 
 public class CompoundEmitter implements IEmitter, IEmitterManager, IEventSourceManager {
 
-    BiMap<String, IEmitter> emitters = Maps.synchronizedBiMap(HashBiMap.create());
+    private BiMap<String, IEmitter> emitters = Maps.synchronizedBiMap(HashBiMap.create());
+
+    private List<IEventSource> eventSources = Collections.synchronizedList(new ArrayList<>());
 
     @Override
     public IEventSourceManager registerEventSource(final IEventSource eventSource) {
-        // TODO Auto-generated method stub
-        return null;
+        eventSources.add(eventSource);
+        return this;
     }
 
     @Override
     public IEmitterManager registerEmitter(final String uid, final IEmitter emitter) {
-        // TODO Auto-generated method stub
-        return null;
+        emitters.put(uid, emitter);
+        return this;
     }
 
     @Override
     public IEmitter getEmitter(final String uid) {
-        // TODO Auto-generated method stub
-        return null;
+        return emitters.get(uid);
     }
 
     @Override
     public boolean closeEmitter(final String uid) {
-        // TODO Auto-generated method stub
+        if (emitters.containsKey(uid)) {
+            emitters.get(uid).close();
+            emitters.remove(uid);
+            return true;
+        }
         return false;
     }
 
     @Override
-    public void event(final String name, final String data) throws IOException {
-        // TODO Auto-generated method stub
-
+    public void event(final String name, final String data){
+        synchronized(this) {
+            emitters.forEach((uid, emitter) -> {
+                try {
+                    emitter.event(name, data);
+                } catch (final IOException e) {
+                    closeEmitter(uid);
+                }
+            });
+        }
     }
 
     @Override
     public void data(final String data) throws IOException {
-        // TODO Auto-generated method stub
-
+        synchronized(this) {
+            emitters.forEach((uid, emitter) -> {
+                try {
+                    emitter.data(data);
+                } catch (final IOException e) {
+                    closeEmitter(uid);
+                }
+            });
+        }
     }
 
     @Override
     public void comment(final String comment) throws IOException {
-        // TODO Auto-generated method stub
-
+        synchronized(this) {
+            emitters.forEach((uid, emitter) -> {
+                try {
+                    emitter.comment(comment);
+                } catch (final IOException e) {
+                    closeEmitter(uid);
+                }
+            });
+        }
     }
 
     @Override
     public void close() {
-        // TODO Auto-generated method stub
-
+        synchronized(this) {
+            emitters.forEach((uid, emitter) -> closeEmitter(uid));
+        }
     }
 
 }
