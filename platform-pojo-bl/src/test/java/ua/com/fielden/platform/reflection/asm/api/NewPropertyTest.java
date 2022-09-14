@@ -32,7 +32,10 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.reflection.asm.exceptions.NewPropertyException;
 import ua.com.fielden.platform.reflection.asm.impl.entities.EntityWithCollectionalPropety;
+import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 
 /**
@@ -174,5 +177,58 @@ public class NewPropertyTest {
         assertNull(atGenerated);
     }
     
+    @Test
+    public void initialization_value_can_be_provided() {
+        final NewProperty<Double> np = NewProperty.create("prop", Double.class, "title", "desc").setValue(Double.valueOf(125));
+        final Object value = np.getValue();
+        assertTrue("Property's value should have been initialized.", np.isInitialized());
+        assertNotNull("Property's value should have been initialized.", value);
+        assertEquals("Incorrect type of property init value.", Double.class, value.getClass());
+        assertEquals("Incorrect property init value.", 125d, value);
+        
+        final NewProperty<List> npCollectional = collectionalParameterizedList.copy().setValue(new LinkedList<>(List.of("hello", "world")));
+        final Object list = npCollectional.getValue();
+        assertTrue("Collectional property's value should have been initialized.", npCollectional.isInitialized());
+        assertNotNull("Collectional property's value should have been initialized.", list);
+        assertEquals("Incorrect type of property init value.", LinkedList.class, list.getClass());
+        assertEquals("Incorrect property init value.", List.of("hello", "world"), list);
+    }
+    
+    @Test
+    public void can_be_created_from_Field() {
+        final Field field = Finder.getFieldByName(Entity.class, "firstProperty");
+        final NewProperty<?> np = NewProperty.fromField(field);
+        assertNotNull("Failed to create NewProperty from Field.", np);
+        assertEquals("Incorrect property name.", field.getName(), np.getName());
+        assertEquals("Incorrect declaration of property's generic type.", field.getGenericType(), np.genericTypeAsDeclared());
+    }
 
+    @Test
+    public void can_be_created_from_Field_and_initalized() {
+        final Entity instance = factory.newByKey(Entity.class, "new").setFirstProperty(125);
+        final Field field = Finder.getFieldByName(Entity.class, "firstProperty");
+
+        final NewProperty<?> np;
+        try {
+            np = NewProperty.fromField(field, instance);
+        } catch (NewPropertyException e) {
+            fail("Failed to initialize NewProperty constructed from Field: " + e.getMessage());
+            return;
+        }
+
+        assertNotNull(np);
+        assertEquals(125, np.getValue());
+    }
+
+    @Test
+    public void throws_when_created_from_Field_but_initialization_value_is_incompatible_with_property_type() {
+        final String value = "125"; // initialization value
+        // this field is of type Integer
+        final Field field = Finder.getFieldByName(Entity.class, "firstProperty");
+        assertFalse(field.getType().isInstance(value));
+
+        Assert.assertThrows(NewPropertyException.class, () -> {
+            NewProperty.fromField(field).setValueThrows(value);
+        });
+    }
 }
