@@ -7,6 +7,7 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -133,13 +134,15 @@ public final class NewProperty {
                 .filter(annot -> annot.annotationType() == IsProperty.class)
                 .findAny().orElse(null);
         if (atIsProp != null) {
-            this.annotations.addAll(Arrays.stream(annotations)
-                    .filter(annot -> annot.annotationType() != IsProperty.class)
-                    .toList());
+            // this::addAnnotation is used to avoid the possibility of old code breaking, since it could be providing duplicate annotations
+            Arrays.stream(annotations)
+                .filter(annot -> annot.annotationType() != IsProperty.class)
+                .forEach(this::addAnnotation);
             this.atIsProperty = (IsProperty) atIsProp;
         }
         else {
-            this.annotations.addAll(Arrays.asList(annotations));
+            // this::addAnnotation is used to avoid the possibility of old code breaking, since it could be providing duplicate annotations
+            Arrays.stream(annotations).forEach(this::addAnnotation);
 
             // determine value() argument
             final IsPropertyAnnotation isPropAnnot = new IsPropertyAnnotation();
@@ -219,7 +222,7 @@ public final class NewProperty {
     }
 
     /**
-     * Add the specified annotation to the list of property annotations.
+     * Add the specified annotation to the list of property annotations only if it hasn't been added yet.
      * 
      * @param annotation
      * @return
@@ -227,18 +230,14 @@ public final class NewProperty {
     public NewProperty addAnnotation(final Annotation annotation) {
         final Class<? extends Annotation> type = annotation.annotationType();
 
-        if (type == IsProperty.class && this.atIsProperty == null) {
-            this.atIsProperty = (IsProperty) annotation;
+        if (type == IsProperty.class && atIsProperty == null) {
+            atIsProperty = (IsProperty) annotation;
         }
         else if (!containsAnnotationDescriptorFor(type)) {
             annotations.add(annotation);
         }
 
         return this;
-    }
-    
-    public boolean hasTitle() {
-        return title != null;
     }
     
     public Title titleAnnotation() {
@@ -365,7 +364,9 @@ public final class NewProperty {
      */
     public List<Annotation> getAnnotations() {
         final List<Annotation> all = new ArrayList<>(annotations);
-        all.add(atIsProperty);
+        if (atIsProperty != null) {
+            all.add(atIsProperty);
+        }
 
         return Collections.unmodifiableList(all);
     }
@@ -475,6 +476,7 @@ public final class NewProperty {
     }
 
     private void updateIsProperty() {
+        // this.atIsProperty can't be null at this point, thus newValue also can't be assigned null
         final Class<?> newValue = determineIsPropertyValue();
         atIsProperty = IsPropertyAnnotation.from(atIsProperty).value(newValue).newInstance();
     }
