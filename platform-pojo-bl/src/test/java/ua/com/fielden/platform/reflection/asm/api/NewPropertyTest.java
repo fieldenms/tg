@@ -106,5 +106,25 @@ public class NewPropertyTest {
         assertEquals("The value of @IsProperty should not have been modified.", 
                 previousValue, ((IsProperty) pair.getAnnotationByType(IsProperty.class)).value());
     }
+    
+    @Test
+    public void Title_annotation_is_missing_if_both_title_and_desc_are_null() {
+        final NewProperty npNoTitle = new NewProperty("prop", String.class, null, null);
+        assertFalse(npNoTitle.containsAnnotationDescriptorFor(Title.class));
+        
+        // only title present, desc is null
+        final NewProperty npWithTitle = new NewProperty("prop", String.class, "title", null);
+        final Title atTitle = npWithTitle.getAnnotationByType(Title.class);
+        assertNotNull(atTitle);
+        assertEquals("title", atTitle.value());
+        assertEquals("", atTitle.desc());
+
+        // title is null, only desc present
+        final NewProperty npWithDesc = new NewProperty("prop", String.class, null, "desc");
+        final Title atTitle1 = npWithDesc.getAnnotationByType(Title.class);
+        assertNotNull(atTitle1);
+        assertEquals("", atTitle1.value());
+        assertEquals("desc", atTitle1.desc());
+    }
 
 }

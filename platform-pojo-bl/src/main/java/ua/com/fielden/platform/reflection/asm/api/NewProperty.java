@@ -109,8 +109,9 @@ public final class NewProperty {
     /**
      * Creates a new property representation with a raw type and type arguments.
      * <p>
-     * <i>Note:</i> <code>annotations</code> parameter - {@link Title} <b>should be</b> omitted and later accessed with {@link #titleAnnotation()};
-     *  {@link IsProperty} <b>can be</b> omitted.
+     * If <code>annotations</code> do not contain {@link IsProperty}, then it's added implicitly.
+     * <p>
+     * <i>Note:</i> <code>annotations</code> should not contain {@link Title}.
      * @param name simple name of the property
      * @param rawType rawType of the property
      * @param typeArguments actual typeArguments if any, otherwise pass <code>null</code> or use another constructor
@@ -128,6 +129,10 @@ public final class NewProperty {
         this.changeSignature = false;
         this.title = title;
         this.desc = desc;
+        
+        if (title != null || desc != null) {
+            this.annotations.add(titleAnnotation());
+        }
 
         // is @IsProperty provided? 
         final Annotation atIsProp = Arrays.stream(annotations)
@@ -157,8 +162,9 @@ public final class NewProperty {
     /**
      * Creates a new property representation with a raw type.
      * <p>
-     * <i>Note:</i> <code>annotations</code> parameter - {@link Title} <b>should be</b> omitted and later accessed with {@link #titleAnnotation()};
-     *  {@link IsProperty} <b>can be</b> omitted.
+     * If <code>annotations</code> do not contain {@link IsProperty}, then it's added implicitly.
+     * <p>
+     * <i>Note:</i> <code>annotations</code> should not contain {@link Title}.
      * @param name simple name of the property
      * @param rawType raw type of the property
      * @param title property title as in {@link Title} annotation
@@ -172,10 +178,10 @@ public final class NewProperty {
     /**
      * Creates a new property representation with a parameterized type.
      * <p>
-     * <i>Note:</i> <code>type</code> - the raw type ({@link ParameterizedType#getRawType()}) must be an instance of {@link Class}, otherwise a runtime exception is thrown.
+     * If <code>annotations</code> do not contain {@link IsProperty}, then it's added implicitly.
      * <p>
-     * <i>Note:</i> <code>annotations</code> - {@link Title} <b>should be</b> omitted and later accessed with {@link #titleAnnotation()};
-     *  {@link IsProperty} <b>can be</b> omitted.
+     * <i>Note:</i> <code>annotations</code> should not contain {@link Title}.
+     * 
      * @param name simple name of the property
      * @param type parameterized type of the property
      * @param title property title as in {@link Title} annotation
@@ -240,7 +246,7 @@ public final class NewProperty {
         return this;
     }
     
-    public Title titleAnnotation() {
+    private Title titleAnnotation() {
         return new Title() {
             @Override
             public Class<Title> annotationType() {

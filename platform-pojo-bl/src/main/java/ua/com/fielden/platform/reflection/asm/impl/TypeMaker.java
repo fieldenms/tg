@@ -150,8 +150,8 @@ public class TypeMaker<T> {
                 .annotateField(prop.getAnnotations())
                 // Generated annotation might already be present
                 .annotateField(prop.containsAnnotationDescriptorFor(GENERATED_ANNOTATION.annotationType()) ? 
-                               List.of(prop.titleAnnotation()) :
-                               List.of(prop.titleAnnotation(), GENERATED_ANNOTATION));
+                               List.of() :
+                               List.of(GENERATED_ANNOTATION));
 
         final boolean collectional = prop.isCollectional();
         // try to determine an initializer for a collectional property
