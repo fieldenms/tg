@@ -5,6 +5,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
@@ -106,6 +107,10 @@ public class Entity extends AbstractEntity<String> {
 
     @IsProperty(Entity.class)
     private PropertyDescriptor<Entity> propertyDescriptor;
+    
+    @IsProperty
+    @MapTo
+    private Optional<String> maybeText;
 
     public Integer getFirstProperty() {
         return firstProperty;
@@ -264,9 +269,19 @@ public class Entity extends AbstractEntity<String> {
         return propertyDescriptor;
     }
 
+    public Optional<String> getMaybeText() {
+        return maybeText;
+    }
+
     @Observable
     public void setPropertyDescriptor(final PropertyDescriptor<Entity> propertyDescriptor) {
         this.propertyDescriptor = propertyDescriptor;
+    }
+
+    @Observable
+    public Entity setMaybeText(final Optional<String> maybeText) {
+        this.maybeText = maybeText;
+        return this;
     }
 
     public ClassWithMap getClassWithMapProp() {
