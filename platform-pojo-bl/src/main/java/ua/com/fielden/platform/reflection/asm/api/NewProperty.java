@@ -145,6 +145,25 @@ public final class NewProperty<T> {
         addAnnotation(DEFAULT_IS_PROPERTY_ANNOTATION); // add in case it wasn't provided
         this.deprecated = true;
     }
+
+    /**
+     * Creates a new property representation with a raw type and type arguments.
+     * <p>
+     * If <code>annotations</code> do not contain {@link IsProperty}, then it's added implicitly.
+     * <p>
+     * <i>Note:</i> <code>annotations</code> should not contain {@link Title}.
+     * @param name simple name of the property
+     * @param rawType rawType of the property
+     * @param typeArguments actual typeArguments if any, otherwise pass <code>null</code> or use another constructor
+     * @param title property title as in {@link Title} annotation
+     * @param desc property description as in {@link Title} annotation
+     * @param annotations annotations directly present on this property (see note)
+     */
+    public static <T> NewProperty<T> create(final String name, final Class<T> rawType, final Type[] typeArguments, final String title,
+            final String desc, final Annotation... annotations) 
+    {
+        return new NewProperty<T>(name, rawType, typeArguments, title, desc, annotations);
+    }
     
     /**
      * Creates a new property representation with a raw type and type arguments.
@@ -211,9 +230,28 @@ public final class NewProperty<T> {
      * @param desc property description as in {@link Title} annotation
      * @param annotations annotations directly present on this property (see note)
      */
+    public static <T> NewProperty<T> create(final String name, final Class<T> rawType, final String title, final String desc, 
+            final Annotation... annotations) 
+    {
+        return new NewProperty<T>(name, rawType, new Type[0], title, desc, annotations);
+    }
+
+    /**
+     * Creates a new property representation with a raw type.
+     * <p>
+     * If <code>annotations</code> do not contain {@link IsProperty}, then it's added implicitly.
+     * <p>
+     * <i>Note:</i> <code>annotations</code> should not contain {@link Title}.
+     * @param name simple name of the property
+     * @param rawType raw type of the property
+     * @param title property title as in {@link Title} annotation
+     * @param desc property description as in {@link Title} annotation
+     * @param annotations annotations directly present on this property (see note)
+     */
     public NewProperty(final String name, final Class<T> rawType, final String title, final String desc, final Annotation... annotations) {
         this(name, rawType, new Type[0], title, desc, annotations);
     }
+
 
     /**
      * Creates a new property representation with a parameterized type.
@@ -228,9 +266,13 @@ public final class NewProperty<T> {
      * @param desc property description as in {@link Title} annotation
      * @param annotations annotations directly present on this property (see note)
      */
-    public NewProperty(final String name, final ParameterizedType type, final String title, final String desc, final Annotation... annotations) {
-        this(name, PropertyTypeDeterminator.classFrom(type.getRawType()), type.getActualTypeArguments(), title, desc, annotations);
+    public static NewProperty<?> create(final String name, final ParameterizedType type, final String title, final String desc,
+            final Annotation... annotations) 
+    {
+        return new NewProperty<>(name, PropertyTypeDeterminator.classFrom(type.getRawType()), type.getActualTypeArguments(), title, desc,
+                annotations);
     }
+
     
     public boolean hasTypeArguments() {
         return typeArguments != null && !typeArguments.isEmpty();
@@ -399,6 +441,17 @@ public final class NewProperty<T> {
      */
     public NewProperty<T> setTypeArguments(final Type... typeArguments) {
         return setTypeArguments(Arrays.asList(typeArguments));
+    }
+    
+    public NewProperty<T> addTypeArguments(final List<Type> typeArguments) {
+        for (final Type typeArg: typeArguments) {
+            this.typeArguments.add(typeArg);
+        }
+        return this;
+    }
+
+    public NewProperty<T> addTypeArguments(final Type... typeArguments) {
+        return addTypeArguments(Arrays.asList(typeArguments));
     }
 
     /**
