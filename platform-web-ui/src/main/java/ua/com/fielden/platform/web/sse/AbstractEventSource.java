@@ -49,15 +49,9 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
      */
     private final ISerialiser serialiser;
 
-    /**
-     * Observable class needed to augment data with additional property to propagate event on client.
-     */
-    private final String observableClassName;
-
     private final Logger logger = Logger.getLogger(this.getClass());
 
     protected AbstractEventSource(final OK observableKind, final ISerialiser serialiser) {
-        this.observableClassName = observableKind.getClass().getName();
         this.stream = observableKind.asObservable();
         if (stream == null) {
             throw new IllegalArgumentException("Event stream is required.");
@@ -142,7 +136,7 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
         public void onNext(final T value) {
             try {
                 final Map<String, Object> data = eventToData(value);
-                data.put("observableClass", observableClassName);
+                data.put("eventSourceClass", this.getClass().getName());
                 final byte [] serialisedData = serialiser.serialise(data);
                 emitter.data(new String(serialisedData, StandardCharsets.UTF_8));
             } catch (final IOException ex) {

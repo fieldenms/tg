@@ -1,23 +1,21 @@
 package ua.com.fielden.platform.web.sse;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.List;
-
-import com.google.common.collect.BiMap;
-import com.google.common.collect.HashBiMap;
-import com.google.common.collect.Maps;
+import java.util.HashMap;
+import java.util.Map;
 
 public class CompoundEmitter implements IEmitter, IEmitterManager, IEventSourceManager {
 
-    private BiMap<String, IEmitter> emitters = Maps.synchronizedBiMap(HashBiMap.create());
+    private Map<String, IEmitter> emitters = Collections.synchronizedMap(new HashMap<>());
 
-    private List<IEventSource> eventSources = Collections.synchronizedList(new ArrayList<>());
+    private Map<Class<? extends IEventSource>, IEventSource> eventSources = Collections.synchronizedMap(new HashMap<>());
 
     @Override
     public IEventSourceManager registerEventSource(final IEventSource eventSource) {
-        eventSources.add(eventSource);
+        if (!eventSources.containsKey(eventSource.getClass())) {
+            eventSources.put(eventSource.getClass(), eventSource);
+        }
         return this;
     }
 
@@ -43,7 +41,7 @@ public class CompoundEmitter implements IEmitter, IEmitterManager, IEventSourceM
     }
 
     @Override
-    public void event(final String name, final String data){
+    public void event(final String name, final String data) {
         synchronized(this) {
             emitters.forEach((uid, emitter) -> {
                 try {

@@ -28,17 +28,17 @@ public class EntityCentreView extends AbstractView {
     private String uri;
 
     @IsProperty
-    @Title(value = "Class of observer", desc = "SSE observer class")
-    private String observableClass;
+    @Title(value = "Event Source Class", desc = "SSE event source")
+    private String eventSourceClass;
 
     @Observable
-    public EntityCentreView setObservableClass(final String observableClass) {
-        this.observableClass = observableClass;
+    public EntityCentreView setEventSourceClass(final String eventSourceClass) {
+        this.eventSourceClass = eventSourceClass;
         return this;
     }
 
-    public String getObservableClass() {
-        return observableClass;
+    public String getEventSourceClass() {
+        return eventSourceClass;
     }
 
     @Observable

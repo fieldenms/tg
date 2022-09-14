@@ -59,7 +59,7 @@ import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
 import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
 import ua.com.fielden.platform.web.sse.CompoundEmitter;
 import ua.com.fielden.platform.web.sse.IEmitterManager;
-import ua.com.fielden.platform.web.sse.IEventSourceManager;
+import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
@@ -223,8 +223,11 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
 
     @Override
-    public IEventSourceManager getEventSourceManager() {
-        return compoundEmitter;
+    public IWebUiConfig registerEventSource(final Class<? extends IEventSource> eventSourceClass) {
+        final IEventSource eventSource = injector.getInstance(eventSourceClass);
+        eventSource.onOpen(compoundEmitter);
+        compoundEmitter.registerEventSource(eventSource);
+        return this;
     }
 
     private static boolean isDevelopmentWorkflow(final Workflows workflow) {

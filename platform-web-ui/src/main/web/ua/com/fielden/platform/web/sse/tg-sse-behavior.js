@@ -42,7 +42,7 @@ const registerEventSourceHandlers = function (sourceObj) {
 
         postal.publish({
             channel: "sse-event",
-            topic: `${sourceObj.uri}${data.observableClass ? "/" + data.observableClass : ""}/message`,
+            topic: `${sourceObj.uri}${data.eventSourceClass ? "/" + data.eventSourceClass : ""}/message`,
             data: {
                 msg: data
             }
@@ -120,7 +120,7 @@ export const TgSseBehavior = {
             observer: '_uriChanged'
         },
 
-        observableClass: {
+        eventSourceClass: {
             type: String
         },
 
@@ -191,7 +191,7 @@ export const TgSseBehavior = {
 
         this._messageSubscription = postal.subscribe({
             channel: "sse-event",
-            topic: `${this.uri}${this.observableClass ? "/" + this.observableClass : ""}/message`,
+            topic: `${this.uri}${this.eventSourceClass ? "/" + this.eventSourceClass : ""}/message`,
             callback: (data, envelope) => {
                 const msg = data.msg;
                 if (this.useTimerBasedScheduling) {

@@ -67,10 +67,7 @@ public class WebView implements IExecutable {
                 if (entityCentre.shouldEnforcePostSaveRefresh()) {
                     attrs.append("enforcePostSaveRefresh: true,");
                 }
-                if (entityCentre.eventSourceUri().isPresent()) {
-                	attrs.append(format("uri: \"%s\",", entityCentre.eventSourceUri().get()));
-                }
-                attrs.append(format("observableClass: \"%s\",", entityCentre.observableClass().orElse("")));
+                attrs.append(format("eventSourceClass: \"%s\",", entityCentre.eventSourceClass().map(clazz -> clazz.getName()).orElse("")));
                 attrs.append("}");
             } else {
                 attrs.append("{}");
@@ -115,10 +112,7 @@ public class WebView implements IExecutable {
                 if (entityCentre.shouldEnforcePostSaveRefresh()) {
                     entityCentreView.setEnforcePostSaveRefresh(true);
                 }
-                if (entityCentre.eventSourceUri().isPresent()) {
-                    entityCentreView.setUri(entityCentre.eventSourceUri().get());
-                }
-                entityCentreView.setObservableClass(entityCentre.observableClass().orElse(""));
+                entityCentreView.setEventSourceClass(entityCentre.eventSourceClass().map(clazz -> clazz.getName()).orElse(""));
                 view.setAttrs(entityCentreView);
             } else {
                 view.setAttrs(new CustomView());
