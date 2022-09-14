@@ -122,7 +122,7 @@ public class TypeMaker<T> {
      * @param properties
      * @return
      */
-    public TypeMaker<T> addProperties(final NewProperty... properties) {
+    public TypeMaker<T> addProperties(final NewProperty<?>... properties) {
         if (builder == null) {
             throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
         }
@@ -143,7 +143,7 @@ public class TypeMaker<T> {
         return this;
     }
 
-    private void addProperty(final NewProperty prop) {
+    private void addProperty(final NewProperty<?> prop) {
         final Type genericType = prop.genericType();
         builder = builder.defineField(prop.getName(), genericType, Visibility.PRIVATE)
                 // annotations
@@ -337,7 +337,7 @@ public class TypeMaker<T> {
      * @param propertyReplacements
      * @return
      */
-    public TypeMaker<T> modifyProperties(final NewProperty... propertyReplacements) {
+    public TypeMaker<T> modifyProperties(final NewProperty<?>... propertyReplacements) {
         if (builder == null) {
             throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
         }
@@ -347,28 +347,21 @@ public class TypeMaker<T> {
         }
 
         StreamUtils.distinct(Arrays.stream(propertyReplacements), prop -> prop.getName()) // distinguish properties by name
-            .map(prop -> prop.deprecated ? modifyProperty(prop) : prop)
+            .map(prop -> prop.deprecated ? undeprecateProperty(prop) : prop)
             .forEach(this::addProperty);
 
         return this;
     }
 
-    private NewProperty modifyProperty(final NewProperty property) {
+    private NewProperty<?> undeprecateProperty(final NewProperty<?> property) {
         // operates on deprecated NewProperty; only name and raw type information
         final Field origField = Finder.findFieldByName(origType, property.getName());
 
         if (property.changeSignature) {
             // NewProperty.type represents a type argument
-            return NewProperty.fromField(origField).setType(new ParameterizedType() {
-                @Override
-                public Type[] getActualTypeArguments() { return new Type[] { property.getRawType() }; }
-                @Override
-                public Type getRawType() { return origField.getType(); }
-                @Override
-                public Type getOwnerType() { return origField.getType().getDeclaringClass(); }
-            });
+            return NewProperty.fromField(origField).setTypeArguments(property.getRawType());
         }
-        return NewProperty.fromField(origField).setRawType(property.getRawType());
+        return NewProperty.fromField(origField).changeType(property.getRawType());
     }
 
     /**

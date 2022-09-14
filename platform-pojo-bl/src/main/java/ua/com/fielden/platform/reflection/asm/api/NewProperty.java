@@ -26,15 +26,18 @@ import ua.com.fielden.platform.reflection.asm.exceptions.NewPropertyRuntimeExcep
 /**
  * A convenient abstraction for representing data needed for dynamic construction of properties.
  * 
- * @author TG Team
+ * @param <T> The raw type of this property. This type parameter provides a compile-time safe way to initialize property's value using
+ * {@link #setValue(Object)}. If the type is unknown and <code>NewProperty&lt?&gt</code> is being used, then 
+ * {@link #setValueThrows(Object)} can be used to initialize its value. 
  * 
+ * @author TG Team
  */
-public final class NewProperty {
+public final class NewProperty<T> {
     public static final IsProperty DEFAULT_IS_PROPERTY_ANNOTATION = new IsPropertyAnnotation().newInstance();
 
     // TODO make fields private
     public String name;
-    public Class<?> type; // TODO rename to rawType
+    public Class<T> type; // TODO rename to rawType
     private List<Type> typeArguments = new ArrayList<Type>();
     @Deprecated public final boolean changeSignature; // TODO remove
     public String title;
@@ -44,15 +47,19 @@ public final class NewProperty {
     public final List<Annotation> annotations = new ArrayList<Annotation>();
     // IsProperty annotation requires frequent access; is never null
     private IsProperty atIsProperty;
+    private T value; // property's initalized value
+    private boolean isInitialized = false;
     public final boolean deprecated;
     
     /**
-     * Constructs a property from the given <code>field</code>.
+     * Constructs a property from the given <code>field</code>. To also initialize its value use {@link #fromField(Field, Object)} instead. 
+     * To initialize the value explicitly use {@link #setValueThrows(Object)}.
      * @param field
      * @return
      */
-    public static NewProperty fromField(final Field field) {
+    public static NewProperty<?> fromField(final Field field) {
         final Title titleAnnot = field.getDeclaredAnnotation(Title.class);
+        // TODO simply pass Title along with other annotations
         final String title = titleAnnot == null ? null : titleAnnot.value();
         final String desc = titleAnnot == null ? null : titleAnnot.desc();
         // exclude Title annotation from the list of declared annotations
@@ -64,20 +71,52 @@ public final class NewProperty {
         final Type genericType = field.getGenericType();
         // explicit check is needed to be able to store the information about type arguments
         if (ParameterizedType.class.isInstance(genericType)) {
-            return new NewProperty(field.getName(), (ParameterizedType) genericType, title, desc, restAnnotations);
+            final ParameterizedType parType = (ParameterizedType) genericType;
+            return new NewProperty<>(field.getName(), PropertyTypeDeterminator.classFrom(parType.getRawType()),
+                    parType.getActualTypeArguments(), title, desc, restAnnotations);
         }
         // only raw type information is available
-        return new NewProperty(field.getName(), PropertyTypeDeterminator.classFrom(genericType), title, desc, restAnnotations);
+        return new NewProperty<>(field.getName(), PropertyTypeDeterminator.classFrom(genericType), title, desc, restAnnotations);
+    }
+
+    /**
+     * Constructs a property from the given <code>field</code> and initializes its value by retrieving the value of 
+     * <code>field</code> from <code>object</code>.
+     * @param field
+     * @param object
+     * @throws NewPropertyException if the property value couldn't be initialized
+     * @return
+     */
+    public static NewProperty<?> fromField(final Field field, final Object object) throws NewPropertyException {
+        final NewProperty<?> np = fromField(field);
+        final Object fieldValue = Finder.getFieldValue(field, object);
+
+        return np.setValueThrows(fieldValue);
     }
 
     /**
      * Constructs a property from a field with <code>name</code> found in <code>type</code>'s hierarchy.
+     * To also initialize its value use {@link #fromField(Field, Object)} instead.
+     * To initialize the value explicitly use {@link #setValueThrows(Object)}.
      * @param type
      * @param name
      * @return
      */
-    public static NewProperty fromField(final Class<?> type, final String name) {
+    public static NewProperty<?> fromField(final Class<?> type, final String name) {
         return NewProperty.fromField(Finder.getFieldByName(type, name));
+    }
+
+    /**
+     * Constructs a property from a field with <code>name</code> found in <code>type</code>'s hierarchy.
+     * Initializes its value by retrieving the value of the found field from <code>object</code>.
+     * @param type
+     * @param name
+     * @param object
+     * @throws NewPropertyException if the property value couldn't be initialized
+     * @return
+     */
+    public static NewProperty<?> fromField(final Class<?> type, final String name, final Object object) throws NewPropertyException {
+        return NewProperty.fromField(Finder.getFieldByName(type, name), object);
     }
 
     // TODO remove
@@ -94,7 +133,7 @@ public final class NewProperty {
 
     // TODO obsolete constructor
     @Deprecated
-    public NewProperty(final String name, final Class<?> type, final boolean changeSignature, final String title, final String desc, 
+    public NewProperty(final String name, final Class<T> type, final boolean changeSignature, final String title, final String desc, 
             final Annotation... annotations) 
     {
         this.name = name;
@@ -120,7 +159,7 @@ public final class NewProperty {
      * @param desc property description as in {@link Title} annotation
      * @param annotations annotations directly present on this property (see note)
      */
-    public NewProperty(final String name, final Class<?> rawType, final Type[] typeArguments, final String title, final String desc, 
+    public NewProperty(final String name, final Class<T> rawType, final Type[] typeArguments, final String title, final String desc, 
             final Annotation... annotations) 
     {
         this.deprecated = false;
@@ -172,7 +211,7 @@ public final class NewProperty {
      * @param desc property description as in {@link Title} annotation
      * @param annotations annotations directly present on this property (see note)
      */
-    public NewProperty(final String name, final Class<?> rawType, final String title, final String desc, final Annotation... annotations) {
+    public NewProperty(final String name, final Class<T> rawType, final String title, final String desc, final Annotation... annotations) {
         this(name, rawType, new Type[0], title, desc, annotations);
     }
 
@@ -236,7 +275,7 @@ public final class NewProperty {
      * @param annotation
      * @return
      */
-    public NewProperty addAnnotation(final Annotation annotation) {
+    public NewProperty<T> addAnnotation(final Annotation annotation) {
         final Class<? extends Annotation> type = annotation.annotationType();
 
         if (type == IsProperty.class && atIsProperty == null) {
@@ -324,18 +363,13 @@ public final class NewProperty {
         return name;
     }
     
-    public NewProperty setName(final String name) {
+    public NewProperty<T> setName(final String name) {
         this.name = name;
         return this;
     }
 
-    public Class<?> getRawType() {
+    public Class<T> getRawType() {
         return type;
-    }
-
-    public NewProperty setRawType(final Class<?> rawType) {
-        this.type = rawType;
-        return this;
     }
 
     public List<Type> getTypeArguments() {
@@ -351,7 +385,7 @@ public final class NewProperty {
      * <p>
      * For other types, {@link IsProperty#value()} is unchanged.
      */
-    public NewProperty setTypeArguments(final List<Type> typeArguments) {
+    public NewProperty<T> setTypeArguments(final List<Type> typeArguments) {
         this.typeArguments.clear();
         this.typeArguments.addAll(typeArguments);
         updateIsProperty();
@@ -363,7 +397,7 @@ public final class NewProperty {
      * <p>
      * Might also update {@link IsProperty} - see {@link #setTypeArguments(List)}.
      */
-    public NewProperty setTypeArguments(final Type... typeArguments) {
+    public NewProperty<T> setTypeArguments(final Type... typeArguments) {
         return setTypeArguments(Arrays.asList(typeArguments));
     }
 
@@ -380,13 +414,13 @@ public final class NewProperty {
         return Collections.unmodifiableList(all);
     }
 
-    public NewProperty setAnnotations(final List<Annotation> annotations) {
+    public NewProperty<T> setAnnotations(final List<Annotation> annotations) {
         this.annotations.clear();
         annotations.forEach(this::addAnnotation);
         return this;
     }
 
-    public NewProperty setAnnotations(final Annotation... annotations) {
+    public NewProperty<T> setAnnotations(final Annotation... annotations) {
         return setAnnotations(Arrays.asList(annotations));
     }
 
@@ -398,9 +432,6 @@ public final class NewProperty {
      * @param typeArguments
      * @return
      */
-    public NewProperty setType(final Class<?> rawType, final Type[] typeArguments) {
-        return setType(newParameterizedType(rawType, typeArguments));
-    }
 
     /**
      * Modifies this instance by changing its raw type and type arguments that are derived from <code>type</code>.
@@ -413,25 +444,43 @@ public final class NewProperty {
      * @param type
      * @return
      */
-    public NewProperty setType(final ParameterizedType type) {
-        typeArguments = Arrays.asList(type.getActualTypeArguments());
-        // determine new raw type
-        this.type = PropertyTypeDeterminator.classFrom(type.getRawType());
-        // update @IsProperty
-        updateIsProperty();
-
+    
+    public boolean isInitialized() {
+        return this.isInitialized;
+    }
+    
+    public T getValue() {
+        return value;
+    }
+    
+    /**
+     * Sets the initialization value of this property to <code>value</code>.
+     * @param value
+     * @return this modified instance
+     */
+    public NewProperty<T> setValue(final T value) {
+        this.value = value;
+        this.isInitialized = true;
         return this;
     }
     
     /**
-     * Sets the value of this property to <code>value</code>. No validation is performed by this class. 
-     * It is up to the caller to make sure that the type of this property is compatible with its value.
+     * Sets the initialization value of this property to <code>value</code>. 
+     * <p>
+     * If <code>value</code> is not assignment-compatible with this property's type, then an exception is thrown.
      * @param value
-     * @return
+     * @return this modified instance
+     * @throws NewPropertyException
      */
-    public NewProperty setValue(final Object value) {
-        this.value = value;
-        return this;
+    @SuppressWarnings("unchecked")
+    public NewProperty<T> setValueThrows(final Object value) throws NewPropertyException {
+        if (!type.isInstance(value)) {
+            throw new NewPropertyException(String.format(
+                    "Couldn't initialize property value: uncompatible types. Property raw type: %s. Value type given: %s.",
+                    type.toString(), value.getClass().toString()));
+        }
+
+        return setValue((T) value); // this cast is safe
     }
     
     /**
@@ -440,6 +489,18 @@ public final class NewProperty {
      */
     public NewProperty copy() {
         return new NewProperty(name, type, typeArguments.toArray(Type[]::new), title, desc, annotations.toArray(Annotation[]::new));
+    
+    /**
+     * Returns a fresh copy of this instance with its raw type set to <code>rawType</code>.
+     * <p>
+     * <i>Note:</i> individual annotation instances are not copied, but referenced instead. 
+     * @param <C> new raw type
+     * @param rawType
+     * @return
+     */
+    public <C> NewProperty<C> changeType(final Class<C> rawType) {
+        return NewProperty.create(name, rawType, typeArguments.toArray(Type[]::new), title, desc,
+                getAnnotations().toArray(Annotation[]::new));
     }
     
     /**
