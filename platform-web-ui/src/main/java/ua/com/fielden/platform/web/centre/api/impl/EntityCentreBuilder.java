@@ -18,7 +18,6 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ListMultimap;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithCentreContext;
-import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -67,8 +66,6 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected final List<EntityActionConfig> frontActions = new ArrayList<>();
     protected final List<InsertionPointConfig> insertionPointConfigs = new ArrayList<>();
 
-    private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
-
     protected boolean egiHidden = false;
     protected String gridViewIcon = "tg-icons:grid";
     protected String gridViewIconStyle = "";
@@ -78,6 +75,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected boolean hideToolbar = false;
     protected IScrollConfig scrollConfig = ScrollConfig.configScroll().done();
     protected boolean retrieveAll = false;
+    protected boolean lockScrollingForInsertionPoints = false;
     protected int pageCapacity = 30;
     protected int maxPageCapacity = 300;
     //EGI height related properties
@@ -155,7 +153,10 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
 
     protected boolean runAutomatically = false;
     protected boolean enforcePostSaveRefresh = false;
+    protected Integer leftSplitterPosition = null;
+    protected Integer rightSplitterPosition = null;
     protected String sseUri;
+    protected Integer refreshCountdown = null;
 
     private EntityCentreBuilder() {
     }
@@ -191,6 +192,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 hideToolbar,
                 scrollConfig,
                 retrieveAll,
+                lockScrollingForInsertionPoints,
                 pageCapacity,
                 maxPageCapacity,
                 visibleRowsCount,
@@ -229,7 +231,10 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 providedTypesForAutocompletedSelectionCriteria,
                 runAutomatically,
                 enforcePostSaveRefresh,
+                leftSplitterPosition,
+                rightSplitterPosition,
                 sseUri,
+                refreshCountdown,
                 selectionCriteriaLayout,
                 resultsetCollapsedCardLayout,
                 resultsetExpansionCardLayout,

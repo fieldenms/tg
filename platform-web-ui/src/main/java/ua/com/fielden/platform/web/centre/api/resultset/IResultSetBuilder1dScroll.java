@@ -11,9 +11,9 @@ import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
  *
  * @param <T>
  */
-public interface IResultSetBuilder1dScroll<T extends AbstractEntity<?>> extends IResultSetBuilder1eDraggable<T> {
+public interface IResultSetBuilder1dScroll<T extends AbstractEntity<?>> extends IResultSetBuilder1dCentreScroll<T> {
 
-    IResultSetBuilder1eDraggable<T> notScrollable();
+    IResultSetBuilder1dCentreScroll<T> notScrollable();
 
-    IResultSetBuilder1eDraggable<T> withScrollingConfig(IScrollConfig scrollConfig);
+    IResultSetBuilder1dCentreScroll<T> withScrollingConfig(IScrollConfig scrollConfig);
 }

@@ -86,6 +86,13 @@ public class TitlesDescsGetterTest {
     }
 
     @Test
+    public void getTitleAndDesc_can_determine_prop_title_and_desc_from_IConvertableToPath() {
+        final Pair<String, String> baseCaseTitleAndDesc = TitlesDescsGetter.getTitleAndDesc(() -> "prop2.propertyTwo", FirstLevelEntityPathDependentTitles.class);
+        assertEquals("Two", baseCaseTitleAndDesc.getKey());
+        assertEquals("Two", baseCaseTitleAndDesc.getValue());
+    }
+
+    @Test
     public void getTitleAndDescOfPropertyType_can_determine_title_and_desc_of_entity_type_by_property_path() {
         final Optional<Pair<String, String>> titleAndDesc = TitlesDescsGetter.getTitleAndDescOfPropertyType("critOnlyAEProperty", FirstLevelEntity.class);
 
