@@ -84,13 +84,13 @@ public class DynamicEntityTypeGenerationTest {
     private final Calculated calculated = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION).newInstance();
     private final Calculated boolCalculated = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION_BOOL).newInstance();
 
-    private final NewProperty pd1 = new NewProperty(NEW_PROPERTY_1, Money.class, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC,
+    private final NewProperty<Money> pd1 = NewProperty.create(NEW_PROPERTY_1, Money.class, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC,
             propertyWithPrecision, calculated);
-    private final NewProperty pd2 = new NewProperty(NEW_PROPERTY_2, Money.class, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, 
+    private final NewProperty<Money> pd2 = NewProperty.create(NEW_PROPERTY_2, Money.class, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, 
             calculated);
-    private final NewProperty pdBool = new NewProperty(NEW_PROPERTY_BOOL, boolean.class, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC,
+    private final NewProperty<Boolean> pdBool = NewProperty.create(NEW_PROPERTY_BOOL, boolean.class, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC,
             boolCalculated);
-    private final NewProperty pdCollectional = new NewProperty("collectionalProperty", List.class, "Collectional Property", 
+    private final NewProperty<List> pdCollectional = NewProperty.create("collectionalProperty", List.class, "Collectional Property", 
             "Collectional Property Description", new IsPropertyAnnotation(String.class).newInstance());
     
     private static final Class<Entity> DEFAULT_ORIG_TYPE = Entity.class;
@@ -174,7 +174,7 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void test_type_name_modification_after_properties_modification() throws Exception {
         final String newTypeName = DEFAULT_ORIG_TYPE.getName() + "_enhanced4";
-        final NewProperty np = NewProperty.fromField(DEFAULT_ORIG_TYPE, "firstProperty").setRawType(BigDecimal.class);
+        final NewProperty<BigDecimal> np = NewProperty.fromField(DEFAULT_ORIG_TYPE, "firstProperty").changeType(BigDecimal.class);
         final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
                 .modifyTypeName(newTypeName)
                 .modifyProperties(np)
@@ -185,7 +185,7 @@ public class DynamicEntityTypeGenerationTest {
         Reflector.getMethod(entity, "getFirstProperty").invoke(entity);
         assertEquals("Incorrect setter return type.", 
                 newType,
-                Reflector.obtainPropertySetter(newType, np.name).getReturnType());
+                Reflector.obtainPropertySetter(newType, np.getName()).getReturnType());
     }
 
     @Test
@@ -274,8 +274,8 @@ public class DynamicEntityTypeGenerationTest {
 
     @Test
     public void conflicting_new_properties_are_not_added() throws Exception {
-        // new property with the same as an existing one
-        final NewProperty npConflicting = NewProperty.fromField(DEFAULT_ORIG_TYPE, "firstProperty").setRawType(Money.class);
+        // new property with the same name as an existing one
+        final NewProperty<Money> npConflicting = NewProperty.fromField(DEFAULT_ORIG_TYPE, "firstProperty").changeType(Money.class);
         final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(npConflicting)
                 .endModification();
@@ -397,7 +397,7 @@ public class DynamicEntityTypeGenerationTest {
             @Override public Class<?> type() { return Money.class; } 
         };
 
-        final NewProperty pd = new NewProperty(NEW_PROPERTY_1, Money.class, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, ad1, ad2);
+        final NewProperty<Money> pd = NewProperty.create(NEW_PROPERTY_1, Money.class, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, ad1, ad2);
         final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(pd)
                 .endModification();
@@ -456,7 +456,7 @@ public class DynamicEntityTypeGenerationTest {
             final Collection<String> expectedInitValue = pair.getValue();
 
             final Class<? extends AbstractEntity<String>> enhancedType = cl.startModification(EntityBeingEnhanced.class)
-                    .addProperties(pdCollectional.copy().setRawType(collectionType))
+                    .addProperties(pdCollectional.changeType(collectionType))
                     .endModification();
 
             final Field collectionalPropertyField = Finder.findFieldByName(enhancedType, pdCollectional.getName());
@@ -481,7 +481,7 @@ public class DynamicEntityTypeGenerationTest {
             final Collection<String> expectedValue = pair.getValue();
 
             final Class<? extends AbstractEntity<String>> enhancedType = cl.startModification(EntityBeingEnhanced.class)
-                    .addProperties(pdCollectional.copy().setRawType(collectionType))
+                    .addProperties(pdCollectional.changeType(collectionType))
                     .endModification();
 
             final Field collectionalPropertyField = Finder.findFieldByName(enhancedType, pdCollectional.getName());
@@ -534,7 +534,7 @@ public class DynamicEntityTypeGenerationTest {
         };
         final BeforeChange bch = new BeforeChangeAnnotation(handlers).newInstance();
         final String PROP_NAME = "prop_name";
-        final NewProperty pd = new NewProperty(PROP_NAME, String.class, "title", "desc", bch);
+        final NewProperty<String> pd = NewProperty.create(PROP_NAME, String.class, "title", "desc", bch);
 
         final Class<? extends AbstractEntity<String>> enhancedType = cl.startModification(EntityBeingEnhanced.class)
                 .addProperties(pd)
@@ -565,9 +565,9 @@ public class DynamicEntityTypeGenerationTest {
 
     @Test
     public void one2Many_special_case_property_is_generated_correctly() throws Exception {
-        final IsProperty isProperty = new IsPropertyAnnotation(String.class, "key1").newInstance();
-        final NewProperty pd = new NewProperty("one2manyAssociationSpecialCase2", DetailsEntityForOneToManyAssociation.class,
-                "One2Many Special Case Association Property", "One2Many Special Case Association Property Description", isProperty);
+        final NewProperty<DetailsEntityForOneToManyAssociation> pd = NewProperty.create("one2manyAssociationSpecialCase2",
+                DetailsEntityForOneToManyAssociation.class, "One2Many Special Case Association Property",
+                "One2Many Special Case Association Property Description", new IsPropertyAnnotation(String.class, "key1").newInstance());
         final Class<? extends AbstractEntity<String>> enhancedType = cl.startModification(MasterEntityWithOneToManyAssociation.class)
                 .addProperties(pd)
                 .endModification();
@@ -583,7 +583,7 @@ public class DynamicEntityTypeGenerationTest {
     public void one2Many_collectional_property_is_generated_correctly() throws Exception {
         final IsProperty isProperty = new IsPropertyAnnotation(DetailsEntityForOneToManyAssociation.class, "key1").newInstance();
 
-        final NewProperty pd = new NewProperty("one2manyAssociationCollectional2", List.class,
+        final NewProperty<List> pd = NewProperty.create("one2manyAssociationCollectional2", List.class,
                 "One2Many Collectional Association Property", "One2Many Collectional Association Property Description", isProperty);
         final Class<? extends AbstractEntity<String>> enhancedType = cl.startModification(MasterEntityWithOneToManyAssociation.class)
                 .addProperties(pd)
@@ -606,7 +606,7 @@ public class DynamicEntityTypeGenerationTest {
     @Ignore
     public void test_to_ensure_that_property_name_with_dangerous_character_works() throws Exception {
         final String propName = "//firstProperty//";
-        final NewProperty exoticProperty = new NewProperty(propName, String.class, "title", "desc");
+        final NewProperty<String> exoticProperty = NewProperty.create(propName, String.class, "title", "desc");
         final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(exoticProperty)
                 .endModification();
