@@ -21,6 +21,7 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.exceptions.NewPropertyException;
+import ua.com.fielden.platform.reflection.asm.exceptions.NewPropertyRuntimeException;
 
 /**
  * A convenient abstraction for representing data needed for dynamic construction of properties.
@@ -512,7 +513,7 @@ public final class NewProperty {
             if (hasTypeArguments()) {
                 return PropertyTypeDeterminator.classFrom(typeArguments.get(0));
             }
-            else throw new NewPropertyException("PropertyDescriptor must be parameterized, got empty type arguments instead.");
+            else throw new NewPropertyRuntimeException("PropertyDescriptor must be parameterized, got empty type arguments instead.");
         }
         // for other types - leave unchanged
         else if (atIsProperty != null) {

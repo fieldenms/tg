@@ -7,7 +7,7 @@ import ua.com.fielden.platform.reflection.asm.api.NewProperty;
  * 
  * @author TG Team
  */
-public class NewPropertyException extends RuntimeException {
+public class NewPropertyException extends Exception {
     private static final long serialVersionUID = 1L;
     
     public NewPropertyException() {
