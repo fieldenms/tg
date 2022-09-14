@@ -105,7 +105,7 @@
                             <goal>testCompile</goal>
                         </goals>
                         <configuration>
-                            <release>16</release>
+                            <release>17</release>
                             <encoding>UTF-8</encoding>
                             <generatedTestSourcesDirectory>${project.build.directory}/generated-test-sources</generatedTestSourcesDirectory>
                             <annotationProcessors>
