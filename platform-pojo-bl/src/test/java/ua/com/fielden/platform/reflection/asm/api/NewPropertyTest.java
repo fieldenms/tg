@@ -1,18 +1,23 @@
 package ua.com.fielden.platform.reflection.asm.api;
 
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
-import java.lang.annotation.Annotation;
+import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.LinkedList;
 import java.util.List;
 
+import org.junit.Assert;
 import org.junit.Test;
+
+import com.google.inject.Injector;
 
 import javassist.compiler.ast.Pair;
 import ua.com.fielden.platform.entity.Entity;
@@ -23,7 +28,10 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
+import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
+import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
+import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.asm.impl.entities.EntityWithCollectionalPropety;
 import ua.com.fielden.platform.types.Money;
 
@@ -34,20 +42,24 @@ import ua.com.fielden.platform.types.Money;
  * 
  */
 public class NewPropertyTest {
+
+    private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
+    private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
+    private final EntityFactory factory = injector.getInstance(EntityFactory.class);
     
-    private static final NewProperty collectionalRawList = new NewProperty("elements", List.class, "title", "desc", 
+    private static final NewProperty<List> collectionalRawList = NewProperty.create("elements", List.class, "title", "desc", 
             new IsPropertyAnnotation(String.class).newInstance());
-    private static final NewProperty collectionalParameterizedList = new NewProperty("elements", List.class, new Type[] {String.class},
-            "title", "desc", new IsPropertyAnnotation(String.class).newInstance());
-    private static final NewProperty propertyDescriptor = new NewProperty("elements", PropertyDescriptor.class, new Type[] {Entity.class},
-            "title", "desc", new IsPropertyAnnotation(Entity.class).newInstance());
+    private static final NewProperty<List> collectionalParameterizedList = NewProperty.create("elements", List.class,
+            new Type[] {String.class}, "title", "desc", new IsPropertyAnnotation(String.class).newInstance());
+    private static final NewProperty<PropertyDescriptor> propertyDescriptor = NewProperty.create("elements", PropertyDescriptor.class,
+            new Type[] {Entity.class}, "title", "desc", new IsPropertyAnnotation(Entity.class).newInstance());
 
     @Test
     public void test_annotation_description_presence() {
         final Calculated calculated = new CalculatedAnnotation().contextualExpression("some expression").newInstance();
         final IsProperty isProperty = new IsPropertyAnnotation(Money.class).newInstance();
 
-        final NewProperty pd = new NewProperty("prop_name", List.class, "title", "desc", calculated, isProperty);
+        final NewProperty<List> pd = NewProperty.create("prop_name", List.class, "title", "desc", calculated, isProperty);
         assertTrue("Should have recognised the presence of annotation description.", pd.containsAnnotationDescriptorFor(IsProperty.class));
         assertTrue("Should have recognised the presence of annotation description.", pd.containsAnnotationDescriptorFor(Calculated.class));
         assertFalse("Should have not recognised the presence of annotation description.", pd.containsAnnotationDescriptorFor(CritOnly.class));
@@ -78,7 +90,7 @@ public class NewPropertyTest {
     @Test
     public void changing_the_type_argument_of_collectional_property_also_modifies_value_of_IsProperty_annotation() {
         // copy NewProperty and manually copy @IsProperty annotation
-        final NewProperty pd = collectionalRawList.copy().setAnnotations(new IsPropertyAnnotation(String.class).newInstance());
+        final NewProperty<List> pd = collectionalRawList.copy().setAnnotations(new IsPropertyAnnotation(String.class).newInstance());
         // update type arguments
         pd.setTypeArguments(Double.class);
 
@@ -91,41 +103,42 @@ public class NewPropertyTest {
     @Test
     public void changing_the_type_argument_of_PropertyDescriptor_also_modifies_value_of_IsProperty_annotation() {
         // copy NewProperty and manually copy @IsProperty annotation
-        final NewProperty pd = propertyDescriptor.copy().setAnnotations(new IsPropertyAnnotation(Entity.class).newInstance());
+        final NewProperty<PropertyDescriptor> pd = propertyDescriptor.copy().setAnnotations(
+                new IsPropertyAnnotation(Entity.class).newInstance());
         // update type arguments to any other entity
         pd.setTypeArguments(EntityWithCollectionalPropety.class);
 
         assertArrayEquals("Should be parameterized with EntityWithCollectionalPropety.",
                 new Type[] {EntityWithCollectionalPropety.class}, ((ParameterizedType) pd.genericType()).getActualTypeArguments());
         assertEquals("The value of @IsProperty should be equal to EntityWithCollectionalPropety.class",
-                EntityWithCollectionalPropety.class, ((IsProperty) pd.getAnnotationByType(IsProperty.class)).value());
+                EntityWithCollectionalPropety.class, pd.getAnnotationByType(IsProperty.class).value());
     }
     
     @Test
     public void changing_type_arguments_of_other_types_does_not_affect_IsProperty() {
         // Pair<String, String>
-        final NewProperty pair = new NewProperty("pair", Pair.class, new Type[] {String.class, String.class}, "title", "desc");
-        final Class<?> previousValue = ((IsProperty) pair.getAnnotationByType(IsProperty.class)).value();
+        final NewProperty<Pair> pair = NewProperty.create("pair", Pair.class, new Type[] {String.class, String.class}, "title", "desc");
+        final Class<?> previousValue = pair.getAnnotationByType(IsProperty.class).value();
         pair.setTypeArguments(String.class, Double.class);
 
         assertEquals("The value of @IsProperty should not have been modified.", 
-                previousValue, ((IsProperty) pair.getAnnotationByType(IsProperty.class)).value());
+                previousValue, pair.getAnnotationByType(IsProperty.class).value());
     }
     
     @Test
     public void Title_annotation_is_missing_if_both_title_and_desc_are_null() {
-        final NewProperty npNoTitle = new NewProperty("prop", String.class, null, null);
+        final NewProperty<String> npNoTitle = NewProperty.create("prop", String.class, null, null);
         assertFalse(npNoTitle.containsAnnotationDescriptorFor(Title.class));
         
         // only title present, desc is null
-        final NewProperty npWithTitle = new NewProperty("prop", String.class, "title", null);
+        final NewProperty<String> npWithTitle = NewProperty.create("prop", String.class, "title", null);
         final Title atTitle = npWithTitle.getAnnotationByType(Title.class);
         assertNotNull(atTitle);
         assertEquals("title", atTitle.value());
         assertEquals("", atTitle.desc());
 
         // title is null, only desc present
-        final NewProperty npWithDesc = new NewProperty("prop", String.class, null, "desc");
+        final NewProperty<String> npWithDesc = NewProperty.create("prop", String.class, null, "desc");
         final Title atTitle1 = npWithDesc.getAnnotationByType(Title.class);
         assertNotNull(atTitle1);
         assertEquals("", atTitle1.value());
@@ -135,13 +148,13 @@ public class NewPropertyTest {
     @Test
     public void IsProperty_annotation_is_always_present() {
         // an instance without explicitly provided @IsProperty
-        final NewProperty npImplicit = new NewProperty("prop", String.class, "title", "desc");
+        final NewProperty<String> npImplicit = NewProperty.create("prop", String.class, "title", "desc");
         // 2: @Title and @IsProperty
         assertEquals("Incorrect number of annotations.", 2, npImplicit.getAnnotations().size());
         assertTrue("@IsProperty should be implicitly added.", npImplicit.containsAnnotationDescriptorFor(IsProperty.class));
         
         // explicitly provide @IsProperty
-        final NewProperty npExplicit = new NewProperty("prop", String.class, "title", "desc",
+        final NewProperty<String> npExplicit = NewProperty.create("prop", String.class, "title", "desc",
                 new IsPropertyAnnotation(String.class).newInstance());
 
         // 2: @Title and @IsProperty
@@ -160,5 +173,6 @@ public class NewPropertyTest {
         final Generated atGenerated = collectionalRawList.getAnnotationByType(Generated.class);
         assertNull(atGenerated);
     }
+    
 
 }
