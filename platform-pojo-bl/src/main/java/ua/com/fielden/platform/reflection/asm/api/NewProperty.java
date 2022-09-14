@@ -220,10 +220,12 @@ public final class NewProperty {
      * @param annotationType
      * @return
      */
-    public Annotation getAnnotationByType(final Class<? extends Annotation> annotationType) {
-        if (annotationType == IsProperty.class) return atIsProperty;
+    @SuppressWarnings("unchecked") // these casts are safe, since they are preceeded by manual type checking
+    public <A extends Annotation> A getAnnotationByType(final Class<A> annotationType) {
+        if (annotationType == IsProperty.class) return atIsProperty == null ? null : (A) atIsProperty;
         else {
-            return getAnnotations().stream().filter(annot -> annot.annotationType() == annotationType).findAny().orElse(null);
+            return getAnnotations().stream().filter(annot -> annot.annotationType() == annotationType)
+                    .findAny().map(annot -> (A) annot).orElse(null);
         }
     }
 

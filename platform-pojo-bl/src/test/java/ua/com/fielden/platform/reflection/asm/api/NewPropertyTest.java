@@ -1,10 +1,13 @@
 package ua.com.fielden.platform.reflection.asm.api;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.List;
@@ -15,7 +18,9 @@ import javassist.compiler.ast.Pair;
 import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
+import ua.com.fielden.platform.entity.annotation.Generated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
 import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
@@ -42,7 +47,7 @@ public class NewPropertyTest {
         final Calculated calculated = new CalculatedAnnotation().contextualExpression("some expression").newInstance();
         final IsProperty isProperty = new IsPropertyAnnotation(Money.class).newInstance();
 
-        final NewProperty pd = new NewProperty("prop_name", List.class, false, "title", "desc", calculated, isProperty);
+        final NewProperty pd = new NewProperty("prop_name", List.class, "title", "desc", calculated, isProperty);
         assertTrue("Should have recognised the presence of annotation description.", pd.containsAnnotationDescriptorFor(IsProperty.class));
         assertTrue("Should have recognised the presence of annotation description.", pd.containsAnnotationDescriptorFor(Calculated.class));
         assertFalse("Should have not recognised the presence of annotation description.", pd.containsAnnotationDescriptorFor(CritOnly.class));
@@ -80,7 +85,7 @@ public class NewPropertyTest {
         assertArrayEquals("Should be parameterized with Double.",
                 new Type[] {Double.class}, ((ParameterizedType) pd.genericType()).getActualTypeArguments());
         assertEquals("The value of @IsProperty should be equal to Double.class",
-                Double.class, ((IsProperty) pd.getAnnotationByType(IsProperty.class)).value());
+                Double.class, pd.getAnnotationByType(IsProperty.class).value());
     }
 
     @Test
@@ -125,6 +130,35 @@ public class NewPropertyTest {
         assertNotNull(atTitle1);
         assertEquals("", atTitle1.value());
         assertEquals("desc", atTitle1.desc());
+    }
+    
+    @Test
+    public void IsProperty_annotation_is_always_present() {
+        // an instance without explicitly provided @IsProperty
+        final NewProperty npImplicit = new NewProperty("prop", String.class, "title", "desc");
+        // 2: @Title and @IsProperty
+        assertEquals("Incorrect number of annotations.", 2, npImplicit.getAnnotations().size());
+        assertTrue("@IsProperty should be implicitly added.", npImplicit.containsAnnotationDescriptorFor(IsProperty.class));
+        
+        // explicitly provide @IsProperty
+        final NewProperty npExplicit = new NewProperty("prop", String.class, "title", "desc",
+                new IsPropertyAnnotation(String.class).newInstance());
+
+        // 2: @Title and @IsProperty
+        assertEquals("Incorrect number of annotations.", 2, npImplicit.getAnnotations().size());
+        final IsProperty atIsProperty = npExplicit.getAnnotationByType(IsProperty.class);
+        assertNotNull("@IsProperty should be present when added explicitly.", atIsProperty);
+        assertEquals("Incorrect value of IsProperty.value().", String.class, atIsProperty.value());
+    }
+    
+    @Test
+    public void annotations_can_be_retrieved_in_a_generic_way_safely() {
+        final IsProperty atIsProperty = collectionalRawList.getAnnotationByType(IsProperty.class);
+        assertNotNull(atIsProperty);
+        final Title atTitle = collectionalRawList.getAnnotationByType(Title.class);
+        assertNotNull(atTitle);
+        final Generated atGenerated = collectionalRawList.getAnnotationByType(Generated.class);
+        assertNull(atGenerated);
     }
 
 }
