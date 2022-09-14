@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
@@ -8,9 +9,11 @@ import static org.junit.Assert.fail;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -234,7 +237,8 @@ public class DynamicEntityTypeGenerationTest {
 
     @Test
     public void test_to_ensure_that_duplicate_new_properties_are_eliminated() throws Exception {
-        final Class<? extends AbstractEntity<String>> newType = cl.startModification(Entity.class).addProperties(pd1, pd1, pd1).endModification(); assertEquals("Incorrect number of properties.", 
+        final Class<? extends AbstractEntity<String>> newType = cl.startModification(Entity.class)
+                .addProperties(pd1, pd1, pd1).endModification(); assertEquals("Incorrect number of properties.", 
                 Finder.getPropertyDescriptors(Entity.class).size() + 1,
                 Finder.getPropertyDescriptors(newType).size());
     }
@@ -319,6 +323,19 @@ public class DynamicEntityTypeGenerationTest {
         assertEquals("Incorrect number of properties.", 
                 Finder.getPropertyDescriptors(DEFAULT_ORIG_TYPE).size() + 2,
                 Finder.getPropertyDescriptors(newType2).size());
+    }
+    
+    @Test
+    public void adding_a_property_with_explicitly_initialized_value() throws Exception {
+        final Double value = 125d;
+        final NewProperty<Double> np = NewProperty.create("newPropWithInitializedValue", Double.class, "title", "desc").setValue(value);
+        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+                .addProperties(np)
+                .endModification();
+        
+        final Field field = Finder.getFieldByName(newType, np.getName());
+        final AbstractEntity<String> instance = factory.newByKey(newType, "new");
+        assertEquals("Incorrect field value.", value, Finder.getFieldValue(field, instance));
     }
 
     @Test

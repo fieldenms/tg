@@ -9,7 +9,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -154,8 +153,10 @@ public class TypeMaker<T> {
                                List.of(GENERATED_ANNOTATION));
 
         final boolean collectional = prop.isCollectional();
-        // try to determine an initializer for a collectional property
-        if (collectional) {
+        if (prop.isInitialized()) {
+            propertyInitializers.add(Pair.pair(prop.getName(), prop.getValue()));
+        }
+        else if (collectional) { // automatically initialize collectional properties
             final Object initValue;
             try {
                 initValue = collectionalInitValue(prop.getRawType());
@@ -164,9 +165,7 @@ public class TypeMaker<T> {
                         String.format("Failed to initialize new property %s", prop.toString(IsProperty.class)),
                         e);
             }
-            if (initValue != null) {
-                propertyInitializers.add(Pair.pair(prop.getName(), initValue));
-            }
+            propertyInitializers.add(Pair.pair(prop.getName(), initValue));
         }
 
         addGetter(prop.getName(), genericType);
@@ -234,7 +233,7 @@ public class TypeMaker<T> {
             Reflector.getMethod(prop.getType(), "addAll", Collection.class).invoke(propValue, arg);
         }
     }
-
+    
     /**
      * Adds the specified class level annotation to the class. Existing annotations are not replaced.
      * <p>
@@ -404,6 +403,7 @@ public class TypeMaker<T> {
                 // instead of making ByteBuddy create a separate class loader for each
                 .load(cl)
                 .getLoaded();
+    }
 
     public static class ConstructorInterceptor {
         private final List<Pair<String, Object>> fieldInitializers = new ArrayList<>();
