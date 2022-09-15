@@ -291,7 +291,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             return false;
         }
 
-        messager.printMessage(Kind.NOTE, format("Generated empty meta-model %s.", mme.getSimpleName().toString()));
+        messager.printMessage(Kind.NOTE, format("Generated empty meta-model %s.", mme.getSimpleName()));
         return true;
     }
 
@@ -302,15 +302,15 @@ public class MetaModelProcessor extends AbstractProcessor {
      * @return a set of inactive meta-models; could be empty
      */
     private Set<MetaModelElement> findInactiveMetaModels(final MetaModelsElement metaModelsElement) {
-        messager.printMessage(Kind.NOTE, format("Verifying %s.", metaModelsElement.getSimpleName().toString()));
+        messager.printMessage(Kind.NOTE, format("Verifying %s.", metaModelsElement.getSimpleName()));
         final Set<MetaModelElement> inactive = new LinkedHashSet<>();
         for (final MetaModelElement mme: metaModelsElement.getMetaModels()) {
             final EntityElement entity = entityFinder.findEntityForMetaModel(mme);
             if (entity == null || !entityFinder.isEntityThatNeedsMetaModel(entity)) {
                 if (entity != null) {
-                    messager.printMessage(Kind.NOTE, format("Entity %s is no longer a domain entity.", entity.getSimpleName().toString()));
+                    messager.printMessage(Kind.NOTE, format("Entity %s is no longer a domain entity.", entity.getSimpleName()));
                 } else {
-                    messager.printMessage(Kind.NOTE, format("Entity for %s does not exist anymore.", mme.getSimpleName().toString()));
+                    messager.printMessage(Kind.NOTE, format("Entity for %s does not exist anymore.", mme.getSimpleName()));
                 }
                 inactive.add(mme);
             }
@@ -630,7 +630,7 @@ public class MetaModelProcessor extends AbstractProcessor {
             return false;
         }
 
-        messager.printMessage(Kind.NOTE, format("Generated %s for entity %s.", metaModelSpec.name, entityElement.getSimpleName().toString()));
+        messager.printMessage(Kind.NOTE, format("Generated %s for entity %s.", metaModelSpec.name, entityElement.getSimpleName()));
         return true;
     }
 
