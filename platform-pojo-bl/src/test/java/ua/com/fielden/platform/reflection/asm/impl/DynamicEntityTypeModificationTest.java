@@ -405,7 +405,7 @@ public class DynamicEntityTypeModificationTest {
 
         final AbstractEntity<?> entity = factory.newByKey(modifiedType, "key");
         assertNotNull("Should have been instantiated.", entity);
-        assertNull("Initial collectional property value should be null", entity.get("prop1"));
+        assertNotNull("Initial collectional property value should not be null.", entity.get("prop1"));
 
         // test mutator set and getter
         final ArrayList value = new ArrayList();
@@ -413,22 +413,6 @@ public class DynamicEntityTypeModificationTest {
         entity.set("prop1", value);
         Collection result = (Collection) entity.get("prop1");
         assertNotNull("Collectional property should have a value", result);
-        assertEquals("Incorrect number of elements in the collectional property", 1, result.size());
-        assertTrue("Observation should have been triggered.", observed);
-
-        // test mutator addTo
-        observed = false;
-        final Method addTo = modifiedType.getMethod("addToProp1", entityBeingEnhancedEnhancedType);
-        addTo.invoke(entity, factory.newByKey(entityBeingEnhancedEnhancedType, "key2"));
-        result = (Collection) entity.get("prop1");
-        assertEquals("Incorrect number of elements in the collectional property", 2, result.size());
-        assertTrue("Observation should have been triggered.", observed);
-
-        // test mutator removeFrom
-        observed = false;
-        final Method removeFrom = modifiedType.getMethod("removeFromProp1", entityBeingEnhancedEnhancedType);
-        removeFrom.invoke(entity, factory.newByKey(entityBeingEnhancedEnhancedType, "key2"));
-        result = (Collection) entity.get("prop1");
         assertEquals("Incorrect number of elements in the collectional property", 1, result.size());
         assertTrue("Observation should have been triggered.", observed);
     }
