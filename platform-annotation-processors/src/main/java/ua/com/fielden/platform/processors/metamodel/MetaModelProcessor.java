@@ -333,10 +333,10 @@ public class MetaModelProcessor extends AbstractProcessor {
      * <p>
      * A meta-model is generated in 2 forms:
      * <ol>
-     *  <li> A regular meta-model which extends {@link EntityMetaModel}.
-     *  <li> An aliased meta-model which extends 1. and provides aliasing capabilities.
+     *  <li> A regular meta-model which extends {@link EntityMetaModel}, and
+     *  <li> An aliased meta-model which extends the first one and provides aliasing capabilities.
      * </ol>
-     * Therefore 2 source files are generated for every entity.
+     * Therefore, 2 meta-model source files are generated for every entity.
      * <p>
      * Properties, which test positive for COVID... {@code propertyTypeMetamodeledTest} are generated as such that have a meta-model on their own.
      * All other properties are generated as instances of {@link PropertyMetaModel}, which are terminal and do not support property traversing.
@@ -455,7 +455,7 @@ public class MetaModelProcessor extends AbstractProcessor {
                 .addStatement("return TYPE")
                 .build();
         methodSpecs.add(getModelMethod);
-        
+
         // ######################## CONSTRUCTORS ######################
 
         /*
@@ -609,7 +609,7 @@ public class MetaModelProcessor extends AbstractProcessor {
                         .addCode(CodeBlock.builder()
                                 .beginControlFlow("if (alias.isBlank())")
                                 .addStatement("throw new $T($S)", EntityMetaModelAliasedException.class,
-                                        "Alias can't be blank")
+                                        "An alias cannot be blank.")
                                 .endControlFlow()
                                 .addStatement("this.alias = alias")
                                 .build())
@@ -708,7 +708,7 @@ public class MetaModelProcessor extends AbstractProcessor {
     }
 
     /**
-     * Generates a meta-models collection class that acts as a provider of meta-model instances and thus is to be used as an entry point.
+     * Generates a meta-model collection class, which serves as an entry-point for accessing domain meta-models at design time.
      *
      * @param metaModelConcepts new meta-models that should be added
      * @param maybeMetaModelsElement optionally provides an existing meta-models class, contents of which should be copied
