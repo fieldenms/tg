@@ -32,14 +32,15 @@ import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
-import ua.com.fielden.platform.processors.test_entities.AdjacentToOtherEntities;
-import ua.com.fielden.platform.processors.test_entities.Child;
-import ua.com.fielden.platform.processors.test_entities.NotPersistent;
-import ua.com.fielden.platform.processors.test_entities.Parent;
-import ua.com.fielden.platform.processors.test_entities.Persistent;
-import ua.com.fielden.platform.processors.test_entities.SinkNodesOnly;
-import ua.com.fielden.platform.processors.test_entities.WithDescTitle;
-import ua.com.fielden.platform.processors.test_entities.WithoutDescTitle;
+import ua.com.fielden.platform.processors.test_entities.EntityWithEntityTypedAndOrdinaryProps;
+import ua.com.fielden.platform.processors.test_entities.SubEntity;
+import ua.com.fielden.platform.processors.test_entities.NonPersistentButDomainEntity;
+import ua.com.fielden.platform.processors.test_entities.NonPersistentButWithMetaModelEntity;
+import ua.com.fielden.platform.processors.test_entities.SuperEntity;
+import ua.com.fielden.platform.processors.test_entities.PersistentEntity;
+import ua.com.fielden.platform.processors.test_entities.EntityWithOrdinaryProps;
+import ua.com.fielden.platform.processors.test_entities.EntityWithDescTitle;
+import ua.com.fielden.platform.processors.test_entities.EntityWithoutDescTitle;
 import ua.com.fielden.platform.processors.test_utils.CompilationRule;
 
 
@@ -78,7 +79,7 @@ public class MetaModelStructureTest {
 
     @Test
     public void entity_annotated_with_DescTitle_has_property_desc_metamodeled() {
-        final EntityElement entityWithDesc = findEntity(WithDescTitle.class);
+        final EntityElement entityWithDesc = findEntity(EntityWithDescTitle.class);
         final MetaModelElement metaModelWithDesc = findMetaModel(entityWithDesc);
 
         // Meta-model for TestEntityWithDescTitle has method desc()
@@ -86,7 +87,7 @@ public class MetaModelStructureTest {
                 .anyMatch(el -> StringUtils.equals(el.getSimpleName(), "desc")));
 
 
-        final EntityElement entityWithoutDesc = findEntity(WithoutDescTitle.class);
+        final EntityElement entityWithoutDesc = findEntity(EntityWithoutDescTitle.class);
         final MetaModelElement metaModelWithoutDesc = findMetaModel(entityWithoutDesc);
 
         // Meta-model for TestEntityWithoutDescTitle does NOT have method desc()
@@ -96,7 +97,7 @@ public class MetaModelStructureTest {
     
     @Test
     public void entity_with_sink_node_properties_only_has_all_properties_metamodeled_with_PropertyMetaModel() {
-        final EntityElement entity = findEntity(SinkNodesOnly.class);
+        final EntityElement entity = findEntity(EntityWithOrdinaryProps.class);
         final MetaModelElement metaModel = findMetaModel(entity);
         
         // find all distinct return types of methods that model properies of an underlying entity
@@ -114,7 +115,7 @@ public class MetaModelStructureTest {
      */
     @Test
     public void entity_adjacent_to_other_metamodeled_entities_has_properties_metamodeled_with_EntityMetaModel() {
-        final EntityElement entity = findEntity(AdjacentToOtherEntities.class);
+        final EntityElement entity = findEntity(EntityWithEntityTypedAndOrdinaryProps.class);
         final MetaModelElement metaModel = findMetaModel(entity);
 
         final Set<ExecutableElement> metamodeledProps = metaModelFinder.findPropertyMethods(metaModel);
@@ -146,10 +147,10 @@ public class MetaModelStructureTest {
     @Test
     public void meta_model_of_child_entity_extends_meta_model_of_parent_entity_and_metamodels_only_declared_properties() {
         // find Child
-        final EntityElement child = findEntity(Child.class);
+        final EntityElement child = findEntity(SubEntity.class);
         final MetaModelElement childMetaModel = findMetaModel(child);
         // find Parent
-        final EntityElement parent = findEntity(Parent.class);
+        final EntityElement parent = findEntity(SuperEntity.class);
         final MetaModelElement parentMetaModel = findMetaModel(parent);
 
         // Child's meta-model extends Parent's meta-model ?
@@ -180,17 +181,26 @@ public class MetaModelStructureTest {
     
     @Test
     public void only_persistent_entities_have_property_id_metamodeled() {
-        final EntityElement entityPersistent = findEntity(Persistent.class);
+        final EntityElement entityPersistent = findEntity(PersistentEntity.class);
         final MetaModelElement persistentMetaModel = findMetaModel(entityPersistent);
         // make sure property "id" is metamodeled
         assertTrue(metaModelFinder.findPropertyMethods(persistentMetaModel).stream()
             .anyMatch(el -> el.getSimpleName().toString().equals("id")));
 
-        final EntityElement entityNotPersistent = findEntity(NotPersistent.class);
-        final MetaModelElement notPersistentMetaModel = findMetaModel(entityNotPersistent);
+        final EntityElement domainNotPersistentEntity = findEntity(NonPersistentButDomainEntity.class);
+        final MetaModelElement domainNotPersistentMetaModel = findMetaModel(domainNotPersistentEntity);
         // make sure property "id" is not metamodeled
-        assertTrue(metaModelFinder.findPropertyMethods(notPersistentMetaModel).stream()
+        assertTrue(metaModelFinder.findPropertyMethods(domainNotPersistentMetaModel).stream()
             .noneMatch(el -> el.getSimpleName().toString().equals("id")));
+        
+
+        final EntityElement notDomainAndNotPersistent = findEntity(NonPersistentButWithMetaModelEntity.class);
+        final MetaModelElement notDomainAndNotPersistentMetaModel = findMetaModel(notDomainAndNotPersistent);
+        // make sure property "id" is not metamodeled
+        assertTrue(metaModelFinder.findPropertyMethods(notDomainAndNotPersistentMetaModel).stream()
+            .noneMatch(el -> el.getSimpleName().toString().equals("id")));
+
+        
     }
     
     /**
