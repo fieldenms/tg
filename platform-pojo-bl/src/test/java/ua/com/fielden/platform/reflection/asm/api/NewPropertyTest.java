@@ -8,9 +8,11 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -210,8 +212,7 @@ public class NewPropertyTest {
         final Field field = Finder.getFieldByName(Entity.class, "firstProperty");
         final NewProperty<?> np = NewProperty.fromField(field);
         assertNotNull("Failed to create NewProperty from Field.", np);
-        assertEquals("Incorrect property name.", field.getName(), np.getName());
-        assertEquals("Incorrect declaration of property's generic type.", field.getGenericType(), np.genericTypeAsDeclared());
+        NewPropertyTest.assertSameProperty(field, np);
     }
 
     @Test
@@ -228,7 +229,8 @@ public class NewPropertyTest {
         }
 
         assertNotNull(np);
-        assertEquals(125, np.getValue());
+        NewPropertyTest.assertSameProperty(field, np);
+        assertEquals("Incorrect property initialized value.", 125, np.getValue());
     }
 
     @Test
@@ -241,5 +243,23 @@ public class NewPropertyTest {
         Assert.assertThrows(NewPropertyException.class, () -> {
             NewProperty.fromField(field).setValueThrows(value);
         });
+    }
+    
+    /**
+     * Asserts that <code>np</code> is a correct representation of <code>field</code> by testing its name, type and annotations. 
+     * @param field
+     * @param np
+     */
+    public static void assertSameProperty(final Field field, final NewProperty<?> np) {
+        assertEquals("Incorrect property name.", field.getName(), np.getName());
+        assertEquals("Incorrect declaration of property's generic type.", field.getGenericType(), np.genericTypeAsDeclared());
+
+        final Annotation[] fieldAnnotations = field.getDeclaredAnnotations();
+        final List<Annotation> npAnnotations = np.getAnnotations();
+        assertEquals("Different number of annotations.", fieldAnnotations.length, npAnnotations.size());
+
+        for (final Annotation fieldAnnot: fieldAnnotations) {
+            assertTrue("Missing annotation.", npAnnotations.contains(fieldAnnot));
+        }
     }
 }
