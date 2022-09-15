@@ -190,7 +190,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         // find classes annotated with any of DOMAIN_TYPE_ANNOTATIONS
         final Set<TypeElement> annotatedElements = roundEnv.getElementsAnnotatedWithAny(ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION).stream()
                 // just in case make sure identified elements are top-level classes
-                // TODO support visible nested classes
+                // TODO support visible nested classes, in case if we start supporting "components" in a form of nested classes
                 .filter(element -> elementFinder.isTopLevelClass(element))
                 .map(el -> (TypeElement) el).collect(toSet());
         messager.printMessage(Kind.NOTE, format("annotatedElements: [%s]", annotatedElements.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
