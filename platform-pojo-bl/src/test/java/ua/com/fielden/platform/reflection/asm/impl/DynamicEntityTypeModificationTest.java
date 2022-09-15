@@ -66,7 +66,7 @@ public class DynamicEntityTypeModificationTest {
 
     private final Calculated calculated = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION).newInstance();
 
-    private final NewProperty pd = new NewProperty(NEW_PROPERTY, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
+    private final NewProperty pd = new NewProperty(NEW_PROPERTY, Money.class, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
 
     @Before
     public void setUp() {
@@ -80,7 +80,7 @@ public class DynamicEntityTypeModificationTest {
                 .addProperties(pd)
                 .endModification();
         // specify what property of what owning type should be replaced with the enhanced entity type
-        final NewProperty np = NewProperty.changeType("prop1", modEntityBeingEnhanced);
+        final NewProperty np = NewProperty.fromField(EntityBeingEnhanced.class, "prop1").changeType(modEntityBeingEnhanced);
         try {
             final TypeMaker tp = new TypeMaker(cl, EntityBeingEnhanced.class);
             tp.modifyProperties(np).endModification();
@@ -95,27 +95,30 @@ public class DynamicEntityTypeModificationTest {
         final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
                 .addProperties(pd)
                 .endModification();
-        // EntityBeingModified.prop1 should have its type replaced with modEntityBeingEnhanced
-        final NewProperty np = NewProperty.changeType("prop1", modEntityBeingEnhanced);
-        // get the modified EntityBeingModified type
-        final Class<? extends EntityBeingModified> entityBeingModifiedModifiedType = cl.startModification(EntityBeingModified.class)
+
+        // enhance(EntityBeingModified)
+        //      prop1: EntityBeingEnhanced -> modEntityBeingEnhanced
+        final NewProperty np = NewProperty.fromField(EntityBeingModified.class, "prop1").changeType(modEntityBeingEnhanced);
+        final Class<? extends EntityBeingModified> modEntityBeingModified = cl.startModification(EntityBeingModified.class)
                 .modifyProperties(np)
                 .endModification();
-        // TopLevelEntity.prop1 and TopLevelEntity.prop2 should have their type replaced with entityBeingModifiedModifiedType
-        final NewProperty topLevelNp1 = NewProperty.changeType("prop1", entityBeingModifiedModifiedType);
-        final NewProperty topLevelNp2 = NewProperty.changeType("prop2", entityBeingModifiedModifiedType);
-        // get the modified TopLevelEntity type
+
+        // enhance(TopLevelEntity)
+        //      prop1: EntityBeingModified -> modEntityBeingModified
+        //      prop2: EntityBeingModified -> modEntityBeingModified
+        final NewProperty topLevelNp1 = NewProperty.fromField(TopLevelEntity.class, "prop1").changeType(modEntityBeingModified);
+        final NewProperty topLevelNp2 = NewProperty.fromField(TopLevelEntity.class, "prop2").changeType(modEntityBeingModified);
         final Class<?> topLevelEntityModifiedType = cl.startModification(TopLevelEntity.class)
                 .modifyProperties(topLevelNp1, topLevelNp2)
                 .endModification();
 
         final Field prop1 = topLevelEntityModifiedType.getDeclaredField("prop1");
         assertNotNull("Modified property should be declared by the enhanced type.", prop1);
-        assertEquals("Incorrect property type after modification", entityBeingModifiedModifiedType, prop1.getType());
+        assertEquals("Incorrect property type after modification", modEntityBeingModified, prop1.getType());
 
         final Field prop2 = topLevelEntityModifiedType.getDeclaredField("prop2");
         assertNotNull("Modified property should be declared by the enhanced type.", prop2);
-        assertEquals("Incorrect property type after modification", entityBeingModifiedModifiedType, prop2.getType());
+        assertEquals("Incorrect property type after modification", modEntityBeingModified, prop2.getType());
 
         assertEquals("prop 1 and prop 2 should be of the same type", prop2.getType(), prop1.getType());
     }
@@ -126,16 +129,20 @@ public class DynamicEntityTypeModificationTest {
         final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
                 .addProperties(pd)
                 .endModification();
-        // EntityBeingModified.prop1 should have its type replaced with modEntityBeingEnhanced
-        final NewProperty np = NewProperty.changeType("prop1", modEntityBeingEnhanced);
-        // get the modified EntityBeingModified type
-        final Class<?> entityBeingModifiedModifiedType = cl.startModification(EntityBeingModified.class)
+
+        // enhance(EntityBeingModified)
+        //      prop1: EntityBeingEnhanced -> modEntityBeingEnhanced
+        final NewProperty np = NewProperty.fromField(EntityBeingModified.class, "prop1").changeType(modEntityBeingEnhanced);
+        final Class<?> modEntityBeingModified = cl.startModification(EntityBeingModified.class)
                 .modifyProperties(np)
                 .endModification();
-        // TopLevelEntity.prop1 and TopLevelEntity.prop2 should have their type replaced with entityBeingModifiedModifiedType
-        final NewProperty topLevelNp1 = NewProperty.changeType("prop1", entityBeingModifiedModifiedType);
-        final NewProperty topLevelNp2 = NewProperty.changeType("prop2", entityBeingModifiedModifiedType);
-        // get the modified TopLevelEntity type
+
+
+        // enhance(TopLevelEntity)
+        //      prop1: EntityBeingModified -> modEntityBeingModified
+        //      prop2: EntityBeingModified -> modEntityBeingModified
+        final NewProperty topLevelNp1 = NewProperty.fromField(TopLevelEntity.class, "prop1").changeType(modEntityBeingModified);
+        final NewProperty topLevelNp2 = NewProperty.fromField(TopLevelEntity.class, "prop2").changeType(modEntityBeingModified);
         final Class<?> topLevelEntityModifiedType = cl.startModification(TopLevelEntity.class)
                 .modifyProperties(topLevelNp1)
                 .modifyProperties(topLevelNp2)
@@ -143,11 +150,11 @@ public class DynamicEntityTypeModificationTest {
 
         final Field prop1 = topLevelEntityModifiedType.getDeclaredField("prop1");
         assertNotNull("Modified property should be declared by the enhanced type.", prop1);
-        assertEquals("Incorrect property type after modification", entityBeingModifiedModifiedType, prop1.getType());
+        assertEquals("Incorrect property type after modification", modEntityBeingModified, prop1.getType());
 
         final Field prop2 = topLevelEntityModifiedType.getDeclaredField("prop2");
         assertNotNull("Modified property should be declared by the enhanced type.", prop2);
-        assertEquals("Incorrect property type after modification", entityBeingModifiedModifiedType, prop2.getType());
+        assertEquals("Incorrect property type after modification", modEntityBeingModified, prop2.getType());
 
         assertEquals("prop 1 and prop 2 should be of the same type", prop2.getType(), prop1.getType());
     }
@@ -158,30 +165,35 @@ public class DynamicEntityTypeModificationTest {
         final Class<?> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
                 .addProperties(pd)
                 .endModification();
-        // EntityBeingModified.prop1 should have its type replaced with modEntityBeingEnhanced
-        final NewProperty np = NewProperty.changeType("prop1", modEntityBeingEnhanced);
-        // get the modified EntityBeingModified type
-        final Class<?> entityBeingModifiedModifiedType = cl.startModification(EntityBeingModified.class)
+
+        // enhance(EntityBeingModified)
+        //      prop1: EntityBeingEnhanced -> modEntityBeingEnhanced
+        final NewProperty np = NewProperty.fromField(EntityBeingModified.class, "prop1").changeType(modEntityBeingEnhanced);
+        final Class<?> modEntityBeingModified = cl.startModification(EntityBeingModified.class)
                 .modifyProperties(np)
                 .endModification();
-        // TopLevelEntity.prop1 and TopLevelEntity.prop2 should have their type replaced with entityBeingModifiedModifiedType
-        final NewProperty topLevelNp1 = NewProperty.changeType("prop1", entityBeingModifiedModifiedType);
-        final NewProperty topLevelNp2 = NewProperty.changeType("prop2", entityBeingModifiedModifiedType);
-        // get the modified TopLevelEntity type
-        final Class<?> topLevelEntityModifiedType1 = cl.startModification(TopLevelEntity.class)
+
+        // enhance(TopLevelEntity)
+        //      prop1: EntityBeingModified -> modEntityBeingModified
+        final NewProperty topLevelNp1 = NewProperty.fromField(TopLevelEntity.class, "prop1").changeType(modEntityBeingModified);
+        final Class<?> mod1TopLevelEntity = cl.startModification(TopLevelEntity.class)
                 .modifyProperties(topLevelNp1)
                 .endModification();
-        final Class<?> topLevelEntityModifiedType2 = cl.startModification(topLevelEntityModifiedType1)
+
+        // enhance(mod1TopLevelEntity)
+        //      prop2: EntityBeingModified -> modEntityBeingModified
+        final NewProperty topLevelNp2 = NewProperty.fromField(mod1TopLevelEntity, "prop2").changeType(modEntityBeingModified);
+        final Class<?> mod2TopLevelEntity = cl.startModification(mod1TopLevelEntity)
                 .modifyProperties(topLevelNp2)
                 .endModification();
 
-        final Field prop1 = Finder.getFieldByName(topLevelEntityModifiedType2, "prop1");
+        final Field prop1 = Finder.getFieldByName(mod2TopLevelEntity, "prop1");
         assertNotNull("Property modified by an enhanced type should be accessible to a derived enhanced type.", prop1);
-        assertEquals("Incorrect property type after modification", entityBeingModifiedModifiedType, prop1.getType());
+        assertEquals("Incorrect property type after modification", modEntityBeingModified, prop1.getType());
 
-        final Field prop2 = topLevelEntityModifiedType2.getDeclaredField("prop2");
+        final Field prop2 = mod2TopLevelEntity.getDeclaredField("prop2");
         assertNotNull("Modified property should be declared by the enhanced type.", prop2);
-        assertEquals("Incorrect property type after modification", entityBeingModifiedModifiedType, prop2.getType());
+        assertEquals("Incorrect property type after modification", modEntityBeingModified, prop2.getType());
 
         assertEquals("prop 1 and prop 2 should be of the same type", prop2.getType(), prop1.getType());
     }
@@ -192,35 +204,41 @@ public class DynamicEntityTypeModificationTest {
         final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
                 .addProperties(pd)
                 .endModification();
-        // EntityBeingModified.prop1 should have its type replaced with modEntityBeingEnhanced
-        final NewProperty np = NewProperty.changeType("prop1", modEntityBeingEnhanced);
-        // get the modified EntityBeingModified type
-        final Class<?> entityBeingModifiedModifiedType = cl.startModification(EntityBeingModified.class)
+
+        // enhance(EntityBeingModified)
+        //      prop1: EntityBeingEnhanced -> modEntityBeingEnhanced
+        final NewProperty np = NewProperty.fromField(EntityBeingModified.class, "prop1").changeType(modEntityBeingEnhanced);
+        final Class<?> modEntityBeingModified = cl.startModification(EntityBeingModified.class)
                 .modifyProperties(np)
                 .endModification();
-        // TopLevelEntity.prop1 and TopLevelEntity.prop2 should have their type replaced with entityBeingModifiedModifiedType
-        final NewProperty topLevelNp1 = NewProperty.changeType("prop1", entityBeingModifiedModifiedType);
-        final NewProperty topLevelNp2 = NewProperty.changeType("prop2", entityBeingModifiedModifiedType);
-        // get the modified TopLevelEntity type
-        final Class<?> topLevelEntityModifiedType1 = cl.startModification(TopLevelEntity.class)
+
+        // enhance(TopLevelEntity)
+        //      prop1: EntityBeingModified -> modEntityBeingModified
+        final NewProperty topLevelNp1 = NewProperty.fromField(TopLevelEntity.class, "prop1").changeType(modEntityBeingModified);
+        final Class<?> mod1TopLevelEntity = cl.startModification(TopLevelEntity.class)
                 .modifyProperties(topLevelNp1)
                 .endModification();
-        final Class<?> topLevelEntityModifiedType2 = cl.startModification(topLevelEntityModifiedType1)
+
+        // enhance(mod1TopLevelEntity)
+        //      prop2: EntityBeingModified -> modEntityBeingModified
+        final NewProperty topLevelNp2 = NewProperty.fromField(mod1TopLevelEntity, "prop2")
+                .changeType(modEntityBeingModified);
+        final Class<?> mod2TopLevelEntity = cl.startModification(mod1TopLevelEntity)
                 .modifyProperties(topLevelNp2)
                 .endModification();
 
         assertTrue("Incorrect type name.", modEntityBeingEnhanced.getName().startsWith(
                         EntityBeingEnhanced.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
-        assertTrue("Incorrect type name.", entityBeingModifiedModifiedType.getName().startsWith(
+        assertTrue("Incorrect type name.", modEntityBeingModified.getName().startsWith(
                         EntityBeingModified.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
-        assertTrue("Incorrect type name.", topLevelEntityModifiedType1.getName().startsWith(
+        assertTrue("Incorrect type name.", mod1TopLevelEntity.getName().startsWith(
                         TopLevelEntity.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
-        assertTrue("Incorrect type name.", topLevelEntityModifiedType2.getName().startsWith(
+        assertTrue("Incorrect type name.", mod2TopLevelEntity.getName().startsWith(
                         TopLevelEntity.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
 
         // make sure that names are unique
-        final List<String> names = Stream.of(modEntityBeingEnhanced, entityBeingModifiedModifiedType,
-                                             topLevelEntityModifiedType1, topLevelEntityModifiedType2)
+        final List<String> names = Stream.of(modEntityBeingEnhanced, modEntityBeingModified,
+                                             mod1TopLevelEntity, mod2TopLevelEntity)
                                          .map(Class::getName).toList();
         assertEquals("Generated types' names are not unique", names.size(), names.stream().distinct().count());
     }
@@ -231,8 +249,9 @@ public class DynamicEntityTypeModificationTest {
                 .addProperties(pd)
                 .endModification();
 
-        // modify a property of the owning type by settings its type to the enhanced one
-        final NewProperty np = NewProperty.changeType("prop1", modEntityBeingEnhanced);
+        // enhance(EntityBeingModified)
+        //      prop1: EntityBeingEnhanced -> modEntityBeingEnhanced
+        final NewProperty np = NewProperty.fromField(EntityBeingModified.class, "prop1").changeType(modEntityBeingEnhanced);
         final Class<? extends EntityBeingModified> entityBeingModifiedModifiedType = cl.startModification(EntityBeingModified.class)
                 .modifyProperties(np)
                 .endModification();
@@ -248,8 +267,9 @@ public class DynamicEntityTypeModificationTest {
                 .addProperties(pd)
                 .endModification();
 
-        // modify a property of the owning type by settings its type to the enhanced one
-        final NewProperty np = NewProperty.changeType("prop1", modEntityBeingEnhanced);
+        // enhance(EntityBeingModified)
+        //      prop1: EntityBeingEnhanced -> modEntityBeingEnhanced
+        final NewProperty np = NewProperty.fromField(EntityBeingModified.class, "prop1").changeType(modEntityBeingEnhanced);
         final Class<? extends EntityBeingModified> entityBeingModifiedModifiedType = cl.startModification(EntityBeingModified.class)
                 .modifyProperties(np)
                 .endModification();
@@ -285,19 +305,24 @@ public class DynamicEntityTypeModificationTest {
         final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
                 .addProperties(pd)
                 .endModification();
-        // EntityBeingModified.prop1 should have its type replaced with modEntityBeingEnhanced
-        final NewProperty np = NewProperty.changeType("prop1", modEntityBeingEnhanced);
-        // get the modified EntityBeingModified type
+
+        // enhance(EntityBeingModified)
+        //      prop1: EntityBeingEnhanced -> modEntityBeingEnhanced
+        final NewProperty np = NewProperty.fromField(EntityBeingModified.class, "prop1").changeType(modEntityBeingEnhanced);
         final Class<? extends EntityBeingModified> entityBeingModifiedModifiedType = cl.startModification(EntityBeingModified.class)
                 .modifyProperties(np)
                 .endModification();
+
+        // enhance(TopLevelEntity)
+        //      prop1: EntityBeingModified -> modEntityBeingModified
+        //      prop2: EntityBeingModified -> modEntityBeingModified
         // TopLevelEntity.prop1 and TopLevelEntity.prop2 should have their type replaced with entityBeingModifiedModifiedType
-        final NewProperty topLevelNp1 = NewProperty.changeType("prop1", entityBeingModifiedModifiedType);
-        final NewProperty topLevelNp2 = NewProperty.changeType("prop2", entityBeingModifiedModifiedType);
-        // get the modified TopLevelEntity type
+        final NewProperty topLevelNp1 = NewProperty.fromField(TopLevelEntity.class, "prop1").changeType(entityBeingModifiedModifiedType);
+        final NewProperty topLevelNp2 = NewProperty.fromField(TopLevelEntity.class, "prop2").changeType(entityBeingModifiedModifiedType);
         final Class<? extends TopLevelEntity> topLevelEntityModifiedType = cl.startModification(TopLevelEntity.class)
                 .modifyProperties(topLevelNp1, topLevelNp2)
                 .endModification();
+
         // create a new instance of the modified TopLevelEntity type
         final TopLevelEntity topLevelEntity = topLevelEntityModifiedType.getConstructor().newInstance();
         assertNotNull("Should not be null.", topLevelEntity);
@@ -339,17 +364,17 @@ public class DynamicEntityTypeModificationTest {
         });
 
         // enhance(EntityBeingModified)
-        //      prop1 -> modEntityBeingEnhanced
-        final NewProperty np = NewProperty.changeType("prop1", modEntityBeingEnhanced);
+        //      prop1: EntityBeingEnhanced -> modEntityBeingEnhanced
+        final NewProperty np = NewProperty.fromField(EntityBeingModified.class, "prop1").changeType(modEntityBeingEnhanced);
         final Class<? extends EntityBeingModified> modEntityBeingModified = cl.startModification(EntityBeingModified.class)
                 .modifyProperties(np)
                 .endModification();
 
         // enhance(TopLevelEntity)
-        //      prop1 -> modEntityBeingModified
-        //      prop2 -> modEntityBeingModified
-        final NewProperty topLevelNp1 = NewProperty.changeType("prop1", modEntityBeingModified);
-        final NewProperty topLevelNp2 = NewProperty.changeType("prop2", modEntityBeingModified);
+        //      prop1: EntityBeingModified -> modEntityBeingModified
+        //      prop2: EntityBeingModified -> modEntityBeingModified
+        final NewProperty topLevelNp1 = NewProperty.fromField(TopLevelEntity.class, "prop1").changeType(modEntityBeingModified);
+        final NewProperty topLevelNp2 = NewProperty.fromField(TopLevelEntity.class, "prop2").changeType(modEntityBeingModified);
         // get the modified TopLevelEntity type
         final Class<? extends TopLevelEntity> modTopLevelEntity = cl.startModification(TopLevelEntity.class)
                 .modifyProperties(topLevelNp1, topLevelNp2)
@@ -393,7 +418,8 @@ public class DynamicEntityTypeModificationTest {
 
         // enhance(EntityWithCollectionalProperty)
         //      prop1: Collection<EntityBeingEnhanced> -> Collection<modEntityBeingEnhanced>
-        final NewProperty collectionalPropModification = NewProperty.changeTypeSignature("prop1", modEntityBeingEnhanced);
+        final NewProperty collectionalPropModification = NewProperty.fromField(EntityWithCollectionalPropety.class, "prop1")
+                .setTypeArguments(modEntityBeingEnhanced);
         final Class<? extends EntityWithCollectionalPropety> modifiedType = cl.startModification(EntityWithCollectionalPropety.class)
                 .modifyProperties(collectionalPropModification)
                 .endModification();
@@ -419,7 +445,8 @@ public class DynamicEntityTypeModificationTest {
 
         // enhance(EntityWithCollectionalPropety)
         //      prop1: Collection<EntityBeingEnhanced> -> Collection<modEntityBeingEnhanced>
-        final NewProperty collectionalPropModification = NewProperty.changeTypeSignature("prop1", modEntityBeingEnhanced);
+        final NewProperty collectionalPropModification = NewProperty.fromField(EntityWithCollectionalPropety.class, "prop1")
+                .setTypeArguments(modEntityBeingEnhanced);
         final Class<? extends EntityWithCollectionalPropety> modEntityWithCollectionalPropety =
                 cl.startModification(EntityWithCollectionalPropety.class)
                 .modifyProperties(collectionalPropModification)
@@ -450,7 +477,7 @@ public class DynamicEntityTypeModificationTest {
     public void test_inner_types_usage_in_generated_classes() throws Exception {
         // enhance(EntityBeingModifiedWithInnerTypes)
         //      integerProp: Integer -> BigInteger
-        final NewProperty np = NewProperty.changeType("integerProp", BigInteger.class);
+        final NewProperty np = NewProperty.fromField(EntityBeingModifiedWithInnerTypes.class, "integerProp").changeType(BigInteger.class);
         final Class<? extends EntityBeingModifiedWithInnerTypes> modEntityBeingModifiedWithInnerTypes = 
                 cl.startModification(EntityBeingModifiedWithInnerTypes.class)
                 .modifyProperties(np)
@@ -473,7 +500,7 @@ public class DynamicEntityTypeModificationTest {
     public void test_generated_class_with_inner_types_factory_instantiation() throws Exception {
         // enhance(EntityBeingModifiedWithInnerTypes)
         //      integerProp: Integer -> BigInteger
-        final NewProperty np = NewProperty.changeType("integerProp", BigInteger.class);
+        final NewProperty np = NewProperty.fromField(EntityBeingModifiedWithInnerTypes.class, "integerProp").changeType(BigInteger.class);
         final Class<? extends EntityBeingModifiedWithInnerTypes> modEntityBeingModifiedWithInnerTypes = 
                 cl.startModification(EntityBeingModifiedWithInnerTypes.class)
                 .modifyProperties(np)
@@ -507,7 +534,10 @@ public class DynamicEntityTypeModificationTest {
                 .addProperties(pd)
                 .endModification();
 
-        final NewProperty npOne2ManySpecialCase = NewProperty.changeType("one2manyAssociationSpecialCase", modOneToManyDetailsEntity);
+        // enhance(MasterEntityWithOneToManyAssociation)
+        //      one2manyAssociationSpecialCase: DetailsEntityForOneToManyAssociation ---> modOneToManyDetailsEntity
+        final NewProperty npOne2ManySpecialCase = NewProperty.fromField(MasterEntityWithOneToManyAssociation.class,
+                "one2manyAssociationSpecialCase").changeType(modOneToManyDetailsEntity);
         final Class<? extends MasterEntityWithOneToManyAssociation> modOneToManyMasterEntity = 
                 cl.startModification(MasterEntityWithOneToManyAssociation.class)
                 .modifyProperties(npOne2ManySpecialCase)
@@ -527,8 +557,11 @@ public class DynamicEntityTypeModificationTest {
                 .addProperties(pd)
                 .endModification();
 
-        final NewProperty npOne2ManyCollectional = NewProperty.changeTypeSignature("one2manyAssociationCollectional",
-                modOneToManyDetailsEntity);
+        // enhance(MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPropValue)
+        //      one2manyAssociationCollectional: List<DetailsEntityForOneToManyAssociation> ---> List<modOneToManyDetailsEntity> 
+        final NewProperty npOne2ManyCollectional = NewProperty.fromField(
+                MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPropValue.class, "one2manyAssociationCollectional"
+                ).setTypeArguments(modOneToManyDetailsEntity);
         final Class<? extends MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPropValue> modOneToManyMasterEntity = 
                 cl.startModification(MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPropValue.class)
                 .modifyProperties(npOne2ManyCollectional)
