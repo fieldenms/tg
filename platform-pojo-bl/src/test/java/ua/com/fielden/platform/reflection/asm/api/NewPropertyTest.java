@@ -90,6 +90,17 @@ public class NewPropertyTest {
                 new Type[] {String.class}, ((ParameterizedType) genericType).getActualTypeArguments());
     }
     
+    /**
+     * For collectional properties with raw types (e.g. <code>List</code>) the method {@link NewProperty#genericTypeAsDeclared()} 
+     * should return the raw type, i.e., it should ignore the value of {@link IsProperty}.
+     */
+    @Test
+    public void collectional_property_with_raw_type_returns_correct_generic_declared_type() {
+        final Type genericTypeAsDeclared = collectionalRawList.genericTypeAsDeclared();
+        assertTrue("Incorrect representation of property's declared type.", Class.class.isInstance(genericTypeAsDeclared));
+        assertEquals("Incorrect type returned as property's declared type.", List.class, (Class<?>) genericTypeAsDeclared);
+    }
+    
     @Test
     public void changing_the_type_argument_of_collectional_property_also_modifies_value_of_IsProperty_annotation() {
         // copy NewProperty and manually copy @IsProperty annotation
