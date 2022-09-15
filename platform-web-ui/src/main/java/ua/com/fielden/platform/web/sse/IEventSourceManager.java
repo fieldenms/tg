@@ -15,4 +15,12 @@ public interface IEventSourceManager {
      * @return
      */
     IEventSourceManager registerEventSource(final IEventSource eventSource);
+
+    /**
+     * Removes registered with {@link #registerEventSource(IEventSource)} event source.
+     *
+     * @param eventSource - previously registered event source.
+     * @return
+     */
+    boolean removeEventSource(final IEventSource eventSource);
 }

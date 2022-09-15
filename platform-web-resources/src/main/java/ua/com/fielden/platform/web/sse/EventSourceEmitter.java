@@ -30,7 +30,7 @@ import ua.com.fielden.platform.web.application.RequestInfo;
  * @author TG Team
  *
  */
-public final class EventSourceEmitter implements IEmitter, Runnable {
+public final class EventSourceEmitter implements IEmitter, Runnable, IEventSourceManager {
 
     private static final byte[] CRLF = new byte[] { '\r', '\n' };
     private static final byte[] EVENT_FIELD = "event: ".getBytes(StandardCharsets.UTF_8);
@@ -59,13 +59,23 @@ public final class EventSourceEmitter implements IEmitter, Runnable {
      * @param serialiser
      * @throws IOException
      */
-    public EventSourceEmitter(final AtomicBoolean shouldResourceThreadBeBlocked, final List<IEventSource> eventSources, final AsyncContext async, final RequestInfo info) throws IOException {
+    public EventSourceEmitter(final AtomicBoolean shouldResourceThreadBeBlocked, final AsyncContext async, final RequestInfo info) throws IOException {
         this.shouldResourceThreadBeBlocked = shouldResourceThreadBeBlocked;
-        this.eventSources.addAll(eventSources);
         this.async = async;
         this.output = async.getResponse().getOutputStream();
         this.info = info;
         logger.info(format("Started event source emitter: %s", info.toString()));
+    }
+
+    @Override
+    public IEventSourceManager registerEventSource(final IEventSource eventSource) {
+        eventSources.add(eventSource);
+        return this;
+    }
+
+    @Override
+    public boolean removeEventSource(final IEventSource eventSource) {
+        return eventSources.remove(eventSource);
     }
 
     @Override

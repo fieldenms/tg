@@ -2,8 +2,6 @@ package ua.com.fielden.platform.web.sse.resources;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import javax.servlet.AsyncContext;
@@ -18,12 +16,12 @@ import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
 
 import ua.com.fielden.platform.utils.IDates;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.application.RequestInfo;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebResource;
-import ua.com.fielden.platform.web.sse.AbstractEventSource;
 import ua.com.fielden.platform.web.sse.EventSourceEmitter;
-import ua.com.fielden.platform.web.sse.IEventSource;
+import ua.com.fielden.platform.web.sse.IEmitter;
 import ua.com.fielden.platform.web.utils.ServletUtils;
 
 /**
@@ -35,17 +33,17 @@ public class EventSourcingResource extends AbstractWebResource {
 
     private final Logger logger = Logger.getLogger(this.getClass());
     private final AtomicBoolean shouldKeepGoing = new AtomicBoolean(true);
-    private final List<IEventSource> eventSources = new ArrayList<>();
+    private final IWebUiConfig webApp;
 
     public EventSourcingResource(
-            final List<AbstractEventSource<?,?>> eventSources,
+            final IWebUiConfig webApp,
             final IDeviceProvider deviceProvider,
             final IDates dates,
             final Context context,
             final Request request,
             final Response response) {
         super(context, request, response, deviceProvider, dates);
-        this.eventSources.addAll(eventSources);
+        this.webApp = webApp;
     }
 
     /**
@@ -55,19 +53,20 @@ public class EventSourcingResource extends AbstractWebResource {
      */
     @Get
     public void subcribeClient() throws ResourceException {
+        final String sseIdString = getRequest().getAttributes().get("sseUid").toString();
         try {
-            final HttpServletRequest httpRequest = ServletUtils.getRequest(getRequest());
-            final HttpServletResponse httpResponse = ServletUtils.getResponse(getResponse());
-            makeHandshake(httpResponse);
-            // create an asynchronous context for pushing messages out to the subscribed client
-            final AsyncContext async = httpRequest.startAsync();
-            // Infinite timeout because the continuation is never resumed,
-            // but only completed on close
-            async.setTimeout(0);
-            final EventSourceEmitter emitter = new EventSourceEmitter(shouldKeepGoing, eventSources, async, new RequestInfo(getRequest()));
-            emitter.scheduleHeartBeat();
-            for (final IEventSource eventSource: eventSources) {
-                eventSource.onOpen(emitter);
+            IEmitter emitter = webApp.getEmitterManager().getEmitter(sseIdString);
+            if (emitter == null) {
+                final HttpServletRequest httpRequest = ServletUtils.getRequest(getRequest());
+                final HttpServletResponse httpResponse = ServletUtils.getResponse(getResponse());
+                makeHandshake(httpResponse);
+                // create an asynchronous context for pushing messages out to the subscribed client
+                final AsyncContext async = httpRequest.startAsync();
+                // Infinite timeout because the continuation is never resumed,
+                // but only completed on close
+                async.setTimeout(0);
+                emitter = new EventSourceEmitter(shouldKeepGoing, async, new RequestInfo(getRequest()));
+                webApp.getEmitterManager().registerEmitter(sseIdString, emitter);
             }
         } catch (final IOException ex) {
             logger.error(ex);
@@ -79,6 +78,7 @@ public class EventSourcingResource extends AbstractWebResource {
             try {
                 Thread.sleep(2000);
             } catch (final Exception e) {
+                webApp.getEmitterManager().closeEmitter(sseIdString);
                 logger.error(e);
             }
         }

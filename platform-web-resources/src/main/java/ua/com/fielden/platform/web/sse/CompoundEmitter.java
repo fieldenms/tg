@@ -20,6 +20,11 @@ public class CompoundEmitter implements IEmitter, IEmitterManager, IEventSourceM
     }
 
     @Override
+    public boolean removeEventSource(final IEventSource eventSource) {
+        return eventSources.remove(eventSource.getClass()) != null;
+    }
+
+    @Override
     public IEmitterManager registerEmitter(final String uid, final IEmitter emitter) {
         emitters.put(uid, emitter);
         return this;
@@ -85,5 +90,4 @@ public class CompoundEmitter implements IEmitter, IEmitterManager, IEventSourceM
             emitters.forEach((uid, emitter) -> closeEmitter(uid));
         }
     }
-
 }

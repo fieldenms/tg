@@ -12,9 +12,6 @@ import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.application.AbstractWebUiResources;
 import ua.com.fielden.platform.web.factories.webui.AttachmentDownloadResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.FileProcessingResourceFactory;
-import ua.com.fielden.platform.web.sse.resources.EventSourcingResourceFactory;
-import ua.com.fielden.platform.web.test.eventsources.TgMessageEventSource;
-import ua.com.fielden.platform.web.test.eventsources.TgPersistentEntityWithPropertiesEventSrouce;
 
 /**
  * Custom {@link AbstractWebUiResources} descendant for Web UI Testing Server. Provided in order to configure entity centres, masters and other client specific stuff.
@@ -88,7 +85,7 @@ public class WebUiResources extends AbstractWebUiResources {
 
         // register some server-side eventing
         // router.attach("/sse/events",  new _EventSourcingResourceFactory()); -- some experimental stuff, which should be kept here for the moment
-        router.attach("/sse/entity-centre-events",  new EventSourcingResourceFactory(injector, deviceProvider, dates, TgPersistentEntityWithPropertiesEventSrouce.class));
-        router.attach("/sse/message-update-events", new EventSourcingResourceFactory(injector, deviceProvider, dates, TgMessageEventSource.class));
+        //router.attach("/sse/entity-centre-events",  new EventSourcingResourceFactory(injector, deviceProvider, dates, TgPersistentEntityWithPropertiesEventSrouce.class));
+        // router.attach("/sse/message-update-events", new EventSourcingResourceFactory(injector, deviceProvider, dates, TgMessageEventSource.class));
     }
 }
