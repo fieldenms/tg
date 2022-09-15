@@ -58,25 +58,17 @@ public final class NewProperty<T> {
      * @return
      */
     public static NewProperty<?> fromField(final Field field) {
-        final Title titleAnnot = field.getDeclaredAnnotation(Title.class);
-        // TODO simply pass Title along with other annotations
-        final String title = titleAnnot == null ? null : titleAnnot.value();
-        final String desc = titleAnnot == null ? null : titleAnnot.desc();
-        // exclude Title annotation from the list of declared annotations
-        // instead we will pass its value() and desc() attributes
-        final Annotation[] restAnnotations = titleAnnot == null ? 
-                field.getDeclaredAnnotations() : 
-                Arrays.stream(field.getDeclaredAnnotations()).filter(annot -> !annot.equals(titleAnnot)).toArray(Annotation[]::new);
+        final Annotation[] annotations = field.getDeclaredAnnotations();
 
         final Type genericType = field.getGenericType();
         // explicit check is needed to be able to store the information about type arguments
         if (ParameterizedType.class.isInstance(genericType)) {
             final ParameterizedType parType = (ParameterizedType) genericType;
             return new NewProperty<>(field.getName(), PropertyTypeDeterminator.classFrom(parType.getRawType()),
-                    parType.getActualTypeArguments(), title, desc, restAnnotations);
+                    parType.getActualTypeArguments(), null, null, annotations);
         }
         // only raw type information is available
-        return new NewProperty<>(field.getName(), PropertyTypeDeterminator.classFrom(genericType), title, desc, restAnnotations);
+        return new NewProperty<>(field.getName(), PropertyTypeDeterminator.classFrom(genericType), null, null, annotations);
     }
 
     /**
