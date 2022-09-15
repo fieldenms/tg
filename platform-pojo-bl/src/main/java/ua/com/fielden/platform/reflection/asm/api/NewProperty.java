@@ -147,11 +147,10 @@ public final class NewProperty<T> {
     }
 
     /**
-     * Creates a new property representation with a raw type and type arguments.
+     * A convenient factory method for creating a new property representation with a raw type and type arguments.
      * <p>
-     * If <code>annotations</code> do not contain {@link IsProperty}, then it's added implicitly.
-     * <p>
-     * <i>Note:</i> <code>annotations</code> should not contain {@link Title}.
+     * Refer to {@link #NewProperty(String, Class, Type[], String, String, Annotation...)} for details.
+     * 
      * @param name simple name of the property
      * @param rawType rawType of the property
      * @param typeArguments actual typeArguments if any, otherwise pass <code>null</code> or use another constructor
@@ -170,7 +169,11 @@ public final class NewProperty<T> {
      * <p>
      * If <code>annotations</code> do not contain {@link IsProperty}, then it's added implicitly.
      * <p>
-     * <i>Note:</i> <code>annotations</code> should not contain {@link Title}.
+     * Generally, {@link Title} annotation is constructed using <code>title</code> and <code>desc</code>, so having
+     * <code>annotations</code> contain {@link Title} has no effect.
+     * If, however, both <code>title</code> and <code>desc</code> are <code>null</code>, then {@link Title} from 
+     * <code>annotations</code> is considered (if found).
+     * 
      * @param name simple name of the property
      * @param rawType rawType of the property
      * @param typeArguments actual typeArguments if any, otherwise pass <code>null</code> or use another constructor
@@ -199,6 +202,7 @@ public final class NewProperty<T> {
                 .findAny().orElse(null);
         if (atIsProp != null) {
             // this::addAnnotation is used to avoid the possibility of old code breaking, since it could be providing duplicate annotations
+            // and also to avoid the possibility of adding @Title twice
             Arrays.stream(annotations)
                 .filter(annot -> annot.annotationType() != IsProperty.class)
                 .forEach(this::addAnnotation);
@@ -206,6 +210,7 @@ public final class NewProperty<T> {
         }
         else {
             // this::addAnnotation is used to avoid the possibility of old code breaking, since it could be providing duplicate annotations
+            // and also to avoid the possibility of adding @Title twice
             Arrays.stream(annotations).forEach(this::addAnnotation);
 
             // determine value() argument
@@ -219,11 +224,10 @@ public final class NewProperty<T> {
     }
 
     /**
-     * Creates a new property representation with a raw type.
+     * A convenient factory method for creating a new property representation with a raw type.
      * <p>
-     * If <code>annotations</code> do not contain {@link IsProperty}, then it's added implicitly.
-     * <p>
-     * <i>Note:</i> <code>annotations</code> should not contain {@link Title}.
+     * Refer to {@link #NewProperty(String, Class, String, String, Annotation...)} for details.
+     * 
      * @param name simple name of the property
      * @param rawType raw type of the property
      * @param title property title as in {@link Title} annotation
@@ -241,7 +245,11 @@ public final class NewProperty<T> {
      * <p>
      * If <code>annotations</code> do not contain {@link IsProperty}, then it's added implicitly.
      * <p>
-     * <i>Note:</i> <code>annotations</code> should not contain {@link Title}.
+     * Generally, {@link Title} annotation is constructed using <code>title</code> and <code>desc</code>, so having
+     * <code>annotations</code> contain {@link Title} has no effect.
+     * If, however, both <code>title</code> and <code>desc</code> are <code>null</code>, then {@link Title} from 
+     * <code>annotations</code> is considered (if found).
+     * 
      * @param name simple name of the property
      * @param rawType raw type of the property
      * @param title property title as in {@link Title} annotation
@@ -254,11 +262,9 @@ public final class NewProperty<T> {
 
 
     /**
-     * Creates a new property representation with a parameterized type.
+     * A convenient factory method for creating a new property representation with a parameterized type.
      * <p>
-     * If <code>annotations</code> do not contain {@link IsProperty}, then it's added implicitly.
-     * <p>
-     * <i>Note:</i> <code>annotations</code> should not contain {@link Title}.
+     * Refer to {@link #NewProperty(String, ParameterizedType, String, String, Annotation...)} for details.
      * 
      * @param name simple name of the property
      * @param type parameterized type of the property
@@ -273,7 +279,6 @@ public final class NewProperty<T> {
                 annotations);
     }
 
-    
     public boolean hasTypeArguments() {
         return typeArguments != null && !typeArguments.isEmpty();
     }
@@ -540,8 +545,9 @@ public final class NewProperty<T> {
      * Returns a newly created copy of this instance. However, the annotation instances are not copied, which means that you shouldn't modify them.
      * @return
      */
-    public NewProperty copy() {
-        return new NewProperty(name, type, typeArguments.toArray(Type[]::new), title, desc, annotations.toArray(Annotation[]::new));
+    public NewProperty<T> copy() {
+        return new NewProperty<T>(name, type, typeArguments.toArray(Type[]::new), title, desc, getAnnotations().toArray(Annotation[]::new));
+    }
     
     /**
      * Returns a fresh copy of this instance with its raw type set to <code>rawType</code>.
