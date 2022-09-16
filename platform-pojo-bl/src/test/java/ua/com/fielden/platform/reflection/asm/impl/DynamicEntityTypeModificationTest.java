@@ -576,4 +576,26 @@ public class DynamicEntityTypeModificationTest {
                     IsProperty.class)
                 .value());
     }
+    
+    @Test
+    public void initialization_value_of_a_property_can_be_modified() throws Exception {
+        // modify a simple property
+        final NewProperty np = NewProperty.fromField(EntityBeingEnhanced.class, "prop1").setValueThrows("Hello");
+        final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
+                .modifyProperties(np)
+                .endModification();
+        // instantiate
+        final EntityBeingEnhanced instance = factory.newByKey(modEntityBeingEnhanced, "new");
+        assertEquals("Incorrect property initialization value.", np.getValue(), instance.get(np.getName()));
+
+        // modify a collectional property
+        final NewProperty npColl = NewProperty.fromField(EntityWithCollectionalPropety.class, "prop1").setValueThrows(new ArrayList<>());
+        final Class<? extends EntityWithCollectionalPropety> modEntityWithCollectionalPropety =
+                cl.startModification(EntityWithCollectionalPropety.class)
+                .modifyProperties(npColl)
+                .endModification();
+        // instantiate
+        final EntityWithCollectionalPropety instanceColl = factory.newByKey(modEntityWithCollectionalPropety, "new");
+        assertEquals("Incorrect property initialization value.", npColl.getValue(), instanceColl.get(npColl.getName()));
+    }
 }
