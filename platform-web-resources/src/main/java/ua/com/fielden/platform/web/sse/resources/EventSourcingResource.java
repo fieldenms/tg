@@ -78,10 +78,10 @@ public class EventSourcingResource extends AbstractWebResource {
             try {
                 Thread.sleep(2000);
             } catch (final Exception e) {
-                webApp.getEmitterManager().closeEmitter(sseIdString);
                 logger.error(e);
             }
         }
+        webApp.getEmitterManager().closeEmitter(sseIdString);
         logger.debug("Server-Sent Event Restlet completed.");
 
     }

@@ -1,5 +1,6 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { TgSseBehavior } from '/resources/sse/tg-sse-behavior.js';
+import {eventSource} from '/app/tg-app-config.js';
 import { generateUUID } from '/resources/reflection/tg-polymer-utils.js';
 
 const TgFileProcessingBehaviorImpl = {
@@ -229,8 +230,10 @@ const TgFileProcessingBehaviorImpl = {
 
             // unique job UUID is required to register a progress update event source
             // which is provided to the server as a header value
-            const jobUid = generateUUID();
-            xhr.setRequestHeader('jobUid', jobUid);
+            this.jobUid = generateUUID();
+            xhr.setRequestHeader('jobUid', this.jobUid);
+            //Also add specify client uid to let server know what SSE emitter to chose for message sending 
+            xhr.setRequestHeader('sseUid', eventSource.sseUid);
             // and also let's provide the original file meta-data
             xhr.setRequestHeader('origFileName', encodeURIComponent(file.name));
             xhr.setRequestHeader('lastModified', file.lastModified);
@@ -241,7 +244,7 @@ const TgFileProcessingBehaviorImpl = {
             // onload occurs also if there was an error processing the file at the server side
             // therefore, it is necessary to analyse the response for any error
             xhr.onload = function (e) {
-                this.closeEventSource();
+                this.unsubscribeFromSseEvents();
                 this._cleanup();
 
                 // if the status is not success then need to call error handler
@@ -268,7 +271,7 @@ const TgFileProcessingBehaviorImpl = {
                     }
 
                     // can now subscribe to a server side processing progress eventing source
-                    this.uri = this.url + "/sse/" + jobUid;
+                    this.jobId = jobUid;
                 }
 
             }.bind(this);
@@ -277,7 +280,7 @@ const TgFileProcessingBehaviorImpl = {
             // and to invoke an external response handler if provided
             // onerror usually happens in case of networking issues
             xhr.onerror = function (e) {
-                this.closeEventSource();
+                this.unsubscribeFromSseEvents();
                 this._cleanup();
 
                 if (this.fpErrorHandler) {
@@ -287,7 +290,7 @@ const TgFileProcessingBehaviorImpl = {
 
             // let's clean up if the call was aborted
             xhr.onabort = function (e) {
-                this.closeEventSource();
+                this.unsubscribeFromSseEvents();
                 this._cleanup();
 
                 if (this.fpAbortEventHandler) {

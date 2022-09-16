@@ -8,6 +8,8 @@ import '/resources/polymer/@polymer/app-route/app-route.js';
 
 import '/resources/polymer/@polymer/neon-animation/neon-animated-pages.js';
 
+import '/app/tg-app-config.js';
+
 import '/resources/views/tg-app-menu.js';
 import '/resources/views/tg-app-view.js';
 import '/resources/master/tg-entity-master.js';
