@@ -36,8 +36,10 @@ public class DynamicEntityTypeMixedAndRepetitiveModificationTest {
 
     private final Calculated calculated = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION).newInstance();
 
-    private final NewProperty pd1 = new NewProperty(NEW_PROPERTY, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
-    private final NewProperty pd2 = new NewProperty(NEW_PROPERTY + 1, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
+    private final NewProperty<Money> np1 = NewProperty.create(NEW_PROPERTY, Money.class, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC,
+            calculated);
+    private final NewProperty<Money> np2 = NewProperty.create(NEW_PROPERTY + "1", Money.class, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC,
+            calculated);
 
     @Before
     public void setUp() {
@@ -46,72 +48,88 @@ public class DynamicEntityTypeMixedAndRepetitiveModificationTest {
 
     @Test
     public void test_complex_class_loading_with_multiple_repetative_enhancements() throws Exception {
-        // first enhancement
-        // get the enhanced EntityBeingEnhanced type
-        final Class<?> oneTimeEnhancedType = cl.startModification(EntityBeingEnhanced.class).addProperties(pd1).endModification();
-        // second enhancement
-        // get the enhanced EntityBeingEnhanced type
-        final Class<?> twoTimesEnhancedType = cl.startModification(oneTimeEnhancedType).addProperties(pd2).endModification();
+        // 1. enhance(EntityBeingEnhanced)
+        final Class<? extends EntityBeingEnhanced> mod1EntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
+                .addProperties(np1)
+                .endModification();
 
-        assertTrue("Incorrect name.", oneTimeEnhancedType.getName().startsWith(EntityBeingEnhanced.class.getName() + APPENDIX + "_"));
-        assertEquals("Incorrect parent.", AbstractEntity.class, oneTimeEnhancedType.getSuperclass());
+        // 2. enhance(mod1EntityBeingEnhanced)
+        final Class<? extends EntityBeingEnhanced> mod2EntityBeingEnhanced = cl.startModification(mod1EntityBeingEnhanced)
+                .addProperties(np2)
+                .endModification();
 
-        assertTrue("Incorrect name.", twoTimesEnhancedType.getName().startsWith(EntityBeingEnhanced.class.getName() + APPENDIX + "_"));
-        assertEquals("Incorrect parent.", AbstractEntity.class, twoTimesEnhancedType.getSuperclass());
+        assertTrue("Incorrect name.", mod1EntityBeingEnhanced.getName().startsWith(EntityBeingEnhanced.class.getName() + APPENDIX + "_"));
+        assertEquals("Incorrect parent.", EntityBeingEnhanced.class, mod1EntityBeingEnhanced.getSuperclass());
 
-        final Field field1 = Finder.findFieldByName(twoTimesEnhancedType, NEW_PROPERTY);
-        assertNotNull("Property should exist.", field1);
-        final Field field2 = Finder.findFieldByName(twoTimesEnhancedType, NEW_PROPERTY + 1);
-        assertNotNull("Property should exist.", field2);
+        assertTrue("Incorrect name.", mod2EntityBeingEnhanced.getName().startsWith(EntityBeingEnhanced.class.getName() + APPENDIX + "_"));
+        assertEquals("Incorrect parent.", mod1EntityBeingEnhanced, mod2EntityBeingEnhanced.getSuperclass());
+
+        final Field mod2Np1Field = Finder.findFieldByName(mod2EntityBeingEnhanced, np1.getName());
+        assertNotNull("Property should exist.", mod2Np1Field);
+        final Field mod2Np2Field = Finder.findFieldByName(mod2EntityBeingEnhanced, np2.getName());
+        assertNotNull("Property should exist.", mod2Np2Field);
     }
 
     @Test
     public void test_sequential_multiple_enhancements_and_modification() throws Exception {
-        // get the enhanced EntityBeingEnhanced type
-        final Class<?> entityBeingEnhancedEnhancedType = //
-        cl.startModification(EntityBeingEnhanced.class).//
-        addProperties(pd1).//
-        addProperties(pd2).//
-        endModification();
+        // enhance(EntityBeingEnhanced)
+        final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
+                .addProperties(np1)
+                .addProperties(np2)
+                .endModification();
 
-        assertTrue("Incorrect property type.", entityBeingEnhancedEnhancedType.getName().startsWith(EntityBeingEnhanced.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
+        assertTrue("Incorrect property type.", modEntityBeingEnhanced.getName().startsWith(
+                EntityBeingEnhanced.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
 
-        // get the modified and enhanced EntityBeingModified type
-        final Class<?> entityBeingModifiedModifiedType = //
-        cl.startModification(EntityBeingModified.class).//
-        addProperties(pd1).//
-        modifyProperties(NewProperty.changeType("prop1", entityBeingEnhancedEnhancedType)).//
-        endModification();
+        // enhance(EntityBeingModified)
+        //      prop1: EntityBeingEnhanced -> modEntityBeingEnhanced
+        final Class<? extends EntityBeingModified> modEntityBeingModified = cl.startModification(EntityBeingModified.class)
+                .addProperties(np1)
+                .modifyProperties(NewProperty.changeType("prop1", modEntityBeingEnhanced))
+                .endModification();
 
-        assertTrue("Incorrect property type.", entityBeingModifiedModifiedType.getName().startsWith(EntityBeingModified.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
+        assertTrue("Incorrect property type.", modEntityBeingModified.getName().startsWith(
+                EntityBeingModified.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
 
-        // get the modified TopLevelEntity type
-        final Class<?> topLevelEntityModifiedType = //
-        cl.startModification(TopLevelEntity.class).//
-        addProperties(pd1).//
-        addProperties(pd2).//
-        modifyProperties(NewProperty.changeType("prop1", entityBeingModifiedModifiedType)).//
-        modifyProperties(NewProperty.changeType("prop2", entityBeingModifiedModifiedType)).//
-        endModification();
+        // enhance(TopLevelEntity)
+        //      prop1: EntityBeingModified -> modEntityBeingModified
+        //      prop2: EntityBeingModified -> modEntityBeingModified
+        final Class<? extends TopLevelEntity> modTopLevelEntity = cl.startModification(TopLevelEntity.class)
+                .addProperties(np1)
+                .addProperties(np2)
+                .modifyProperties(NewProperty.changeType("prop1", modEntityBeingModified))
+                .modifyProperties(NewProperty.changeType("prop2", modEntityBeingModified))
+                .endModification();
 
-        assertTrue("Incorrect property type.", topLevelEntityModifiedType.getName().startsWith(TopLevelEntity.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
+        assertTrue("Incorrect property type.", modTopLevelEntity.getName().startsWith(
+                TopLevelEntity.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
 
-        // create a new instance of the modified TopLevelEntity type
-        final Object topLevelEntity = topLevelEntityModifiedType.newInstance();
+        // instantiate modTopLevelEntity
+        final TopLevelEntity topLevelEntity = modTopLevelEntity.getConstructor().newInstance();
         assertNotNull("Should not be null.", topLevelEntity);
 
-        // let's ensure that property types are compatible -- prop2 should be compatible with prop1 as its type is a super class for type of prop1
-        final Field prop1 = topLevelEntityModifiedType.getDeclaredField("prop1");
-        final Field prop2 = topLevelEntityModifiedType.getDeclaredField("prop2");
+
+        // let's ensure that property types are compatible 
+        // original prop2 and prop1 are of the same type - EntityBeingModified
+        final Field prop1 = Finder.getFieldByName(modTopLevelEntity, "prop1");
+        final Field prop2 = Finder.getFieldByName(modTopLevelEntity, "prop2");
         assertEquals("prop 1 and prop 2 should be of the same type", prop2.getType(), prop1.getType());
 
-        // now take one of the properties from top level entity and ensure that it's type is property modified
+        // now take one of the modified properties from the enhanced TopLevelEntity and ensure that its type is indeed modified 
+        // prop1.prop1: modEntityBeingEnhanced
         final Field enhancedProp = prop1.getType().getDeclaredField("prop1");
-        final Field unenhancedProp = prop1.getType().getDeclaredField("prop2");
-        assertTrue("Incorrect property type.", enhancedProp.getType().getName().startsWith(EntityBeingEnhanced.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
+        assertTrue("Incorrect property type.", enhancedProp.getType().getName().startsWith(
+                EntityBeingEnhanced.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
+
+        // prop1.prop2: EntityBeingEnhanced
+        final Field unenhancedProp = Finder.getFieldByName(prop1.getType(), "prop2");
         assertEquals("Incorrect property type.", EntityBeingEnhanced.class.getName(), unenhancedProp.getType().getName());
-        assertFalse("Original type should not be assignable to the enhanced type", unenhancedProp.getType().isAssignableFrom(enhancedProp.getType()));
-        assertFalse("Enhanced type should not be assignable to the original type", enhancedProp.getType().isAssignableFrom(unenhancedProp.getType()));
+
+        assertTrue("Original type should be assignable FROM the enhanced type.",
+                unenhancedProp.getType().isAssignableFrom(enhancedProp.getType()));
+        assertFalse("Enhanced type should be assignable TO the original type",
+                // in other words, enhanced type should NOT be assignable FROM the original type
+                enhancedProp.getType().isAssignableFrom(unenhancedProp.getType()));
     }
 
 }
