@@ -74,4 +74,9 @@ public class EntityMetaModelAliasedTest {
         assertNotEquals(MetaModels.ExampleEntity_("m"), MetaModels.SubEntity_("m"));
     }
 
+    @Test
+    public void meta_models_for_the_same_entities_but_different_aliases_are_not_equal() {
+        assertNotEquals(MetaModels.ExampleEntity_("m1"), MetaModels.ExampleEntity_("m2"));
+    }
+
 }
