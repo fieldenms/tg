@@ -3,6 +3,7 @@ package ua.com.fielden.platform.processors.metamodel.utils;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Stream.iterate;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -230,15 +231,9 @@ public class ElementFinder {
      * @param rootClass - upper limit (included) of a superclass of typeElement
      */
     public Set<VariableElement> findInheritedFields(TypeElement typeElement, Class<?> rootClass) {
-        final Set<VariableElement> fields = new LinkedHashSet<>();
-
-        TypeElement superclass = getSuperclassOrNull(typeElement, rootClass);
-        while (superclass != null) {
-            fields.addAll(findDeclaredFields(superclass));
-            superclass = getSuperclassOrNull(superclass, rootClass);
-        }
-
-        return fields;
+        return iterate(getSuperclassOrNull(typeElement, rootClass), superType -> getSuperclassOrNull(superType, rootClass))
+               .takeWhile(el -> el != null)
+               .flatMap(type -> findDeclaredFields(type).stream()).collect(toCollection(LinkedHashSet::new));
     }
 
     /**
@@ -383,15 +378,9 @@ public class ElementFinder {
      * @return
      */
     public Set<ExecutableElement> findInheritedMethods(final TypeElement typeElement) {
-        final Set<ExecutableElement> methods = new LinkedHashSet<>();
-
-        TypeElement superclass = getSuperclassOrNull(typeElement);
-        while (superclass != null) {
-            methods.addAll(findDeclaredMethods(superclass));
-            superclass = getSuperclassOrNull(superclass);
-        }
-
-        return methods;
+        return iterate(getSuperclassOrNull(typeElement), superType -> getSuperclassOrNull(superType))
+               .takeWhile(el -> el != null)
+               .flatMap(type -> findDeclaredMethods(type).stream()).collect(toCollection(LinkedHashSet::new));
     }
 
     /**
@@ -539,4 +528,5 @@ public class ElementFinder {
                 .map(pkgEl -> pkgEl.getQualifiedName().toString())
                 .orElse(null);
     }
+
 }

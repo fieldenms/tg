@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.processors.metamodel.exceptions;
 
 /**
- * A runtime exception time to report error pertaining to finding elements with {@link ElementFinder}.
+ * A runtime exception time to report errors pertaining to finding elements with {@link ElementFinder}.
  *
  * @author TG Team
  *
@@ -12,4 +12,5 @@ public class ElementFinderException extends RuntimeException {
     public ElementFinderException(final String message) {
         super(message);
     }
+
 }
