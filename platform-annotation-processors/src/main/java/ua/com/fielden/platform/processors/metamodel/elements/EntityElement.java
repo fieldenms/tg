@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.processors.metamodel.elements;
 
+import java.util.Objects;
+
 import javax.lang.model.element.TypeElement;
 
 import com.squareup.javapoet.ClassName;
@@ -10,7 +12,7 @@ import com.squareup.javapoet.ClassName;
  * @author TG Team
  *
  */
-public class EntityElement extends ForwardingTypeElement {
+public final class EntityElement extends AbstractForwardingTypeElement {
     private String packageName;
 
     /**
@@ -34,6 +36,23 @@ public class EntityElement extends ForwardingTypeElement {
 
     public ClassName getEntityClassName() {
         return ClassName.get(packageName, getSimpleName().toString());
+    }
+
+    @Override
+    public int hashCode() {
+        return 31 + Objects.hash(getQualifiedName());
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof EntityElement)) {
+            return false;
+        }
+        final EntityElement that = (EntityElement) obj;
+        return Objects.equals(this.getQualifiedName(), that.getQualifiedName());
     }
 
 }

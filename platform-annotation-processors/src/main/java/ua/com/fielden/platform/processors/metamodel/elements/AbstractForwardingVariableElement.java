@@ -2,9 +2,9 @@ package ua.com.fielden.platform.processors.metamodel.elements;
 
 import javax.lang.model.element.VariableElement;
 
-class ForwardingVariableElement extends ForwardingElement<VariableElement> implements VariableElement {
+abstract class AbstractForwardingVariableElement extends AbstractForwardingElement<VariableElement> implements VariableElement {
 
-    protected ForwardingVariableElement(final VariableElement element) {
+    protected AbstractForwardingVariableElement(final VariableElement element) {
         super(element);
     }
 

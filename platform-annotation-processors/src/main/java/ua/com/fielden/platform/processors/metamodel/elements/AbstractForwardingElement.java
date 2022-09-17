@@ -15,21 +15,18 @@ import javax.lang.model.type.TypeMirror;
 import ua.com.fielden.platform.processors.metamodel.exceptions.ForwardingElementException;
 
 /**
- * Forwards calls to a given {@link Element} implementation.
+ * A base type that implements {@link Element} and acts as a wrapper around an {@code element} instance, where all the {@link Element} contract calls are forwarded to {@code element}. 
+ *
  * @author TG Team
  *
  * @param <E> the implementation of {@link Element} to forward calls to
  */
-class ForwardingElement<E extends Element> implements Element {
+abstract class AbstractForwardingElement<E extends Element> implements Element {
     protected final E element;
     
-    /**
-     * Creates an implementation of {@link Element} that forwards its calls to <code>element</code>.
-     * @param element the element to forward calls to
-     */
-    protected ForwardingElement(final E element) {
+    protected AbstractForwardingElement(final E element) {
         if (element == null) {
-            throw new ForwardingElementException("Constructor received null as an argument.");
+            throw new ForwardingElementException("Value null for an element is not acceptable.");
         }
         this.element = element;
     }
@@ -70,17 +67,17 @@ class ForwardingElement<E extends Element> implements Element {
     }
 
     @Override
-    public <A extends Annotation> A getAnnotation(Class<A> annotationType) {
+    public <A extends Annotation> A getAnnotation(final Class<A> annotationType) {
         return element.getAnnotation(annotationType);
     }
 
     @Override
-    public <A extends Annotation> A[] getAnnotationsByType(Class<A> annotationType) {
+    public <A extends Annotation> A[] getAnnotationsByType(final Class<A> annotationType) {
         return element.getAnnotationsByType(annotationType);
     }
 
     @Override
-    public <R, P> R accept(ElementVisitor<R, P> v, P p) {
+    public <R, P> R accept(final ElementVisitor<R, P> v, P p) {
         return element.accept(v, p);
     }
 

@@ -11,7 +11,7 @@ import com.squareup.javapoet.ClassName;
  *
  * @author TG Team 
  */
-public class MetaModelElement extends ForwardingTypeElement {
+public final class MetaModelElement extends AbstractForwardingTypeElement {
     private final String packageName;
     
     public MetaModelElement(final TypeElement typeElement, final String packageName) {
@@ -30,6 +30,18 @@ public class MetaModelElement extends ForwardingTypeElement {
     @Override
     public int hashCode() {
         return 31 + Objects.hash(getQualifiedName());
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof MetaModelElement)) {
+            return false;
+        }
+        final MetaModelElement that = (MetaModelElement) obj;
+        return Objects.equals(this.getQualifiedName(), that.getQualifiedName());
     }
 
 }
