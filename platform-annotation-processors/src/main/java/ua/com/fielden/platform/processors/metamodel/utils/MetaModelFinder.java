@@ -36,7 +36,7 @@ import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
  *
  */
 public class MetaModelFinder extends ElementFinder {
-    
+
     public MetaModelFinder(final Elements elements, final Types types) {
         super(elements, types);
     }
@@ -44,11 +44,11 @@ public class MetaModelFinder extends ElementFinder {
     public boolean isMetaModel(final TypeElement typeElement) {
         return doesExtend(typeElement, METAMODEL_SUPERCLASS);
     }
-    
+
     public boolean isMetaModelAliased(final MetaModelElement mme) {
         return mme.getSimpleName().toString().endsWith(META_MODEL_ALIASED_NAME_SUFFIX);
     }
-    
+
     public Set<VariableElement> findPropertyMetaModelFields(final MetaModelElement mme) {
         return findNonStaticFields(mme).stream()
                 .filter(field -> isFieldOfType(field, PropertyMetaModel.class))
@@ -74,7 +74,7 @@ public class MetaModelFinder extends ElementFinder {
                 })
                 .collect(Collectors.toSet());
     }
-    
+
     /**
      * Finds all methods of a meta-model that model properties of the underlying entity. Processes the whole meta-model hierarchy (i.e. meta-models that extend other meta-models).
      * @param mme the target meta-model
@@ -135,11 +135,18 @@ public class MetaModelFinder extends ElementFinder {
         return !method.getModifiers().contains(Modifier.STATIC) &&
                 isSubtype(method.getReturnType(), EntityMetaModel.class);
     }
-    
+
+    /**
+     * Identifies whether {@code mmc} and {@code mme} represent the same meta-model type.
+     *
+     * @param mmc
+     * @param mme
+     * @return
+     */
     public boolean isSameMetaModel(final MetaModelConcept mmc, final MetaModelElement mme) {
-        return mmc.getQualifiedName().equals(mme.getQualifiedName());
+        return mmc.getQualifiedName().equals(mme.getQualifiedName().toString());
     }
-    
+
     /**
      * Attempts to find a meta-model for a given entity.
      * @param entityElement
@@ -179,8 +186,9 @@ public class MetaModelFinder extends ElementFinder {
                 .map(te -> newMetaModelElement(te))
                 .collect(Collectors.toCollection(LinkedHashSet::new));
     }
-    
+
     public MetaModelElement newMetaModelElement(final TypeElement typeElement) {
         return new MetaModelElement(typeElement, getPackageName(typeElement));
     }
+
 }
