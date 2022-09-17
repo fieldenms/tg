@@ -173,7 +173,7 @@ public class MetaModelFinder extends ElementFinder {
     }
 
     /**
-     * Identifies and collects all declared class-typed fields in the MetaModels element, which represent meta-models (i.e., extend {@link EntityMetaModel}).  
+     * Identifies and collects all declared fields in the MetaModels element, which represent meta-models (i.e., extend {@link EntityMetaModel}).  
      *
      * @param typeElement
      * @param elementUtils
