@@ -38,15 +38,22 @@ import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelEx
  *
  */
 public class ElementFinder {
-    protected Elements elements;
-    protected Types types;
+    public static final Class<?> DEFAULT_ROOT_CLASS = Object.class;
+
+    protected final Elements elements;
+    protected final Types types;
 
     public ElementFinder(final Elements elements, final Types types) {
+        if (elements == null) {
+            throw new ElementFinderException("Argument elements cannot be null.");
+        }
+        if (types == null) {
+            throw new ElementFinderException("Argument types cannot be null.");
+        }
+
         this.elements = elements;
         this.types = types;
     }
-
-    public static final Class<?> DEFAULT_ROOT_CLASS = Object.class;
 
     public Elements getElements() {
         return this.elements;
@@ -510,9 +517,6 @@ public class ElementFinder {
      *          of the second
      */
     public boolean isSubtype(final TypeMirror typeMirror, final Class<?> type) {
-        if (types == null) {
-            throw new ElementFinderException("types parameter can't be null.");
-        }
         if (typeMirror.getKind() != TypeKind.DECLARED) {
             return false;
         }
