@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.processors.metamodel.utils;
 
 import static java.util.stream.Collectors.toCollection;
+import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.METAMODEL_SUPERCLASS;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_ALIASED_NAME_SUFFIX;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_NAME_SUFFIX;
@@ -9,7 +10,6 @@ import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
@@ -52,7 +52,7 @@ public class MetaModelFinder extends ElementFinder {
     public Set<VariableElement> findPropertyMetaModelFields(final MetaModelElement mme) {
         return findNonStaticFields(mme).stream()
                 .filter(field -> isFieldOfType(field, PropertyMetaModel.class))
-                .collect(Collectors.toSet());
+                .collect(toSet());
     }
 
     public Set<VariableElement> findEntityMetaModelFields(final MetaModelElement mme) {
@@ -72,7 +72,7 @@ public class MetaModelFinder extends ElementFinder {
                     }
                     return false;
                 })
-                .collect(Collectors.toSet());
+                .collect(toSet());
     }
 
     /**
@@ -113,7 +113,7 @@ public class MetaModelFinder extends ElementFinder {
                     final TypeElement fieldTypeArgumentTypeElement = (TypeElement) fieldTypeArgument.asElement();
                     return newMetaModelElement(fieldTypeArgumentTypeElement);
                 })
-                .collect(Collectors.toSet());
+                .collect(toSet());
     }
 
     /**
@@ -168,7 +168,7 @@ public class MetaModelFinder extends ElementFinder {
     public TypeElement findMetaModelAliased(final MetaModelElement mme) {
         // aliasedMetaModelName = metaModelName - META_MODEL_NAME_SUFFIX + META_MODEL_ALIASED_NAME_SUFFIX
         final String entitySimpleName = StringUtils.substringBeforeLast(mme.getSimpleName().toString(), META_MODEL_NAME_SUFFIX);
-        final String qualName = String.format("%s.%s%s", mme.getPackageName(), entitySimpleName, META_MODEL_ALIASED_NAME_SUFFIX);
+        final String qualName = "%s.%s%s".formatted(mme.getPackageName(), entitySimpleName, META_MODEL_ALIASED_NAME_SUFFIX);
         return elements.getTypeElement(qualName);
     }
 
@@ -184,7 +184,7 @@ public class MetaModelFinder extends ElementFinder {
                 .map(field -> (TypeElement) ((DeclaredType) field.asType()).asElement())
                 .filter(te -> doesExtend(te, EntityMetaModel.class))
                 .map(te -> newMetaModelElement(te))
-                .collect(Collectors.toCollection(LinkedHashSet::new));
+                .collect(toCollection(LinkedHashSet::new));
     }
 
     public MetaModelElement newMetaModelElement(final TypeElement typeElement) {
