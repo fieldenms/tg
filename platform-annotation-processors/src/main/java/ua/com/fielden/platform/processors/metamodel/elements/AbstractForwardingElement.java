@@ -77,7 +77,7 @@ abstract class AbstractForwardingElement<E extends Element> implements Element {
     }
 
     @Override
-    public <R, P> R accept(final ElementVisitor<R, P> v, P p) {
+    public <R, P> R accept(final ElementVisitor<R, P> v, final P p) {
         return element.accept(v, p);
     }
 
