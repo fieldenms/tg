@@ -581,7 +581,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         public class ${METAMODEL_ALIASED} extends ${METAMODEL} {
             public final String alias;
 
-            public ${METAMODEL_ALIASED}(String alias) {
+            public ${METAMODEL_ALIASED}(final String alias) {
                 super(alias);
                 if (alias.isBlank()) {
                     throw new EntityMetaModelAliasedException("Alias can't be blank");
@@ -602,7 +602,7 @@ public class MetaModelProcessor extends AbstractProcessor {
                 .addField(String.class, "alias", Modifier.PUBLIC, Modifier.FINAL)
                 .addMethod(MethodSpec.constructorBuilder()
                         .addModifiers(Modifier.PUBLIC)
-                        .addParameter(String.class, "alias")
+                        .addParameter(String.class, "alias", Modifier.FINAL)
                         .addStatement("super(alias)")
                         .addCode(CodeBlock.builder()
                                 .beginControlFlow("if (alias.isBlank())")
@@ -818,7 +818,7 @@ public class MetaModelProcessor extends AbstractProcessor {
     }
 
     /**
-     * Creates a {@link MethodSpec} for the <code>MetaModels</code> class to access aliased meta-models.
+     * Creates a {@link MethodSpec} for the <code>MetaModels</code> class to instantiate aliased meta-models.
      * <pre>
      * public static ${METAMODEL_ALIASED} ${NAME}(final String alias) {
      *     final ${METAMODEL_ALIASED} aliased = new ${METAMODEL_ALIASED}(alias);
