@@ -54,7 +54,7 @@ import com.google.common.io.ByteSource;
  * @author TG Team
  */
 public final class CompilationRule implements TestRule {
-    private static final JavaFileObject DUMMY = InMemoryJavaFileObjects.createJavaSource("Dummy", "final class Dummy {}");
+    private static final JavaFileObject PLACEHOLDER = InMemoryJavaFileObjects.createJavaSource("Placeholder", "final class Dummy {}");
 
     private Collection<? extends JavaFileObject> javaSources;
     private Optional<Processor> processor;
@@ -68,7 +68,7 @@ public final class CompilationRule implements TestRule {
      * @param processor annotation processor to use during compilation
      */
     public CompilationRule(final Collection<? extends JavaFileObject> javaSources, final Processor processor) {
-        this.javaSources = javaSources.isEmpty() || javaSources == null ? List.of(DUMMY) : javaSources;
+        this.javaSources = javaSources.isEmpty() || javaSources == null ? List.of(PLACEHOLDER) : javaSources;
         this.processor = Optional.ofNullable(processor);
     }
 
@@ -90,7 +90,6 @@ public final class CompilationRule implements TestRule {
                 if (!success) {
                     throw new IllegalStateException("Compilation failed.");
                 }
-                System.out.println("Compilation completed successfully.");
                 evaluatingProcessor.throwIfStatementThrew();
             }
         };
@@ -121,10 +120,10 @@ public final class CompilationRule implements TestRule {
 
     private final class EvaluatingProcessor extends AbstractProcessor {
 
-        final Statement base;
-        Throwable thrown;
+        private final Statement base;
+        private Throwable thrown;
 
-        EvaluatingProcessor(Statement base) {
+        public EvaluatingProcessor(final Statement base) {
             this.base = base;
         }
 
@@ -139,7 +138,7 @@ public final class CompilationRule implements TestRule {
         }
 
         @Override
-        public synchronized void init(ProcessingEnvironment processingEnv) {
+        public synchronized void init(final ProcessingEnvironment processingEnv) {
             super.init(processingEnv);
             processor.ifPresent(p -> p.init(processingEnv));
             elements = processingEnv.getElementUtils();
@@ -147,7 +146,7 @@ public final class CompilationRule implements TestRule {
         }
 
         @Override
-        public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+        public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
             processor.ifPresent(p -> p.process(annotations, roundEnv));
             if (roundEnv.processingOver()) {
                 try {
@@ -172,7 +171,7 @@ public final class CompilationRule implements TestRule {
     /**
      * Implementation of {@link JavaFileManager} that stores generated java sources in memory and provides access to retrieve them.
      * <p>
-     * Note: this file manager provides access to java sources exclusively (i.e. {@link JavaFileObject} instances with {@code kind ==} {@link Kind.SOURCE})
+     * Note: this file manager provides access to java sources exclusively (i.e., {@link JavaFileObject} instances with {@code kind ==} {@link Kind.SOURCE})
      * 
      * @author TG Team
      */
