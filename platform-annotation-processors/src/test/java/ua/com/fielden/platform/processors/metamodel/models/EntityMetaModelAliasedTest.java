@@ -12,7 +12,6 @@ import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelAl
 import ua.com.fielden.platform.processors.test_entities.meta.EntityWithEntityTypedAndOrdinaryPropsMetaModel;
 import ua.com.fielden.platform.processors.test_entities.meta.ExampleEntityMetaModelAliased;
 
-
 /**
  * Tests that cover meta-model aliasing capabilities.
  * <p>
@@ -53,7 +52,7 @@ public class EntityMetaModelAliasedTest {
     @Test
     public void blank_aliases_are_not_permitted() {
         for (final String alias:  new String[]{"", " ", "  "} ) {
-            assertThrows(EntityMetaModelAliasedException.class, () -> MetaModels.ExampleEntity_(alias) /* should an throw exception */);
+            assertThrows(EntityMetaModelAliasedException.class, () -> MetaModels.ExampleEntity_(alias) /* should throw an exception */);
         }
     }
 
