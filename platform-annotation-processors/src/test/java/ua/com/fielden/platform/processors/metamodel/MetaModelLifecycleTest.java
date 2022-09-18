@@ -25,6 +25,7 @@ import javax.tools.StandardJavaFileManager;
 import javax.tools.StandardLocation;
 import javax.tools.ToolProvider;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,31 +40,32 @@ import ua.com.fielden.platform.processors.metamodel.elements.MetaModelsElement;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
+import ua.com.fielden.platform.processors.test_utils.exceptions.TestCaseConfigException;
 
 /**
- * Tests that verify correctness of meta-model lifecycle, i.e., how a meta-model behaves across multiple compilation cycles in response to the evolution of a domain model.
+ * Tests that verify correctness of the meta-model generation lifecycle. More specification, how a meta-model behaves across multiple compilation cycles in response to the evolution of a domain model.
  * <p>
- * Current approach involves creating a temporary directory under <code>target/</code> before each test and storing generated meta-models there.
+ * Current approach involves creating a temporary directory under {@code target/} before each test and storing generated meta-models there.
  * This directory is cleaned up after each test.
  * Also note that entities which are created in these tests are not written to the temporary directory or to anywhere else at all.
  * Instead, to make them visible in the annotation processor's environment, we simply pass them as an input to the compiler.
  * Hence, the act of not compiling an entity is the same as that entity not existing.
  * <p>
- * All testable lifecycle operations perform 2 compilation cycles and since we use the meta-model processor for this project, we have meta-models generated at compile time under <code>target/generated-test-sources/</code>.
- * This means that in each of these tests during the 1st compilation cycle the annotation processor will find meta-models in <code>target/generated-test-sources/</code>.
+ * All testable lifecycle operations perform 2 compilation cycles and since we use the meta-model processor for this project, we have meta-models generated at compile time under {@code target/generated-test-sources/}.
+ * This means that in each of these tests during the 1st compilation cycle the annotation processor will find meta-models in {@code target/generated-test-sources/}.
  * And only during the 2nd compilation cycle it will correctly find the meta-models in the temporary directory that was created.
  * This is not a critical issue, but it prevents us from testing on a "clean sheet".
- * 
+ *
  * @author TG Team
  *
  */
 public class MetaModelLifecycleTest {
-    
+
     public static final String TEST_ENTITIES_PKG_NAME = "ua.com.fielden.platform.processors.test_entities";
     public static final Path TMP_GEN_TEST_SOURCES = Path.of("target", "tmp-gen-test-sources");
-    
-    private static final JavaFileObject DUMMY_JFO = toJFO(TypeSpec.classBuilder("Dummy").build(), "test.dummy");
-    
+
+    private static final JavaFileObject PLACEHOLDER_JFO = toJfo(TypeSpec.classBuilder("Placeholder").build(), "test.placeholder");
+
     @Before
     public void setup() {
         // we want to store generated meta-models in a temporary directory, so make sure it exists
@@ -71,22 +73,17 @@ public class MetaModelLifecycleTest {
             if (Files.notExists(TMP_GEN_TEST_SOURCES)) {
                 Files.createDirectory(TMP_GEN_TEST_SOURCES);
             }
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
+        } catch (final IOException ex) {
+            throw new TestCaseConfigException("Could not ensure existence of a temporary directory for generated meta-models.", ex);
         }
     }
 
     @After
     public void cleanup() {
-        // delete the temporary directory
-        for (final Path path: new Path[] {
-                TMP_GEN_TEST_SOURCES
-        }) {
-            System.out.println("Deleting " + path + ": " + rmDir(path));
-        }
+        // delete the temporary directory together with its content
+        FileUtils.deleteQuietly(TMP_GEN_TEST_SOURCES.toFile());
     }
-    
+
     /**
      * <ol>
 	 *  <li>Create an entity with one of the annotations that trigger meta-model generation and assert that its meta-model is acitve.</li>
@@ -105,18 +102,17 @@ public class MetaModelLifecycleTest {
                     .toBuilder()
                     .addAnnotation(annot)
                     .build();
-            compileAndAssertActiveMetaModel(List.of(toJFO(domainEntity, pkgName)), qualName);
+            compileAndAssertActiveMetaModel(List.of(toJfo(domainEntity, pkgName)), qualName);
 
             // build the same entity, but without the triggering annotation
             final TypeSpec nonDomainEntity = buildEntity(simpleName);
-            compileAndAssertInactiveMetaModel(List.of(toJFO(nonDomainEntity, pkgName)), 
-                    pkgName, simpleName);
+            compileAndAssertInactiveMetaModel(List.of(toJfo(nonDomainEntity, pkgName)), pkgName, simpleName);
         }
     }
 
     /**
-     * To the meta-model generation algorithm the action of renaming an entity is equivalent to that of removing it, since in both cases the original underlying entity ceases to exist.
-     * Thus this test covers both actions.
+     * The action of renaming an entity is equivalent to that of removing it, since in both cases the original underlying entity ceases to exist from the meta-model generation algorithm's perspective.
+     * This test covers both actions.
      */
     @Test
     public void meta_model_gets_deactivated_when_entity_is_removed() {
@@ -129,22 +125,23 @@ public class MetaModelLifecycleTest {
                 .toBuilder()
                 .addAnnotation(DomainEntity.class)
                 .build();
-        compileAndAssertActiveMetaModel(List.of(toJFO(domainEntity, pkgName)), qualName);
+        compileAndAssertActiveMetaModel(List.of(toJfo(domainEntity, pkgName)), qualName);
 
         // remove entity (i.e. don't include it in compilation targets) 
         // a compiler requires at least one compilation target, so give it a dummy
-        compileAndAssertInactiveMetaModel(List.of(DUMMY_JFO), pkgName, simpleName);
+        compileAndAssertInactiveMetaModel(List.of(PLACEHOLDER_JFO), pkgName, simpleName);
     }
-    
+
     /**
-     * Compiles <code>compilationTargets</code> and asserts that an active meta-model (+ the aliased one) exists for an entity with a given name.
+     * Compiles {@code compilationTargets} and asserts that an active meta-model (+ the aliased one) exists for an entity with a given name.
+     *
      * @param compilationTargets java sources to compile
      * @param entityQualName fully-qualified name of an entity, the meta-model of which is to be tested
      */
     private void compileAndAssertActiveMetaModel(final List<JavaFileObject> compilationTargets, final String entityQualName) {
         // compile and make assertions about the generated meta-model
         final boolean success = compile(compilationTargets,
-                (procEnv) -> {
+                procEnv -> {
                     // setup
                     final EntityFinder entityFinder = new EntityFinder(procEnv.getElementUtils(), procEnv.getTypeUtils());
                     final MetaModelFinder mmFinder = new MetaModelFinder(procEnv.getElementUtils(), procEnv.getTypeUtils());
@@ -166,7 +163,8 @@ public class MetaModelLifecycleTest {
     }
 
     /**
-     * Compiles <code>compilationTargets</code> and asserts that an INACTIVE meta-model (+ the aliased one) exists for an entity with a given name.
+     * Compiles {@code compilationTargets} and asserts that an INACTIVE meta-model (+ the aliased one) exists for an entity with a given name.
+     *
      * @param compilationTargets java sources to compile
      * @param entityPkgName package name of an entity, the meta-model of which is to be tested
      * @param entitySimpleName simple name of an entity, the meta-model of which is to be tested
@@ -174,7 +172,7 @@ public class MetaModelLifecycleTest {
     private void compileAndAssertInactiveMetaModel(final List<JavaFileObject> compilationTargets, final String entityPkgName, final String entitySimpleName) {
         // compile and make assertions about the generated meta-model
         final boolean success = compile(compilationTargets,
-                (procEnv) -> {
+                procEnv -> {
                     // setup
                     final MetaModelFinder mmFinder = new MetaModelFinder(procEnv.getElementUtils(), procEnv.getTypeUtils());
 
@@ -194,7 +192,7 @@ public class MetaModelLifecycleTest {
 
                     // make sure that MetaModels doesn't contain these two
                     final MetaModelsElement mmse = mmFinder.findMetaModelsElement()
-                            .orElseThrow(() -> new AssertionError("MetaModelsElement wasn't found"));
+                            .orElseThrow(() -> new AssertionError("MetaModelsElement was not found"));
                     assertFalse(mmse.getMetaModels().containsAll(List.of(mme, alMme)));
 
                 });
@@ -202,21 +200,24 @@ public class MetaModelLifecycleTest {
     }
 
     /**
-     * Builds a basic entity class.
+     * Builds a basic entity class:
      * <pre>
      * public class ${simpleName} extends AbsractEntity {}
      * </pre>
+     *
      * @param simpleName
      * @return {@link TypeSpec}
      */
     private TypeSpec buildEntity(final String simpleName) {
         return TypeSpec.classBuilder(simpleName).addModifiers(Modifier.PUBLIC).superclass(AbstractEntity.class).build();
     }
-    
+
     /**
-     * Compiles <code>compilationTargets</code> with {@link MetaModelProcessor} and applies <code>consumer</code>. See {@link Compilation#compileAndEvaluate}.
+     * Compiles {@code compilationTargets} with {@link MetaModelProcessor} and applies {@code consumer}.
+     * See {@link Compilation#compileAndEvaluate}.
      * <p>
-     * Generated sources are written to a temporary directory as defined by <code>TMP_GEN_TEST_SOURCES</code>.
+     * Generated sources are written to a temporary directory as defined by {@code TMP_GEN_TEST_SOURCES}.
+     *
      * @param compilationTargets
      * @param consumer
      * @return
@@ -225,53 +226,33 @@ public class MetaModelLifecycleTest {
         final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         final StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, Locale.getDefault(), StandardCharsets.UTF_8);
         try {
-            // write generated sources to the temporary directory
+            // set the temporary directory as a location for writing generated sources
             fileManager.setLocationFromPaths(StandardLocation.SOURCE_OUTPUT, List.of(TMP_GEN_TEST_SOURCES));
-            // search the temporary directory for sources
+            // set the temporary directory as a location to search for sources
             fileManager.setLocationFromPaths(StandardLocation.SOURCE_PATH, List.of(TMP_GEN_TEST_SOURCES));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+        } catch (final IOException ex) {
+            throw new TestCaseConfigException("Could not set compilation locations from paths.", ex);
         }
         // perform only annotation processing, without subsequent compilation
         final List<String> options = List.of("-proc:only");
         final Compilation compilation = new Compilation(compilationTargets, new MetaModelProcessor(), compiler, fileManager, options);
         try {
             return compilation.compileAndEvaluate(consumer);
-        } catch (Throwable e) {
-            e.printStackTrace();
+        } catch (final Throwable ex) {
+            ex.printStackTrace();
             return false;
         }
     }
-    
+
     /**
      * Maps {@link TypeSpec} to {@link JavaFileObject}.
+     *
      * @param typeSpec
      * @param pkgName
      * @return
      */
-    private static JavaFileObject toJFO(final TypeSpec typeSpec, final String pkgName) {
+    private static JavaFileObject toJfo(final TypeSpec typeSpec, final String pkgName) {
         return JavaFile.builder(pkgName, typeSpec).build().toJavaFileObject();
-    }
-
-    /**
-     * Deletes a file/directory recursively.
-     * @return
-     */
-    private static boolean rmDir(final Path path) {
-        // delete contents
-        if (Files.isDirectory(path)) {
-            try {
-                Files.list(path).forEach(p -> rmDir(p));
-            } catch (IOException e) {
-                return false;
-            }
-        }
-        // delete itself
-        try {
-            return Files.deleteIfExists(path);
-        } catch (IOException e) {
-            return false;
-        }
     }
 
 }

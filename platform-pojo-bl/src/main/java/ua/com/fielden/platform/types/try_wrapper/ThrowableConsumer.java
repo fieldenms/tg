@@ -11,7 +11,7 @@ import java.util.Objects;
  */
 
 @FunctionalInterface
-public interface FailableConsumer<T> {
+public interface ThrowableConsumer<T> {
 
     /**
      * Performs this operation on the given argument.
@@ -22,7 +22,7 @@ public interface FailableConsumer<T> {
     void accept(T t) throws Throwable;
 
     /**
-     * Returns a composed {@code FailableConsumer} that performs, in sequence, this
+     * Returns a composed {@code ThrowableConsumer} that performs, in sequence, this
      * operation followed by the {@code after} operation. If performing either
      * operation throws an exception, it is relayed to the caller of the
      * composed operation.  If performing this operation throws an exception,
@@ -33,8 +33,9 @@ public interface FailableConsumer<T> {
      * operation followed by the {@code after} operation
      * @throws NullPointerException if {@code after} is null
      */
-    default FailableConsumer<T> andThen(FailableConsumer<? super T> after) throws Throwable {
+    default ThrowableConsumer<T> andThen(final ThrowableConsumer<? super T> after) throws Throwable {
         Objects.requireNonNull(after);
         return (T t) -> { accept(t); after.accept(t); };
     }
+
 }

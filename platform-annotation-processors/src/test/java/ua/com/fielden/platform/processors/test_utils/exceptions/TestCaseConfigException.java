@@ -13,4 +13,8 @@ public class TestCaseConfigException extends RuntimeException {
         super(message);
     }
 
+    public TestCaseConfigException(final String message, final Throwable cause) {
+        super(message, cause);
+    }
+
 }

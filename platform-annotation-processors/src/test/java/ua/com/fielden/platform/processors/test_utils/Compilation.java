@@ -21,7 +21,7 @@ import javax.tools.ToolProvider;
 
 import org.junit.runners.model.Statement;
 
-import ua.com.fielden.platform.types.try_wrapper.FailableConsumer;
+import ua.com.fielden.platform.types.try_wrapper.ThrowableConsumer;
 
 /**
  * An abstraction for compiling java sources that is based on {@link CompilationTask} with the primary purpose of evaluating additional statements in the annotation processing environment.
@@ -60,22 +60,24 @@ public final class Compilation {
     }
 
     /**
-     * Similar to {@link #compileAndEvaluate}, but accepts a {@link FailableConsumer}.
+     * Similar to {@link #compileAndEvaluate}, but accepts a {@link ThrowableConsumer}.
      * <p>
-     * Use whenever <code>evaluator</code> might throw.
+     * Use whenever {@code evaluator} might throw.
+     *
      * @param evaluator
      * @return
      * @throws Throwable
      */
-    public boolean compileAndEvaluatef(final FailableConsumer<ProcessingEnvironment> evaluator) throws Throwable {
-            final EvaluatingProcessor evaluatingProcessor = new EvaluatingProcessor(evaluator);
-            boolean success = compile(evaluatingProcessor);
-            evaluatingProcessor.throwIfStatementThrew();
-            return success;
+    public boolean compileAndEvaluatef(final ThrowableConsumer<ProcessingEnvironment> evaluator) throws Throwable {
+        final EvaluatingProcessor evaluatingProcessor = new EvaluatingProcessor(evaluator);
+        final boolean success = compile(evaluatingProcessor);
+        evaluatingProcessor.throwIfStatementThrew();
+        return success;
     }
     
     /**
-     * Performs compilation and applies <code>evaluator</code> during the last round of annotation processing.
+     * Performs compilation and applies {@code evaluator} during the last round of annotation processing.
+     *
      * @param evaluator
      * @return
      * @throws Throwable
@@ -96,12 +98,16 @@ public final class Compilation {
         return task.call();
     }
 
+    /**
+     * An annotation processor that wraps {@code Compilation.processor}, passed during instantiation, in order to to be able to control its execution and error reporting.
+     *
+     */
     private final class EvaluatingProcessor extends AbstractProcessor {
 
-        final FailableConsumer<ProcessingEnvironment> evaluator;
-        Throwable thrown;
+        private final ThrowableConsumer<ProcessingEnvironment> evaluator;
+        private Throwable thrown;
 
-        EvaluatingProcessor(final FailableConsumer<ProcessingEnvironment> evaluator) {
+        public EvaluatingProcessor(final ThrowableConsumer<ProcessingEnvironment> evaluator) {
             this.evaluator = evaluator;
         }
 
@@ -131,8 +137,8 @@ public final class Compilation {
             if (roundEnv.processingOver()) {
                 try {
                     evaluator.accept(processingEnv);
-                } catch (Throwable e) {
-                    thrown = e;
+                } catch (final Throwable ex) {
+                    thrown = ex;
                 }
             }
             return false;
