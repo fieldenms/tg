@@ -9,7 +9,7 @@ import javax.lang.model.type.TypeMirror;
 
 import com.squareup.javapoet.ClassName;
 
-import ua.com.fielden.platform.annotations.metamodel.ForType;
+import ua.com.fielden.platform.annotations.metamodel.MetaModelForType;
 
 /**
  * Represents a source code of a meta-model for a corresponding domain entity.
@@ -33,7 +33,7 @@ public final class MetaModelElement extends AbstractForwardingTypeElement {
     }
 
     /**
-     * Returns a {@link TypeMirror} for the underlying entity by looking at {@link ForType} annotation.
+     * Returns a {@link TypeMirror} for the underlying entity by looking at {@link MetaModelForType} annotation.
      * <p>
      * Note that if the underlying entity no longer exists, then {@link ErrorType} with kind {@link TypeKind.ERROR} is returned.
      * @return type of the underlying entity
@@ -43,7 +43,7 @@ public final class MetaModelElement extends AbstractForwardingTypeElement {
         // the information to load or locate a class is not available, since we are in the realm of source code
         // therefore MirroredTypeException should be caught, which provides TypeMirror of that Class object
         try {
-            getAnnotation(ForType.class).value();
+            getAnnotation(MetaModelForType.class).value();
         } catch (MirroredTypeException e) {
             final TypeMirror entityTypeMirror = e.getTypeMirror();
             return entityTypeMirror;

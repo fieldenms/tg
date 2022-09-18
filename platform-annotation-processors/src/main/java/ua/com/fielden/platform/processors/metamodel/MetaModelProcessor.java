@@ -64,7 +64,7 @@ import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.WildcardTypeName;
 
-import ua.com.fielden.platform.annotations.metamodel.ForType;
+import ua.com.fielden.platform.annotations.metamodel.MetaModelForType;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
@@ -543,8 +543,8 @@ public class MetaModelProcessor extends AbstractProcessor {
             metaModelBuilder.addJavadoc(format("Description: %s\n<p>\n", desc)).build();
         }
         
-        // @ForType annotation
-        final AnnotationSpec annotForType = AnnotationSpec.builder(ForType.class)
+        // @MetaModelForType annotation
+        final AnnotationSpec annotForType = AnnotationSpec.builder(MetaModelForType.class)
             .addMember("value", "$T.class", entityClassName)
             .build();
         

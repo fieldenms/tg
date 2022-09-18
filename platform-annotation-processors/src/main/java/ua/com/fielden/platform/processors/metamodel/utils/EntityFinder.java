@@ -21,7 +21,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
-import ua.com.fielden.platform.annotations.metamodel.ForType;
+import ua.com.fielden.platform.annotations.metamodel.MetaModelForType;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
@@ -273,7 +273,8 @@ public class EntityFinder extends ElementFinder {
     }
 
     /**
-     * Finds the entity on which a given meta-model is based by looking at its {@link ForType} annotation.
+     * Finds the entity on which a given meta-model is based by looking at its {@link MetaModelForType} annotation.
+     *
      * @param mme
      * @return
      */

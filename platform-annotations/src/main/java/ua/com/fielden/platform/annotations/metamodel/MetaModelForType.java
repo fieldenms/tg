@@ -7,15 +7,18 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
 
 /**
- * Should be used to annotate meta-models with the value equal to the actual type that is being metamodeled.
- * 
+ * An annotation that is used during meta-model generation to reliably identify entities being meta-modelled.
+ * Annotation of meta-models happens automatically during the generation of meta-models and should not be used "manually" by application developers. 
+ *
  * @author TG Team
  */
 @Retention(RUNTIME)
 @Target(TYPE)
-public @interface ForType {
+public @interface MetaModelForType {
+
     /**
      * @return the underlying type that this meta-model is based on.
      */
     Class<?> value();
+
 }
