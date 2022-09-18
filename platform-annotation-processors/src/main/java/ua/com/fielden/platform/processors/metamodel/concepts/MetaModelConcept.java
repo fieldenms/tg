@@ -22,6 +22,7 @@ public final class MetaModelConcept {
     private final String aliasedSimpleName;
     private final String packageName;
     private final String qualifiedName;
+    private final String aliasedQualifiedName;
 
     public MetaModelConcept(final EntityElement entityElement) {
         this.entityElement = entityElement;
@@ -29,6 +30,7 @@ public final class MetaModelConcept {
         this.aliasedSimpleName = entityElement.getSimpleName() + MetaModelConstants.META_MODEL_ALIASED_NAME_SUFFIX;
         this.packageName = entityElement.getPackageName() + MetaModelConstants.META_MODEL_PKG_NAME_SUFFIX;
         this.qualifiedName = format("%s.%s", packageName, simpleName);
+        this.aliasedQualifiedName = format("%s.%s", packageName, aliasedSimpleName);
     }
 
     public EntityElement getEntityElement() {
@@ -49,6 +51,10 @@ public final class MetaModelConcept {
 
     public String getQualifiedName() {
         return qualifiedName;
+    }
+    
+    public String getAliasedQualifiedName() {
+        return aliasedQualifiedName;
     }
 
     public ClassName getMetaModelClassName() {

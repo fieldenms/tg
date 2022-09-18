@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.processors.metamodel.utils;
 
-import static java.lang.String.format;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toCollection;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION;
@@ -17,17 +16,18 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
+import ua.com.fielden.platform.annotations.metamodel.MetaModelForType;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.Title;
-import ua.com.fielden.platform.processors.metamodel.MetaModelConstants;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
@@ -166,7 +166,7 @@ public class EntityFinder extends ElementFinder {
      * @return
      */
     public boolean isEntityType(final TypeElement element) {
-        return Stream.iterate(element, el -> !equals(el, Object.class) , el -> getSuperclassOrNull(el))
+        return Stream.iterate(element, el -> !equals(el, Object.class) , el -> findSuperclass(el))
                .filter(el -> equals(el, ROOT_ENTITY_CLASS))
                .findFirst().isPresent();
     }
@@ -190,7 +190,7 @@ public class EntityFinder extends ElementFinder {
      */
     public boolean doesExtendPersistentEntity(final EntityElement element) {
         final TypeElement superclass = element;
-        return Stream.iterate(getSuperclassOrNull(superclass), el -> !equals(el, Object.class) , el -> getSuperclassOrNull(el))
+        return Stream.iterate(findSuperclass(superclass), el -> !equals(el, Object.class) , el -> findSuperclass(el))
                .filter(el -> isPersistentEntityType(EntityElement.wrapperFor(el)))
                .findFirst().isPresent();
     }
@@ -251,13 +251,8 @@ public class EntityFinder extends ElementFinder {
 
     public EntityElement getParent(final EntityElement element) {
         // superclass should not be null, because every entity extends AbstractEntity
-        final TypeElement superclass = getSuperclassOrNull(element, ROOT_ENTITY_CLASS);
-        
-        if (!isEntityType(superclass)) {
-            return null;
-        }
-
-        return newEntityElement(superclass);
+        final TypeElement superclass = findSuperclass(element);
+        return isEntityType(superclass) ? newEntityElement(superclass) : null;
     }
     
     /**
@@ -271,47 +266,21 @@ public class EntityFinder extends ElementFinder {
         if (element.getAnnotation(annotationClass) != null) {
             return of(element.getAnnotation(annotationClass));
         }
-        return findSuperclasses(element, ROOT_ENTITY_CLASS, true).stream()
+        return findSuperclasses(element, ROOT_ENTITY_CLASS).stream()
                 .filter(superEl -> superEl.getAnnotation(annotationClass) != null)
                 .map(superEl -> superEl.getAnnotation(annotationClass))
                 .findFirst();
     }
 
-    private static String getEntitySimpleName(final String metaModelSimpleName) {
-        final int index = metaModelSimpleName.lastIndexOf(MetaModelConstants.META_MODEL_NAME_SUFFIX);
-        return index == -1 ? null : metaModelSimpleName.substring(0, index);
-    }
-
-    private static String getEntityPackageName(final String metaModelPackageName) {
-        final int index = metaModelPackageName.lastIndexOf(MetaModelConstants.META_MODEL_PKG_NAME_SUFFIX);
-        return index == -1 ? null : metaModelPackageName.substring(0, index);
-    }
-
-    private static String getEntityQualifiedName(final String metaModelQualName) {
-        final int lastDot = metaModelQualName.lastIndexOf('.');
-        final String metaModelSimpleName = metaModelQualName.substring(lastDot + 1);
-        final String metaModelPackageName = metaModelQualName.substring(0, lastDot);
-
-        final String entitySimpleName = getEntitySimpleName(metaModelSimpleName);
-        if (entitySimpleName == null) {
-            return null;
-        }
-
-        final String entityPackageName = getEntityPackageName(metaModelPackageName);
-        if (entityPackageName == null) {
-            return null;
-        }
-
-        return format("%s.%s", entityPackageName, entitySimpleName);
-    }
-    
+    /**
+     * Finds the entity on which a given meta-model is based by looking at its {@link MetaModelForType} annotation.
+     *
+     * @param mme
+     * @return
+     */
     public EntityElement findEntityForMetaModel(final MetaModelElement mme) {
-        final String entityQualName = getEntityQualifiedName(mme.getQualifiedName().toString());
-        if (entityQualName == null) {
-            return null;
-        }
-        final TypeElement typeElement = elements.getTypeElement(entityQualName);
-        return typeElement == null ? null : newEntityElement(typeElement);
+        final TypeMirror entityType = mme.getEntityType();
+        return entityType == null || entityType.getKind() == TypeKind.ERROR ? null : newEntityElement(toTypeElement(entityType));
     }
 
     public boolean hasPropertyOfType(final EntityElement entityElement, final TypeMirror type, final Types typeUtils) {

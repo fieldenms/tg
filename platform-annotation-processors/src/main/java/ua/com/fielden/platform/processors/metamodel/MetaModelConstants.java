@@ -22,8 +22,8 @@ public abstract class MetaModelConstants {
 
     public static final Set<Class<? extends Annotation>> ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION = Set.of(MapEntityTo.class, DomainEntity.class, WithMetaModel.class);
 
-    public static final Class<EntityMetaModel> METAMODEL_SUPERCLASS = EntityMetaModel.class;
-    public static final ClassName METAMODEL_SUPERCLASS_CLASSNAME = ClassName.get(METAMODEL_SUPERCLASS);
+    public static final Class<EntityMetaModel> META_MODEL_SUPERCLASS = EntityMetaModel.class;
+    public static final ClassName META_MODEL_SUPERCLASS_CLASSNAME = ClassName.get(META_MODEL_SUPERCLASS);
 
     public static final String METAMODELS_CLASS_SIMPLE_NAME = "MetaModels";
     public static final String METAMODELS_CLASS_PKG_NAME = "metamodels";

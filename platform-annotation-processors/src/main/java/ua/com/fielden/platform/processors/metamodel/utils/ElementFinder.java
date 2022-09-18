@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.iterate;
+import static ua.com.fielden.platform.utils.StreamUtils.stopAfter;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -13,6 +14,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import javax.lang.model.AnnotatedConstruct;
 import javax.lang.model.element.AnnotationMirror;
@@ -21,6 +23,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
@@ -29,6 +32,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
+import ua.com.fielden.platform.processors.metamodel.elements.AbstractForwardingElement;
 import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderException;
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelException;
 
@@ -81,96 +85,69 @@ public class ElementFinder {
     }
 
     /**
-     * Determines whether {@code typElement} represent a type that extends {@code type}.
-     *
-     * @param typeElement
-     * @param type
-     * @return
-     */
-    public boolean doesExtend(final TypeElement typeElement, final Class<?> type) {
-        final List<TypeElement> superclasses = findSuperclasses(typeElement, true);
-        return superclasses.stream().anyMatch(sup -> equals(sup, type));
-    }
-
-    /**
-     * Returns the immediate parent class of {@code typeElement} or null if {@code typeElement} is either an interface type or {@link Object}, or a {@code rootClass}.
+     * Returns the immediate parent class of {@code typeElement} or null in the following cases:
+     * <ul>
+     *  <li>{@code typeElement} is the {@link Object} type
+     *  <li>{@code typeElement} is an interface type
+     *  <li>The superclass of {@code typeElement} is an interface type
+     * </ul>
      * 
      * @param typeElement
-     * @param rootClass
      * @return
      */
-    public TypeElement getSuperclassOrNull(final TypeElement typeElement, final Class<?> rootClass) {
-        // if this is a root class then return null
-        if (equals(typeElement, rootClass)) {
-            return null;
-        }
-
-        // with correct usage this code would never be reached
-        // but if supplied root class is not in the type hierarchy then this condition could be reached
+    public TypeElement findSuperclass(final TypeElement typeElement) {
         final TypeMirror superclass = typeElement.getSuperclass();
         if (superclass.getKind() == TypeKind.NONE) {
             return null;
         }
-
-        return (TypeElement) ((DeclaredType) superclass).asElement();
+        final TypeElement superclassTypeElement = toTypeElement(superclass);
+        // ignore interfaces
+        return superclassTypeElement.getKind() == ElementKind.INTERFACE ? null : superclassTypeElement;
     }
 
     /**
-     * Returns the immediate parent class of {@code typeElement} or null if {@code typeElement} is either an interface type or {@link Object}.
-     *
-     * @param typeElement
-     * @param rootClass
-     * @return
-     */
-    public TypeElement getSuperclassOrNull(final TypeElement typeElement) {
-        return getSuperclassOrNull(typeElement, DEFAULT_ROOT_CLASS);
-    }
-
-    /**
-     * Returns a list of all super-classes with respect to {@code typeElement}.
-     * The type hierarchy is traversed until either {@code rootType} or an interface type or {@link Object} is reached.
+     * Returns an ordered list of all super-classes with respect to {@code typeElement}.
+     * The type hierarchy is traversed until either {@code rootType} or an interface type is reached.
+     * <p>
+     * If {@code rootType} is not in the class hierarchy, then an empty list is returned.
+     * <p>
+     * {@code rootType} is included in the resulting list if it's a class type.
      *
      * @param typeElement
      * @param rootType
-     * @param includeRootType - controls whether the provided {@code rootType} is included in the list.
      * @return
      */
-    public List<TypeElement> findSuperclasses(final TypeElement typeElement, final Class<?> rootType, final boolean includeRootType) {
-        final List<TypeElement> superclasses = new ArrayList<>();
-
-        TypeMirror superclassTypeMirror = typeElement.getSuperclass();
-        TypeElement superclass = null;
-        while (superclassTypeMirror.getKind() != TypeKind.NONE) {
-            superclass = (TypeElement) ((DeclaredType) superclassTypeMirror).asElement();
-
-            if (equals(superclass, rootType)) {
-                if (includeRootType) {
-                    superclasses.add(superclass);
-                }
-                break;
-            }
-
-            superclasses.add(superclass);
-            superclassTypeMirror = superclass.getSuperclass();
+    public List<TypeElement> findSuperclasses(final TypeElement typeElement, final Class<?> rootType) {
+        if (!isSubtype(typeElement.asType(), rootType)) {
+            return List.of();
         }
-
-        // if the last parent element was an interface type, remove it
-        if (superclass != null && !superclasses.isEmpty() && (superclass.getKind() == ElementKind.INTERFACE)) {
-            superclasses.remove(superclasses.size() - 1);
-        }
-        
-        return superclasses;
+        return stopAfter(
+                iterate(findSuperclass(typeElement), te -> findSuperclass(te)),
+                te -> te == null || equals(te, rootType))
+                .filter(te -> te != null)
+                .toList();
     }
 
     /**
-     * The same as {@link #findSuperclasses(TypeElement, Class, boolean)}, but with the {@code rootType} set as {@code Object}. 
+     * The same as {@link #findSuperclasses(TypeElement, Class)}, but with the {@code rootType} set as {@code Object}. 
      *
      * @param typeElement
      * @param includeRootClass
      * @return
      */
-    public List<TypeElement> findSuperclasses(final TypeElement typeElement, final boolean includeRootClass) {
-        return findSuperclasses(typeElement, DEFAULT_ROOT_CLASS, includeRootClass);
+    public List<TypeElement> findSuperclasses(final TypeElement typeElement) {
+        return findSuperclasses(typeElement, DEFAULT_ROOT_CLASS);
+    }
+
+    /**
+     * Finds all super-types of a {@link TypeMirror}. No particular order is preserved.
+     *
+     * @param typeMirror
+     * @return
+     */
+    public List<TypeMirror> findSupertypes(final TypeMirror typeMirror) {
+        final List<TypeMirror> supertypes = (List<TypeMirror>) types.directSupertypes(typeMirror);
+        return supertypes.stream().flatMap(tm -> findSupertypes(tm).stream()).toList();
     }
 
     /**
@@ -202,17 +179,7 @@ public class ElementFinder {
      * @return
      */
     public Set<VariableElement> findInheritedFields(final TypeElement typeElement) {
-        // use LinkedHashSet to store fields so that they appear in their hierarchical order,
-        // that is, fields inherited from the root of the type hierarchy will be placed at the end of the set
-        final Set<VariableElement> fields = new LinkedHashSet<>();
-
-        TypeElement superclass = getSuperclassOrNull(typeElement);
-        while (superclass != null) {
-            fields.addAll(findDeclaredFields(superclass));
-            superclass = getSuperclassOrNull(superclass);
-        }
-
-        return fields;
+        return findInheritedFields(typeElement, DEFAULT_ROOT_CLASS);
     }
 
     /**
@@ -225,15 +192,19 @@ public class ElementFinder {
     }
 
     /**
-     * The same as {@link #findInheritedFields(TypeElement)}, but with upper type constrained to {@code rootClass}.
+     * The same as {@link #findInheritedFields(TypeElement)}, but with upper type constrained to <code>rootClass</code>.
+     * <p>
+     * If <code>rootClass</code> is absent in the class hierarchy, then an empty set is returned.
      * 
      * @param typeElement - target element which fields are to be found
      * @param rootClass - upper limit (included) of a superclass of typeElement
      */
-    public Set<VariableElement> findInheritedFields(TypeElement typeElement, Class<?> rootClass) {
-        return iterate(getSuperclassOrNull(typeElement, rootClass), superType -> getSuperclassOrNull(superType, rootClass))
-               .takeWhile(el -> el != null)
-               .flatMap(type -> findDeclaredFields(type).stream()).collect(toCollection(LinkedHashSet::new));
+    public Set<VariableElement> findInheritedFields(final TypeElement typeElement, final Class<?> rootClass) {
+        // use LinkedHashSet to store fields so that they appear in their hierarchical order,
+        // that is, fields inherited from the root of the type hierarchy will be placed at the end of the set
+        return findSuperclasses(typeElement, rootClass).stream()
+                .flatMap(te -> findDeclaredFields(te).stream())
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     /**
@@ -378,9 +349,10 @@ public class ElementFinder {
      * @return
      */
     public Set<ExecutableElement> findInheritedMethods(final TypeElement typeElement) {
-        return iterate(getSuperclassOrNull(typeElement), superType -> getSuperclassOrNull(superType))
-               .takeWhile(el -> el != null)
-               .flatMap(type -> findDeclaredMethods(type).stream()).collect(toCollection(LinkedHashSet::new));
+        return iterate(findSuperclass(typeElement), superType -> findSuperclass(superType))
+                .takeWhile(el -> el != null)
+                .flatMap(type -> findDeclaredMethods(type).stream()).collect(toCollection(LinkedHashSet::new));
+
     }
 
     /**
@@ -509,24 +481,44 @@ public class ElementFinder {
         if (typeMirror.getKind() != TypeKind.DECLARED) {
             return false;
         }
-        if (equals((TypeElement) ((DeclaredType) typeMirror).asElement(), type)) {
+        if (equals(toTypeElement(typeMirror), type)) {
             return true;
         }
-        final List<? extends TypeMirror> directSupertypes = types.directSupertypes(typeMirror);
-        if (directSupertypes.isEmpty()) {
-            return false;
-        }
-        return directSupertypes.stream().anyMatch(tm -> isSubtype(tm, type));
+        return types.directSupertypes(typeMirror).stream().anyMatch(tm -> isSubtype(tm, type));
     }
 
     public boolean isTopLevelClass(final Element element) {
         return element.getEnclosingElement().getKind() == ElementKind.PACKAGE;
     }
     
-    public String getPackageName(final TypeElement typeElement) {
-        return Optional.ofNullable(elements.getPackageOf(typeElement))
+    /**
+     * Wraps {@link Elements#getPackageOf} in order to avoid ClassCastException, since Sun's internal implementation of {@link Elements} expects a {@link com.sun.tools.javac.code.Symbol} instance.
+     * <p>
+     * In order to enable support for {@link ForwardingElement} we have to dynamically check the type of <code>element</code>.
+     * 
+     * @param element
+     * @return
+     */
+    public PackageElement getPackageOf(final Element element) {
+        if (AbstractForwardingElement.class.isAssignableFrom(element.getClass())) {
+            return elements.getPackageOf(((AbstractForwardingElement<Element>) element).element());
+        }
+        return elements.getPackageOf(element);
+    }
+    
+    public String getPackageName(final Element element) {
+        return Optional.ofNullable(getPackageOf(element))
                 .map(pkgEl -> pkgEl.getQualifiedName().toString())
                 .orElse(null);
+    }
+
+    /**
+     * Converts {@link TypeMirror} to {@link TypeElement}.
+     * @param typeMirror
+     * @return a {@link TypeElement} if conversion was successful, otherwise null
+     */
+    public TypeElement toTypeElement(final TypeMirror typeMirror) {
+        return typeMirror.getKind() == TypeKind.DECLARED ? (TypeElement) ((DeclaredType) typeMirror).asElement() : null;
     }
 
 }

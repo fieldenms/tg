@@ -21,7 +21,7 @@ import ua.com.fielden.platform.processors.metamodel.exceptions.ForwardingElement
  *
  * @param <E> the implementation of {@link Element} to forward calls to
  */
-abstract class AbstractForwardingElement<E extends Element> implements Element {
+public abstract class AbstractForwardingElement<E extends Element> implements Element {
     protected final E element;
     
     protected AbstractForwardingElement(final E element) {
@@ -29,6 +29,10 @@ abstract class AbstractForwardingElement<E extends Element> implements Element {
             throw new ForwardingElementException("Value null for an element is not acceptable.");
         }
         this.element = element;
+    }
+    
+    public E element() {
+        return element;
     }
     
     @Override

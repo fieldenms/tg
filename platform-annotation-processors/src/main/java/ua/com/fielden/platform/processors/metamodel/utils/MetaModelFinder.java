@@ -1,16 +1,20 @@
 package ua.com.fielden.platform.processors.metamodel.utils;
 
+import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toSet;
-import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.METAMODEL_SUPERCLASS;
+import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.METAMODELS_CLASS_QUAL_NAME;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_ALIASED_NAME_SUFFIX;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_NAME_SUFFIX;
+import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_SUPERCLASS;
 
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
 
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
@@ -23,9 +27,11 @@ import javax.lang.model.util.Types;
 
 import org.apache.commons.lang3.StringUtils;
 
+import ua.com.fielden.platform.processors.metamodel.MetaModelConstants;
 import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
+import ua.com.fielden.platform.processors.metamodel.elements.MetaModelsElement;
 import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
 
@@ -42,7 +48,7 @@ public class MetaModelFinder extends ElementFinder {
     }
 
     public boolean isMetaModel(final TypeElement typeElement) {
-        return doesExtend(typeElement, METAMODEL_SUPERCLASS);
+        return isSubtype(typeElement.asType(), META_MODEL_SUPERCLASS);
     }
 
     public boolean isMetaModelAliased(final MetaModelElement mme) {
@@ -66,8 +72,8 @@ public class MetaModelFinder extends ElementFinder {
 
                         // EntityMetaModel fields have type Supplier<[METAMODEL]>
                         if (equals(fieldTypeElement, Supplier.class)) {
-                            final DeclaredType fieldTypeArgument = (DeclaredType) ((DeclaredType) fieldType).getTypeArguments().get(0);
-                            return doesExtend((TypeElement) fieldTypeArgument.asElement(), EntityMetaModel.class);
+                            final TypeMirror fieldTypeArgument = ((DeclaredType) fieldType).getTypeArguments().get(0);
+                            return isSubtype(fieldTypeArgument, META_MODEL_SUPERCLASS);
                         }
                     }
                     return false;
@@ -144,7 +150,8 @@ public class MetaModelFinder extends ElementFinder {
      * @return
      */
     public boolean isSameMetaModel(final MetaModelConcept mmc, final MetaModelElement mme) {
-        return mmc.getQualifiedName().equals(mme.getQualifiedName().toString());
+        return mmc.getQualifiedName().equals(mme.getQualifiedName().toString()) ||
+               mmc.getAliasedQualifiedName().equals(mme.getQualifiedName().toString());
     }
 
     /**
@@ -165,11 +172,11 @@ public class MetaModelFinder extends ElementFinder {
      * @param elements
      * @return
      */
-    public TypeElement findMetaModelAliased(final MetaModelElement mme) {
+    public Optional<MetaModelElement> findMetaModelAliased(final MetaModelElement mme) {
         // aliasedMetaModelName = metaModelName - META_MODEL_NAME_SUFFIX + META_MODEL_ALIASED_NAME_SUFFIX
         final String entitySimpleName = StringUtils.substringBeforeLast(mme.getSimpleName().toString(), META_MODEL_NAME_SUFFIX);
         final String qualName = "%s.%s%s".formatted(mme.getPackageName(), entitySimpleName, META_MODEL_ALIASED_NAME_SUFFIX);
-        return elements.getTypeElement(qualName);
+        return Optional.ofNullable(elements.getTypeElement(qualName)).map(this::newMetaModelElement);
     }
 
     /**
@@ -180,15 +187,68 @@ public class MetaModelFinder extends ElementFinder {
      * @return
      */
     public Set<MetaModelElement> findMetaModels(final TypeElement typeElement) {
-        return findDeclaredFields(typeElement, field -> field.asType().getKind() == TypeKind.DECLARED).stream()
-                .map(field -> (TypeElement) ((DeclaredType) field.asType()).asElement())
-                .filter(te -> doesExtend(te, EntityMetaModel.class))
-                .map(te -> newMetaModelElement(te))
-                .collect(toCollection(LinkedHashSet::new));
+        final Set<MetaModelElement> metaModels = new HashSet<>();
+        // find regular meta-models that are declared as fields
+        findDeclaredFields(typeElement).stream()
+                .filter(field -> isSubtype(field.asType(), EntityMetaModel.class))
+                .map(field -> newMetaModelElement(toTypeElement(field.asType())))
+                .forEach(mme -> metaModels.add(mme));
+        // find aliased meta-models that are declared as methods
+        findDeclaredMethods(typeElement).stream()
+                .filter(method -> isSubtype(method.getReturnType(), EntityMetaModel.class))
+                .map(method -> newMetaModelElement(toTypeElement(method.getReturnType())))
+                .forEach(mme -> metaModels.add(mme));
+        
+        return unmodifiableSet(metaModels);
     }
 
     public MetaModelElement newMetaModelElement(final TypeElement typeElement) {
         return new MetaModelElement(typeElement, getPackageName(typeElement));
+    }
+
+    public boolean isActive(final MetaModelElement mme) {
+        return mme.getKind() == ElementKind.CLASS;
+    }
+    
+    public Optional<MetaModelsElement> findMetaModelsElement() {
+        return Optional.ofNullable(elements.getTypeElement(METAMODELS_CLASS_QUAL_NAME))
+                .map(te -> new MetaModelsElement(te, findMetaModels(te)));
+    }
+
+    public String resolveMetaModelPkgName(final String entityPkgName) {
+        return entityPkgName + MetaModelConstants.META_MODEL_PKG_NAME_SUFFIX;
+    }
+    
+    public String resolveMetaModelSimpleName(final String entitySimpleName) {
+        return entitySimpleName + MetaModelConstants.META_MODEL_NAME_SUFFIX;
+    }
+
+    public String resolveAliasedMetaModelSimpleName(final String entitySimpleName) {
+        return entitySimpleName + MetaModelConstants.META_MODEL_ALIASED_NAME_SUFFIX;
+    }
+
+    /**
+     * Resolves the FQN of a meta-model from the FQN of its underlying entity.
+     * <p>
+     * FQN - fully-qualified name
+     * @param entityPkgName
+     * @param entitySimpleName
+     * @return FQN of this entity's meta-model
+     */
+    public String resolveMetaModelName(final String entityPkgName, final String entitySimpleName) {
+        return "%s.%s".formatted(resolveMetaModelPkgName(entityPkgName), resolveMetaModelSimpleName(entitySimpleName));
+    }
+
+    /**
+     * Resolves the FQN of an aliased meta-model from the FQN of its underlying entity.
+     * <p>
+     * FQN - fully-qualified name
+     * @param entityPkgName
+     * @param entitySimpleName
+     * @return FQN of this entity's aliased meta-model
+     */
+    public String resolveAliasedMetaModelName(final String entityPkgName, final String entitySimpleName) {
+        return "%s.%s".formatted(resolveMetaModelPkgName(entityPkgName), resolveAliasedMetaModelSimpleName(entitySimpleName));
     }
 
 }
