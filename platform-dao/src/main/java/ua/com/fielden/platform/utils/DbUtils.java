@@ -203,7 +203,7 @@ public class DbUtils {
 
     /**
      * Executes SQL {@code statements} in batches of {@code batchSize} using the {@code conn} provided.
-     * All entries in list {@code statements} should be complete SQL statements (i.e. one statement should not be represented by several consecutive entries).
+     * All entries in list {@code statements} should be complete SQL statements (i.e., one statement should not be represented by several consecutive entries as if it is split on multiple lines.).
      * <p>
      * If {@code barchSize} is 0 or negative then no batching is used (i.e. all statements are executed one-by-one).
      * <p>

@@ -75,7 +75,12 @@ public abstract class EntityMetaModel implements IConvertableToPath {
         if (!(obj instanceof EntityMetaModel)) {
             return false;
         }
+        
         final EntityMetaModel that = (EntityMetaModel) obj;
+        if (this.getClass() != that.getClass()) {
+            return false;
+        }
+        
         return Objects.equals(this.path, that.path);
     }
 

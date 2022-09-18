@@ -47,7 +47,7 @@ import com.google.testing.compile.ForwardingStandardJavaFileManager;
  * @author TG Team
  */
 public final class CompilationRule implements TestRule {
-    private static final JavaFileObject DUMMY = InMemoryJavaFileObjects.createJavaSource("Dummy", "final class Dummy {}");
+    private static final JavaFileObject PLACEHOLDER = InMemoryJavaFileObjects.createJavaSource("Placeholder", "final class Dummy {}");
 
     private Collection<? extends JavaFileObject> javaSources;
     private Processor processor;
@@ -61,7 +61,7 @@ public final class CompilationRule implements TestRule {
      * @param processor annotation processor to use during compilation
      */
     public CompilationRule(final Collection<? extends JavaFileObject> javaSources, final Processor processor) {
-        this.javaSources = javaSources.isEmpty() || javaSources == null ? List.of(DUMMY) : javaSources;
+        this.javaSources = javaSources.isEmpty() || javaSources == null ? List.of(PLACEHOLDER) : javaSources;
         this.processor = processor;
     }
 
@@ -103,7 +103,7 @@ public final class CompilationRule implements TestRule {
     /**
      * Implementation of {@link JavaFileManager} that stores generated java sources in memory and provides access to retrieve them.
      * <p>
-     * Note: this file manager provides access to java sources exclusively (i.e. {@link JavaFileObject} instances with {@code kind ==} {@link Kind.SOURCE})
+     * Note: this file manager provides access to java sources exclusively (i.e., {@link JavaFileObject} instances with {@code kind ==} {@link Kind.SOURCE})
      * 
      * @author TG Team
      */

@@ -19,7 +19,7 @@ import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelEx
  * @author TG Team
  *
  */
-public class PropertyElement extends ForwardingVariableElement {
+public class PropertyElement extends AbstractForwardingVariableElement {
     
     public PropertyElement(final VariableElement varElement) {
         super(varElement);
@@ -66,7 +66,7 @@ public class PropertyElement extends ForwardingVariableElement {
 
     @Override
     public int hashCode() {
-        return 31 + Objects.hash(getSimpleName().toString());
+        return 31 + Objects.hash(getSimpleName());
     }
 
     @Override
@@ -78,7 +78,7 @@ public class PropertyElement extends ForwardingVariableElement {
             return false;
         }
         final PropertyElement that = (PropertyElement) obj;
-        return Objects.equals(getSimpleName().toString(), that.getSimpleName().toString());
+        return Objects.equals(getSimpleName(), that.getSimpleName());
     }
 
 }

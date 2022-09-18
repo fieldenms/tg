@@ -42,12 +42,14 @@ import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.OrderDirection;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.SummaryPropDef;
+import ua.com.fielden.platform.web.centre.api.IEcbCompletion;
+import ua.com.fielden.platform.web.centre.api.IWithRightSplitterPosition;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
-import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointPreferred;
+import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointConfig0;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
@@ -61,6 +63,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aEgiAp
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aEgiIconStyle;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bCheckbox;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cToolbar;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dCentreScroll;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dScroll;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eDraggable;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1efRetrieveAll;
@@ -112,6 +115,8 @@ import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerW
  */
 class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder1aEgiAppearance<T>, IResultSetBuilder1aEgiIconStyle<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T>{
 
+    private static final String ERR_SPLITTER_OVERLAPPING = "The left and right splitters are overlapping (i.e., left splitter position + right splitter position > 100).";
+    private static final String ERR_SPLITTER_POSITION_OUT_OF_BOUNDS = "The splitter position should be greater than 0 and less than 100.";
     private static final String ERR_EDITABLE_SUB_PROP_DISALLOWED = "Dot-notated property [%s] cannot be added as editable. Only first-level properties are supported.";
 
     protected final EntityCentreBuilder<T> builder;
@@ -513,13 +518,23 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
 
         @Override
-        public IInsertionPointPreferred<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
+        public IInsertionPointConfig0<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
             return ResultSetBuilder.this.addInsertionPoint(actionConfig, whereToInsertView);
+        }
+
+        @Override
+        public IWithRightSplitterPosition<T> withLeftSplitterPosition(final int percantage) {
+            return ResultSetBuilder.this.withLeftSplitterPosition(percantage);
+        }
+
+        @Override
+        public IEcbCompletion<T> withRightSplitterPosition(final int percentage) {
+            return ResultSetBuilder.this.withRightSplitterPosition(percentage);
         }
     }
 
     @Override
-    public IInsertionPointPreferred<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
+    public IInsertionPointConfig0<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
         return new InsertionPointConfigBuilder<>(this, actionConfig, whereToInsertView);
     }
 
@@ -554,7 +569,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder1eDraggable<T> notScrollable() {
+    public IResultSetBuilder1dCentreScroll<T> notScrollable() {
         this.builder.scrollConfig = ScrollConfig.configScroll()
                 .withFixedCheckboxesAndPrimaryActions()
                 .withFixedSecondaryActions()
@@ -589,8 +604,14 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder1eDraggable<T> withScrollingConfig(final IScrollConfig scrollConfig) {
+    public IResultSetBuilder1dCentreScroll<T> withScrollingConfig(final IScrollConfig scrollConfig) {
         this.builder.scrollConfig = scrollConfig;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder1eDraggable<T> lockScrollingForInsertionPoints() {
+        this.builder.lockScrollingForInsertionPoints = true;
         return this;
     }
 
@@ -661,6 +682,27 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     public ResultSetBuilder<T> addInsertionPoint(final InsertionPointConfig insertionPoint) {
         this.builder.insertionPointConfigs.add(insertionPoint);
+        return this;
+    }
+
+    @Override
+    public IWithRightSplitterPosition<T> withLeftSplitterPosition(final int percentage) {
+        if (percentage < 0 || percentage > 100) {
+            throw new EntityCentreConfigurationException(ERR_SPLITTER_POSITION_OUT_OF_BOUNDS);
+        }
+        builder.leftSplitterPosition = Integer.valueOf(percentage);
+        return this;
+    }
+
+    @Override
+    public IEcbCompletion<T> withRightSplitterPosition(final int percentage) {
+        if (percentage < 0 || percentage > 100) {
+            throw new EntityCentreConfigurationException(ERR_SPLITTER_POSITION_OUT_OF_BOUNDS);
+        }
+        if (builder.leftSplitterPosition != null && builder.leftSplitterPosition.intValue() + percentage > 100) {
+            throw new EntityCentreConfigurationException(ERR_SPLITTER_OVERLAPPING);
+        }
+        builder.rightSplitterPosition = Integer.valueOf(percentage);
         return this;
     }
 }

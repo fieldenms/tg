@@ -29,7 +29,7 @@ public class MetaModelsElementTest {
     public @Rule CompilationRule rule = new CompilationRule();
     private MetaModelFinder metaModelFinder;
     private MetaModelsElement metaModelsElement;
-    
+
     @Before
     public void setup() {
         metaModelFinder = new MetaModelFinder(rule.getElements(), rule.getTypes());
@@ -39,12 +39,12 @@ public class MetaModelsElementTest {
 
     @Test
     public void construction_of_meta_models_element_ignores_non_meta_model_fields() {
-      assertEquals(Set.of(AttachmentMetaModel.class.getSimpleName(), UserMetaModel.class.getSimpleName()), metaModelsElement.getMetaModels().stream().map(mme -> mme.getSimpleName().toString()).collect(toSet()));
+        assertEquals(Set.of(AttachmentMetaModel.class.getSimpleName(), UserMetaModel.class.getSimpleName()), metaModelsElement.getMetaModels().stream().map(mme -> mme.getSimpleName().toString()).collect(toSet()));
     }
 
     @Test
     public void meta_models_do_not_contain_duplicate_models() {
-      assertEquals(2, metaModelsElement.getMetaModels().size());
+        assertEquals(2, metaModelsElement.getMetaModels().size());
     }
 
     /**
@@ -56,10 +56,11 @@ public class MetaModelsElementTest {
         public static final UserMetaModel User_ = new UserMetaModel();
         public static final String someStringField = "";
         public static final int someIntField = 0;
+
     }
 
     /**
-     * A test meta-model for entity {@link Attachment}. 
+     * A test meta-model for entity {@link Attachment}.
      */
     public static class AttachmentMetaModel extends EntityMetaModel {
         @Override

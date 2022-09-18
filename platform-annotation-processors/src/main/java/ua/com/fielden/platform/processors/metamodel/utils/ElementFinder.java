@@ -3,6 +3,7 @@ package ua.com.fielden.platform.processors.metamodel.utils;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
+import static java.util.stream.Stream.iterate;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -31,7 +32,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
-import ua.com.fielden.platform.processors.metamodel.elements.ForwardingElement;
+import ua.com.fielden.platform.processors.metamodel.elements.AbstractForwardingElement;
 import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderException;
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelException;
 import ua.com.fielden.platform.utils.StreamUtils;
@@ -43,15 +44,22 @@ import ua.com.fielden.platform.utils.StreamUtils;
  *
  */
 public class ElementFinder {
-    protected Elements elements;
-    protected Types types;
+    public static final Class<?> DEFAULT_ROOT_CLASS = Object.class;
+
+    protected final Elements elements;
+    protected final Types types;
 
     public ElementFinder(final Elements elements, final Types types) {
+        if (elements == null) {
+            throw new ElementFinderException("Argument elements cannot be null.");
+        }
+        if (types == null) {
+            throw new ElementFinderException("Argument types cannot be null.");
+        }
+
         this.elements = elements;
         this.types = types;
     }
-
-    public static final Class<?> DEFAULT_ROOT_CLASS = Object.class;
 
     public Elements getElements() {
         return this.elements;
@@ -341,15 +349,10 @@ public class ElementFinder {
      * @return
      */
     public Set<ExecutableElement> findInheritedMethods(final TypeElement typeElement) {
-        final Set<ExecutableElement> methods = new LinkedHashSet<>();
+        return iterate(findSuperclass(typeElement), superType -> findSuperclass(superType))
+                .takeWhile(el -> el != null)
+                .flatMap(type -> findDeclaredMethods(type).stream()).collect(toCollection(LinkedHashSet::new));
 
-        TypeElement superclass = findSuperclass(typeElement);
-        while (superclass != null) {
-            methods.addAll(findDeclaredMethods(superclass));
-            superclass = findSuperclass(superclass);
-        }
-
-        return methods;
     }
 
     /**
@@ -475,9 +478,6 @@ public class ElementFinder {
      *          of the second
      */
     public boolean isSubtype(final TypeMirror typeMirror, final Class<?> type) {
-        if (types == null) {
-            throw new ElementFinderException("types parameter can't be null.");
-        }
         if (typeMirror.getKind() != TypeKind.DECLARED) {
             return false;
         }
@@ -500,8 +500,8 @@ public class ElementFinder {
      * @return
      */
     public PackageElement getPackageOf(final Element element) {
-        if (ForwardingElement.class.isAssignableFrom(element.getClass())) {
-            return elements.getPackageOf(((ForwardingElement<Element>) element).element());
+        if (AbstractForwardingElement.class.isAssignableFrom(element.getClass())) {
+            return elements.getPackageOf(((AbstractForwardingElement<Element>) element).element());
         }
         return elements.getPackageOf(element);
     }

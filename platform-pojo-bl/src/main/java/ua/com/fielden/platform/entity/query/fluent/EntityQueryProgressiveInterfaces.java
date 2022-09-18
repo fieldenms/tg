@@ -517,9 +517,13 @@ public interface EntityQueryProgressiveInterfaces {
 
 		T as(final Enum<?> alias);
 
+		T as(final IConvertableToPath alias);
+
 		T asRequired(final String alias);
 
 		T asRequired(final Enum<?> alias);
+
+		T asRequired(final IConvertableToPath alias);
 
 		<E extends AbstractEntity<?>> EntityResultQueryModel<E> modelAsEntity(final Class<E> entityType);
 
@@ -531,9 +535,13 @@ public interface EntityQueryProgressiveInterfaces {
 
 		T as(final Enum<?> alias);
 
+		T as(final IConvertableToPath alias);
+
 		T asRequired(final String alias);
 
 		T asRequired(final Enum<?> alias);
+
+		T asRequired(final IConvertableToPath alias);
 	}
 
 	interface IArithmeticalOperator<T> {

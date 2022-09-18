@@ -40,14 +40,15 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  */
 public class EntityFinder extends ElementFinder {
+    public static final Class<?> ROOT_ENTITY_CLASS = AbstractEntity.class;
+
     public EntityFinder(final Elements elements, final Types types) {
         super(elements, types);
     }
-    
-    public static final Class<?> ROOT_ENTITY_CLASS = AbstractEntity.class;
 
     /**
      * Finds an entity described by {@code entityClass}.
+     *
      * @param entityClass
      * @return {@link EntityElement} wrapped in an {@link Optional} if found, else an empty optional
      */

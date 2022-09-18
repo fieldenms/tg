@@ -14,9 +14,9 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
- * Master entity object.
+ * A test entity representing a persistent entity.
  *
- * @author Developers
+ * @author TG Team
  *
  */
 @KeyType(String.class)
@@ -24,19 +24,19 @@ import ua.com.fielden.platform.utils.Pair;
 @MapEntityTo
 @DomainEntity
 @DescTitle("Description")
-public class Persistent extends AbstractEntity<String> {
+public class PersistentEntity extends AbstractEntity<String> {
 
-    private static final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(Persistent.class);
+    private static final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(PersistentEntity.class);
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
     public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
-    
+
     @IsProperty
     @MapTo
     @Title(value = "Prop1")
     private int prop1;
-    
+
     @Observable
-    public Persistent setProp1(final int prop1) {
+    public PersistentEntity setProp1(final int prop1) {
         this.prop1 = prop1;
         return this;
     }
@@ -44,4 +44,5 @@ public class Persistent extends AbstractEntity<String> {
     public int getProp1() {
         return prop1;
     }
+
 }

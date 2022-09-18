@@ -1389,8 +1389,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final String centreMrLast = "['flex']";
 
         final ICentreTopLevelActionsWithRunConfig<TgPersistentEntityWithProperties> partialCentre = EntityCentreBuilder.centreFor(TgPersistentEntityWithProperties.class);
-        ICentreTopLevelActionsInGroup<TgPersistentEntityWithProperties> actionConf = (runAutomatically ? partialCentre.runAutomatically() : partialCentre)
+        final ICentreTopLevelActionsInGroup<TgPersistentEntityWithProperties> actionConf = (runAutomatically ? partialCentre.runAutomatically() : partialCentre)
                 .hasEventSourceAt("/sse/entity-centre-events")
+                .withRefreshPrompt() // or .withCountdownRefreshPrompt(5)
                 .enforcePostSaveRefresh()
                 .addFrontAction(action(EntityNewAction.class).
                         withContext(context().withSelectionCrit().build()).
@@ -1437,16 +1438,16 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
 
         if (isComposite) {
-            actionConf = actionConf.addGroupAction(
-                    action(TgCentreInvokerWithCentreContext.class)
-                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
-                            .icon("assignment-ind")
-                            .shortDesc("Function 4 (TgCentreInvokerWithCentreContext)")
-                            .longDesc("Functional context-dependent action 4 (TgCentreInvokerWithCentreContext)")
-                            .prefDimForView(mkDim("'80%'", "'400px'"))
-                            .withNoParentCentreRefresh()
-                            .build()
-                    ).endTopActionsGroup().also().beginTopActionsGroup("group 3");
+//            actionConf = actionConf.addGroupAction(
+//                    action(TgCentreInvokerWithCentreContext.class)
+//                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+//                            .icon("assignment-ind")
+//                            .shortDesc("Function 4 (TgCentreInvokerWithCentreContext)")
+//                            .longDesc("Functional context-dependent action 4 (TgCentreInvokerWithCentreContext)")
+//                            .prefDimForView(mkDim("'80%'", "'400px'"))
+//                            .withNoParentCentreRefresh()
+//                            .build()
+//                    ).endTopActionsGroup().also().beginTopActionsGroup("group 3");
 
         }
 
@@ -1746,12 +1747,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 .withFixedHeader()
                                 .withFixedSummary()
                                 .done())
+                //.lockScrollingForInsertionPoints()
                 //.draggable()
                 //.retrieveAll()
                 .setPageCapacity(20)
                 //.setHeight("100%")
                 //.setVisibleRowsCount(10)
-                .fitToHeight()
+                //.fitToHeight()
                 .addProp("this")
                     .order(2).asc()
                     .width(60);
@@ -1999,32 +2001,64 @@ public class WebUiConfig extends AbstractWebUiConfig {
 //                    action(TgCentreInvokerWithCentreContext.class)
 //                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
 //                            .icon("assignment-ind")
-//                            .shortDesc("Insertion Point")
+//                            .shortDesc("Right Insertion Point")
 //                            .longDesc("Functional context-dependent Insertion Point")
 //                            .prefDimForView(mkDim("''", "'500px'"))
 //                            .withNoParentCentreRefresh()
 //                            .build(),
-//                    InsertionPoints.RIGHT)
-//                    .addInsertionPoint(
-//                            action(TgCentreInvokerWithCentreContext.class)
-//                                    .withContext(context().withSelectionCrit().withSelectedEntities().build())
-//                                    .icon("assignment-ind")
-//                                    .shortDesc("Insertion Point")
-//                                    .longDesc("Functional context-dependent Insertion Point")
-//                                    .prefDimForView(mkDim("''", "'500px'"))
-//                                    .withNoParentCentreRefresh()
-//                                    .build(),
-//                            InsertionPoints.RIGHT)
+//                    InsertionPoints.RIGHT).noResizing()
+////                    .addInsertionPoint(
+////                            action(TgCentreInvokerWithCentreContext.class)
+////                                    .withContext(context().withSelectionCrit().withSelectedEntities().build())
+////                                    .icon("assignment-ind")
+////                                    .shortDesc("Insertion Point")
+////                                    .longDesc("Functional context-dependent Insertion Point")
+////                                    .prefDimForView(mkDim("''", "'500px'"))
+////                                    .withNoParentCentreRefresh()
+////                                    .build(),
+////                            InsertionPoints.RIGHT)
 //                    .addInsertionPoint(
 //                            action(TgCentreInvokerWithCentreContext.class)
 //                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
 //                            .icon("assignment-ind")
-//                            .shortDesc("Insertion Point")
+//                            .shortDesc("Left1 Insertion Point")
 //                            .longDesc("Functional context-dependent Insertion Point")
 //                            .prefDimForView(mkDim("'350px'", "'500px'"))
 //                            .withNoParentCentreRefresh()
 //                            .build(),
 //                    InsertionPoints.LEFT)
+//                    .addInsertionPoint(
+//                            action(TgCentreInvokerWithCentreContext.class)
+//                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+//                            .icon("assignment-ind")
+//                            .shortDesc("Left2 Insertion Point")
+//                            .longDesc("Functional context-dependent Insertion Point")
+//                            .prefDimForView(mkDim("'350px'", "'500px'"))
+//                            .withNoParentCentreRefresh()
+//                            .build(),
+//                    InsertionPoints.LEFT)
+//                    .addInsertionPoint(
+//                            action(TgCentreInvokerWithCentreContext.class)
+//                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+//                            .icon("assignment-ind")
+//                            .shortDesc("Top Insertion Point")
+//                            .longDesc("Functional context-dependent Insertion Point")
+//                            .prefDimForView(mkDim("'350px'", "'500px'"))
+//                            .withNoParentCentreRefresh()
+//                            .build(),
+//                    InsertionPoints.TOP)
+//                    .addInsertionPoint(
+//                            action(TgCentreInvokerWithCentreContext.class)
+//                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+//                            .icon("assignment-ind")
+//                            .shortDesc("Bottom Insertion Point")
+//                            .longDesc("Functional context-dependent Insertion Point")
+//                            .prefDimForView(mkDim("'350px'", "'500px'"))
+//                            .withNoParentCentreRefresh()
+//                            .build(),
+//                    InsertionPoints.BOTTOM)
+//                    .withLeftSplitterPosition(40)
+//                    .withRightSplitterPosition(30)
 //                    .build();
         }
         return scl.build();

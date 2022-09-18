@@ -19,7 +19,6 @@ const checksumCacheName = 'tg-deployment-cache-checksums';
 const isStatic = function (url, method) {
     const pathname = new URL(url).pathname;
     return 'GET' === method && (pathname === '/' ||
-        pathname === '/logout' ||
         pathname === '/forgotten' ||
         pathname.startsWith('/resources/') ||
         pathname.startsWith('/app/') ||
