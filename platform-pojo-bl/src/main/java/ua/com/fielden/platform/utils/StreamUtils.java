@@ -108,9 +108,9 @@ public class StreamUtils {
     }
 
     /**
-     * Returns the longest prefix of the <code>stream</code> until (inclusive) an element that satisfies <code>predicate</code> is encountered.
+     * Returns the longest prefix of the {@code stream} until (inclusive) an element that satisfies {@code predicate} is encountered.
      * <p>
-     * If no such element was encouneterd then the whole stream is returned.
+     * If no such element was encountered then the whole stream is returned.
      *
      * @param stream
      * @param predicate

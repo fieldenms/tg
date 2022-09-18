@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.iterate;
+import static ua.com.fielden.platform.utils.StreamUtils.stopAfter;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -14,7 +15,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.lang.model.AnnotatedConstruct;
 import javax.lang.model.element.AnnotationMirror;
@@ -35,7 +35,6 @@ import javax.lang.model.util.Types;
 import ua.com.fielden.platform.processors.metamodel.elements.AbstractForwardingElement;
 import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderException;
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelException;
-import ua.com.fielden.platform.utils.StreamUtils;
 
 /**
  * A collection of utility functions to finding various type elements. 
@@ -88,9 +87,9 @@ public class ElementFinder {
     /**
      * Returns the immediate parent class of {@code typeElement} or null in the following cases:
      * <ul>
-     *  <li><code>typeElement</code> is the {@link Object} type
-     *  <li><code>typeElement</code> is an interface type
-     *  <li>The superclass of <code>typeElement</code> is an interface type
+     *  <li>{@code typeElement} is the {@link Object} type
+     *  <li>{@code typeElement} is an interface type
+     *  <li>The superclass of {@code typeElement} is an interface type
      * </ul>
      * 
      * @param typeElement
@@ -107,12 +106,12 @@ public class ElementFinder {
     }
 
     /**
-     * Returns an ordered list of all super-classes with respect to <code>typeElement</code>.
-     * The type hierarchy is traversed until either <code>rootType</code> or an interface type is reached.
+     * Returns an ordered list of all super-classes with respect to {@code typeElement}.
+     * The type hierarchy is traversed until either {@code rootType} or an interface type is reached.
      * <p>
-     * If <code>rootType</code> is not in the class hierarchy, then an empty list is returned.
+     * If {@code rootType} is not in the class hierarchy, then an empty list is returned.
      * <p>
-     * <code>rootType</code> is included in the resulting list if it's a class type.
+     * {@code rootType} is included in the resulting list if it's a class type.
      *
      * @param typeElement
      * @param rootType
@@ -122,8 +121,8 @@ public class ElementFinder {
         if (!isSubtype(typeElement.asType(), rootType)) {
             return List.of();
         }
-        return StreamUtils.stopAfter(
-                Stream.iterate(findSuperclass(typeElement), te -> findSuperclass(te)),
+        return stopAfter(
+                iterate(findSuperclass(typeElement), te -> findSuperclass(te)),
                 te -> te == null || equals(te, rootType))
                 .filter(te -> te != null)
                 .toList();
@@ -141,7 +140,8 @@ public class ElementFinder {
     }
 
     /**
-     * Finds all supertypes of a {@link TypeMirror}. No particular order is preserved.
+     * Finds all super-types of a {@link TypeMirror}. No particular order is preserved.
+     *
      * @param typeMirror
      * @return
      */
