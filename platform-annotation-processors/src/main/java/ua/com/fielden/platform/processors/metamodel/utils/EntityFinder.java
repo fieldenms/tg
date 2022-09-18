@@ -3,11 +3,11 @@ package ua.com.fielden.platform.processors.metamodel.utils;
 import static java.lang.String.format;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toCollection;
+import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.annotation.Annotation;
 import java.util.LinkedHashSet;
-import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -21,8 +21,6 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
-import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
-import ua.com.fielden.platform.annotations.metamodel.WithMetaModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
@@ -41,10 +39,23 @@ import ua.com.fielden.platform.utils.Pair;
  *
  * @author TG Team
  */
-public class EntityFinder {
-    private EntityFinder() {}
-    
+public class EntityFinder extends ElementFinder {
     public static final Class<?> ROOT_ENTITY_CLASS = AbstractEntity.class;
+
+    public EntityFinder(final Elements elements, final Types types) {
+        super(elements, types);
+    }
+
+    /**
+     * Finds an entity described by {@code entityClass}.
+     *
+     * @param entityClass
+     * @return {@link EntityElement} wrapped in an {@link Optional} if found, else an empty optional
+     */
+    public Optional<EntityElement> findEntity(final Class<? extends AbstractEntity<?>> entityClass) {
+        return Optional.ofNullable(elements.getTypeElement(entityClass.getCanonicalName()))
+                .map(te -> newEntityElement(te));
+    }
 
    /**
     * Finds properties, which are explicitly declared in an entity, represented by {@code entityElement}.
@@ -57,10 +68,9 @@ public class EntityFinder {
     *
     * @param entityElement
     */
-    public static Set<PropertyElement> findDeclaredProperties(final EntityElement entityElement) {
-        final TypeElement typeElement = entityElement.getTypeElement();
-        return ElementFinder.findDeclaredFields(typeElement).stream()
-                .filter(EntityFinder::isProperty)
+    public Set<PropertyElement> findDeclaredProperties(final EntityElement entityElement) {
+        return findDeclaredFields(entityElement).stream()
+                .filter(this::isProperty)
                 .map(PropertyElement::new)
                 .collect(toCollection(LinkedHashSet::new));
     }
@@ -77,20 +87,19 @@ public class EntityFinder {
      * @param entityElement
      * @return
      */
-    public static Set<PropertyElement> findInheritedProperties(final EntityElement entityElement) {
-        final TypeElement typeElement = entityElement.getTypeElement();
-        final Set<PropertyElement> props = ElementFinder.findInheritedFields(typeElement, ROOT_ENTITY_CLASS).stream()
-                .filter(EntityFinder::isProperty)
+    public Set<PropertyElement> findInheritedProperties(final EntityElement entityElement) {
+        final Set<PropertyElement> props = findInheritedFields(entityElement, ROOT_ENTITY_CLASS).stream()
+                .filter(this::isProperty)
                 .map(PropertyElement::new)
                 .collect(toCollection(LinkedHashSet::new));
         // let's see if we need to include "id" as a property -- only persistent entities are of interest
-        if (EntityFinder.isPersistentEntityType(entityElement) || EntityFinder.doesExtendPersistentEntity(entityElement)) {
-            final var idProp = ElementFinder.findField(entityElement.getTypeElement(), AbstractEntity.ID);
+        if (isPersistentEntityType(entityElement) || doesExtendPersistentEntity(entityElement)) {
+            final var idProp = findField(entityElement, AbstractEntity.ID);
             props.add(new PropertyElement(idProp));
         }
         // and now similar for property "desc", which may need to be removed
         if (findAnnotation(entityElement, DescTitle.class).isEmpty()) {
-            final var descProp = ElementFinder.findField(entityElement.getTypeElement(), AbstractEntity.DESC);
+            final var descProp = findField(entityElement, AbstractEntity.DESC);
             props.remove(new PropertyElement(descProp));
         }
         return props;
@@ -100,15 +109,15 @@ public class EntityFinder {
      * Finds all properties for entity represented by {@code entityElement}.
      * The result is the union of result, returned by {@link #findDeclaredProperties(EntityElement)} and {@link #findInheritedProperties(EntityElement)}.
      */
-    public static Set<PropertyElement> findProperties(final EntityElement entityElement) {
+    public Set<PropertyElement> findProperties(final EntityElement entityElement) {
         final Set<PropertyElement> properties = findDeclaredProperties(entityElement);
         properties.addAll(findInheritedProperties(entityElement));
         return properties;
     }
 
-    public static Pair<String, String> getPropTitleAndDesc(final PropertyElement propElement) {
+    public Pair<String, String> getPropTitleAndDesc(final PropertyElement propElement) {
         // TODO need to replicate the logic from TitlesDescsGetter in application to the Mirror types.
-        final AnnotationMirror titleAnnotationMirror = ElementFinder.getElementAnnotationMirror(propElement.getVariableElement(), Title.class);
+        final AnnotationMirror titleAnnotationMirror = getElementAnnotationMirror(propElement, Title.class);
 
         if (titleAnnotationMirror == null) {
             return null;
@@ -117,11 +126,11 @@ public class EntityFinder {
         return getTitleAndDesc(titleAnnotationMirror);
     }
 
-    public static Pair<String, String> getEntityTitleAndDesc(final EntityElement entityElement) {
-        final AnnotationMirror entityTitleAnnotMirror = ElementFinder.getElementAnnotationMirror(entityElement.getTypeElement(), EntityTitle.class);
+    public Pair<String, String> getEntityTitleAndDesc(final EntityElement entityElement) {
+        final AnnotationMirror entityTitleAnnotMirror = getElementAnnotationMirror(entityElement, EntityTitle.class);
 
         if (entityTitleAnnotMirror == null) {
-            final var title = TitlesDescsGetter.breakClassName(entityElement.getSimpleName());
+            final var title = TitlesDescsGetter.breakClassName(entityElement.getSimpleName().toString());
             return pair(title, title + " entity");
         }
 
@@ -156,9 +165,9 @@ public class EntityFinder {
      * @param element
      * @return
      */
-    public static boolean isEntityType(final TypeElement element) {
-        return Stream.iterate(element, el -> !ElementFinder.equals(el, Object.class) , el -> ElementFinder.getSuperclassOrNull(el))
-               .filter(el -> ElementFinder.equals(el, ROOT_ENTITY_CLASS))
+    public boolean isEntityType(final TypeElement element) {
+        return Stream.iterate(element, el -> !equals(el, Object.class) , el -> getSuperclassOrNull(el))
+               .filter(el -> equals(el, ROOT_ENTITY_CLASS))
                .findFirst().isPresent();
     }
 
@@ -168,8 +177,8 @@ public class EntityFinder {
      * @param element
      * @return
      */
-    public static boolean isPersistentEntityType(final EntityElement element) {
-        return isEntityType(element.getTypeElement()) && element.getTypeElement().getAnnotation(MapEntityTo.class) != null;
+    public boolean isPersistentEntityType(final EntityElement element) {
+        return isEntityType(element) && element.getAnnotation(MapEntityTo.class) != null;
     }
     
     /**
@@ -179,9 +188,9 @@ public class EntityFinder {
      * @param element
      * @return
      */
-    public static boolean doesExtendPersistentEntity(final EntityElement element) {
-        final TypeElement superclass = element.getTypeElement();
-        return Stream.iterate(ElementFinder.getSuperclassOrNull(superclass), el -> !ElementFinder.equals(el, Object.class) , el -> ElementFinder.getSuperclassOrNull(el))
+    public boolean doesExtendPersistentEntity(final EntityElement element) {
+        final TypeElement superclass = element;
+        return Stream.iterate(getSuperclassOrNull(superclass), el -> !equals(el, Object.class) , el -> getSuperclassOrNull(el))
                .filter(el -> isPersistentEntityType(EntityElement.wrapperFor(el)))
                .findFirst().isPresent();
     }
@@ -192,7 +201,7 @@ public class EntityFinder {
      * @param element
      * @return
      */
-    public static boolean isProperty(final VariableElement element) {
+    public boolean isProperty(final VariableElement element) {
         return element.getKind() == ElementKind.FIELD && element.getAnnotation(IsProperty.class) != null;
     }
 
@@ -202,9 +211,9 @@ public class EntityFinder {
      * @param propElement
      * @return
      */
-    public static boolean isPropertyOfEntityType(final PropertyElement propElement) {
+    public boolean isPropertyOfEntityType(final PropertyElement propElement) {
         try {
-            return EntityFinder.isEntityType(propElement.getTypeAsTypeElement());
+            return isEntityType(propElement.getTypeAsTypeElement());
         } catch (final Exception ex) {
             // an exception may be thrown is property type is not a DECLARED type (i.e., not a class or an interface)
             return false;
@@ -217,7 +226,7 @@ public class EntityFinder {
      * @param propElement
      * @return
      */
-    public static boolean isPropertyOfDomainEntityType(final PropertyElement propElement) {
+    public boolean isPropertyOfDomainEntityType(final PropertyElement propElement) {
         try {
             return isEntityThatNeedsMetaModel(propElement.getTypeAsTypeElement());
         } catch (final Exception ex) {
@@ -232,24 +241,23 @@ public class EntityFinder {
      * @param element
      * @return
      */
-    public static boolean isEntityThatNeedsMetaModel(final TypeElement element) {
-        return EntityFinder.isEntityType(element) && 
-               (element.getAnnotation(MapEntityTo.class) != null || element.getAnnotation(DomainEntity.class) != null || element.getAnnotation(WithMetaModel.class) != null);
+    public boolean isEntityThatNeedsMetaModel(final TypeElement element) {
+        if (!isEntityType(element)) {
+            return false;
+        }
+        return ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION.stream()
+                .anyMatch(annotClass -> element.getAnnotation(annotClass) != null);
     }
 
-    public static List<? extends AnnotationMirror> getPropertyAnnotations(final PropertyElement property) {
-        return ElementFinder.getFieldAnnotations(property.getVariableElement());
-    }
-    
-    public static EntityElement getParent(final EntityElement element, final Elements elementUtils) {
+    public EntityElement getParent(final EntityElement element) {
         // superclass should not be null, because every entity extends AbstractEntity
-        final TypeElement superclass = ElementFinder.getSuperclassOrNull(element.getTypeElement(), ROOT_ENTITY_CLASS);
+        final TypeElement superclass = getSuperclassOrNull(element, ROOT_ENTITY_CLASS);
         
         if (!isEntityType(superclass)) {
             return null;
         }
 
-        return new EntityElement(superclass, elementUtils);
+        return newEntityElement(superclass);
     }
     
     /**
@@ -259,11 +267,11 @@ public class EntityFinder {
      * @param annotationClass
      * @return
      */
-    public static <A extends Annotation> Optional<A> findAnnotation(final EntityElement element, final Class<A> annotationClass) {
-        if (element.getTypeElement().getAnnotation(annotationClass) != null) {
-            return of(element.getTypeElement().getAnnotation(annotationClass));
+    public <A extends Annotation> Optional<A> findAnnotation(final EntityElement element, final Class<A> annotationClass) {
+        if (element.getAnnotation(annotationClass) != null) {
+            return of(element.getAnnotation(annotationClass));
         }
-        return ElementFinder.findSuperclasses(element.getTypeElement(), ROOT_ENTITY_CLASS, true).stream()
+        return findSuperclasses(element, ROOT_ENTITY_CLASS, true).stream()
                 .filter(superEl -> superEl.getAnnotation(annotationClass) != null)
                 .map(superEl -> superEl.getAnnotation(annotationClass))
                 .findFirst();
@@ -297,18 +305,22 @@ public class EntityFinder {
         return format("%s.%s", entityPackageName, entitySimpleName);
     }
     
-    public static EntityElement findEntityForMetaModel(final MetaModelElement mme, final Elements elementUtils) {
+    public EntityElement findEntityForMetaModel(final MetaModelElement mme) {
         final String entityQualName = getEntityQualifiedName(mme.getQualifiedName().toString());
         if (entityQualName == null) {
             return null;
         }
-        final TypeElement typeElement = elementUtils.getTypeElement(entityQualName);
-        return typeElement == null ? null : new EntityElement(typeElement, elementUtils);
+        final TypeElement typeElement = elements.getTypeElement(entityQualName);
+        return typeElement == null ? null : newEntityElement(typeElement);
     }
 
-    public static boolean hasPropertyOfType(final EntityElement entityElement, final TypeMirror type, final Types typeUtils) {
-        return EntityFinder.findProperties(entityElement).stream()
+    public boolean hasPropertyOfType(final EntityElement entityElement, final TypeMirror type, final Types typeUtils) {
+        return findProperties(entityElement).stream()
                .anyMatch(prop -> typeUtils.isSameType(prop.getType(), type));
+    }
+
+    public EntityElement newEntityElement(final TypeElement typeElement) {
+        return new EntityElement(typeElement, getPackageName(typeElement));
     }
 
 }

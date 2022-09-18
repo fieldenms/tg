@@ -2,8 +2,14 @@ package ua.com.fielden.platform.processors.metamodel;
 
 import static java.lang.String.format;
 
+import java.lang.annotation.Annotation;
+import java.util.Set;
+
 import com.squareup.javapoet.ClassName;
 
+import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
+import ua.com.fielden.platform.annotations.metamodel.WithMetaModel;
+import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 
 /**
@@ -14,6 +20,8 @@ import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 
 public abstract class MetaModelConstants {
 
+    public static final Set<Class<? extends Annotation>> ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION = Set.of(MapEntityTo.class, DomainEntity.class, WithMetaModel.class);
+
     public static final Class<EntityMetaModel> METAMODEL_SUPERCLASS = EntityMetaModel.class;
     public static final ClassName METAMODEL_SUPERCLASS_CLASSNAME = ClassName.get(METAMODEL_SUPERCLASS);
 
@@ -23,5 +31,6 @@ public abstract class MetaModelConstants {
 
     public static final String META_MODEL_PKG_NAME_SUFFIX = ".meta";
     public static final String META_MODEL_NAME_SUFFIX = "MetaModel";
+    public static final String META_MODEL_ALIASED_NAME_SUFFIX = META_MODEL_NAME_SUFFIX + "Aliased";
 
 }
