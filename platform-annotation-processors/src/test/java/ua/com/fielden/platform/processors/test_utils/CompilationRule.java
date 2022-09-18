@@ -91,11 +91,11 @@ public final class CompilationRule implements TestRule {
             }
         };
     }
-    
+
     public Elements getElements() {
         return elements;
     }
-    
+
     public Types getTypes() {
         return types;
     }
