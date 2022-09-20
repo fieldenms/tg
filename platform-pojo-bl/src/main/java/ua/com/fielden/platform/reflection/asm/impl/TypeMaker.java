@@ -380,6 +380,10 @@ public class TypeMaker<T> {
      * @return a loaded class representing the modified type
      */
     public Class<? extends T> endModification() {
+        if (builder == null) {
+            throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
+        }
+
         if (!DynamicEntityClassLoader.isGenerated(origType)) {
             recordOrigType(origType);
         }
