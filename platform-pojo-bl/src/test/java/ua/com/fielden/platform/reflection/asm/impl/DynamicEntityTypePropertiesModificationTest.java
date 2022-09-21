@@ -53,7 +53,7 @@ import ua.com.fielden.platform.types.Money;
  *
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
-public class DynamicEntityTypeModificationTest {
+public class DynamicEntityTypePropertiesModificationTest {
     private static final String NEW_PROPERTY_DESC = "Description  for new money property";
     private static final String NEW_PROPERTY_TITLE = "New money property";
     private static final String NEW_PROPERTY_EXPRESSION = "2 * 3 - [integerProp]";
@@ -72,21 +72,6 @@ public class DynamicEntityTypeModificationTest {
     public void setUp() {
         observed = false;
         cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
-    }
-
-    @Test
-    public void test_preconditions() throws Exception {
-        final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
-                .addProperties(pd)
-                .endModification();
-        // specify what property of what owning type should be replaced with the enhanced entity type
-        final NewProperty np = NewProperty.fromField(EntityBeingEnhanced.class, "prop1").changeType(modEntityBeingEnhanced);
-        try {
-            final TypeMaker tp = new TypeMaker(cl, EntityBeingEnhanced.class);
-            tp.modifyProperties(np).endModification();
-            fail("An exception should have been thrown due to omitted startModification call.");
-        } catch (final Exception e) {
-        }
     }
 
     @Test
