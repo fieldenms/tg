@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
@@ -10,6 +11,7 @@ import static ua.com.fielden.platform.reflection.asm.api.test_utils.NewPropertyT
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -20,6 +22,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -289,6 +292,85 @@ public class DynamicEntityTypePropertiesAdditionTest {
         final AbstractEntity<String> instance = factory.newByKey(newType, "key");
         instance.set(np1.getName(), new Money("23.32"));
         assertTrue("Setter for the added property %s was not observed.".formatted(np1.getName()), observed[0]);
+    }
+
+    /**
+     * If a collectional property prototype has the following form:
+     * <pre>
+     * {@literal @}IsProperty(String.class) List ${name}
+     * </pre>
+     * Then it will be generated in the following form:
+     * <pre>
+     * {@literal @}IsProperty(String.class) List{@literal <String>} ${name}
+     * </pre>
+     * @throws Exception
+     */
+    @Test
+    public void the_type_of_added_raw_collectional_property_is_parameterized_with_the_value_of_IsProperty() throws Exception {
+        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+                .addProperties(npRawList)
+                .endModification();
+
+        final Field field = Finder.findFieldByName(newType, npRawList.getName());
+        assertNotNull("Added property %s was not found.".formatted(npRawList.getName()), field);
+        assertTrue("Added collectional property %s is not of collectional type.".formatted(npRawList.getName()),
+                Collection.class.isAssignableFrom(field.getType()));
+
+        // make sure all provided property annotations were generated
+        assertAnnotationsEquals(npRawList, field);
+
+        assertTrue("Type of added collectional property %s is not a parameterized one.".formatted(npRawList.getName()),
+                ParameterizedType.class.isInstance(field.getGenericType()));
+        final ParameterizedType fieldParamType = (ParameterizedType) field.getGenericType();
+
+        // check the raw type
+        assertEquals("Incorrect raw type of added collectional property %s.".formatted(npRawList.getName()),
+                npRawList.getRawType(), fieldParamType.getRawType());
+
+        // check the type arguments
+        final Type[] typeArguments = fieldParamType.getActualTypeArguments();
+        assertEquals("Incorrect number of type arguments for added collectional property %s.".formatted(npRawList.getName()),
+                1, typeArguments.length);
+        assertEquals("Incorrect type argument of added collectional property %s.".formatted(npRawList.getName()),
+                npRawList.getAnnotationByType(IsProperty.class).value(), typeArguments[0]);
+    }
+
+    /**
+     * If a collectional property prototype has the following form:
+     * <pre>
+     * {@literal @}IsProperty(String.class) List{@literal <String>} ${name}
+     * </pre>
+     * Then it will be generated having the same form.
+     * @throws Exception
+     */
+    @Test
+    public void the_type_of_added_parameterized_collectional_property_is_parameterized_with_provided_type_arguments() throws Exception {
+        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+                .addProperties(npParamList)
+                .endModification();
+
+        final Field field = Finder.findFieldByName(newType, npParamList.getName());
+        assertNotNull("Added property %s was not found.".formatted(npParamList.getName()), field);
+        assertTrue("Added collectional property %s is not of collectional type.".formatted(npParamList.getName()),
+                Collection.class.isAssignableFrom(field.getType()));
+
+        // make sure all provided property annotations were generated
+        assertAnnotationsEquals(npParamList, field);
+
+        assertTrue("Type of added collectional property %s is not a parameterized one.".formatted(npRawList.getName()),
+                ParameterizedType.class.isInstance(field.getGenericType()));
+        final ParameterizedType fieldParamType = (ParameterizedType) field.getGenericType();
+
+        // check the raw type
+        assertEquals("Incorrect raw type of added collectional property %s.".formatted(npParamList.getName()),
+                npParamList.getRawType(), field.getType());
+
+        // check the type arguments
+        final Type[] typeArguments = fieldParamType.getActualTypeArguments();
+        assertEquals("Incorrect number of type arguments for added collectional property %s.".formatted(npParamList.getName()),
+                npParamList.getTypeArguments().size(), typeArguments.length);
+        assertArrayEquals("Incorrect type arguments of added collectional property %s.".formatted(npParamList.getName()),
+                npParamList.getTypeArguments().toArray(Type[]::new), typeArguments);
     }
 
     @Test
