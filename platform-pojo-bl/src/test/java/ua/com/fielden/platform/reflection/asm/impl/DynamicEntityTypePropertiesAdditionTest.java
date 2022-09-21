@@ -498,11 +498,17 @@ public class DynamicEntityTypePropertiesAdditionTest {
 
             // instantiate the generated type and try to set the value of added property 
             final AbstractEntity<String> instance = factory.newByKey(newType, "new");
-            final List<String> list = List.of("hello");
-            setter.invoke(instance, list);
-
-            assertEquals("Value of added collectional property %s was set incorrectly.".formatted(np.getName()),
-                    list, getFieldValue(findFieldByName(newType, np.getName()), instance));
+            final List<String> list1 = List.of("hello");
+            setter.invoke(instance, list1);
+            assertEquals("The value of added collectional property %s was set incorrectly.".formatted(np.getName()),
+                    list1, getFieldValue(findFieldByName(newType, np.getName()), instance));
+            
+            // now set the value once again to make sure the setter indeed is generated correctly
+            // the old collection contents should be cleared, then provided elements should be added
+            final List<String> list2 = List.of("world");
+            setter.invoke(instance, list2);
+            assertEquals("The value of added collectional property %s was set incorrectly.".formatted(np.getName()),
+                    list2, getFieldValue(findFieldByName(newType, np.getName()), instance));
         }
     }
 
