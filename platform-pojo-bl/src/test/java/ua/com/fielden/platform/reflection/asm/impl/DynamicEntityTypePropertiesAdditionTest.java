@@ -193,6 +193,14 @@ public class DynamicEntityTypePropertiesAdditionTest {
                 Finder.getPropertyDescriptors(DEFAULT_ORIG_TYPE).size() + 1,
                 Finder.getPropertyDescriptors(newType1).size());
 
+        final Class<? extends AbstractEntity<String>> newType2 = cl.startModification(DEFAULT_ORIG_TYPE)
+                .addProperties(np1)
+                .addProperties(np1)
+                .addProperties(np1)
+                .endModification(); 
+        assertEquals("Incorrect number of properties.", 
+                Finder.getPropertyDescriptors(DEFAULT_ORIG_TYPE).size() + 1,
+                Finder.getPropertyDescriptors(newType2).size());
     }
 
     // TODO is this property useful?

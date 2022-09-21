@@ -83,6 +83,7 @@ public class TypeMaker<T> {
     private boolean nameModified = false;
     private List<Field> origTypeDeclaredProperties; // lazy access
     private List<Pair<String, Object>> propertyInitializers = new ArrayList<>();
+    private Set<String> addedPropertiesNames = new HashSet<>();
 
     public TypeMaker(final DynamicEntityClassLoader loader, final Class<T> origType) {
         this.cl = loader;
@@ -134,7 +135,8 @@ public class TypeMaker<T> {
                 .collect(toCollection(HashSet::new));
 
         StreamUtils.distinct(
-                properties.stream().filter(prop -> !existingPropNames.contains(prop.getName())), 
+                properties.stream().filter(prop -> !addedPropertiesNames.contains(prop.getName()) &&
+                                                   !existingPropNames.contains(prop.getName())), 
                 prop -> prop.getName()) // distinguish properties by name
             .forEach(this::addProperty);
 
@@ -183,6 +185,8 @@ public class TypeMaker<T> {
 
         addAccessor(prop.getName(), genericType);
         addSetter(prop.getName(), genericType, collectional);
+        
+        addedPropertiesNames.add(prop.getName());
     }
 
     private Object collectionalInitValue(final Class<?> rawType) throws Exception {
