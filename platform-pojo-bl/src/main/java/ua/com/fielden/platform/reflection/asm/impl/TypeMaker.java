@@ -39,7 +39,6 @@ import ua.com.fielden.platform.entity.Accessor;
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.Generated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
-import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.factory.ObservableAnnotation;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
@@ -112,21 +111,21 @@ public class TypeMaker<T> {
     }
 
     /**
-     * Adds the specified properties to the type. 
-     * Those properties that conflict with the existing ones are discarded (i.e. old properties are not overwritten).
-     * Also, duplicate properties are eliminated.
+     * Enhances currently modified type by adding the specified properties. 
+     * If any of the specified properties conflicts with an existing one (e.g. has the same name), then it is discarded.
+     * If {@code properties} contains duplicates, then they are discarded to obtain only distinct properties.
      * <p>
-     * <i>Note:</i> Some annotations, such as {@link Title} and {@link Generated}, are explicitly added for each property. Therefore, elements of <code>properties</code> should not contain these annotations in {@link NewProperty#annotations}.
+     * Added properties are additionally annotated with {@link Generated}.
      *
-     * @param properties
-     * @return
+     * @param properties properties to be added
+     * @return this instance to continue building
      */
-    public TypeMaker<T> addProperties(final NewProperty<?>... properties) {
+    public TypeMaker<T> addProperties(final List<NewProperty<?>> properties) {
         if (builder == null) {
             throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
         }
 
-        if (properties == null || properties.length == 0) {
+        if (properties == null || properties.isEmpty()) {
             return this;
         }
 
@@ -135,11 +134,25 @@ public class TypeMaker<T> {
                 .collect(toCollection(HashSet::new));
 
         StreamUtils.distinct(
-                Arrays.stream(properties).filter(prop -> !existingPropNames.contains(prop.getName())), 
+                properties.stream().filter(prop -> !existingPropNames.contains(prop.getName())), 
                 prop -> prop.getName()) // distinguish properties by name
             .forEach(this::addProperty);
 
         return this;
+    }
+
+    /**
+     * Enhances currently modified type by adding the specified properties. 
+     * If any of the specified properties conflicts with an existing one (e.g. has the same name), then it is discarded.
+     * If {@code properties} contains duplicates, then they are discarded to obtain only distinct properties.
+     * <p>
+     * Added properties are additionally annotated with {@link Generated}.
+     *
+     * @param properties properties to be added
+     * @return this instance to continue building
+     */
+    public TypeMaker<T> addProperties(final NewProperty<?>... properties) {
+        return addProperties(Arrays.asList(properties));
     }
 
     private void addProperty(final NewProperty<?> prop) {
@@ -168,7 +181,7 @@ public class TypeMaker<T> {
             propertyInitializers.add(Pair.pair(prop.getName(), initValue));
         }
 
-        addGetter(prop.getName(), genericType);
+        addAccessor(prop.getName(), genericType);
         addSetter(prop.getName(), genericType, collectional);
     }
 
@@ -185,7 +198,7 @@ public class TypeMaker<T> {
         }
     }
 
-    private void addGetter(final String propName, final Type propType) {
+    private void addAccessor(final String propName, final Type propType) {
         final String prefix = propType.equals(Boolean.class) ? Accessor.IS.startsWith : Accessor.GET.startsWith;
         builder = builder.defineMethod(prefix + StringUtils.capitalize(propName), propType, Visibility.PUBLIC)
                 .intercept(FieldAccessor.ofField(propName));
@@ -241,7 +254,7 @@ public class TypeMaker<T> {
      * Otherwise, a runtime exception is thrown.
      *
      * @param annotations
-     * @return
+     * @return this instance to continue building
      */
     public TypeMaker<T> addClassAnnotations(final Annotation... annotations) {
         if (builder == null) {
@@ -331,25 +344,37 @@ public class TypeMaker<T> {
     }
 
     /**
-     * Modifies type's properties with the specified properties.
+     * Enhances currently modified type by modifying properties that exist in its original type.
+     * The same rules apply as for {@link #addProperties(List)}.
      *
      * @param propertyReplacements
-     * @return
+     * @return this instance to continue building
      */
-    public TypeMaker<T> modifyProperties(final NewProperty<?>... propertyReplacements) {
+    public TypeMaker<T> modifyProperties(final List<NewProperty<?>> propertyReplacements) {
         if (builder == null) {
             throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
         }
 
-        if (propertyReplacements == null || propertyReplacements.length == 0) {
+        if (propertyReplacements == null || propertyReplacements.isEmpty()) {
             return this;
         }
 
-        StreamUtils.distinct(Arrays.stream(propertyReplacements), prop -> prop.getName()) // distinguish properties by name
+        StreamUtils.distinct(propertyReplacements.stream(), prop -> prop.getName()) // distinguish properties by name
             .map(prop -> prop.deprecated ? undeprecateProperty(prop) : prop)
             .forEach(this::addProperty);
 
         return this;
+    }
+
+    /**
+     * Enhances currently modified type by modifying existing properties with the specified ones.
+     * The same rules apply as for {@link #addProperties(List)}.
+     *
+     * @param propertyReplacements
+     * @return this instance to continue building
+     */
+    public TypeMaker<T> modifyProperties(final NewProperty<?>... propertyReplacements) {
+        return modifyProperties(Arrays.asList(propertyReplacements));
     }
 
     private NewProperty<?> undeprecateProperty(final NewProperty<?> property) {
@@ -435,7 +460,9 @@ public class TypeMaker<T> {
 
     private List<Field> getOrigTypeDeclaredProperties() {
         if (origTypeDeclaredProperties == null) {
-            origTypeDeclaredProperties = Arrays.stream(origType.getDeclaredFields()).filter(field -> field.isAnnotationPresent(IsProperty.class)).toList(); 
+            origTypeDeclaredProperties = Arrays.stream(origType.getDeclaredFields())
+                    .filter(field -> field.isAnnotationPresent(IsProperty.class))
+                    .toList(); 
         }
         return origTypeDeclaredProperties;
     }
