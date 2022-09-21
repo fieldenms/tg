@@ -513,6 +513,47 @@ public class DynamicEntityTypePropertiesAdditionTest {
     }
 
     @Test
+    public void getter_returns_correct_value_after_setter_invokation_for_added_collectional_property() throws Exception {
+        // test both raw and parameterized collectional properties
+        for (final NewProperty<? extends Collection> np: List.of(npRawList, npParamList)) {
+            final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+                    .addProperties(np)
+                    .endModification();
+
+            final Method setter;
+            try {
+                setter = Reflector.obtainPropertySetter(newType, np.getName());
+            } catch (final Exception e) {
+                fail("Setter for added collectional property %s was not found.".formatted(np.getName()));
+                return;
+            }
+
+            // instantiate the generated type and try to set the value of added property 
+            final AbstractEntity<String> instance = factory.newByKey(newType, "new");
+            final List<String> list1 = List.of("hello");
+            setter.invoke(instance, list1);
+
+            final Method getter;
+            try {
+                getter = Reflector.obtainPropertyAccessor(newType, np.getName());
+            } catch (final Exception e) {
+                fail("Getter for added collectional property %s was not found.".formatted(np.getName()));
+                return;
+            }
+
+            assertEquals("Incorrect getter return value for added collectional property %s.".formatted(np.getName()),
+                    list1, getter.invoke(instance));
+            
+            // now set the value once again
+            // the old collection contents should be cleared, then provided elements should be added
+            final List<String> list2 = List.of("world");
+            setter.invoke(instance, list2);
+            assertEquals("Incorrect getter return value for added collectional property %s.".formatted(np.getName()),
+                    list2, getter.invoke(instance));
+        }
+    }
+
+    @Test
     public void added_properties_with_BCE_handlers_are_generated_correctly() throws Exception {
         final Handler[] handlers = new Handler[] { 
                 new HandlerAnnotation(BeforeChangeEventHandler.class)
