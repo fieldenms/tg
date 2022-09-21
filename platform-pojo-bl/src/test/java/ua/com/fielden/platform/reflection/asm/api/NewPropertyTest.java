@@ -12,7 +12,6 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -55,9 +54,9 @@ public class NewPropertyTest {
     private static final NewProperty<List> collectionalRawList = NewProperty.create("elements", List.class, "title", "desc", 
             new IsPropertyAnnotation(String.class).newInstance());
     private static final NewProperty<List> collectionalParameterizedList = NewProperty.create("elements", List.class,
-            new Type[] {String.class}, "title", "desc", new IsPropertyAnnotation(String.class).newInstance());
+            List.of(String.class), "title", "desc", new IsPropertyAnnotation(String.class).newInstance());
     private static final NewProperty<PropertyDescriptor> propertyDescriptor = NewProperty.create("elements", PropertyDescriptor.class,
-            new Type[] {Entity.class}, "title", "desc", new IsPropertyAnnotation(Entity.class).newInstance());
+            List.of(Entity.class), "title", "desc", new IsPropertyAnnotation(Entity.class).newInstance());
 
     @Test
     public void test_annotation_description_presence() {
@@ -133,7 +132,7 @@ public class NewPropertyTest {
     @Test
     public void changing_type_arguments_of_other_types_does_not_affect_IsProperty() {
         // Pair<String, String>
-        final NewProperty<Pair> pair = NewProperty.create("pair", Pair.class, new Type[] {String.class, String.class}, "title", "desc");
+        final NewProperty<Pair> pair = NewProperty.create("pair", Pair.class, List.of(String.class, String.class), "title", "desc");
         final Class<?> previousValue = pair.getAnnotationByType(IsProperty.class).value();
         pair.setTypeArguments(String.class, Double.class);
 

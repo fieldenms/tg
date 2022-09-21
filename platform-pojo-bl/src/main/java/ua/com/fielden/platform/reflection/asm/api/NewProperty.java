@@ -65,7 +65,7 @@ public final class NewProperty<T> {
         if (ParameterizedType.class.isInstance(genericType)) {
             final ParameterizedType parType = (ParameterizedType) genericType;
             return new NewProperty<>(field.getName(), PropertyTypeDeterminator.classFrom(parType.getRawType()),
-                    parType.getActualTypeArguments(), null, null, annotations);
+                    Arrays.asList(parType.getActualTypeArguments()), null, null, annotations);
         }
         // only raw type information is available
         return new NewProperty<>(field.getName(), PropertyTypeDeterminator.classFrom(genericType), null, null, annotations);
@@ -150,7 +150,7 @@ public final class NewProperty<T> {
      * @param desc property description as in {@link Title} annotation
      * @param annotations annotations directly present on this property (see note)
      */
-    public static <T> NewProperty<T> create(final String name, final Class<T> rawType, final Type[] typeArguments, final String title,
+    public static <T> NewProperty<T> create(final String name, final Class<T> rawType, final List<Type> typeArguments, final String title,
             final String desc, final Annotation... annotations) 
     {
         return new NewProperty<T>(name, rawType, typeArguments, title, desc, annotations);
@@ -173,13 +173,13 @@ public final class NewProperty<T> {
      * @param desc property description as in {@link Title} annotation
      * @param annotations annotations directly present on this property (see note)
      */
-    public NewProperty(final String name, final Class<T> rawType, final Type[] typeArguments, final String title, final String desc, 
+    public NewProperty(final String name, final Class<T> rawType, final List<Type> typeArguments, final String title, final String desc, 
             final Annotation... annotations) 
     {
         this.deprecated = false;
         this.name = name;
         this.type = rawType;
-        if (typeArguments.length > 0) this.typeArguments.addAll(Arrays.asList(typeArguments));
+        if (!typeArguments.isEmpty()) this.typeArguments.addAll(typeArguments);
         this.changeSignature = false;
         this.title = title;
         this.desc = desc;
@@ -229,7 +229,7 @@ public final class NewProperty<T> {
     public static <T> NewProperty<T> create(final String name, final Class<T> rawType, final String title, final String desc, 
             final Annotation... annotations) 
     {
-        return new NewProperty<T>(name, rawType, new Type[0], title, desc, annotations);
+        return new NewProperty<T>(name, rawType, List.of(), title, desc, annotations);
     }
 
     /**
@@ -249,7 +249,7 @@ public final class NewProperty<T> {
      * @param annotations annotations directly present on this property (see note)
      */
     public NewProperty(final String name, final Class<T> rawType, final String title, final String desc, final Annotation... annotations) {
-        this(name, rawType, new Type[0], title, desc, annotations);
+        this(name, rawType, List.of(), title, desc, annotations);
     }
 
 
@@ -267,8 +267,8 @@ public final class NewProperty<T> {
     public static NewProperty<?> create(final String name, final ParameterizedType type, final String title, final String desc,
             final Annotation... annotations) 
     {
-        return new NewProperty<>(name, PropertyTypeDeterminator.classFrom(type.getRawType()), type.getActualTypeArguments(), title, desc,
-                annotations);
+        return new NewProperty<>(name, PropertyTypeDeterminator.classFrom(type.getRawType()), Arrays.asList(type.getActualTypeArguments()),
+                title, desc, annotations);
     }
 
     public boolean hasTypeArguments() {
@@ -538,7 +538,7 @@ public final class NewProperty<T> {
      * @return
      */
     public NewProperty<T> copy() {
-        return new NewProperty<T>(name, type, typeArguments.toArray(Type[]::new), title, desc, getAnnotations().toArray(Annotation[]::new));
+        return new NewProperty<T>(name, type, List.copyOf(typeArguments), title, desc, getAnnotations().toArray(Annotation[]::new));
     }
     
     /**
@@ -550,7 +550,7 @@ public final class NewProperty<T> {
      * @return
      */
     public <C> NewProperty<C> changeType(final Class<C> rawType) {
-        return NewProperty.create(name, rawType, typeArguments.toArray(Type[]::new), title, desc,
+        return NewProperty.create(name, rawType, List.copyOf(typeArguments), title, desc,
                 getAnnotations().toArray(Annotation[]::new));
     }
     
