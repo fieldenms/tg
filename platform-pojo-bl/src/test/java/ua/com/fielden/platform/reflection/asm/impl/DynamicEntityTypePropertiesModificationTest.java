@@ -2,16 +2,22 @@ package ua.com.fielden.platform.reflection.asm.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.ParameterizedType;
+import java.lang.reflect.Type;
+import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 
 import org.junit.Before;
@@ -22,6 +28,8 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.associations.one2many.DetailsEntityForOneToManyAssociation;
 import ua.com.fielden.platform.associations.one2many.MasterEntityWithOneToManyAssociation;
 import ua.com.fielden.platform.associations.one2many.MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPropValue;
+import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
@@ -45,6 +53,7 @@ import ua.com.fielden.platform.reflection.asm.impl.entities.TopLevelEntity;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.Pair;
 
 /**
  * A test case to ensure correct dynamic modification of entity types by means of changing existing properties.
@@ -54,6 +63,8 @@ import ua.com.fielden.platform.types.Money;
  */
 @SuppressWarnings({ "rawtypes", "unchecked" })
 public class DynamicEntityTypePropertiesModificationTest {
+    private static final Class<Entity> DEFAULT_ORIG_TYPE = Entity.class;
+
     private static final String NEW_PROPERTY_DESC = "Description  for new money property";
     private static final String NEW_PROPERTY_TITLE = "New money property";
     private static final String NEW_PROPERTY_EXPRESSION = "2 * 3 - [integerProp]";
@@ -582,5 +593,129 @@ public class DynamicEntityTypePropertiesModificationTest {
         // instantiate
         final EntityWithCollectionalPropety instanceColl = factory.newByKey(modEntityWithCollectionalPropety, "new");
         assertEquals("Incorrect property initialization value.", npColl.getValue(), instanceColl.get(npColl.getName()));
+    }
+
+    @Test
+    public void deprecated_NewProperty_can_be_used_to_modify_property_type() throws Exception {
+        // Here we are testing 2 things:
+        // 1. changing the type of an existing *simple* property
+        // 2. changing the raw type of an existing collectional property
+        for (final var nameAndNewType: List.of(Pair.pair("firstProperty", BigDecimal.class),
+                                               Pair.pair("entities", Set.class)))
+        {
+            final String name = nameAndNewType.getKey();
+            final Field origField = Finder.getFieldByName(DEFAULT_ORIG_TYPE, name);
+            assertNotNull(origField); // make sure such a property exists
+
+            final Class<?> newPropType = nameAndNewType.getValue();
+            // make sure that new property type is actually different
+            assertNotEquals(newPropType, origField.getType());
+
+            // access original field type arguments, if any 
+            final List<Type> origFieldTypeArguments = extractTypeArguments(origField.getGenericType());
+
+            final NewProperty np = NewProperty.changeType(name, newPropType);
+            final Class<? extends AbstractEntity<String>> enhancedType = cl.startModification(DEFAULT_ORIG_TYPE)
+                    .modifyProperties(np)
+                    .endModification();
+
+            assertPropertyCorrectness(enhancedType, name, newPropType, 
+                    // we only changed the raw type, so the last argument is the type arguments of the original field, 
+                    // which should have been preserved
+                    origFieldTypeArguments);
+        }
+    }
+
+    @Test
+    public void deprecated_NewProperty_can_be_used_to_modify_property_type_arguments() throws Exception {
+        // Here we are testing 3 things:
+        // 1. changing type argument of a collectional property
+        // 2. changing type argument of a PropertyDescriptor property
+        // 3. changing type argument of any other parameterized type (e.g. Optional)
+
+        // first, test 1. and 2. which affect @IsProperty.value()
+        for (final var nameAndTypeArg: List.of(Pair.pair("entities", EntityBeingEnhanced.class),
+                                               Pair.pair("propertyDescriptor", EntityBeingEnhanced.class)))
+        {
+            final String name = nameAndTypeArg.getKey();
+            final Field origField = Finder.getFieldByName(DEFAULT_ORIG_TYPE, name);
+            assertNotNull(origField); // make sure such a property exists
+
+            final Class<?> typeArg = nameAndTypeArg.getValue();
+
+            // access original field type arguments, if any 
+            final List<Type> origFieldTypeArguments = extractTypeArguments(origField.getGenericType());
+
+            final NewProperty np = NewProperty.changeTypeSignature(name, typeArg);
+            final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+                    .modifyProperties(np)
+                    .endModification();
+
+            final Field modifiedProperty = assertPropertyCorrectness(newType, name, 
+                    origField.getType(), // expect the same raw type
+                    List.of(typeArg)     // expect new type argument
+                    );
+
+            // make sure @IsProperty.value() was also modified
+            final IsProperty atIsProperty = modifiedProperty.getAnnotation(IsProperty.class);
+            assertNotNull("@IsProperty should be present.", atIsProperty);
+            assertEquals("Incorrect value of @IsProperty.", typeArg, atIsProperty.value());
+        }
+
+        // now test 3.
+        final String name = "maybeText";
+        final Field origField = Finder.getFieldByName(DEFAULT_ORIG_TYPE, name);
+        assertNotNull(origField); // make sure such a property exists
+
+        final Class<?> typeArg = Integer.class;
+
+        // access original field type arguments, if any 
+        final List<Type> origFieldTypeArguments = extractTypeArguments(origField.getGenericType());
+
+        final NewProperty np = NewProperty.changeTypeSignature(name, typeArg);
+        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+                .modifyProperties(np)
+                .endModification();
+
+        final Field modifiedProperty = assertPropertyCorrectness(newType, name, 
+                origField.getType(), // expect the same raw type
+                List.of(typeArg)     // expect new type argument
+                );
+
+        // make sure @IsProperty.value() was unchanged
+        final Class<?> origIsPropertyValue = origField.getAnnotation(IsProperty.class).value();
+        final IsProperty atIsProperty = modifiedProperty.getAnnotation(IsProperty.class);
+        assertNotNull("@IsProperty should be present.", atIsProperty);
+        assertEquals("Incorrect value of @IsProperty.", origIsPropertyValue, atIsProperty.value());
+    }
+
+    private static List<Type> extractTypeArguments(final Type type) {
+        if (ParameterizedType.class.isInstance(type)) {
+            return Arrays.asList(((ParameterizedType) type).getActualTypeArguments());
+        }
+        else return List.of();
+    }
+
+    private static Field assertPropertyCorrectness(final Class<?> owningEnhancedType, final String name, final Class<?> expectedRawType, 
+            final List<Type> expectedTypeArguments) 
+    {
+        final Field field = Finder.getFieldByName(owningEnhancedType, name);
+        assertNotNull("Modified property should exist.", field);
+        final List<Type> origFieldTypeArguments = extractTypeArguments(field.getGenericType());
+
+        assertEquals("Incorrect property raw type.", expectedRawType, field.getType());
+        assertEquals("Incorrect property type arguments.", expectedTypeArguments, origFieldTypeArguments);
+
+        final Method accessor = Reflector.obtainPropertyAccessor(owningEnhancedType, name);
+        assertEquals("Incorrect accessor return raw type.", expectedRawType, accessor.getReturnType());
+        assertEquals("Incorrect accessor return type arguments.", 
+                expectedTypeArguments, extractTypeArguments(accessor.getGenericReturnType()));
+
+        final Method setter = Reflector.obtainPropertySetter(owningEnhancedType, name);
+        assertEquals("Incorrect number of setter parameters.", 1, setter.getParameterCount());
+        assertEquals("Incorrect setter parameter raw type.", expectedRawType, setter.getParameterTypes()[0]);
+        assertEquals("Incorrect setter parameter type arguments.", 
+                expectedTypeArguments, extractTypeArguments(setter.getGenericParameterTypes()[0]));
+        return field;
     }
 }
