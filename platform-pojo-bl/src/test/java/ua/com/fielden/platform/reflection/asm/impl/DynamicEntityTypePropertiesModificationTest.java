@@ -1,11 +1,13 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
+import static java.util.Arrays.asList;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -61,23 +63,22 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  *
  */
-@SuppressWarnings({ "rawtypes", "unchecked" })
 public class DynamicEntityTypePropertiesModificationTest {
-    private static final Class<Entity> DEFAULT_ORIG_TYPE = Entity.class;
-
     private static final String NEW_PROPERTY_DESC = "Description  for new money property";
     private static final String NEW_PROPERTY_TITLE = "New money property";
     private static final String NEW_PROPERTY_EXPRESSION = "2 * 3 - [integerProp]";
     private static final String NEW_PROPERTY = "newProperty";
+
+    private static final Calculated calculated = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION).newInstance();
+
+    private static final NewProperty<Money> np1 = NewProperty.create(NEW_PROPERTY, Money.class, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC,
+            calculated);
+
     private boolean observed = false;
     private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
     private DynamicEntityClassLoader cl;
-
-    private final Calculated calculated = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION).newInstance();
-
-    private final NewProperty pd = new NewProperty(NEW_PROPERTY, Money.class, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
 
     @Before
     public void setUp() {
@@ -86,80 +87,97 @@ public class DynamicEntityTypePropertiesModificationTest {
     }
 
     @Test
-    public void test_to_ensure_several_properties_can_be_modified() throws Exception {
-        // enhance(EntityBeingEnhanced)
-        final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
-                .addProperties(pd)
-                .endModification();
+    public void a_single_property_can_be_modified() throws Exception {
+        final Field oldField = EntityBeingEnhanced.class.getDeclaredField("prop1");
 
-        // enhance(EntityBeingModified)
-        //      prop1: EntityBeingEnhanced -> modEntityBeingEnhanced
-        final NewProperty np = NewProperty.fromField(EntityBeingModified.class, "prop1").changeType(modEntityBeingEnhanced);
-        final Class<? extends EntityBeingModified> modEntityBeingModified = cl.startModification(EntityBeingModified.class)
+        final NewProperty<Double> np = NewProperty.fromField(oldField).changeType(Double.class);
+        final Class<? extends AbstractEntity<?>> newType = cl.startModification(EntityBeingEnhanced.class)
                 .modifyProperties(np)
                 .endModification();
 
-        // enhance(TopLevelEntity)
-        //      prop1: EntityBeingModified -> modEntityBeingModified
-        //      prop2: EntityBeingModified -> modEntityBeingModified
-        final NewProperty topLevelNp1 = NewProperty.fromField(TopLevelEntity.class, "prop1").changeType(modEntityBeingModified);
-        final NewProperty topLevelNp2 = NewProperty.fromField(TopLevelEntity.class, "prop2").changeType(modEntityBeingModified);
-        final Class<?> topLevelEntityModifiedType = cl.startModification(TopLevelEntity.class)
-                .modifyProperties(topLevelNp1, topLevelNp2)
+        assertEquals("Incorrect number of property descriptors in the generated type.", 
+                Finder.getPropertyDescriptors(EntityBeingEnhanced.class).size(),
+                Finder.getPropertyDescriptors(newType).size());
+
+        final Field newField = Finder.findFieldByName(newType, np.getName());
+        assertNotNull("Modified property %s was not found.".formatted(np.getName()), newField);
+        assertEquals("Incorrect type of modified property.", 
+                np.genericType().toString(), newField.getGenericType().toString());
+
+        assertTrue("Not all property annotations were preserved.",
+                asList(newField.getDeclaredAnnotations()).containsAll(asList(oldField.getDeclaredAnnotations())));
+    }
+    
+    @Test
+    public void multiple_properties_can_be_modified_at_once() throws Exception {
+        final Class<? extends AbstractEntity<?>> origType = Entity.class;
+        final Field oldField1 = origType.getDeclaredField("firstProperty");
+        final Field oldField2 = origType.getDeclaredField("entity");
+        final Field oldField3 = origType.getDeclaredField("observableProperty");
+
+        final NewProperty<Double> np1 = NewProperty.fromField(oldField1).changeType(Double.class);
+        final NewProperty<TopLevelEntity> np2 = NewProperty.fromField(oldField2).changeType(TopLevelEntity.class);
+        final NewProperty<String> np3 = NewProperty.fromField(oldField3).changeType(String.class);
+        final Class<? extends AbstractEntity<?>> newType = cl.startModification(origType)
+                .modifyProperties(np1, np2, np3)
                 .endModification();
 
-        final Field prop1 = topLevelEntityModifiedType.getDeclaredField("prop1");
-        assertNotNull("Modified property should be declared by the enhanced type.", prop1);
-        assertEquals("Incorrect property type after modification", modEntityBeingModified, prop1.getType());
+        assertEquals("Incorrect number of property descriptors in the generated type.", 
+                Finder.getPropertyDescriptors(origType).size(),
+                Finder.getPropertyDescriptors(newType).size());
 
-        final Field prop2 = topLevelEntityModifiedType.getDeclaredField("prop2");
-        assertNotNull("Modified property should be declared by the enhanced type.", prop2);
-        assertEquals("Incorrect property type after modification", modEntityBeingModified, prop2.getType());
+        for (final var npAndOldField: List.of(pair(np1, oldField1), pair(np2, oldField2), pair(np3, oldField3))) {
+            final NewProperty<?> np = npAndOldField.getKey();
+            final Field oldField = npAndOldField.getValue();
 
-        assertEquals("prop 1 and prop 2 should be of the same type", prop2.getType(), prop1.getType());
+            final Field newField = Finder.findFieldByName(newType, np.getName());
+            assertNotNull("Modified property %s was not found.".formatted(np.getName()), newField);
+            assertEquals("Incorrect type of modified property.", 
+                    np.genericType().toString(), newField.getGenericType().toString());
+
+            assertTrue("Not all property annotations were preserved.",
+                    asList(newField.getDeclaredAnnotations()).containsAll(asList(oldField.getDeclaredAnnotations())));
+        }
     }
 
     @Test
-    public void test_sequential_modificaton_of_properties() throws Exception {
-        // enhance(EntityBeingEnhanced)
-        final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
-                .addProperties(pd)
-                .endModification();
+    public void multiple_properties_can_be_modified_sequentially() throws Exception {
+        final Class<? extends AbstractEntity<?>> origType = Entity.class;
+        final Field oldField1 = origType.getDeclaredField("firstProperty");
+        final Field oldField2 = origType.getDeclaredField("entity");
+        final Field oldField3 = origType.getDeclaredField("observableProperty");
 
-        // enhance(EntityBeingModified)
-        //      prop1: EntityBeingEnhanced -> modEntityBeingEnhanced
-        final NewProperty np = NewProperty.fromField(EntityBeingModified.class, "prop1").changeType(modEntityBeingEnhanced);
-        final Class<?> modEntityBeingModified = cl.startModification(EntityBeingModified.class)
-                .modifyProperties(np)
-                .endModification();
+        final NewProperty<Double> np1 = NewProperty.fromField(oldField1).changeType(Double.class);
+        final NewProperty<TopLevelEntity> np2 = NewProperty.fromField(oldField2).changeType(TopLevelEntity.class);
+        final NewProperty<String> np3 = NewProperty.fromField(oldField3).changeType(String.class);
 
+        final TypeMaker<? extends AbstractEntity<?>> builder = cl.startModification(origType);
+        List.of(np1, np2, np3).forEach(builder::addProperties);
+        final Class<? extends AbstractEntity<?>> newType = builder.endModification();
 
-        // enhance(TopLevelEntity)
-        //      prop1: EntityBeingModified -> modEntityBeingModified
-        //      prop2: EntityBeingModified -> modEntityBeingModified
-        final NewProperty topLevelNp1 = NewProperty.fromField(TopLevelEntity.class, "prop1").changeType(modEntityBeingModified);
-        final NewProperty topLevelNp2 = NewProperty.fromField(TopLevelEntity.class, "prop2").changeType(modEntityBeingModified);
-        final Class<?> topLevelEntityModifiedType = cl.startModification(TopLevelEntity.class)
-                .modifyProperties(topLevelNp1)
-                .modifyProperties(topLevelNp2)
-                .endModification();
+        assertEquals("Incorrect number of property descriptors in the generated type.", 
+                Finder.getPropertyDescriptors(origType).size(),
+                Finder.getPropertyDescriptors(newType).size());
 
-        final Field prop1 = topLevelEntityModifiedType.getDeclaredField("prop1");
-        assertNotNull("Modified property should be declared by the enhanced type.", prop1);
-        assertEquals("Incorrect property type after modification", modEntityBeingModified, prop1.getType());
+        for (final var npAndOldField: List.of(pair(np1, oldField1), pair(np2, oldField2), pair(np3, oldField3))) {
+            final NewProperty<?> np = npAndOldField.getKey();
+            final Field oldField = npAndOldField.getValue();
 
-        final Field prop2 = topLevelEntityModifiedType.getDeclaredField("prop2");
-        assertNotNull("Modified property should be declared by the enhanced type.", prop2);
-        assertEquals("Incorrect property type after modification", modEntityBeingModified, prop2.getType());
+            final Field newField = Finder.findFieldByName(newType, np.getName());
+            assertNotNull("Modified property %s was not found.".formatted(np.getName()), newField);
+            assertEquals("Incorrect type of modified property.", 
+                    np.genericType().toString(), newField.getGenericType().toString());
 
-        assertEquals("prop 1 and prop 2 should be of the same type", prop2.getType(), prop1.getType());
+            assertTrue("Not all property annotations were preserved.",
+                    asList(newField.getDeclaredAnnotations()).containsAll(asList(oldField.getDeclaredAnnotations())));
+        }
     }
 
     @Test
     public void test_modification_of_properties_to_modified_type() throws Exception {
         // enhance(EntityBeingEnhanced)
         final Class<?> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
-                .addProperties(pd)
+                .addProperties(np1)
                 .endModification();
 
         // enhance(EntityBeingModified)
@@ -198,7 +216,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     public void test_new_type_name_generation() throws Exception {
         // enhance(EntityBeingEnhanced)
         final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
-                .addProperties(pd)
+                .addProperties(np1)
                 .endModification();
 
         // enhance(EntityBeingModified)
@@ -242,7 +260,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     @Test
     public void test_instantiation_of_enhanced_type() throws Exception {
         final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
-                .addProperties(pd)
+                .addProperties(np1)
                 .endModification();
 
         // enhance(EntityBeingModified)
@@ -260,7 +278,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     @Test
     public void test_correct_modification_of_entity_being_modified() throws Exception {
         final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
-                .addProperties(pd)
+                .addProperties(np1)
                 .endModification();
 
         // enhance(EntityBeingModified)
@@ -299,7 +317,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     public void test_correct_modification_of_top_level_entity() throws Exception {
         // enhance(EntityBeingEnhanced)
         final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
-                .addProperties(pd)
+                .addProperties(np1)
                 .endModification();
 
         // enhance(EntityBeingModified)
@@ -348,7 +366,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     {
         // enhance(EntityBeingEnhanced)
         final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
-                .addProperties(pd)
+                .addProperties(np1)
                 .endModification();
         module.getDomainMetaPropertyConfig().setDefiner(modEntityBeingEnhanced, NEW_PROPERTY, 
                 new IAfterChangeEventHandler<Object>() 
@@ -409,7 +427,7 @@ public class DynamicEntityTypePropertiesModificationTest {
 
         // enhance(EntityBeingEnhanced)
         final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
-                .addProperties(pd)
+                .addProperties(np1)
                 .endModification();
 
         // enhance(EntityWithCollectionalProperty)
@@ -436,7 +454,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     public void test_getting_setting_and_observation_of_modified_collectional_property() throws Exception {
         // enhance(EntityBeingEnhanced)
         final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
-                .addProperties(pd)
+                .addProperties(np1)
                 .endModification();
 
         // enhance(EntityWithCollectionalPropety)
@@ -512,7 +530,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     @Test
     public void type_modification_does_not_modify_existing_getters_for_untouched_properties() throws Exception {
         final Class<? extends EntityName> enhancedType = cl.startModification(EntityName.class)
-                .addProperties(pd)
+                .addProperties(np1)
                 .endModification();
 
         // no properties were modified so original getters should not be overriden
@@ -527,7 +545,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     public void modified_one2Many_special_case_property_is_generated_correctly() throws Exception {
         final Class<? extends DetailsEntityForOneToManyAssociation> modOneToManyDetailsEntity = 
                 cl.startModification(DetailsEntityForOneToManyAssociation.class)
-                .addProperties(pd)
+                .addProperties(np1)
                 .endModification();
 
         // enhance(MasterEntityWithOneToManyAssociation)
@@ -550,7 +568,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     public void modified_one2Many_collectional_property_is_generated_correctly_when_IsProperty_is_not_provided() throws Exception {
         final Class<? extends DetailsEntityForOneToManyAssociation> modOneToManyDetailsEntity =
                 cl.startModification(DetailsEntityForOneToManyAssociation.class)
-                .addProperties(pd)
+                .addProperties(np1)
                 .endModification();
 
         // enhance(MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPropValue)
@@ -604,7 +622,7 @@ public class DynamicEntityTypePropertiesModificationTest {
                                                Pair.pair("entities", Set.class)))
         {
             final String name = nameAndNewType.getKey();
-            final Field origField = Finder.getFieldByName(DEFAULT_ORIG_TYPE, name);
+            final Field origField = Finder.getFieldByName(Entity.class, name);
             assertNotNull(origField); // make sure such a property exists
 
             final Class<?> newPropType = nameAndNewType.getValue();
@@ -615,7 +633,7 @@ public class DynamicEntityTypePropertiesModificationTest {
             final List<Type> origFieldTypeArguments = extractTypeArguments(origField.getGenericType());
 
             final NewProperty np = NewProperty.changeType(name, newPropType);
-            final Class<? extends AbstractEntity<String>> enhancedType = cl.startModification(DEFAULT_ORIG_TYPE)
+            final Class<? extends AbstractEntity<String>> enhancedType = cl.startModification(Entity.class)
                     .modifyProperties(np)
                     .endModification();
 
@@ -638,7 +656,7 @@ public class DynamicEntityTypePropertiesModificationTest {
                                                Pair.pair("propertyDescriptor", EntityBeingEnhanced.class)))
         {
             final String name = nameAndTypeArg.getKey();
-            final Field origField = Finder.getFieldByName(DEFAULT_ORIG_TYPE, name);
+            final Field origField = Finder.getFieldByName(Entity.class, name);
             assertNotNull(origField); // make sure such a property exists
 
             final Class<?> typeArg = nameAndTypeArg.getValue();
@@ -647,7 +665,7 @@ public class DynamicEntityTypePropertiesModificationTest {
             final List<Type> origFieldTypeArguments = extractTypeArguments(origField.getGenericType());
 
             final NewProperty np = NewProperty.changeTypeSignature(name, typeArg);
-            final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+            final Class<? extends AbstractEntity<String>> newType = cl.startModification(Entity.class)
                     .modifyProperties(np)
                     .endModification();
 
@@ -664,7 +682,7 @@ public class DynamicEntityTypePropertiesModificationTest {
 
         // now test 3.
         final String name = "maybeText";
-        final Field origField = Finder.getFieldByName(DEFAULT_ORIG_TYPE, name);
+        final Field origField = Finder.getFieldByName(Entity.class, name);
         assertNotNull(origField); // make sure such a property exists
 
         final Class<?> typeArg = Integer.class;
@@ -673,7 +691,7 @@ public class DynamicEntityTypePropertiesModificationTest {
         final List<Type> origFieldTypeArguments = extractTypeArguments(origField.getGenericType());
 
         final NewProperty np = NewProperty.changeTypeSignature(name, typeArg);
-        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+        final Class<? extends AbstractEntity<String>> newType = cl.startModification(Entity.class)
                 .modifyProperties(np)
                 .endModification();
 
