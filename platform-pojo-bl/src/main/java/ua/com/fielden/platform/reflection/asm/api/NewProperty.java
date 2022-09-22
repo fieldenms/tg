@@ -21,7 +21,6 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.exceptions.NewPropertyException;
-import ua.com.fielden.platform.reflection.asm.exceptions.NewPropertyRuntimeException;
 
 /**
  * A convenient abstraction for representing data needed for dynamic construction of properties.
@@ -159,7 +158,9 @@ public final class NewProperty<T> {
     /**
      * Creates a new property representation with a raw type and type arguments.
      * <p>
-     * If <code>annotations</code> do not contain {@link IsProperty}, then it's added implicitly.
+     * If <code>annotations</code> do not contain {@link IsProperty}, then it's added implicitly. However, for collectional properties
+     * and {@link PropertyDescriptor}s it is required to explicitly supply an instance of {@link IsProperty} with 
+     * its {@code value()} set accordingly.
      * <p>
      * Generally, {@link Title} annotation is constructed using <code>title</code> and <code>desc</code>, so having
      * <code>annotations</code> contain {@link Title} has no effect.
@@ -193,25 +194,18 @@ public final class NewProperty<T> {
                 .filter(annot -> annot.annotationType() == IsProperty.class)
                 .findAny().orElse(null);
         if (atIsProp != null) {
+            this.atIsProperty = (IsProperty) atIsProp;
             // this::addAnnotation is used to avoid the possibility of old code breaking, since it could be providing duplicate annotations
             // and also to avoid the possibility of adding @Title twice
             Arrays.stream(annotations)
                 .filter(annot -> annot.annotationType() != IsProperty.class)
                 .forEach(this::addAnnotation);
-            this.atIsProperty = (IsProperty) atIsProp;
         }
         else {
+            this.atIsProperty = new IsPropertyAnnotation().newInstance();
             // this::addAnnotation is used to avoid the possibility of old code breaking, since it could be providing duplicate annotations
             // and also to avoid the possibility of adding @Title twice
             Arrays.stream(annotations).forEach(this::addAnnotation);
-
-            // determine value() argument
-            final IsPropertyAnnotation isPropAnnot = new IsPropertyAnnotation();
-            final Class<?> value = determineIsPropertyValue();
-            if (value != null) {
-                isPropAnnot.value(value);
-            }
-            this.atIsProperty = isPropAnnot.newInstance();
         }
     }
 
@@ -416,25 +410,16 @@ public final class NewProperty<T> {
     }
 
     /**
-     * Updates type arguments of this instance.
-     * <p>
-     * If the raw type represents {@link PropertyDescriptor} or {@link Collection}, then {@link IsProperty#value()} is updated by
-     * the first type argument. If no type arguments are present, then for {@link Collection} {@link Object} is chosen, but for
-     * {@link PropertyDescriptor} a runtime exception is thrown.
-     * <p>
-     * For other types, {@link IsProperty#value()} is unchanged.
+     * Sets type arguments of this property's type.
      */
     public NewProperty<T> setTypeArguments(final List<Type> typeArguments) {
         this.typeArguments.clear();
         this.typeArguments.addAll(typeArguments);
-        updateIsProperty();
         return this;
     }
     
     /**
-     * Updates type arguments of this instance.
-     * <p>
-     * Might also update {@link IsProperty} - see {@link #setTypeArguments(List)}.
+     * Sets type arguments of this property's type.
      */
     public NewProperty<T> setTypeArguments(final Type... typeArguments) {
         return setTypeArguments(Arrays.asList(typeArguments));
@@ -449,6 +434,24 @@ public final class NewProperty<T> {
 
     public NewProperty<T> addTypeArguments(final Type... typeArguments) {
         return addTypeArguments(Arrays.asList(typeArguments));
+    }
+    
+    /**
+     * Returns {@link IsProperty} annotation for this property.
+     */
+    public IsProperty getIsProperty() {
+        return atIsProperty;
+    }
+    
+    /**
+     * Changes the {@code value()} of {@link IsProperty} annotation for this property.
+     * <p>
+     * It should be emphasized that this method <b>changes</b>, rather than <b>sets</b> the new value.
+     * Old reference to {@link IsProperty} instance is discarded by creating a copy with the new {@code value}.
+     */
+    public NewProperty<T> changeIsPropertyValue(final Class<?> value) {
+        atIsProperty = IsPropertyAnnotation.from(atIsProperty).value(value).newInstance();
+        return this;
     }
 
     /**
@@ -596,44 +599,6 @@ public final class NewProperty<T> {
         return strBuilder.append(String.format("%s %s", genericTypeAsDeclared().getTypeName(), name)).toString();
     }
 
-    private void updateIsProperty() {
-        // this.atIsProperty can't be null at this point, thus newValue also can't be assigned null
-        final Class<?> newValue = determineIsPropertyValue();
-        atIsProperty = IsPropertyAnnotation.from(atIsProperty).value(newValue).newInstance();
-    }
-
-    /**
-     * Determines the correct value for {@link IsProperty#value()} based on the raw type of this property.
-     * <ol>
-	 *  <li>{@link Collection} - 1st type argument if exists, otherwise <code>Object.class</code>.</li>
-	 *  <li>{@link PropertyDescriptor} - 1st type argument if exists, otherwise throws a runtime exception.</li>
-	 *  <li>Other - current <code>value()</code> if {@link IsProperty} is present, otherwise <code>null</code>.</li>
-	 * </ol>
-	 * 
-     * @return best match for {@link IsProperty#value()} or <code>null</code> if <code>atIsProperty == null</code>.
-     */
-    private Class<?> determineIsPropertyValue() {
-        if (isCollectional()) {
-            if (hasTypeArguments()) {
-                return PropertyTypeDeterminator.classFrom(typeArguments.get(0));
-            }
-            // collectional property and empty type arguments -> set IsProperty.value() to Object
-            else return Object.class;
-        }
-        else if (isPropertyDescriptor()) {
-            // property descriptor MUST BE parameterized
-            if (hasTypeArguments()) {
-                return PropertyTypeDeterminator.classFrom(typeArguments.get(0));
-            }
-            else throw new NewPropertyRuntimeException("PropertyDescriptor must be parameterized, got empty type arguments instead.");
-        }
-        // for other types - leave unchanged
-        else if (atIsProperty != null) {
-            return this.atIsProperty.value();
-        }
-        else return null;
-    }
-    
     /**
      * Creates a new anonymous class implementing {@link ParameterizedType}.
      * 

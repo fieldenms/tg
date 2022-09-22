@@ -4,6 +4,7 @@ import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -20,7 +21,6 @@ import org.junit.Test;
 
 import com.google.inject.Injector;
 
-import javassist.compiler.ast.Pair;
 import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
@@ -103,30 +103,26 @@ public class NewPropertyTest {
     }
     
     @Test
-    public void changing_the_type_argument_of_collectional_property_also_modifies_value_of_IsProperty_annotation() {
+    public void changing_the_type_argument_of_collectional_property_does_not_modify_the_value_of_IsProperty_annotation() {
         // copy NewProperty and manually copy @IsProperty annotation
         final NewProperty<List> pd = collectionalRawList.copy().setAnnotations(new IsPropertyAnnotation(String.class).newInstance());
         // update type arguments
         pd.setTypeArguments(Double.class);
 
-        assertArrayEquals("Should be parameterized with Double.",
-                new Type[] {Double.class}, ((ParameterizedType) pd.genericType()).getActualTypeArguments());
-        assertEquals("The value of @IsProperty should be equal to Double.class",
-                Double.class, pd.getAnnotationByType(IsProperty.class).value());
+        assertEquals("Incorrect property type arguments.", List.of(Double.class), pd.getTypeArguments());
+        assertEquals("Incorrect @IsProperty.value().", String.class, pd.getIsProperty().value());
     }
 
     @Test
-    public void changing_the_type_argument_of_PropertyDescriptor_also_modifies_value_of_IsProperty_annotation() {
+    public void changing_the_type_argument_of_PropertyDescriptor_does_not_modify_the_value_of_IsProperty_annotation() {
         // copy NewProperty and manually copy @IsProperty annotation
         final NewProperty<PropertyDescriptor> pd = propertyDescriptor.copy().setAnnotations(
                 new IsPropertyAnnotation(Entity.class).newInstance());
         // update type arguments to any other entity
         pd.setTypeArguments(EntityWithCollectionalPropety.class);
 
-        assertArrayEquals("Should be parameterized with EntityWithCollectionalPropety.",
-                new Type[] {EntityWithCollectionalPropety.class}, ((ParameterizedType) pd.genericType()).getActualTypeArguments());
-        assertEquals("The value of @IsProperty should be equal to EntityWithCollectionalPropety.class",
-                EntityWithCollectionalPropety.class, pd.getAnnotationByType(IsProperty.class).value());
+        assertEquals("Incorrect property type arguments.", List.of(EntityWithCollectionalPropety.class), pd.getTypeArguments());
+        assertEquals("Incorrect @IsProperty.value().", Entity.class, pd.getIsProperty().value());
     }
     
     @Test
