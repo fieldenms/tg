@@ -14,6 +14,7 @@ import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -23,7 +24,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -51,6 +51,7 @@ import ua.com.fielden.platform.entity.before_change_event_handling.BeforeChangeE
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
@@ -105,6 +106,17 @@ public class DynamicEntityTypePropertiesAdditionTest {
     @SuppressWarnings("rawtypes")
     private static final NewProperty<List> npParamList = NewProperty.create("paramListTestProperty", List.class, List.of(String.class),
             "Collectional Property", "Collectional Property Description", new IsPropertyAnnotation(String.class).newInstance());
+
+    // PropertyDescriptor properties
+    @SuppressWarnings("rawtypes")
+    private static final NewProperty<PropertyDescriptor> npRawPropDescriptor = NewProperty.create("propertyDescriptorTestProperyt",
+            PropertyDescriptor.class, "PropertyDescriptor property", "PropertyDescriptor property description",
+            new IsPropertyAnnotation(TopLevelEntity.class).newInstance());
+    @SuppressWarnings("rawtypes")
+    private static final NewProperty<PropertyDescriptor> npParamPropDescriptor = NewProperty.create("propertyDescriptorTestProperyt",
+            PropertyDescriptor.class, List.of(TopLevelEntity.class),
+            "PropertyDescriptor property", "PropertyDescriptor property description",
+            new IsPropertyAnnotation(TopLevelEntity.class).newInstance());
 
     @Before
     public void setUp() {
@@ -298,6 +310,89 @@ public class DynamicEntityTypePropertiesAdditionTest {
         instance.set(np1.getName(), new Money("23.32"));
         assertTrue("Setter for the added property %s was not observed.".formatted(np1.getName()), observed[0]);
     }
+
+    /**
+     * If a {@link PropertyDescriptor} property prototype has the following form:
+     * <pre>
+     * {@literal @}IsProperty(Entity.class) PropertyDescriptor ${name}
+     * </pre>
+     * Then it will be generated in the following form:
+     * <pre>
+     * {@literal @}IsProperty(Entity.class) PropertyDescriptor{@literal <Entity>} ${name}
+     * </pre>
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void the_type_of_added_raw_PropertyDescriptor_property_is_parameterized_with_the_value_of_IsProperty() throws Exception {
+        final Function<String, String> formatter = MiscUtilities.stringFormatter(npRawPropDescriptor.getName());
+
+        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+                .addProperties(npRawPropDescriptor)
+                .endModification();
+
+        final Field field = Finder.findFieldByName(newType, npRawPropDescriptor.getName());
+        assertNotNull("Added property %s was not found.".formatted(npRawPropDescriptor.getName()), field);
+
+        // make sure all provided property annotations were generated
+        assertAnnotationsEquals(npRawPropDescriptor, field);
+
+        final Type fieldGenericType = field.getGenericType();
+        assertTrue(formatter.apply("Type of added PropertyDescriptor property %s is not a parameterized one."),
+                ParameterizedType.class.isInstance(fieldGenericType));
+        final ParameterizedType fieldParamType = (ParameterizedType) fieldGenericType;
+
+        // check the raw type
+        assertEquals(formatter.apply("Incorrect raw type of added PropertyDescriptor property %s."),
+                npRawPropDescriptor.getRawType(), fieldParamType.getRawType());
+
+        // check the type arguments
+        final Type[] typeArguments = fieldParamType.getActualTypeArguments();
+        assertEquals(formatter.apply("Incorrect number of type arguments for added PropertyDescriptor property %s."),
+                1, typeArguments.length);
+        assertEquals(formatter.apply("Incorrect type argument of added PropertyDescriptor property %s."),
+                npRawPropDescriptor.getIsProperty().value(), typeArguments[0]);
+    }
+
+    /**
+     * If a collectional property prototype has the following form:
+     * <pre>
+     * {@literal @}IsProperty(Entity.class) PropertyDescriptor{@literal <Entity>} ${name}
+     * </pre>
+     * Then it will be generated having the same form.
+     * 
+     * @throws Exception
+     */
+    @Test
+    public void the_type_of_added_parameterized_PropertyDescriptor_property_is_parameterized_with_provided_type_arguments() throws Exception {
+        final Function<String, String> formatter = MiscUtilities.stringFormatter(npParamPropDescriptor.getName());
+
+        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+                .addProperties(npParamPropDescriptor)
+                .endModification();
+
+        final Field field = Finder.findFieldByName(newType, npParamPropDescriptor.getName());
+        assertNotNull(formatter.apply("Added property %s was not found."), field);
+
+        // make sure all provided property annotations were generated
+        assertAnnotationsEquals(npParamPropDescriptor, field);
+
+        assertTrue(formatter.apply("Type of added PropertyDescriptor property %s is not a parameterized one."),
+                ParameterizedType.class.isInstance(field.getGenericType()));
+        final ParameterizedType fieldParamType = (ParameterizedType) field.getGenericType();
+
+        // check the raw type
+        assertEquals(formatter.apply("Incorrect raw type of added PropertyDescriptor property %s."),
+                npParamPropDescriptor.getRawType(), field.getType());
+
+        // check the type arguments
+        final Type[] typeArguments = fieldParamType.getActualTypeArguments();
+        assertEquals(formatter.apply("Incorrect number of type arguments for added PropertyDescriptor property %s."),
+                npParamPropDescriptor.getTypeArguments().size(), typeArguments.length);
+        assertEquals(formatter.apply("Incorrect type arguments of added PropertyDescriptor property %s."),
+                npParamPropDescriptor.getTypeArguments(), Arrays.asList(typeArguments));
+    }
+
 
     /**
      * If a collectional property prototype has the following form:
