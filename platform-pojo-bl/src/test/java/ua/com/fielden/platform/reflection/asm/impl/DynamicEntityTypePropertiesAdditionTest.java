@@ -36,6 +36,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
+import ua.com.fielden.platform.entity.annotation.Generated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.factory.BeforeChangeAnnotation;
@@ -182,6 +183,21 @@ public class DynamicEntityTypePropertiesAdditionTest {
             // make sure all provided property annotations were generated
             assertAnnotationsEquals(np, field);
         });
+    }
+    
+    @Test
+    public void added_properties_are_annotated_with_Generated() throws Exception {
+        final List<NewProperty<?>> newProperties = List.of(np1, npBool, npRawList, npParamPropDescriptor);
+        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+                .addProperties(newProperties)
+                .endModification();
+        
+        for (final NewProperty<?> np: newProperties) {
+            final Field field = newType.getDeclaredField(np.getName());
+            assertNotNull("Added property %s was not found.".formatted(np.getName()), field);
+            assertTrue("Added property %s is missing @Generated annotation.".formatted(np.getName()),
+                    field.isAnnotationPresent(Generated.class));
+        }
     }
 
     @Test
