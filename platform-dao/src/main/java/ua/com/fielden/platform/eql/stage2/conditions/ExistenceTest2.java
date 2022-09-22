@@ -3,8 +3,8 @@ package ua.com.fielden.platform.eql.stage2.conditions;
 import java.util.Objects;
 import java.util.Set;
 
-import ua.com.fielden.platform.eql.stage2.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.TransformationContext2;
+import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.TypelessSubQuery2;
 import ua.com.fielden.platform.eql.stage3.conditions.ExistenceTest3;
@@ -25,9 +25,9 @@ public class ExistenceTest2 extends AbstractCondition2<ExistenceTest3> {
     }
 
     @Override
-    public TransformationResult<ExistenceTest3> transform(final TransformationContext context) {
-        final TransformationResult<TypelessSubQuery3> subQueryTr = subQuery.transform(context);
-        return new TransformationResult<>(new ExistenceTest3(negated, subQueryTr.item), subQueryTr.updatedContext);
+    public TransformationResult2<ExistenceTest3> transform(final TransformationContext2 context) {
+        final TransformationResult2<TypelessSubQuery3> subQueryTr = subQuery.transform(context);
+        return new TransformationResult2<>(new ExistenceTest3(negated, subQueryTr.item), subQueryTr.updatedContext);
     }
     
     @Override

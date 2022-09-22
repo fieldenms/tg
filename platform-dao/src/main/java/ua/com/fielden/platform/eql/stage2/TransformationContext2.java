@@ -5,32 +5,35 @@ import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
 import static ua.com.fielden.platform.eql.meta.DomainMetadataUtils.getOriginalEntityTypeFullName;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.types.tuples.T3.t3;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
+import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.sources.ChildGroup;
+import ua.com.fielden.platform.eql.stage2.sources.Prop2Link;
 import ua.com.fielden.platform.eql.stage3.Table;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.types.tuples.T3;
 
-public class TransformationContext {
+public class TransformationContext2 {
 
     private final TablesAndSourceChildren tablesAndSourceChildren;
-    private final Map<Integer, Map<String, T2<ISource3, Object>>> resolutions = new HashMap<>(); // TODO consider replacing Object with 2 concrete types  
+    private final Map<Integer, Map<String, T3<String, ISource3, Expression2>>> resolutions = new HashMap<>();  
     private final Map<String, Object> paramValuesByNames = new HashMap<>();
     private final Map<Object, String> paramNamesByValues = new HashMap<>();
     public final int sqlId;
     private final int paramId; //incremented after each new param name generation
 
-    public TransformationContext(final TablesAndSourceChildren tablesAndSourceChildren) {
+    public TransformationContext2(final TablesAndSourceChildren tablesAndSourceChildren) {
         this(tablesAndSourceChildren, emptyMap(), emptyMap(), emptyMap(), 0, 1);
     }
 
-    private TransformationContext(final TablesAndSourceChildren tablesAndSourceChildren, 
-            final Map<Integer, Map<String, T2<ISource3, Object>>> resolutions,
+    private TransformationContext2(final TablesAndSourceChildren tablesAndSourceChildren, 
+            final Map<Integer, Map<String, T3<String, ISource3, Expression2>>> resolutions,
             final Map<String, Object> paramValuesByNames,
             final Map<Object, String> paramNamesByValues,
             final int sqlId, final int paramId) {
@@ -50,13 +53,13 @@ public class TransformationContext {
         return unmodifiableMap(paramValuesByNames);
     }
     
-    public T2<String, TransformationContext> obtainParamNameAndUpdateContext(final Object paramValue) {
+    public T2<String, TransformationContext2> obtainParamNameAndUpdateContext(final Object paramValue) {
         final String existingParamName = paramNamesByValues.get(paramValue);
         if (existingParamName != null) {
             return t2(existingParamName, this);
         } else {
             final String paramName = "P_" + paramId;
-            final TransformationContext result = new TransformationContext(tablesAndSourceChildren, resolutions, paramValuesByNames, paramNamesByValues, sqlId, paramId + 1);
+            final TransformationContext2 result = new TransformationContext2(tablesAndSourceChildren, resolutions, paramValuesByNames, paramNamesByValues, sqlId, paramId + 1);
             result.paramValuesByNames.put(paramName, paramValue);
             result.paramNamesByValues.put(paramValue, paramName);
 
@@ -69,29 +72,29 @@ public class TransformationContext {
         return result != null ? result : emptyList();
     }
 
-    public TransformationContext cloneWithNextSqlId() {
-        return new TransformationContext(tablesAndSourceChildren, resolutions, paramValuesByNames, paramNamesByValues, sqlId + 1, paramId);
+    public TransformationContext2 cloneWithNextSqlId() {
+        return new TransformationContext2(tablesAndSourceChildren, resolutions, paramValuesByNames, paramNamesByValues, sqlId + 1, paramId);
     }
 
-    public TransformationContext cloneWithResolutions(final ISource3 source, final List<ChildGroup> children) {
-        final TransformationContext result = new TransformationContext(tablesAndSourceChildren, resolutions, paramValuesByNames, paramNamesByValues, sqlId, paramId);
+    public TransformationContext2 cloneWithResolutions(final ISource3 source, final List<ChildGroup> children) {
+        final TransformationContext2 result = new TransformationContext2(tablesAndSourceChildren, resolutions, paramValuesByNames, paramNamesByValues, sqlId, paramId);
         
         for (final ChildGroup child : children) {
-            for (final Entry<String, Integer> el : child.paths().entrySet()) {
-                final Map<String, T2<ISource3, Object>> existing = result.resolutions.get(el.getValue());
+            for (final Prop2Link propLink : child.paths()) {
+                final Map<String, T3<String, ISource3, Expression2>> existing = result.resolutions.get(propLink.sourceId);
                 if (existing != null) {
-                    existing.put(el.getKey(), t2(source, child.expr == null ? child.name : child.expr));
+                    existing.put(propLink.name, child.expr == null ? t3(child.name, source, null) : t3(child.name, null, child.expr));
                 } else {
-                    final Map<String, T2<ISource3, Object>> created = new HashMap<>();
-                    created.put(el.getKey(), t2(source, child.expr == null ? child.name : child.expr));
-                    result.resolutions.put(el.getValue(), created);
+                    final Map<String, T3<String, ISource3, Expression2>> created = new HashMap<>();
+                    created.put(propLink.name, child.expr == null ? t3(child.name, source, null) : t3(child.name, null, child.expr));
+                    result.resolutions.put(propLink.sourceId, created);
                 }
             }
         }
         return result;
     }
 
-    public T2<ISource3, Object> resolve(final Integer sourceId, final String path) {
+    public T3<String, ISource3, Expression2> resolve(final Integer sourceId, final String path) {
     	return resolutions.get(sourceId).get(path);
     }
 }

@@ -1,11 +1,8 @@
 package ua.com.fielden.platform.eql.stage2.sources;
 
 import static java.util.Collections.unmodifiableList;
-import static java.util.Collections.unmodifiableMap;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
@@ -16,11 +13,11 @@ public class ChildGroup {
     public final boolean required;
     private final List<ChildGroup> items;
     
-    private final Map<String, Integer> paths; //prop ExplicitSourceId and its full resolution path (i.e. explicit dot.notated prop representation)
+    private final List<Prop2Link> paths; //prop ExplicitSourceId and its full resolution path (i.e. explicit dot.notated prop representation)
     
     public final Expression2 expr;
     
-    public ChildGroup(final String name, final List<ChildGroup> items, final Map<String, Integer> paths, final boolean required, final Source2BasedOnPersistentType source, final Expression2 expr) {
+    public ChildGroup(final String name, final List<ChildGroup> items, final List<Prop2Link> paths, final boolean required, final Source2BasedOnPersistentType source, final Expression2 expr) {
         this.name = name;
         this.items = items;
         this.required = required;
@@ -35,8 +32,8 @@ public class ChildGroup {
 //                );
     }
     
-    public Map<String, Integer> paths() {
-        return unmodifiableMap(paths);
+    public List<Prop2Link> paths() {
+        return unmodifiableList(paths);
     }
 
     public List<ChildGroup> items() {
@@ -55,8 +52,8 @@ public class ChildGroup {
         final StringBuffer sb = new StringBuffer();
         sb.append("\n" + currentOffset + "**** CHILDGROUP **** name : " + name + (expr != null ? " [CALC]" : ""));
         if (!paths.isEmpty()) {
-            for (Entry<String, Integer> path : paths.entrySet()) {
-                sb.append("\n" + currentOffset + "-------- absolutePropPath : [" + path.getValue() + "]*[" +path.getKey()+ "]");    
+            for (final Prop2Link path : paths) {
+                sb.append("\n" + currentOffset + "-------- absolutePropPath : [" + path.sourceId + "]*[" +path.name+ "]");    
             }
         }
         if (!items.isEmpty()) {

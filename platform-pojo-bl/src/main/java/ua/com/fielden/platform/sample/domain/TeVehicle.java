@@ -132,6 +132,26 @@ public class TeVehicle extends AbstractEntity<String> {
     protected static final ExpressionModel replacedByTwice_ = expr().prop("replacedBy.replacedBy").model();
     
     @IsProperty
+	@Calculated
+	private TeVehicleModel replacedByTwiceModel;
+	protected static final ExpressionModel replacedByTwiceModel_ = expr().prop("replacedByTwice.model").model();
+
+	@Observable
+	protected TeVehicle setReplacedByTwiceModel(final TeVehicleModel replacedByTwiceModel) {
+		this.replacedByTwiceModel = replacedByTwiceModel;
+		return this;
+	}
+
+	public TeVehicleModel getReplacedByTwiceModel() {
+		return replacedByTwiceModel;
+	}
+
+	
+
+	
+
+    
+    @IsProperty
     @MapTo
     private TeVehicleMake make;
 

@@ -37,7 +37,7 @@ import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.entity.query.stream.ScrollableResultStream;
-import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage3.etc.Yield3;
 import ua.com.fielden.platform.eql.stage3.etc.Yields3;
 import ua.com.fielden.platform.eql.stage3.operands.ResultQuery3;
@@ -129,7 +129,7 @@ public class EntityContainerFetcher {
     }
 
     private <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryProcessingModel<E, ?> qem, final DbVersion dbVersion, final IFilter filter, final String username) {
-        final TransformationResult<ResultQuery3> tr = transform(qem, filter, username, executionContext.dates(), executionContext.getDomainMetadata().eqlDomainMetadata);
+        final TransformationResult2<ResultQuery3> tr = transform(qem, filter, username, executionContext.dates(), executionContext.getDomainMetadata().eqlDomainMetadata);
         final ResultQuery3 entQuery3 = tr.item;
         final String sql = entQuery3.sql(dbVersion);
         return new QueryModelResult<>((Class<E>) entQuery3.resultType, sql, getResultPropsInfos(entQuery3.yields), tr.updatedContext.getParamValues(), qem.fetchModel);

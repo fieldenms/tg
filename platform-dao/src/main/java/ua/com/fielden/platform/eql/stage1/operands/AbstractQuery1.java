@@ -24,7 +24,7 @@ import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.meta.UnionTypePropInfo;
 import ua.com.fielden.platform.eql.stage1.PropResolution;
 import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
-import ua.com.fielden.platform.eql.stage1.TransformationContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.etc.GroupBys1;
 import ua.com.fielden.platform.eql.stage1.etc.OrderBys1;
@@ -66,16 +66,16 @@ public abstract class AbstractQuery1 {
         this.yieldAll = queryBlocks.yieldAll;
     }
 
-    public QueryBlocks2 transformSourceless(final TransformationContext context) {
+    public QueryBlocks2 transformSourceless(final TransformationContext1 context) {
         return new QueryBlocks2(null, conditions.transform(context), yields.transform(context), groups.transform(context), orderings.transform(context));
     }
     
-    protected Conditions2 enhanceWithUserDataFilterConditions(final ISource2<? extends ISource3> mainSource, final TransformationContext context, final Conditions2 originalConditions) { 
+    protected Conditions2 enhanceWithUserDataFilterConditions(final ISource2<? extends ISource3> mainSource, final TransformationContext1 context, final Conditions2 originalConditions) { 
         if (udfConditions.isEmpty()) {
             return originalConditions;
         }
         
-        final TransformationContext localContext = new TransformationContext(context.domainInfo, asList(asList(mainSource)), false); 
+        final TransformationContext1 localContext = new TransformationContext1(context.domainInfo, asList(asList(mainSource)), false); 
         final Conditions2 udfConditions2 = udfConditions.transform(localContext);
         
         if (originalConditions.ignore()) {

@@ -19,8 +19,8 @@ import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
 import ua.com.fielden.platform.eql.stage1.ITransformableToS2;
 import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
-import ua.com.fielden.platform.eql.stage1.TransformationContext;
-import ua.com.fielden.platform.eql.stage1.TransformationResult;
+import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationResult1;
 import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
@@ -44,12 +44,12 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
     }
 
     @Override
-    public ResultQuery2 transform(final TransformationContext context) {
+    public ResultQuery2 transform(final TransformationContext1 context) {
         if (sources == null) {
             return new ResultQuery2(transformSourceless(context), resultType);
         }
-        final TransformationResult<? extends ISources2<?>> sourcesTr = transformAndEnhanceSource(context);
-        final TransformationContext enhancedContext = sourcesTr.updatedContext;
+        final TransformationResult1<? extends ISources2<?>> sourcesTr = transformAndEnhanceSource(context);
+        final TransformationContext1 enhancedContext = sourcesTr.updatedContext;
         final ISources2<? extends ISources3> sources2 = sourcesTr.item;
         final Conditions2 conditions2 = enhanceWithUserDataFilterConditions(sources2.mainSource(), context, conditions.transform(enhancedContext));
         final Yields2 yields2 = yields.transform(enhancedContext);
@@ -61,8 +61,8 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
         return new ResultQuery2(entQueryBlocks, resultType);
     }
     
-    private TransformationResult<? extends ISources2<?>> transformAndEnhanceSource(final TransformationContext context) {
-        final TransformationResult<? extends ISources2<?>> sourcesTr = sources.transform(context);
+    private TransformationResult1<? extends ISources2<?>> transformAndEnhanceSource(final TransformationContext1 context) {
+        final TransformationResult1<? extends ISources2<?>> sourcesTr = sources.transform(context);
         if (fetchModel == null) {
             return sourcesTr;
         }
@@ -83,7 +83,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
         if (!allAggregated) {
             return sourcesTr;
         } else {
-            return new TransformationResult<>(sourcesTr.item, sourcesTr.updatedContext.cloneForAggregates());
+            return new TransformationResult1<>(sourcesTr.item, sourcesTr.updatedContext.cloneForAggregates());
         } 
     }
     

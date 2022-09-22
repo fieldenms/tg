@@ -8,8 +8,8 @@ import java.util.Set;
 
 import org.hibernate.type.StringType;
 
-import ua.com.fielden.platform.eql.stage2.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.TransformationContext2;
+import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
@@ -25,15 +25,15 @@ public class Concat2 extends AbstractFunction2<Concat3> {
     }
 
     @Override
-    public TransformationResult<Concat3> transform(final TransformationContext context) {
+    public TransformationResult2<Concat3> transform(final TransformationContext2 context) {
         final List<ISingleOperand3> transformed = new ArrayList<>();
-        TransformationContext currentContext = context;
+        TransformationContext2 currentContext = context;
         for (final ISingleOperand2<? extends ISingleOperand3> operand : operands) {
-            final TransformationResult<? extends ISingleOperand3> operandTr = operand.transform(currentContext);
+            final TransformationResult2<? extends ISingleOperand3> operandTr = operand.transform(currentContext);
             transformed.add(operandTr.item);
             currentContext = operandTr.updatedContext;
         }
-        return new TransformationResult<>(new Concat3(transformed, type, hibType), currentContext);
+        return new TransformationResult2<>(new Concat3(transformed, type, hibType), currentContext);
     }
 
     @Override

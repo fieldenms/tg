@@ -8,8 +8,8 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
-import ua.com.fielden.platform.eql.stage2.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.TransformationContext2;
+import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.SourceQuery2;
 import ua.com.fielden.platform.eql.stage3.operands.SourceQuery3;
@@ -56,20 +56,20 @@ public class Source2BasedOnSubqueries extends AbstractSource2 implements ISource
     }
 
     @Override
-    public TransformationResult<Source3BasedOnSubqueries> transform(final TransformationContext context) {
+    public TransformationResult2<Source3BasedOnSubqueries> transform(final TransformationContext2 context) {
         
         final List<SourceQuery3> transformedQueries = new ArrayList<>();
-        TransformationContext currentContext = context.cloneWithNextSqlId();
+        TransformationContext2 currentContext = context.cloneWithNextSqlId();
         final int sqlId = currentContext.sqlId;
         
         for (final SourceQuery2 model : models) {
-            final TransformationResult<SourceQuery3> modelTr = model.transform(currentContext);
+            final TransformationResult2<SourceQuery3> modelTr = model.transform(currentContext);
             transformedQueries.add(modelTr.item);
             currentContext = modelTr.updatedContext; // TODO should be just resolutionContext with propsResolutions added from this model transformation   
         }
            
         final Source3BasedOnSubqueries transformedSource = new Source3BasedOnSubqueries(transformedQueries, id, sqlId);
-        return new TransformationResult<>(transformedSource, currentContext);
+        return new TransformationResult2<>(transformedSource, currentContext);
     }
 
     @Override

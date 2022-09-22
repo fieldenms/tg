@@ -4,8 +4,8 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import ua.com.fielden.platform.eql.stage2.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.TransformationContext2;
+import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.eql.stage3.sources.ISources3;
@@ -18,9 +18,9 @@ public class SingleNodeSources2 implements ISources2<ISources3> {
     }
 
     @Override
-    public TransformationResult<ISources3> transform(TransformationContext context) {
-        final TransformationResult<ISources3> sourceTransformed = ISources2.transform(source, context);
-        return new TransformationResult<>(sourceTransformed.item, sourceTransformed.updatedContext);    
+    public TransformationResult2<ISources3> transform(TransformationContext2 context) {
+        final TransformationResult2<ISources3> sourceTransformed = ISources2.transform(source, context);
+        return new TransformationResult2<>(sourceTransformed.item, sourceTransformed.updatedContext);    
     }
 
     @Override

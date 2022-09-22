@@ -12,7 +12,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
-import ua.com.fielden.platform.eql.stage1.TransformationContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 
 public class Yields1 {
@@ -26,7 +26,7 @@ public class Yields1 {
         }
     }
     
-    public Yields2 transform(final TransformationContext context) {
+    public Yields2 transform(final TransformationContext1 context) {
         if (yieldsMap.isEmpty()) {
             return Yields2.emptyYields;
         } else {

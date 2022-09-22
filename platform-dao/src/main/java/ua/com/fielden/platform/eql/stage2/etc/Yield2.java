@@ -2,8 +2,8 @@ package ua.com.fielden.platform.eql.stage2.etc;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage2.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.TransformationContext2;
+import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.etc.Yield3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
@@ -23,10 +23,10 @@ public class Yield2 {
         return operand.type();
     }
 
-    public TransformationResult<Yield3> transform(final TransformationContext context) {
-        final TransformationContext newContext = !operand.isHeader() ? context.cloneWithNextSqlId() : context;
-        final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(newContext);
-        return new TransformationResult<>(new Yield3(operandTransformationResult.item, alias, operand.isHeader() ? 0 : newContext.sqlId, operand.isHeader(), operand.type(), operand.hibType()), operandTransformationResult.updatedContext);
+    public TransformationResult2<Yield3> transform(final TransformationContext2 context) {
+        final TransformationContext2 newContext = !operand.isHeader() ? context.cloneWithNextSqlId() : context;
+        final TransformationResult2<? extends ISingleOperand3> operandTransformationResult = operand.transform(newContext);
+        return new TransformationResult2<>(new Yield3(operandTransformationResult.item, alias, operand.isHeader() ? 0 : newContext.sqlId, operand.isHeader(), operand.type(), operand.hibType()), operandTransformationResult.updatedContext);
     }
 
     @Override

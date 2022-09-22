@@ -30,7 +30,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage3.EqlQueryTransformer;
 import ua.com.fielden.platform.eql.stage3.QueryBlocks3;
 import ua.com.fielden.platform.eql.stage3.conditions.ComparisonTest3;
@@ -70,7 +70,7 @@ public class EqlStage3TestCase extends EqlTestCase {
         return EqlQueryTransformer.transform(qem, filter, null, dates, metadata()).item;
     }
     private static final <E extends AbstractEntity<?>> QueryModelResult<E> transformToModelResult(final QueryProcessingModel<E, ?> qem) {
-        final TransformationResult<ResultQuery3> tr = EqlQueryTransformer.transform(qem, filter, null, dates, metadata());
+        final TransformationResult2<ResultQuery3> tr = EqlQueryTransformer.transform(qem, filter, null, dates, metadata());
         final ResultQuery3 entQuery3 = tr.item;
         final String sql = entQuery3.sql(H2);
         return new QueryModelResult<>((Class<E>) entQuery3.resultType, sql, getResultPropsInfos(entQuery3.yields), tr.updatedContext.getParamValues(), qem.fetchModel);

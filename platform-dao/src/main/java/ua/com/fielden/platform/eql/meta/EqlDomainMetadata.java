@@ -87,7 +87,7 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 import ua.com.fielden.platform.eql.meta.EqlPropertyMetadata.Builder;
 import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
-import ua.com.fielden.platform.eql.stage1.TransformationContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage1.sources.YieldInfoNode;
 import ua.com.fielden.platform.eql.stage1.sources.YieldInfoNodesGenerator;
@@ -198,7 +198,7 @@ public class EqlDomainMetadata {
      * @return
      */
     private <T extends AbstractEntity<?>> EntityInfo<?> generateEnhancedEntityInfoForSyntheticType(final EntityTypeInfo<T> parentInfo, final Class<? extends AbstractEntity<?>> actualType) {
-        final TransformationContext context = new TransformationContext(this);
+        final TransformationContext1 context = new TransformationContext1(this);
         final Yields2 yields = gen.generateAsSyntheticEntityQuery(parentInfo.entityModels.get(0), parentInfo.entityType).transform(context).yields;
         final Map<String, YieldInfoNode> yieldInfoNodes = YieldInfoNodesGenerator.generate(yields.getYields());
         return Source1BasedOnSubqueries.produceEntityInfoForDefinedEntityType(this, yieldInfoNodes, actualType/*parentInfo.entityType*/);
