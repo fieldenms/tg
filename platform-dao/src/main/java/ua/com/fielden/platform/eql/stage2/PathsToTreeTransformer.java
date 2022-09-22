@@ -383,14 +383,14 @@ public class PathsToTreeTransformer {
 	private static record PendingTail(Prop2Link link, List<PropChunk> tail) {
     	private PendingTail(final Prop2Link link, final List<PropChunk> tail) {
     		this.link = link;
-    		this.tail = unmodifiableList(tail);
+    		this.tail = tail;// unmodifiableList(tail);
 		}
     }
     
     private static record SourceTails(ISource2<?> source, List<PendingTail> tails) {
         private SourceTails(final ISource2<?> source, final List<PendingTail> tails) {
             this.source = source;
-            this.tails = unmodifiableList(tails);
+            this.tails = tails;// unmodifiableList(tails);
         }
     }
 
