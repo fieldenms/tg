@@ -21,6 +21,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
 
 import org.junit.Assert;
 import org.junit.Before;
@@ -59,6 +60,7 @@ import ua.com.fielden.platform.reflection.asm.impl.entities.TopLevelEntity;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.MiscUtilities;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -310,31 +312,33 @@ public class DynamicEntityTypePropertiesAdditionTest {
      */
     @Test
     public void the_type_of_added_raw_collectional_property_is_parameterized_with_the_value_of_IsProperty() throws Exception {
+        final Function<String, String> formatter = MiscUtilities.stringFormatter(npRawList.getName());
+
         final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(npRawList)
                 .endModification();
 
         final Field field = Finder.findFieldByName(newType, npRawList.getName());
-        assertNotNull("Added property %s was not found.".formatted(npRawList.getName()), field);
-        assertTrue("Added collectional property %s is not of collectional type.".formatted(npRawList.getName()),
+        assertNotNull(formatter.apply("Added property %s was not found."), field);
+        assertTrue(formatter.apply("Added collectional property %s is not of collectional type."),
                 Collection.class.isAssignableFrom(field.getType()));
 
         // make sure all provided property annotations were generated
         assertAnnotationsEquals(npRawList, field);
 
-        assertTrue("Type of added collectional property %s is not a parameterized one.".formatted(npRawList.getName()),
+        assertTrue(formatter.apply("Type of added collectional property %s is not a parameterized one."),
                 ParameterizedType.class.isInstance(field.getGenericType()));
         final ParameterizedType fieldParamType = (ParameterizedType) field.getGenericType();
 
         // check the raw type
-        assertEquals("Incorrect raw type of added collectional property %s.".formatted(npRawList.getName()),
+        assertEquals(formatter.apply("Incorrect raw type of added collectional property %s."),
                 npRawList.getRawType(), fieldParamType.getRawType());
 
         // check the type arguments
         final Type[] typeArguments = fieldParamType.getActualTypeArguments();
-        assertEquals("Incorrect number of type arguments for added collectional property %s.".formatted(npRawList.getName()),
+        assertEquals(formatter.apply("Incorrect number of type arguments for added collectional property %s."),
                 1, typeArguments.length);
-        assertEquals("Incorrect type argument of added collectional property %s.".formatted(npRawList.getName()),
+        assertEquals(formatter.apply("Incorrect type argument of added collectional property %s."),
                 npRawList.getAnnotationByType(IsProperty.class).value(), typeArguments[0]);
     }
 
@@ -348,31 +352,33 @@ public class DynamicEntityTypePropertiesAdditionTest {
      */
     @Test
     public void the_type_of_added_parameterized_collectional_property_is_parameterized_with_provided_type_arguments() throws Exception {
+        final Function<String, String> formatter = MiscUtilities.stringFormatter(npParamList.getName());
+
         final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(npParamList)
                 .endModification();
 
         final Field field = Finder.findFieldByName(newType, npParamList.getName());
-        assertNotNull("Added property %s was not found.".formatted(npParamList.getName()), field);
-        assertTrue("Added collectional property %s is not of collectional type.".formatted(npParamList.getName()),
+        assertNotNull(formatter.apply("Added property %s was not found."), field);
+        assertTrue(formatter.apply("Added collectional property %s is not of collectional type."),
                 Collection.class.isAssignableFrom(field.getType()));
 
         // make sure all provided property annotations were generated
         assertAnnotationsEquals(npParamList, field);
 
-        assertTrue("Type of added collectional property %s is not a parameterized one.".formatted(npRawList.getName()),
+        assertTrue(formatter.apply("Type of added collectional property %s is not a parameterized one."),
                 ParameterizedType.class.isInstance(field.getGenericType()));
         final ParameterizedType fieldParamType = (ParameterizedType) field.getGenericType();
 
         // check the raw type
-        assertEquals("Incorrect raw type of added collectional property %s.".formatted(npParamList.getName()),
+        assertEquals(formatter.apply("Incorrect raw type of added collectional property %s."),
                 npParamList.getRawType(), field.getType());
 
         // check the type arguments
         final Type[] typeArguments = fieldParamType.getActualTypeArguments();
-        assertEquals("Incorrect number of type arguments for added collectional property %s.".formatted(npParamList.getName()),
+        assertEquals(formatter.apply("Incorrect number of type arguments for added collectional property %s."),
                 npParamList.getTypeArguments().size(), typeArguments.length);
-        assertArrayEquals("Incorrect type arguments of added collectional property %s.".formatted(npParamList.getName()),
+        assertArrayEquals(formatter.apply("Incorrect type arguments of added collectional property %s."),
                 npParamList.getTypeArguments().toArray(Type[]::new), typeArguments);
     }
 
@@ -449,6 +455,8 @@ public class DynamicEntityTypePropertiesAdditionTest {
     public void getters_are_generated_correctly_for_added_collectional_properties() throws Exception {
         // test both raw and parameterized collectional properties
         for (final NewProperty<? extends Collection> np: List.of(npRawList, npParamList)) {
+            final Function<String, String> formatter = MiscUtilities.stringFormatter(np.getName());
+
             final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
                     .addProperties(np)
                     .endModification();
@@ -457,11 +465,11 @@ public class DynamicEntityTypePropertiesAdditionTest {
             try {
                 getter = Reflector.obtainPropertyAccessor(newType, np.getName());
             } catch (final Exception e) {
-                fail("Getter for added collectional property %s was not found.".formatted(np.getName()));
+                fail(formatter.apply("Getter for added collectional property %s was not found."));
                 return;
             }
 
-            assertEquals("Incorrect getter return type for added collectional property %s.".formatted(np.getName()),
+            assertEquals(formatter.apply("Incorrect getter return type for added collectional property %s."),
                     np.genericType().toString(), getter.getGenericReturnType().toString());
 
             // instantiate the generated type and try to invoke the getter
@@ -471,7 +479,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
             try {
                 getter.invoke(instance);
             } catch (final Exception e) {
-                fail("Failed to invoke getter for added collectional property %s.".formatted(np.getName()));
+                fail(formatter.apply("Failed to invoke getter for added collectional property %s."));
                 return;
             }
         }
@@ -481,6 +489,8 @@ public class DynamicEntityTypePropertiesAdditionTest {
     public void setters_are_generated_correctly_for_added_collectional_properties() throws Exception {
         // test both raw and parameterized collectional properties
         for (final NewProperty<? extends Collection> np: List.of(npRawList, npParamList)) {
+            final Function<String, String> formatter = MiscUtilities.stringFormatter(np.getName());
+
             final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
                     .addProperties(np)
                     .endModification();
@@ -489,28 +499,28 @@ public class DynamicEntityTypePropertiesAdditionTest {
             try {
                 setter = Reflector.obtainPropertySetter(newType, np.getName());
             } catch (final Exception e) {
-                fail("Setter for added collectional property %s was not found.".formatted(np.getName()));
+                fail(formatter.apply("Setter for added collectional property %s was not found."));
                 return;
             }
 
             final Type[] parameterTypes = setter.getGenericParameterTypes();
-            assertEquals("Incorrect number of setter generic parameters for added collectional property %s.".formatted(np.getName()),
+            assertEquals(formatter.apply("Incorrect number of setter generic parameters for added collectional property %s."),
                     1, parameterTypes.length);
-            assertEquals("Incorrect setter parameter type for added collectional property %s.".formatted(np.getName()),
+            assertEquals(formatter.apply("Incorrect setter parameter type for added collectional property %s."),
                     np.genericType().toString(), parameterTypes[0].toString());
 
             // instantiate the generated type and try to set the value of added property 
             final AbstractEntity<String> instance = factory.newByKey(newType, "new");
             final List<String> list1 = List.of("hello");
             setter.invoke(instance, list1);
-            assertEquals("The value of added collectional property %s was set incorrectly.".formatted(np.getName()),
+            assertEquals(formatter.apply("The value of added collectional property %s was set incorrectly."),
                     list1, getFieldValue(findFieldByName(newType, np.getName()), instance));
             
             // now set the value once again to make sure the setter indeed is generated correctly
             // the old collection contents should be cleared, then provided elements should be added
             final List<String> list2 = List.of("world");
             setter.invoke(instance, list2);
-            assertEquals("The value of added collectional property %s was set incorrectly.".formatted(np.getName()),
+            assertEquals(formatter.apply("The value of added collectional property %s was set incorrectly."),
                     list2, getFieldValue(findFieldByName(newType, np.getName()), instance));
         }
     }
@@ -519,6 +529,8 @@ public class DynamicEntityTypePropertiesAdditionTest {
     public void getter_returns_correct_value_after_setter_invokation_for_added_collectional_property() throws Exception {
         // test both raw and parameterized collectional properties
         for (final NewProperty<? extends Collection> np: List.of(npRawList, npParamList)) {
+            final Function<String, String> formatter = MiscUtilities.stringFormatter(np.getName());
+
             final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
                     .addProperties(np)
                     .endModification();
@@ -527,7 +539,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
             try {
                 setter = Reflector.obtainPropertySetter(newType, np.getName());
             } catch (final Exception e) {
-                fail("Setter for added collectional property %s was not found.".formatted(np.getName()));
+                fail(formatter.apply("Setter for added collectional property %s was not found."));
                 return;
             }
 
@@ -540,18 +552,18 @@ public class DynamicEntityTypePropertiesAdditionTest {
             try {
                 getter = Reflector.obtainPropertyAccessor(newType, np.getName());
             } catch (final Exception e) {
-                fail("Getter for added collectional property %s was not found.".formatted(np.getName()));
+                fail(formatter.apply("Getter for added collectional property %s was not found."));
                 return;
             }
 
-            assertEquals("Incorrect getter return value for added collectional property %s.".formatted(np.getName()),
+            assertEquals(formatter.apply("Incorrect getter return value for added collectional property %s."),
                     list1, getter.invoke(instance));
             
             // now set the value once again
             // the old collection contents should be cleared, then provided elements should be added
             final List<String> list2 = List.of("world");
             setter.invoke(instance, list2);
-            assertEquals("Incorrect getter return value for added collectional property %s.".formatted(np.getName()),
+            assertEquals(formatter.apply("Incorrect getter return value for added collectional property %s."),
                     list2, getter.invoke(instance));
         }
     }
