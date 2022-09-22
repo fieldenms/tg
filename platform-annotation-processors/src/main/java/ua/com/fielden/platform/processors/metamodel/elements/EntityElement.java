@@ -3,8 +3,6 @@ package ua.com.fielden.platform.processors.metamodel.elements;
 import java.util.Objects;
 
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Elements;
 
 import com.squareup.javapoet.ClassName;
 
@@ -14,54 +12,35 @@ import com.squareup.javapoet.ClassName;
  * @author TG Team
  *
  */
-public class EntityElement {
-    private final TypeElement typeElement;
-    private final String simpleName;
-    private final String packageName;
-    private final String qualifiedName;
-
-    public EntityElement(final TypeElement typeElement, final Elements elementUtils) {
-        this.typeElement = typeElement;
-        this.qualifiedName = typeElement.getQualifiedName().toString();
-        this.simpleName = typeElement.getSimpleName().toString();
-        this.packageName = elementUtils != null ? elementUtils.getPackageOf(typeElement).getQualifiedName().toString() : null;
-    }
-
-    private EntityElement(final TypeElement typeElement) {
-        this(typeElement, null);
-    }
+public final class EntityElement extends AbstractForwardingTypeElement {
+    private String packageName;
 
     /**
-     * Returns a wrapper for {@link TypeElement} and should only be used for this sole purpose.
+     * Creates an {@link EntityElement} without a package name. Use at your own risk.
+     * 
+     * @param typeElement
      * @return {@link EntityElement}
      */
     public static EntityElement wrapperFor(final TypeElement typeElement) {
-        return new EntityElement(typeElement);
+        return new EntityElement(typeElement, null);
     }
 
-    public TypeElement getTypeElement() {
-        return typeElement;
+    public EntityElement(final TypeElement typeElement, final String packageName) {
+        super(typeElement);
+        this.packageName = packageName;
     }
-
-    public String getSimpleName() {
-        return simpleName;
-    }
-
+    
     public String getPackageName() {
         return packageName;
     }
 
-    public TypeMirror asType() {
-        return this.typeElement.asType();
-    }
-
     public ClassName getEntityClassName() {
-        return ClassName.get(packageName, simpleName);
+        return ClassName.get(packageName, getSimpleName().toString());
     }
 
     @Override
     public int hashCode() {
-        return 31 + Objects.hash(qualifiedName);
+        return 31 + Objects.hash(getQualifiedName());
     }
 
     @Override
@@ -73,7 +52,7 @@ public class EntityElement {
             return false;
         }
         final EntityElement that = (EntityElement) obj;
-        return Objects.equals(this.qualifiedName, that.qualifiedName);
+        return Objects.equals(this.getQualifiedName(), that.getQualifiedName());
     }
 
 }

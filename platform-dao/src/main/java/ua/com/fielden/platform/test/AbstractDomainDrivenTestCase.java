@@ -86,7 +86,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
         return this;
     }
     
-    public DbCreator getDbCreator() {
+    public final DbCreator getDbCreator() {
         return dbCreator;
     }
     
