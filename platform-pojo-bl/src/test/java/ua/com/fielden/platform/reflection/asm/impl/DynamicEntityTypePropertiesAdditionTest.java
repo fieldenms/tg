@@ -83,22 +83,25 @@ public class DynamicEntityTypePropertiesAdditionTest {
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
     private DynamicEntityClassLoader cl;
 
-    private final IsProperty atIsPropertyWithPrecision = new IsPropertyAnnotation(19, 4).newInstance();
-    private final Calculated atCalculated = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION).newInstance();
-    private final Calculated atCalculatedBool = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION_BOOL)
+    private static final IsProperty atIsPropertyWithPrecision = new IsPropertyAnnotation(19, 4).newInstance();
+    private static final Calculated atCalculated = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION).newInstance();
+    private static final Calculated atCalculatedBool = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION_BOOL)
             .newInstance();
 
-    private final NewProperty<Money> np1 = NewProperty.create(NEW_PROPERTY_1, Money.class, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC,
+    // simple properties
+    private static final NewProperty<Money> np1 = NewProperty.create(NEW_PROPERTY_1, Money.class, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC,
             atIsPropertyWithPrecision, atCalculated);
-    private final NewProperty<Money> np2 = NewProperty.create(NEW_PROPERTY_2, Money.class, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, 
+    private static final NewProperty<Money> np2 = NewProperty.create(NEW_PROPERTY_2, Money.class, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, 
             atCalculated);
-    private final NewProperty<Boolean> npBool = NewProperty.create(NEW_PROPERTY_BOOL, boolean.class, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC,
-            atCalculatedBool);
+    private static final NewProperty<Boolean> npBool = NewProperty.create(NEW_PROPERTY_BOOL, boolean.class, 
+            NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, atCalculatedBool);
+
+    // collectional properties
     @SuppressWarnings("rawtypes")
-    private final NewProperty<List> npRawList = NewProperty.create("rawListTestProperty", List.class, "Collectional Property", 
+    private static final NewProperty<List> npRawList = NewProperty.create("rawListTestProperty", List.class, "Collectional Property", 
             "Collectional Property Description", new IsPropertyAnnotation(String.class).newInstance());
     @SuppressWarnings("rawtypes")
-    private final NewProperty<List> npParamList = NewProperty.create("paramListTestProperty", List.class, List.of(String.class),
+    private static final NewProperty<List> npParamList = NewProperty.create("paramListTestProperty", List.class, List.of(String.class),
             "Collectional Property", "Collectional Property Description", new IsPropertyAnnotation(String.class).newInstance());
 
     @Before
