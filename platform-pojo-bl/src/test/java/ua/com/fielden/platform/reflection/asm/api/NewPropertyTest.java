@@ -8,8 +8,8 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.reflection.asm.api.test_utils.NewPropertyTestUtils.assertPropertyEquals;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -51,11 +51,11 @@ public class NewPropertyTest {
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
     
-    private static final NewProperty<List> collectionalRawList = NewProperty.create("elements", List.class, "title", "desc", 
+    private static final NewProperty<List> npRawList = NewProperty.create("elements", List.class, "title", "desc", 
             new IsPropertyAnnotation(String.class).newInstance());
-    private static final NewProperty<List> collectionalParameterizedList = NewProperty.create("elements", List.class,
+    private static final NewProperty<List> npParamList = NewProperty.create("elements", List.class,
             List.of(String.class), "title", "desc", new IsPropertyAnnotation(String.class).newInstance());
-    private static final NewProperty<PropertyDescriptor> propertyDescriptor = NewProperty.create("elements", PropertyDescriptor.class,
+    private static final NewProperty<PropertyDescriptor> npPropDescriptor = NewProperty.create("elements", PropertyDescriptor.class,
             List.of(Entity.class), "title", "desc", new IsPropertyAnnotation(Entity.class).newInstance());
 
     @Test
@@ -63,15 +63,15 @@ public class NewPropertyTest {
         final Calculated calculated = new CalculatedAnnotation().contextualExpression("some expression").newInstance();
         final IsProperty isProperty = new IsPropertyAnnotation(Money.class).newInstance();
 
-        final NewProperty<List> pd = NewProperty.create("prop_name", List.class, "title", "desc", calculated, isProperty);
-        assertTrue("Should have recognised the presence of annotation description.", pd.containsAnnotationDescriptorFor(IsProperty.class));
-        assertTrue("Should have recognised the presence of annotation description.", pd.containsAnnotationDescriptorFor(Calculated.class));
-        assertFalse("Should have not recognised the presence of annotation description.", pd.containsAnnotationDescriptorFor(CritOnly.class));
+        final NewProperty<List> np = NewProperty.create("prop_name", List.class, "title", "desc", calculated, isProperty);
+        assertTrue("Should have recognised the presence of annotation description.", np.containsAnnotationDescriptorFor(IsProperty.class));
+        assertTrue("Should have recognised the presence of annotation description.", np.containsAnnotationDescriptorFor(Calculated.class));
+        assertFalse("Should have not recognised the presence of annotation description.", np.containsAnnotationDescriptorFor(CritOnly.class));
     }
 
     @Test
     public void collectional_property_with_parameterized_type_returns_correct_generic_type() {
-        final Type genericType = collectionalParameterizedList.genericType();
+        final Type genericType = npParamList.genericType();
         assertTrue("Collectional property's generic type should be an instance of ParameterizedType.",
                 ParameterizedType.class.isInstance(genericType));
         assertArrayEquals("Should be parameterized with String", 
@@ -84,7 +84,7 @@ public class NewPropertyTest {
      */
     @Test
     public void collectional_property_with_raw_type_returns_correct_generic_type() {
-        final Type genericType = collectionalRawList.genericType();
+        final Type genericType = npRawList.genericType();
         assertTrue("Collectional property's generic type should be an instance of ParameterizedType.",
                 ParameterizedType.class.isInstance(genericType));
         assertArrayEquals("Should be parameterized with String.", 
@@ -97,7 +97,7 @@ public class NewPropertyTest {
      */
     @Test
     public void collectional_property_with_raw_type_returns_correct_generic_declared_type() {
-        final Type genericTypeAsDeclared = collectionalRawList.genericTypeAsDeclared();
+        final Type genericTypeAsDeclared = npRawList.genericTypeAsDeclared();
         assertTrue("Incorrect representation of property's declared type.", Class.class.isInstance(genericTypeAsDeclared));
         assertEquals("Incorrect type returned as property's declared type.", List.class, (Class<?>) genericTypeAsDeclared);
     }
@@ -105,29 +105,29 @@ public class NewPropertyTest {
     @Test
     public void changing_the_type_argument_of_collectional_property_does_not_modify_the_value_of_IsProperty_annotation() {
         // copy NewProperty and manually copy @IsProperty annotation
-        final NewProperty<List> pd = collectionalRawList.copy().setAnnotations(new IsPropertyAnnotation(String.class).newInstance());
+        final NewProperty<List> np = npRawList.copy().setAnnotations(new IsPropertyAnnotation(String.class).newInstance());
         // update type arguments
-        pd.setTypeArguments(Double.class);
+        np.setTypeArguments(Double.class);
 
-        assertEquals("Incorrect property type arguments.", List.of(Double.class), pd.getTypeArguments());
-        assertEquals("Incorrect @IsProperty.value().", String.class, pd.getIsProperty().value());
+        assertEquals("Incorrect property type arguments.", List.of(Double.class), np.getTypeArguments());
+        assertEquals("Incorrect @IsProperty.value().", String.class, np.getIsProperty().value());
     }
 
     @Test
     public void changing_the_type_argument_of_PropertyDescriptor_does_not_modify_the_value_of_IsProperty_annotation() {
         // copy NewProperty and manually copy @IsProperty annotation
-        final NewProperty<PropertyDescriptor> pd = propertyDescriptor.copy().setAnnotations(
+        final NewProperty<PropertyDescriptor> np = npPropDescriptor.copy().setAnnotations(
                 new IsPropertyAnnotation(Entity.class).newInstance());
         // update type arguments to any other entity
-        pd.setTypeArguments(EntityWithCollectionalPropety.class);
+        np.setTypeArguments(EntityWithCollectionalPropety.class);
 
-        assertEquals("Incorrect property type arguments.", List.of(EntityWithCollectionalPropety.class), pd.getTypeArguments());
-        assertEquals("Incorrect @IsProperty.value().", Entity.class, pd.getIsProperty().value());
+        assertEquals("Incorrect property type arguments.", List.of(EntityWithCollectionalPropety.class), np.getTypeArguments());
+        assertEquals("Incorrect @IsProperty.value().", Entity.class, np.getIsProperty().value());
     }
     
     @Test
     public void the_value_of_IsProperty_annotation_can_be_changed() {
-        final NewProperty<List> np = collectionalRawList.changeTypeArguments(Double.class);
+        final NewProperty<List> np = npRawList.changeTypeArguments(Double.class);
         final IsProperty oldAtIsProperty = np.getIsProperty();
         // previous value
         assertEquals("Incorrect @IsProperty.value().", String.class, oldAtIsProperty.value());
@@ -184,11 +184,11 @@ public class NewPropertyTest {
     
     @Test
     public void annotations_can_be_retrieved_in_a_generic_way_safely() {
-        final IsProperty atIsProperty = collectionalRawList.getAnnotationByType(IsProperty.class);
+        final IsProperty atIsProperty = npRawList.getAnnotationByType(IsProperty.class);
         assertNotNull(atIsProperty);
-        final Title atTitle = collectionalRawList.getAnnotationByType(Title.class);
+        final Title atTitle = npRawList.getAnnotationByType(Title.class);
         assertNotNull(atTitle);
-        final Generated atGenerated = collectionalRawList.getAnnotationByType(Generated.class);
+        final Generated atGenerated = npRawList.getAnnotationByType(Generated.class);
         assertNull(atGenerated);
     }
     
@@ -201,7 +201,7 @@ public class NewPropertyTest {
         assertEquals("Incorrect type of property init value.", Double.class, value.getClass());
         assertEquals("Incorrect property init value.", 125d, value);
         
-        final NewProperty<List> npCollectional = collectionalParameterizedList.copy().setValue(new LinkedList<>(List.of("hello", "world")));
+        final NewProperty<List> npCollectional = npParamList.copy().setValue(new LinkedList<>(List.of("hello", "world")));
         final Object list = npCollectional.getValue();
         assertTrue("Collectional property's value should have been initialized.", npCollectional.isInitialized());
         assertNotNull("Collectional property's value should have been initialized.", list);
@@ -214,7 +214,7 @@ public class NewPropertyTest {
         final Field field = Finder.getFieldByName(Entity.class, "firstProperty");
         final NewProperty<?> np = NewProperty.fromField(field);
         assertNotNull("Failed to create NewProperty from Field.", np);
-        NewPropertyTest.assertSameProperty(field, np);
+        assertPropertyEquals(np, field);
     }
 
     @Test
@@ -231,7 +231,7 @@ public class NewPropertyTest {
         }
 
         assertNotNull(np);
-        NewPropertyTest.assertSameProperty(field, np);
+        assertPropertyEquals(np, field);
         assertEquals("Incorrect property initialized value.", 125, np.getValue());
     }
 
@@ -245,23 +245,5 @@ public class NewPropertyTest {
         Assert.assertThrows(NewPropertyException.class, () -> {
             NewProperty.fromField(field).setValueThrows(value);
         });
-    }
-    
-    /**
-     * Asserts that <code>np</code> is a correct representation of <code>field</code> by testing its name, type and annotations. 
-     * @param field
-     * @param np
-     */
-    public static void assertSameProperty(final Field field, final NewProperty<?> np) {
-        assertEquals("Incorrect property name.", field.getName(), np.getName());
-        assertEquals("Incorrect declaration of property's generic type.", field.getGenericType(), np.genericTypeAsDeclared());
-
-        final Annotation[] fieldAnnotations = field.getDeclaredAnnotations();
-        final List<Annotation> npAnnotations = np.getAnnotations();
-        assertEquals("Different number of annotations.", fieldAnnotations.length, npAnnotations.size());
-
-        for (final Annotation fieldAnnot: fieldAnnotations) {
-            assertTrue("Missing annotation.", npAnnotations.contains(fieldAnnot));
-        }
     }
 }

@@ -352,8 +352,10 @@ public final class NewProperty<T> {
      * </pre>
      * In such case the value of {@link IsProperty} is recorded in the form of type arguments. However, if a type argument is present,
      * then it's prioritized over the value of  {@link IsProperty}.
-     * Refer to {@link #getGenericTypeAsDeclared()} to get a precise representation (which would simply return a raw {@link List}).
      * The same rules apply to {@link PropertyDescriptor} which also accepts a single type argument.
+     * <p>
+     * Refer to {@link #getGenericTypeAsDeclared()} to get a precise representation (which would simply return a raw {@link List}
+     * in the example above).
      * <p>
      * <i>Note:</i> This method tries to determine the correct generic type on every call, so use it sparingly.
      * 
