@@ -456,7 +456,6 @@ public final class NewProperty<T> {
 
     /**
      * Returns all annotations present on this property. The returned list is unmodifiable.
-     * @return
      */
     public List<Annotation> getAnnotations() {
         final List<Annotation> all = new ArrayList<>(annotations);
@@ -476,32 +475,15 @@ public final class NewProperty<T> {
     public NewProperty<T> setAnnotations(final Annotation... annotations) {
         return setAnnotations(Arrays.asList(annotations));
     }
-
-    /**
-     * Modifies this instance by changing its raw type and type arguments.
-     * <p>
-     * Might also update {@link IsProperty} - see {@link #setType(ParameterizedType)}.
-     * @param rawType
-     * @param typeArguments
-     * @return
-     */
-
-    /**
-     * Modifies this instance by changing its raw type and type arguments that are derived from <code>type</code>.
-     * <p>
-     * If the raw type represents {@link PropertyDescriptor} or {@link Collection}, then {@link IsProperty#value()} is updated by
-     * the first type argument. If no type arguments are present, then for {@link Collection} {@link Object} is chosen, but for
-     * {@link PropertyDescriptor} a runtime exception is thrown.
-     * <p>
-     * For other types, {@link IsProperty#value()} is unchanged.
-     * @param type
-     * @return
-     */
     
     public boolean isInitialized() {
         return this.isInitialized;
     }
     
+    /**
+     * Returns the initialized value of this property.
+     * @return
+     */
     public T getValue() {
         return value;
     }
@@ -555,6 +537,28 @@ public final class NewProperty<T> {
     public <C> NewProperty<C> changeType(final Class<C> rawType) {
         return NewProperty.create(name, rawType, List.copyOf(typeArguments), title, desc,
                 getAnnotations().toArray(Annotation[]::new));
+    }
+    
+    /**
+     * Returns a fresh copy of this instance with its type arguments updated with {@code typeArguments}.
+     * <p>
+     * <i>Note:</i> individual annotation instances are not copied, but referenced instead. 
+     * @param typeArguments
+     * @return
+     */
+    public NewProperty<T> changeTypeArguments(final List<Type> typeArguments) {
+        return NewProperty.create(name, type, typeArguments, title, desc, getAnnotations().toArray(Annotation[]::new));
+    }
+
+    /**
+     * Returns a fresh copy of this instance with its type arguments updated with {@code typeArguments}.
+     * <p>
+     * <i>Note:</i> individual annotation instances are not copied, but referenced instead. 
+     * @param typeArguments
+     * @return
+     */
+    public NewProperty<T> changeTypeArguments(final Type... typeArguments) {
+        return changeTypeArguments(Arrays.asList(typeArguments));
     }
     
     /**

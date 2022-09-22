@@ -126,14 +126,21 @@ public class NewPropertyTest {
     }
     
     @Test
-    public void changing_type_arguments_of_other_types_does_not_affect_IsProperty() {
-        // Pair<String, String>
-        final NewProperty<Pair> pair = NewProperty.create("pair", Pair.class, List.of(String.class, String.class), "title", "desc");
-        final Class<?> previousValue = pair.getAnnotationByType(IsProperty.class).value();
-        pair.setTypeArguments(String.class, Double.class);
+    public void the_value_of_IsProperty_annotation_can_be_changed() {
+        final NewProperty<List> np = collectionalRawList.changeTypeArguments(Double.class);
+        final IsProperty oldAtIsProperty = np.getIsProperty();
+        // previous value
+        assertEquals("Incorrect @IsProperty.value().", String.class, oldAtIsProperty.value());
 
-        assertEquals("The value of @IsProperty should not have been modified.", 
-                previousValue, pair.getAnnotationByType(IsProperty.class).value());
+        // change IsProperty.value()
+        np.changeIsPropertyValue(Double.class);
+        
+        final IsProperty newAtIsProperty = np.getIsProperty();
+        assertNotSame("New @IsProperty refers to the old @IsProperty.", oldAtIsProperty, newAtIsProperty);
+        // previous value
+        assertEquals("Incorrect old @IsProperty.value().", String.class, oldAtIsProperty.value());
+        // new value
+        assertEquals("Incorrect new @IsProperty.value().", Double.class, newAtIsProperty.value());
     }
     
     @Test
