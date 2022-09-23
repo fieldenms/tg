@@ -69,105 +69,29 @@ public class IsPropertyAnnotation {
         this.value = value;
         return this;
     }
-
-    public IsProperty newInstance() {
+    
+    private static IsProperty create(final Class<?> value, final String linkProperty, final boolean assignBeforeSave,
+            final int length, final int precision, final int scale, final boolean trailingZeros, final String displayAs) 
+    {
         return new IsProperty() {
-
-            @Override
-            public Class<IsProperty> annotationType() {
-                return IsProperty.class;
-            }
-
-            @Override
-            public Class<?> value() {
-                return value;
-            }
-
-            @Override
-            public String linkProperty() {
-                return linkProperty;
-            }
-
-            @Override
-            public boolean assignBeforeSave() {
-                return assignBeforeSave;
-            }
-
-            @Override
-            public int length() {
-                return length;
-            }
-
-            @Override
-            public int precision() {
-                return precision;
-            }
-
-            @Override
-            public int scale() {
-                return scale;
-            }
-
-            @Override
-            public boolean trailingZeros() {
-                return trailingZeros;
-            }
-
-            @Override
-            public String displayAs() {
-                return displayAs;
-            }
+            @Override public Class<IsProperty> annotationType() { return IsProperty.class; }
+            @Override public Class<?> value() { return value; }
+            @Override public String linkProperty() { return linkProperty; }
+            @Override public boolean assignBeforeSave() { return assignBeforeSave; }
+            @Override public int length() { return length; }
+            @Override public int precision() { return precision; }
+            @Override public int scale() { return scale; }
+            @Override public boolean trailingZeros() { return trailingZeros; }
+            @Override public String displayAs() { return displayAs; }
         };
     }
 
+    public IsProperty newInstance() {
+        return create(value, linkProperty, assignBeforeSave, length, precision, scale, trailingZeros, displayAs);
+    }
+
     public IsProperty copyFrom(final IsProperty original) {
-        return new IsProperty() {
-
-            @Override
-            public Class<IsProperty> annotationType() {
-                return IsProperty.class;
-            }
-
-            @Override
-            public Class<?> value() {
-                return original.value();
-            }
-
-            @Override
-            public String linkProperty() {
-                return original.linkProperty();
-            }
-
-            @Override
-            public boolean assignBeforeSave() {
-                return original.assignBeforeSave();
-            }
-
-            @Override
-            public int length() {
-                return original.length();
-            }
-
-            @Override
-            public int precision() {
-                return original.precision();
-            }
-
-            @Override
-            public int scale() {
-                return original.scale();
-            }
-
-            @Override
-            public boolean trailingZeros() {
-                return original.trailingZeros();
-            }
-
-            @Override
-            public String displayAs() {
-                return original.displayAs();
-            }
-        };
+        return from(original).newInstance();
     }
     
     /**
