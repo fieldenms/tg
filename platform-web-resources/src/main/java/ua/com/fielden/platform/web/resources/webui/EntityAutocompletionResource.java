@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
@@ -9,6 +11,7 @@ import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentre
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.apache.log4j.Logger;
 import org.restlet.Context;
@@ -24,6 +27,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.IEntityProducer;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.CentreContextHolder;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
@@ -97,23 +101,29 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
             // However, this is not suitable for values of type Attachment, where new hyperlink instances are created ad hoc for autocompletion and, if chosen, such values distort the typed in or copy/pasted URIs.
             // This is why upper casing of the search strings was removed in tg-entity-editor.js and introduces in this web resource for ease of maintenance and customisation.
             // There could be other cases where upper casing should not be applied, but for now the change is limited to entity Attachment only.
-            final boolean shouldUpperCase;
-            if (Attachment.class.isAssignableFrom(propType)) {
-                shouldUpperCase = false;
-            } else {
-                shouldUpperCase = true;
-            }
-
-            final String searchStringVal = (String) centreContextHolder.getCustomObject().get("@@searchString"); // custom property inside paramsHolder
-            final String prepSearchString = prepare(searchStringVal.contains("*") ? searchStringVal : searchStringVal + "*");
-            final String searchString = shouldUpperCase ? prepSearchString.toUpperCase() : prepSearchString;
-            final int dataPage = centreContextHolder.getCustomObject().containsKey("@@dataPage") ? (Integer) centreContextHolder.getCustomObject().get("@@dataPage") : 1;
-            // logger.debug(format("SEARCH STRING %s, PAGE %s", searchString, dataPage));
-            final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchString != null ? searchString : "%", dataPage);
+            final boolean shouldUpperCase = !Attachment.class.isAssignableFrom(propType);
+            // prepare the search string and perform value matching
+            final T2<String, Integer> searchStringAndDataPageNo = prepSearchString(centreContextHolder, shouldUpperCase);
+            final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchStringAndDataPageNo._1, searchStringAndDataPageNo._2);
 
             // logger.debug("ENTITY_AUTOCOMPLETION_RESOURCE: search finished.");
             return restUtil.listJsonRepresentationWithoutIdAndVersion(entities);
         }, restUtil);
     }
-    
+
+    /**
+     * Obtains a search string from {@code centreContextHolder} and prepares it to be used for finding the matching values.
+     *
+     * @param centreContextHolder an centre context holder.
+     * @param shouldUpperCase indicates whether the search string should be in uppercase.
+     * @return a search string and a data page number to be retrieved to support loading of "more" data
+     */
+    public static T2<String, Integer> prepSearchString(final CentreContextHolder centreContextHolder, final boolean shouldUpperCase) {
+        final String searchStringVal = (String) centreContextHolder.getCustomObject().get("@@searchString"); // custom property inside paramsHolder
+        final Optional<String> maybeSearchString = ofNullable(prepare(searchStringVal.contains("*") || searchStringVal.contains("%") ? searchStringVal : searchStringVal + "*"));
+        final String searchString = maybeSearchString.map(str -> shouldUpperCase ? str.toUpperCase() : str).orElse("%");
+        final int dataPageNo = centreContextHolder.getCustomObject().containsKey("@@dataPage") ? (Integer) centreContextHolder.getCustomObject().get("@@dataPage") : 1;
+        return t2(searchString, dataPageNo);
+    }
+
 }

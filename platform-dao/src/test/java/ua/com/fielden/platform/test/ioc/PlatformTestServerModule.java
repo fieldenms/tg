@@ -54,6 +54,8 @@ import ua.com.fielden.platform.test.entities.CompositeEntityKeyDao;
 import ua.com.fielden.platform.test.entities.IComplexKeyEntity;
 import ua.com.fielden.platform.test.entities.ICompositeEntity;
 import ua.com.fielden.platform.test.entities.ICompositeEntityKey;
+import ua.com.fielden.platform.test.entities.TgEntityWithManyPropTypesCo;
+import ua.com.fielden.platform.test.entities.TgEntityWithManyPropTypesDao;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.IUniversalConstants;
 
@@ -154,6 +156,10 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(ITgAuthoriser.class).to(TgAuthoriserDao.class);
         bind(ITgOriginator.class).to(TgOriginatorDao.class);
         bind(ITgDateTestEntity.class).to(TgDateTestEntityDao.class);
+        bind(TgEntityWithManyPropTypesCo.class).to(TgEntityWithManyPropTypesDao.class);
+        bind(IEntityOne.class).to(EntityOneDao.class);
+        bind(IEntityTwo.class).to(EntityTwoDao.class);
+        bind(IUnionEntity.class).to(UnionEntityDao.class);
 
         bind(ITgMakeCount.class).to(TgMakeCountDao.class);
         bind(ITgAverageFuelUsage.class).to(TgAverageFuelUsageDao.class);

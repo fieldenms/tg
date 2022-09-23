@@ -149,4 +149,64 @@ public class StreamUtilsTest {
         assertEquals(listOf(), zip(Stream.of(0, 1, 2), Stream.<Integer>empty(), (x, y) -> x+y).collect(toList()));
         
     }
+
+    @Test
+    public void stream_with_even_number_of_elements_can_be_windowed_into_two_equal_parts() {
+        final Stream<Integer> source = Stream.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+        final Stream<List<Integer>> windowed = StreamUtils.windowed(source, 5);
+        final List<List<Integer>> windowedAsList = windowed.collect(toList());
+        assertEquals(2, windowedAsList.size());
+        assertEquals(listOf(0, 1, 2, 3, 4), windowedAsList.get(0));
+        assertEquals(listOf(5, 6, 7, 8, 9), windowedAsList.get(1));
+    }
+
+    @Test
+    public void stream_can_be_windowed_into_equal_parts_with_a_shorter_remainder() {
+        final Stream<Integer> source = Stream.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+        final Stream<List<Integer>> windowed = StreamUtils.windowed(source, 3);
+        final List<List<Integer>> windowedAsList = windowed.collect(toList());
+        assertEquals(4, windowedAsList.size());
+        assertEquals(listOf(0, 1, 2), windowedAsList.get(0));
+        assertEquals(listOf(3, 4, 5), windowedAsList.get(1));
+        assertEquals(listOf(6, 7, 8), windowedAsList.get(2));
+        assertEquals(listOf(9), windowedAsList.get(3));
+    }
+
+    @Test
+    public void stream_can_be_windowed_into_parts_with_a_single_element_each() {
+        final Stream<Integer> source = Stream.of(0, 1, 2);
+        final Stream<List<Integer>> windowed = StreamUtils.windowed(source, 1);
+        final List<List<Integer>> windowedAsList = windowed.collect(toList());
+        assertEquals(3, windowedAsList.size());
+        assertEquals(listOf(0), windowedAsList.get(0));
+        assertEquals(listOf(1), windowedAsList.get(1));
+        assertEquals(listOf(2), windowedAsList.get(2));
+    }
+
+    @Test
+    public void windowing_a_stream_with_a_non_positive_window_size_results_in_parts_with_a_single_element_each() {
+        final Stream<List<Integer>> negWindowed = StreamUtils.windowed(Stream.of(0, 1, 2), -1);
+        final List<List<Integer>> negWindowedAsList = negWindowed.collect(toList());
+        assertEquals(3, negWindowedAsList.size());
+        assertEquals(listOf(0), negWindowedAsList.get(0));
+        assertEquals(listOf(1), negWindowedAsList.get(1));
+        assertEquals(listOf(2), negWindowedAsList.get(2));
+
+        final Stream<List<Integer>> zeroWindowed = StreamUtils.windowed(Stream.of(0, 1, 2), 0);
+        final List<List<Integer>> zeroWindowedAsList = zeroWindowed.collect(toList());
+        assertEquals(3, zeroWindowedAsList.size());
+        assertEquals(listOf(0), zeroWindowedAsList.get(0));
+        assertEquals(listOf(1), zeroWindowedAsList.get(1));
+        assertEquals(listOf(2), zeroWindowedAsList.get(2));
+    }
+
+    @Test
+    public void empty_stream_is_windowed_into_empty_stream() {
+        final Stream<Integer> source = Stream.empty();
+        final Stream<List<Integer>> windowed = StreamUtils.windowed(source, 1);
+        final List<List<Integer>> windowedAsList = windowed.collect(toList());
+        assertEquals(0, windowedAsList.size());
+    }
+
+
 }

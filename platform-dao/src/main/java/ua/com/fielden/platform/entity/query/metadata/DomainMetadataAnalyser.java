@@ -48,7 +48,7 @@ public class DomainMetadataAnalyser {
                 final AbstractEntityMetadata<ET> newOne;
                 final EntityTypeInfo<ET> parentInfo = new EntityTypeInfo<>(entityType);
                 switch (parentInfo.category) {
-                case PERSISTED:
+                case PERSISTENT:
                     newOne = domainMetadata.generatePersistedEntityMetadata(parentInfo);
                     break;
                 case QUERY_BASED:

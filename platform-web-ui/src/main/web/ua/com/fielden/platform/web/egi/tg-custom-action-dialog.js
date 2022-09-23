@@ -193,7 +193,7 @@ const template = html`
             <tg-element-loader id="elementLoader" class="flex"></tg-element-loader>
         </div>
     </div>
-    <iron-icon id="resizer" hidden=[[_dialogInteractionsDisabled(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-track="resizeDialog" tooltip-text="Drag to resize"></iron-icon>
+    <iron-icon id="resizer" hidden=[[_dialogInteractionsDisabled(_minimised,_maximised)]] icon="tg-icons:resize-bottom-right" on-track="resizeDialog" tooltip-text="Drag to resize<br>Double tap to reset dimensions" on-tap="resetDimensions"></iron-icon>
     <tg-toast id="toaster"></tg-toast>`;
 
 template.setAttribute('strip-whitespace', '');
@@ -414,14 +414,6 @@ Polymer({
         },
 
         /**
-         * Other overlays, which are descendants of the current dialog.
-         * When dialog is bringing to front / closing, they also should be brought to the front / closed with parent.
-         */
-        _childOverlays: {
-            type: Array
-        },
-
-        /**
          * Needed to prevent user from dragging dialog out of the window rectangle. Caches window width and height.
          */
         _windowWidth: Number,
@@ -507,7 +499,6 @@ Polymer({
 
         this._parentDialog = null;
         this._childDialogs = [];
-        this._childOverlays = [];
         
         //Set the blocking pane counter equal to 0 so taht no one can't block it twice or event more time
         this._blockingPaneCounter = 0;
@@ -621,16 +612,6 @@ Polymer({
     },
 
     _onCaptureClick: function (event) {
-        // (inspired by iron-overlay-manager._onCaptureClick): close all child overlays (without noCancelOnOutsideClick) when started tapping on this dialog
-        const path = dom(event).path;
-        const overlayOnPath = this._manager._overlayInPath(path);
-        if (overlayOnPath === this) {
-            this._childOverlays.slice().forEach(childOverlay => {
-                if (!childOverlay.noCancelOnOutsideClick) {
-                    childOverlay.close();
-                }
-            });
-        }
         // bring current dialog to front if it is not in front already
         if (this._manager.currentOverlay() !== this) {
             this._bringToFront();
@@ -659,9 +640,6 @@ Polymer({
 
     _bringToFront: function() {
         this._manager.addOverlay(this); // dialog itself should be brought to front first ...
-        this._childOverlays.forEach(childOverlay => {
-            this._manager.addOverlay(childOverlay); // ... then all child overlays (autocompleter, secondary action dropdowns etc.) ...
-        });
         this._childDialogs.forEach(function(childDialog) {
             childDialog._bringToFront(); // ... and finally all child dialogs
         });
@@ -812,6 +790,23 @@ Polymer({
             }
         }
         tearDownEvent(event);
+    },
+
+    resetDimensions: function (event) {
+        if (this._wasResized &&  event.detail.sourceEvent.detail && event.detail.sourceEvent.detail === 2) {
+            if (this.prefDim) {
+                const width = (typeof this.prefDim.width === 'function' ? this.prefDim.width() : this.prefDim.width) + this.prefDim.widthUnit;
+                const height = (typeof this.prefDim.height === 'function' ? this.prefDim.height() : this.prefDim.height) + this.prefDim.heightUnit;
+                this.style.width = width;
+                this.style.height = this.prefDim.heightUnit === '%' ? height : ('calc(' + height + ' + 44px)'); // +44px - height of the title bar please see styles for .title-bar selector; applicable only for non-relative units of measure
+                this.style.overflow = 'auto';
+            } else {
+                this.style.width = '';
+                this.style.height = '';
+                this.style.overflow = 'auto';
+            }
+            this._wasResized = false;
+        }
     },
 
     /**
@@ -1468,19 +1463,12 @@ Polymer({
                 this._focusDialogView();
             }.bind(this), 100);
             this._setIsRunning(false);
-        } else { 
-            // some child overlay was opened and should be added to the list of child overlays in order to be brought to the front when this dialog will be brought to the front
-            this._childOverlays.push(target);
         }
     },
 
     _dialogClosed: function (e) {
         const target = e.composedPath()[0];
         if (target === this) {
-            // close all child overlays
-            this._childOverlays.slice().forEach(childOverlay => childOverlay.close());
-            // clear child overlays cache
-            this._childOverlays = [];
             // if there are current subscriptions they need to be unsubscribed
             // due to dialog being closed
             for (var index = 0; index < this._subscriptions.length; index++) {
@@ -1502,12 +1490,6 @@ Polymer({
 
             if (this._lastAction) {
                 this._lastAction.restoreActionState();
-            }
-        } else {
-            const idx = this._childOverlays.indexOf(target);
-            if (idx >= 0) {
-                // clear child overlay from cache if it has already been closed
-                this._childOverlays.splice(idx, 1);
             }
         }
     },

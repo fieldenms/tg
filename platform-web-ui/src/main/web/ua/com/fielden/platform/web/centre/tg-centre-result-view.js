@@ -8,7 +8,6 @@ import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
 const template = html`
     <style>
         :host {
-            min-height: 100%;
             @apply --layout-horizontal;
             @apply --layout-justified;
         }
