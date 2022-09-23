@@ -7,6 +7,8 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.reflection.asm.api.test_utils.NewPropertyTestUtils.assertPropertyEquals;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertInstantiation;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.reflect.Field;
@@ -20,7 +22,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Stream;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -106,6 +107,8 @@ public class DynamicEntityTypePropertiesModificationTest {
 
         assertTrue("Not all property annotations were preserved.",
                 asList(newField.getDeclaredAnnotations()).containsAll(asList(oldField.getDeclaredAnnotations())));
+        
+        assertInstantiation(newType, factory);
     }
     
     @Test
@@ -138,6 +141,8 @@ public class DynamicEntityTypePropertiesModificationTest {
             assertTrue("Not all property annotations were preserved.",
                     asList(newField.getDeclaredAnnotations()).containsAll(asList(oldField.getDeclaredAnnotations())));
         }
+
+        assertInstantiation(newType, factory);
     }
 
     @Test
@@ -171,6 +176,8 @@ public class DynamicEntityTypePropertiesModificationTest {
             assertTrue("Not all property annotations were preserved.",
                     asList(newField.getDeclaredAnnotations()).containsAll(asList(oldField.getDeclaredAnnotations())));
         }
+
+        assertInstantiation(newType, factory);
     }
 
     @Test
