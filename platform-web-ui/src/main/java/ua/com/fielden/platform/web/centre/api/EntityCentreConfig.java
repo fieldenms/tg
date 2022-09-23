@@ -220,6 +220,11 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     /** Identifies URI for the Server-Side Eventing. If <code>null</code> is set then no SSE is required. */
     private final String sseUri;
+    /** The number of seconds before refresh on sse event. This value might be null, then refresh will be immediate.
+     *  If the value is zero, then user will have to make decision whether to refresh the center or to skip it.
+     *  if the value is greater then 0, then user will have a chance to skip refreshing the specified number of seconds.
+     *  After refreshCountdown seconds centre will be refreshed immediately.*/
+    private final Integer refreshCountdown;
 
     /////////////////////////////////////////////
     ////////////////// RESULT SET ///////////////
@@ -470,6 +475,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Integer rightSplitterPosition,
 
             final String sseUri,
+            final Integer refreshCountdown,
 
             final FlexLayout selectionCriteriaLayout,
             final FlexLayout resultsetCollapsedCardLayout,
@@ -551,6 +557,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.rightSplitterPosition = rightSplitterPosition;
 
         this.sseUri = sseUri;
+        this.refreshCountdown = refreshCountdown;
 
         this.resultSetProperties.addAll(resultSetProperties);
         this.summaryExpressions.putAll(summaryExpressions);
@@ -920,6 +927,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public Optional<String> getSseUri() {
         return Optional.ofNullable(sseUri);
+    }
+
+    public Optional<Integer> getRefreshCountdown() {
+        return Optional.ofNullable(refreshCountdown);
     }
 
     public boolean isEgiHidden() {

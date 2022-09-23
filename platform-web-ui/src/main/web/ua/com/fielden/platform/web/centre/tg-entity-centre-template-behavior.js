@@ -15,29 +15,75 @@ const TgEntityCentreTemplateBehaviorImpl = {
         pageCountUpdated: Number,
         staleCriteriaMessage: String,
         _centreDirtyOrEdited: Boolean,
-        _defaultPropertyActionAttrs: Object
+        _defaultPropertyActionAttrs: Object,
+        _pendingRefresh : {
+            type: Boolean,
+            value: false
+        },
+        _entitiesToRefresh: Array,
+        _visible: {
+            type: Boolean,
+            value: false
+        },
+        _isEgiEditing : {
+            type: Boolean,
+            value : false
+        }
     },
 
     created: function () {
+
+        this._entitiesToRefresh = [];
+
         // bind SSE event handling method regardless of the fact whether this particulare
         // centre is bound to some SSE url or not.
         this.dataHandler = function (msg) {
-            const self = this;
-            let needsFullRefresh = true;
+
+            let entityToRefresh = null;
             if (msg.id) {
                 // let's search for an item to update...
                 // if the current EGI model does not contain an updated entity then there is no need for a refresh...
                 // TODO such update strategy might need to be revisited in future...
-                const entry = this.$.egi.egiModel.find(entry => entry.entity.get('id') === msg.id);
-                if (entry) {
-                    needsFullRefresh = false;
-                    self.refreshEntities([entry.entity]);
+                entityToRefresh = this.$.egi.egiModel.find(entry => entry.entity.get('id') === msg.id);
+            }
+
+            // Initialise entities to refresh:
+            // 1. If an SSE event with id and egi has entity with the same id, then add it to the list of entities to refresh.
+            // 2. Otherwise, if an SSE event is without an id or egi doesn't contain an entity with the same id, then clear a list of entities to refresh, and refresh the whole centre.
+            if (entityToRefresh) {
+                this._entitiesToRefresh.push(entityToRefresh.entity);
+            } else {
+                this._entitiesToRefresh = [];
+            }
+
+            if (!this._pendingRefresh) {
+                this._pendingRefresh = true;
+                if (this._visible && !this._isEgiEditing) {
+                    this.showRefreshToast();
                 }
             }
-            if (needsFullRefresh === true) {
-                self.refreshEntities([]);
+            
+        }.bind(this);
+
+        /////////////////TgDelayedActionBehavior related properties//////////////////////
+        this.actionText = 'REFRESH';
+        this.cancelText = 'SKIP';
+        this.textForCountdownAction = "Data changed. Refreshing in ";
+        this.textForPromptAction = "Data changed.";
+        
+        this.actionHandler = function () {
+            if (this._pendingRefresh) {
+                this._pendingRefresh = false;
+                this.refreshEntities(this._entitiesToRefresh);
+                this._entitiesToRefresh = [];
             }
         }.bind(this);
+
+        this.cancelHandler = function () {
+            this._pendingRefresh = false;
+            this._entitiesToRefresh = [];
+        }.bind(this);
+        /////////////////////////////////////////////////////////////////////////////////
     },
 
     /**
@@ -47,6 +93,47 @@ const TgEntityCentreTemplateBehaviorImpl = {
         this.classList.add("canLeave");
         this._defaultPropertyActionAttrs = {currentState: "EDIT", centreUuid: this.uuid};
         this.navigationPreAction = this.navigationPreAction.bind(this);
+
+        //////////////////Event handler to determine centre visibility///////////////////
+        const observableNodes = [this._dom().$.centreResultContainer, ...this._dom().$.alternativeViewSlot.assignedNodes({ flatten: true })];
+        const observer = new IntersectionObserver((entries, observer) => {
+
+            const anyViewVisibility = entries.some(entry => entry.intersectionRatio > 0);
+
+            if (anyViewVisibility && !this._visible) {
+                this._visible = true;
+                if (this._pendingRefresh && !this._isEgiEditing) {
+                    this.showRefreshToast();
+                }
+            } else if (!anyViewVisibility && this._visible) {
+                this._visible = false;
+                if (this._pendingRefresh && !this._isEgiEditing) {
+                    this.hideRefreshToast();
+                }
+            }
+            
+        }, {
+            root: document.documentElement
+        });
+        observableNodes.forEach(altView => {
+            observer.observe(altView);
+        });
+        /////////////////////////////////////////////////////////////////////////////////
+
+        //////////////////Event handler for egi editing//////////////////////////////////
+        this.addEventListener("tg-egi-start-editing", (event) => {
+            this._isEgiEditing = true;
+            if (this._pendingRefresh && this._visible) {
+                this.hideRefreshToast();
+            }
+        });
+        this.addEventListener("tg-egi-finish-editing", (event) => {
+            this._isEgiEditing = false;
+            if (this._pendingRefresh && this._visible) {
+                this.showRefreshToast();
+            }
+        });
+        /////////////////////////////////////////////////////////////////////////////////
     },
 
     ////////////// Template related method are here in order to reduce the template size ///////////////

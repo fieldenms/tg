@@ -2,6 +2,8 @@ package ua.com.fielden.platform.processors.metamodel.models;
 
 import static java.lang.String.format;
 
+import java.util.Objects;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.processors.metamodel. exceptions.EntityMetaModelException;
@@ -16,7 +18,7 @@ import ua.com.fielden.platform.processors.metamodel. exceptions.EntityMetaModelE
  *
  */
 public abstract class EntityMetaModel implements IConvertableToPath {
-    private final String path;
+    protected final String path;
     
     public EntityMetaModel(final String path) {
         if (path == null) {
@@ -39,29 +41,20 @@ public abstract class EntityMetaModel implements IConvertableToPath {
     }
     
     /**
-     * Returns the dot-notated path captured in the context. If this entity meta-model has no surrounding context, then this method returns {@code "this"} string constant.
+     * Returns the dot-notated path captured in the context. If this entity meta-model has no surrounding context, then this method returns its alias in case the meta-model was aliased, otherwise {@code "this"} is returned.
      * <p> 
      * Example:
      * 
      * <pre>
-     * public class PersonMetaModel extends EntityMetaModel {
-     *      ...
-     * }
-     * 
-     * PersonMetaModel personBase = new PersonMetaModel();
-     * personBase.toPath(); // "this"
-     * 
-     * PersonMetaModel personWithContext = new PersonMetaModel("owner");
-     * personWithContext.toPath(); // "owner"
+     * var person = MetaModels.Person_;
+     * person.toPath();                 // "this"
+     * person.user().toPath();          // "user"
+     * person.user().email()>toPath();  // "user.email"
      * </pre>
      */
     @Override
-    public final String toPath() {
-        if (path.isEmpty()) {
-            return "this";
-        }
-
-        return this.path;
+    public String toPath() {
+        return path.isEmpty() ? "this" : path;
     }
 
     @Override
@@ -69,10 +62,31 @@ public abstract class EntityMetaModel implements IConvertableToPath {
         return toPath();
     }
 
+    @Override
+    public int hashCode() {
+        return 31 + Objects.hashCode(path);
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof EntityMetaModel)) {
+            return false;
+        }
+        
+        final EntityMetaModel that = (EntityMetaModel) obj;
+        if (this.getClass() != that.getClass()) {
+            return false;
+        }
+        
+        return Objects.equals(this.path, that.path);
+    }
+
     /**
      * Returns the underlying entity class of this meta-model.
      * @return
      */
     public abstract Class<? extends AbstractEntity> getEntityClass();
-
 }
