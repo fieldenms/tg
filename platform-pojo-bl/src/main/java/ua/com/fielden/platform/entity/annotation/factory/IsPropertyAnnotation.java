@@ -83,6 +83,23 @@ public class IsPropertyAnnotation {
             @Override public int scale() { return scale; }
             @Override public boolean trailingZeros() { return trailingZeros; }
             @Override public String displayAs() { return displayAs; }
+            
+            @Override
+            public boolean equals(final Object other) {
+                if (this == other) {
+                    return true;
+                }
+                return (other instanceof IsProperty atIsProp) &&
+                        this.annotationType().equals(atIsProp.annotationType()) &&
+                        this.value().equals(atIsProp.value()) &&
+                        this.linkProperty().equals(atIsProp.linkProperty()) &&
+                        this.assignBeforeSave() == atIsProp.assignBeforeSave() &&
+                        this.length() == atIsProp.length() &&
+                        this.precision() == atIsProp.precision() &&
+                        this.scale() == atIsProp.scale() &&
+                        this.trailingZeros() == atIsProp.trailingZeros() &&
+                        this.displayAs().equals(atIsProp.displayAs());
+            }
         };
     }
 

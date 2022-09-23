@@ -569,7 +569,7 @@ public final class NewProperty<T> {
      */
     @Override
     public String toString() {
-        return toString(true);
+        return toString(false);
     }
     
     /**
