@@ -1333,7 +1333,11 @@ Polymer({
         if (this.master && this.master.editors.length > 0 && this._tapOnce && this.canOpenMaster()) {
             delete this._tapOnce;
             this.master._lastFocusedEditor = this.master.editors.find(editor => editor.propertyName === column.property);
+            const prevEditing = this.isEditing();
             this._makeRowEditable(entityIndex);
+            if (!prevEditing && this.isEditing()) {
+                this._fireStartEditing();
+            }
         } else if (this.master && this.master.editors.length > 0 && this.canOpenMaster()) {
             this._tapOnce = true;
             this.async(() => {
@@ -2295,7 +2299,7 @@ Polymer({
     },
 
     /**
-     * @returns object that explains the reason why this EGI can not be left or undefined.
+     * @returns object that explains the reason why this EGI cannot be left or undefined.
      */
     canLeave: function () {
         if (this.isEditing()) {
@@ -2310,6 +2314,14 @@ Polymer({
 
     canOpenMaster: function () {
         return true;
+    },
+
+    _fireStartEditing: function () {
+        this.fire("tg-egi-start-editing", this);
+    },
+
+    _fireFinishEditing: function () {
+        this.fire("tg-egi-finish-editing", this);
     },
 
     _scrollToVisibleLeftMaster: function (e) {
@@ -2377,6 +2389,8 @@ Polymer({
                 this.master.retrieve();
             } else {
                 this._closeMaster();
+                //At this point firing finish-edit event is needed because row with entityIndex cannot be editable due to entityIndex being out of bounds.
+                this._fireFinishEditing();
             }
         }
     },
