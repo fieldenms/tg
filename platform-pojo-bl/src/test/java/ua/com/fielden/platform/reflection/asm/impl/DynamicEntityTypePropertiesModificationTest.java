@@ -76,7 +76,7 @@ public class DynamicEntityTypePropertiesModificationTest {
 
     private static final Calculated calculated = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION).newInstance();
 
-    private static final NewProperty<Money> np1 = NewProperty.create(NEW_PROPERTY, Money.class, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC,
+    private static final NewProperty<Money> npMoney = NewProperty.create(NEW_PROPERTY, Money.class, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC,
             calculated);
 
     private boolean observed = false;
@@ -242,7 +242,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     @Test
     public void a_property_can_be_modified_to_have_its_type_set_to_a_generated_type() throws Exception {
         final Class<? extends AbstractEntity<?>> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
-                .addProperties(np1)
+                .addProperties(npMoney)
                 .endModification();
 
         // enhance(EntityBeingModified)
@@ -290,76 +290,67 @@ public class DynamicEntityTypePropertiesModificationTest {
         assertTrue("Setter for the modified property %s was not observed.".formatted(np.getName()), observed);
         assertEquals("Incorrect value of the modified property %s.".formatted(np.getName()), value, instance.get(np.getName()));
     }
-
+    
     @Test
-    public void test_modification_of_collectional_property_signature() throws Exception {
-        // Collection<EntityBeingEnhanced> prop1;
-        final Field field = Finder.findFieldByName(EntityWithCollectionalPropety.class, "prop1");
-        assertTrue("Incorrect collectional type.", Collection.class.isAssignableFrom(field.getType()));
-        assertEquals("Incorrect signature for collectional property.",
-                EntityBeingEnhanced.class,
-                PropertyTypeDeterminator.determinePropertyType(EntityWithCollectionalPropety.class, "prop1"));
-
-        // enhance(EntityBeingEnhanced)
-        final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
-                .addProperties(np1)
+    public void raw_type_of_parameterized_property_type_can_be_modified() throws Exception {
+        // from List<Double> to Set<Double>
+        final NewProperty<?> np1 = NewProperty.fromField(EntityWithCollectionalPropety.class, "items").changeType(Set.class);
+        final Class<? extends EntityWithCollectionalPropety> newType = cl.startModification(EntityWithCollectionalPropety.class)
+                .modifyProperties(np1)
                 .endModification();
 
-        // enhance(EntityWithCollectionalProperty)
-        //      prop1: Collection<EntityBeingEnhanced> -> Collection<modEntityBeingEnhanced>
-        final NewProperty collectionalPropModification = NewProperty.fromField(EntityWithCollectionalPropety.class, "prop1")
-                .setTypeArguments(modEntityBeingEnhanced);
-        final Class<? extends EntityWithCollectionalPropety> modifiedType = cl.startModification(EntityWithCollectionalPropety.class)
-                .modifyProperties(collectionalPropModification)
+        assertGeneratedPropertyCorrectness(np1, newType);
+    }
+    
+    @Test
+    public void collectional_property_with_modified_raw_type_is_generated_with_correct_initializer() throws Exception {
+         // from List<Double> to Set<Double>
+        final NewProperty<?> np1 = NewProperty.fromField(EntityWithCollectionalPropety.class, "items").changeType(Set.class);
+        final Class<? extends EntityWithCollectionalPropety> newType = cl.startModification(EntityWithCollectionalPropety.class)
+                .modifyProperties(np1)
                 .endModification();
 
-        // test the modified field attributes such as type and IsProperty annotation
-        final Field modField = Finder.findFieldByName(modifiedType, "prop1");
-        assertTrue("Incorrect collectional type.", Collection.class.isAssignableFrom(modField.getType()));
-        assertEquals("Incorrect signature for collectional property.", 
-                modEntityBeingEnhanced,
-                PropertyTypeDeterminator.determinePropertyType(modifiedType, "prop1"));
-
-        final IsProperty annotation = AnnotationReflector.getAnnotation(modField, IsProperty.class);
-        assertNotNull("There should be IsProperty annotation.", annotation);
-        assertEquals("Incorrect value in IsProperty annotation.", modEntityBeingEnhanced, annotation.value());
+        assertGeneratedPropertyCorrectness(np1, newType);
+        // make sure that modified property is initialized with an empty collection of the new type 
+        final EntityWithCollectionalPropety instance = assertInstantiation(newType, factory);
+        final Object value = instance.get(np1.getName());
+        assertTrue("Incorrect initializer of the modified property %s.".formatted(np1.getName()), Set.class.isInstance(value));
+        final Set<?> valueSet = (Set<?>) value;
+        assertTrue("Modified collectional property should be empty after initialization.", valueSet.isEmpty());
     }
 
     @Test
-    public void test_getting_setting_and_observation_of_modified_collectional_property() throws Exception {
+    public void type_arguments_of_parameterized_property_type_can_be_modified() throws Exception {
+        // 1. changing type arguments to unrelated types (not in the same hierarchy)
+        final NewProperty<?> np1 = NewProperty.fromField(EntityWithCollectionalPropety.class, "items")
+                .setTypeArguments(String.class)
+                // for consistency, since this is a collectional property
+                .changeIsPropertyValue(String.class);
+        final Class<? extends EntityWithCollectionalPropety> newType1 = cl.startModification(EntityWithCollectionalPropety.class)
+                .modifyProperties(np1)
+                .endModification();
+        assertGeneratedPropertyCorrectness(np1, newType1);
+        
+        // 2. in this test EntityWithCollectionalProperty.prop1 is modified
+        // type argument EntityBeingEnhanced is replaced by a generated type based on it
         // enhance(EntityBeingEnhanced)
         final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
-                .addProperties(np1)
+                .addProperties(npMoney)
                 .endModification();
+        assertGeneratedPropertyCorrectness(npMoney, modEntityBeingEnhanced);
 
-        // enhance(EntityWithCollectionalPropety)
+        final NewProperty<?> np2 = NewProperty.fromField(EntityWithCollectionalPropety.class, "prop1")
+                .setTypeArguments(modEntityBeingEnhanced)
+                // for consistency, since this is a collectional property
+                .changeIsPropertyValue(modEntityBeingEnhanced);
+        // enhance(EntityWithCollectionalProperty)
         //      prop1: Collection<EntityBeingEnhanced> -> Collection<modEntityBeingEnhanced>
-        final NewProperty collectionalPropModification = NewProperty.fromField(EntityWithCollectionalPropety.class, "prop1")
-                .setTypeArguments(modEntityBeingEnhanced);
-        final Class<? extends EntityWithCollectionalPropety> modEntityWithCollectionalPropety =
+        final Class<? extends EntityWithCollectionalPropety> modEntityWithCollectionalProperty =
                 cl.startModification(EntityWithCollectionalPropety.class)
-                .modifyProperties(collectionalPropModification)
+                .modifyProperties(np2)
                 .endModification();
 
-        module.getDomainMetaPropertyConfig().setDefiner(modEntityWithCollectionalPropety, "prop1", new IAfterChangeEventHandler<Object>() {
-            @Override
-            public void handle(final MetaProperty<Object> property, final Object entityPropertyValue) {
-                observed = true;
-            }
-        });
-
-        final EntityWithCollectionalPropety entity = factory.newByKey(modEntityWithCollectionalPropety, "key");
-        assertNotNull("Should have been instantiated.", entity);
-        assertNotNull("Initial collectional property value should not be null.", entity.get("prop1"));
-
-        // test mutator set and getter
-        final ArrayList value = new ArrayList();
-        value.add(factory.newByKey(modEntityBeingEnhanced, "key1"));
-        entity.set("prop1", value);
-        Collection result = (Collection) entity.get("prop1");
-        assertNotNull("Collectional property should not be null after setting.", result);
-        assertEquals("Incorrect number of elements in the collectional property.", 1, result.size());
-        assertTrue("Observation should have been triggered.", observed);
+        assertGeneratedPropertyCorrectness(np2, modEntityWithCollectionalProperty);
     }
 
     @Test
@@ -405,7 +396,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     @Test
     public void type_modification_does_not_modify_existing_getters_for_untouched_properties() throws Exception {
         final Class<? extends EntityName> enhancedType = cl.startModification(EntityName.class)
-                .addProperties(np1)
+                .addProperties(npMoney)
                 .endModification();
 
         // no properties were modified so original getters should not be overriden
@@ -420,7 +411,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     public void modified_one2Many_special_case_property_is_generated_correctly() throws Exception {
         final Class<? extends DetailsEntityForOneToManyAssociation> modOneToManyDetailsEntity = 
                 cl.startModification(DetailsEntityForOneToManyAssociation.class)
-                .addProperties(np1)
+                .addProperties(npMoney)
                 .endModification();
 
         // enhance(MasterEntityWithOneToManyAssociation)
@@ -443,7 +434,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     public void modified_one2Many_collectional_property_is_generated_correctly_when_IsProperty_is_not_provided() throws Exception {
         final Class<? extends DetailsEntityForOneToManyAssociation> modOneToManyDetailsEntity =
                 cl.startModification(DetailsEntityForOneToManyAssociation.class)
-                .addProperties(np1)
+                .addProperties(npMoney)
                 .endModification();
 
         // enhance(MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPropValue)
