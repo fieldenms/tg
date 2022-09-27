@@ -34,6 +34,7 @@ import ua.com.fielden.platform.associations.one2many.MasterEntityWithOneToManyCo
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.Generated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -181,246 +182,113 @@ public class DynamicEntityTypePropertiesModificationTest {
     }
 
     @Test
-    public void test_modification_of_properties_to_modified_type() throws Exception {
-        // enhance(EntityBeingEnhanced)
-        final Class<?> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
+    public void modified_properties_are_annotated_with_Generated() throws Exception {
+        final List<NewProperty<?>> newProperties = List.of(
+                NewProperty.fromField(Entity.class, "firstProperty").changeType(String.class),
+                NewProperty.fromField(Entity.class, "entity").changeType(TopLevelEntity.class),
+                NewProperty.fromField(Entity.class, "observableProperty").setValueThrows(123d));
+        final Class<? extends AbstractEntity<?>> newType = cl.startModification(Entity.class)
+                .modifyProperties(newProperties)
+                .endModification();
+        
+        for (final NewProperty<?> np: newProperties) {
+            final Field field = newType.getDeclaredField(np.getName());
+            assertNotNull("Modified property %s was not found.".formatted(np.getName()), field);
+            assertTrue("Modified property %s is missing @Generated annotation.".formatted(np.getName()),
+                    field.isAnnotationPresent(Generated.class));
+        }
+
+        assertInstantiation(newType, factory);
+    }
+    
+    @Test
+    public void generated_types_can_be_used_as_original_types_for_modification() throws Exception {
+        final Class<? extends AbstractEntity<?>> newType1 = cl.startModification(Entity.class)
+                .modifyProperties(NewProperty.fromField(Entity.class, "firstProperty").changeType(String.class))
+                .endModification();
+
+        final List<NewProperty<?>> newProperties = List.of(NewProperty.fromField(newType1, "firstProperty").changeType(Double.class),
+                NewProperty.fromField(newType1, "number").setValueThrows(123));
+        final Class<? extends AbstractEntity<?>> newType2 = cl.startModification(newType1)
+                .modifyProperties(newProperties)
+                .endModification();
+        
+        assertNotNull("Could not obtain a generated type based on another generated type.", newType2);
+        assertEquals("Incorrect type hierarchy for the generated type.", newType1, newType2.getSuperclass());
+        
+        for (final var np: newProperties) {
+            final Field field = newType2.getDeclaredField(np.getName());
+            assertNotNull("Modified property %s was not found.".formatted(np.getName()), field);
+            assertPropertyEquals(np, field);
+        }
+
+        assertInstantiation(newType2, factory);
+    }
+
+    @Test
+    public void a_modified_property_hides_the_original_property_in_the_generated_type() throws Exception {
+        final Field origProp = Finder.findFieldByName(Entity.class, "firstProperty");
+        final NewProperty<String> np = NewProperty.fromField(origProp).changeType(String.class);
+        final Class<? extends AbstractEntity<?>> newType = cl.startModification(Entity.class)
+                .modifyProperties(np)
+                .endModification();
+        
+        assertNotNull("Modified property %s is not declared by the generated type.".formatted(np.getName()),
+                newType.getDeclaredField(np.getName()));
+
+        assertInstantiation(newType, factory);
+    }
+
+    @Test
+    public void a_property_can_be_modified_to_have_its_type_set_to_a_generated_type() throws Exception {
+        final Class<? extends AbstractEntity<?>> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
                 .addProperties(np1)
                 .endModification();
 
         // enhance(EntityBeingModified)
         //      prop1: EntityBeingEnhanced -> modEntityBeingEnhanced
-        final NewProperty np = NewProperty.fromField(EntityBeingModified.class, "prop1").changeType(modEntityBeingEnhanced);
-        final Class<?> modEntityBeingModified = cl.startModification(EntityBeingModified.class)
-                .modifyProperties(np)
+        //      prop2: EntityBeingEnhanced -> modEntityBeingEnhanced
+        final NewProperty<? extends AbstractEntity<?>> np1 = NewProperty.fromField(EntityBeingModified.class, "prop1")
+                .changeType(modEntityBeingEnhanced);
+        final NewProperty<? extends AbstractEntity<?>> np2 = NewProperty.fromField(EntityBeingModified.class, "prop2")
+                .changeType(modEntityBeingEnhanced);
+        final Class<? extends AbstractEntity<?>> modEntityBeingModified = cl.startModification(EntityBeingModified.class)
+                .modifyProperties(np1, np2)
                 .endModification();
 
-        // enhance(TopLevelEntity)
-        //      prop1: EntityBeingModified -> modEntityBeingModified
-        final NewProperty topLevelNp1 = NewProperty.fromField(TopLevelEntity.class, "prop1").changeType(modEntityBeingModified);
-        final Class<?> mod1TopLevelEntity = cl.startModification(TopLevelEntity.class)
-                .modifyProperties(topLevelNp1)
-                .endModification();
+        final Field field1 = Finder.getFieldByName(modEntityBeingModified, np1.getName());
+        assertNotNull("Modified property %s was not found.".formatted(np1.getName()), field1);
+        assertEquals("Incorrect type of modified property.", np1.genericType().toString(), field1.getGenericType().toString());
 
-        // enhance(mod1TopLevelEntity)
-        //      prop2: EntityBeingModified -> modEntityBeingModified
-        final NewProperty topLevelNp2 = NewProperty.fromField(mod1TopLevelEntity, "prop2").changeType(modEntityBeingModified);
-        final Class<?> mod2TopLevelEntity = cl.startModification(mod1TopLevelEntity)
-                .modifyProperties(topLevelNp2)
-                .endModification();
+        final Field field2 = Finder.getFieldByName(modEntityBeingModified, np2.getName());
+        assertNotNull("Modified property %s was not found.".formatted(np2.getName()), field2);
+        assertEquals("Incorrect type of modified property.", np2.genericType().toString(), field2.getGenericType().toString());
 
-        final Field prop1 = Finder.getFieldByName(mod2TopLevelEntity, "prop1");
-        assertNotNull("Property modified by an enhanced type should be accessible to a derived enhanced type.", prop1);
-        assertEquals("Incorrect property type after modification", modEntityBeingModified, prop1.getType());
-
-        final Field prop2 = mod2TopLevelEntity.getDeclaredField("prop2");
-        assertNotNull("Modified property should be declared by the enhanced type.", prop2);
-        assertEquals("Incorrect property type after modification", modEntityBeingModified, prop2.getType());
-
-        assertEquals("prop 1 and prop 2 should be of the same type", prop2.getType(), prop1.getType());
+        assertEquals("Modified properties %s and %s should be of the same type.".formatted(np1.getName(), np2.getName()),
+                field1.getGenericType(), field2.getGenericType());
+        
+        assertInstantiation(modEntityBeingModified, factory);
     }
 
     @Test
-    public void test_new_type_name_generation() throws Exception {
-        // enhance(EntityBeingEnhanced)
-        final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
-                .addProperties(np1)
-                .endModification();
-
-        // enhance(EntityBeingModified)
-        //      prop1: EntityBeingEnhanced -> modEntityBeingEnhanced
-        final NewProperty np = NewProperty.fromField(EntityBeingModified.class, "prop1").changeType(modEntityBeingEnhanced);
-        final Class<?> modEntityBeingModified = cl.startModification(EntityBeingModified.class)
+    public void setter_is_observed_for_a_modified_property() throws Exception {
+        final NewProperty<Money> np = NewProperty.fromField(Entity.class, "observableProperty").changeType(Money.class);
+        final Class<? extends AbstractEntity<?>> newType = cl.startModification(Entity.class)
                 .modifyProperties(np)
                 .endModification();
 
-        // enhance(TopLevelEntity)
-        //      prop1: EntityBeingModified -> modEntityBeingModified
-        final NewProperty topLevelNp1 = NewProperty.fromField(TopLevelEntity.class, "prop1").changeType(modEntityBeingModified);
-        final Class<?> mod1TopLevelEntity = cl.startModification(TopLevelEntity.class)
-                .modifyProperties(topLevelNp1)
-                .endModification();
-
-        // enhance(mod1TopLevelEntity)
-        //      prop2: EntityBeingModified -> modEntityBeingModified
-        final NewProperty topLevelNp2 = NewProperty.fromField(mod1TopLevelEntity, "prop2")
-                .changeType(modEntityBeingModified);
-        final Class<?> mod2TopLevelEntity = cl.startModification(mod1TopLevelEntity)
-                .modifyProperties(topLevelNp2)
-                .endModification();
-
-        assertTrue("Incorrect type name.", modEntityBeingEnhanced.getName().startsWith(
-                        EntityBeingEnhanced.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
-        assertTrue("Incorrect type name.", modEntityBeingModified.getName().startsWith(
-                        EntityBeingModified.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
-        assertTrue("Incorrect type name.", mod1TopLevelEntity.getName().startsWith(
-                        TopLevelEntity.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
-        assertTrue("Incorrect type name.", mod2TopLevelEntity.getName().startsWith(
-                        TopLevelEntity.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
-
-        // make sure that names are unique
-        final List<String> names = Stream.of(modEntityBeingEnhanced, modEntityBeingModified,
-                                             mod1TopLevelEntity, mod2TopLevelEntity)
-                                         .map(Class::getName).toList();
-        assertEquals("Generated types' names are not unique", names.size(), names.stream().distinct().count());
-    }
-
-    @Test
-    public void test_instantiation_of_enhanced_type() throws Exception {
-        final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
-                .addProperties(np1)
-                .endModification();
-
-        // enhance(EntityBeingModified)
-        //      prop1: EntityBeingEnhanced -> modEntityBeingEnhanced
-        final NewProperty np = NewProperty.fromField(EntityBeingModified.class, "prop1").changeType(modEntityBeingEnhanced);
-        final Class<? extends EntityBeingModified> entityBeingModifiedModifiedType = cl.startModification(EntityBeingModified.class)
-                .modifyProperties(np)
-                .endModification();
-
-        // create a new instance of the modified type
-        final EntityBeingModified modifiedEntity = entityBeingModifiedModifiedType.getConstructor().newInstance();
-        assertNotNull("Should not be null.", modifiedEntity);
-    }
-
-    @Test
-    public void test_correct_modification_of_entity_being_modified() throws Exception {
-        final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
-                .addProperties(np1)
-                .endModification();
-
-        // enhance(EntityBeingModified)
-        //      prop1: EntityBeingEnhanced -> modEntityBeingEnhanced
-        final NewProperty np = NewProperty.fromField(EntityBeingModified.class, "prop1").changeType(modEntityBeingEnhanced);
-        final Class<? extends EntityBeingModified> entityBeingModifiedModifiedType = cl.startModification(EntityBeingModified.class)
-                .modifyProperties(np)
-                .endModification();
-
-        // create a new instance of the modified type
-        final EntityBeingModified modifiedEntity = entityBeingModifiedModifiedType.getConstructor().newInstance();
-        assertNotNull("Should not be null.", modifiedEntity);
-
-        // let's ensure that property types are compatible 
-        // original prop2 and prop1 are of the same type - EntityBeingEnhanced
-        // *unenhanced* prop2 should be compatible with the *enhanced* prop1
-        final Field enhancedProp = Finder.findFieldByName(entityBeingModifiedModifiedType, "prop1");
-        final Field unenhancedProp = Finder.findFieldByName(entityBeingModifiedModifiedType, "prop2");
-        assertTrue("Incorrect enhanced property type.", enhancedProp.getType().getName().startsWith(
-                EntityBeingEnhanced.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
-        assertEquals("Incorrect unenhanced property type.", EntityBeingEnhanced.class.getName(), unenhancedProp.getType().getName());
-        assertTrue("Original type should be assignable FROM the enhanced type",
-                unenhancedProp.getType().isAssignableFrom(enhancedProp.getType()));
-        assertFalse("Enhanced type should be assignable TO the original type",
-                // in other words, enhanced type should NOT be assignable FROM the original type
-                enhancedProp.getType().isAssignableFrom(unenhancedProp.getType()));
-
-        // let's see what happens with the selfTypeProperty's type
-        // self-referencing properties should NOT be implicitly modified
-        final Field selfTypeProperty = Finder.getFieldByName(entityBeingModifiedModifiedType, "selfTypeProperty");
-        assertEquals("Self-referencing properties should NOT be implicitly modified.", 
-                EntityBeingModified.class, selfTypeProperty.getType());
-    }
-
-    @Test
-    public void test_correct_modification_of_top_level_entity() throws Exception {
-        // enhance(EntityBeingEnhanced)
-        final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
-                .addProperties(np1)
-                .endModification();
-
-        // enhance(EntityBeingModified)
-        //      prop1: EntityBeingEnhanced -> modEntityBeingEnhanced
-        final NewProperty np = NewProperty.fromField(EntityBeingModified.class, "prop1").changeType(modEntityBeingEnhanced);
-        final Class<? extends EntityBeingModified> entityBeingModifiedModifiedType = cl.startModification(EntityBeingModified.class)
-                .modifyProperties(np)
-                .endModification();
-
-        // enhance(TopLevelEntity)
-        //      prop1: EntityBeingModified -> modEntityBeingModified
-        //      prop2: EntityBeingModified -> modEntityBeingModified
-        // TopLevelEntity.prop1 and TopLevelEntity.prop2 should have their type replaced with entityBeingModifiedModifiedType
-        final NewProperty topLevelNp1 = NewProperty.fromField(TopLevelEntity.class, "prop1").changeType(entityBeingModifiedModifiedType);
-        final NewProperty topLevelNp2 = NewProperty.fromField(TopLevelEntity.class, "prop2").changeType(entityBeingModifiedModifiedType);
-        final Class<? extends TopLevelEntity> topLevelEntityModifiedType = cl.startModification(TopLevelEntity.class)
-                .modifyProperties(topLevelNp1, topLevelNp2)
-                .endModification();
-
-        // create a new instance of the modified TopLevelEntity type
-        final TopLevelEntity topLevelEntity = topLevelEntityModifiedType.getConstructor().newInstance();
-        assertNotNull("Should not be null.", topLevelEntity);
-
-        // let's ensure that property types are compatible 
-        // original prop2 and prop1 are of the same type - EntityBeingModified
-        final Field prop1 = topLevelEntityModifiedType.getDeclaredField("prop1");
-        final Field prop2 = topLevelEntityModifiedType.getDeclaredField("prop2");
-        assertEquals("Enhanced prop1 and prop2 should be of the same type.", prop2.getType(), prop1.getType());
-
-        // now take one of the modified properties from the enhanced TopLevelEntity and ensure that its type is indeed modified 
-        final Field enhancedProp = prop1.getType().getDeclaredField("prop1");
-        final Field unenhancedProp = Finder.getFieldByName(prop1.getType(), "prop2");
-        assertTrue("Incorrect property type.", enhancedProp.getType().getName().startsWith(
-                        EntityBeingEnhanced.class.getName() + DynamicTypeNamingService.APPENDIX + "_"));
-        assertEquals("Incorrect property type.", EntityBeingEnhanced.class, unenhancedProp.getType());
-        assertTrue("Original type should be assignable FROM the enhanced type.",
-                unenhancedProp.getType().isAssignableFrom(enhancedProp.getType()));
-        assertFalse("Enhanced type should be assignable TO the original type.",
-                // in other words, enhanced type should NOT be assignable FROM the original type
-                enhancedProp.getType().isAssignableFrom(unenhancedProp.getType()));
-    }
-
-    @Test
-    public void test_observation_of_setter_for_new_property_in_instance_of_generated_entity_type_used_for_property_in_higher_order_type()
-            throws Exception 
-    {
-        // enhance(EntityBeingEnhanced)
-        final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
-                .addProperties(np1)
-                .endModification();
-        module.getDomainMetaPropertyConfig().setDefiner(modEntityBeingEnhanced, NEW_PROPERTY, 
-                new IAfterChangeEventHandler<Object>() 
-        {
+        module.getDomainMetaPropertyConfig().setDefiner(newType, np.getName(), new IAfterChangeEventHandler<Object>() {
             @Override
             public void handle(final MetaProperty<Object> property, final Object entityPropertyValue) {
                 observed = true;
             }
         });
 
-        // enhance(EntityBeingModified)
-        //      prop1: EntityBeingEnhanced -> modEntityBeingEnhanced
-        final NewProperty np = NewProperty.fromField(EntityBeingModified.class, "prop1").changeType(modEntityBeingEnhanced);
-        final Class<? extends EntityBeingModified> modEntityBeingModified = cl.startModification(EntityBeingModified.class)
-                .modifyProperties(np)
-                .endModification();
-
-        // enhance(TopLevelEntity)
-        //      prop1: EntityBeingModified -> modEntityBeingModified
-        //      prop2: EntityBeingModified -> modEntityBeingModified
-        final NewProperty topLevelNp1 = NewProperty.fromField(TopLevelEntity.class, "prop1").changeType(modEntityBeingModified);
-        final NewProperty topLevelNp2 = NewProperty.fromField(TopLevelEntity.class, "prop2").changeType(modEntityBeingModified);
-        // get the modified TopLevelEntity type
-        final Class<? extends TopLevelEntity> modTopLevelEntity = cl.startModification(TopLevelEntity.class)
-                .modifyProperties(topLevelNp1, topLevelNp2)
-                .endModification();
-
-        // create new instances of the modified TopLevelEntity and EntityBeingModified types using entity factory
-        final TopLevelEntity topLevelEntity = factory.newByKey(modTopLevelEntity, "key");
-        assertNotNull("Should not be null.", topLevelEntity);
-
-        final EntityBeingModified entityBeingModified = factory.newByKey(modEntityBeingModified, "key");
-        assertNotNull("Should not be null.", entityBeingModified);
-
-        final EntityBeingEnhanced entityBeingEnhanced = factory.newByKey(modEntityBeingEnhanced, "key");
-        assertNotNull("Should not be null.", entityBeingEnhanced);
-
-        topLevelEntity.set("prop1", entityBeingModified);
-        entityBeingModified.set("prop1", entityBeingEnhanced);
-        final Money newPropertyValue = new Money("23.32");
-        entityBeingEnhanced.set(NEW_PROPERTY, newPropertyValue);
-
-        assertTrue("Setter for the new property should have been observed.", observed);
-        assertEquals("Incorrect property value", newPropertyValue, entityBeingEnhanced.get(NEW_PROPERTY));
-        assertEquals("Incorrect property value", newPropertyValue, entityBeingModified.get("prop1." + NEW_PROPERTY));
-        assertEquals("Incorrect property value", newPropertyValue, topLevelEntity.get("prop1.prop1." + NEW_PROPERTY));
-        assertEquals("Incorrect property value", entityBeingModified, topLevelEntity.get("prop1"));
+        final AbstractEntity<?> instance = assertInstantiation(newType, factory);
+        final Money value = new Money("23.32");
+        instance.set(np.getName(), value);
+        assertTrue("Setter for the modified property %s was not observed.".formatted(np.getName()), observed);
+        assertEquals("Incorrect value of the modified property %s.".formatted(np.getName()), value, instance.get(np.getName()));
     }
 
     @Test
