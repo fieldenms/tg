@@ -29,6 +29,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.TreeSet;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -163,7 +164,7 @@ public class DynamicEntityTypePropertiesModificationTest {
         final NewProperty<String> np3 = NewProperty.fromField(oldField3).changeType(String.class);
 
         final TypeMaker<? extends AbstractEntity<?>> builder = cl.startModification(origType);
-        List.of(np1, np2, np3).forEach(builder::addProperties);
+        List.of(np1, np2, np3).forEach(builder::modifyProperties);
         final Class<? extends AbstractEntity<?>> newType = builder.endModification();
 
         assertEquals("Incorrect number of property descriptors in the generated type.", 
@@ -175,7 +176,7 @@ public class DynamicEntityTypePropertiesModificationTest {
             final Field oldField = npAndOldField.getValue();
 
             final Field newField = assertFieldExists(newType, np.getName());
-            assertEquals("Incorrect type of modified property.", 
+            assertEquals("Incorrect type of modified property %s.".formatted(np.getName()), 
                     np.genericType().toString(), newField.getGenericType().toString());
 
             assertTrue("Not all property annotations were preserved.",
@@ -289,25 +290,6 @@ public class DynamicEntityTypePropertiesModificationTest {
             accessor.invoke(instance);
         } catch (final Exception e) {
             fail("Failed to invoke accessor for modified property %s.".formatted(np.getName()));
-            return;
-        }
-    }
-
-    @Test
-    public void setters_are_generated_correctly_for_added_collectional_properties() throws Exception {
-        final NewProperty<String> np = NewProperty.fromField(Entity.class, "observableProperty").changeType(String.class);
-        final Class<? extends Entity> newType = cl.startModification(Entity.class)
-                .modifyProperties(np)
-                .endModification();
-
-        final Method setter = assertGeneratedPropertySetterSignature(np, newType);
-
-        // instantiate the generated type and try to invoke the accessor
-        final Entity instance = assertInstantiation(newType, factory);
-        try {
-            setter.invoke(instance, "value");
-        } catch (final Exception e) {
-            fail("Failed to invoke setter for modified property %s.".formatted(np.getName()));
             return;
         }
     }
@@ -442,80 +424,50 @@ public class DynamicEntityTypePropertiesModificationTest {
 
         assertGeneratedPropertyCorrectness(np2, modEntityWithCollectionalProperty);
     }
-
+    
     @Test
-    public void test_inner_types_usage_in_generated_classes() throws Exception {
+    public void test_inner_types_usage_in_generated_types() throws Exception {
         // enhance(EntityBeingModifiedWithInnerTypes)
         //      integerProp: Integer -> BigInteger
-        final NewProperty np = NewProperty.fromField(EntityBeingModifiedWithInnerTypes.class, "integerProp").changeType(BigInteger.class);
-        final Class<? extends EntityBeingModifiedWithInnerTypes> modEntityBeingModifiedWithInnerTypes = 
+        final NewProperty<BigInteger> np = NewProperty.fromField(EntityBeingModifiedWithInnerTypes.class, "integerProp")
+                .changeType(BigInteger.class);
+        final Class<? extends EntityBeingModifiedWithInnerTypes> newType = 
                 cl.startModification(EntityBeingModifiedWithInnerTypes.class)
                 .modifyProperties(np)
                 .endModification();
         // EntityBeingModifiedWithInnerTypes class contains an inner type that also has a field named "integerProp"
         // this fact should not have any effect
 
-        // instance creation of the generated class with inner types does not fail
-        final var instance = modEntityBeingModifiedWithInnerTypes.getConstructor().newInstance();
-        assertNotNull("Should not be null.", instance);
+        // instantiation of the generated class with inner types
+        final var instance = assertInstantiation(newType, factory);
         try {
             instance.set("enumProp", InnerEnum.ONE);
         } catch (final Throwable e) {
             e.printStackTrace();
-            fail("The setter should not fail -- inner classes can not be loaded.");
+            fail("Could not set value for a property of inner type.");
+            return;
         }
-    }
-
-    @Test
-    public void test_generated_class_with_inner_types_factory_instantiation() throws Exception {
-        // enhance(EntityBeingModifiedWithInnerTypes)
-        //      integerProp: Integer -> BigInteger
-        final NewProperty np = NewProperty.fromField(EntityBeingModifiedWithInnerTypes.class, "integerProp").changeType(BigInteger.class);
-        final Class<? extends EntityBeingModifiedWithInnerTypes> modEntityBeingModifiedWithInnerTypes = 
-                cl.startModification(EntityBeingModifiedWithInnerTypes.class)
-                .modifyProperties(np)
-                .endModification();
-        try {
-            factory.newByKey(modEntityBeingModifiedWithInnerTypes, "key");
-        } catch (final Throwable e) {
-            e.printStackTrace();
-            fail("The instantiation with entity factory shouldn't fail -- inner classes can not be loaded.");
-        }
-    }
-
-    @Test
-    public void type_modification_does_not_modify_existing_getters_for_untouched_properties() throws Exception {
-        final Class<? extends EntityName> enhancedType = cl.startModification(EntityName.class)
-                .addProperties(npMoney)
-                .endModification();
-
-        // no properties were modified so original getters should not be overriden
-        final Field prop = Finder.getFieldByName(enhancedType, "prop");
-        assertEquals("Incorrect property type.", EntityNameProperty.class, prop.getType());
-
-        final Method getter = Reflector.obtainPropertyAccessor(enhancedType, "prop");
-        assertEquals("Incorrect getter return type.", EntityNameProperty.class, getter.getReturnType());
     }
 
     @Test
     public void modified_one2Many_special_case_property_is_generated_correctly() throws Exception {
+        // enhance(DetailsEntityForOneToManyAssociation)
         final Class<? extends DetailsEntityForOneToManyAssociation> modOneToManyDetailsEntity = 
                 cl.startModification(DetailsEntityForOneToManyAssociation.class)
                 .addProperties(npMoney)
                 .endModification();
 
         // enhance(MasterEntityWithOneToManyAssociation)
-        //      one2manyAssociationSpecialCase: DetailsEntityForOneToManyAssociation ---> modOneToManyDetailsEntity
-        final NewProperty npOne2ManySpecialCase = NewProperty.fromField(MasterEntityWithOneToManyAssociation.class,
-                "one2manyAssociationSpecialCase").changeType(modOneToManyDetailsEntity);
+        //   one2manyAssociationSpecialCase: DetailsEntityForOneToManyAssociation ---> modOneToManyDetailsEntity
+        final NewProperty<? extends DetailsEntityForOneToManyAssociation> npOne2ManySpecialCase =
+                NewProperty.fromField(MasterEntityWithOneToManyAssociation.class, "one2manyAssociationSpecialCase")
+                .changeType(modOneToManyDetailsEntity);
         final Class<? extends MasterEntityWithOneToManyAssociation> modOneToManyMasterEntity = 
                 cl.startModification(MasterEntityWithOneToManyAssociation.class)
                 .modifyProperties(npOne2ManySpecialCase)
                 .endModification();
 
-        assertEquals("key1", AnnotationReflector.getAnnotation(
-                Finder.findFieldByName(modOneToManyMasterEntity, "one2manyAssociationSpecialCase"), IsProperty.class
-                ).linkProperty());
+        assertGeneratedPropertyCorrectness(npOne2ManySpecialCase, modOneToManyMasterEntity);
     }
 
     // NOTE: test name says "when IsProperty is not provided", but target entity that is being enhanced in this class
@@ -528,138 +480,166 @@ public class DynamicEntityTypePropertiesModificationTest {
                 .endModification();
 
         // enhance(MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPropValue)
-        //      one2manyAssociationCollectional: List<DetailsEntityForOneToManyAssociation> ---> List<modOneToManyDetailsEntity> 
-        final NewProperty npOne2ManyCollectional = NewProperty.fromField(
-                MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPropValue.class, "one2manyAssociationCollectional"
-                ).setTypeArguments(modOneToManyDetailsEntity);
+        //   one2manyAssociationCollectional: List<DetailsEntityForOneToManyAssociation> ---> List<modOneToManyDetailsEntity> 
+        final NewProperty<?> npOne2ManyCollectional = NewProperty.fromField(
+                MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPropValue.class, "one2manyAssociationCollectional")
+                .setTypeArguments(modOneToManyDetailsEntity)
+                .changeIsPropertyValue(modOneToManyDetailsEntity);
         final Class<? extends MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPropValue> modOneToManyMasterEntity = 
                 cl.startModification(MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPropValue.class)
                 .modifyProperties(npOne2ManyCollectional)
                 .endModification();
 
-        assertEquals("key1", AnnotationReflector.getAnnotation(
-                    Finder.findFieldByName(modOneToManyMasterEntity, "one2manyAssociationCollectional"), 
-                    IsProperty.class)
-                .linkProperty());
-        assertEquals(modOneToManyDetailsEntity, AnnotationReflector.getAnnotation(
-                    Finder.findFieldByName(modOneToManyMasterEntity, "one2manyAssociationCollectional"),
-                    IsProperty.class)
-                .value());
+        assertGeneratedPropertyCorrectness(npOne2ManyCollectional, modOneToManyMasterEntity);
     }
     
     @Test
     public void initialization_value_of_a_property_can_be_modified() throws Exception {
-        // modify a simple property
-        final NewProperty np = NewProperty.fromField(EntityBeingEnhanced.class, "prop1").setValueThrows("Hello");
+        // 1. modify a simple property
+        final NewProperty<?> np = NewProperty.fromField(EntityBeingEnhanced.class, "prop1").setValueThrows("Hello");
         final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
                 .modifyProperties(np)
                 .endModification();
+
         // instantiate
-        final EntityBeingEnhanced instance = factory.newByKey(modEntityBeingEnhanced, "new");
+        final EntityBeingEnhanced instance = assertInstantiation(modEntityBeingEnhanced, factory);
         assertEquals("Incorrect property initialization value.", np.getValue(), instance.get(np.getName()));
 
-        // modify a collectional property
-        final NewProperty npColl = NewProperty.fromField(EntityWithCollectionalPropety.class, "prop1").setValueThrows(new ArrayList<>());
+        // 2. modify a collectional property
+        final NewProperty<?> npColl = NewProperty.fromField(EntityWithCollectionalPropety.class, "prop1").setValueThrows(new TreeSet<>());
         final Class<? extends EntityWithCollectionalPropety> modEntityWithCollectionalPropety =
                 cl.startModification(EntityWithCollectionalPropety.class)
                 .modifyProperties(npColl)
                 .endModification();
+
         // instantiate
-        final EntityWithCollectionalPropety instanceColl = factory.newByKey(modEntityWithCollectionalPropety, "new");
+        final EntityWithCollectionalPropety instanceColl = assertInstantiation(modEntityWithCollectionalPropety, factory);
         assertEquals("Incorrect property initialization value.", npColl.getValue(), instanceColl.get(npColl.getName()));
     }
 
     @Test
     public void deprecated_NewProperty_can_be_used_to_modify_property_type() throws Exception {
         // Here we are testing 2 things:
-        // 1. changing the type of an existing *simple* property
-        // 2. changing the raw type of an existing collectional property
+        // 1. changing the type of *simple* property
+        // 2. changing the raw type of a parameterized type property
         for (final var nameAndNewType: List.of(Pair.pair("firstProperty", BigDecimal.class),
                                                Pair.pair("entities", Set.class)))
         {
             final String name = nameAndNewType.getKey();
-            final Field origField = Finder.getFieldByName(Entity.class, name);
-            assertNotNull(origField); // make sure such a property exists
+            final Field origField = assertFieldExists(Entity.class, name);
 
             final Class<?> newPropType = nameAndNewType.getValue();
             // make sure that new property type is actually different
             assertNotEquals(newPropType, origField.getType());
 
-            // access original field type arguments, if any 
-            final List<Type> origFieldTypeArguments = extractTypeArguments(origField.getGenericType());
-
             final NewProperty np = NewProperty.changeType(name, newPropType);
-            final Class<? extends AbstractEntity<String>> enhancedType = cl.startModification(Entity.class)
+            final Class<? extends AbstractEntity<String>> newType = cl.startModification(Entity.class)
                     .modifyProperties(np)
                     .endModification();
 
-//            assertGeneratedPropertyCorrectness(enhancedType, name, newPropType, 
-//                    // we only changed the raw type, so the last argument is the type arguments of the original field, 
-//                    // which should have been preserved
-//                    origFieldTypeArguments);
+            // manually assert all assumptions, since np is a deprecated instance and does not contain enough information
+            // for DynamicEntityTypeTestUtils.assertGeneratedPropertyCorrectness to be used
+            final Field field = assertFieldExists(newType, name);
+            assertEquals("Incorrect raw type of modified property %s.".formatted(name),
+                    newPropType, field.getType());
+            // type arguments were not modified so they should remain the same
+            final List<Type> origTypeArguments = extractTypeArguments(origField.getGenericType());
+            assertEquals("Incorrect type arguments of modified property %s.".formatted(name),
+                    origTypeArguments, extractTypeArguments(field.getGenericType()));
+            
+            // acessor method
+            final Method accessor;
+            try {
+                accessor = Reflector.obtainPropertyAccessor(newType, name);
+            } catch (final Exception e) {
+                fail("Accessor method for modified property %s was not found.".formatted(name));
+                return;
+            }
+
+            assertEquals("Incorrect number of accessor parameters.", 0, accessor.getParameterCount());
+            assertEquals("Incorrect accessor return raw type.", newPropType, accessor.getReturnType());
+            assertEquals("Incorrect accessor return type arguments.", 
+                    origTypeArguments, extractTypeArguments(accessor.getGenericReturnType()));
+        
+            // setter method
+            final Method setter;
+            try {
+                setter = Reflector.obtainPropertySetter(newType, name);
+            } catch (final Exception e) {
+                fail("Setter method for modified property %s was not found.".formatted(name));
+                return;
+            }
+
+            assertEquals("Incorrect number of setter parameters.", 1, setter.getParameterCount());
+            assertEquals("Incorrect setter parameter raw type.", newPropType, setter.getParameterTypes()[0]);
+            assertEquals("Incorrect setter parameter type arguments.", 
+                    origTypeArguments, extractTypeArguments(setter.getGenericParameterTypes()[0]));
+            assertEquals("Incorrect setter return type.", newType, setter.getReturnType());
         }
     }
 
     @Test
     public void deprecated_NewProperty_can_be_used_to_modify_property_type_arguments() throws Exception {
-        // Here we are testing 3 things:
-        // 1. changing type argument of a collectional property
-        // 2. changing type argument of a PropertyDescriptor property
-        // 3. changing type argument of any other parameterized type (e.g. Optional)
+        final String name = "items";
+        final Field origField = assertFieldExists(EntityWithCollectionalPropety.class, name);
+        final Class<?> origFieldType = origField.getType();
+        final List<Type> newTypeArguments = List.of(String.class);
 
-        // first, test 1. and 2. which affect @IsProperty.value()
-        for (final var nameAndTypeArg: List.of(Pair.pair("entities", EntityBeingEnhanced.class),
-                                               Pair.pair("propertyDescriptor", EntityBeingEnhanced.class)))
-        {
-            final String name = nameAndTypeArg.getKey();
-            final Field origField = Finder.getFieldByName(Entity.class, name);
-            assertNotNull(origField); // make sure such a property exists
-
-            final Class<?> typeArg = nameAndTypeArg.getValue();
-
-            // access original field type arguments, if any 
-            final List<Type> origFieldTypeArguments = extractTypeArguments(origField.getGenericType());
-
-            final NewProperty np = NewProperty.changeTypeSignature(name, typeArg);
-            final Class<? extends AbstractEntity<String>> newType = cl.startModification(Entity.class)
-                    .modifyProperties(np)
-                    .endModification();
-
-//            final Field modifiedProperty = assertGeneratedPropertyCorrectness(newType, name, 
-//                    origField.getType(), // expect the same raw type
-//                    List.of(typeArg)     // expect new type argument
-//                    );
-//
-//            // make sure @IsProperty.value() was also modified
-//            final IsProperty atIsProperty = modifiedProperty.getAnnotation(IsProperty.class);
-//            assertNotNull("@IsProperty should be present.", atIsProperty);
-//            assertEquals("Incorrect value of @IsProperty.", typeArg, atIsProperty.value());
-        }
-
-        // now test 3.
-        final String name = "maybeText";
-        final Field origField = Finder.getFieldByName(Entity.class, name);
-        assertNotNull(origField); // make sure such a property exists
-
-        final Class<?> typeArg = Integer.class;
-
-        // access original field type arguments, if any 
-        final List<Type> origFieldTypeArguments = extractTypeArguments(origField.getGenericType());
-
-        final NewProperty np = NewProperty.changeTypeSignature(name, typeArg);
-        final Class<? extends AbstractEntity<String>> newType = cl.startModification(Entity.class)
+        final NewProperty np = NewProperty.changeTypeSignature(name, (Class<?>) newTypeArguments.get(0));
+        final Class<? extends EntityWithCollectionalPropety> newType = cl.startModification(EntityWithCollectionalPropety.class)
                 .modifyProperties(np)
                 .endModification();
 
-//        final Field modifiedProperty = assertGeneratedPropertyCorrectness(newType, name, 
-//                origField.getType(), // expect the same raw type
-//                List.of(typeArg)     // expect new type argument
-//                );
-//
-//        // make sure @IsProperty.value() was unchanged
-//        final Class<?> origIsPropertyValue = origField.getAnnotation(IsProperty.class).value();
-//        final IsProperty atIsProperty = modifiedProperty.getAnnotation(IsProperty.class);
-//        assertNotNull("@IsProperty should be present.", atIsProperty);
-//        assertEquals("Incorrect value of @IsProperty.", origIsPropertyValue, atIsProperty.value());
+        // manually assert all assumptions, since np is a deprecated instance and does not contain enough information
+        // for DynamicEntityTypeTestUtils.assertGeneratedPropertyCorrectness to be used
+        final Field newField = assertFieldExists(newType, name);
+        assertEquals("Incorrect raw type of modified property %s.".formatted(name),
+                origFieldType, newField.getType());
+        assertEquals("Incorrect type arguments of modified property %s.".formatted(name),
+                newTypeArguments, extractTypeArguments(newField.getGenericType()));
+
+        // acessor method
+        final Method accessor;
+        try {
+            accessor = Reflector.obtainPropertyAccessor(newType, name);
+        } catch (final Exception e) {
+            fail("Accessor method for modified property %s was not found.".formatted(name));
+            return;
+        }
+
+        assertEquals("Incorrect number of accessor parameters.", 0, accessor.getParameterCount());
+        assertEquals("Incorrect accessor return raw type.", origFieldType, accessor.getReturnType());
+        assertEquals("Incorrect accessor return type arguments.", 
+                newTypeArguments, extractTypeArguments(accessor.getGenericReturnType()));
+
+        // setter method
+        final Method setter;
+        try {
+            setter = Reflector.obtainPropertySetter(newType, name);
+        } catch (final Exception e) {
+            fail("Setter method for modified property %s was not found.".formatted(name));
+            return;
+        }
+
+        assertEquals("Incorrect number of setter parameters.", 1, setter.getParameterCount());
+        assertEquals("Incorrect setter parameter raw type.", origFieldType, setter.getParameterTypes()[0]);
+        assertEquals("Incorrect setter parameter type arguments.", 
+                newTypeArguments, extractTypeArguments(setter.getGenericParameterTypes()[0]));
+        assertEquals("Incorrect setter return type.", newType, setter.getReturnType());
+
+        // instantiate the generated type and try to set the value of modified property 
+        final EntityWithCollectionalPropety instance = assertInstantiation(newType, factory);
+        final List<String> list1 = List.of("hello");
+        setter.invoke(instance, list1);
+        assertEquals("The value of modified collectional property %s was set incorrectly.".formatted(name),
+                list1, getFieldValue(findFieldByName(newType, name), instance));
+
+        // now set the value once again to make sure the setter indeed is generated correctly
+        // the old collection contents should be cleared, then provided elements should be added
+        final List<String> list2 = List.of("world");
+        setter.invoke(instance, list2);
+        assertEquals("The value of added collectional property %s was set incorrectly.".formatted(name),
+                list2, getFieldValue(findFieldByName(newType, name), instance));
+
     }
 }

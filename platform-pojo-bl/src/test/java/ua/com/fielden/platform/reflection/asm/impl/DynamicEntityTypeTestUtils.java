@@ -106,6 +106,7 @@ public class DynamicEntityTypeTestUtils {
         assertEquals("Incorrect setter parameter raw type.", prototype.getRawType(), setter.getParameterTypes()[0]);
         assertEquals("Incorrect setter parameter type arguments.", 
                 prototype.getTypeArguments(), extractTypeArguments(setter.getGenericParameterTypes()[0]));
+        assertEquals("Incorrect setter return type", generatedType, setter.getReturnType());
 
         return setter;
     }
