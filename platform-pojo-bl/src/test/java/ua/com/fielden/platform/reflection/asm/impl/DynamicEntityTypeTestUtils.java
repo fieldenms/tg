@@ -66,20 +66,48 @@ public class DynamicEntityTypeTestUtils {
         final Field field = assertFieldExists(generatedType, name);
 
         assertPropertyEquals(prototype, field);
+        assertGeneratedPropertyAccessorSignature(prototype, generatedType);
+        assertGeneratedPropertySetterSignature(prototype, generatedType);
 
-        final Method accessor = Reflector.obtainPropertyAccessor(generatedType, name);
+        return field;
+    }
+    
+    public static Method assertGeneratedPropertyAccessorSignature(final NewProperty<?> prototype, final Class<?> generatedType) {
+        final String name = prototype.getName();
+
+        final Method accessor;
+        try {
+            accessor = Reflector.obtainPropertyAccessor(generatedType, name);
+        } catch (final Exception e) {
+            fail("Accessor method for modified collectional property %s was not found.".formatted(name));
+            return null;
+        }
+
         assertEquals("Incorrect number of accessor parameters.", 0, accessor.getParameterCount());
         assertEquals("Incorrect accessor return raw type.", prototype.getRawType(), accessor.getReturnType());
         assertEquals("Incorrect accessor return type arguments.", 
                 prototype.getTypeArguments(), extractTypeArguments(accessor.getGenericReturnType()));
+        
+        return accessor;
+    }
 
-        final Method setter = Reflector.obtainPropertySetter(generatedType, name);
+    public static Method assertGeneratedPropertySetterSignature(final NewProperty<?> prototype, final Class<?> generatedType) {
+        final String name = prototype.getName();
+
+        final Method setter;
+        try {
+            setter = Reflector.obtainPropertySetter(generatedType, name);
+        } catch (final Exception e) {
+            fail("Setter method for modified collectional property %s was not found.".formatted(name));
+            return null;
+        }
+
         assertEquals("Incorrect number of setter parameters.", 1, setter.getParameterCount());
         assertEquals("Incorrect setter parameter raw type.", prototype.getRawType(), setter.getParameterTypes()[0]);
         assertEquals("Incorrect setter parameter type arguments.", 
                 prototype.getTypeArguments(), extractTypeArguments(setter.getGenericParameterTypes()[0]));
 
-        return field;
+        return setter;
     }
 
 }

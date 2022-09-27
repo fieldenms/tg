@@ -7,9 +7,13 @@ import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
+import static ua.com.fielden.platform.reflection.Finder.getFieldValue;
 import static ua.com.fielden.platform.reflection.asm.api.test_utils.NewPropertyTestUtils.assertPropertyEquals;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertFieldExists;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertGeneratedPropertyCorrectness;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertGeneratedPropertySetterSignature;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertGeneratedPropertyAccessorSignature;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertInstantiation;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.extractTypeArguments;
 import static ua.com.fielden.platform.utils.Pair.pair;
@@ -200,7 +204,7 @@ public class DynamicEntityTypePropertiesModificationTest {
 
         assertInstantiation(newType, factory);
     }
-    
+
     @Test
     public void generated_types_can_be_used_as_original_types_for_modification() throws Exception {
         final Class<? extends AbstractEntity<?>> newType1 = cl.startModification(Entity.class)
@@ -270,6 +274,92 @@ public class DynamicEntityTypePropertiesModificationTest {
         assertInstantiation(modEntityBeingModified, factory);
     }
 
+    @Test
+    public void accessor_method_is_generated_correctly_for_a_modified_property() throws Exception {
+        final NewProperty<String> np = NewProperty.fromField(Entity.class, "observableProperty").changeType(String.class);
+        final Class<? extends Entity> newType = cl.startModification(Entity.class)
+                .modifyProperties(np)
+                .endModification();
+
+        final Method accessor = assertGeneratedPropertyAccessorSignature(np, newType);
+
+        // instantiate the generated type and try to invoke the accessor
+        final Entity instance = assertInstantiation(newType, factory);
+        try {
+            accessor.invoke(instance);
+        } catch (final Exception e) {
+            fail("Failed to invoke accessor for modified property %s.".formatted(np.getName()));
+            return;
+        }
+    }
+
+    @Test
+    public void setters_are_generated_correctly_for_added_collectional_properties() throws Exception {
+        final NewProperty<String> np = NewProperty.fromField(Entity.class, "observableProperty").changeType(String.class);
+        final Class<? extends Entity> newType = cl.startModification(Entity.class)
+                .modifyProperties(np)
+                .endModification();
+
+        final Method setter = assertGeneratedPropertySetterSignature(np, newType);
+
+        // instantiate the generated type and try to invoke the accessor
+        final Entity instance = assertInstantiation(newType, factory);
+        try {
+            setter.invoke(instance, "value");
+        } catch (final Exception e) {
+            fail("Failed to invoke setter for modified property %s.".formatted(np.getName()));
+            return;
+        }
+    }
+
+    @Test
+    public void setters_are_generated_correctly_for_modified_collectional_properties() throws Exception {
+        final NewProperty<?> np = NewProperty.fromField(EntityWithCollectionalPropety.class, "items").setTypeArguments(String.class);
+        final Class<? extends EntityWithCollectionalPropety> newType = cl.startModification(EntityWithCollectionalPropety.class)
+                .modifyProperties(np)
+                .endModification();
+        
+        final Method setter = assertGeneratedPropertySetterSignature(np, newType);
+
+        // instantiate the generated type and try to set the value of modified property 
+        final EntityWithCollectionalPropety instance = assertInstantiation(newType, factory);
+        final List<String> list1 = List.of("hello");
+        setter.invoke(instance, list1);
+        assertEquals("The value of modified collectional property %s was set incorrectly.".formatted(np.getName()),
+                list1, getFieldValue(findFieldByName(newType, np.getName()), instance));
+
+        // now set the value once again to make sure the setter indeed is generated correctly
+        // the old collection contents should be cleared, then provided elements should be added
+        final List<String> list2 = List.of("world");
+        setter.invoke(instance, list2);
+        assertEquals("The value of added collectional property %s was set incorrectly.".formatted(np.getName()),
+                list2, getFieldValue(findFieldByName(newType, np.getName()), instance));
+    }
+
+    @Test
+    public void accessor_returns_correct_value_after_setter_invokation_for_modified_properties() throws Exception {
+        final NewProperty<String> np = NewProperty.fromField(Entity.class, "observableProperty").changeType(String.class);
+        final Class<? extends Entity> newType = cl.startModification(Entity.class)
+                .modifyProperties(np)
+                .endModification();
+
+        final Method setter = assertGeneratedPropertySetterSignature(np, newType);
+
+        // instantiate the generated type and try to invoke the accessor
+        final Entity instance = assertInstantiation(newType, factory);
+        final String newValue = "value";
+        try {
+            setter.invoke(instance, newValue);
+        } catch (final Exception e) {
+            fail("Failed to invoke setter for modified property %s.".formatted(np.getName()));
+            return;
+        }
+        
+        final Method accessor = assertGeneratedPropertyAccessorSignature(np, newType);
+        assertEquals("Incorrect accessor return value for modified property %s.".formatted(np.getName()), 
+                newValue, accessor.invoke(instance));
+    }
+    
     @Test
     public void setter_is_observed_for_a_modified_property() throws Exception {
         final NewProperty<Money> np = NewProperty.fromField(Entity.class, "observableProperty").changeType(Money.class);
