@@ -22,4 +22,5 @@ public interface UserAndRoleAssociationCo extends IEntityDao<UserAndRoleAssociat
     void removeAssociation(Set<UserAndRoleAssociation> associations);
 
     static final IFetchProvider<UserAndRoleAssociation> FETCH_PROVIDER = EntityUtils.fetch(UserAndRoleAssociation.class).with("user", "userRole");
+
 }
