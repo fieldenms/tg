@@ -349,12 +349,16 @@ public class TypeMaker<T> {
 
     /**
      * Enhances currently modified type by modifying properties that exist in its original type.
-     * The same rules apply as for {@link #addProperties(List)}.
+     * <p>
+     * If {@code propertyReplacements} contains multiple properties with the same name, then only one of these will be considered.
+     * <p>
+     * Modifying a property with the same name in multiple sequential calls is illegal. That is, a property can be modified only once.
+     * Modifying a property that previously added with {@link #addProperties(List)} is also illegal for the same reasons.
      *
      * @param propertyReplacements
      * @return this instance to continue building
      */
-    public TypeMaker<T> modifyProperties(final List<NewProperty<?>> propertyReplacements) {
+    public TypeMaker<T> modifyProperties(final List<NewProperty<?>> propertyReplacements) throws IllegalArgumentException {
         if (builder == null) {
             throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
         }
@@ -363,7 +367,20 @@ public class TypeMaker<T> {
             return this;
         }
 
-        StreamUtils.distinct(propertyReplacements.stream(), prop -> prop.getName()) // distinguish properties by name
+        // distinguish properties by name
+        final List<NewProperty<?>> distinctPropertyReplacements = StreamUtils.distinct(propertyReplacements.stream(),
+                prop -> prop.getName()).toList();
+        
+        // modifying the same property multiple times is illegal
+        final NewProperty<?> illegalNp = distinctPropertyReplacements.stream()
+            .filter(prop -> addedPropertiesNames.contains(prop.getName()))
+            .findAny().orElse(null);
+        if (illegalNp != null) {
+            throw new IllegalArgumentException("Property %s was already added or modified for this type."
+                    .formatted(illegalNp.toString(true)));
+        }
+
+        distinctPropertyReplacements.stream()
             .map(prop -> prop.deprecated ? undeprecateProperty(prop) : prop)
             .forEach(this::addProperty);
 

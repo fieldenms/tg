@@ -31,6 +31,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -185,7 +186,19 @@ public class DynamicEntityTypePropertiesModificationTest {
 
         assertInstantiation(newType, factory);
     }
+    
+    @Test
+    public void modifying_a_property_with_the_same_name_more_than_once_leads_to_a_runtime_exception() throws Exception {
+        final Field oldField = EntityBeingEnhanced.class.getDeclaredField("prop1");
 
+        final NewProperty<Double> np = NewProperty.fromField(oldField).changeType(Double.class);
+        final TypeMaker<EntityBeingEnhanced> builder = cl.startModification(EntityBeingEnhanced.class)
+                .modifyProperties(np);
+        Assert.assertThrows(RuntimeException.class, () -> {
+            builder.modifyProperties(np);
+        });
+    }
+    
     @Test
     public void modified_properties_are_annotated_with_Generated() throws Exception {
         final List<NewProperty<?>> newProperties = List.of(
