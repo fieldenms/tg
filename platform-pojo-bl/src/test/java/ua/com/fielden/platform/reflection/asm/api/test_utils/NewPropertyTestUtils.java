@@ -37,7 +37,7 @@ public class NewPropertyTestUtils {
             final Annotation fieldAnnot = AnnotationReflector.getAnnotation(field, protoAnnot.annotationType());
             assertNotNull("Property %s.%s is missing an annotation: %s.".formatted(
                     field.getDeclaringClass(), field.getName(), fieldAnnot.annotationType().getName()), fieldAnnot); 
-            // NOTE: It's important to use the equals method of annot specifically, since it was obtained through reflective
+            // NOTE: It's important to use the equals method of fieldAnnot specifically, since it was obtained through reflective
             // mechanisms that involve sun.reflect.annotation.AnnotationInvocationHandler, which provides an implementation of equals.
             // Otherwise, protoAnnot is simply an anonymous type created by NewProperty that has no proper equals method.
             assertTrue("Property %s.%s has incorrect annotation contents.".formatted(
