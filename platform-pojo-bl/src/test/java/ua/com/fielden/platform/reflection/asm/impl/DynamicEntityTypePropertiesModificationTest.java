@@ -189,6 +189,24 @@ public class DynamicEntityTypePropertiesModificationTest {
     }
     
     @Test
+    public void inherited_properties_can_be_modified() throws Exception {
+        // 1. create a generated type
+        final NewProperty<Integer> np1 = NewProperty.fromField(Entity.class, "observableProperty").changeType(Integer.class);
+        final Class<? extends Entity> newType1 = cl.startModification(Entity.class)
+                .modifyProperties(np1)
+                .endModification();
+        
+        // 2. try to modify newType1 by modifying a property from its original type
+        final NewProperty<BigDecimal> np2 = NewProperty.fromField(Entity.class, "money").changeType(BigDecimal.class);
+        final Class<? extends Entity> newType2 = cl.startModification(newType1)
+                .modifyProperties(np2)
+                .endModification();
+        
+        assertFieldExists(newType2, np1.getName());
+        assertGeneratedPropertyCorrectness(np2, newType2);
+    }
+    
+    @Test
     public void modifying_a_property_with_the_same_name_more_than_once_leads_to_a_runtime_exception() throws Exception {
         final NewProperty<Double> np = NewProperty.fromField(EntityBeingEnhanced.class.getDeclaredField("prop1"))
                 .changeType(Double.class);
