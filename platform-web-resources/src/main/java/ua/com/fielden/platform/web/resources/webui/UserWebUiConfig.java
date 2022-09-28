@@ -70,42 +70,41 @@ public class UserWebUiConfig {
     public final EntityMaster<UserRolesUpdater> rolesUpdater;
     public final EntityCentre<ReUser> centre;
     public final EntityMaster<User> master;
-    public final EntityMaster<OpenUserMasterAction> compoundMaster;
-    public final EntityActionConfig editUserAction; // should be used on embedded centres instead of a standard EDIT action
-    //    public final EntityActionConfig newUserWithMasterAction; // should be used on embedded centres instead of a standrad NEW action
-    private final EntityActionConfig newUserAction;
 
     public static UserWebUiConfig register(final Injector injector, final IWebUiBuilder builder) {
-        return new UserWebUiConfig(injector, builder);
+        final UserWebUiConfig userWebUiConfig = new UserWebUiConfig(injector, builder, false);
+        UserAndRoleAssociationWebUiConfig.register(injector, builder);
+        return userWebUiConfig;
     }
 
-    private UserWebUiConfig(final Injector injector, final IWebUiBuilder builder) {
-        final PrefDim dims = mkDim(960, 640, Unit.PX);
-        editUserAction = Compound.openEdit(OpenUserMasterAction.class, USER_TITLE, "Edit " + USER_TITLE, dims);
-        //        newUserWithMasterAction = Compound.openNewWithMaster(OpenUserMasterAction.class, "add-circle-outline", "Application User", "Add Application User", dims);
-        newUserAction = Compound.openNew(OpenUserMasterAction.class, "add-circle-outline", USER_TITLE, "Add " + USER_TITLE, dims);
-        builder.registerOpenMasterAction(User.class, editUserAction);
+    public static UserWebUiConfig registerWithCompoundMaster(final Injector injector, final IWebUiBuilder builder) {
+        final UserWebUiConfig userWebUiConfig = new UserWebUiConfig(injector, builder, true);
+        UserAndRoleAssociationWebUiConfig.register(injector, builder);
+        return userWebUiConfig;
+    }
 
-        centre = createCentre(injector, builder, mkLocator(builder, injector, UserLocator.class, "user"));
+    private UserWebUiConfig(final Injector injector, final IWebUiBuilder builder, final boolean withCompoundMaster) {
+        centre = createCentre(injector, builder, mkLocator(builder, injector, UserLocator.class, "user"), withCompoundMaster);
         master = createMaster(injector);
         rolesUpdater = createRolesUpdater(injector);
         
-        compoundMaster = CompoundMasterBuilder.<User, OpenUserMasterAction>create(injector, builder)
-                .forEntity(OpenUserMasterAction.class)
-                .withProducer(OpenUserMasterActionProducer.class)
-                .addMenuItem(UserMaster_OpenMain_MenuItem.class)
-                    .icon("icons:picture-in-picture")
-                    .shortDesc(OpenUserMasterAction.MAIN)
-                    .longDesc("Application User" + " main")
-                    .withView(master)
-                .also()
-                .addMenuItem(UserMaster_OpenUserAndRoleAssociation_MenuItem.class)
-                    .icon("icons:view-module")
-                    .shortDesc(OpenUserMasterAction.ROLES)
-                    .longDesc("Application User" + " " + OpenUserMasterAction.ROLES)
-                    .withView(createUserAndRoleAssociationCentre(injector))
-                .done();
-
+        if (withCompoundMaster) {
+            CompoundMasterBuilder.<User, OpenUserMasterAction>create(injector, builder)
+                    .forEntity(OpenUserMasterAction.class)
+                    .withProducer(OpenUserMasterActionProducer.class)
+                    .addMenuItem(UserMaster_OpenMain_MenuItem.class)
+                        .icon("icons:picture-in-picture")
+                        .shortDesc(OpenUserMasterAction.MAIN)
+                        .longDesc("Application User" + " main")
+                        .withView(master)
+                    .also()
+                    .addMenuItem(UserMaster_OpenUserAndRoleAssociation_MenuItem.class)
+                        .icon("av:recent-actors")
+                        .shortDesc(OpenUserMasterAction.ROLES)
+                        .longDesc("Application User" + " " + OpenUserMasterAction.ROLES)
+                        .withView(createUserAndRoleAssociationCentre(injector))
+                    .done();
+        }
     }
 
     /**
@@ -113,9 +112,22 @@ public class UserWebUiConfig {
      *
      * @return
      */
-    private EntityCentre<ReUser> createCentre(final Injector injector, final IWebUiBuilder builder, final EntityActionConfig locator) {
-        final String layout = LayoutComposer.mkVarGridForCentre(2, 2, 2, 1);
+    private EntityCentre<ReUser> createCentre(final Injector injector, final IWebUiBuilder builder, final EntityActionConfig locator, final boolean withCompoundMaster) {
+        final EntityActionConfig editUserAction;
+        final EntityActionConfig newUserAction;
+        // different edit and new actions are needed depending on whether compound or simpler master is in use
+        if (withCompoundMaster) {
+            final PrefDim dims = mkDim(960, 640, Unit.PX);
+            editUserAction = Compound.openEdit(OpenUserMasterAction.class, USER_TITLE, "Edit " + USER_TITLE, dims);
+            newUserAction = Compound.openNew(OpenUserMasterAction.class, "add-circle-outline", USER_TITLE, "Add " + USER_TITLE, dims);
+            builder.registerOpenMasterAction(User.class, editUserAction);
+        } else {
+            newUserAction = UserActions.NEW_ACTION.mkAction();
+            editUserAction = UserActions.EDIT_ACTION.mkAction();
+            builder.registerOpenMasterAction(User.class, editUserAction);
+        }
 
+        final String layout = LayoutComposer.mkVarGridForCentre(2, 2, 2, 1);
         final EntityCentre<ReUser> userCentre = new EntityCentre<>(MiUser.class,
                 EntityCentreBuilder.centreFor(ReUser.class)
                 .addFrontAction(newUserAction).also()
