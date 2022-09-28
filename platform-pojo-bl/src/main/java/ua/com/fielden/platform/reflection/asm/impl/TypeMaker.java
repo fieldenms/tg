@@ -82,6 +82,7 @@ public class TypeMaker<T> {
     private DynamicType.Builder<T> builder;
     private boolean nameModified = false;
     private List<Field> origTypeDeclaredProperties; // lazy access
+    private List<Field> origTypeProperties; // lazy access
     private List<Pair<String, Object>> propertyInitializers = new ArrayList<>();
     private Set<String> addedPropertiesNames = new HashSet<>();
 
@@ -371,12 +372,22 @@ public class TypeMaker<T> {
         final List<NewProperty<?>> distinctPropertyReplacements = StreamUtils.distinct(propertyReplacements.stream(),
                 prop -> prop.getName()).toList();
         
+        // modifying a property that doesn't exist in the original type's hierarchy is illegal
+        final List<String> existingPropNames = getOrigTypeProperties().stream().map(Field::getName).toList();
+        final NewProperty<?> nonExistentNp = distinctPropertyReplacements.stream()
+                .filter(prop -> !existingPropNames.contains(prop.getName()))
+                .findAny().orElse(null);
+        if (nonExistentNp != null) {
+            throw new IllegalArgumentException("Unable to modify property \"%s\" that does not belong to the original type."
+                    .formatted(nonExistentNp.getName()));
+        }
+
         // modifying the same property multiple times is illegal
         final NewProperty<?> illegalNp = distinctPropertyReplacements.stream()
             .filter(prop -> addedPropertiesNames.contains(prop.getName()))
             .findAny().orElse(null);
         if (illegalNp != null) {
-            throw new IllegalArgumentException("Property %s was already added or modified for this type."
+            throw new IllegalArgumentException("Property \"%s\" was already added or modified for this type."
                     .formatted(illegalNp.toString(true)));
         }
 
@@ -486,6 +497,13 @@ public class TypeMaker<T> {
                     .toList(); 
         }
         return origTypeDeclaredProperties;
+    }
+    
+    private List<Field> getOrigTypeProperties() {
+        if (origTypeProperties == null) {
+            origTypeProperties = Finder.findProperties(origType); 
+        }
+        return origTypeProperties;
     }
 
 }

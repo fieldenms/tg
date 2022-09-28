@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
@@ -189,12 +190,23 @@ public class DynamicEntityTypePropertiesModificationTest {
     
     @Test
     public void modifying_a_property_with_the_same_name_more_than_once_leads_to_a_runtime_exception() throws Exception {
-        final Field oldField = EntityBeingEnhanced.class.getDeclaredField("prop1");
-
-        final NewProperty<Double> np = NewProperty.fromField(oldField).changeType(Double.class);
+        final NewProperty<Double> np = NewProperty.fromField(EntityBeingEnhanced.class.getDeclaredField("prop1"))
+                .changeType(Double.class);
         final TypeMaker<EntityBeingEnhanced> builder = cl.startModification(EntityBeingEnhanced.class)
                 .modifyProperties(np);
-        Assert.assertThrows(RuntimeException.class, () -> {
+
+        assertThrows(RuntimeException.class, () -> {
+            builder.modifyProperties(np);
+        });
+    }
+    
+    @Test
+    public void modification_of_a_non_existent_property_leads_to_a_runtime_exception() throws Exception {
+        final NewProperty<Double> np = NewProperty.fromField(EntityBeingEnhanced.class.getDeclaredField("prop1"))
+                .changeType(Double.class);
+        final TypeMaker<Entity> builder = cl.startModification(Entity.class);
+
+        assertThrows(RuntimeException.class, () -> {
             builder.modifyProperties(np);
         });
     }
