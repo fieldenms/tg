@@ -3,11 +3,13 @@ package ua.com.fielden.platform.reflection.asm.impl;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.getFieldValue;
 import static ua.com.fielden.platform.reflection.asm.api.test_utils.NewPropertyTestUtils.assertAnnotationsEquals;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertFieldExists;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -24,6 +26,7 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
 
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -232,6 +235,37 @@ public class DynamicEntityTypePropertiesAdditionTest {
         assertEquals("Incorrect number of properties.", 
                 Finder.getPropertyDescriptors(DEFAULT_ORIG_TYPE).size() + 1,
                 Finder.getPropertyDescriptors(newType2).size());
+    }
+    
+    // TODO Instead of merely having no effect, method addProperties() could throw a runtime exception.
+    // Would this change have any undesirable side-effects?
+    @Test
+    public void adding_a_property_with_the_same_name_as_one_declared_by_the_original_type_has_no_effect() throws Exception {
+        final NewProperty<Money> np = NewProperty.create("money", Money.class, "title", "desc");
+        final Class<? extends Entity> newType = cl.startModification(Entity.class)
+                .addProperties(np)
+                .endModification();
+        
+        assertThrows(NoSuchFieldException.class, () -> {
+            newType.getDeclaredField(np.getName());
+        });
+    }
+    
+    // TODO Make this kind of modification illegal. Instead of "adding" a property that already exists in the original type's hierarchy,
+    // consider modifying it, i.e., use modifyProperties() instead.
+    // Would this change have any undesirable side-effects?
+    @Test
+    public void adding_a_property_with_the_same_name_as_one_inherited_by_the_original_type_succeeds() throws Exception {
+        final Class<? extends Entity> newType1 = cl.startModification(Entity.class)
+                .addProperties(np1)
+                .endModification();
+
+        final NewProperty<Money> np = NewProperty.create("money", Money.class, "title", "desc");
+        final Class<? extends Entity> newType2 = cl.startModification(newType1)
+                .addProperties(np)
+                .endModification();
+        
+        assertFieldExists(newType2, np.getName());
     }
 
     // TODO is this property useful?
