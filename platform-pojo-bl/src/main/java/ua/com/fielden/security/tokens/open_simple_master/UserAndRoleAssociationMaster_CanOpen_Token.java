@@ -13,6 +13,6 @@ import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
  *
  */
 public class UserAndRoleAssociationMaster_CanOpen_Token implements ISecurityToken {
-    public final static String TITLE = format(Template.MASTER_OPEN.forTitle(), "User Role Association Master");
-    public final static String DESC = format(Template.MASTER_OPEN.forDesc(), "User Role Association");
+    public final static String TITLE = format(Template.MASTER_OPEN.forTitle(), UserAndRoleAssociation.ENTITY_TITLE + " Master");
+    public final static String DESC = format(Template.MASTER_OPEN.forDesc(), UserAndRoleAssociation.ENTITY_TITLE);
 }

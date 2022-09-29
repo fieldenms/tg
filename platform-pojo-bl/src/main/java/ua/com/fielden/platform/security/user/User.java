@@ -3,6 +3,7 @@ package ua.com.fielden.platform.security.user;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.property.validator.StringValidator.regexProp;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
 import java.util.Collections;
 import java.util.Set;
@@ -33,6 +34,7 @@ import ua.com.fielden.platform.security.user.definers.UserBasedOnUserDefiner;
 import ua.com.fielden.platform.security.user.definers.UserSsoOnlyDefiner;
 import ua.com.fielden.platform.security.user.validators.UserBaseOnUserValidator;
 import ua.com.fielden.platform.security.user.validators.UserBaseValidator;
+import ua.com.fielden.platform.utils.Pair;
 
 /**
  * Represents the system-wide concept of a user. So, this is a system user, which should be used by system security as well as for implementing any specific customer personnel
@@ -45,6 +47,9 @@ import ua.com.fielden.platform.security.user.validators.UserBaseValidator;
 @MapEntityTo
 @CompanionObject(IUser.class)
 public class User extends ActivatableAbstractEntity<String> {
+    private static final Pair<String, String> entityTitleAndDesc = getEntityTitleAndDesc(User.class);
+    public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
+    public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
 
     public static final String ROLES = "roles";
     public static final String BASED_ON_USER = "basedOnUser";
