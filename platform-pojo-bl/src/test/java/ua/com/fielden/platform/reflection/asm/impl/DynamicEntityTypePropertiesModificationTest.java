@@ -1,8 +1,8 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
 import static java.util.Arrays.asList;
+import static org.apache.commons.lang3.StringUtils.capitalize;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
@@ -12,27 +12,24 @@ import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.getFieldValue;
 import static ua.com.fielden.platform.reflection.asm.api.test_utils.NewPropertyTestUtils.assertPropertyEquals;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertFieldExists;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertGeneratedPropertyAccessorSignature;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertGeneratedPropertyCorrectness;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertGeneratedPropertySetterSignature;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertGeneratedPropertyAccessorSignature;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertInstantiation;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.extractTypeArguments;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -45,23 +42,18 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.Generated;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.IAfterChangeEventHandler;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
-import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.entities.EntityBeingEnhanced;
 import ua.com.fielden.platform.reflection.asm.impl.entities.EntityBeingModified;
 import ua.com.fielden.platform.reflection.asm.impl.entities.EntityBeingModifiedWithInnerTypes;
 import ua.com.fielden.platform.reflection.asm.impl.entities.EntityBeingModifiedWithInnerTypes.InnerEnum;
-import ua.com.fielden.platform.reflection.asm.impl.entities.EntityName;
-import ua.com.fielden.platform.reflection.asm.impl.entities.EntityNameProperty;
 import ua.com.fielden.platform.reflection.asm.impl.entities.EntityWithCollectionalPropety;
 import ua.com.fielden.platform.reflection.asm.impl.entities.TopLevelEntity;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
@@ -316,6 +308,37 @@ public class DynamicEntityTypePropertiesModificationTest {
                 field1.getGenericType(), field2.getGenericType());
         
         assertInstantiation(modEntityBeingModified, factory);
+    }
+    
+    /**
+     * Modifying a property should result in the generated type declaring:
+     * <ul>
+	 *   <li>A single field with the name of the modified property</li>
+	 *   <li>A single accessor method for that property with a respective name</li>
+	 *   <li>A single setter method for that property</li>
+	 * </ul>
+	 * The purpose of this test is to ensure that no class members with the same name are generated as a result of property modification.
+     */
+    @Test
+    public void for_each_modified_property_generated_type_declares_a_field_and_acessor_and_setter() throws Exception {
+        final NewProperty<String> np = NewProperty.fromField(Entity.class, "observableProperty").changeType(String.class);
+        final Class<? extends Entity> newType = cl.startModification(Entity.class)
+                .modifyProperties(np)
+                .endModification();
+        
+        // declared fields
+        assertEquals("Incorrect number of declared fields by a generated type for a modified property.",
+                1, Arrays.stream(newType.getDeclaredFields()).filter(field -> field.getName().equals(np.getName())).count());
+        // declared accessor method
+        assertEquals("Incorrect number of declared accessor methods by a generated type for a modified property.",
+                1, Arrays.stream(newType.getDeclaredMethods())
+                        .filter(method -> method.getName().equals("get" + capitalize(np.getName())))
+                        .count());
+        // declared setter method
+        assertEquals("Incorrect number of declared setter methods by a generated type for a modified property.",
+                1, Arrays.stream(newType.getDeclaredMethods())
+                        .filter(method -> method.getName().equals("set" + capitalize(np.getName())))
+                        .count());
     }
 
     @Test

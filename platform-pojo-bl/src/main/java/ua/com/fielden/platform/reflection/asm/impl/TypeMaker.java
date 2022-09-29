@@ -35,7 +35,6 @@ import net.bytebuddy.implementation.bind.annotation.Argument;
 import net.bytebuddy.implementation.bind.annotation.This;
 import net.bytebuddy.matcher.ElementMatchers;
 import net.bytebuddy.pool.TypePool;
-import ua.com.fielden.platform.entity.Accessor;
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.Generated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -80,7 +79,7 @@ public class TypeMaker<T> {
     private final DynamicEntityClassLoader cl;
     private final Class<T> origType;
     private DynamicType.Builder<T> builder;
-    private boolean nameModified = false;
+    private String modifiedName;
     private List<Field> origTypeDeclaredProperties; // lazy access
     private List<Field> origTypeProperties; // lazy access
     private List<Pair<String, Object>> propertyInitializers = new ArrayList<>();
@@ -204,9 +203,11 @@ public class TypeMaker<T> {
     }
 
     private void addAccessor(final String propName, final Type propType) {
-        final String prefix = propType.equals(Boolean.class) ? Accessor.IS.startsWith : Accessor.GET.startsWith;
-        builder = builder.defineMethod(prefix + StringUtils.capitalize(propName), propType, Visibility.PUBLIC)
-                .intercept(FieldAccessor.ofField(propName));
+        // generated type name needs to be known to use low-level ASM
+        if (modifiedName == null) {
+            modifyTypeName();
+        }
+        builder = builder.visit(AddPropertyAccessorAdapter.wrapper(propName, propType, modifiedName.replace('.', '/')));
     }
 
     private void addSetter(final String propName, final Type propType, final boolean collectional) {
@@ -306,15 +307,24 @@ public class TypeMaker<T> {
      * @return
      */
     public TypeMaker<T> modifyTypeName(final String newTypeName) {
+        if (modifiedName != null) {
+            throw new IllegalStateException("Type name can't be modified past this point.");
+        }
         if (StringUtils.isEmpty(newTypeName)) {
             throw new IllegalStateException("New type name is 'null' or empty.");
         }
         if (builder == null) {
             throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
         }
-        nameModified = true;
+        modifiedName = newTypeName;
         builder = builder.name(newTypeName);
         return this;
+    }
+    
+    private String modifyTypeName() {
+        final String newName = DynamicTypeNamingService.nextTypeName(origType.getName());
+        modifyTypeName(newName);
+        return newName;
     }
 
     /**
@@ -445,8 +455,8 @@ public class TypeMaker<T> {
             recordOrigType(origType);
         }
 
-        if (!nameModified) {
-            modifyTypeName(DynamicTypeNamingService.nextTypeName(origType.getName()));
+        if (modifiedName == null) {
+            modifyTypeName();
         }
 
         if (!propertyInitializers.isEmpty()) {

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
+import static org.apache.commons.lang3.StringUtils.capitalize;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -204,17 +205,19 @@ public class DynamicEntityTypePropertiesAdditionTest {
     }
 
     @Test
-    public void generated_types_can_be_renamed_after_adding_new_properties() throws Exception {
+    public void generated_types_can_NOT_be_renamed_after_adding_new_properties() throws Exception {
         final String newTypeName = DEFAULT_ORIG_TYPE.getName() + "_enhanced";
-        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
-                .addProperties(np1)
-                .modifyTypeName(newTypeName)
-                .endModification();
-
-        assertEquals("Incorrect type name.", newTypeName, newType.getName());
-        assertEquals("Incorrect number of properties.", 
-                Finder.getPropertyDescriptors(DEFAULT_ORIG_TYPE).size() + 1,
-                Finder.getPropertyDescriptors(newType).size());
+        assertThrows(IllegalStateException.class, () -> {
+            final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+                    .addProperties(np1)
+                    .modifyTypeName(newTypeName)
+                    .endModification();
+        });
+//
+//        assertEquals("Incorrect type name.", newTypeName, newType.getName());
+//        assertEquals("Incorrect number of properties.", 
+//                Finder.getPropertyDescriptors(DEFAULT_ORIG_TYPE).size() + 1,
+//                Finder.getPropertyDescriptors(newType).size());
     }
 
     @Test
@@ -235,6 +238,36 @@ public class DynamicEntityTypePropertiesAdditionTest {
         assertEquals("Incorrect number of properties.", 
                 Finder.getPropertyDescriptors(DEFAULT_ORIG_TYPE).size() + 1,
                 Finder.getPropertyDescriptors(newType2).size());
+    }
+
+    /**
+     * Adding a property should result in the generated type declaring:
+     * <ul>
+	 *   <li>A single field with the name of the added property</li>
+	 *   <li>A single accessor method for that property with a respective name</li>
+	 *   <li>A single setter method for that property</li>
+	 * </ul>
+	 * The purpose of this test is to ensure that no class members with the same name are generated as a result of adding properties.
+     */
+    @Test
+    public void for_each_modified_property_generated_type_contains_a_field_and_acessor_and_setter_methods() throws Exception {
+        final Class<? extends Entity> newType = cl.startModification(Entity.class)
+                .addProperties(np1)
+                .endModification();
+        
+        // declared fields
+        assertEquals("Incorrect number of declared fields by a generated type for a modified property.",
+                1, Arrays.stream(newType.getDeclaredFields()).filter(field -> field.getName().equals(np1.getName())).count());
+        // declared accessor method
+        assertEquals("Incorrect number of declared accessor methods by a generated type for a modified property.",
+                1, Arrays.stream(newType.getDeclaredMethods())
+                        .filter(method -> method.getName().equals("get" + capitalize(np1.getName())))
+                        .count());
+        // declared setter method
+        assertEquals("Incorrect number of declared setter methods by a generated type for a modified property.",
+                1, Arrays.stream(newType.getDeclaredMethods())
+                        .filter(method -> method.getName().equals("set" + capitalize(np1.getName())))
+                        .count());
     }
     
     // TODO Instead of merely having no effect, method addProperties() could throw a runtime exception.
