@@ -18,7 +18,6 @@ import ua.com.fielden.platform.entity.proxy.TgOwnerEntity;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.reflection.asm.impl.entities.EntityBeingEnhanced;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
@@ -45,7 +44,8 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
     
     public PropertyTypeDeterminatorCheckingEnhancementsTest() throws ClassNotFoundException {
         entityType = TgOwnerEntity.class;
-        entityTypeGenerated = (Class<AbstractEntity<?>>) cl.startModification(entityType).modifyTypeName(DynamicTypeNamingService.nextTypeName(entityType.getName())).endModification();
+        final Class<? extends AbstractEntity<?>> tmp = cl.startModification(entityType).endModification();
+        entityTypeGenerated = (Class<AbstractEntity<?>>) tmp;
     }
 
     //////////////////////////////////// isInstrumented ////////////////////////////////////
