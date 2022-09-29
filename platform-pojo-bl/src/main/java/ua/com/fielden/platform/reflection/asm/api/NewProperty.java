@@ -27,7 +27,7 @@ import ua.com.fielden.platform.reflection.asm.exceptions.NewPropertyException;
  * 
  * @param <T> The raw type of this property. This type parameter provides a compile-time safe way to initialize property's value using
  * {@link #setValue(Object)}. If the type is unknown and <code>NewProperty&lt?&gt</code> is being used, then 
- * {@link #setValueThrows(Object)} can be used to initialize its value. 
+ * {@link #setValueOrThrow(Object)} can be used to initialize its value. 
  * 
  * @author TG Team
  */
@@ -52,7 +52,7 @@ public final class NewProperty<T> {
     
     /**
      * Constructs a property from the given <code>field</code>. To also initialize its value use {@link #fromField(Field, Object)} instead. 
-     * To initialize the value explicitly use {@link #setValueThrows(Object)}.
+     * To initialize the value explicitly use {@link #setValueOrThrow(Object)}.
      * @param field
      * @return
      */
@@ -82,13 +82,13 @@ public final class NewProperty<T> {
         final NewProperty<?> np = fromField(field);
         final Object fieldValue = Finder.getFieldValue(field, object);
 
-        return np.setValueThrows(fieldValue);
+        return np.setValueOrThrow(fieldValue);
     }
 
     /**
      * Constructs a property from a field with <code>name</code> found in <code>type</code>'s hierarchy.
      * To also initialize its value use {@link #fromField(Field, Object)} instead.
-     * To initialize the value explicitly use {@link #setValueThrows(Object)}.
+     * To initialize the value explicitly use {@link #setValueOrThrow(Object)}.
      * @param type
      * @param name
      * @return
@@ -510,7 +510,7 @@ public final class NewProperty<T> {
      * @throws NewPropertyException
      */
     @SuppressWarnings("unchecked")
-    public NewProperty<T> setValueThrows(final Object value) throws NewPropertyException {
+    public NewProperty<T> setValueOrThrow(final Object value) throws NewPropertyException {
         if (!type.isInstance(value)) {
             throw new NewPropertyException(String.format(
                     "Couldn't initialize property value: uncompatible types. Property raw type: %s. Value type given: %s.",

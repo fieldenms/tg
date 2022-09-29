@@ -13,7 +13,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.google.inject.Injector;
@@ -136,25 +135,6 @@ public class DynamicEntityTypeGenerationTest {
         
         assertTrue("Incorrect generated type name prefix.", newType.getName().startsWith(
                 DEFAULT_ORIG_TYPE.getName() + DynamicTypeNamingService.APPENDIX + "_"));
-    }
-
-    // Specifying supertype name using current API doesn't make sense.
-    // All generated types are subclasses of their original types.
-    // Modifying supertype name would lead to a malformed class structure.
-    // TODO Either remove this API or extend the current one to support this ability.
-    @Ignore
-    @Test
-    public void supertype_can_be_specified_for_a_generated_type() throws Exception {
-        final String newTypeName = DEFAULT_ORIG_TYPE.getName() + "_enhanced2";
-        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
-                .modifyTypeName(newTypeName)
-                .modifySupertypeName(TopLevelEntity.class.getName())
-                .endModification();
-
-        assertEquals("Incorrect type hierarchy.", TopLevelEntity.class, newType.getSuperclass());
-        assertEquals("Incorrect getter return type.", 
-                TopLevelEntity.class.getDeclaredField("prop1").getGenericType(),
-                Reflector.obtainPropertyAccessor(newType, "prop1").getReturnType());
     }
 
     @Test

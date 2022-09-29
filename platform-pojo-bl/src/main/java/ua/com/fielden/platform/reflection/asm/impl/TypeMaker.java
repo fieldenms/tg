@@ -54,11 +54,9 @@ import ua.com.fielden.platform.utils.StreamUtils;
  * <p>
  * <i>Notes on specific parts of the API</i>:
  * <p>
- * If {@link #modifyTypeName(String)} is not called, then {@link #endModification()} will most likely fail due to a name conflict 
- * with the original type.
- * <p>
- * {@link #modifyTypeName(String)} should be called, if needed, <b>only after all other modifications</b>, in order to guarantee
- * correct renaming of all occurences of the previous type name.
+ * If {@link #modifyTypeName(String)} is used, then it must preceed calls to {@link #addProperties(NewProperty...)} and 
+ * {@link #modifyProperties(NewProperty...)}. Otherwise an exception is thrown. In case the generated type name is not explicitly modified
+ * a unique name is chosen, prefixed by the original type's name.
  * 
  * @param <T> The original type, on which the modified type is based on.
  * 
@@ -73,9 +71,10 @@ public class TypeMaker<T> {
             return Generated.class;
         }
     };
-    private static final String NEW_SUPERTYPE_NAME_IS_NULL_OR_EMPTY = "New supertype name is 'null' or empty.";
+
     private static final String CURRENT_BUILDER_IS_NOT_SPECIFIED = "Current builder is not specified.";
     public static final String GET_ORIG_TYPE_METHOD_NAME = "_GET_ORIG_TYPE_METHOD_";
+
     private final DynamicEntityClassLoader cl;
     private final Class<T> origType;
     private DynamicType.Builder<T> builder;
@@ -325,37 +324,6 @@ public class TypeMaker<T> {
         final String newName = DynamicTypeNamingService.nextTypeName(origType.getName());
         modifyTypeName(newName);
         return newName;
-    }
-
-    /**
-     * Modifies the supertype's name with the specified <code>newSupertypeName</code>. 
-     * <p>
-     * 
-     * @param newSupertypeName - must be fully-qualified in a binary format 
-     * (e.g. <code>foo.Bar</code> )
-     * @return
-     */
-    public TypeMaker<T> modifySupertypeName(final String newSupertypeName) {
-        if (StringUtils.isEmpty(newSupertypeName)) {
-            throw new IllegalStateException(NEW_SUPERTYPE_NAME_IS_NULL_OR_EMPTY);
-        }
-        if (builder == null) {
-            throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
-        }
-        // DynamicType.Builder does not provide supertype modification capabilities
-        // so we have to use an ASM wrapper
-        builder = builder.visit(AdvancedChangeSupertypeAdapter.asAsmVisitorWrapper(newSupertypeName));
-        return this;
-    }
-
-    /**
-     * Sets the supertype's name to the name of the original type.
-     * A shortcut for {@link #modifySupertypeName(String)} where the argument is the original type's name.
-     * @return
-     */
-    public TypeMaker<T> extendOriginalType() {
-        modifySupertypeName(origType.getName());
-        return this;
     }
 
     /**

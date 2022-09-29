@@ -243,7 +243,7 @@ public class NewPropertyTest {
         assertFalse(field.getType().isInstance(value));
 
         Assert.assertThrows(NewPropertyException.class, () -> {
-            NewProperty.fromField(field).setValueThrows(value);
+            NewProperty.fromField(field).setValueOrThrow(value);
         });
     }
 }
