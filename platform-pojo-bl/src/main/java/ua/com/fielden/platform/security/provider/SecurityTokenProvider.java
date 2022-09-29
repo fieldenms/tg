@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.security.provider;
 
+import static java.util.Collections.emptySet;
 import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.isSuperTokenOf;
 import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.isTopLevel;
 
@@ -26,6 +27,7 @@ import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanRead_Tok
 import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanSave_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.AttachmentMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.DashboardRefreshFrequencyMaster_CanOpen_Token;
+import ua.com.fielden.platform.security.tokens.open_simple_master.UserMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.open_simple_master.UserRoleMaster_CanOpen_Token;
 import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequencyUnit_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequencyUnit_CanRead_Token;
@@ -51,10 +53,6 @@ import ua.com.fielden.platform.security.tokens.user.User_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.user.User_CanSave_Token;
 import ua.com.fielden.platform.security.tokens.web_api.GraphiQL_CanExecute_Token;
 import ua.com.fielden.platform.utils.CollectionUtil;
-import ua.com.fielden.security.tokens.compound_master_menu.UserMaster_OpenMain_MenuItem_CanAccess_Token;
-import ua.com.fielden.security.tokens.compound_master_menu.UserMaster_OpenUserAndRoleAssociation_MenuItem_CanAccess_Token;
-import ua.com.fielden.security.tokens.open_compound_master.OpenUserMasterAction_CanOpen_Token;
-import ua.com.fielden.security.tokens.open_simple_master.UserAndRoleAssociationMaster_CanOpen_Token;
 
 /**
  * Searches for all available security tokens in the application based on the provided path and package name.
@@ -81,28 +79,39 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
     private final SortedSet<SecurityTokenNode> topLevelSecurityTokenNodes;
 
     /**
-     * Creates security provider by automatically determining all security tokens available on the path within the specified package. May throw an exception as a result of failure
-     * to loaded token classes.
-     * 
-     * @param path
-     *            -- a path to classes or a jar (requires jar file name too) where security tokens are located.
-     * @param packageName
-     *            -- a package name containing security tokens (sub-packages are traversed automatically).
-     * @throws Exception
+     * The "default" constructor that can be used by IoC.
      */
     @Inject
     public SecurityTokenProvider(
             final @Named("tokens.path") String path,
             final @Named("tokens.package") String packageName
     ) {
+        this(path, packageName, emptySet(), emptySet());
+    }
+
+    /**
+     * Creates security provider by automatically determining all security tokens available on the path within the specified package.
+     * May throw an exception as a result of failure to loaded token classes.
+     * <p>
+     * Please note that excluding tokens by specifying them in {@link redundantTokens} would still get introduced if they are specified in an application specific {@link ISecurityTokenNodeTransformation}.
+     *
+     * @param path -- a path to classes or a jar (requires jar file name too) where security tokens are located.
+     * @param packageName -- a package name containing security tokens (sub-packages are traversed automatically).
+     * @param extraTokens -- additional tokens that belong neither to the standard platform ones not to the application specific ones, loaded dynamically "tokens.path". 
+     * @param redundantTokens -- tokens to be removed for consideration; in most cases this would only be relevant for some of the platform-level tokens that are not applicable for some applications.
+     */
+    public SecurityTokenProvider(
+            final String path,
+            final String packageName,
+            final Set<Class<? extends ISecurityToken>> extraTokens,
+            final Set<Class<? extends ISecurityToken>> redundantTokens
+    ) {
         final Set<Class<? extends ISecurityToken>> platformLevelTokens = CollectionUtil.setOf(
                 User_CanSave_Token.class,
                 User_CanRead_Token.class,
                 User_CanReadModel_Token.class,
                 User_CanDelete_Token.class,
-                OpenUserMasterAction_CanOpen_Token.class,
-                UserMaster_OpenMain_MenuItem_CanAccess_Token.class,
-                UserMaster_OpenUserAndRoleAssociation_MenuItem_CanAccess_Token.class,
+                UserMaster_CanOpen_Token.class,
                 UserRole_CanSave_Token.class,
                 UserRole_CanRead_Token.class,
                 UserRole_CanReadModel_Token.class,
@@ -110,7 +119,6 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
                 UserRoleMaster_CanOpen_Token.class,
                 UserAndRoleAssociation_CanRead_Token.class,
                 UserAndRoleAssociation_CanReadModel_Token.class,
-                UserAndRoleAssociationMaster_CanOpen_Token.class,
                 UserRolesUpdater_CanExecute_Token.class,
                 UserRoleTokensUpdater_CanExecute_Token.class,
                 Attachment_CanSave_Token.class,
@@ -133,6 +141,8 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
                 GraphiQL_CanExecute_Token.class);
         final Set<Class<? extends ISecurityToken>> allTokens = new HashSet<>(ClassesRetriever.getAllClassesInPackageDerivedFrom(path, packageName, ISecurityToken.class));
         allTokens.addAll(platformLevelTokens);
+        allTokens.addAll(extraTokens);
+        allTokens.removeAll(redundantTokens);
 
         allTokens.forEach(type -> { tokenClassesByName.put(type.getName(), type); tokenClassesBySimpleName.put(type.getSimpleName(), type); });
         if (tokenClassesByName.size() != tokenClassesBySimpleName.size()) {
