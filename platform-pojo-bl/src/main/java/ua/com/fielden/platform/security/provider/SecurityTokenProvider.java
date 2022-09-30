@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.security.provider;
 
 import static java.util.Collections.emptySet;
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.isSuperTokenOf;
 import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.isTopLevel;
 
@@ -92,8 +93,6 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
     /**
      * Creates security provider by automatically determining all security tokens available on the path within the specified package.
      * May throw an exception as a result of failure to loaded token classes.
-     * <p>
-     * Please note that excluding tokens by specifying them in {@link redundantTokens} would still get introduced if they are specified in an application specific {@link ISecurityTokenNodeTransformation}.
      *
      * @param path -- a path to classes or a jar (requires jar file name too) where security tokens are located.
      * @param packageName -- a package name containing security tokens (sub-packages are traversed automatically).
@@ -159,13 +158,13 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
     /**
      * Returns a class representing a security token by its simple or full class name.
      *
-     * @param tokenClassName -- a simple or a full class name for a security token.
+     * @param tokenClassSimpleName -- a simple or a full class name for a security token.
      */
     @SuppressWarnings("unchecked")
     @Override
-    public <T extends ISecurityToken> Optional<Class<T>> getTokenByName(final String tokenClassName) {
-        final Class<T> classBySimpleName = (Class<T>) tokenClassesBySimpleName.get(tokenClassName);
-        return Optional.ofNullable(classBySimpleName != null ? classBySimpleName : (Class<T>) tokenClassesByName.get(tokenClassName));
+    public <T extends ISecurityToken> Optional<Class<T>> getTokenByName(final String tokenClassSimpleName) {
+        final Class<T> classBySimpleName = (Class<T>) tokenClassesBySimpleName.get(tokenClassSimpleName);
+        return ofNullable(classBySimpleName != null ? classBySimpleName : (Class<T>) tokenClassesByName.get(tokenClassSimpleName));
     }
 
     private SortedSet<SecurityTokenNode> buildTokenNodes(final Set<Class<? extends ISecurityToken>> allTokens) {
