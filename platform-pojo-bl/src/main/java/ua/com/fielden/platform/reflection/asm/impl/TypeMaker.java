@@ -13,8 +13,11 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -43,7 +46,6 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.exceptions.CollectionalPropertyInitializationException;
-import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.utils.StreamUtils;
 
 /**
@@ -52,11 +54,29 @@ import ua.com.fielden.platform.utils.StreamUtils;
  * To use this API start with {@link #startModification()}, then perform any other modifications, and end with {@link #endModification()}
  * which loads the modified type and returns a corresponding {@link Class}.
  * <p>
- * <i>Notes on specific parts of the API</i>:
- * <p>
- * If {@link #modifyTypeName(String)} is used, then it must preceed calls to {@link #addProperties(NewProperty...)} and 
- * {@link #modifyProperties(NewProperty...)}. Otherwise an exception is thrown. In case the generated type name is not explicitly modified
- * a unique name is chosen, prefixed by the original type's name.
+ * <i>Notes on implicit modifications performed by the API:</i>
+ * <ul>
+ *   <li>
+ *   Generated types will have an additional method generated for accessing the original type, unless the original type itself 
+ *   is a generated type, in which case the mentioned method will be inherited by the resultant generated type.
+ *   The mentioned method is named as defined by {@link #GET_ORIG_TYPE_METHOD_NAME} constant.
+ *   </li>
+ *   <li>
+ *   In case a generated type's name is not explicitly set with {@link #modifyTypeName(String)}, a unique name is generated, prefixed
+ *   by the original type's name.
+ *   </li>
+ * </ul>
+ * <i>Notes on using the API:</i>
+ * <ul>
+ *   <li>
+ *   Certain classes, such as those that are a part of the Java platform, cannot be modified. 
+ *   For details refer to the implementation of {@link #skipAdaptation(String)}.
+ *   </li>
+ *   <li>
+ *   If {@link #modifyTypeName(String)} is used, then it must preceed calls to {@link #addProperties(NewProperty...)} and 
+ *   {@link #modifyProperties(NewProperty...)}. Otherwise an exception is thrown.
+ *   </li>
+ * </ul>
  * 
  * @param <T> The original type, on which the modified type is based on.
  * 
@@ -79,9 +99,21 @@ public class TypeMaker<T> {
     private final Class<T> origType;
     private DynamicType.Builder<T> builder;
     private String modifiedName;
-    private List<Field> origTypeDeclaredProperties; // lazy access
-    private List<Field> origTypeProperties; // lazy access
-    private List<Pair<String, Object>> propertyInitializers = new ArrayList<>();
+    /**
+     * Enables lazy access to declared properties of the original type.
+     */
+    private List<Field> origTypeDeclaredProperties;
+    /**
+     * Enables lazy access to all (declared + inherited) properties of the original type.
+     */
+    private List<Field> origTypeProperties;
+    /**
+     * Holds mappings of the form: {@code property name -> initialized value}.
+     */
+    private Map<String, Object> propertyInitializers = new HashMap<>();
+    /**
+     * Storage for names of both added and modified properties.
+     */
     private Set<String> addedPropertiesNames = new HashSet<>();
 
     public TypeMaker(final DynamicEntityClassLoader loader, final Class<T> origType) {
@@ -168,7 +200,9 @@ public class TypeMaker<T> {
 
         final boolean collectional = prop.isCollectional();
         if (prop.isInitialized()) {
-            propertyInitializers.add(Pair.pair(prop.getName(), prop.getValue()));
+            // it is guaranteed at this point that `prop` hasn't been put into the map previously
+            // since properties with duplicate names are not allowed
+            propertyInitializers.put(prop.getName(), prop.getValue());
         }
         else if (collectional) { // automatically initialize collectional properties
             final Object initValue;
@@ -176,10 +210,10 @@ public class TypeMaker<T> {
                 initValue = collectionalInitValue(prop.getRawType());
             } catch (Exception e) {
                 throw new CollectionalPropertyInitializationException(
-                        String.format("Failed to initialize new property %s", prop.toString(IsProperty.class)),
+                        String.format("Failed to initialize new collectional property %s.", prop.toString(IsProperty.class)),
                         e);
             }
-            propertyInitializers.add(Pair.pair(prop.getName(), initValue));
+            propertyInitializers.put(prop.getName(), initValue);
         }
 
         addAccessor(prop.getName(), genericType);
@@ -188,6 +222,12 @@ public class TypeMaker<T> {
         addedPropertiesNames.add(prop.getName());
     }
 
+    /**
+     * Determines a fitting value to initialize an instance of collectional type {@code rawType}. 
+     * @param rawType
+     * @return
+     * @throws Exception
+     */
     private Object collectionalInitValue(final Class<?> rawType) throws Exception {
         if (rawType == Collection.class || rawType == List.class) {
             return new ArrayList<Object>();
@@ -445,16 +485,16 @@ public class TypeMaker<T> {
     }
 
     public static class ConstructorInterceptor {
-        private final List<Pair<String, Object>> fieldInitializers = new ArrayList<>();
+        private final Map<String, Object> fieldInitializers = new HashMap<>();
 
-        ConstructorInterceptor(final List<Pair<String, Object>> fieldInitializers) {
+        ConstructorInterceptor(final Map<String, Object> fieldInitializers) {
             if (fieldInitializers != null) {
-                this.fieldInitializers.addAll(fieldInitializers);
+                this.fieldInitializers.putAll(fieldInitializers);
             }
         }
 
         public void intercept(@This final Object instrumentedInstance) throws Exception {
-            for (final Pair<String, Object> nameAndValue : fieldInitializers) {
+            for (final Entry<String, Object> nameAndValue : fieldInitializers.entrySet()) {
                 final Field prop = Finder.getFieldByName(instrumentedInstance.getClass(), nameAndValue.getKey());
                 final boolean accessible = prop.canAccess(instrumentedInstance);
                 prop.setAccessible(true);
@@ -468,6 +508,10 @@ public class TypeMaker<T> {
         return name.startsWith("java.");
     }
 
+    /**
+     * Lazily finds and returns declared properties of the original type.
+     * @return
+     */
     private List<Field> getOrigTypeDeclaredProperties() {
         if (origTypeDeclaredProperties == null) {
             origTypeDeclaredProperties = Arrays.stream(origType.getDeclaredFields())
@@ -477,6 +521,10 @@ public class TypeMaker<T> {
         return origTypeDeclaredProperties;
     }
     
+    /**
+     * Lazily finds and returns all (declared + inherited) properties of the original type.
+     * @return
+     */
     private List<Field> getOrigTypeProperties() {
         if (origTypeProperties == null) {
             origTypeProperties = Finder.findProperties(origType); 
