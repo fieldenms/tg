@@ -47,6 +47,18 @@ public class DynamicEntityTypeTestUtils {
 
         return field;
     }
+    
+    public static Field assertFieldDeclared(final Class<?> owningType, final String name) {
+        final Field field;
+        try {
+            field = owningType.getDeclaredField(name);
+        } catch (final Exception e) {
+            fail("Field %s was not found in type %s.".formatted(name, owningType.getName()));
+            return null;
+        }
+
+        return field;
+    }
 
     /**
      * Asserts that {@code generatedType} contains a property being modeled by {@code prototype}. Assertion is successful if:
