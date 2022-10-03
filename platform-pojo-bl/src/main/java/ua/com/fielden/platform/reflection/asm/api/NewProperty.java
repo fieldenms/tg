@@ -52,8 +52,8 @@ public final class NewProperty<T> {
     private T value; // property's initalized value
     private boolean isInitialized = false;
 
-    @Deprecated public final boolean changeSignature; // TODO remove
-    public final boolean deprecated;
+    @Deprecated public /*final*/ boolean changeSignature; // TODO remove
+    public /*final*/ boolean deprecated;
     
     /**
      * Constructs a property from the given <code>field</code>. To also initialize its value use {@link #fromField(Field, Object)} instead. 
@@ -132,13 +132,8 @@ public final class NewProperty<T> {
     public NewProperty(final String name, final Class<T> type, final boolean changeSignature, final String title, final String desc, 
             final Annotation... annotations) 
     {
-        this.name = name;
-        this.type = type;
+        this(name, type, title, desc, annotations);
         this.changeSignature = changeSignature;
-        this.title = title;
-        this.desc = desc;
-        this.annotations.addAll(Arrays.asList(annotations));
-        addAnnotation(DEFAULT_IS_PROPERTY_ANNOTATION); // add in case it wasn't provided
         this.deprecated = true;
     }
 
