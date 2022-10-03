@@ -21,7 +21,7 @@ import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Put;
-import org.restlet.routing.Router;
+import org.restlet.resource.ResourceException;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
@@ -29,10 +29,12 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.rx.observables.ProcessingProgressSubject;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.utils.IDates;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.resources.webui.exceptions.InvalidUiConfigException;
 import ua.com.fielden.platform.web.rx.eventsources.ProcessingProgressEventSource;
-import ua.com.fielden.platform.web.sse.resources.EventSourcingResourceFactory;
+import ua.com.fielden.platform.web.sse.IEmitter;
 
 /**
  * This is a multi-purpose file-processing resource that can be used for uploading files to be processed with the specified functional entity.
@@ -42,6 +44,8 @@ import ua.com.fielden.platform.web.sse.resources.EventSourcingResourceFactory;
  */
 public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> extends AbstractWebResource {
 
+    private static final String ERR_CLIENT_NOT_REGISTERED = "The client should have been registered.";
+
     protected final IEntityDao<T> companion;
     private final EntityFactory factory;
     private final Function<EntityFactory, T> entityCreator;
@@ -49,8 +53,9 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
     private final ISerialiser serialiser;
     private final long sizeLimitBytes;
     private final Set<MediaType> types;
-    private final Router router;
+    private final IWebUiConfig webApp;
     private final String jobUid;
+    private final String sseUid;
     private final String origFileName;
     private final Date fileLastModified;
     private final String mimeAsProvided;
@@ -58,7 +63,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
     private final IDates dates;
 
     public FileProcessingResource(
-            final Router router,
+            final IWebUiConfig webApp,
             final IEntityDao<T> companion,
             final EntityFactory factory,
             final Function<EntityFactory, T> entityCreator,
@@ -72,7 +77,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             final Request request,
             final Response response) {
         super(context, request, response, deviceProvider, dates);
-        this.router = router;
+        this.webApp = webApp;
         this.companion = companion;
         this.factory = factory;
         this.entityCreator = entityCreator;
@@ -85,7 +90,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
 
         try {
             this.jobUid = request.getHeaders().getFirstValue("jobUid", /*ignore case*/ true);
-
+            this.sseUid = request.getHeaders().getFirstValue("sseUid", /*ignore case*/ true);
             try {
                 this.origFileName = URLDecoder.decode(request.getHeaders().getFirstValue("origFileName", /*ignore case*/ true), StandardCharsets.UTF_8.toString());
             } catch (final UnsupportedEncodingException ex) {
@@ -186,11 +191,16 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
      */
     private Representation tryToProcess(final InputStream stream, final String mime) {
         final ProcessingProgressSubject subject = new ProcessingProgressSubject();
-        final EventSourcingResourceFactory eventSource = new EventSourcingResourceFactory(deviceProvider, dates, new ProcessingProgressEventSource(subject, serialiser));
-        final String baseUri = getRequest().getResourceRef().getPath(true);
-        router.attach(baseUri + "/sse/" + jobUid, eventSource);
+        final IEmitter emitter = webApp.getEmitterManager().getEmitter(sseUid);
+
+        if (emitter == null) {
+            throw new InvalidUiConfigException(ERR_CLIENT_NOT_REGISTERED);
+        }
+
+        final ProcessingProgressEventSource eventSource = new ProcessingProgressEventSource(subject, jobUid, serialiser);
 
         try {
+            eventSource.onOpen(emitter);
             final T entity = entityCreator.apply(factory);
             entity.setOrigFileName(origFileName);
             entity.setLastModified(fileLastModified);
@@ -200,8 +210,10 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
 
             final T applied = saveRaw(entity);
             return restUtil.singleJsonRepresentation(applied);
+        } catch (final IOException e) {
+            throw new ResourceException(e);
         } finally {
-            router.detach(eventSource);
+            eventSource.onClose();
         }
     }
 

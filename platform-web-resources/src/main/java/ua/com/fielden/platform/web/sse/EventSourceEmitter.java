@@ -6,8 +6,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -30,7 +28,7 @@ import ua.com.fielden.platform.web.application.RequestInfo;
  * @author TG Team
  *
  */
-public final class EventSourceEmitter implements IEmitter, Runnable, IEventSourceManager {
+public final class EventSourceEmitter implements IEmitter, Runnable{
 
     private static final byte[] CRLF = new byte[] { '\r', '\n' };
     private static final byte[] EVENT_FIELD = "event: ".getBytes(StandardCharsets.UTF_8);
@@ -41,7 +39,7 @@ public final class EventSourceEmitter implements IEmitter, Runnable, IEventSourc
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private int heartBeatPeriod = 5;
 
-    private final List<IEventSource> eventSources = new ArrayList<>();
+    //private final List<IEventSource> eventSources = new ArrayList<>();
     private final AsyncContext async;
     private final ServletOutputStream output;
     private Future<?> heartBeat;
@@ -65,17 +63,6 @@ public final class EventSourceEmitter implements IEmitter, Runnable, IEventSourc
         this.output = async.getResponse().getOutputStream();
         this.info = info;
         logger.info(format("Started event source emitter: %s", info.toString()));
-    }
-
-    @Override
-    public IEventSourceManager registerEventSource(final IEventSource eventSource) {
-        eventSources.add(eventSource);
-        return this;
-    }
-
-    @Override
-    public boolean removeEventSource(final IEventSource eventSource) {
-        return eventSources.remove(eventSource);
     }
 
     @Override
@@ -160,7 +147,7 @@ public final class EventSourceEmitter implements IEmitter, Runnable, IEventSourc
                 }
             }
             async.complete();
-            eventSources.forEach(eventSource -> eventSource.onClose());
+            //eventSources.forEach(eventSource -> eventSource.onClose());
         } finally {
             logger.info(format("Closed event source emitter: %s", info.toString()));
             shouldResourceThreadBeBlocked.set(false);

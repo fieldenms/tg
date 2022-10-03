@@ -9,7 +9,7 @@ export const TgSseBehavior = {
     properties: {
         
         /**
-         * Event source class that is used to identify what process is taking place.
+         * Event source class that is used to identify what process is sending the server event.
          */
         eventSourceClass: {
             type: String
@@ -18,7 +18,7 @@ export const TgSseBehavior = {
         /**
          * The identifier of sse job that uses the same eventSourceClass (for example file upload process).
          */
-        jobId: {
+        jobUid: {
             type: String
         },
 
@@ -52,9 +52,9 @@ export const TgSseBehavior = {
 
     },
 
-    observers: ['_sseAttributesChanged(eventSourceClass, jobId)'],
+    observers: ['_sseAttributesChanged(eventSourceClass, jobUid)'],
 
-    _sseAttributesChanged: function (eventSourceClass, jobId) {
+    _sseAttributesChanged: function (eventSourceClass, jobUid) {
         this.unsubscribeFromSseEvents();
         if (eventSourceClass) {
             this.subscribeToSseEvent();
@@ -82,7 +82,7 @@ export const TgSseBehavior = {
 
         this._messageSubscription = postal.subscribe({
             channel: "sse-event",
-            topic: `${this.uri}${this.eventSourceClass ? "/" + this.eventSourceClass : ""}${this.jobId ? "/" + this.jobId : ""}/message`,
+            topic: `${this.eventSourceClass ? "/" + this.eventSourceClass : ""}${this.jobUid ? "/" + this.jobUid : ""}/message`,
             callback: (data, envelope) => {
                 const msg = data.msg;
                 if (this.useTimerBasedScheduling) {
@@ -102,7 +102,7 @@ export const TgSseBehavior = {
 
         this._errorSubscription = postal.subscribe({
             channel: "sse-event",
-            topic: this.uri + "/error",
+            topic: "error",
             callback: (data, envelope) => {
                 // invoke error handler if provided
                 if (this.errorHandler) {

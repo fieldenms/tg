@@ -5,7 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
-public class CompoundEmitter implements IEmitter, IEmitterManager, IEventSourceManager {
+public class CompoundEmitter implements IEmitter, IEmitterManager, IEventSourceManager{
 
     private Map<String, IEmitter> emitters = Collections.synchronizedMap(new HashMap<>());
 
@@ -13,15 +13,13 @@ public class CompoundEmitter implements IEmitter, IEmitterManager, IEventSourceM
 
     @Override
     public IEventSourceManager registerEventSource(final IEventSource eventSource) {
-        if (!eventSources.containsKey(eventSource.getClass())) {
-            eventSources.put(eventSource.getClass(), eventSource);
-        }
+        eventSources.put(eventSource.getClass(), eventSource);
         return this;
     }
 
     @Override
-    public boolean removeEventSource(final IEventSource eventSource) {
-        return eventSources.remove(eventSource.getClass()) != null;
+    public boolean hasEventSource(final Class<? extends IEventSource> eventSourceClass) {
+        return eventSources.containsKey(eventSourceClass);
     }
 
     @Override

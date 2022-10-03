@@ -232,7 +232,7 @@ const TgFileProcessingBehaviorImpl = {
             // which is provided to the server as a header value
             this.jobUid = generateUUID();
             xhr.setRequestHeader('jobUid', this.jobUid);
-            //Also add specify client uid to let server know what SSE emitter to chose for message sending 
+            //Also add client uid to let server know what SSE emitter to chose for message sending 
             xhr.setRequestHeader('sseUid', eventSource.sseUid);
             // and also let's provide the original file meta-data
             xhr.setRequestHeader('origFileName', encodeURIComponent(file.name));
@@ -269,9 +269,6 @@ const TgFileProcessingBehaviorImpl = {
                     if (this.fpFileUploadedEventHandler) {
                         this.fpFileUploadedEventHandler();
                     }
-
-                    // can now subscribe to a server side processing progress eventing source
-                    this.jobId = jobUid;
                 }
 
             }.bind(this);

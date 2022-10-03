@@ -136,7 +136,7 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
         public void onNext(final T value) {
             try {
                 final Map<String, Object> data = eventToData(value);
-                data.put("eventSourceClass", this.getClass().getName());
+                data.put("eventSourceClass", AbstractEventSource.this.getClass().getName());
                 final byte [] serialisedData = serialiser.serialise(data);
                 emitter.data(new String(serialisedData, StandardCharsets.UTF_8));
             } catch (final IOException ex) {

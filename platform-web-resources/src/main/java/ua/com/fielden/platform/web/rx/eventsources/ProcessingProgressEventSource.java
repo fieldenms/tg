@@ -15,14 +15,18 @@ import ua.com.fielden.platform.web.sse.AbstractEventSource;
  */
 public class ProcessingProgressEventSource extends AbstractEventSource<Integer, ProcessingProgressSubject> {
 
-    public ProcessingProgressEventSource(final ProcessingProgressSubject observableKind, final ISerialiser serialiser) {
+    private final String jobUid;
+
+    public ProcessingProgressEventSource(final ProcessingProgressSubject observableKind, final String jobUid, final ISerialiser serialiser) {
         super(observableKind, serialiser);
+        this.jobUid = jobUid;
     }
 
     @Override
     protected Map<String, Object> eventToData(final Integer event) {
         final Map<String, Object> data = new HashMap<>();
         data.put("prc", event);
+        data.put("jobUid", jobUid);
         return data;
     }
 

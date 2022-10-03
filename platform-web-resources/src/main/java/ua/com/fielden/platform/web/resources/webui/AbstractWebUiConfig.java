@@ -229,11 +229,12 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     @Override
     public IWebUiConfig registerEventSource(final Class<? extends IEventSource> eventSourceClass) {
-
         try {
-            final IEventSource eventSource = injector.getInstance(eventSourceClass);
-            eventSource.onOpen(compoundEmitter);
-            compoundEmitter.registerEventSource(eventSource);
+            if (!compoundEmitter.hasEventSource(eventSourceClass)) {
+                final IEventSource eventSource = injector.getInstance(eventSourceClass);
+                compoundEmitter.registerEventSource(eventSource);
+                eventSource.onOpen(compoundEmitter);
+            }
         } catch (final IOException e) {
             logger.error(e);
             throw new InvalidUiConfigException(ERR_IN_COMPOUND_EMITTER);

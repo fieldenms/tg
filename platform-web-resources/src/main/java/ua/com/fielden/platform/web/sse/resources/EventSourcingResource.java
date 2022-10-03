@@ -55,7 +55,7 @@ public class EventSourcingResource extends AbstractWebResource {
     public void subcribeClient() throws ResourceException {
         final String sseIdString = getRequest().getAttributes().get("sseUid").toString();
         try {
-            IEmitter emitter = webApp.getEmitterManager().getEmitter(sseIdString);
+            final IEmitter emitter = webApp.getEmitterManager().getEmitter(sseIdString);
             if (emitter == null) {
                 final HttpServletRequest httpRequest = ServletUtils.getRequest(getRequest());
                 final HttpServletResponse httpResponse = ServletUtils.getResponse(getResponse());
@@ -65,8 +65,9 @@ public class EventSourcingResource extends AbstractWebResource {
                 // Infinite timeout because the continuation is never resumed,
                 // but only completed on close
                 async.setTimeout(0);
-                emitter = new EventSourceEmitter(shouldKeepGoing, async, new RequestInfo(getRequest()));
-                webApp.getEmitterManager().registerEmitter(sseIdString, emitter);
+                final EventSourceEmitter ecentSourceEmitter = new EventSourceEmitter(shouldKeepGoing, async, new RequestInfo(getRequest()));
+                webApp.getEmitterManager().registerEmitter(sseIdString, ecentSourceEmitter);
+                ecentSourceEmitter.scheduleHeartBeat();
             }
         } catch (final IOException ex) {
             logger.error(ex);

@@ -48,7 +48,7 @@ public class WebUiResources extends AbstractWebUiResources {
     protected void registerDomainWebResources(final Router router, final IWebUiConfig webApp) {
         // register some file processors
         final FileProcessingResourceFactory<DumpCsvTxtProcessor> factory = new FileProcessingResourceFactory<DumpCsvTxtProcessor>(
-                router,
+                webApp,
                 injector,
                 DumpCsvTxtProcessor.class,
                 f -> f.newByKey(DumpCsvTxtProcessor.class, "DUMMY"), // this entity construction could be more sophisticated in practice
@@ -61,7 +61,7 @@ public class WebUiResources extends AbstractWebUiResources {
 
         // register attachment uploader
         final FileProcessingResourceFactory<AttachmentUploader> factoryForAttachmentUploader = new FileProcessingResourceFactory<>(
-                router,
+                webApp,
                 injector,
                 AttachmentUploader.class,
                 f -> f.newEntity(AttachmentUploader.class),

@@ -52,7 +52,7 @@ const registerEventSourceHandlers = function (sourceObj) {
 
         postal.publish({
             channel: "sse-event",
-            topic: `${sourceObj.uri}${data.eventSourceClass ? "/" + data.eventSourceClass : ""}${data.jobId ? "/" + data.jobId : ""}/message`,
+            topic: `${data.eventSourceClass ? "/" + data.eventSourceClass : ""}${data.jobUid ? "/" + data.jobUid : ""}/message`,
             data: {
                 msg: data
             }
@@ -78,7 +78,7 @@ const registerEventSourceHandlers = function (sourceObj) {
         // publish event for error handling
         postal.publish({
             channel: "sse-event",
-            topic: sourceObj.uri + "/error",
+            topic: "error",
             data: {
                 event: e,
                 source: sourceObj

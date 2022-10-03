@@ -17,10 +17,10 @@ public interface IEventSourceManager {
     IEventSourceManager registerEventSource(final IEventSource eventSource);
 
     /**
-     * Removes registered with {@link #registerEventSource(IEventSource)} event source.
+     * Determines whether event source with specified class was already registered.
      *
-     * @param eventSource - previously registered event source.
+     * @param eventSourceClass
      * @return
      */
-    boolean removeEventSource(final IEventSource eventSource);
+    boolean hasEventSource(Class<? extends IEventSource> eventSourceClass);
 }
