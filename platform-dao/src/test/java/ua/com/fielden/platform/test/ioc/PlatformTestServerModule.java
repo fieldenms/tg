@@ -37,7 +37,6 @@ import ua.com.fielden.platform.security.annotations.SessionCache;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
-import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
@@ -62,21 +61,11 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 public class PlatformTestServerModule extends BasicWebServerModule {
 
     private final List<Class<? extends AbstractEntity<?>>> domainTypes;
-    
-    public PlatformTestServerModule(final Map<Class, Class> defaultHibernateTypes, //
-            final IApplicationDomainProvider applicationDomainProvider,//
-            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
-            final Class<? extends IFilter> automaticDataFilterType, //
-            final SecurityTokenProvider tokenProvider,//
-            final Properties props) throws Exception {
-        super(defaultHibernateTypes, applicationDomainProvider, serialisationClassProviderType, automaticDataFilterType, tokenProvider, props);
-        domainTypes = applicationDomainProvider.entityTypes();
-    }
 
-    public PlatformTestServerModule(final Map<Class, Class> defaultHibernateTypes, //
-            final IApplicationDomainProvider applicationDomainProvider,//
-            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
-            final Class<? extends IFilter> automaticDataFilterType, //
+    public PlatformTestServerModule(final Map<Class, Class> defaultHibernateTypes,
+            final IApplicationDomainProvider applicationDomainProvider,
+            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
+            final Class<? extends IFilter> automaticDataFilterType,
             final Properties props) throws Exception {
         super(defaultHibernateTypes, applicationDomainProvider, serialisationClassProviderType, automaticDataFilterType, null, props);
         domainTypes = applicationDomainProvider.entityTypes();
