@@ -172,7 +172,11 @@ public class CriteriaGenerator implements ICriteriaGenerator {
         }
         final DynamicEntityClassLoader cl = getInstance(getSystemClassLoader());
         try {
-            return (Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>>) cl.startModification(CentreEntityQueryCriteriaToEnhance.class).addClassAnnotations(customAnnotations).addProperties(newProperties.toArray(new NewProperty[0])).endModification();
+            return (Class<? extends EntityQueryCriteria<CDTME, T, IEntityDao<T>>>)
+                    cl.startModification(CentreEntityQueryCriteriaToEnhance.class)
+                    .addClassAnnotations(customAnnotations)
+                    .addProperties(newProperties.toArray(new NewProperty[0]))
+                    .endModification();
         } catch (final ClassNotFoundException ex) {
             throw new CriteriaGeneratorException(format("Criteria type for [%s] could not be generated.", root.getSimpleName()), ex);
         }
