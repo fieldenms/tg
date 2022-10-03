@@ -62,6 +62,9 @@ import ua.com.fielden.platform.security.user.UserRoleTokensUpdater;
 import ua.com.fielden.platform.security.user.UserRolesUpdater;
 import ua.com.fielden.platform.security.user.UserSecret;
 import ua.com.fielden.platform.security.user.locator.UserLocator;
+import ua.com.fielden.platform.security.user.master.menu.actions.UserMaster_OpenMain_MenuItem;
+import ua.com.fielden.platform.security.user.master.menu.actions.UserMaster_OpenUserAndRoleAssociation_MenuItem;
+import ua.com.fielden.platform.security.user.ui_actions.OpenUserMasterAction;
 import ua.com.fielden.platform.ui.config.EntityCentreAnalysisConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityLocatorConfig;
@@ -165,6 +168,9 @@ public class PlatformDomainTypes {
         types.add(DomainTreeEntity.class);
         types.add(DomainPropertyTreeEntity.class);
         types.add(UserMenuVisibilityAssociator.class);
+        types.add(OpenUserMasterAction.class);
+        types.add(UserMaster_OpenMain_MenuItem.class);
+        types.add(UserMaster_OpenUserAndRoleAssociation_MenuItem.class);
 
         typesDependentOnWebUI.add(EntityExportAction.class);
         typesDependentOnWebUI.add(CentreConfigUpdater.class);
