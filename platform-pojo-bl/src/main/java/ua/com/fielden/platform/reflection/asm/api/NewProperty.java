@@ -34,20 +34,25 @@ import ua.com.fielden.platform.reflection.asm.exceptions.NewPropertyException;
 public final class NewProperty<T> {
     public static final IsProperty DEFAULT_IS_PROPERTY_ANNOTATION = new IsPropertyAnnotation().newInstance();
 
-    // TODO make fields private
-    public String name;
-    public Class<T> type; // TODO rename to rawType
+    private String name;
+    private Class<T> type;
     private List<Type> typeArguments = new ArrayList<Type>();
-    @Deprecated public final boolean changeSignature; // TODO remove
-    public String title;
-    public String desc;
-    // TODO use ordered set
-    // store all property's annotations except for @IsProperty
-    public final List<Annotation> annotations = new ArrayList<Annotation>();
-    // IsProperty annotation requires frequent access; is never null
+    private String title;
+    private String desc;
+    /**
+     * Stores all annotations that are directly present on this property except for {@link IsProperty},
+     * which is stored in a separate field {@link #atIsProperty}.
+     */
+    private final List<Annotation> annotations = new ArrayList<Annotation>();
+    /**
+     * Stores the instance of {@link IsProperty} annotation, since it requires frequent access.
+     * Should never be null after initialization.
+     */
     private IsProperty atIsProperty;
     private T value; // property's initalized value
     private boolean isInitialized = false;
+
+    @Deprecated public final boolean changeSignature; // TODO remove
     public final boolean deprecated;
     
     /**

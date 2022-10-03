@@ -312,11 +312,11 @@ public class DynamicEntityTypePropertiesAdditionTest {
                 .endModification();
         final int size = newType.getDeclaredFields().length;
         assertEquals("The last field of class should correspond to a last 'freshly added' property.", 
-                npBool.name, newType.getDeclaredFields()[size - 1].getName());
+                npBool.getName(), newType.getDeclaredFields()[size - 1].getName());
         assertEquals("The last - 1 field of class should correspond to a last - 1 'freshly added' property.",
-                np2.name, newType.getDeclaredFields()[size - 2].getName());
+                np2.getName(), newType.getDeclaredFields()[size - 2].getName());
         assertEquals("The last - 2 field of class should correspond to a last - 2 'freshly added' property.",
-                np1.name, newType.getDeclaredFields()[size - 3].getName());
+                np1.getName(), newType.getDeclaredFields()[size - 3].getName());
     }
 
     @Test
