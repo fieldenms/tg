@@ -17,11 +17,12 @@ import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
 
 import ua.com.fielden.platform.utils.IDates;
+import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.application.RequestInfo;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebResource;
 import ua.com.fielden.platform.web.sse.EventSourceEmitter;
-import ua.com.fielden.platform.web.sse.IEventSource;
+import ua.com.fielden.platform.web.sse.IEmitter;
 import ua.com.fielden.platform.web.utils.ServletUtils;
 
 /**
@@ -33,17 +34,17 @@ public class EventSourcingResource extends AbstractWebResource {
 
     private final Logger logger = LogManager.getLogger(this.getClass());
     private final AtomicBoolean shouldKeepGoing = new AtomicBoolean(true);
-    private final IEventSource eventSource;
+    private final IWebUiConfig webApp;
 
     public EventSourcingResource(
-            final IEventSource eventSource,
+            final IWebUiConfig webApp,
             final IDeviceProvider deviceProvider,
             final IDates dates,
             final Context context,
             final Request request,
             final Response response) {
         super(context, request, response, deviceProvider, dates);
-        this.eventSource = eventSource;
+        this.webApp = webApp;
     }
 
     /**
@@ -53,18 +54,22 @@ public class EventSourcingResource extends AbstractWebResource {
      */
     @Get
     public void subcribeClient() throws ResourceException {
+        final String sseIdString = getRequest().getAttributes().get("sseUid").toString();
         try {
-            final HttpServletRequest httpRequest = ServletUtils.getRequest(getRequest());
-            final HttpServletResponse httpResponse = ServletUtils.getResponse(getResponse());
-            makeHandshake(httpResponse);
-            // create an asynchronous context for pushing messages out to the subscribed client
-            final AsyncContext async = httpRequest.startAsync();
-            // Infinite timeout because the continuation is never resumed,
-            // but only completed on close
-            async.setTimeout(0);
-            final EventSourceEmitter emitter = new EventSourceEmitter(shouldKeepGoing, eventSource, async, new RequestInfo(getRequest()));
-            emitter.scheduleHeartBeat();
-            eventSource.onOpen(emitter);
+            final IEmitter emitter = webApp.getEmitterManager().getEmitter(sseIdString);
+            if (emitter == null) {
+                final HttpServletRequest httpRequest = ServletUtils.getRequest(getRequest());
+                final HttpServletResponse httpResponse = ServletUtils.getResponse(getResponse());
+                makeHandshake(httpResponse);
+                // create an asynchronous context for pushing messages out to the subscribed client
+                final AsyncContext async = httpRequest.startAsync();
+                // Infinite timeout because the continuation is never resumed,
+                // but only completed on close
+                async.setTimeout(0);
+                final EventSourceEmitter ecentSourceEmitter = new EventSourceEmitter(shouldKeepGoing, async, new RequestInfo(getRequest()));
+                webApp.getEmitterManager().registerEmitter(sseIdString, ecentSourceEmitter);
+                ecentSourceEmitter.scheduleHeartBeat();
+            }
         } catch (final IOException ex) {
             logger.error(ex);
             throw new ResourceException(ex);
@@ -78,6 +83,7 @@ public class EventSourcingResource extends AbstractWebResource {
                 logger.error(e);
             }
         }
+        webApp.getEmitterManager().closeEmitter(sseIdString);
         logger.debug("Server-Sent Event Restlet completed.");
 
     }

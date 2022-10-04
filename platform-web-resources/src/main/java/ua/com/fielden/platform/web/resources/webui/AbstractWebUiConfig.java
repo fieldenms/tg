@@ -12,6 +12,7 @@ import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBu
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -58,6 +59,10 @@ import ua.com.fielden.platform.web.ioc.exceptions.MissingWebResourceException;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
 import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
+import ua.com.fielden.platform.web.resources.webui.exceptions.InvalidUiConfigException;
+import ua.com.fielden.platform.web.sse.CompoundEmitter;
+import ua.com.fielden.platform.web.sse.IEmitterManager;
+import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
@@ -71,9 +76,13 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  */
 public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private final Logger logger = LogManager.getLogger(getClass());
+    private static final String ERR_IN_COMPOUND_EMITTER = "Compound emitter should catch this error. Something went wrong in webUiConfig.";
+
     private final String title;
     private WebUiBuilder webUiBuilder;
     private Injector injector;
+
+    private final CompoundEmitter compoundEmitter;
 
     protected MainMenuBuilder desktopMainMenuConfig;
     protected MainMenuBuilder mobileMainMenuConfig;
@@ -103,6 +112,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         this.title = title;
         this.independentTimeZone = independentTimeZone;
         this.webUiBuilder = new WebUiBuilder(this);
+        this.compoundEmitter = new CompoundEmitter();
         this.desktopMainMenuConfig = new MainMenuBuilder(this);
         this.mobileMainMenuConfig = new MainMenuBuilder(this);
 
@@ -210,6 +220,27 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
             return indexSource.replace("@startupResources", "startup-resources-vulcanized");
         }
 
+    }
+
+    @Override
+    public IEmitterManager getEmitterManager() {
+        return compoundEmitter;
+    }
+
+    @Override
+    public IWebUiConfig registerEventSource(final Class<? extends IEventSource> eventSourceClass) {
+        try {
+            if (!compoundEmitter.hasEventSource(eventSourceClass)) {
+                final IEventSource eventSource = injector.getInstance(eventSourceClass);
+                eventSource.onOpen(compoundEmitter);
+                compoundEmitter.registerEventSource(eventSource);
+            }
+        } catch (final IOException e) {
+            logger.error(e);
+            throw new InvalidUiConfigException(ERR_IN_COMPOUND_EMITTER);
+        }
+
+        return this;
     }
 
     private static boolean isDevelopmentWorkflow(final Workflows workflow) {

@@ -29,7 +29,7 @@ import ua.com.fielden.platform.web.application.RequestInfo;
  * @author TG Team
  *
  */
-public final class EventSourceEmitter implements IEmitter, Runnable {
+public final class EventSourceEmitter implements IEmitter, Runnable{
 
     private static final byte[] CRLF = new byte[] { '\r', '\n' };
     private static final byte[] EVENT_FIELD = "event: ".getBytes(StandardCharsets.UTF_8);
@@ -40,7 +40,6 @@ public final class EventSourceEmitter implements IEmitter, Runnable {
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private int heartBeatPeriod = 5;
 
-    private final IEventSource eventSource;
     private final AsyncContext async;
     private final ServletOutputStream output;
     private Future<?> heartBeat;
@@ -55,11 +54,11 @@ public final class EventSourceEmitter implements IEmitter, Runnable {
      * @param shouldResourceThreadBeBlocked
      * @param eventSource
      * @param async
+     * @param serialiser
      * @throws IOException
      */
-    public EventSourceEmitter(final AtomicBoolean shouldResourceThreadBeBlocked, final IEventSource eventSource, final AsyncContext async, final RequestInfo info) throws IOException {
+    public EventSourceEmitter(final AtomicBoolean shouldResourceThreadBeBlocked, final AsyncContext async, final RequestInfo info) throws IOException {
         this.shouldResourceThreadBeBlocked = shouldResourceThreadBeBlocked;
-        this.eventSource = eventSource;
         this.async = async;
         this.output = async.getResponse().getOutputStream();
         this.info = info;
@@ -148,7 +147,6 @@ public final class EventSourceEmitter implements IEmitter, Runnable {
                 }
             }
             async.complete();
-            eventSource.onClose();
         } finally {
             logger.info(format("Closed event source emitter: %s", info.toString()));
             shouldResourceThreadBeBlocked.set(false);

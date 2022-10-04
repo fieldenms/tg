@@ -3,6 +3,8 @@ package ua.com.fielden.platform.web.sse;
 import static org.apache.logging.log4j.LogManager.getLogger;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 import org.apache.logging.log4j.Logger;
 
@@ -10,6 +12,7 @@ import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
 import ua.com.fielden.platform.rx.IObservableKind;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
 
 /**
  * A base class for custom event sources that are subscribed to the specified data streams (aka observable) and emit respective values to the client.
@@ -44,12 +47,18 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
     private Observable<T> stream;
 
     private final Logger logger = getLogger(this.getClass());
+    /**
+     * A JSON serialiser needed to convert a map of dat into a String.
+     */
+    private final ISerialiser serialiser;
 
-    protected AbstractEventSource(final OK observableKind) {
+
+    protected AbstractEventSource(final OK observableKind, final ISerialiser serialiser) {
         this.stream = observableKind.asObservable();
         if (stream == null) {
             throw new IllegalArgumentException("Event stream is required.");
         }
+        this.serialiser = serialiser;
     }
 
     @Override
@@ -88,7 +97,7 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
      * @param event
      * @return
      */
-    protected abstract String eventToData(final T event);
+    protected abstract Map<String, Object> eventToData(final T event);
 
     @Override
     public void onClose() {
@@ -128,7 +137,10 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
         @Override
         public void onNext(final T value) {
             try {
-                emitter.data(eventToData(value));
+                final Map<String, Object> data = eventToData(value);
+                data.put("eventSourceClass", AbstractEventSource.this.getClass().getName());
+                final byte [] serialisedData = serialiser.serialise(data);
+                emitter.data(new String(serialisedData, StandardCharsets.UTF_8));
             } catch (final IOException ex) {
                 logger.error(ex);
             }
