@@ -82,10 +82,5 @@ public class WebUiResources extends AbstractWebUiResources {
 
         // register attachment download resource
         router.attach("/download-attachment/{attachment-id}/{attachment-sha1}", new AttachmentDownloadResourceFactory(injector));
-
-        // register some server-side eventing
-        // router.attach("/sse/events",  new _EventSourcingResourceFactory()); -- some experimental stuff, which should be kept here for the moment
-        //router.attach("/sse/entity-centre-events",  new EventSourcingResourceFactory(injector, deviceProvider, dates, TgPersistentEntityWithPropertiesEventSrouce.class));
-        // router.attach("/sse/message-update-events", new EventSourcingResourceFactory(injector, deviceProvider, dates, TgMessageEventSource.class));
     }
 }

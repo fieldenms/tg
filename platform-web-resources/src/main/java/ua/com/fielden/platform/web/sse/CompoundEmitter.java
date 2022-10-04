@@ -44,41 +44,29 @@ public class CompoundEmitter implements IEmitter, IEmitterManager, IEventSourceM
     }
 
     @Override
-    public void event(final String name, final String data) {
+    public void event(final String name, final String data) throws IOException {
         synchronized(this) {
-            emitters.forEach((uid, emitter) -> {
-                try {
-                    emitter.event(name, data);
-                } catch (final IOException e) {
-                    closeEmitter(uid);
-                }
-            });
+            for(final IEmitter emitter: emitters.values()) {
+                emitter.event(name, data);
+            }
         }
     }
 
     @Override
     public void data(final String data) throws IOException {
         synchronized(this) {
-            emitters.forEach((uid, emitter) -> {
-                try {
-                    emitter.data(data);
-                } catch (final IOException e) {
-                    closeEmitter(uid);
-                }
-            });
+            for(final IEmitter emitter: emitters.values()) {
+                emitter.data(data);
+            }
         }
     }
 
     @Override
     public void comment(final String comment) throws IOException {
         synchronized(this) {
-            emitters.forEach((uid, emitter) -> {
-                try {
-                    emitter.comment(comment);
-                } catch (final IOException e) {
-                    closeEmitter(uid);
-                }
-            });
+            for(final IEmitter emitter: emitters.values()) {
+                emitter.comment(comment);
+            }
         }
     }
 

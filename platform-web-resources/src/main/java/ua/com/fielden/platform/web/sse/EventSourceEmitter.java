@@ -39,7 +39,6 @@ public final class EventSourceEmitter implements IEmitter, Runnable{
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private int heartBeatPeriod = 5;
 
-    //private final List<IEventSource> eventSources = new ArrayList<>();
     private final AsyncContext async;
     private final ServletOutputStream output;
     private Future<?> heartBeat;
@@ -147,7 +146,6 @@ public final class EventSourceEmitter implements IEmitter, Runnable{
                 }
             }
             async.complete();
-            //eventSources.forEach(eventSource -> eventSource.onClose());
         } finally {
             logger.info(format("Closed event source emitter: %s", info.toString()));
             shouldResourceThreadBeBlocked.set(false);
