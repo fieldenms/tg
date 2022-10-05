@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.utils.Pair.pair;
 import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Method;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -33,11 +34,17 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  */
 public class DynamicEntityClassLoader extends InjectionClassLoader {
+    /**
+     * Permanent cache for instances of this type of the form: {@code parentClassLoader -> thisInstance}.
+     */
+    private static final Map<ClassLoader, DynamicEntityClassLoader> instances = new HashMap<>();
 
     private final Cache<Class<?>, byte[]> cache = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).concurrencyLevel(50).build();
 
     public static DynamicEntityClassLoader getInstance(final ClassLoader parent) {
-        return new DynamicEntityClassLoader(parent);
+        final var newInstance = new DynamicEntityClassLoader(parent);
+        final var current = instances.putIfAbsent(parent, newInstance);
+        return current == null ? newInstance : current;
     }
     
     private DynamicEntityClassLoader(final ClassLoader parent) {
