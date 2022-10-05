@@ -8,9 +8,14 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -28,6 +33,7 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.entities.TopLevelEntity;
+import ua.com.fielden.platform.reflection.test_entities.EntityWithConstructors;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.utils.Pair;
@@ -225,5 +231,28 @@ public class DynamicEntityTypeGenerationTest {
 
         assertEquals(DEFAULT_ORIG_TYPE, DynamicEntityClassLoader.getOriginalType(newType1));
         assertEquals(DEFAULT_ORIG_TYPE, DynamicEntityClassLoader.getOriginalType(newType2));
+    }
+    
+    @Test
+    public void a_generated_type_declares_visible_constructors_of_the_original_type_and_inherits_runtime_annotations() throws Exception {
+        final Class<? extends EntityWithConstructors> newType = cl.startModification(EntityWithConstructors.class)
+                .endModification();
+        
+        final Map<Boolean, List<Constructor<?>>> constructors = Arrays.stream(EntityWithConstructors.class.getDeclaredConstructors())
+                .collect(Collectors.partitioningBy(constr -> Modifier.isPrivate(constr.getModifiers())));
+
+        // private constructors are ignored
+        for (final Constructor<?> origPrivateConstructor: constructors.get(true)) {
+            assertThrows(NoSuchMethodException.class, () -> {
+                newType.getDeclaredConstructor(origPrivateConstructor.getParameterTypes());
+            });
+        }
+        // visible constructors are declared with runtime annotations inherited 
+        for (final Constructor<?> origVisibleConstructor: constructors.get(false)) {
+            final Constructor<?> newConstructor = newType.getDeclaredConstructor(origVisibleConstructor.getParameterTypes());
+            assertNotNull(newConstructor);
+            assertArrayEquals("Incorrect annotations declared by the generated type's constructor.", 
+                    origVisibleConstructor.getDeclaredAnnotations(), newConstructor.getDeclaredAnnotations());
+        }
     }
 }

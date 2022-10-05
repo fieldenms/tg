@@ -8,7 +8,9 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,6 +22,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -28,10 +31,13 @@ import net.bytebuddy.description.modifier.Ownership;
 import net.bytebuddy.description.modifier.ParameterManifestation;
 import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.dynamic.DynamicType;
+import net.bytebuddy.dynamic.DynamicType.Builder.MethodDefinition;
 import net.bytebuddy.dynamic.DynamicType.Builder.MethodDefinition.ReceiverTypeDefinition;
+import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
 import net.bytebuddy.dynamic.TargetType;
 import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.implementation.FixedValue;
+import net.bytebuddy.implementation.Implementation;
 import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.implementation.SuperMethodCall;
 import net.bytebuddy.implementation.bind.annotation.Argument;
@@ -135,8 +141,10 @@ public class TypeMaker<T> {
         // no need for looking up the specified type in cache,
         // which was useful before, since ASM operates on byte[] directly
 
-        builder = new ByteBuddy().subclass(origType)
-                // grab all declared annotations
+        builder = new ByteBuddy().subclass(origType, 
+                // do not implicitly define any constructors, since this is done manually later
+                ConstructorStrategy.Default.NO_CONSTRUCTORS)
+                // grab all declared class-level annotations
                 .annotateType(origType.getDeclaredAnnotations());
 
         return this;
@@ -446,6 +454,36 @@ public class TypeMaker<T> {
         builder = builder.defineMethod(GET_ORIG_TYPE_METHOD_NAME, type.getClass(), Visibility.PUBLIC, Ownership.STATIC)
                 .intercept(FixedValue.value(type));
     }
+    
+    private void generateConstructors() {
+        final Implementation impl = propertyInitializers.isEmpty() ? SuperMethodCall.INSTANCE
+                : SuperMethodCall.INSTANCE.andThen(MethodDelegation.to(new ConstructorInterceptor(propertyInitializers)));
+
+        final List<Constructor<?>> visibleConstructors = Arrays.stream(origType.getDeclaredConstructors())
+                .filter(constr -> !Modifier.isPrivate(constr.getModifiers()))
+                .toList();
+
+        for (final Constructor<?> origConstr: visibleConstructors) {
+            // manually define a constructor to imitate the original type's constructor
+            MethodDefinition<T> methodBuilder = builder.defineConstructor(origConstr.getModifiers())
+                    .withParameters(origConstr.getGenericParameterTypes())
+                    .throwing(origConstr.getGenericExceptionTypes())
+                    .intercept(impl)
+                    // constructor-level annotations
+                    .annotateMethod(origConstr.getDeclaredAnnotations());
+
+            // constructor parameter-level annotations
+            final Annotation[][] paramAnnotations = origConstr.getParameterAnnotations();
+            for (int i = 0; i < paramAnnotations.length; i++) {
+                final Annotation[] annotations = paramAnnotations[i];
+                if (annotations.length > 0) {
+                    methodBuilder = methodBuilder.annotateParameter(i, annotations);
+                }
+            }
+
+            builder = methodBuilder;
+        }
+    }
 
     /**
      * Finalizes type modification and loads the resulting class.
@@ -463,17 +501,12 @@ public class TypeMaker<T> {
             recordOrigType(origType);
         }
 
+        generateConstructors();
+
         if (modifiedName == null) {
             modifyTypeName();
         }
 
-        if (!propertyInitializers.isEmpty()) {
-            // initialize all fields in this.propertyInitializers by intercepting the default constructor
-            // which calls its parent constructor and then does the initialization
-            builder = builder.constructor(ElementMatchers.isDefaultConstructor())
-                    .intercept(SuperMethodCall.INSTANCE.andThen(MethodDelegation.to(new ConstructorInterceptor(propertyInitializers))));
-        }
-        
         // provide a TypePool that uses the class loader of the original type
         // if origType is a dynamic one, then this will be DynamicEntityClassLoader, which will be able to locate origType
         return builder.make(TypePool.ClassLoading.of(origType.getClassLoader()))
