@@ -45,7 +45,7 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
     private Observable<T> stream;
 
     /**
-     * A JSON serialiser needed to convert a map of dat into a String.
+     * A JSON serialiser needed to convert a map of data into a String.
      */
     private final ISerialiser serialiser;
 

@@ -5,6 +5,12 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * {@link IEmitter} implementation that manages number of registered emitters (clients). This also registers event sources in the system.
+ *
+ * @author TG Team
+ *
+ */
 public class CompoundEmitter implements IEmitter, IEmitterManager, IEventSourceManager{
 
     private Map<String, IEmitter> emitters = Collections.synchronizedMap(new HashMap<>());
@@ -35,12 +41,14 @@ public class CompoundEmitter implements IEmitter, IEmitterManager, IEventSourceM
 
     @Override
     public boolean closeEmitter(final String uid) {
-        if (emitters.containsKey(uid)) {
-            emitters.get(uid).close();
-            emitters.remove(uid);
-            return true;
+        synchronized(this) {
+            if (emitters.containsKey(uid)) {
+                emitters.get(uid).close();
+                emitters.remove(uid);
+                return true;
+            }
+            return false;
         }
-        return false;
     }
 
     @Override
