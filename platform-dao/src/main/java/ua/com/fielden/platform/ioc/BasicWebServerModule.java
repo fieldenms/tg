@@ -64,37 +64,37 @@ import ua.com.fielden.platform.web_api.IWebApi;
 public class BasicWebServerModule extends CommonFactoryModule {
 
     private final Properties props;
-    private final SecurityTokenProvider tokenProvider;
+    private final Class<? extends ISecurityTokenProvider> tokenProviderType;
     private final IApplicationDomainProvider applicationDomainProvider;
     private final Class<? extends ISerialisationClassProvider> serialisationClassProviderType;
     private final Class<? extends IFilter> automaticDataFilterType;
     private final Class<? extends IAuthorisationModel> authorisationModelType;
 
-    public BasicWebServerModule(final Map<Class, Class> defaultHibernateTypes, //
-            final IApplicationDomainProvider applicationDomainProvider,//
-            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
-            final Class<? extends IFilter> automaticDataFilterType, //
-            final SecurityTokenProvider tokenProvider,//
+    public BasicWebServerModule(final Map<Class, Class> defaultHibernateTypes,
+            final IApplicationDomainProvider applicationDomainProvider,
+            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
+            final Class<? extends IFilter> automaticDataFilterType,
+            final Class<? extends ISecurityTokenProvider> tokenProviderType,
             final Properties props) throws Exception {
         super(props, defaultHibernateTypes, applicationDomainProvider.entityTypes());
         this.props = props;
-        this.tokenProvider = tokenProvider;
+        this.tokenProviderType = tokenProviderType;
         this.applicationDomainProvider = applicationDomainProvider;
         this.serialisationClassProviderType = serialisationClassProviderType;
         this.automaticDataFilterType = automaticDataFilterType;
         this.authorisationModelType = ServerAuthorisationModel.class;
     }
 
-    public BasicWebServerModule(final Map<Class, Class> defaultHibernateTypes, //
-            final IApplicationDomainProvider applicationDomainProvider,//
-            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
-            final Class<? extends IFilter> automaticDataFilterType, //
+    public BasicWebServerModule(final Map<Class, Class> defaultHibernateTypes,
+            final IApplicationDomainProvider applicationDomainProvider,
+            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
+            final Class<? extends IFilter> automaticDataFilterType,
             final Class<? extends IAuthorisationModel> authorisationModelType,
-            final SecurityTokenProvider tokenProvider,//
+            final Class<? extends ISecurityTokenProvider> tokenProviderType,
             final Properties props) throws Exception {
         super(props, defaultHibernateTypes, applicationDomainProvider.entityTypes());
         this.props = props;
-        this.tokenProvider = tokenProvider;
+        this.tokenProviderType = tokenProviderType;
         this.applicationDomainProvider = applicationDomainProvider;
         this.serialisationClassProviderType = serialisationClassProviderType;
         this.automaticDataFilterType = automaticDataFilterType;
@@ -125,7 +125,11 @@ public class BasicWebServerModule extends CommonFactoryModule {
 
         bind(IApplicationSettings.class).to(ApplicationSettings.class).in(Singleton.class);
         bind(IApplicationDomainProvider.class).toInstance(applicationDomainProvider);
-        bind(ISecurityTokenProvider.class).to(SecurityTokenProvider.class).in(Singleton.class);
+        if (tokenProviderType != null) {
+            bind(ISecurityTokenProvider.class).to(tokenProviderType).in(Singleton.class);
+        } else {
+            bind(ISecurityTokenProvider.class).to(SecurityTokenProvider.class).in(Singleton.class);
+        }
         // serialisation related binding
         bind(ISerialisationClassProvider.class).to(serialisationClassProviderType).in(Singleton.class);
         bind(ISerialiser.class).to(Serialiser.class).in(Singleton.class);
@@ -144,9 +148,6 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(ISecurityRoleAssociationBatchAction.class).to(SecurityRoleAssociationBatchActionDao.class);
 
         bind(ISecurityTokenController.class).to(SecurityTokenController.class);
-        if (tokenProvider != null) {
-            bind(SecurityTokenProvider.class).toInstance(tokenProvider);
-        }
         bind(IAuthorisationModel.class).to(authorisationModelType);
 
         // bind value matcher factory to support autocompleters
