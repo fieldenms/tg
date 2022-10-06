@@ -75,7 +75,7 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  */
 public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
-    private static final String ERR_IN_COMPOUND_EMITTER = "Compound emitter should catch this error. Something went wrong in webUiConfig.";
+    private static final String ERR_IN_COMPOUND_EMITTER = "Event source compound emitter should have cought this error. Something went wrong in webUiConfig.";
 
     private final Logger logger = Logger.getLogger(getClass());
     private final String title;
@@ -235,9 +235,9 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
                 eventSource.onOpen(compoundEmitter);
                 compoundEmitter.registerEventSource(eventSource);
             }
-        } catch (final IOException e) {
-            logger.error(e);
-            throw new InvalidUiConfigException(ERR_IN_COMPOUND_EMITTER);
+        } catch (final IOException ex) {
+            logger.error(ex);
+            throw new InvalidUiConfigException(ERR_IN_COMPOUND_EMITTER, ex);
         }
 
         return this;
