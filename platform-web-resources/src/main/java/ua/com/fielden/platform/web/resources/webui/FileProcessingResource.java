@@ -34,7 +34,7 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.exceptions.InvalidUiConfigException;
 import ua.com.fielden.platform.web.rx.eventsources.ProcessingProgressEventSource;
-import ua.com.fielden.platform.web.sse.IEmitter;
+import ua.com.fielden.platform.web.sse.IEventSourceEmitter;
 
 /**
  * This is a multi-purpose file-processing resource that can be used for uploading files to be processed with the specified functional entity.
@@ -191,7 +191,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
      */
     private Representation tryToProcess(final InputStream stream, final String mime) {
         final ProcessingProgressSubject subject = new ProcessingProgressSubject();
-        final IEmitter emitter = webApp.getEmitterManager().getEmitter(sseUid);
+        final IEventSourceEmitter emitter = webApp.getEventSourceEmitterRegister().getEmitter(sseUid);
 
         if (emitter == null) {
             throw new InvalidUiConfigException(ERR_CLIENT_NOT_REGISTERED);

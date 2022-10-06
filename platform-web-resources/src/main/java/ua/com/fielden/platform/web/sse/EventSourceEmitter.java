@@ -28,7 +28,7 @@ import ua.com.fielden.platform.web.application.RequestInfo;
  * @author TG Team
  *
  */
-public final class EventSourceEmitter implements IEmitter, Runnable{
+public final class EventSourceEmitter implements IEventSourceEmitter, Runnable{
 
     private static final byte[] CRLF = new byte[] { '\r', '\n' };
     private static final byte[] EVENT_FIELD = "event: ".getBytes(StandardCharsets.UTF_8);

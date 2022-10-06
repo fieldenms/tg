@@ -6,19 +6,20 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * {@link IEmitter} implementation that manages number of registered emitters (clients). This also registers event sources in the system.
+ * {@link IEventSourceEmitter} implementation that manages a number of registered emitters. Each such emitter corresponds to a separate instance of a web client.
+ * This class is also responsible for registering event sources.
  *
  * @author TG Team
  *
  */
-public class CompoundEmitter implements IEmitter, IEmitterManager, IEventSourceManager{
+public class EventSourceCompoundEmitter implements IEventSourceEmitter, IEventSourceEmitterRegister, IEventSourceRegister {
 
-    private Map<String, IEmitter> emitters = Collections.synchronizedMap(new HashMap<>());
+    private Map<String, IEventSourceEmitter> emitters = Collections.synchronizedMap(new HashMap<>());
 
     private Map<Class<? extends IEventSource>, IEventSource> eventSources = Collections.synchronizedMap(new HashMap<>());
 
     @Override
-    public IEventSourceManager registerEventSource(final IEventSource eventSource) {
+    public IEventSourceRegister registerEventSource(final IEventSource eventSource) {
         eventSources.put(eventSource.getClass(), eventSource);
         return this;
     }
@@ -29,18 +30,18 @@ public class CompoundEmitter implements IEmitter, IEmitterManager, IEventSourceM
     }
 
     @Override
-    public IEmitterManager registerEmitter(final String uid, final IEmitter emitter) {
+    public IEventSourceEmitterRegister registerEmitter(final String uid, final IEventSourceEmitter emitter) {
         emitters.put(uid, emitter);
         return this;
     }
 
     @Override
-    public IEmitter getEmitter(final String uid) {
+    public IEventSourceEmitter getEmitter(final String uid) {
         return emitters.get(uid);
     }
 
     @Override
-    public boolean closeEmitter(final String uid) {
+    public boolean deregisterEmitter(final String uid) {
         synchronized(this) {
             if (emitters.containsKey(uid)) {
                 emitters.get(uid).close();
@@ -54,7 +55,7 @@ public class CompoundEmitter implements IEmitter, IEmitterManager, IEventSourceM
     @Override
     public void event(final String name, final String data) throws IOException {
         synchronized(this) {
-            for(final IEmitter emitter: emitters.values()) {
+            for(final IEventSourceEmitter emitter: emitters.values()) {
                 emitter.event(name, data);
             }
         }
@@ -63,7 +64,7 @@ public class CompoundEmitter implements IEmitter, IEmitterManager, IEventSourceM
     @Override
     public void data(final String data) throws IOException {
         synchronized(this) {
-            for(final IEmitter emitter: emitters.values()) {
+            for(final IEventSourceEmitter emitter: emitters.values()) {
                 emitter.data(data);
             }
         }
@@ -72,7 +73,7 @@ public class CompoundEmitter implements IEmitter, IEmitterManager, IEventSourceM
     @Override
     public void comment(final String comment) throws IOException {
         synchronized(this) {
-            for(final IEmitter emitter: emitters.values()) {
+            for(final IEventSourceEmitter emitter: emitters.values()) {
                 emitter.comment(comment);
             }
         }
@@ -81,7 +82,8 @@ public class CompoundEmitter implements IEmitter, IEmitterManager, IEventSourceM
     @Override
     public void close() {
         synchronized(this) {
-            emitters.forEach((uid, emitter) -> closeEmitter(uid));
+            emitters.forEach((uid, emitter) -> deregisterEmitter(uid));
         }
     }
+
 }

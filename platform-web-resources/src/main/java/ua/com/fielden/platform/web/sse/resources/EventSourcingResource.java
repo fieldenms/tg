@@ -21,7 +21,7 @@ import ua.com.fielden.platform.web.application.RequestInfo;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebResource;
 import ua.com.fielden.platform.web.sse.EventSourceEmitter;
-import ua.com.fielden.platform.web.sse.IEmitter;
+import ua.com.fielden.platform.web.sse.IEventSourceEmitter;
 import ua.com.fielden.platform.web.utils.ServletUtils;
 
 /**
@@ -55,7 +55,7 @@ public class EventSourcingResource extends AbstractWebResource {
     public void subcribeClient() throws ResourceException {
         final String sseIdString = getRequest().getAttributes().get("sseUid").toString();
         try {
-            final IEmitter emitter = webApp.getEmitterManager().getEmitter(sseIdString);
+            final IEventSourceEmitter emitter = webApp.getEventSourceEmitterRegister().getEmitter(sseIdString);
             if (emitter == null) {
                 final HttpServletRequest httpRequest = ServletUtils.getRequest(getRequest());
                 final HttpServletResponse httpResponse = ServletUtils.getResponse(getResponse());
@@ -66,7 +66,7 @@ public class EventSourcingResource extends AbstractWebResource {
                 // but only completed on close
                 async.setTimeout(0);
                 final EventSourceEmitter ecentSourceEmitter = new EventSourceEmitter(shouldKeepGoing, async, new RequestInfo(getRequest()));
-                webApp.getEmitterManager().registerEmitter(sseIdString, ecentSourceEmitter);
+                webApp.getEventSourceEmitterRegister().registerEmitter(sseIdString, ecentSourceEmitter);
                 ecentSourceEmitter.scheduleHeartBeat();
             }
         } catch (final IOException ex) {
@@ -82,7 +82,7 @@ public class EventSourcingResource extends AbstractWebResource {
                 logger.error(e);
             }
         }
-        webApp.getEmitterManager().closeEmitter(sseIdString);
+        webApp.getEventSourceEmitterRegister().deregisterEmitter(sseIdString);
         logger.debug("Server-Sent Event Restlet completed.");
 
     }

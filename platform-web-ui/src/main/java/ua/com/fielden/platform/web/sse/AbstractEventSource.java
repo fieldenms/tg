@@ -33,7 +33,7 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
      * The emitter that is used for sending messages back to the client.
      * It is provided by the web resource in response to a subscription request from the client.
      */
-    private IEmitter emitter;
+    private IEventSourceEmitter emitter;
     /**
      * A subscription to the sever-side data stream, which is mainly used for unsubscribing.
      */
@@ -60,7 +60,7 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
     }
 
     @Override
-    public final void onOpen(final IEmitter emitter) throws IOException {
+    public final void onOpen(final IEventSourceEmitter emitter) throws IOException {
         logger.debug("client subscription in progress...");
         this.emitter = emitter;
         subscription = getStream().subscribe(new EventObserver());
