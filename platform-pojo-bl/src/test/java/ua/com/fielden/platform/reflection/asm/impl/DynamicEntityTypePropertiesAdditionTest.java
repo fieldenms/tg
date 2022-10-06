@@ -205,19 +205,17 @@ public class DynamicEntityTypePropertiesAdditionTest {
     }
 
     @Test
-    public void generated_types_can_NOT_be_renamed_after_adding_new_properties() throws Exception {
+    public void generated_types_can_be_renamed_after_adding_new_properties() throws Exception {
         final String newTypeName = DEFAULT_ORIG_TYPE.getName() + "_enhanced";
-        assertThrows(IllegalStateException.class, () -> {
-            final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
-                    .addProperties(np1)
-                    .modifyTypeName(newTypeName)
-                    .endModification();
-        });
-//
-//        assertEquals("Incorrect type name.", newTypeName, newType.getName());
-//        assertEquals("Incorrect number of properties.", 
-//                Finder.getPropertyDescriptors(DEFAULT_ORIG_TYPE).size() + 1,
-//                Finder.getPropertyDescriptors(newType).size());
+        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+                .addProperties(np1)
+                .modifyTypeName(newTypeName)
+                .endModification();
+
+        assertEquals("Incorrect type name.", newTypeName, newType.getName());
+        assertEquals("Incorrect number of properties.", 
+                Finder.getPropertyDescriptors(DEFAULT_ORIG_TYPE).size() + 1,
+                Finder.getPropertyDescriptors(newType).size());
     }
 
     @Test

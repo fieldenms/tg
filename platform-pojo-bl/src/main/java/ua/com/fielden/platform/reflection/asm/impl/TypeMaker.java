@@ -22,7 +22,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -33,8 +32,9 @@ import net.bytebuddy.description.modifier.Visibility;
 import net.bytebuddy.dynamic.DynamicType;
 import net.bytebuddy.dynamic.DynamicType.Builder.MethodDefinition;
 import net.bytebuddy.dynamic.DynamicType.Builder.MethodDefinition.ReceiverTypeDefinition;
-import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
 import net.bytebuddy.dynamic.TargetType;
+import net.bytebuddy.dynamic.scaffold.MethodGraph;
+import net.bytebuddy.dynamic.scaffold.subclass.ConstructorStrategy;
 import net.bytebuddy.implementation.FieldAccessor;
 import net.bytebuddy.implementation.FixedValue;
 import net.bytebuddy.implementation.Implementation;
@@ -42,8 +42,8 @@ import net.bytebuddy.implementation.MethodDelegation;
 import net.bytebuddy.implementation.SuperMethodCall;
 import net.bytebuddy.implementation.bind.annotation.Argument;
 import net.bytebuddy.implementation.bind.annotation.This;
-import net.bytebuddy.matcher.ElementMatchers;
 import net.bytebuddy.pool.TypePool;
+import ua.com.fielden.platform.entity.Accessor;
 import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.Generated;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -77,10 +77,6 @@ import ua.com.fielden.platform.utils.StreamUtils;
  *   <li>
  *   Certain classes, such as those that are a part of the Java platform, cannot be modified. 
  *   For details refer to the implementation of {@link #skipAdaptation(String)}.
- *   </li>
- *   <li>
- *   If {@link #modifyTypeName(String)} is used, then it must preceed calls to {@link #addProperties(NewProperty...)} and 
- *   {@link #modifyProperties(NewProperty...)}. Otherwise an exception is thrown.
  *   </li>
  * </ul>
  * 
@@ -141,7 +137,13 @@ public class TypeMaker<T> {
         // no need for looking up the specified type in cache,
         // which was useful before, since ASM operates on byte[] directly
 
-        builder = new ByteBuddy().subclass(origType, 
+        builder = new ByteBuddy()
+                // By JVM rules 2 methods are considered different if their parameter and return types are different
+                // in contrast to Java rules, where only parameter types are considered (default choice of ByteBuddy instances).
+                // JVM rules enable us to generate methods with modified return type, while avoiding implicit generation
+                // of bridge methods by Java compiler. This is the case for generation of subclasses.
+                .with(MethodGraph.Compiler.Default.forJVMHierarchy())
+                .subclass(origType, 
                 // do not implicitly define any constructors, since this is done manually later
                 ConstructorStrategy.Default.NO_CONSTRUCTORS)
                 // grab all declared class-level annotations
@@ -250,11 +252,10 @@ public class TypeMaker<T> {
     }
 
     private void addAccessor(final String propName, final Type propType) {
-        // generated type name needs to be known to use low-level ASM
-        if (modifiedName == null) {
-            modifyTypeName();
-        }
-        builder = builder.visit(AddPropertyAccessorAdapter.wrapper(propName, propType, modifiedName.replace('.', '/')));
+        final String prefix = propType.equals(Boolean.class) || propType.equals(boolean.class) ?
+                Accessor.IS.startsWith : Accessor.GET.startsWith;
+        builder = builder.defineMethod(prefix + StringUtils.capitalize(propName), propType, Visibility.PUBLIC)
+                .intercept(FieldAccessor.ofField(propName));
     }
 
     private void addSetter(final String propName, final Type propType, final boolean collectional) {
@@ -354,17 +355,14 @@ public class TypeMaker<T> {
      * @return
      */
     public TypeMaker<T> modifyTypeName(final String newTypeName) {
-        if (modifiedName != null) {
-            throw new IllegalStateException("Type name can't be modified past this point.");
-        }
         if (StringUtils.isEmpty(newTypeName)) {
             throw new IllegalStateException("New type name is 'null' or empty.");
         }
         if (builder == null) {
             throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
         }
-        modifiedName = newTypeName;
         builder = builder.name(newTypeName);
+        modifiedName = newTypeName;
         return this;
     }
     
