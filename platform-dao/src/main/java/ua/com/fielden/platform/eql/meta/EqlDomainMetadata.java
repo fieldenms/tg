@@ -321,7 +321,6 @@ public class EqlDomainMetadata {
     }
 
     private Optional<EqlPropertyMetadata> generateIdPropertyMetadata(final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo) {
-        // TODO reconsider this implementation taking into account its role combined with actual yields information in the process of getting final EntityPropInfo for Synthetic Entity 
     	final EqlPropertyMetadata idProperty = new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).required().column(id).build();
         final EqlPropertyMetadata idPropertyInOne2One = new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).required().column(id).build();
         switch (parentInfo.category) {
@@ -336,6 +335,7 @@ public class EqlDomainMetadata {
             } else if (isEntityType(getKeyType(parentInfo.entityType))) {
                 return of(new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).expression(expr().prop(KEY).model()).implicit().build());
             } else {
+            	// FIXME reconsider this implementation taking into account its role combined with actual yields information in the process of getting final EntityPropInfo for Synthetic Entity 
                 return of(idProperty);
             }
         default:
@@ -377,7 +377,7 @@ public class EqlDomainMetadata {
     }
 
     private ExpressionModel generateUnionCommonDescPropExpressionModel(final List<Field> unionMembers, final String contextPropName) {
-        final List<String> unionMembersNames = unionMembers.stream().filter(et -> hasDescProperty((Class<? extends AbstractEntity<?>>) et.getType())).map(et -> et.getName()).collect(Collectors.toList());
+        final List<String> unionMembersNames = unionMembers.stream().filter(et -> hasDescProperty((Class<? extends AbstractEntity<?>>) et.getType())).map(et -> et.getName()).collect(toList());
         return generateUnionEntityPropertyContextualExpression(unionMembersNames, DESC, contextPropName);
     }
 
@@ -424,18 +424,18 @@ public class EqlDomainMetadata {
              .collect(toList());
     }
 
-    private String getColumnName(final String propName, final MapTo mapTo, final String parentPrefix) {
+    private static String getColumnName(final String propName, final MapTo mapTo, final String parentPrefix) {
         return (parentPrefix != null ? parentPrefix + "_" : "") + (isNotEmpty(mapTo.value()) ? mapTo.value() : propName.toUpperCase() + "_");
     }
 
-    private PropColumn generateColumn(final String columnName, final IsProperty isProperty) {
+    private static PropColumn generateColumn(final String columnName, final IsProperty isProperty) {
         final Integer length = isProperty.length() > 0 ? isProperty.length() : null;
         final Integer precision = isProperty.precision() >= 0 ? isProperty.precision() : null;
         final Integer scale = isProperty.scale() >= 0 ? isProperty.scale() : null;
         return new PropColumn(removeObsoleteUnderscore(columnName), length, precision, scale);
     }
 
-    private List<EqlPropertyMetadata> getCompositeUserTypeSubpropsMetadata(final ICompositeUserTypeInstantiate hibType, final String parentColumnPrefix, final ExpressionModel expr) {
+    private static List<EqlPropertyMetadata> getCompositeUserTypeSubpropsMetadata(final ICompositeUserTypeInstantiate hibType, final String parentColumnPrefix, final ExpressionModel expr) {
         final String[] propNames = hibType.getPropertyNames();
         final Object[] propHibTypes = hibType.getPropertyTypes();
         final Class<?> headerPropType = hibType.returnedClass();
@@ -555,7 +555,7 @@ public class EqlDomainMetadata {
         return new EqlPropertyMetadata.Builder(propName, javaType, hibType).notRequired().expression(expressionModel).implicit().build();
     }
 
-    private final Table generateTable(final String tableName, final List<EqlPropertyMetadata> propsMetadatas) {
+    private final static Table generateTable(final String tableName, final List<EqlPropertyMetadata> propsMetadatas) {
         final Map<String, String> columns = new HashMap<>();
         for (final EqlPropertyMetadata el : propsMetadatas) {
 
@@ -580,7 +580,7 @@ public class EqlDomainMetadata {
      * @param propsMetadata
      * @return
      */
-    private final TableStructForBatchInsertion generateTableWithPropColumnInfo(final String tableName, final List<EqlPropertyMetadata> propsMetadata) {
+    private final static TableStructForBatchInsertion generateTableWithPropColumnInfo(final String tableName, final List<EqlPropertyMetadata> propsMetadata) {
         final List<PropColumnInfo> columns = new ArrayList<>();
         for (final EqlPropertyMetadata el : propsMetadata) {
             if (!el.name.equals(ID) && !el.name.equals(VERSION)) {
