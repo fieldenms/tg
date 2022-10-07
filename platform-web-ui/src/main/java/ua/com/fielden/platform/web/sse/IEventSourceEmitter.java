@@ -59,7 +59,7 @@ public interface IEventSourceEmitter {
      * When invoked as: <code>comment("foo")</code>, the client will receive the line:
      *
      * <pre>
-     * : foo
+     * comment: foo
      * </pre>
      *
      * @param comment

@@ -28,12 +28,12 @@ import ua.com.fielden.platform.web.application.RequestInfo;
  * @author TG Team
  *
  */
-public final class EventSourceEmitter implements IEventSourceEmitter, Runnable{
+public final class EventSourceEmitter implements IEventSourceEmitter, Runnable {
 
     private static final byte[] CRLF = new byte[] { '\r', '\n' };
     private static final byte[] EVENT_FIELD = "event: ".getBytes(StandardCharsets.UTF_8);
     private static final byte[] DATA_FIELD = "data: ".getBytes(StandardCharsets.UTF_8);
-    private static final byte[] COMMENT_FIELD = ": ".getBytes(StandardCharsets.UTF_8);
+    private static final byte[] COMMENT_FIELD = "comment: ".getBytes(StandardCharsets.UTF_8);
 
     private final Logger logger = Logger.getLogger(getClass());
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
@@ -47,13 +47,11 @@ public final class EventSourceEmitter implements IEventSourceEmitter, Runnable{
     private final RequestInfo info;
 
     /**
-     * The use of <code>stopResourceThread</code> is a workaround at this stage to prevent restlet from closing the connection with the client by means of blocking its thread by
-     * putting it to sleep.
+     * The use of {@code stopResourceThread} is a workaround at this stage to prevent Restlet from closing the connection with the client by means of blocking its thread by putting it to sleep.
      *
      * @param shouldResourceThreadBeBlocked
-     * @param eventSource
      * @param async
-     * @param serialiser
+     * @param info
      * @throws IOException
      */
     public EventSourceEmitter(final AtomicBoolean shouldResourceThreadBeBlocked, final AsyncContext async, final RequestInfo info) throws IOException {
