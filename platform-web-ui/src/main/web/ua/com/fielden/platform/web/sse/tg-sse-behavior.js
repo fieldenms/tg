@@ -113,10 +113,14 @@ export const TgSseBehavior = {
     },
 
     unsubscribeFromSseEvents: function () {
-        this._messageSubscription && this._messageSubscription.unsubscribe();
-        this._errorSubscription && this._errorSubscription.unsubscribe();
-        delete this._messageSubscription;
-        delete this._errorSubscription;
+        if (this._messageSubscription) {
+            this._messageSubscription.unsubscribe();
+            delete this._messageSubscription;
+        }
+        if (this._errorSubscription) {
+            this._errorSubscription.unsubscribe();
+            delete this._errorSubscription;
+        }
     },
 
     /** Executes dataHandler with delay. */
