@@ -51,6 +51,7 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeUtils;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -121,8 +122,8 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     private List<String> constructProperties(final Class<?> managedType, final String path, final List<Field> fieldsAndKeys) {
         // sort fieldsAndKeys to achieve an order, where dynamically added properties are last
         final List<Field> orderedFieldsAndKeys = fieldsAndKeys.stream().sorted((field1, field2) -> {
-            final boolean field1Generated = DynamicEntityClassLoader.isGenerated(field1.getDeclaringClass());
-            final boolean field2Generated = DynamicEntityClassLoader.isGenerated(field2.getDeclaringClass());
+            final boolean field1Generated = DynamicTypeUtils.isGenerated(field1);
+            final boolean field2Generated = DynamicTypeUtils.isGenerated(field2);
             
             if (!Boolean.logicalXor(field1Generated, field2Generated)) return 0; // both are either generated or not
             else if (field1Generated)                                  return 1;
