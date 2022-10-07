@@ -16,12 +16,12 @@ import org.restlet.resource.Get;
 import org.restlet.resource.ResourceException;
 
 import ua.com.fielden.platform.utils.IDates;
-import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.application.RequestInfo;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebResource;
 import ua.com.fielden.platform.web.sse.EventSourceEmitter;
 import ua.com.fielden.platform.web.sse.IEventSourceEmitter;
+import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 import ua.com.fielden.platform.web.utils.ServletUtils;
 
 /**
@@ -33,17 +33,17 @@ public class EventSourcingResource extends AbstractWebResource {
 
     private final Logger logger = Logger.getLogger(this.getClass());
     private final AtomicBoolean shouldKeepGoing = new AtomicBoolean(true);
-    private final IWebUiConfig webApp;
+    private final IEventSourceEmitterRegister eseRegister;
 
     public EventSourcingResource(
-            final IWebUiConfig webApp,
+            final IEventSourceEmitterRegister eseRegister,
             final IDeviceProvider deviceProvider,
             final IDates dates,
             final Context context,
             final Request request,
             final Response response) {
         super(context, request, response, deviceProvider, dates);
-        this.webApp = webApp;
+        this.eseRegister = eseRegister;
     }
 
     /**
@@ -55,7 +55,7 @@ public class EventSourcingResource extends AbstractWebResource {
     public void subcribeClient() throws ResourceException {
         final String sseIdString = getRequest().getAttributes().get("sseUid").toString();
         try {
-            final IEventSourceEmitter emitter = webApp.getEventSourceEmitterRegister().getEmitter(sseIdString);
+            final IEventSourceEmitter emitter = eseRegister.getEmitter(sseIdString);
             if (emitter == null) {
                 final HttpServletRequest httpRequest = ServletUtils.getRequest(getRequest());
                 final HttpServletResponse httpResponse = ServletUtils.getResponse(getResponse());
@@ -66,7 +66,7 @@ public class EventSourcingResource extends AbstractWebResource {
                 // but only completed on close
                 async.setTimeout(0);
                 final EventSourceEmitter ecentSourceEmitter = new EventSourceEmitter(shouldKeepGoing, async, new RequestInfo(getRequest()));
-                webApp.getEventSourceEmitterRegister().registerEmitter(sseIdString, ecentSourceEmitter);
+                eseRegister.registerEmitter(sseIdString, ecentSourceEmitter);
                 ecentSourceEmitter.scheduleHeartBeat();
             }
         } catch (final IOException ex) {
@@ -82,7 +82,7 @@ public class EventSourcingResource extends AbstractWebResource {
                 logger.error(e);
             }
         }
-        webApp.getEventSourceEmitterRegister().deregisterEmitter(sseIdString);
+        eseRegister.deregisterEmitter(sseIdString);
         logger.debug("Server-Sent Event Restlet completed.");
 
     }

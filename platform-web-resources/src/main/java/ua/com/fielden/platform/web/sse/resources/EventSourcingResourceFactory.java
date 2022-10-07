@@ -7,8 +7,8 @@ import org.restlet.data.Method;
 
 import rx.Observable;
 import ua.com.fielden.platform.utils.IDates;
-import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
+import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 import ua.com.fielden.platform.web.sse.SseUtils;
 import ua.com.fielden.platform.web.sse.exceptions.InvalidSseUriException;
 
@@ -24,10 +24,10 @@ public class EventSourcingResourceFactory extends Restlet {
 
     private final IDeviceProvider deviceProvider;
     private final IDates dates;
-    private final IWebUiConfig webApp;
+    private final IEventSourceEmitterRegister eseRegister;
 
-    public EventSourcingResourceFactory(final IWebUiConfig webApp, final IDeviceProvider deviceProvider, final IDates dates) {
-        this.webApp = webApp;
+    public EventSourcingResourceFactory(final IEventSourceEmitterRegister eseRegister, final IDeviceProvider deviceProvider, final IDates dates) {
+        this.eseRegister = eseRegister;
         this.deviceProvider = deviceProvider;
         this.dates = dates;
     }
@@ -40,7 +40,7 @@ public class EventSourcingResourceFactory extends Restlet {
                 throw new InvalidSseUriException(String.format("URI [%s] is not valid for SSE.", request.getResourceRef().toString()));
             }
 
-            new EventSourcingResource(webApp, deviceProvider, dates, getContext(), request, response).handle();
+            new EventSourcingResource(eseRegister, deviceProvider, dates, getContext(), request, response).handle();
         }
     }
 

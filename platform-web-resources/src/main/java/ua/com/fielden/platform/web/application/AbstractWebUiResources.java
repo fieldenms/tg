@@ -141,7 +141,7 @@ public abstract class AbstractWebUiResources extends Application {
         //Attache client side error logger resource
         guardedRouter.attach("/error", new WebClientErrorLoggerResourceFactory(injector));
 
-        guardedRouter.attach("/sse/{sseUid}",  new EventSourcingResourceFactory(webApp, deviceProvider, dates));
+        guardedRouter.attach("/sse/{sseUid}",  new EventSourcingResourceFactory(webApp.getEventSourceEmitterRegister(), deviceProvider, dates));
 
         // Registering entity centres:
         attachCentreResources(guardedRouter, webApp, restUtil);
