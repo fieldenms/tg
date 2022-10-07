@@ -18,10 +18,10 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.utils.IDates;
-import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.FileProcessingResource;
+import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 
 /**
  * Factory to instantiate {@link FileProcessingResource}.
@@ -34,7 +34,7 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
     protected final Class<T> entityType;
     protected final Function<EntityFactory, T> entityCreator;
     protected final ICompanionObjectFinder companionFinder;
-    protected final IWebUiConfig webApp;
+    private final IEventSourceEmitterRegister eseRegister;
 
     protected final long fileSizeLimitBytes;
     protected final Set<MediaType> types = new HashSet<>();
@@ -42,7 +42,7 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
     protected final IDates dates;
 
     public FileProcessingResourceFactory(
-            final IWebUiConfig webApp,
+            final IEventSourceEmitterRegister eseRegister,
             final Injector injector,
             final Class<T> entityType,
             final Function<EntityFactory, T> entityCreator,
@@ -51,7 +51,7 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
             final long fileSizeLimitKb,
             final MediaType type, // at least one type is required
             final MediaType... types) {
-        this.webApp = webApp;
+        this.eseRegister = eseRegister;
         this.injector = injector;
         this.entityType = entityType;
         this.entityCreator = entityCreator;
@@ -69,7 +69,7 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
 
         if (Method.PUT.equals(request.getMethod())) {
             new FileProcessingResource<>(
-                    webApp,
+                    eseRegister,
                     companionFinder.find(entityType),
                     injector.getInstance(EntityFactory.class),
                     entityCreator,
@@ -82,4 +82,5 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
                     getContext(), request, response).handle();
         }
     }
+
 }

@@ -29,12 +29,12 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.rx.observables.ProcessingProgressSubject;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.utils.IDates;
-import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.exceptions.InvalidUiConfigException;
 import ua.com.fielden.platform.web.rx.eventsources.ProcessingProgressEventSource;
 import ua.com.fielden.platform.web.sse.IEventSourceEmitter;
+import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 
 /**
  * This is a multi-purpose file-processing resource that can be used for uploading files to be processed with the specified functional entity.
@@ -53,7 +53,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
     private final ISerialiser serialiser;
     private final long sizeLimitBytes;
     private final Set<MediaType> types;
-    private final IWebUiConfig webApp;
+    private final IEventSourceEmitterRegister eseRegister;
     private final String jobUid;
     private final String sseUid;
     private final String origFileName;
@@ -63,7 +63,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
     private final IDates dates;
 
     public FileProcessingResource(
-            final IWebUiConfig webApp,
+            final IEventSourceEmitterRegister eseRegister,
             final IEntityDao<T> companion,
             final EntityFactory factory,
             final Function<EntityFactory, T> entityCreator,
@@ -77,7 +77,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
             final Request request,
             final Response response) {
         super(context, request, response, deviceProvider, dates);
-        this.webApp = webApp;
+        this.eseRegister = eseRegister;
         this.companion = companion;
         this.factory = factory;
         this.entityCreator = entityCreator;
@@ -191,8 +191,8 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
      */
     private Representation tryToProcess(final InputStream stream, final String mime) {
         final ProcessingProgressSubject subject = new ProcessingProgressSubject();
-        final IEventSourceEmitter emitter = webApp.getEventSourceEmitterRegister().getEmitter(sseUid);
 
+        final IEventSourceEmitter emitter = eseRegister.getEmitter(sseUid);
         if (emitter == null) {
             throw new InvalidUiConfigException(ERR_CLIENT_NOT_REGISTERED);
         }
