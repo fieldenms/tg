@@ -23,8 +23,8 @@ import com.google.inject.name.Named;
 
 /**
  * Default implementation of {@link IDates}, which uses a thread-local state for managing time-zone values specified in client requests.
- * Request time-zones are used when converting timeline moments to time-zone specific ones. 
- * 
+ * Request time-zones are used when converting timeline moments to time-zone specific ones.
+ *
  * @author TG Team
  *
  */
@@ -33,24 +33,49 @@ public class DefaultDates implements IDates {
     private static final String SERVER_TIME_ZONE_APPLIED = "Server time-zone will be used.";
     private final Logger logger = Logger.getLogger(getClass());
     private final boolean independentTimeZone;
+    private final Integer weekStart;
+    private final Integer financialYearStartDate;
+    private final Integer financialYearStartMonth;
     private final ThreadLocal<DateTimeZone> threadLocalRequestTimeZone = new ThreadLocal<>();
-    
+
     @Inject
-    public DefaultDates(final @Named("independent.time.zone") boolean independentTimeZone) {
+    public DefaultDates(
+            final @Named("independent.time.zone") boolean independentTimeZone,
+            final @Named("weekStart") Integer weekStart,
+            final @Named("financialYearStartDate") Integer financialYearStartDate,
+            final @Named("financialYearStartMonth") Integer financialYearStartMonth) {
         this.independentTimeZone = independentTimeZone;
+        this.weekStart = weekStart;
+        this.financialYearStartDate = financialYearStartDate;
+        this.financialYearStartMonth = financialYearStartMonth;
     }
-    
+
     @Override
     public DateTimeZone timeZone() {
         return independentTimeZone ? getDefault() : requestTimeZone().orElseGet(DateTimeZone::getDefault);
     }
-    
+
+    @Override
+    public int startOfWeek() {
+        return weekStart;
+    }
+
+    @Override
+    public int financialYearStartDate() {
+        return financialYearStartDate;
+    }
+
+    @Override
+    public int financialYearStartMonth() {
+        return financialYearStartMonth;
+    }
+
     /**
      * Sets time-zone associated with an external request defined by {@code tzDatabaseTimeZoneId}, if any.
      * <p>
      * WARNING: every server resource should invoke one of {@code setRequestTimeZone} methods to redefine thread-local request time-zone (potentially empty);
      *          this is because threads can be reused for different resources and, if not redefined, previous request time-zone will be taken, potentially from other user and other time-zone
-     * 
+     *
      * @param tzDatabaseTimeZoneId -- the name of time-zone as it is defined in 'tz database' (also known as 'tzdata', 'zoneinfo database' or 'IANA time zone database');
      *                                if multiple IDs are provided and separated by comma, only first one will be used;
      *                                if empty then no time-zone will be associated with the request
@@ -70,20 +95,20 @@ public class DefaultDates implements IDates {
             setRequestTimeZone(empty());
         }
     }
-    
+
     /**
      * Sets time-zone associated with an external request, if any.
      * <p>
      * WARNING: every server resource should invoke one of {@code setRequestTimeZone} methods to redefine thread-local request time-zone (potentially empty);
      *          this is because threads can be reused for different resources and, if not redefined, previous request time-zone will be taken, potentially from other user and other time-zone
-     * 
+     *
      * @param requestTimeZoneOpt -- optional time-zone as in 'tz database' (also known as 'tzdata', 'zoneinfo database' or 'IANA time zone database');
      *                              if empty then no time-zone will be associated with the request
      */
     public void setRequestTimeZone(final Optional<DateTimeZone> requestTimeZoneOpt) {
         threadLocalRequestTimeZone.set(requestTimeZoneOpt.orElse(null));
     }
-    
+
     @Override
     public DateTime now() {
         return requestTimeZone().map(tz -> {
@@ -92,25 +117,25 @@ public class DefaultDates implements IDates {
         })
         .orElseGet(() -> new DateTime()); // now in server time-zone; used as a fallback where no time-zone was used.
     }
-    
+
     @Override
     public DateTime zoned(final Date date) {
         return new DateTime(date, timeZone());
     }
-    
+
     @Override
     public String toString(final DateTime dateTime) {
         return forPattern(dateWithoutTimeFormat + " hh:mm a").print(dateTime);
     }
-    
+
     @Override
     public String toString(final Date date) {
         return toString(zoned(date));
     }
-    
+
     @Override
     public Optional<DateTimeZone> requestTimeZone() {
         return ofNullable(threadLocalRequestTimeZone.get());
     }
-    
+
 }
