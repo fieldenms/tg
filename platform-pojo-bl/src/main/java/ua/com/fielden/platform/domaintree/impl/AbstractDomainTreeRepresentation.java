@@ -119,21 +119,37 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @return
      */
     private List<String> constructProperties(final Class<?> managedType, final String path, final List<Field> fieldsAndKeys) {
+        // sort fieldsAndKeys to achieve an order, where dynamically added properties are last
+        final List<Field> orderedFieldsAndKeys = fieldsAndKeys.stream().sorted((field1, field2) -> {
+            final boolean field1Generated = DynamicEntityClassLoader.isGenerated(field1.getDeclaringClass());
+            final boolean field2Generated = DynamicEntityClassLoader.isGenerated(field2.getDeclaringClass());
+            
+            if (!Boolean.logicalXor(field1Generated, field2Generated)) return 0; // both are either generated or not
+            else if (field1Generated)                                  return 1;
+            else                                                       return -1;
+        }).toList();
+
         final List<String> newIncludedProps = new ArrayList<>();
-        for (final Field field : fieldsAndKeys) {
+        for (final Field field : orderedFieldsAndKeys) {
             final String property = StringUtils.isEmpty(path) ? field.getName() : path + "." + field.getName();
             final String reflectionProperty = reflectionProperty(property);
             if (!isExcludedImmutably(managedType, reflectionProperty)) {
                 newIncludedProps.add(property);
 
-                // determine the type of property, which can be a) "union entity" property b) property under "union entity" c) collection property d) entity property e) simple property
+                // determine the type of property, which can be:
+                // a) "union entity" property 
+                // b) property under "union entity" 
+                // c) collection property 
+                // d) entity property 
+                // e) simple property
                 final Pair<Class<?>, String> penultAndLast = PropertyTypeDeterminator.transform(managedType, reflectionProperty);
                 final Class<?> parentType = penultAndLast.getKey();
                 final Class<?> propertyType = PropertyTypeDeterminator.determineClass(parentType, penultAndLast.getValue(), true, true);
 
                 // add the children for "property" based on its nature
                 if (EntityUtils.isEntityType(propertyType)) {
-                    final boolean propertyTypeWasInHierarchyBefore = typesInHierarchy(managedType, reflectionProperty, true).contains(DynamicEntityClassLoader.getOriginalType(propertyType));
+                    final boolean propertyTypeWasInHierarchyBefore = typesInHierarchy(managedType, reflectionProperty, true)
+                            .contains(DynamicEntityClassLoader.getOriginalType(propertyType));
                     
                     // The logic below (determining whether property represents link property) is important to maintain the integrity of domain trees.
                     // However, it also causes performance bottlenecks when invoking multiple times.
