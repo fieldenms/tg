@@ -48,8 +48,8 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class PersistDomainMetadataModel {
     final static String CRITERION = "[selection criterion]";
-    final static String DOMAINTYPE_INSERT_STMT = "INSERT INTO DOMAINTYPE_ VALUES(?,?,?,?,?,?,?,?);";
-    final static String DOMAINPROPERTY_INSERT_STMT = "INSERT INTO DOMAINPROPERTY_ VALUES(?,?,?,?,?,?,?,?,?,?,?,?);";
+    final static String DOMAINTYPE_INSERT_STMT = "INSERT INTO DOMAINTYPE_(_ID, KEY_, DESC_, DBTABLE_, ENTITYTYPEDESC_, ENTITY_, PROPSCOUNT_, _VERSION) VALUES(?, ?, ?, ?, ?, ?, ?, ?);";
+    final static String DOMAINPROPERTY_INSERT_STMT = "INSERT INTO DOMAINPROPERTY_(_ID, NAME_, TITLE_, DESC_, HOLDER__DOMAINTYPE, HOLDER__DOMAINPROPERTY, DOMAINTYPE_, KEYINDEX_, REQUIRED_, DBCOLUMN_, POSITION_, _VERSION) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);";
     final static String EXISTING_DATA_DELETE_STMT = "DELETE FROM DOMAINPROPERTY_; DELETE FROM DOMAINTYPE_;";
 
     private static final Logger LOGGER = LogManager.getLogger(PersistDomainMetadataModel.class);
