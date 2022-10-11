@@ -60,7 +60,7 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
     }
 
     @Override
-    public final void subscribe(final IEventSourceEmitter emitter) throws IOException {
+    public final void connect(final IEventSourceEmitter emitter) throws IOException {
         logger.debug("client subscription in progress...");
         this.emitter = emitter;
         this.subscription = getStream().subscribe(new EventObserver());
@@ -98,7 +98,7 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
     protected abstract Map<String, Object> eventToData(final T event);
 
     @Override
-    public void unsubscribe() {
+    public void disconnect() {
         logger.debug("client subscription connection has been closed");
         if (subscription != null) {
             subscription.unsubscribe();

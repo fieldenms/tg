@@ -12,19 +12,20 @@ import java.io.IOException;
 public interface IEventSource {
 
     /**
-     * A method that is invoked when an event source connection is opened, which subscribes to the evens from the {@code emitter}.
+     * A method that is invoked when this event source needs to connect to {@code emitter}, through which events should be sent.
      * <p>
      *
      * @param emitter
-     *            the {@link IEventSourceEmitter} instance that allows to operate on the connection
+     *            a {@link IEventSourceEmitter} instance, through which events are sent.
      * @throws IOException
      *             if the implementation of the method throws such exception
      */
-    void subscribe(final IEventSourceEmitter emitter) throws IOException;
+    void connect(final IEventSourceEmitter emitter) throws IOException;
 
     /**
-     * A method that is invoked when an event source connection is closed, and thus this even source needs to unsubscribe from the {@code emitter}, passed into {@link #subscribe(IEventSourceEmitter)}.
+     * A method that is invoked when this event source should be disconnected from the {@code emitter}, passed into {@link #connect(IEventSourceEmitter)}.
+     * This usually needs to be done when this even source has completed its work (i.e., no new events need to be sent).
      */
-    void unsubscribe();
+    void disconnect();
 
 }

@@ -183,24 +183,24 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
     }
 
     /**
-     * Registers an event sourcing resource that sends file processing progress back to the client.
-     * Instantiates an entity that is responsible for file processing and executes it (call method <code>save</code>).
+     * Creates an event source and connects it to an SSE emitter, which is associated with a client making the current request as identified by {@code sseUid}, to report file processing progress back to that client.
+     * Instantiates an entity that is responsible for file processing and executes it.
      *
      * @param stream -- a stream that represents a file to be processed.
      * @return
      */
     private Representation tryToProcess(final InputStream stream, final String mime) {
-        final ProcessingProgressSubject subject = new ProcessingProgressSubject();
 
         final IEventSourceEmitter emitter = eseRegister.getEmitter(sseUid);
         if (emitter == null) {
             throw new InvalidUiConfigException(ERR_CLIENT_NOT_REGISTERED);
         }
 
+        final ProcessingProgressSubject subject = new ProcessingProgressSubject();
         final ProcessingProgressEventSource eventSource = new ProcessingProgressEventSource(subject, jobUid, serialiser);
 
         try {
-            eventSource.subscribe(emitter);
+            eventSource.connect(emitter);
             final T entity = entityCreator.apply(factory);
             entity.setOrigFileName(origFileName);
             entity.setLastModified(fileLastModified);
@@ -213,7 +213,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         } catch (final IOException e) {
             throw new ResourceException(e);
         } finally {
-            eventSource.unsubscribe();
+            eventSource.disconnect();
         }
     }
 
