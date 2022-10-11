@@ -7,12 +7,12 @@ import java.io.IOException;
  * <p>
  * {@link IEventSourceEmitter} is the active half of the connection and allows to operate on the connection.
  * <p>
- * {@link IEventSource} allows applications to be notified of events happening on the connection; two events are being notified: the opening of the event source connection, where
- * method {@link IEventSource#onOpen(IEventSourceEmitter)} is invoked, and the closing of the event source connection, where method {@link IEventSource#onClose()} is invoked.
+ * {@link IEventSource} allows applications to be notified of events happening on the connection.
  */
 public interface IEventSource {
+
     /**
-     * Callback method invoked when an event source connection is opened.
+     * A method that is invoked when an event source connection is opened, which subscribes to the evens from the {@code emitter}.
      * <p>
      *
      * @param emitter
@@ -20,11 +20,11 @@ public interface IEventSource {
      * @throws IOException
      *             if the implementation of the method throws such exception
      */
-    void onOpen(final IEventSourceEmitter emitter) throws IOException;
+    void subscribe(final IEventSourceEmitter emitter) throws IOException;
 
     /**
-     * Callback method invoked when an event source connection is closed.
+     * A method that is invoked when an event source connection is closed, and thus this even source needs to unsubscribe from the {@code emitter}, passed into {@link #subscribe(IEventSourceEmitter)}.
      */
-    void onClose();
+    void unsubscribe();
 
 }

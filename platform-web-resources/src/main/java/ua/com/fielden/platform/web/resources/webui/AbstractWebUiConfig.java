@@ -232,7 +232,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         try {
             if (!compoundEmitter.hasEventSource(eventSourceClass)) {
                 final IEventSource eventSource = injector.getInstance(eventSourceClass);
-                eventSource.onOpen(compoundEmitter);
+                eventSource.subscribe(compoundEmitter);
                 compoundEmitter.registerEventSource(eventSource);
             }
         } catch (final IOException ex) {

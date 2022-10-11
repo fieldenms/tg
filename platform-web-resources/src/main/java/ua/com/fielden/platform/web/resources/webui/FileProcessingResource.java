@@ -200,7 +200,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         final ProcessingProgressEventSource eventSource = new ProcessingProgressEventSource(subject, jobUid, serialiser);
 
         try {
-            eventSource.onOpen(emitter);
+            eventSource.subscribe(emitter);
             final T entity = entityCreator.apply(factory);
             entity.setOrigFileName(origFileName);
             entity.setLastModified(fileLastModified);
@@ -213,7 +213,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         } catch (final IOException e) {
             throw new ResourceException(e);
         } finally {
-            eventSource.onClose();
+            eventSource.unsubscribe();
         }
     }
 
