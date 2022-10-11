@@ -877,7 +877,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     /**
-     * Returns class name of event source that is used to generate data for Server source event. This event should be used on client to send/subscribe to postal event to refresh centre.
+     * Returns a class name of an SSE event source, associated with this entity centre. This event source is used at the client-side to subscribe to a postal event to refresh this entity centre.
      *
      * @return
      */

@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.rx.eventsources;
 
-import java.util.HashMap;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
+
 import java.util.Map;
 
 import ua.com.fielden.platform.rx.observables.ProcessingProgressSubject;
@@ -24,10 +26,7 @@ public class ProcessingProgressEventSource extends AbstractEventSource<Integer, 
 
     @Override
     protected Map<String, Object> eventToData(final Integer event) {
-        final Map<String, Object> data = new HashMap<>();
-        data.put("prc", event);
-        data.put("jobUid", jobUid);
-        return data;
+        return mapOf(t2("prc", event), t2("jobUid", jobUid));
     }
 
 }

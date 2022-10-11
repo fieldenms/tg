@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui.exceptions;
 
 /**
- * Indicates problem in web ui client configuration process.
+ * Indicates a problem in Web UI client configuration.
  *
  * @author TG Team
  *
