@@ -20,12 +20,12 @@ import ua.com.fielden.platform.utils.IDates;
 public class DatesForTesting implements IDates {
     private DateTime now;
     private Supplier<DateTime> timeSupplier;
-    
+
     @Override
     public DateTime now() {
         return getNow();
     }
-    
+
     public DateTime getNow() {
         if (timeSupplier != null) {
             return timeSupplier.get();
@@ -35,12 +35,12 @@ public class DatesForTesting implements IDates {
         }
         return new DateTime();
     }
-    
+
     public void setNow(final DateTime now) {
         this.timeSupplier = null;
         this.now = now;
     }
-    
+
     /**
      * A convenient way to specify the model time as a function.
      * If time supplier is not specified, value <code>now</code> is used.
@@ -57,10 +57,10 @@ public class DatesForTesting implements IDates {
         this.timeSupplier = timeSupplier;
         return this;
     }
-    
+
     /**
      * A more explicit API for removing a time supplier if it was provided.
-     * 
+     *
      * @return
      */
     public DatesForTesting removeTimeSupplier() {
@@ -71,6 +71,21 @@ public class DatesForTesting implements IDates {
     @Override
     public Optional<DateTimeZone> requestTimeZone() {
         return Optional.empty();
+    }
+
+    @Override
+    public int financialYearStartDate() {
+        return 1;
+    }
+
+    @Override
+    public int financialYearStartMonth() {
+        return 7;
+    }
+
+    @Override
+    public int startOfWeek() {
+        return 1;
     }
 
 }

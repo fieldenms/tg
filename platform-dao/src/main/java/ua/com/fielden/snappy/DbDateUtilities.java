@@ -12,7 +12,7 @@ public class DbDateUtilities {
     /**
      * This method initializes all date parameters that exist in "query" and are relative to previously retrieved "currentDbDate". </br> For instance : "BEG_PREV_MONTH",
      * "MID_CURR_YEAR" or "END_NEXT_DAY" etc.
-     * 
+     *
      * @param query
      * @param currentDbDate
      * @return
@@ -25,7 +25,7 @@ public class DbDateUtilities {
                 final DateRangeSelectorEnum begMidEnd = DateRangeSelectorEnum.valueOf(paramParts[0]);
                 final DateRangePrefixEnum prevCurrNext = DateRangePrefixEnum.valueOf(paramParts[1]);
                 final MnemonicEnum rangeWidth = MnemonicEnum.valueOf(paramParts[2]);
-                final Date date = DateUtilities.dateOfRangeThatIncludes(currentDbDate, begMidEnd, prevCurrNext, rangeWidth, new DefaultDates(true));
+                final Date date = DateUtilities.dateOfRangeThatIncludes(currentDbDate, begMidEnd, prevCurrNext, rangeWidth, new DefaultDates(true, 1, 1, 7));
                 query.setDate(param, date);
                 System.err.println("param :" + param + " == " + date);
             } catch (final Exception e) {

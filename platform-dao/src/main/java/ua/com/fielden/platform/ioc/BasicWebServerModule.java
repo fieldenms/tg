@@ -123,7 +123,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bindConstant().annotatedWith(Names.named("auth.mode")).to(props.getProperty("auth.mode", AuthMode.RSO.name()));
         bindConstant().annotatedWith(Names.named("auth.sso.provider")).to(props.getProperty("auth.sso.provider", "Identity Provider"));
         // date related parameters
-        bindConstant().annotatedWith(Names.named("weekStart")).to(Integer.valueOf(props.getProperty("weekStart", "0")));
+        bindConstant().annotatedWith(Names.named("weekStart")).to(Integer.valueOf(props.getProperty("weekStart", "1")));
         bindConstant().annotatedWith(Names.named("financialYearStartDate")).to(Integer.valueOf(props.getProperty("financialYearStartDate", "1")));
         bindConstant().annotatedWith(Names.named("financialYearStartMonth")).to(Integer.valueOf(props.getProperty("financialYearStartMonth", "7")));
 

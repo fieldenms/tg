@@ -14,16 +14,16 @@ import ua.com.fielden.platform.utils.IDates;
 
 /**
  * Provides an utilities to work with "BEG_PREV_MONTH", "MID_CURR_YEAR" or "END_NEXT_DAY" etc. dates, which are related to "current" date.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class DateUtilities {
 
     private DateUtilities() {}
     /**
      * Returns <code>true</code> if "rangeWidth" represents one of four quarters, otherwise returns <code>false</code>.
-     * 
+     *
      * @param rangeWidth
      * @return
      */
@@ -34,7 +34,7 @@ public class DateUtilities {
     /**
      * Returns a date that represents [beginning or middle or ending] of date range, that includes specified [date or relative "prevDate" or relative "nextDate"] with specified
      * rangeWidth [DAY or WEEK or MONTH or YEAR or QRT1..4].
-     * 
+     *
      * @param date
      *            - the date which is included by specified date range.
      * @param begMidEnd
@@ -57,7 +57,7 @@ public class DateUtilities {
     /**
      * Returns a date that represents beginning of date range, that includes specified date and have rangeWidth of DAY or WEEK or MONTH or YEAR.</br>
      * {@link #startOfDateRangeThatIncludes(Date, MnemonicEnum)} <= date < {@link #endOfDateRangeThatIncludes(Date, MnemonicEnum)} </br>
-     * 
+     *
      * @param date
      * @param rangeWidth
      * @return
@@ -73,6 +73,7 @@ public class DateUtilities {
         } else if (rangeWidth == MnemonicEnum.DAY_AND_AFTER) {
             return adjustedDate.toDate(); // time portion is already removed.
         } else if (rangeWidth == MnemonicEnum.WEEK) {
+            //TODO first day of the week should be configurable
             // set the first day of week as MONDAY regardless of the current locale.
             return adjustedDate.withDayOfWeek(MONDAY).toDate();
         } else if (rangeWidth == MnemonicEnum.MONTH) {
@@ -80,8 +81,8 @@ public class DateUtilities {
         } else if (rangeWidth == MnemonicEnum.YEAR) {
             return adjustedDate.withDayOfYear(1).toDate();// set first day of year as 1-st.
         } else if (rangeWidth == MnemonicEnum.OZ_FIN_YEAR) {
-            final DateTime newDate = (adjustedDate.getMonthOfYear() < JULY) ? dates.zoned(roll(adjustedDate.toDate(), MnemonicEnum.YEAR, false, dates)) : adjustedDate;
-            return newDate.withMonthOfYear(JULY).withDayOfMonth(1).toDate();// set first day of month as 1-st.
+            final DateTime newDate = (adjustedDate.getMonthOfYear() < dates.financialYearStartMonth()) ? dates.zoned(roll(adjustedDate.toDate(), MnemonicEnum.YEAR, false, dates)) : adjustedDate;
+            return newDate.withMonthOfYear(dates.financialYearStartMonth()).withDayOfMonth(dates.financialYearStartDate()).toDate();// set first day of month as 1-st.
         } else if (rangeWidth == MnemonicEnum.QRT1) { // first quarter
             return adjustedDate.withMonthOfYear(JANUARY).withDayOfMonth(1).toDate();// set first day of month as 1-st.
         } else if (rangeWidth == MnemonicEnum.QRT2) { // second quarter
@@ -97,7 +98,7 @@ public class DateUtilities {
 
     /**
      * Move specified "date" on specified "width" up or down.
-     * 
+     *
      * @param date
      * @param width
      * @param up
@@ -125,7 +126,7 @@ public class DateUtilities {
     /**
      * Returns a date that represents ending of date range( that includes specified date and have rangeWidth of DAY or WEEK or MONTH or YEAR ). Important : the range does not
      * include this ending! </br> {@link #startOfDateRangeThatIncludes(Date, MnemonicEnum)} <= date < {@link #endOfDateRangeThatIncludes(Date, MnemonicEnum)} </br>
-     * 
+     *
      * @param date
      * @param rangeWidth
      * @return
@@ -140,7 +141,7 @@ public class DateUtilities {
     /**
      * Returns a date that represents middle of date range, that includes specified date and have rangeWidth of DAY or WEEK or MONTH or YEAR.</br>
      * {@link #startOfDateRangeThatIncludes(Date, MnemonicEnum)} <= date < {@link #endOfDateRangeThatIncludes(Date, MnemonicEnum)} </br>
-     * 
+     *
      * @param date
      * @param rangeWidth
      * @return
@@ -151,7 +152,7 @@ public class DateUtilities {
 
     /**
      * Creates {@link DateTime} instance from <code>date</code> instance with respect of returning <code>null</code> for <code>null</code> <code>date</code>.
-     * 
+     *
      * @param date
      * @return
      */
@@ -161,7 +162,7 @@ public class DateUtilities {
 
     /**
      * Creates {@link Date} instance from <code>dateTime</code> instance with respect of returning <code>null</code> for <code>null</code> <code>dateTime</code>.
-     * 
+     *
      * @param dateTime
      * @return
      */
@@ -171,7 +172,7 @@ public class DateUtilities {
 
     /**
      * Returns a minimum date from two values with respect of <code>null</code> value (which means +infinity).
-     * 
+     *
      * @param one
      * @param sec
      * @return
@@ -182,7 +183,7 @@ public class DateUtilities {
 
     /**
      * Returns a maximum date from two values with respect of <code>null</code> value (which means +infinity).
-     * 
+     *
      * @param one
      * @param sec
      * @return
@@ -193,7 +194,7 @@ public class DateUtilities {
 
     /**
      * Returns <code>true</code> if "one isBefore sec" (<code>false</code> otherwise) with respect of <code>null</code> value (which means +infinity).
-     * 
+     *
      * @param one
      * @param sec
      * @return
