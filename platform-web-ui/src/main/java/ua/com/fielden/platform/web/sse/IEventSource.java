@@ -20,7 +20,7 @@ public interface IEventSource {
      * @throws IOException
      *             if the implementation of the method throws such exception
      */
-    void connect(final IEventSourceEmitter emitter) throws IOException;
+    void connect(final IEventSourceEmitter emitter);
 
     /**
      * A method that is invoked when this event source should be disconnected from the {@code emitter}, passed into {@link #connect(IEventSourceEmitter)}.

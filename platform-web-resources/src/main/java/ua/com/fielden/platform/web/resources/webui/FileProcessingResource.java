@@ -210,7 +210,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
 
             final T applied = saveRaw(entity);
             return restUtil.singleJsonRepresentation(applied);
-        } catch (final IOException e) {
+        } catch (final Exception e) {
             throw new ResourceException(e);
         } finally {
             eventSource.disconnect();

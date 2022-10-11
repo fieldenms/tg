@@ -11,6 +11,7 @@ import rx.Observer;
 import rx.Subscription;
 import ua.com.fielden.platform.rx.IObservableKind;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.web.sse.exceptions.SseException;
 
 /**
  * A base class for custom event sources that are subscribed to the specified data streams (aka observable) and emit respective values to the client.
@@ -60,13 +61,17 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
     }
 
     @Override
-    public final void connect(final IEventSourceEmitter emitter) throws IOException {
+    public final void connect(final IEventSourceEmitter emitter) {
         logger.debug("client subscription in progress...");
         this.emitter = emitter;
         this.subscription = getStream().subscribe(new EventObserver());
 
-        this.emitter.event("connection", "established");
-        logger.debug("client subscribed successfully");
+        try {
+            this.emitter.event("connection", "established");
+            logger.debug("client subscribed successfully");
+        } catch (final IOException ex) {
+            throw new SseException("Could not send connection event.", ex);
+        }
     }
 
     /**

@@ -4,29 +4,41 @@ import java.io.IOException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.Supplier;
 
 /**
- * {@link IEventSourceEmitter} implementation that manages a number of registered emitters. Each such emitter corresponds to a separate instance of a web client.
- * This class is also responsible for registering event sources.
+ * {@link IEventSourceEmitter} implementation that acts as a broadcast emitter (broadcaster), which passes events to all registered emitters.
+ * There should be only a single instance of this class per application.
+ * All emitters that get registered by this broadcaster correspond to separate web client instances.
  *
  * @author TG Team
  *
  */
-public class EventSourceCompoundEmitter implements IEventSourceEmitter, IEventSourceEmitterRegister, IEventSourceRegister {
+public class EventSourceCompoundEmitter implements IEventSourceEmitter, IEventSourceEmitterRegister {
 
     private Map<String, IEventSourceEmitter> emitters = Collections.synchronizedMap(new HashMap<>());
 
-    private Map<Class<? extends IEventSource>, IEventSource> eventSources = Collections.synchronizedMap(new HashMap<>());
+    /**
+     * A collection of event sources, specified for various Entity Centres.
+     * The only reason for this collection is to prevent GC from collecting instantiated event sources, which are required for SSE eventing.
+     */
+    private Map<Class<? extends IEventSource>, IEventSource> eventSources = new HashMap<>();
 
-    @Override
-    public IEventSourceRegister registerEventSource(final IEventSource eventSource) {
-        eventSources.put(eventSource.getClass(), eventSource);
+    /**
+     * Creates and registers an instance of {@code eventSourceClass}, but only if such SSE class was not instantiated before.
+     * SSE classes may get specified as part of Entity Centre configurations.
+     *
+     * @param eventSourceClass
+     * @param eventSourceSupplier
+     * @return
+     * @throws IOException
+     */
+    public EventSourceCompoundEmitter createAndRegisterEventSource(final Class<? extends IEventSource> eventSourceClass, final Supplier<IEventSource> eventSourceSupplier) throws IOException {
+        eventSources.computeIfAbsent(eventSourceClass, argNotUsed -> {
+            final IEventSource eventSource = eventSourceSupplier.get();
+            eventSource.connect(this);
+            return eventSource;});
         return this;
-    }
-
-    @Override
-    public boolean hasEventSource(final Class<? extends IEventSource> eventSourceClass) {
-        return eventSources.containsKey(eventSourceClass);
     }
 
     @Override

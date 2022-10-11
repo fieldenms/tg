@@ -175,7 +175,7 @@ public class WebUiBuilder implements IWebUiBuilder {
             }
         } else {
             centreMap.put(centre.getMenuItemType(), centre);
-            centre.eventSourceClass().ifPresent(eventSourceClass -> webUiConfig.registerEventSource(eventSourceClass));
+            centre.eventSourceClass().ifPresent(eventSourceClass -> webUiConfig.createAndRegisterEventSource(eventSourceClass));
             return this;
         }
     }

@@ -14,9 +14,8 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.custom_view.AbstractCustomView;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
-import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 import ua.com.fielden.platform.web.sse.IEventSource;
-import ua.com.fielden.platform.web.sse.IEventSourceRegister;
+import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
@@ -99,11 +98,11 @@ public interface IWebUiConfig extends IMenuRetriever {
     IEventSourceEmitterRegister getEventSourceEmitterRegister();
 
     /**
-     * Returns instance of {@link IEventSourceRegister} to manage all resource which send data to clients via SSE.
+     * Creates and registers an instance of {@code eventSrouceClass}, if it was not created before.
      *
      * @return
      */
-    IWebUiConfig registerEventSource(Class<? extends IEventSource> eventSourceClass);
+    IWebUiConfig createAndRegisterEventSource(Class<? extends IEventSource> eventSourceClass);
 
     /**
      * Returns the map of entity masters for this web application.

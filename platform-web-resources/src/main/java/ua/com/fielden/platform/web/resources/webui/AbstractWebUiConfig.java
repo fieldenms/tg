@@ -60,8 +60,8 @@ import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
 import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.exceptions.InvalidUiConfigException;
 import ua.com.fielden.platform.web.sse.EventSourceCompoundEmitter;
-import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 import ua.com.fielden.platform.web.sse.IEventSource;
+import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
@@ -75,7 +75,7 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  */
 public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
-    private static final String ERR_IN_COMPOUND_EMITTER = "Event source compound emitter should have cought this error. Something went wrong in webUiConfig.";
+    private static final String ERR_IN_COMPOUND_EMITTER = "Event source compound emitter should have cought this error. Something went wrong in WebUiConfig.";
 
     private final Logger logger = Logger.getLogger(getClass());
     private final String title;
@@ -228,14 +228,10 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     }
 
     @Override
-    public IWebUiConfig registerEventSource(final Class<? extends IEventSource> eventSourceClass) {
+    public IWebUiConfig createAndRegisterEventSource(final Class<? extends IEventSource> eventSourceClass) {
         try {
-            if (!compoundEmitter.hasEventSource(eventSourceClass)) {
-                final IEventSource eventSource = injector.getInstance(eventSourceClass);
-                eventSource.connect(compoundEmitter);
-                compoundEmitter.registerEventSource(eventSource);
-            }
-        } catch (final IOException ex) {
+            compoundEmitter.createAndRegisterEventSource(eventSourceClass, () -> injector.getInstance(eventSourceClass));
+        } catch (final Exception ex) {
             logger.error(ex);
             throw new InvalidUiConfigException(ERR_IN_COMPOUND_EMITTER, ex);
         }
