@@ -66,7 +66,7 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTree implements IDomainTreeRepresentationWithMutability {
     private final Logger logger = getLogger(this.getClass());
-    
+
     /**
      * 0 -- to load only first level properties, Integer.MAX_VALUE -- to load all properties (obviously without cross-references ones);
      */
@@ -120,15 +120,8 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @return
      */
     private List<String> constructProperties(final Class<?> managedType, final String path, final List<Field> fieldsAndKeys) {
-        // sort fieldsAndKeys to achieve an order, where dynamically added properties are last
-        final List<Field> orderedFieldsAndKeys = fieldsAndKeys.stream().sorted((field1, field2) -> {
-            final boolean field1Generated = DynamicTypeUtils.isGenerated(field1);
-            final boolean field2Generated = DynamicTypeUtils.isGenerated(field2);
-            
-            if (!Boolean.logicalXor(field1Generated, field2Generated)) return 0; // both are either generated or not
-            else if (field1Generated)                                  return 1;
-            else                                                       return -1;
-        }).toList();
+        final List<Field> orderedFieldsAndKeys = DynamicEntityClassLoader.isGenerated(managedType) ?
+                DynamicTypeUtils.orderedProperties(fieldsAndKeys) : fieldsAndKeys;
 
         final List<String> newIncludedProps = new ArrayList<>();
         for (final Field field : orderedFieldsAndKeys) {
@@ -151,14 +144,14 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
                 if (EntityUtils.isEntityType(propertyType)) {
                     final boolean propertyTypeWasInHierarchyBefore = typesInHierarchy(managedType, reflectionProperty, true)
                             .contains(DynamicEntityClassLoader.getOriginalType(propertyType));
-                    
+
                     // The logic below (determining whether property represents link property) is important to maintain the integrity of domain trees.
                     // However, it also causes performance bottlenecks when invoking multiple times.
                     // In current Web UI logic, that uses centre domain trees, the following logic does not add any significant value.
                     // Reintroducing may be significant when management of domain trees from UI will be implemented.
                     // Please note number 1. indicates "old" simplified version and number 2. indicates newer version with link property handling.
                     // Perhaps some "hybrid" of both can be used to achieve acceptable performance.
-                    
+
                     // 1. final boolean isKeyPart = Finder.getKeyMembers(parentType).contains(field); // indicates if field is the part of the key.
                     // 2. final boolean isEntityItself = "".equals(property); // empty property means "entity itself"
                     // 2. final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(managedType, property);
@@ -167,7 +160,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
                     // 2. final boolean isLinkProperty = !isEntityItself && PropertyTypeDeterminator.isDotNotation(property)
                     // 2.         && Finder.isOne2Many_or_One2One_association(managedType, penultPropertyName)
                     // 2.         && lastPropertyName.equals(Finder.findLinkProperty((Class<? extends AbstractEntity<?>>) managedType, penultPropertyName)); // exclude link properties in one2many and one2one associations
-                    
+
                     if (level(property) >= LOADING_LEVEL && !EntityUtils.isUnionEntityType(propertyType) //
                             || propertyTypeWasInHierarchyBefore /* && 2. !isLinkProperty */ /* && 1. !isKeyPart */) {
                         newIncludedProps.add(createDummyMarker(property));
