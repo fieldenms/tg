@@ -120,11 +120,8 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @return
      */
     private List<String> constructProperties(final Class<?> managedType, final String path, final List<Field> fieldsAndKeys) {
-        final List<Field> orderedFieldsAndKeys = DynamicEntityClassLoader.isGenerated(managedType) ?
-                DynamicTypeUtils.orderedProperties(fieldsAndKeys) : fieldsAndKeys;
-
         final List<String> newIncludedProps = new ArrayList<>();
-        for (final Field field : orderedFieldsAndKeys) {
+        for (final Field field : fieldsAndKeys) {
             final String property = StringUtils.isEmpty(path) ? field.getName() : path + "." + field.getName();
             final String reflectionProperty = reflectionProperty(property);
             if (!isExcludedImmutably(managedType, reflectionProperty)) {
@@ -247,7 +244,9 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
             fieldsAndKeys.add(getFieldByName(type, VERSION));
         }
         fieldsAndKeys.add(getFieldByName(type, DESC));
-        fieldsAndKeys.addAll(properties);
+
+        // add the rest (take care of ordering if the type is a generated one)
+        fieldsAndKeys.addAll(DynamicEntityClassLoader.isGenerated(type) ? DynamicTypeUtils.orderedProperties(properties) : properties);
         // logger().info("Ended constructProperties for [" + type.getSimpleName() + "].");
         return fieldsAndKeys;
     }
