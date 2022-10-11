@@ -228,7 +228,7 @@ public class TypeMaker<T> {
 
         addAccessor(prop.getName(), genericType);
         addSetter(prop.getName(), genericType, collectional);
-        
+
         addedPropertiesNames.add(prop.getName());
     }
 
@@ -300,7 +300,7 @@ public class TypeMaker<T> {
             Reflector.getMethod(prop.getType(), "addAll", Collection.class).invoke(propValue, arg);
         }
     }
-    
+
     /**
      * Adds the specified class level annotation to the class. Existing annotations are not replaced.
      * <p>
@@ -365,7 +365,7 @@ public class TypeMaker<T> {
         modifiedName = newTypeName;
         return this;
     }
-    
+
     private String modifyTypeName() {
         final String newName = DynamicTypeNamingService.nextTypeName(origType.getName());
         modifyTypeName(newName);
@@ -395,7 +395,7 @@ public class TypeMaker<T> {
         // distinguish properties by name
         final List<NewProperty<?>> distinctPropertyReplacements = StreamUtils.distinct(propertyReplacements.stream(),
                 prop -> prop.getName()).toList();
-        
+
         // modifying a property that doesn't exist in the original type's hierarchy is illegal
         final List<String> existingPropNames = getOrigTypeProperties().stream().map(Field::getName).toList();
         final NewProperty<?> nonExistentNp = distinctPropertyReplacements.stream()
@@ -452,7 +452,7 @@ public class TypeMaker<T> {
         builder = builder.defineMethod(GET_ORIG_TYPE_METHOD_NAME, type.getClass(), Visibility.PUBLIC, Ownership.STATIC)
                 .intercept(FixedValue.value(type));
     }
-    
+
     private void generateConstructors() {
         final Implementation impl = propertyInitializers.isEmpty() ? SuperMethodCall.INSTANCE
                 : SuperMethodCall.INSTANCE.andThen(MethodDelegation.to(new ConstructorInterceptor(propertyInitializers)));

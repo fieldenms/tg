@@ -109,10 +109,10 @@ public class DynamicEntityTypePropertiesModificationTest {
 
         assertTrue("Not all property annotations were preserved.",
                 asList(newField.getDeclaredAnnotations()).containsAll(asList(oldField.getDeclaredAnnotations())));
-        
+
         assertInstantiation(newType, factory);
     }
-    
+
     @Test
     public void multiple_properties_can_be_modified_at_once() throws Exception {
         final Class<? extends AbstractEntity<?>> origType = Entity.class;
@@ -179,7 +179,7 @@ public class DynamicEntityTypePropertiesModificationTest {
 
         assertInstantiation(newType, factory);
     }
-    
+
     @Test
     public void inherited_properties_can_be_modified() throws Exception {
         // 1. create a generated type
@@ -187,17 +187,17 @@ public class DynamicEntityTypePropertiesModificationTest {
         final Class<? extends Entity> newType1 = cl.startModification(Entity.class)
                 .modifyProperties(np1)
                 .endModification();
-        
+
         // 2. try to modify newType1 by modifying a property from its original type
         final NewProperty<BigDecimal> np2 = NewProperty.fromField(Entity.class, "money").changeType(BigDecimal.class);
         final Class<? extends Entity> newType2 = cl.startModification(newType1)
                 .modifyProperties(np2)
                 .endModification();
-        
+
         assertFieldExists(newType2, np1.getName());
         assertGeneratedPropertyCorrectness(np2, newType2);
     }
-    
+
     @Test
     public void modifying_a_property_with_the_same_name_more_than_once_leads_to_a_runtime_exception() throws Exception {
         final NewProperty<Double> np = NewProperty.fromField(EntityBeingEnhanced.class.getDeclaredField("prop1"))
@@ -209,7 +209,7 @@ public class DynamicEntityTypePropertiesModificationTest {
             builder.modifyProperties(np);
         });
     }
-    
+
     @Test
     public void modification_of_a_non_existent_property_leads_to_a_runtime_exception() throws Exception {
         final NewProperty<Double> np = NewProperty.fromField(EntityBeingEnhanced.class.getDeclaredField("prop1"))
@@ -220,7 +220,7 @@ public class DynamicEntityTypePropertiesModificationTest {
             builder.modifyProperties(np);
         });
     }
-    
+
     @Test
     public void modified_properties_are_annotated_with_Generated() throws Exception {
         final List<NewProperty<?>> newProperties = List.of(
@@ -230,7 +230,7 @@ public class DynamicEntityTypePropertiesModificationTest {
         final Class<? extends AbstractEntity<?>> newType = cl.startModification(Entity.class)
                 .modifyProperties(newProperties)
                 .endModification();
-        
+
         for (final NewProperty<?> np: newProperties) {
             final Field field = newType.getDeclaredField(np.getName());
             assertNotNull("Modified property %s was not found.".formatted(np.getName()), field);
@@ -252,10 +252,10 @@ public class DynamicEntityTypePropertiesModificationTest {
         final Class<? extends AbstractEntity<?>> newType2 = cl.startModification(newType1)
                 .modifyProperties(newProperties)
                 .endModification();
-        
+
         assertNotNull("Could not obtain a generated type based on another generated type.", newType2);
         assertEquals("Incorrect type hierarchy for the generated type.", newType1, newType2.getSuperclass());
-        
+
         for (final var np: newProperties) {
             final Field field = newType2.getDeclaredField(np.getName());
             assertNotNull("Modified property %s was not found.".formatted(np.getName()), field);
@@ -272,7 +272,7 @@ public class DynamicEntityTypePropertiesModificationTest {
         final Class<? extends AbstractEntity<?>> newType = cl.startModification(Entity.class)
                 .modifyProperties(np)
                 .endModification();
-        
+
         assertNotNull("Modified property %s is not declared by the generated type.".formatted(np.getName()),
                 newType.getDeclaredField(np.getName()));
 
@@ -306,10 +306,10 @@ public class DynamicEntityTypePropertiesModificationTest {
 
         assertEquals("Modified properties %s and %s should be of the same type.".formatted(np1.getName(), np2.getName()),
                 field1.getGenericType(), field2.getGenericType());
-        
+
         assertInstantiation(modEntityBeingModified, factory);
     }
-    
+
     /**
      * Modifying a property should result in the generated type declaring:
      * <ul>
@@ -325,7 +325,7 @@ public class DynamicEntityTypePropertiesModificationTest {
         final Class<? extends Entity> newType = cl.startModification(Entity.class)
                 .modifyProperties(np)
                 .endModification();
-        
+
         // declared fields
         assertEquals("Incorrect number of declared fields by a generated type for a modified property.",
                 1, Arrays.stream(newType.getDeclaredFields()).filter(field -> field.getName().equals(np.getName())).count());
@@ -366,7 +366,7 @@ public class DynamicEntityTypePropertiesModificationTest {
         final Class<? extends EntityWithCollectionalPropety> newType = cl.startModification(EntityWithCollectionalPropety.class)
                 .modifyProperties(np)
                 .endModification();
-        
+
         final Method setter = assertGeneratedPropertySetterSignature(np, newType);
 
         // instantiate the generated type and try to set the value of modified property 
@@ -402,12 +402,12 @@ public class DynamicEntityTypePropertiesModificationTest {
             fail("Failed to invoke setter for modified property %s.".formatted(np.getName()));
             return;
         }
-        
+
         final Method accessor = assertGeneratedPropertyAccessorSignature(np, newType);
         assertEquals("Incorrect accessor return value for modified property %s.".formatted(np.getName()), 
                 newValue, accessor.invoke(instance));
     }
-    
+
     @Test
     public void setter_is_observed_for_a_modified_property() throws Exception {
         final NewProperty<Money> np = NewProperty.fromField(Entity.class, "observableProperty").changeType(Money.class);
@@ -428,7 +428,7 @@ public class DynamicEntityTypePropertiesModificationTest {
         assertTrue("Setter for the modified property %s was not observed.".formatted(np.getName()), observed);
         assertEquals("Incorrect value of the modified property %s.".formatted(np.getName()), value, instance.get(np.getName()));
     }
-    
+
     @Test
     public void raw_type_of_parameterized_property_type_can_be_modified() throws Exception {
         // from List<Double> to Set<Double>
@@ -439,7 +439,7 @@ public class DynamicEntityTypePropertiesModificationTest {
 
         assertGeneratedPropertyCorrectness(np1, newType);
     }
-    
+
     @Test
     public void collectional_property_with_modified_raw_type_is_generated_with_correct_initializer() throws Exception {
          // from List<Double> to Set<Double>
@@ -468,7 +468,7 @@ public class DynamicEntityTypePropertiesModificationTest {
                 .modifyProperties(np1)
                 .endModification();
         assertGeneratedPropertyCorrectness(np1, newType1);
-        
+
         // 2. in this test EntityWithCollectionalProperty.prop1 is modified
         // type argument EntityBeingEnhanced is replaced by a generated type based on it
         // enhance(EntityBeingEnhanced)
@@ -490,7 +490,7 @@ public class DynamicEntityTypePropertiesModificationTest {
 
         assertGeneratedPropertyCorrectness(np2, modEntityWithCollectionalProperty);
     }
-    
+
     @Test
     public void test_inner_types_usage_in_generated_types() throws Exception {
         // enhance(EntityBeingModifiedWithInnerTypes)
@@ -558,7 +558,7 @@ public class DynamicEntityTypePropertiesModificationTest {
 
         assertGeneratedPropertyCorrectness(npOne2ManyCollectional, modOneToManyMasterEntity);
     }
-    
+
     @Test
     public void initialization_value_of_a_property_can_be_modified() throws Exception {
         // 1. modify a simple property
@@ -612,7 +612,7 @@ public class DynamicEntityTypePropertiesModificationTest {
             final List<Type> origTypeArguments = extractTypeArguments(origField.getGenericType());
             assertEquals("Incorrect type arguments of modified property %s.".formatted(name),
                     origTypeArguments, extractTypeArguments(field.getGenericType()));
-            
+
             // acessor method
             final Method accessor;
             try {
@@ -626,7 +626,7 @@ public class DynamicEntityTypePropertiesModificationTest {
             assertEquals("Incorrect accessor return raw type.", newPropType, accessor.getReturnType());
             assertEquals("Incorrect accessor return type arguments.", 
                     origTypeArguments, extractTypeArguments(accessor.getGenericReturnType()));
-        
+
             // setter method
             final Method setter;
             try {
