@@ -28,7 +28,7 @@ const registerEventSource = function () {
     const source = {initialised: false, sseUid: uid, uri: `/sse/${uid}`, shouldReconnectWhenError: true, errorReconnectionDelay: 15000};
     console.log('Determine if EventSrouce needs polyfilling: ', window.EventSource)
     if (window.EventSource == undefined) {
-        console.warn('EventSrouce polyfilling is in progress.');
+        console.warn('EventSource polyfilling is in progress.');
         const esPoly = document.createElement('script');
         esPoly.src = '/resources/polyfills/eventsource.min.js';
         esPoly.onload = () => registerEventSourceHandlers(source);
@@ -40,7 +40,7 @@ const registerEventSource = function () {
 };
 
 const registerEventSourceHandlers = function (sourceObj) {
-    console.log("Registering EventSrouce handlers for URI ", sourceObj.uri);
+    console.log("Registering EventSource handlers for URI ", sourceObj.uri);
 
     const source = new EventSource(sourceObj.uri);
     sourceObj.source = source;
