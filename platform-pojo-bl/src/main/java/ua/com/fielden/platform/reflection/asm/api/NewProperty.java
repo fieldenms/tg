@@ -580,7 +580,7 @@ public final class NewProperty<T> {
     public String toString(final boolean ommitAnnotations) {
         final StringBuilder strBuilder = new StringBuilder();
         if (!ommitAnnotations) {
-            strBuilder.append(annotations.stream().map(Annotation::toString).collect(Collectors.joining(" ")));
+            strBuilder.append(getAnnotations().stream().map(Annotation::toString).collect(Collectors.joining(" ")));
             strBuilder.append(' ');
         }
 
