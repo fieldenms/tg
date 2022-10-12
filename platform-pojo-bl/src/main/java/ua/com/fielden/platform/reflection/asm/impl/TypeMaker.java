@@ -50,6 +50,7 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.factory.ObservableAnnotation;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
+import ua.com.fielden.platform.reflection.asm.annotation.GeneratedAnnotation;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.exceptions.CollectionalPropertyInitializationException;
 import ua.com.fielden.platform.utils.StreamUtils;
@@ -87,13 +88,7 @@ import ua.com.fielden.platform.utils.StreamUtils;
  */
 public class TypeMaker<T> {
 
-    private static final Generated GENERATED_ANNOTATION = new Generated() {
-        @Override
-        public Class<Generated> annotationType() {
-            return Generated.class;
-        }
-    };
-
+    private static final Generated GENERATED_ANNOTATION = GeneratedAnnotation.newInstance();
     private static final String CURRENT_BUILDER_IS_NOT_SPECIFIED = "Current builder is not specified.";
     public static final String GET_ORIG_TYPE_METHOD_NAME = "_GET_ORIG_TYPE_METHOD_";
 
