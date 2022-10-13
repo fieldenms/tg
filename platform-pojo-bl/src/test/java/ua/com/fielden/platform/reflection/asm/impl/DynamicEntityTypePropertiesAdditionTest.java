@@ -9,9 +9,13 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
+import static ua.com.fielden.platform.reflection.Finder.findProperties;
+import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
 import static ua.com.fielden.platform.reflection.Finder.getFieldValue;
 import static ua.com.fielden.platform.reflection.asm.api.test_utils.NewPropertyTestUtils.assertAnnotationsEquals;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertFieldExists;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertGeneratedPropertyCorrectness;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertHasProperties;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -212,9 +216,12 @@ public class DynamicEntityTypePropertiesAdditionTest {
                 .endModification();
 
         assertEquals("Incorrect type name.", newTypeName, newType.getName());
-        assertEquals("Incorrect number of properties.", 
-                Finder.getPropertyDescriptors(DEFAULT_ORIG_TYPE).size() + 1,
-                Finder.getPropertyDescriptors(newType).size());
+
+        assertHasProperties(DEFAULT_ORIG_TYPE, newType);
+        // assert that the added property is generated correctly
+        assertGeneratedPropertyCorrectness(np1, newType);
+        assertEquals("Incorrect number of properties found in the generated type.",
+                findProperties(DEFAULT_ORIG_TYPE).size() + 1, findProperties(newType).size());
     }
 
     @Test
@@ -842,14 +849,18 @@ public class DynamicEntityTypePropertiesAdditionTest {
 
         final DescTitle actualAtDescTitle = newType.getAnnotation(DescTitle.class);
         assertNotNull("Generated type is missing the provided class annotation.", actualAtDescTitle);
-        assertEquals("Incorrect value of added annotation element.",
-                atDescTitle.value(), actualAtDescTitle.value());
-        assertEquals("Incorrect value of added annotation element.",
-                atDescTitle.desc(), actualAtDescTitle.desc());
+        assertEquals("Incorrect value of added annotation element.", atDescTitle.value(), actualAtDescTitle.value());
+        assertEquals("Incorrect value of added annotation element.", atDescTitle.desc(), actualAtDescTitle.desc());
 
-        // new type must have 2 new property descriptors: np1 (the added property) and 'desc' (from @DescTitle)
-        assertEquals("Incorrect number of property descriptors found for the generated type.",
-                Finder.getPropertyDescriptors(TopLevelEntity.class).size() + 2,
-                Finder.getPropertyDescriptors(newType).size());
+        assertHasProperties(TopLevelEntity.class, newType);
+
+        // assert that the added property exists
+        assertGeneratedPropertyCorrectness(np1, newType);
+        // assert that "desc" property is a real property
+        assertTrue("Real property [%s] wasn't found in the generated type.".formatted(DESC),
+                findRealProperties(newType).stream().map(Field::getName).anyMatch(name -> name.equals(DESC)));
+        // generated type should have 2 new real properties: np1 and "desc"
+        assertEquals("Incorrect number of real properties found in the generated type.",
+                findRealProperties(TopLevelEntity.class).size() + 2, findRealProperties(newType).size());
     }
 }
