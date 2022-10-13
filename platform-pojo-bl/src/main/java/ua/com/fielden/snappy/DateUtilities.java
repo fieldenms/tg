@@ -3,7 +3,6 @@ package ua.com.fielden.snappy;
 import static org.joda.time.DateTimeConstants.APRIL;
 import static org.joda.time.DateTimeConstants.JANUARY;
 import static org.joda.time.DateTimeConstants.JULY;
-import static org.joda.time.DateTimeConstants.MONDAY;
 import static org.joda.time.DateTimeConstants.OCTOBER;
 
 import java.util.Date;
@@ -73,16 +72,15 @@ public class DateUtilities {
         } else if (rangeWidth == MnemonicEnum.DAY_AND_AFTER) {
             return adjustedDate.toDate(); // time portion is already removed.
         } else if (rangeWidth == MnemonicEnum.WEEK) {
-            //TODO first day of the week should be configurable
-            // set the first day of week as MONDAY regardless of the current locale.
-            return adjustedDate.withDayOfWeek(MONDAY).toDate();
+            // set the first day of week.
+            return adjustedDate.withDayOfWeek(dates.startOfWeek()).toDate();
         } else if (rangeWidth == MnemonicEnum.MONTH) {
             return adjustedDate.withDayOfMonth(1).toDate();// set first day of month as 1-st.
         } else if (rangeWidth == MnemonicEnum.YEAR) {
             return adjustedDate.withDayOfYear(1).toDate();// set first day of year as 1-st.
         } else if (rangeWidth == MnemonicEnum.OZ_FIN_YEAR) {
             final DateTime newDate = (adjustedDate.getMonthOfYear() < dates.financialYearStartMonth()) ? dates.zoned(roll(adjustedDate.toDate(), MnemonicEnum.YEAR, false, dates)) : adjustedDate;
-            return newDate.withMonthOfYear(dates.financialYearStartMonth()).withDayOfMonth(dates.financialYearStartDate()).toDate();// set first day of month as 1-st.
+            return newDate.withMonthOfYear(dates.financialYearStartMonth()).withDayOfMonth(dates.financialYearStartDate()).toDate();// set first day of month of the financial year.
         } else if (rangeWidth == MnemonicEnum.QRT1) { // first quarter
             return adjustedDate.withMonthOfYear(JANUARY).withDayOfMonth(1).toDate();// set first day of month as 1-st.
         } else if (rangeWidth == MnemonicEnum.QRT2) { // second quarter

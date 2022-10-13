@@ -13,6 +13,7 @@ import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
@@ -204,10 +205,11 @@ public class WebUiBuilder implements IWebUiBuilder {
 
     /**
      * Generates a HTML representation of the web application UI preferences.
+     * @param iDates
      *
      * @return
      */
-    public String genWebUiPrefComponent() {
+    public String genWebUiPrefComponent(final IDates dates) {
         if (this.minDesktopWidth <= this.minTabletWidth) {
             throw new IllegalStateException("The desktop width can not be less then or equal tablet width.");
         }
@@ -218,7 +220,8 @@ public class WebUiBuilder implements IWebUiBuilder {
                 replace("@independentTimeZoneSetting", webUiConfig.independentTimeZone() ? format("moment.tz.setDefault('%s');", TimeZone.getDefault().getID()) : "").
                 replace("@dateFormat", "\"" + this.dateFormat + "\"").
                 replace("@timeFormat", "\"" + this.timeFormat + "\"").
-                replace("@timeWithMillisFormat", "\"" + this.timeWithMillisFormat + "\"");
+                replace("@timeWithMillisFormat", "\"" + this.timeWithMillisFormat + "\"").
+                replace("@firstDayOfWeek", String.valueOf(dates.startOfWeek()));
     }
 
     public String getAppIndex () {
