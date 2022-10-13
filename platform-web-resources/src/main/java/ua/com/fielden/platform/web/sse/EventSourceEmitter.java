@@ -22,8 +22,7 @@ import ua.com.fielden.platform.web.application.RequestInfo;
 /**
  * This EventSource emitter is taken from Jetty source in the attempt to make it working with Restlet.
  * <p>
- * TODO: Need to support message id to be able to send the client all the missed messages, and not just to restart sending messages from whatever happens to be the current. TODO:
- * Most likely it should be open sourced. The same goes about a corresponding Restlet web resource.
+ * TODO: Need to support message id to be able to send the client all the missed messages, and not just to restart sending messages from whatever happens to be the current.
  *
  * @author TG Team
  *
@@ -157,4 +156,5 @@ public final class EventSourceEmitter implements IEventSourceEmitter, Runnable {
             }
         }
     }
+
 }

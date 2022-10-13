@@ -59,7 +59,7 @@ import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
 import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.exceptions.InvalidUiConfigException;
-import ua.com.fielden.platform.web.sse.EventSourceCompoundEmitter;
+import ua.com.fielden.platform.web.sse.EventSourceDispatchingEmitter;
 import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
@@ -82,7 +82,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
     private WebUiBuilder webUiBuilder;
     private Injector injector;
 
-    private final EventSourceCompoundEmitter compoundEmitter;
+    private final EventSourceDispatchingEmitter dispatchingEmitter;
 
     protected MainMenuBuilder desktopMainMenuConfig;
     protected MainMenuBuilder mobileMainMenuConfig;
@@ -112,7 +112,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         this.title = title;
         this.independentTimeZone = independentTimeZone;
         this.webUiBuilder = new WebUiBuilder(this);
-        this.compoundEmitter = new EventSourceCompoundEmitter();
+        this.dispatchingEmitter = new EventSourceDispatchingEmitter();
         this.desktopMainMenuConfig = new MainMenuBuilder(this);
         this.mobileMainMenuConfig = new MainMenuBuilder(this);
 
@@ -224,13 +224,13 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     @Override
     public IEventSourceEmitterRegister getEventSourceEmitterRegister() {
-        return compoundEmitter;
+        return dispatchingEmitter;
     }
 
     @Override
     public IWebUiConfig createAndRegisterEventSource(final Class<? extends IEventSource> eventSourceClass) {
         try {
-            compoundEmitter.createAndRegisterEventSource(eventSourceClass, () -> injector.getInstance(eventSourceClass));
+            dispatchingEmitter.createAndRegisterEventSource(eventSourceClass, () -> injector.getInstance(eventSourceClass));
         } catch (final Exception ex) {
             logger.error(ex);
             throw new InvalidUiConfigException(ERR_IN_COMPOUND_EMITTER, ex);

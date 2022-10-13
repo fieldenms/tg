@@ -27,6 +27,8 @@ import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.rx.observables.ProcessingProgressSubject;
+import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
@@ -61,9 +63,11 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
     private final String mimeAsProvided;
     private final IDeviceProvider deviceProvider;
     private final IDates dates;
+    private final User user;
 
     public FileProcessingResource(
             final IEventSourceEmitterRegister eseRegister,
+            final IUserProvider userProvider,
             final IEntityDao<T> companion,
             final EntityFactory factory,
             final Function<EntityFactory, T> entityCreator,
@@ -91,6 +95,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         try {
             this.jobUid = request.getHeaders().getFirstValue("jobUid", /*ignore case*/ true);
             this.sseUid = request.getHeaders().getFirstValue("sseUid", /*ignore case*/ true);
+            this.user = userProvider.getUser();
             try {
                 this.origFileName = URLDecoder.decode(request.getHeaders().getFirstValue("origFileName", /*ignore case*/ true), StandardCharsets.UTF_8.toString());
             } catch (final UnsupportedEncodingException ex) {
@@ -191,7 +196,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
      */
     private Representation tryToProcess(final InputStream stream, final String mime) {
 
-        final IEventSourceEmitter emitter = eseRegister.getEmitter(sseUid);
+        final IEventSourceEmitter emitter = eseRegister.getEmitter(user, sseUid);
         if (emitter == null) {
             throw new InvalidUiConfigException(ERR_CLIENT_NOT_REGISTERED);
         }

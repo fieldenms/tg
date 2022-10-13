@@ -16,6 +16,7 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
@@ -40,6 +41,7 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
     protected final Set<MediaType> types = new HashSet<>();
     protected final IDeviceProvider deviceProvider;
     protected final IDates dates;
+    private final IUserProvider userProvider;
 
     public FileProcessingResourceFactory(
             final IEventSourceEmitterRegister eseRegister,
@@ -53,6 +55,7 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
             final MediaType... types) {
         this.eseRegister = eseRegister;
         this.injector = injector;
+        this.userProvider = injector.getInstance(IUserProvider.class);
         this.entityType = entityType;
         this.entityCreator = entityCreator;
         this.companionFinder = injector.getInstance(ICompanionObjectFinder.class);
@@ -70,6 +73,7 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
         if (Method.PUT.equals(request.getMethod())) {
             new FileProcessingResource<>(
                     eseRegister,
+                    userProvider,
                     companionFinder.find(entityType),
                     injector.getInstance(EntityFactory.class),
                     entityCreator,

@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.web.sse;
 
+import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.security.user.User;
+
 /**
- * A contract to manage clients for SSE.
+ * A contract to manage emitters for SSE clients.
  *
  * @author TG Team
  *
@@ -9,28 +12,30 @@ package ua.com.fielden.platform.web.sse;
 public interface IEventSourceEmitterRegister {
 
     /**
-     * Registers new client represented with {@link IEventSourceEmitter} instance.
+     * Registers an {@link IEventSourceEmitter} instance for a new SSE client, identified by {@code user} and {@code sseUid}.
      *
-     * @param uid
+     * @param user
+     * @param sseUid
      * @param emitter
-     * @return
+     * @return successful result if a an emitter was registered
      */
-    IEventSourceEmitterRegister registerEmitter(final String uid, final IEventSourceEmitter emitter);
+    Result registerEmitter(final User user, final String sseUid, final IEventSourceEmitter emitter);
 
     /**
-     * Returns {@link IEventSourceEmitter} instance by client UID.
+     * Returns an {@link IEventSourceEmitter} instance, associated with {@code user} and {@code sseUid}.
      *
-     * @param uid
+     * @param user
+     * @param sseUid
      * @return
      */
-    IEventSourceEmitter getEmitter(final String uid);
+    IEventSourceEmitter getEmitter(final User user, final String sseUid);
 
     /**
-     * Closes the {@link IEventSourceEmitter} that was registered with specified UID and removes it from the register.
+     * Closes and deregisters an {@link IEventSourceEmitter} instance, associated with {@code user} and {@code sseUid}.
      *
-     * @param uid
-     * @return
+     * @param user
+     * @param sseUid
      */
-    boolean deregisterEmitter(final String uid);
+    void deregisterEmitter(final User user, final String sseUid);
 
 }
