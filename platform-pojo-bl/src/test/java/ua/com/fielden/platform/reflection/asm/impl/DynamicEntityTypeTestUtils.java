@@ -2,19 +2,22 @@ package ua.com.fielden.platform.reflection.asm.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.reflection.asm.api.test_utils.NewPropertyTestUtils.assertPropertyEquals;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 
-import org.junit.Assert;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.Reflector;
@@ -58,6 +61,34 @@ public class DynamicEntityTypeTestUtils {
         }
 
         return field;
+    }
+    
+    /**
+     * Asserts that two fields are equal, ignoring their declaring classes. 
+     * <p>
+     * For more details refer to {@link #assertFieldEquals(Field, Field, boolean)}.
+     * @param expected
+     * @param actual
+     */
+    public static void assertFieldEqualsIgnoringOwner(final Field expected, final Field actual) {
+        assertFieldEquals(expected, actual, true);
+    }
+    
+    /**
+     * Asserts that two fields are equal. 
+     * It is required that annotations declared by {@code actual} constitute a superset
+     * of those declared by {@code expected}.
+     * @param expected
+     * @param actual
+     * @param ignoreOwner indicates whether to ignore the declaring class of a field
+     */
+    private static void assertFieldEquals(final Field expected, final Field actual, final boolean ignoreOwner) {
+        if (!ignoreOwner) {
+            assertEquals("", expected.getDeclaringClass(), actual.getDeclaringClass());
+        }
+        assertEquals("Incorrect field name.", expected.getName(), actual.getName());
+        assertEquals("Incorrect field generic type.", expected.getGenericType(), actual.getGenericType());
+        assertAnnotatedWith(actual, expected.getDeclaredAnnotations());
     }
 
     /**
@@ -121,6 +152,16 @@ public class DynamicEntityTypeTestUtils {
         assertEquals("Incorrect setter return type", generatedType, setter.getReturnType());
 
         return setter;
+    }
+    
+    public static void assertAnnotatedWith(final AnnotatedElement element, final Collection<Annotation> annotations) {
+        final List<Annotation> declaredAnnotations = Arrays.asList(element.getDeclaredAnnotations());
+        annotations.forEach(annot -> assertTrue("Element %s is missing declared annotation %s.".formatted(element.toString(), annot.toString()),
+                declaredAnnotations.contains(annot)));
+    }
+    
+    public static void assertAnnotatedWith(final AnnotatedElement element, final Annotation... annotations) {
+        assertAnnotatedWith(element, Arrays.asList(annotations));
     }
 
 }
