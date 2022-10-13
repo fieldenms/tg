@@ -163,5 +163,26 @@ public class DynamicEntityTypeTestUtils {
     public static void assertAnnotatedWith(final AnnotatedElement element, final Annotation... annotations) {
         assertAnnotatedWith(element, Arrays.asList(annotations));
     }
+    
+    
+    /**
+     * Asserts that {@code actual} has all properties that are found in {@code expected}. 
+     * The whole class hierarchy is traversed for both entity types.
+     * @param expected
+     * @param actual
+     */
+    public static void assertHasProperties(final Class<? extends AbstractEntity<?>> expected, final Class<? extends AbstractEntity<?>> actual) {
+        final List<Field> actualProperties = Finder.findProperties(actual);
+
+        Finder.findProperties(expected).forEach(expectedProp -> {
+            final Field actualProp = actualProperties.stream()
+                    .filter(prop -> prop.getName().equals(expectedProp.getName()))
+                    .findFirst()
+                    .orElseThrow(() -> new AssertionError(
+                            "Expected property \"%s\" wasn't found in the actual type."
+                            .formatted(expectedProp.getName())));
+            assertFieldEqualsIgnoringOwner(expectedProp, actualProp);
+        });
+    }
 
 }
