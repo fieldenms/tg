@@ -2,12 +2,17 @@ package ua.com.fielden.platform.web.sse;
 
 import java.io.IOException;
 
+import ua.com.fielden.platform.rx.AbstractSubjectKind;
+
 /**
- * {@link IEventSource} is the passive half of an event source connection, as defined by the <a href="http://www.w3.org/TR/eventsource/">EventSource Specification</a>.
+ * {@link IEventSource} is the passive half of an event source connection, as defined by the <a href="http://www.w3.org/TR/eventsource/">EventSource Specification</a>, which can only push notifications to a single emitter.
+ * An emitter of type {@link IEventSourceEmitter} is the active half of a connection, and is responsible for sending events of the wire.
  * <p>
- * {@link IEventSourceEmitter} is the active half of the connection and allows to operate on the connection.
+ * An instance of {@link IEventSource} acts as a means to push notifications, published to concrete implementations of {@link AbstractSubjectKind} and subscribed to by this event source, to an emitter {@link IEventSourceEmitter} that was connected to this event source instance.
+ * A single event source can push notification to a single emitter.
+ * However, it is possible for several different event sources, potentially subscribed to different subject kinds, to be connected to the same emitter and thus push notifications to the same web client through the same connection.
  * <p>
- * {@link IEventSource} allows applications to be notified of events happening on the connection.
+ * It should also be noted that if an emitter can dispatch events to other emitters, then by connecting to such a "broadcasting" emitter, an event source can push notifications to multiple emitters, potentially associated with different web clients.
  */
 public interface IEventSource {
 

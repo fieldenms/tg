@@ -20,7 +20,15 @@ import org.apache.log4j.Logger;
 import ua.com.fielden.platform.web.application.RequestInfo;
 
 /**
- * This EventSource emitter is taken from Jetty source in the attempt to make it working with Restlet.
+ * Event source emitter represents a connection to a web client for pushing SSE events to that client.
+ * It other words, this is just a pipe through which all SSE messages get sent to a web client, and which has no knowledge as to what kind of messages are sent or what event sources have produced them.
+ * <p>
+ * In the current SSE architecture, {@link EventSourceDispatchingEmitter} is responsible for dispatching SSE events to event source emitters that are registered with it. All emitters should be registered with a dispatcher instance.
+ * This was not always the case – before that, each emitter was in one-2-one correspondence with an event source, and the lifecycle of every such event source was tight to the lifecycle of an emitter.
+ * In the current SSE architecture, only closing of {@link EventSourceDispatchingEmitter}, which signifies the end of its life, leads to disconnecting of all the event sources.
+ * And there can be more than 1 event source, which could push events to the same emitter.
+ * <p>
+ * The original implementation for Event Source emitter was taken from the Jetty source in the attempt to make it working with Restlet.
  * <p>
  * TODO: Need to support message id to be able to send the client all the missed messages, and not just to restart sending messages from whatever happens to be the current.
  *
@@ -35,13 +43,13 @@ public final class EventSourceEmitter implements IEventSourceEmitter, Runnable {
     private static final byte[] COMMENT_FIELD = "comment: ".getBytes(StandardCharsets.UTF_8);
 
     private final Logger logger = Logger.getLogger(getClass());
-    private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private int heartBeatPeriod = 5;
 
     private final AsyncContext async;
     private final ServletOutputStream output;
     private Future<?> heartBeat;
-    private boolean closed;
+    private final AtomicBoolean closed = new AtomicBoolean(false);
     private final AtomicBoolean shouldResourceThreadBeBlocked;
     private final RequestInfo info;
 
@@ -135,14 +143,15 @@ public final class EventSourceEmitter implements IEventSourceEmitter, Runnable {
     @Override
     public void close() {
         try {
-            synchronized (this) {
-                closed = true;
-                heartBeat.cancel(false);
-                if (scheduler != null) {
-                    scheduler.shutdown();
+            if (!closed.getAndSet(true)) {
+                synchronized (this) {
+                    heartBeat.cancel(false);
+                    if (scheduler != null) {
+                        scheduler.shutdown();
+                    }
                 }
+                async.complete();
             }
-            async.complete();
         } finally {
             logger.info(format("Closed event source emitter: %s", info.toString()));
             shouldResourceThreadBeBlocked.set(false);
@@ -151,7 +160,7 @@ public final class EventSourceEmitter implements IEventSourceEmitter, Runnable {
 
     public void scheduleHeartBeat() {
         synchronized (this) {
-            if (!closed) {
+            if (!closed.get()) {
                 heartBeat = scheduler.schedule(this, heartBeatPeriod, TimeUnit.SECONDS);
             }
         }
