@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.getFieldValue;
 import static ua.com.fielden.platform.reflection.asm.api.test_utils.NewPropertyTestUtils.assertAnnotationsEquals;
@@ -27,7 +28,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
 
-import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
@@ -136,9 +136,8 @@ public class DynamicEntityTypePropertiesAdditionTest {
                 .addProperties(npBool)
                 .endModification();
 
-        assertEquals("Incorrect number of properties.", 
-                Finder.getPropertyDescriptors(DEFAULT_ORIG_TYPE).size() + 1,
-                Finder.getPropertyDescriptors(newType1).size());
+        assertEquals("Incorrect number of properties in the generated type.", 
+                Finder.findProperties(DEFAULT_ORIG_TYPE).size() + 1, Finder.findProperties(newType1).size());
 
         final Field field1 = Finder.findFieldByName(newType1, npBool.getName());
         assertNotNull("Added property %s was not found.".formatted(npBool.getName()), field1);
@@ -154,9 +153,9 @@ public class DynamicEntityTypePropertiesAdditionTest {
                 .addProperties(newProperties)
                 .endModification();
 
-        assertEquals("Incorrect number of properties.", 
-                Finder.getPropertyDescriptors(DEFAULT_ORIG_TYPE).size() + newProperties.size(),
-                Finder.getPropertyDescriptors(newType2).size());
+        assertEquals("Incorrect number of properties in the generated type.", 
+                Finder.findProperties(DEFAULT_ORIG_TYPE).size() + newProperties.size(),
+                Finder.findProperties(newType2).size());
 
         newProperties.forEach(np -> {
             final Field field = Finder.findFieldByName(newType2, np.getName());
@@ -174,9 +173,9 @@ public class DynamicEntityTypePropertiesAdditionTest {
         newProperties.forEach(builder::addProperties);
         final Class<? extends AbstractEntity<String>> newType3 = builder.endModification();
 
-        assertEquals("Incorrect number of properties.", 
-                Finder.getPropertyDescriptors(DEFAULT_ORIG_TYPE).size() + newProperties.size(),
-                Finder.getPropertyDescriptors(newType3).size());
+        assertEquals("Incorrect number of properties in the generated type.", 
+                Finder.findProperties(DEFAULT_ORIG_TYPE).size() + newProperties.size(),
+                Finder.findProperties(newType3).size());
 
         newProperties.forEach(np -> {
             final Field field = Finder.findFieldByName(newType3, np.getName());
@@ -224,18 +223,16 @@ public class DynamicEntityTypePropertiesAdditionTest {
                 .addProperties(np1, np1, np1)
                 .endModification(); 
 
-        assertEquals("Incorrect number of properties.", 
-                Finder.getPropertyDescriptors(DEFAULT_ORIG_TYPE).size() + 1,
-                Finder.getPropertyDescriptors(newType1).size());
+        assertEquals("Incorrect number of properties in the generated type.", 
+                Finder.findProperties(DEFAULT_ORIG_TYPE).size() + 1, Finder.findProperties(newType1).size());
 
         final Class<? extends AbstractEntity<String>> newType2 = cl.startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(np1)
                 .addProperties(np1)
                 .addProperties(np1)
                 .endModification(); 
-        assertEquals("Incorrect number of properties.", 
-                Finder.getPropertyDescriptors(DEFAULT_ORIG_TYPE).size() + 1,
-                Finder.getPropertyDescriptors(newType2).size());
+        assertEquals("Incorrect number of properties in the generated type.", 
+                Finder.findProperties(DEFAULT_ORIG_TYPE).size() + 1, Finder.findProperties(newType2).size());
     }
 
     /**
@@ -326,9 +323,8 @@ public class DynamicEntityTypePropertiesAdditionTest {
                 .addProperties(np2)
                 .endModification();
 
-        assertEquals("Incorrect number of properties.", 
-                Finder.getPropertyDescriptors(DEFAULT_ORIG_TYPE).size() + 2,
-                Finder.getPropertyDescriptors(newType2).size());
+        assertEquals("Incorrect number of properties in the generated type.", 
+                Finder.findProperties(DEFAULT_ORIG_TYPE).size() + 2, Finder.findProperties(newType2).size());
 
         for (final NewProperty<?> np: List.of(np1, np2)) {
             final Field field = Finder.findFieldByName(newType2, np.getName());
