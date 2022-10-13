@@ -90,14 +90,14 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
     }
 
     @Override
-    public Result registerEmitter(final User user, final String sseUid, final IEventSourceEmitter emitter) {
+    public Result registerEmitter(final User user, final String sseUid, final Supplier<IEventSourceEmitter> emitterFactory) {
         LOGGER.info(format("Registering event emitter for web client [%s, %s].", user, sseUid));
         if (isActive.get()) {
-            register.putIfAbsent(key(user, sseUid), emitter);
+            final IEventSourceEmitter emitter = register.computeIfAbsent(key(user, sseUid), argNotUsed -> emitterFactory.get());
             logRegisterSize();
             return successful(emitter);
         }
-        return failure(emitter, "The dispatcher is inactive and no new emitters can be registered.");
+        return failure("The dispatcher is inactive and no new emitters can be registered.");
     }
 
     @Override

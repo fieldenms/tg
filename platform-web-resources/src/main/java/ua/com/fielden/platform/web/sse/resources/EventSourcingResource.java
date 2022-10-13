@@ -23,8 +23,8 @@ import ua.com.fielden.platform.web.application.RequestInfo;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebResource;
 import ua.com.fielden.platform.web.sse.EventSourceEmitter;
-import ua.com.fielden.platform.web.sse.IEventSourceEmitter;
 import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
+import ua.com.fielden.platform.web.sse.exceptions.SseException;
 import ua.com.fielden.platform.web.utils.ServletUtils;
 
 /**
@@ -64,21 +64,27 @@ public class EventSourcingResource extends AbstractWebResource {
         // any errors that may occur during subscription or a normal lifecycle after, should result in deregistering and closing of the emitter, created during this request
         try {
             try {
-                final IEventSourceEmitter emitter = eseRegister.getEmitter(user, sseIdString);
-                if (emitter == null) {
-                    final HttpServletRequest httpRequest = ServletUtils.getRequest(getRequest());
-                    final HttpServletResponse httpResponse = ServletUtils.getResponse(getResponse());
-                    makeHandshake(httpResponse);
-                    // create an asynchronous context for pushing messages out to the subscribed client
-                    final AsyncContext async = httpRequest.startAsync();
-                    // Infinite timeout because the continuation is never resumed,
-                    // but only completed on close
-                    async.setTimeout(0);
-                    final EventSourceEmitter ecentSourceEmitter = new EventSourceEmitter(shouldKeepGoing, async, new RequestInfo(getRequest()));
-                    eseRegister.registerEmitter(user, sseIdString, ecentSourceEmitter).ifFailure(Result::throwRuntime);
-                    ecentSourceEmitter.scheduleHeartBeat();
-                }
-            } catch (final IOException ex) {
+                eseRegister.registerEmitter(user, sseIdString, () -> {
+                    try {
+                        final HttpServletRequest httpRequest = ServletUtils.getRequest(getRequest());
+                        final HttpServletResponse httpResponse = ServletUtils.getResponse(getResponse());
+                        makeHandshake(httpResponse);
+                        // create an asynchronous context for pushing messages out to the subscribed client
+                        final AsyncContext async = httpRequest.startAsync();
+                        // Infinite timeout because the continuation is never resumed,
+                        // but only completed on close
+                        async.setTimeout(0);
+                        
+                        final EventSourceEmitter emitter = new EventSourceEmitter(shouldKeepGoing, async, new RequestInfo(getRequest()));
+                        emitter.scheduleHeartBeat();
+                        
+                        return emitter;
+                    } catch (final IOException ex) {
+                         throw new SseException("Could not create a new SSE emitter.", ex);
+                    }
+                }).ifFailure(Result::throwRuntime);
+                
+            } catch (final Exception ex) {
                 logger.error(ex);
                 throw new ResourceException(ex);
             }
