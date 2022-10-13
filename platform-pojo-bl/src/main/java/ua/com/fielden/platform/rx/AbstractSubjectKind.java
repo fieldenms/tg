@@ -45,11 +45,6 @@ public abstract class AbstractSubjectKind<T> implements IObservableKind<T> {
     }
 
     @Override
-    public final void complete() {
-        observable.onCompleted();
-    }
-
-    @Override
     public final void error(final Throwable ex) {
         try {
             observable.onError(ex);

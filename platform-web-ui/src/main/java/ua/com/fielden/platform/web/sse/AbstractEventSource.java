@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.sse;
 
+import static java.lang.String.format;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Map;
@@ -102,9 +104,12 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
      */
     protected abstract Map<String, Object> eventToData(final T event);
 
+    /**
+     * Unsubscribes from a stream of events this event source was observing.
+     */
     @Override
     public void disconnect() {
-        logger.debug("client subscription connection has been closed");
+        logger.debug("Client subscription is being disconnected.");
         if (subscription != null) {
             subscription.unsubscribe();
         }
@@ -117,23 +122,15 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
 
         @Override
         public void onCompleted() {
-            try {
-                emitter.event("completed", "The server-side data stream has completed.");
-            } catch (final IOException ex) {
-                logger.error(ex);
-            } finally {
-                emitter.close();
-            }
+            logger.debug(format("Event source [%s] completed.", AbstractEventSource.this.getClass().getName()));
         }
 
         @Override
-        public void onError(final Throwable e) {
+        public void onError(final Throwable error) {
             try {
-                emitter.event("exception", e.getMessage());
-            } catch (final IOException ex) {
+                emitter.event("exception", error.getMessage());
+            } catch (final Exception ex) {
                 logger.error(ex);
-            } finally {
-                emitter.close();
             }
         }
 
@@ -144,9 +141,10 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
                 data.put("eventSourceClass", AbstractEventSource.this.getClass().getName());
                 final byte [] serialisedData = serialiser.serialise(data);
                 emitter.data(new String(serialisedData, StandardCharsets.UTF_8));
-            } catch (final IOException ex) {
+            } catch (final Exception ex) {
                 logger.error(ex);
             }
         }
     }
+
 }

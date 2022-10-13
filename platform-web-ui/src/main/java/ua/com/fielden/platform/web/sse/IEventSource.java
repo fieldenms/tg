@@ -24,7 +24,7 @@ public interface IEventSource {
 
     /**
      * A method that is invoked when this event source should be disconnected from the {@code emitter}, passed into {@link #connect(IEventSourceEmitter)}.
-     * This usually needs to be done when this even source has completed its work (i.e., no new events need to be sent).
+     * This usually needs to be done when this even source has completed its work (i.e., no new events need to be observed and sent to a web client).
      */
     void disconnect();
 
