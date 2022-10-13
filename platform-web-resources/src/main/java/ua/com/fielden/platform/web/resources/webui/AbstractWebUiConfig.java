@@ -12,7 +12,6 @@ import static ua.com.fielden.platform.web.centre.api.actions.impl.EntityActionBu
 import static ua.com.fielden.platform.web.centre.api.context.impl.EntityCentreContextSelector.context;
 import static ua.com.fielden.platform.web.resources.webui.FileResource.generateFileName;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -113,6 +112,17 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         this.independentTimeZone = independentTimeZone;
         this.webUiBuilder = new WebUiBuilder(this);
         this.dispatchingEmitter = new EventSourceDispatchingEmitter();
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                try {
+                    logger.info("Closing Event Source Dispatching Emitter with all registered emitters...");
+                    dispatchingEmitter.close();
+                } catch (final Exception ex) {
+                    logger.error("Closing Event Source Dispatching Emitter encountered an error.", ex);
+                }
+            }
+        });
         this.desktopMainMenuConfig = new MainMenuBuilder(this);
         this.mobileMainMenuConfig = new MainMenuBuilder(this);
 
