@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentHashMap.KeySetView;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 
@@ -93,6 +94,7 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
         LOGGER.info(format("Registering event emitter for web client [%s, %s].", user, sseUid));
         if (isActive.get()) {
             register.putIfAbsent(key(user, sseUid), emitter);
+            logRegisterSize();
             return successful(emitter);
         }
         return failure(emitter, "The dispatcher is inactive and no new emitters can be registered.");
@@ -110,9 +112,21 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
             }
         } catch (final Throwable ex) {
             LOGGER.error(format("Deregistering event emitter for web client [%s, %s] resulted in error.", user, sseUid), ex);
+        } finally {
+            logRegisterSize();
         }
     }
 
+    /**
+     * A helper method to report the number of SSE connections – a distinct by user and a total number.
+     */
+    private void logRegisterSize() {
+        final KeySetView<T2<Long, String>, IEventSourceEmitter> keySet = register.keySet();
+        final long distinctUserConnections = keySet.stream().map(t2 -> t2._1).distinct().count();
+        final long totalConnections =  keySet.size();
+        LOGGER.info(format("SSE connections: [%s] distinct, [%s] total.", distinctUserConnections, totalConnections));
+    }
+    
     @Override
     public IEventSourceEmitter getEmitter(final User user, final String sseUid) {
         return register.get(key(user, sseUid));
