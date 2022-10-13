@@ -75,11 +75,16 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
      * @throws IOException
      */
     public EventSourceDispatchingEmitter createAndRegisterEventSource(final Class<? extends IEventSource> eventSourceClass, final Supplier<IEventSource> eventSourceSupplier) throws IOException {
-        eventSources.computeIfAbsent(eventSourceClass, argNotUsed -> {
-            LOGGER.info(format("Registering event source [%s].", eventSourceClass.getName()));
-            final IEventSource eventSource = eventSourceSupplier.get();
-            eventSource.connect(this);
-            return eventSource;});
+        if (isActive.get()) {
+            eventSources.computeIfAbsent(eventSourceClass, argNotUsed -> {
+                LOGGER.info(format("Registering event source [%s].", eventSourceClass.getName()));
+                final IEventSource eventSource = eventSourceSupplier.get();
+                eventSource.connect(this);
+                return eventSource;});
+        } else {
+            LOGGER.info("The dispatcher is inactive and no new event sources can be registered.");
+        }
+
         return this;
     }
 
@@ -166,16 +171,29 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
      */
     @Override
     public void close() {
-        isActive.set(false);
-        LOGGER.info("Closing all emitters...");
-        for (final Iterator<IEventSourceEmitter> iter = register.values().iterator(); iter.hasNext();) {
-            final IEventSourceEmitter emitter = iter.next();
-            iter.remove();
-            try {
-                emitter.close();
-            } catch (final Throwable ex) {
-                LOGGER.warn(format("Non critical error during closing of emitters."), ex);
+        if (isActive.getAndSet(false)) {
+            LOGGER.info("Disconnecting all event sources...");
+            for (final Iterator<IEventSource> iter = eventSources.values().iterator(); iter.hasNext();) {
+                final IEventSource eventSource = iter.next();
+                try {
+                    eventSource.disconnect();
+                    iter.remove();
+                } catch (final Throwable ex) {
+                    LOGGER.warn(format("Non critical error during closing of emitters."), ex);
+                }
             }
+            
+            LOGGER.info("Closing all emitters...");
+            for (final Iterator<IEventSourceEmitter> iter = register.values().iterator(); iter.hasNext();) {
+                final IEventSourceEmitter emitter = iter.next();
+                iter.remove();
+                try {
+                    emitter.close();
+                } catch (final Throwable ex) {
+                    LOGGER.warn(format("Non critical error during closing of emitters."), ex);
+                }
+            }
+            
         }
     }
 
