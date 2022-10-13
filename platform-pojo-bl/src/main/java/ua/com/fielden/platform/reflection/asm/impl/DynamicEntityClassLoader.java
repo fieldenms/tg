@@ -41,10 +41,26 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
 
     private final Cache<Class<?>, byte[]> cache = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).concurrencyLevel(50).build();
 
+    /**
+     * Returns an instance of this class loader type with the specified parent class loader. 
+     * The returned instance might be retrieved from cache, which uses {@code parent} as a lookup key. 
+     * @param parent
+     * @return
+     */
     public static DynamicEntityClassLoader getInstance(final ClassLoader parent) {
         final var newInstance = new DynamicEntityClassLoader(parent);
         final var current = instances.putIfAbsent(parent, newInstance);
         return current == null ? newInstance : current;
+    }
+    
+    /**
+     * Forcefully creates and returns a new insatnce of this class loader type with the specified parent class loader regardless of any cached instances.
+     * Primarily used in testing environments.
+     * @param parent
+     * @return
+     */
+    public static DynamicEntityClassLoader forceInstance(final ClassLoader parent) {
+        return new DynamicEntityClassLoader(parent);
     }
     
     private DynamicEntityClassLoader(final ClassLoader parent) {
