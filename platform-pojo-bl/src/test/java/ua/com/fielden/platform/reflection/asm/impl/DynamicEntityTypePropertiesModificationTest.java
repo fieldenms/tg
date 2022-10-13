@@ -87,7 +87,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     @Before
     public void setUp() {
         observed = false;
-        cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
+        cl = DynamicEntityClassLoader.forceInstance(ClassLoader.getSystemClassLoader());
     }
 
     @Test
