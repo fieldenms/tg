@@ -269,16 +269,10 @@ public final class Reflector {
         try {
             final String methodName = "set" + transformed.getValue().substring(0, 1).toUpperCase() + transformed.getValue().substring(1);
             final Class<?> argumentType = PropertyTypeDeterminator.determineClass(transformed.getKey(), transformed.getValue(), AbstractEntity.KEY.equalsIgnoreCase(transformed.getValue()), false);
-            
-            if (DynamicEntityClassLoader.isGenerated(entityClass) && DynamicEntityClassLoader.getOriginalType(entityClass) == argumentType) {
-                return Reflector.getMethod(transformed.getKey(), 
-                        methodName, 
-                        entityClass);
-            } else {
-                return Reflector.getMethod(transformed.getKey(), 
-                        methodName, 
-                        argumentType);
-            }
+
+            return Reflector.getMethod(transformed.getKey(), 
+                    methodName, 
+                    argumentType);
         } catch (final Exception ex) {
             throw new ReflectionException(format("Could not obtain setter for property [%s] in type [%s].", dotNotationExp, entityClass.getName()), ex);
         }
