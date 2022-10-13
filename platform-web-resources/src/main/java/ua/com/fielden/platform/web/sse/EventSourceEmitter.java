@@ -142,8 +142,8 @@ public final class EventSourceEmitter implements IEventSourceEmitter, Runnable {
 
     @Override
     public void close() {
-        try {
-            if (!closed.getAndSet(true)) {
+        if (!closed.getAndSet(true)) {
+            try {
                 synchronized (this) {
                     heartBeat.cancel(false);
                     if (scheduler != null) {
@@ -151,10 +151,10 @@ public final class EventSourceEmitter implements IEventSourceEmitter, Runnable {
                     }
                 }
                 async.complete();
+            } finally {
+                logger.info(format("Closed event source emitter: %s", info.toString()));
+                shouldResourceThreadBeBlocked.set(false);
             }
-        } finally {
-            logger.info(format("Closed event source emitter: %s", info.toString()));
-            shouldResourceThreadBeBlocked.set(false);
         }
     }
 
