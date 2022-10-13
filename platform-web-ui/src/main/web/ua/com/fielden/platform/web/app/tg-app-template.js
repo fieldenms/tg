@@ -8,6 +8,7 @@ import '/resources/polymer/@polymer/app-route/app-route.js';
 
 import '/resources/polymer/@polymer/neon-animation/neon-animated-pages.js';
 
+// this import is required to ensure the SSE initialisation upon loading of a web client
 import '/app/tg-app-config.js';
 
 import '/resources/views/tg-app-menu.js';
