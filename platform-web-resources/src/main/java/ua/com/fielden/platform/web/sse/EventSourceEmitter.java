@@ -45,11 +45,11 @@ public final class EventSourceEmitter implements IEventSourceEmitter {
 
     private final Logger logger = Logger.getLogger(getClass());
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-    private int heartBeatPeriod = 5;
+    private final int heartBeatPeriod = 5;
 
     private final AsyncContext async;
     private final ServletOutputStream output;
-    private Future<?> heartBeatTask;
+    private Future<?> heartBeatTask; // mutable as it gets reassigned upon hear beat rescheduling
     private final AtomicBoolean closed = new AtomicBoolean(false);
     private final AtomicBoolean shouldResourceThreadBeBlocked;
     private final RequestInfo info;
