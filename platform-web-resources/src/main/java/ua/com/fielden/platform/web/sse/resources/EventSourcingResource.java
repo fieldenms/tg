@@ -75,10 +75,7 @@ public class EventSourcingResource extends AbstractWebResource {
                         // but only completed on close
                         async.setTimeout(0);
                         
-                        final EventSourceEmitter emitter = new EventSourceEmitter(shouldKeepGoing, async, new RequestInfo(getRequest()));
-                        emitter.scheduleHeartBeat();
-                        
-                        return emitter;
+                        return new EventSourceEmitter(shouldKeepGoing, async, new RequestInfo(getRequest()));
                     } catch (final IOException ex) {
                          throw new SseException("Could not create a new SSE emitter.", ex);
                     }

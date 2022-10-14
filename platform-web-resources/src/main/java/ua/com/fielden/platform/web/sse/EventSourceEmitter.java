@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -20,13 +21,13 @@ import org.apache.log4j.Logger;
 import ua.com.fielden.platform.web.application.RequestInfo;
 
 /**
- * Event source emitter represents a connection to a web client for pushing SSE events to that client.
- * It other words, this is just a pipe through which all SSE messages get sent to a web client, and which has no knowledge as to what kind of messages are sent or what event sources have produced them.
+ * Event source emitter represents a connection to a web client for pushing SSE events to that client. It other words, this is just a pipe through which all SSE messages get sent
+ * to a web client, and which has no knowledge as to what kind of messages are sent or what event sources have produced them.
  * <p>
- * In the current SSE architecture, {@link EventSourceDispatchingEmitter} is responsible for dispatching SSE events to event source emitters that are registered with it. All emitters should be registered with a dispatcher instance.
- * This was not always the case – before that, each emitter was in one-2-one correspondence with an event source, and the lifecycle of every such event source was tight to the lifecycle of an emitter.
- * In the current SSE architecture, only closing of {@link EventSourceDispatchingEmitter}, which signifies the end of its life, leads to disconnecting of all the event sources.
- * And there can be more than 1 event source, which could push events to the same emitter.
+ * In the current SSE architecture, {@link EventSourceDispatchingEmitter} is responsible for dispatching SSE events to event source emitters that are registered with it. All
+ * emitters should be registered with a dispatcher instance. This was not always the case – before that, each emitter was in one-2-one correspondence with an event source, and the
+ * lifecycle of every such event source was tight to the lifecycle of an emitter. In the current SSE architecture, only closing of {@link EventSourceDispatchingEmitter}, which
+ * signifies the end of its life, leads to disconnecting of all the event sources. And there can be more than 1 event source, which could push events to the same emitter.
  * <p>
  * The original implementation for Event Source emitter was taken from the Jetty source in the attempt to make it working with Restlet.
  * <p>
@@ -35,7 +36,7 @@ import ua.com.fielden.platform.web.application.RequestInfo;
  * @author TG Team
  *
  */
-public final class EventSourceEmitter implements IEventSourceEmitter, Runnable {
+public final class EventSourceEmitter implements IEventSourceEmitter {
 
     private static final byte[] CRLF = new byte[] { '\r', '\n' };
     private static final byte[] EVENT_FIELD = "event: ".getBytes(StandardCharsets.UTF_8);
@@ -48,7 +49,7 @@ public final class EventSourceEmitter implements IEventSourceEmitter, Runnable {
 
     private final AsyncContext async;
     private final ServletOutputStream output;
-    private Future<?> heartBeat;
+    private Future<?> heartBeatTask;
     private final AtomicBoolean closed = new AtomicBoolean(false);
     private final AtomicBoolean shouldResourceThreadBeBlocked;
     private final RequestInfo info;
@@ -66,6 +67,7 @@ public final class EventSourceEmitter implements IEventSourceEmitter, Runnable {
         this.async = async;
         this.output = async.getResponse().getOutputStream();
         this.info = info;
+        this.heartBeatTask = scheduleHeartBeat();
         logger.info(format("Started event source emitter: %s", info.toString()));
     }
 
@@ -117,26 +119,7 @@ public final class EventSourceEmitter implements IEventSourceEmitter, Runnable {
         }
     }
 
-    @Override
-    public void run() {
-        // If the other peer closes the connection, the first
-        // flush() should generate a TCP reset that is detected
-        // on the second flush()
-        try {
-            synchronized (this) {
-                output.write('\r');
-                flush();
-                output.write('\n');
-                flush();
-            }
-            // reschedule heartbeat
-            scheduleHeartBeat();
-        } catch (final IOException ex) {
-            close();
-        }
-    }
-
-    protected void flush() throws IOException {
+    private void flush() throws IOException {
         async.getResponse().flushBuffer();
     }
 
@@ -145,7 +128,7 @@ public final class EventSourceEmitter implements IEventSourceEmitter, Runnable {
         if (!closed.getAndSet(true)) {
             try {
                 synchronized (this) {
-                    heartBeat.cancel(false);
+                    heartBeatTask.cancel(false);
                     if (scheduler != null) {
                         scheduler.shutdown();
                     }
@@ -158,12 +141,36 @@ public final class EventSourceEmitter implements IEventSourceEmitter, Runnable {
         }
     }
 
-    public void scheduleHeartBeat() {
-        synchronized (this) {
-            if (!closed.get()) {
-                heartBeat = scheduler.schedule(this, heartBeatPeriod, TimeUnit.SECONDS);
+    /**
+     * Performs a heart beat to let the client side know what the connection is still active.
+     */
+    private void doHeartBeat() {
+        // If the other peer closes the connection, the first
+        // flush() should generate a TCP reset that is detected
+        // on the second flush()
+        try {
+            synchronized (this) {
+                output.write('\r');
+                flush();
+                output.write('\n');
+                flush();
             }
+            // reschedule heartbeat, but only if this emitter was not closed yet
+            if (!closed.get()) {
+                heartBeatTask = scheduleHeartBeat();
+            }
+        } catch (final IOException ex) {
+            close();
         }
+    }
+
+    /**
+     * A helper factory method to schedule execution of {@link #doHeartBeat()}.
+     *
+     * @return scheduled task
+     */
+    private ScheduledFuture<?> scheduleHeartBeat() {
+        return scheduler.schedule(this::doHeartBeat, heartBeatPeriod, TimeUnit.SECONDS);
     }
 
 }
