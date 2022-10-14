@@ -62,6 +62,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.centre.exceptions.PropertyDefinitionException;
 import ua.com.fielden.platform.web.layout.FlexLayout;
+import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 
 /**
@@ -218,8 +219,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      */
     private final boolean enforcePostSaveRefresh;
 
-    /** Identifies URI for the Server-Side Eventing. If <code>null</code> is set then no SSE is required. */
-    private final String sseUri;
+    /** Identifies event source class that should be used as part of the topic for distributing server side event on client. If <code>null</code> is set then no SSE is required. */
+    private final Class<? extends IEventSource> eventSourceClass;
     /** The number of seconds before refresh on sse event. This value might be null, then refresh will be immediate.
      *  If the value is zero, then user will have to make decision whether to refresh the center or to skip it.
      *  if the value is greater then 0, then user will have a chance to skip refreshing the specified number of seconds.
@@ -474,7 +475,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Integer leftSplitterPosition,
             final Integer rightSplitterPosition,
 
-            final String sseUri,
+            final Class<? extends IEventSource> eventSourceClass,
             final Integer refreshCountdown,
 
             final FlexLayout selectionCriteriaLayout,
@@ -556,7 +557,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.leftSplitterPosition = leftSplitterPosition;
         this.rightSplitterPosition = rightSplitterPosition;
 
-        this.sseUri = sseUri;
+        this.eventSourceClass = eventSourceClass;
         this.refreshCountdown = refreshCountdown;
 
         this.resultSetProperties.addAll(resultSetProperties);
@@ -925,8 +926,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return Collections.unmodifiableList(insertionPointConfigs);
     }
 
-    public Optional<String> getSseUri() {
-        return Optional.ofNullable(sseUri);
+    public Optional<Class<? extends IEventSource>> getEventSourceClass() {
+        return Optional.ofNullable(eventSourceClass);
     }
 
     public Optional<Integer> getRefreshCountdown() {
