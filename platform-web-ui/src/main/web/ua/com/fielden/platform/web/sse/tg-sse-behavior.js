@@ -73,11 +73,11 @@ export const TgSseBehavior = {
 
     subscribeToSseEvent: function () {
         if (this._messageSubscription) {
-            throw new Error("Unsubscribe from sse message event first in order to subscribe to the new one");
+            throw new Error("Unsubscribe from SSE message event first in order to subscribe to the new one.");
         }
 
         if (this._errorSubscription) {
-            throw new Error("Unsubscribe from sse error event first in order to subscribe to the new one");
+            throw new Error("Unsubscribe from SSE error event first in order to subscribe to the new one.");
         }
 
         this._messageSubscription = postal.subscribe({
