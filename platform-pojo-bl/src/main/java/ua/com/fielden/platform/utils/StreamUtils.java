@@ -142,6 +142,39 @@ public class StreamUtils {
     }
 
     /**
+     * Returns the longest prefix of the {@code stream} until (inclusive) an element that satisfies {@code predicate} is encountered.
+     * <p>
+     * If no such element was encountered then the whole stream is returned.
+     *
+     * @param stream
+     * @param predicate
+     * @return
+     */
+    public static <T> Stream<T> stopAfter(final Stream<T> stream, final Predicate<? super T> predicate) {
+        return StreamSupport.stream(stopAfter(stream.spliterator(), predicate), false);
+    }
+
+    private static <T> Spliterator<T> stopAfter(final Spliterator<T> splitr, final Predicate<? super T> predicate) {
+        return new Spliterators.AbstractSpliterator<T>(splitr.estimateSize(), 0) {
+            boolean stillGoing = true;
+
+            @Override
+            public boolean tryAdvance(final Consumer<? super T> consumer) {
+                if (stillGoing) {
+                    final boolean hadNext = splitr.tryAdvance(elem -> {
+                        consumer.accept(elem);
+                        if (predicate.test(elem)) {
+                            stillGoing = false;
+                        }
+                    });
+                    return hadNext && stillGoing;
+                }
+                return false;
+            }
+        };
+    }
+
+    /**
      * Constructs a zipped stream.
      * 
      * @param xs

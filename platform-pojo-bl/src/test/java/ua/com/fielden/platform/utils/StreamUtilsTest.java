@@ -10,6 +10,7 @@ import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.utils.StreamUtils.ERR_FIRST_STREAM_ELEM_CANNOT_BE_NULL;
 import static ua.com.fielden.platform.utils.StreamUtils.head_and_tail;
+import static ua.com.fielden.platform.utils.StreamUtils.stopAfter;
 import static ua.com.fielden.platform.utils.StreamUtils.takeWhile;
 import static ua.com.fielden.platform.utils.StreamUtils.zip;
 
@@ -134,12 +135,34 @@ public class StreamUtilsTest {
     }
 
     @Test
-    public void takeWhile_returns_the_longest_predicate_of_the_stream_whose_elements_satisfy_predicare() {
+    public void takeWhile_returns_the_longest_prefix_of_the_stream_whose_elements_satisfy_predicate() {
         final Stream<Integer> prefix = takeWhile(Stream.of(0, 1, 2, 3, 4, 5, 6, 1, 2, 3), e -> e < 5);
 
         final AtomicInteger expectedCurrValue = new AtomicInteger(-1);
         assertTrue(prefix.allMatch(v -> v == expectedCurrValue.incrementAndGet()));
         assertEquals(4, expectedCurrValue.get());
+    }
+
+    @Test
+    public void stopAfter_for_empty_stream_returns_empty_stream() {
+        assertEquals(0L, stopAfter(Stream.empty(), e -> true).count());
+    }
+
+    @Test
+    public void stopAfter_returns_the_longest_prefix_of_the_stream_stopping_after_element_satisfying_predicate() {
+        final Stream<Integer> prefix = stopAfter(Stream.of(0, 1, 2, 3, 4, 5, 6, 1, 2, 3), e -> e >= 5);
+
+        final AtomicInteger expectedCurrValue = new AtomicInteger(-1);
+        assertTrue(prefix.allMatch(v -> v == expectedCurrValue.incrementAndGet()));
+        assertEquals(5, expectedCurrValue.get());
+    }
+
+    @Test
+    public void stopAfter_returns_the_whole_stream_if_no_element_satisfies_predicate() {
+        final List<Integer> numbers = List.of(0, 1, 2, 3, 4, 5, 6, 1, 2, 3);
+        final List<Integer> prefix = stopAfter(numbers.stream(), e -> e >= 7).toList();
+
+        assertTrue(numbers.containsAll(prefix) && numbers.size() == prefix.size());
     }
     
     @Test
@@ -163,7 +186,7 @@ public class StreamUtilsTest {
     }
     
     @Test
-    public void can_zip_steams_of_different_size() {
+    public void can_zip_streams_of_different_size() {
         assertEquals(listOf(0, 2, 4), zip(Stream.of(0, 1, 2), Stream.of(0, 1, 2, 3), (x, y) -> x+y).collect(toList()));
         assertEquals(listOf(0, 2, 4), zip(Stream.of(0, 1, 2, 3), Stream.of(0, 1, 2), (x, y) -> x+y).collect(toList()));
         assertEquals(listOf(), zip(Stream.<Integer>empty(), Stream.of(0, 1, 2), (x, y) -> x+y).collect(toList()));

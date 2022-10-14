@@ -88,7 +88,7 @@ public class DataMigrator {
 
     /**
      * Prints out retrievers grouped by their entity types (only those that have more than one retriever per type).
-     * 
+     *
      * @param retrieversJobs
      */
     private static void printRetrieversScheme(final List<CompiledRetriever> retrieversJobs) {
@@ -201,15 +201,19 @@ public class DataMigrator {
                     }
                     final Object key = keyValue.size() == 1 ? keyValue.get(0) : keyValue;
                     final Long idObject = typeCache.get(key);
-                    final long id = idObject;
-                    int index = 1;
-                    final var currTransformedValues = tdu.transformValuesForUpdate(legacyRs, cache, id);
-                    batchValues.add(currTransformedValues);
-                    for (final Object value : currTransformedValues) {
-                        insertStmt.setObject(index, value);
-                        index = index + 1;
+                    if (idObject == null) {
+                        System.out.println("           !!! can't find id for " + tdu.retrieverEntityType.getSimpleName() + " with key: [" + key + "]");
+                    } else {
+                        final long id = idObject;
+                        int index = 1;
+                        final var currTransformedValues = tdu.transformValuesForUpdate(legacyRs, cache, id);
+                        batchValues.add(currTransformedValues);
+                        for (final Object value : currTransformedValues) {
+                            insertStmt.setObject(index, value);
+                            index = index + 1;
+                        }
+                        insertStmt.addBatch();
                     }
-                    insertStmt.addBatch();
 
                     if (batchId % BATCH_SIZE == 0) {
                         repeatAction(insertStmt, batchValues, exceptions);
