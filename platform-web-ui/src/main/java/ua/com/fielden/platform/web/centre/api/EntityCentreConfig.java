@@ -62,6 +62,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.centre.exceptions.PropertyDefinitionException;
 import ua.com.fielden.platform.web.layout.FlexLayout;
+import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 
 /**
@@ -82,6 +83,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     private final boolean hideToolbar;
     private final IScrollConfig scrollConfig;
     private final boolean retrieveAll;
+    private final boolean lockScrollingForInsertionPoints;
     private final int pageCapacity;
     private final int maxPageCapacity;
     private final int visibleRowsCount;
@@ -207,12 +209,23 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     private final boolean runAutomatically;
 
     /**
+     * Determines the position of left and right splitters.
+     */
+    private final Integer leftSplitterPosition;
+    private final Integer rightSplitterPosition;
+
+    /**
      * Determines whether centre should forcibly refresh the current page upon a successful save of a related entity (regardless of the presence of that entity on the current page).
      */
     private final boolean enforcePostSaveRefresh;
 
-    /** Identifies URI for the Server-Side Eventing. If <code>null</code> is set then no SSE is required. */
-    private final String sseUri;
+    /** Identifies event source class that should be used as part of the topic for distributing server side event on client. If <code>null</code> is set then no SSE is required. */
+    private final Class<? extends IEventSource> eventSourceClass;
+    /** The number of seconds before refresh on sse event. This value might be null, then refresh will be immediate.
+     *  If the value is zero, then user will have to make decision whether to refresh the center or to skip it.
+     *  if the value is greater then 0, then user will have a chance to skip refreshing the specified number of seconds.
+     *  After refreshCountdown seconds centre will be refreshed immediately.*/
+    private final Integer refreshCountdown;
 
     /////////////////////////////////////////////
     ////////////////// RESULT SET ///////////////
@@ -411,6 +424,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final boolean hideToolbar,
             final IScrollConfig scrollConfig,
             final boolean retrieveAll,
+            final boolean lockScrollingForInsertionPoints,
             final int pageCapacity,
             final int maxPageCapacity,
             final int visibleRowsCount,
@@ -458,7 +472,11 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final boolean runAutomatically,
             final boolean enforcePostSaveRefresh,
 
-            final String sseUri,
+            final Integer leftSplitterPosition,
+            final Integer rightSplitterPosition,
+
+            final Class<? extends IEventSource> eventSourceClass,
+            final Integer refreshCountdown,
 
             final FlexLayout selectionCriteriaLayout,
             final FlexLayout resultsetCollapsedCardLayout,
@@ -484,6 +502,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.hideToolbar = hideToolbar;
         this.scrollConfig = scrollConfig;
         this.retrieveAll = retrieveAll;
+        this.lockScrollingForInsertionPoints = lockScrollingForInsertionPoints;
         this.pageCapacity = pageCapacity;
         this.maxPageCapacity = maxPageCapacity;
         this.visibleRowsCount = visibleRowsCount;
@@ -535,8 +554,11 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
         this.runAutomatically = runAutomatically;
         this.enforcePostSaveRefresh = enforcePostSaveRefresh;
+        this.leftSplitterPosition = leftSplitterPosition;
+        this.rightSplitterPosition = rightSplitterPosition;
 
-        this.sseUri = sseUri;
+        this.eventSourceClass = eventSourceClass;
+        this.refreshCountdown = refreshCountdown;
 
         this.resultSetProperties.addAll(resultSetProperties);
         this.summaryExpressions.putAll(summaryExpressions);
@@ -586,6 +608,14 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public boolean isRunAutomatically() {
         return runAutomatically;
+    }
+
+    public Optional<Integer> getLeftSplitterPosition() {
+        return ofNullable(leftSplitterPosition);
+    }
+
+    public Optional<Integer> getRightSplitterPosition() {
+        return ofNullable(rightSplitterPosition);
     }
 
     public boolean shouldEnforcePostSaveRefresh() {
@@ -896,8 +926,12 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return Collections.unmodifiableList(insertionPointConfigs);
     }
 
-    public Optional<String> getSseUri() {
-        return Optional.ofNullable(sseUri);
+    public Optional<Class<? extends IEventSource>> getEventSourceClass() {
+        return Optional.ofNullable(eventSourceClass);
+    }
+
+    public Optional<Integer> getRefreshCountdown() {
+        return Optional.ofNullable(refreshCountdown);
     }
 
     public boolean isEgiHidden() {
@@ -934,6 +968,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public boolean shouldRetrieveAll() {
         return retrieveAll;
+    }
+
+    public boolean isLockScrollingForInsertionPoints() {
+        return lockScrollingForInsertionPoints;
     }
 
     public int getPageCapacity() {

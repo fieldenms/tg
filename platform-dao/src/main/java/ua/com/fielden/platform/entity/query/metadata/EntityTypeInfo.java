@@ -4,7 +4,7 @@ import static java.lang.String.format;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.query.metadata.DomainMetadataUtils.produceUnionEntityModels;
-import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSISTED;
+import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSISTENT;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PURE;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.UNION;
@@ -47,7 +47,7 @@ public class EntityTypeInfo <ET extends AbstractEntity<?>> {
         this.entityType = entityType;
         if (isPersistedEntityType(entityType)) {
             tableName = getTableClause(entityType);
-            category = PERSISTED;
+            category = PERSISTENT;
             entityModels = ImmutableList.of();
             unionEntityModels = ImmutableList.of();
         } else if (isSyntheticEntityType(entityType)) {

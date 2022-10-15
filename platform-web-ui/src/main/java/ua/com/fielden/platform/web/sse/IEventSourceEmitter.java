@@ -3,14 +3,15 @@ package ua.com.fielden.platform.web.sse;
 import java.io.IOException;
 
 /**
- * {@link IEmitter} is the active half of an event source connection, and allows applications to operate on the connection by sending events, data or comments, or by closing the
+ * {@link IEventSourceEmitter} is the active half of an event source connection, and allows applications to operate on the connection by sending events, data or comments, or by closing the
  * connection.
  * <p>
- * An {@link IEmitter} instance will be created for each new event source connection.
+ * An {@link IEventSourceEmitter} instance will be created for each new event source connection.
  * <p>
- * {@link IEmitter} instances are fully thread safe and can be used from multiple threads.
+ * {@link IEventSourceEmitter} instances are fully thread safe and can be used from multiple threads.
  */
-public interface IEmitter {
+public interface IEventSourceEmitter {
+
     /**
      * Sends a named event with data to the client.
      * <p>
@@ -58,7 +59,7 @@ public interface IEmitter {
      * When invoked as: <code>comment("foo")</code>, the client will receive the line:
      *
      * <pre>
-     * : foo
+     * comment: foo
      * </pre>
      *
      * @param comment

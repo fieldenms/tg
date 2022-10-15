@@ -8,6 +8,7 @@ import static java.util.Currency.getInstance;
 import static java.util.Locale.getDefault;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.math.MathContext;
 import java.math.RoundingMode;
 import java.text.NumberFormat;
@@ -49,9 +50,14 @@ public class Money implements Comparable<Money> {
     private static final Random random = new Random();
 
     /**
-     * This is a convenient constant value of zero.
+     * This is a convenient unit element for addition.
      */
     public static final Money zero = new Money("0.00");
+
+    /**
+     * This is a convenient unit element for multiplication.
+     */
+    public static final Money ONE = new Money("1.00");
 
     @IsProperty(precision = 18, scale = 2)
     @MapTo
@@ -223,7 +229,7 @@ public class Money implements Comparable<Money> {
     }
 
     /**
-     * Divides current amount by passed value, rounds the result using {@link RoundingMode#HALF_EVEN} rule with 2 digits after comma and returns result as new instance.
+     * Divides current amount by passed value with rounding rule {@link RoundingMode#HALF_EVEN} and returns result as new instance.
      *
      * @param value
      */
@@ -255,7 +261,7 @@ public class Money implements Comparable<Money> {
             return Arrays.asList(this); // returns immutable List instance
         } else {
             // dividing into more than one part
-            final List<Money> parts = new ArrayList<Money>();
+            final List<Money> parts = new ArrayList<>();
             // defining index of happy man who may receive larger part
             final int luckyIndex = random.nextInt(value);
             // calculating amount of money for each
@@ -304,7 +310,11 @@ public class Money implements Comparable<Money> {
 
     @Override
     public String toString() {
-        return NumberFormat.getCurrencyInstance().format(getAmount().setScale(2, HALF_UP).doubleValue());
+        final NumberFormat currencyInstance = NumberFormat.getCurrencyInstance();
+        currencyInstance.setCurrency(currency);
+        currencyInstance.setMinimumFractionDigits(2);
+        currencyInstance.setMaximumFractionDigits(4);
+        return currencyInstance.format(getAmount());
     }
 
     /**
@@ -423,4 +433,5 @@ public class Money implements Comparable<Money> {
     public boolean ge(final Money amount) {
         return compareTo(amount) >= 0;
     }
+
 }

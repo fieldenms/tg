@@ -131,7 +131,7 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     }
     
     public boolean isPure() {
-        return parentInfo.category == EntityCategory.PERSISTED && (category == SYNTHETIC || category == SYNTHETIC_COMPONENT_HEADER || category == SYNTHETIC_COMPONENT_DETAILS);
+        return parentInfo.category == EntityCategory.PERSISTENT && (category == SYNTHETIC || category == SYNTHETIC_COMPONENT_HEADER || category == SYNTHETIC_COMPONENT_DETAILS);
     }
 
     public String getTypeString() {

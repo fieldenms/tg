@@ -8,6 +8,7 @@ import { tearDownEvent, isInHierarchy, deepestActiveElement, FOCUSABLE_ELEMENTS_
 import {createDialog} from '/resources/egi/tg-dialog-util.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgElementSelectorBehavior, queryElements } from '/resources/components/tg-element-selector-behavior.js';
+import { TgDelayedActionBehavior } from '/resources/components/tg-delayed-action-behavior.js';
 
 const generateCriteriaName = function (root, property, suffix) {
     const rootName = root.substring(0, 1).toLowerCase() + root.substring(1) + "_";
@@ -245,6 +246,13 @@ const TgEntityCentreBehaviorImpl = {
          * The menu item type, that identifies this entity centre.
          */
         miType: {
+            type: String
+        },
+
+        /**
+         * user that opened this entity centre
+         */
+        userName: {
             type: String
         },
 
@@ -764,7 +772,10 @@ const TgEntityCentreBehaviorImpl = {
                        propOrder.property = "";
                    }
                    return propOrder;
-                }))
+                }));
+                // If a user received an SSE refresh event, but switched to a selection criteria pane and pressed RUN, then the refresh prompt (a toast) should be canceled.
+                this.cancelRefreshToast();
+
                 if (this._triggerRun) {
                     if (this._selectedView === 0) {
                         this.async(function () {
@@ -1096,7 +1107,7 @@ const TgEntityCentreBehaviorImpl = {
 
     _saveOrCancelPromise: function () {
         this._showToastWithMessage(MSG_SAVE_OR_CANCEL);
-        return Promise.reject(MSG_SAVE_OR_CANCEL);
+        return Promise.reject(MSG_SAVE_OR_CANCEL).catch(e => {});
     },
 
     _focusView: function (e, forward) {
@@ -1219,13 +1230,22 @@ const TgEntityCentreBehaviorImpl = {
      */
     currentPage: function (excludeInsertionPoints) {
         const self = this;
-        if (!self.$.egi.isEditing()) {
-            return self.$.selection_criteria.currentPage()
-                .then(function () {
-                    self.runInsertionPointActions(excludeInsertionPoints);
-                });
-        }
-        return self._saveOrCancelPromise();
+        return new Promise((resolve, reject) => {
+            self.debounce('centre-refresh', () => {
+                // cancel the 'centre-refresh' debouncer if there is any active one:
+                self.cancelDebouncer('centre-refresh');
+
+                if (!self.$.egi.isEditing()) {
+                    this.cancelRefreshToast();
+                    return self.$.selection_criteria.currentPage()
+                        .then(function () {
+                            self.runInsertionPointActions(excludeInsertionPoints);
+                            resolve();
+                        }).catch (e => reject(e));
+                }
+                self._saveOrCancelPromise().then(() => resolve()).catch(e => reject(e));
+            }, 50);
+        });
     },
 
     currentPageTap: function () {
@@ -1475,5 +1495,6 @@ export const TgEntityCentreBehavior = [
     TgEntityCentreBehaviorImpl,
     TgSseBehavior,
     TgFocusRestorationBehavior,
-    TgElementSelectorBehavior
+    TgElementSelectorBehavior,
+    TgDelayedActionBehavior
 ];

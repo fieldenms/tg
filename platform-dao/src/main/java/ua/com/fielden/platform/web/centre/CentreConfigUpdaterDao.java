@@ -7,7 +7,6 @@ import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.IEntityDao;
-import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
@@ -32,7 +31,7 @@ public class CentreConfigUpdaterDao extends CommonEntityDao<CentreConfigUpdater>
     }
 
     @Override
-    @SessionRequired
+    // @SessionRequired -- avoid transaction here; see EntityCentreConfigDao for more details
     public CentreConfigUpdater save(final CentreConfigUpdater action) {
         final T2<CentreConfigUpdater, EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, IEntityDao<AbstractEntity<?>>>> actionAndCriteriaBeingUpdated = validateAction(action, this, String.class, new CentreConfigUpdaterController(criteriaEntityRestorer));
         final CentreConfigUpdater actionToSave = actionAndCriteriaBeingUpdated._1;

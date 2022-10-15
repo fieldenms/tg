@@ -46,7 +46,8 @@ export const IronOverlayManagerClass = function () {
   // https://github.com/Microsoft/ChakraCore/issues/3863
 
   gestures.add(document.documentElement, 'tap', function () {});
-  document.addEventListener('tap', this._onCaptureClick.bind(this), true);
+  const clickEvent = ('ontouchstart' in window) ? 'touchstart' : 'mousedown';
+  document.addEventListener(clickEvent, this._onCaptureClick.bind(this), true);
   document.addEventListener('focus', this._onCaptureFocus.bind(this), true);
   document.addEventListener('keydown', this._onCaptureKeyDown.bind(this), true);
 };
@@ -92,7 +93,7 @@ IronOverlayManagerClass.prototype = {
    * @private
    */
   _bringOverlayAtIndexToFront: function (i) {
-    var overlay = this._overlays[i];
+    const overlay = this._overlays[i];
 
     if (!overlay) {
       return;
@@ -100,30 +101,35 @@ IronOverlayManagerClass.prototype = {
 
     var lastI = this._overlays.length - 1;
     var currentOverlay = this._overlays[lastI]; // Ensure always-on-top overlay stays on top.
-
-    if (currentOverlay && this._shouldBeBehindOverlay(overlay, currentOverlay)) {
+    
+    while (currentOverlay && this._shouldBeBehindOverlay(overlay, currentOverlay)) {
       lastI--;
-    } // If already the top element, return.
+      currentOverlay = this._overlays[lastI];
+    } 
 
-
+    // If already the top element, return.
     if (i >= lastI) {
       return;
-    } // Update z-index to be on top.
+    } 
 
+    const minimumZ = Math.max(this._getZ(this._overlays[lastI]), this._minimumZ);
 
-    var minimumZ = Math.max(this.currentOverlayZ(), this._minimumZ);
-
-    if (this._getZ(overlay) <= minimumZ) {
-      this._applyOverlayZ(overlay, minimumZ);
-    } // Shift other overlays behind the new on top.
-
-
+    // Get the smallest z-index to replace z-index for the next overlay in the list
+    let lastZ = this._getZ(overlay);
     while (i < lastI) {
+      // Shift overlay to left
       this._overlays[i] = this._overlays[i + 1];
       i++;
+      // Replace z-index a for shifted overlay by that last smallest z-index. But before doing this capture z-index for the next overlay.
+      let tempZ = this._getZ(this._overlays[i])
+      this._setZ(this._overlays[i], lastZ);
+      lastZ = tempZ;
     }
-
     this._overlays[lastI] = overlay;
+
+    if (this._getZ(overlay) <= minimumZ) {
+      this._setZ(overlay, minimumZ);
+    }
   },
 
   /**
@@ -158,17 +164,17 @@ IronOverlayManagerClass.prototype = {
     var currentOverlay = this._overlays[insertionIndex - 1];
     var minimumZ = Math.max(this._getZ(currentOverlay), this._minimumZ);
 
-    var newZ = this._getZ(overlay); // Ensure always-on-top overlay stays on top.
-
-
-    if (currentOverlay && this._shouldBeBehindOverlay(overlay, currentOverlay)) {
+    var newZ = this._getZ(overlay); 
+    
+    // Ensure always-on-top overlay stays on top.
+    while (currentOverlay && this._shouldBeBehindOverlay(overlay, currentOverlay)) {
       // This bumps the z-index of +2.
       this._applyOverlayZ(currentOverlay, minimumZ);
 
       insertionIndex--; // Update minimumZ to match previous overlay's z-index.
 
-      var previousOverlay = this._overlays[insertionIndex - 1];
-      minimumZ = Math.max(this._getZ(previousOverlay), this._minimumZ);
+      currentOverlay = this._overlays[insertionIndex - 1];
+      minimumZ = Math.max(this._getZ(currentOverlay), this._minimumZ);
     } // Update z-index and insert overlay.
 
 
