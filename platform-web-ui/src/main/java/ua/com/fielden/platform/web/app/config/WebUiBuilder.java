@@ -222,7 +222,7 @@ public class WebUiBuilder implements IWebUiBuilder {
                 replace("@dateFormat", "\"" + this.dateFormat + "\"").
                 replace("@timeFormat", "\"" + this.timeFormat + "\"").
                 replace("@timeWithMillisFormat", "\"" + this.timeWithMillisFormat + "\"").
-                replace("@firstDayOfWeek", String.valueOf(dates.startOfWeek()));
+                replace("@firstDayOfWeek", String.valueOf(dates.startOfWeek() % 7));
     }
 
     public String getAppIndex () {

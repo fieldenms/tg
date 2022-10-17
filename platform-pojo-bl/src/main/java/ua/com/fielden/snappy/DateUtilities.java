@@ -73,7 +73,8 @@ public class DateUtilities {
             return adjustedDate.toDate(); // time portion is already removed.
         } else if (rangeWidth == MnemonicEnum.WEEK) {
             // set the first day of week.
-            return adjustedDate.withDayOfWeek(dates.startOfWeek()).toDate();
+            final DateTime newDate = adjustedDate.getDayOfWeek() < dates.startOfWeek() ? adjustedDate.minusWeeks(1) : adjustedDate;
+            return newDate.withDayOfWeek(dates.startOfWeek()).toDate();
         } else if (rangeWidth == MnemonicEnum.MONTH) {
             return adjustedDate.withDayOfMonth(1).toDate();// set first day of month as 1-st.
         } else if (rangeWidth == MnemonicEnum.YEAR) {
