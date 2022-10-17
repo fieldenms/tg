@@ -155,6 +155,7 @@ import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 import ua.com.fielden.platform.web.layout.FlexLayout;
 import ua.com.fielden.platform.web.minijs.JsCode;
+import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.utils.EntityResourceUtils;
 import ua.com.fielden.snappy.DateRangeConditionEnum;
 
@@ -876,14 +877,13 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     /**
-     * Return an optional Event Source URI.
+     * Returns a class name of an SSE event source, associated with this entity centre. This event source is used at the client-side to subscribe to a postal event to refresh this entity centre.
      *
      * @return
      */
-    public Optional<String> eventSourceUri() {
-        return dslDefaultConfig.getSseUri();
+    public Optional<Class<? extends IEventSource>> eventSourceClass() {
+        return dslDefaultConfig.getEventSourceClass();
     }
-
     /**
      * Returns the instance of rendering customiser for this entity centre.
      *

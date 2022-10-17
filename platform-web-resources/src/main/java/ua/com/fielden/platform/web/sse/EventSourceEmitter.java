@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -20,48 +21,53 @@ import org.apache.log4j.Logger;
 import ua.com.fielden.platform.web.application.RequestInfo;
 
 /**
- * This EventSource emitter is taken from Jetty source in the attempt to make it working with Restlet.
+ * Event source emitter represents a connection to a web client for pushing SSE events to that client. It other words, this is just a pipe through which all SSE messages get sent
+ * to a web client, and which has no knowledge as to what kind of messages are sent or what event sources have produced them.
  * <p>
- * TODO: Need to support message id to be able to send the client all the missed messages, and not just to restart sending messages from whatever happens to be the current. TODO:
- * Most likely it should be open sourced. The same goes about a corresponding Restlet web resource.
+ * In the current SSE architecture, {@link EventSourceDispatchingEmitter} is responsible for dispatching SSE events to event source emitters that are registered with it. All
+ * emitters should be registered with a dispatcher instance. This was not always the case – before that, each emitter was in one-2-one correspondence with an event source, and the
+ * lifecycle of every such event source was tight to the lifecycle of an emitter. In the current SSE architecture, only closing of {@link EventSourceDispatchingEmitter}, which
+ * signifies the end of its life, leads to disconnecting of all the event sources. And there can be more than 1 event source, which could push events to the same emitter.
+ * <p>
+ * The original implementation for Event Source emitter was taken from the Jetty source in the attempt to make it working with Restlet.
+ * <p>
+ * TODO: Need to support message id to be able to send the client all the missed messages, and not just to restart sending messages from whatever happens to be the current.
  *
  * @author TG Team
  *
  */
-public final class EventSourceEmitter implements IEmitter, Runnable {
+public final class EventSourceEmitter implements IEventSourceEmitter {
 
     private static final byte[] CRLF = new byte[] { '\r', '\n' };
     private static final byte[] EVENT_FIELD = "event: ".getBytes(StandardCharsets.UTF_8);
     private static final byte[] DATA_FIELD = "data: ".getBytes(StandardCharsets.UTF_8);
-    private static final byte[] COMMENT_FIELD = ": ".getBytes(StandardCharsets.UTF_8);
+    private static final byte[] COMMENT_FIELD = "comment: ".getBytes(StandardCharsets.UTF_8);
 
     private final Logger logger = Logger.getLogger(getClass());
-    private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-    private int heartBeatPeriod = 5;
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private final int heartBeatPeriod = 5;
 
-    private final IEventSource eventSource;
     private final AsyncContext async;
     private final ServletOutputStream output;
-    private Future<?> heartBeat;
-    private boolean closed;
+    private Future<?> heartBeatTask; // mutable as it gets reassigned upon hear beat rescheduling
+    private final AtomicBoolean closed = new AtomicBoolean(false);
     private final AtomicBoolean shouldResourceThreadBeBlocked;
     private final RequestInfo info;
 
     /**
-     * The use of <code>stopResourceThread</code> is a workaround at this stage to prevent restlet from closing the connection with the client by means of blocking its thread by
-     * putting it to sleep.
+     * The use of {@code stopResourceThread} is a workaround at this stage to prevent Restlet from closing the connection with the client by means of blocking its thread by putting it to sleep.
      *
      * @param shouldResourceThreadBeBlocked
-     * @param eventSource
      * @param async
+     * @param info
      * @throws IOException
      */
-    public EventSourceEmitter(final AtomicBoolean shouldResourceThreadBeBlocked, final IEventSource eventSource, final AsyncContext async, final RequestInfo info) throws IOException {
+    public EventSourceEmitter(final AtomicBoolean shouldResourceThreadBeBlocked, final AsyncContext async, final RequestInfo info) throws IOException {
         this.shouldResourceThreadBeBlocked = shouldResourceThreadBeBlocked;
-        this.eventSource = eventSource;
         this.async = async;
         this.output = async.getResponse().getOutputStream();
         this.info = info;
+        this.heartBeatTask = scheduleHeartBeat();
         logger.info(format("Started event source emitter: %s", info.toString()));
     }
 
@@ -113,8 +119,32 @@ public final class EventSourceEmitter implements IEmitter, Runnable {
         }
     }
 
+    private void flush() throws IOException {
+        async.getResponse().flushBuffer();
+    }
+
     @Override
-    public void run() {
+    public void close() {
+        if (!closed.getAndSet(true)) {
+            try {
+                synchronized (this) {
+                    heartBeatTask.cancel(false);
+                    if (scheduler != null) {
+                        scheduler.shutdown();
+                    }
+                }
+                async.complete();
+            } finally {
+                logger.info(format("Closed event source emitter: %s", info.toString()));
+                shouldResourceThreadBeBlocked.set(false);
+            }
+        }
+    }
+
+    /**
+     * Performs a heart beat to let the client side know what the connection is still active.
+     */
+    private void doHeartBeat() {
         // If the other peer closes the connection, the first
         // flush() should generate a TCP reset that is detected
         // on the second flush()
@@ -125,40 +155,22 @@ public final class EventSourceEmitter implements IEmitter, Runnable {
                 output.write('\n');
                 flush();
             }
-            // reschedule heartbeat
-            scheduleHeartBeat();
+            // reschedule heartbeat, but only if this emitter was not closed yet
+            if (!closed.get()) {
+                heartBeatTask = scheduleHeartBeat();
+            }
         } catch (final IOException ex) {
             close();
         }
     }
 
-    protected void flush() throws IOException {
-        async.getResponse().flushBuffer();
+    /**
+     * A helper factory method to schedule execution of {@link #doHeartBeat()}.
+     *
+     * @return scheduled task
+     */
+    private ScheduledFuture<?> scheduleHeartBeat() {
+        return scheduler.schedule(this::doHeartBeat, heartBeatPeriod, TimeUnit.SECONDS);
     }
 
-    @Override
-    public void close() {
-        try {
-            synchronized (this) {
-                closed = true;
-                heartBeat.cancel(false);
-                if (scheduler != null) {
-                    scheduler.shutdown();
-                }
-            }
-            async.complete();
-            eventSource.onClose();
-        } finally {
-            logger.info(format("Closed event source emitter: %s", info.toString()));
-            shouldResourceThreadBeBlocked.set(false);
-        }
-    }
-
-    public void scheduleHeartBeat() {
-        synchronized (this) {
-            if (!closed) {
-                heartBeat = scheduler.schedule(this, heartBeatPeriod, TimeUnit.SECONDS);
-            }
-        }
-    }
 }

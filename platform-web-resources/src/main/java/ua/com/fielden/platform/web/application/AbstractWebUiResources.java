@@ -41,6 +41,7 @@ import ua.com.fielden.platform.web.factories.webui.WebUiPreferencesResourceFacto
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.security.DefaultWebResourceGuard;
+import ua.com.fielden.platform.web.sse.resources.EventSourcingResourceFactory;
 
 /**
  * Represents a web application that is running on the server.
@@ -139,6 +140,8 @@ public abstract class AbstractWebUiResources extends Application {
 
         //Attache client side error logger resource
         guardedRouter.attach("/error", new WebClientErrorLoggerResourceFactory(injector));
+
+        guardedRouter.attach("/sse/{sseUid}",  new EventSourcingResourceFactory(webApp.getEventSourceEmitterRegister(), deviceProvider, dates, userProvider));
 
         // Registering entity centres:
         attachCentreResources(guardedRouter, webApp, restUtil);

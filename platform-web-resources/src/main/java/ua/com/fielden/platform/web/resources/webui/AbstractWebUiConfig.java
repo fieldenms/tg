@@ -58,6 +58,10 @@ import ua.com.fielden.platform.web.ioc.exceptions.MissingWebResourceException;
 import ua.com.fielden.platform.web.menu.IMainMenuBuilder;
 import ua.com.fielden.platform.web.menu.impl.MainMenuBuilder;
 import ua.com.fielden.platform.web.ref_hierarchy.ReferenceHierarchyWebUiConfig;
+import ua.com.fielden.platform.web.resources.webui.exceptions.InvalidUiConfigException;
+import ua.com.fielden.platform.web.sse.EventSourceDispatchingEmitter;
+import ua.com.fielden.platform.web.sse.IEventSource;
+import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 
 /**
@@ -70,10 +74,15 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  *
  */
 public abstract class AbstractWebUiConfig implements IWebUiConfig {
+
+    private static final String ERR_IN_COMPOUND_EMITTER = "Event source compound emitter should have cought this error. Something went wrong in WebUiConfig.";
+
     private final Logger logger = Logger.getLogger(getClass());
     private final String title;
     private WebUiBuilder webUiBuilder;
     private Injector injector;
+
+    private final EventSourceDispatchingEmitter dispatchingEmitter;
 
     protected MainMenuBuilder desktopMainMenuConfig;
     protected MainMenuBuilder mobileMainMenuConfig;
@@ -103,6 +112,18 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         this.title = title;
         this.independentTimeZone = independentTimeZone;
         this.webUiBuilder = new WebUiBuilder(this);
+        this.dispatchingEmitter = new EventSourceDispatchingEmitter();
+        Runtime.getRuntime().addShutdownHook(new Thread() {
+            @Override
+            public void run() {
+                try {
+                    logger.info("Closing Event Source Dispatching Emitter with all registered emitters...");
+                    dispatchingEmitter.close();
+                } catch (final Exception ex) {
+                    logger.error("Closing Event Source Dispatching Emitter encountered an error.", ex);
+                }
+            }
+        });
         this.desktopMainMenuConfig = new MainMenuBuilder(this);
         this.mobileMainMenuConfig = new MainMenuBuilder(this);
 
@@ -210,6 +231,23 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
             return indexSource.replace("@startupResources", "startup-resources-vulcanized");
         }
 
+    }
+
+    @Override
+    public IEventSourceEmitterRegister getEventSourceEmitterRegister() {
+        return dispatchingEmitter;
+    }
+
+    @Override
+    public IWebUiConfig createAndRegisterEventSource(final Class<? extends IEventSource> eventSourceClass) {
+        try {
+            dispatchingEmitter.createAndRegisterEventSource(eventSourceClass, () -> injector.getInstance(eventSourceClass));
+        } catch (final Exception ex) {
+            logger.error(ex);
+            throw new InvalidUiConfigException(ERR_IN_COMPOUND_EMITTER, ex);
+        }
+
+        return this;
     }
 
     private static boolean isDevelopmentWorkflow(final Workflows workflow) {
