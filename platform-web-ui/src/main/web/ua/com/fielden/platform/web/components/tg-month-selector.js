@@ -117,7 +117,7 @@ const template = html`
     };
     const createWeek = function (year, month, day, firstDayOfWeek) {
         const yearMonthDay = { year: year, month: month, day: day };
-        const firstDay = (7 - firstDayOfWeek + _momentTz(yearMonthDay, this.timeZone).day()) % 7;
+        const firstDay = (7 - firstDayOfWeek + _momentTz(yearMonthDay, this.timeZone).day()) % 7;//Maps week day where 0 - Sunday into week where 0 - custom first day of week
         const week = [];
         const previousMonthDays = getDaysInPreviousMonth.bind(this)(year, month);
         let _i = 0;
@@ -289,7 +289,7 @@ const template = html`
         },
 
         /**
-         * Returns the first letter of the day specified with day number and taking into account the first day of the week property.
+         * Returns the first letter of the day specified with day number taking into account the specified first day of the week.
          * 
          * @param {Number} firstDayOfWeek  - the number of the first day of week.
          * @param {Number} day - the number of the day for which first letter of the day should be returned

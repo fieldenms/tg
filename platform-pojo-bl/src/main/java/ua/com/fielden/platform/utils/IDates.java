@@ -35,7 +35,7 @@ public interface IDates {
     int financialYearStartMonth();
 
     /**
-     * Returns the number of the day that is a start of the week (1 - Monday, ..., 7 - Monday)
+     * Returns the number of the day that is a start of the week (1 - Monday, ..., 7 - Sunday)
      *
      * @return
      */
