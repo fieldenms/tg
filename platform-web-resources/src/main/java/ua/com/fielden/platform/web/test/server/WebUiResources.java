@@ -13,7 +13,6 @@ import ua.com.fielden.platform.web.application.AbstractWebUiResources;
 import ua.com.fielden.platform.web.factories.webui.AttachmentDownloadResourceFactory;
 import ua.com.fielden.platform.web.factories.webui.FileProcessingResourceFactory;
 import ua.com.fielden.platform.web.sse.resources.EventSourcingResourceFactory;
-import ua.com.fielden.platform.web.test.eventsources.TgMessageEventSource;
 import ua.com.fielden.platform.web.test.eventsources.TgPersistentEntityWithPropertiesEventSrouce;
 
 /**
@@ -89,6 +88,5 @@ public class WebUiResources extends AbstractWebUiResources {
         // register some server-side eventing
         // router.attach("/sse/events",  new _EventSourcingResourceFactory()); -- some experimental stuff, which should be kept here for the moment
         router.attach("/sse/entity-centre-events",  new EventSourcingResourceFactory(injector, TgPersistentEntityWithPropertiesEventSrouce.class, deviceProvider, dates));
-        router.attach("/sse/message-update-events", new EventSourcingResourceFactory(injector, TgMessageEventSource.class, deviceProvider, dates));
     }
 }

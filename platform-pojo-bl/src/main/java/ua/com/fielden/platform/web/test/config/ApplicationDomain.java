@@ -31,7 +31,6 @@ import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
-import ua.com.fielden.platform.sample.domain.TgCoordinate;
 import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusAction;
 import ua.com.fielden.platform.sample.domain.TgDeletionTestEntity;
 import ua.com.fielden.platform.sample.domain.TgDummyAction;
@@ -60,13 +59,8 @@ import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnaly
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnalysisInsertionPoint;
 import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgMachine;
-import ua.com.fielden.platform.sample.domain.TgMachineRealtimeMonitorMap;
-import ua.com.fielden.platform.sample.domain.TgMessage;
-import ua.com.fielden.platform.sample.domain.TgMessageMap;
 import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgOpenTrippleDecDetails;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
@@ -77,13 +71,9 @@ import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithPropertiesAttachment;
 import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
 import ua.com.fielden.platform.sample.domain.TgPerson;
-import ua.com.fielden.platform.sample.domain.TgPolygon;
-import ua.com.fielden.platform.sample.domain.TgPolygonMap;
 import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgSelectedEntitiesExampleAction;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgStop;
-import ua.com.fielden.platform.sample.domain.TgStopMap;
 import ua.com.fielden.platform.sample.domain.TgSynBogie;
 import ua.com.fielden.platform.sample.domain.TgUnion;
 import ua.com.fielden.platform.sample.domain.TgUnionCommonType;
@@ -167,20 +157,6 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class);
         add(TgOpenTrippleDecDetails.class);
         add(OtherEntity.class);
-
-        add(TgMessage.class);
-        add(TgMessageMap.class);
-
-        add(TgOrgUnit.class);
-        add(TgMachine.class);
-        add(TgMachineRealtimeMonitorMap.class);
-
-        add(TgStop.class);
-        add(TgStopMap.class);
-
-        add(TgPolygon.class);
-        add(TgCoordinate.class);
-        add(TgPolygonMap.class);
 
         add(TgVehicle.class);
         add(TgVehicleFinDetails.class);
