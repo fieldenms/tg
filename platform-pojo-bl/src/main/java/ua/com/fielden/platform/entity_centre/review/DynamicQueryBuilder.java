@@ -1174,8 +1174,12 @@ public class DynamicQueryBuilder {
     }
 
     /**
-     * The same as {@link #createConditionProperty(String)}, but with parameter of type {@link IConvertableToPath};
-     * @param property
+     * The same as {@link #createConditionProperty(String)}, but with parameter of type {@link IConvertableToPath}.
+     * <p>
+     * <b>IMPORTANT:</b> At this stage there no way to differentiate between property meta-models coming from aliased and non-aliased instance of entity meta-models.
+     * It is important to use with method only in application to properties from non-aliased meta-models. Otherwise, a runtime error would occur at the EQL/SQL level due to incorrect aliases.
+     *
+     * @param property – a property meta-model coming from a non-aliased instance of an entity meta-model.
      * @return
      */
     public static String createConditionProperty(final IConvertableToPath property) {
