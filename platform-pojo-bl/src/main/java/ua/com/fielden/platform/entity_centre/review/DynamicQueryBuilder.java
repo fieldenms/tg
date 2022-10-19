@@ -62,6 +62,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.exceptions.EntityCentreExecutionException;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -1170,6 +1171,15 @@ public class DynamicQueryBuilder {
      */
     public static String createConditionProperty(final String property) {
         return property.isEmpty() ? ALIAS : ALIAS + "." + property;
+    }
+
+    /**
+     * The same as {@link #createConditionProperty(String)}, but with parameter of type {@link IConvertableToPath};
+     * @param property
+     * @return
+     */
+    public static String createConditionProperty(final IConvertableToPath property) {
+        return createConditionProperty(property.toPath());
     }
 
     /**
