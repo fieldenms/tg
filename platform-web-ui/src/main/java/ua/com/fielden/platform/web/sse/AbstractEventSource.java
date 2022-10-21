@@ -3,6 +3,8 @@ package ua.com.fielden.platform.web.sse;
 import static org.apache.logging.log4j.LogManager.getLogger;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 import org.apache.logging.log4j.Logger;
 
@@ -10,6 +12,8 @@ import rx.Observable;
 import rx.Observer;
 import rx.Subscription;
 import ua.com.fielden.platform.rx.IObservableKind;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.web.sse.exceptions.SseException;
 
 /**
  * A base class for custom event sources that are subscribed to the specified data streams (aka observable) and emit respective values to the client.
@@ -32,7 +36,7 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
      * The emitter that is used for sending messages back to the client.
      * It is provided by the web resource in response to a subscription request from the client.
      */
-    private IEmitter emitter;
+    private IEventSourceEmitter emitter;
     /**
      * A subscription to the sever-side data stream, which is mainly used for unsubscribing.
      */
@@ -43,23 +47,34 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
      */
     private Observable<T> stream;
 
+    /**
+     * A JSON serialiser needed to convert a map of data into a String.
+     */
+    private final ISerialiser serialiser;
+
     private final Logger logger = getLogger(this.getClass());
 
-    protected AbstractEventSource(final OK observableKind) {
+
+    protected AbstractEventSource(final OK observableKind, final ISerialiser serialiser) {
         this.stream = observableKind.asObservable();
         if (stream == null) {
             throw new IllegalArgumentException("Event stream is required.");
         }
+        this.serialiser = serialiser;
     }
 
     @Override
-    public final void onOpen(final IEmitter emitter) throws IOException {
+    public final void connect(final IEventSourceEmitter emitter) {
         logger.debug("client subscription in progress...");
         this.emitter = emitter;
-        subscription = getStream().subscribe(new EventObserver());
+        this.subscription = getStream().subscribe(new EventObserver());
 
-        this.emitter.event("connection", "established");
-        logger.debug("client subscribed successfully");
+        try {
+            this.emitter.event("connection", "established");
+            logger.debug("client subscribed successfully");
+        } catch (final IOException ex) {
+            throw new SseException("Could not send connection event.", ex);
+        }
     }
 
     /**
@@ -88,11 +103,14 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
      * @param event
      * @return
      */
-    protected abstract String eventToData(final T event);
+    protected abstract Map<String, Object> eventToData(final T event);
 
+    /**
+     * Unsubscribes from a stream of events this event source was observing.
+     */
     @Override
-    public void onClose() {
-        logger.debug("client subscription connection has been closed");
+    public void disconnect() {
+        logger.debug("Client subscription is being disconnected.");
         if (subscription != null) {
             subscription.unsubscribe();
         }
@@ -105,33 +123,29 @@ public abstract class AbstractEventSource<T, OK extends IObservableKind<T>> impl
 
         @Override
         public void onCompleted() {
-            try {
-                emitter.event("completed", "The server-side data stream has completed.");
-            } catch (final IOException ex) {
-                logger.error(ex);
-            } finally {
-                emitter.close();
-            }
+            logger.debug(format("Event source [%s] completed.", AbstractEventSource.this.getClass().getName()));
         }
 
         @Override
-        public void onError(final Throwable e) {
+        public void onError(final Throwable error) {
             try {
-                emitter.event("exception", e.getMessage());
-            } catch (final IOException ex) {
+                emitter.event("exception", error.getMessage());
+            } catch (final Exception ex) {
                 logger.error(ex);
-            } finally {
-                emitter.close();
             }
         }
 
         @Override
         public void onNext(final T value) {
             try {
-                emitter.data(eventToData(value));
-            } catch (final IOException ex) {
+                final Map<String, Object> data = eventToData(value);
+                data.put("eventSourceClass", AbstractEventSource.this.getClass().getName());
+                final byte [] serialisedData = serialiser.serialise(data);
+                emitter.data(new String(serialisedData, StandardCharsets.UTF_8));
+            } catch (final Exception ex) {
                 logger.error(ex);
             }
         }
     }
+
 }

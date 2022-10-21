@@ -49,6 +49,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.toolbar.impl.CentreToolb
 import ua.com.fielden.platform.web.centre.api.top_level_actions.ICentreTopLevelActionsWithRunConfig;
 import ua.com.fielden.platform.web.centre.exceptions.EntityCentreConfigurationException;
 import ua.com.fielden.platform.web.layout.FlexLayout;
+import ua.com.fielden.platform.web.sse.IEventSource;
 
 /**
  * A class implementing the Entity Centre DSL contracts.
@@ -155,7 +156,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
     protected boolean enforcePostSaveRefresh = false;
     protected Integer leftSplitterPosition = null;
     protected Integer rightSplitterPosition = null;
-    protected String sseUri;
+    protected Class<? extends IEventSource> eventSourceClass = null;
     protected Integer refreshCountdown = null;
 
     private EntityCentreBuilder() {
@@ -233,7 +234,7 @@ public class EntityCentreBuilder<T extends AbstractEntity<?>> implements IEntity
                 enforcePostSaveRefresh,
                 leftSplitterPosition,
                 rightSplitterPosition,
-                sseUri,
+                eventSourceClass,
                 refreshCountdown,
                 selectionCriteriaLayout,
                 resultsetCollapsedCardLayout,

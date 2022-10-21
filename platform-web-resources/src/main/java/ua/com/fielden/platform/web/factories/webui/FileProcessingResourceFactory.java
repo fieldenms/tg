@@ -10,17 +10,19 @@ import org.restlet.Response;
 import org.restlet.Restlet;
 import org.restlet.data.MediaType;
 import org.restlet.data.Method;
-import org.restlet.routing.Router;
 
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 import ua.com.fielden.platform.web.resources.webui.FileProcessingResource;
+import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 
 /**
  * Factory to instantiate {@link FileProcessingResource}.
@@ -33,25 +35,27 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
     protected final Class<T> entityType;
     protected final Function<EntityFactory, T> entityCreator;
     protected final ICompanionObjectFinder companionFinder;
-    protected final Router router;
-    
+    private final IEventSourceEmitterRegister eseRegister;
+
     protected final long fileSizeLimitBytes;
     protected final Set<MediaType> types = new HashSet<>();
     protected final IDeviceProvider deviceProvider;
     protected final IDates dates;
+    private final IUserProvider userProvider;
 
     public FileProcessingResourceFactory(
-            final Router router,
+            final IEventSourceEmitterRegister eseRegister,
             final Injector injector,
             final Class<T> entityType,
             final Function<EntityFactory, T> entityCreator,
             final IDeviceProvider deviceProvider,
             final IDates dates,
             final long fileSizeLimitKb,
-            final MediaType type, // at least one type is required 
+            final MediaType type, // at least one type is required
             final MediaType... types) {
-        this.router = router;
+        this.eseRegister = eseRegister;
         this.injector = injector;
+        this.userProvider = injector.getInstance(IUserProvider.class);
         this.entityType = entityType;
         this.entityCreator = entityCreator;
         this.companionFinder = injector.getInstance(ICompanionObjectFinder.class);
@@ -68,16 +72,19 @@ public class FileProcessingResourceFactory<T extends AbstractEntityWithInputStre
 
         if (Method.PUT.equals(request.getMethod())) {
             new FileProcessingResource<>(
-                    router,
+                    eseRegister,
+                    userProvider,
                     companionFinder.find(entityType),
-                    injector.getInstance(EntityFactory.class), 
-                    entityCreator, 
-                    injector.getInstance(RestServerUtil.class), 
-                    fileSizeLimitBytes, 
-                    types, 
+                    injector.getInstance(EntityFactory.class),
+                    entityCreator,
+                    injector.getInstance(RestServerUtil.class),
+                    fileSizeLimitBytes,
+                    types,
                     deviceProvider,
                     dates,
+                    injector.getInstance(ISerialiser.class),
                     getContext(), request, response).handle();
         }
     }
+
 }
