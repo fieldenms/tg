@@ -3,11 +3,6 @@ package ua.com.fielden.platform.entity.query;
 import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.COMPOSITE_TYPE_HEADER;
-import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.UNION_ENTITY_HEADER;
-import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.USUAL_PROP;
-import static ua.com.fielden.platform.eql.stage3.EqlQueryTransformer.transform;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.util.List;
 import java.util.Optional;
@@ -25,17 +20,12 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
 import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
-import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType;
 import ua.com.fielden.platform.entity.query.generation.elements.Yield;
 import ua.com.fielden.platform.entity.query.generation.elements.Yields;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.entity.query.stream.ScrollableResultStream;
-import ua.com.fielden.platform.eql.stage2.TransformationResult;
-import ua.com.fielden.platform.eql.stage3.etc.Yield3;
-import ua.com.fielden.platform.eql.stage3.etc.Yields3;
-import ua.com.fielden.platform.eql.stage3.operands.ResultQuery3;
 import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 
 public class EntityContainerFetcher {
@@ -125,37 +115,16 @@ public class EntityContainerFetcher {
     }
 
     private <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryProcessingModel<E, ?> qem, final DomainMetadataAnalyser domainMetadataAnalyser, final IFilter filter, final String username) {
-        QueryModelResult<E> result;
-        if (executionContext.getDomainMetadata().eql2 && !qem.getParamValues().containsKey("EQL3") || qem.getParamValues().containsKey("EQL2")) {
-            final EntQueryGenerator gen = new EntQueryGenerator(domainMetadataAnalyser, filter, username, executionContext.dates());
-            final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel, qem.queryModel.getResultType(), qem.fetchModel, qem.getParamValues());
-            final String sql = entQuery.sql();
-            result = new QueryModelResult<>((Class<E>) entQuery.type(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams(), qem.fetchModel);
-        } else {
-            final TransformationResult<ResultQuery3> tr = transform(qem, filter, username, executionContext.dates(), executionContext.getDomainMetadata().eqlDomainMetadata);
-            final ResultQuery3 entQuery3 = tr.item;
-            final String sql = entQuery3.sql(domainMetadataAnalyser.getDbVersion());
-            result = new QueryModelResult<>((Class<E>) entQuery3.resultType, sql, getResultPropsInfos(entQuery3.yields), tr.updatedContext.getParamValues(), qem.fetchModel);
-        }
-
-        return result;
+        final EntQueryGenerator gen = new EntQueryGenerator(domainMetadataAnalyser, filter, username, executionContext.dates());
+        final EntQuery entQuery = gen.generateEntQueryAsResultQuery(qem.queryModel, qem.orderModel, qem.queryModel.getResultType(), qem.fetchModel, qem.getParamValues());
+        final String sql = entQuery.sql();
+        return new QueryModelResult<>((Class<E>) entQuery.type(), sql, getResultPropsInfos(entQuery.getYields()), entQuery.getValuesForSqlParams(), qem.fetchModel);
     }
 
     private static SortedSet<ResultQueryYieldDetails> getResultPropsInfos(final Yields model) {
         final SortedSet<ResultQueryYieldDetails> result = new TreeSet<>();
         for (final Yield yield : model.getYields()) {
             result.add(new ResultQueryYieldDetails(yield.getInfo().getName(), yield.getInfo().getJavaType(), yield.getInfo().getHibType(), yield.getInfo().getColumn(), yield.getInfo().getYieldDetailsType()));
-        }
-        return result;
-    }
-
-    public static SortedSet<ResultQueryYieldDetails> getResultPropsInfos(final Yields3 model) {
-        final SortedSet<ResultQueryYieldDetails> result = new TreeSet<>();
-        for (final Yield3 yield : model.getYields()) {
-            final Class<?> yieldType = yield.type != null ? yield.type : yield.operand.type();
-            final Object yieldHibType = yield.hibType != null ? yield.hibType : yield.operand.hibType();
-            final YieldDetailsType yieldsDetailsType = yield.isHeader ? (isUnionEntityType(yield.type) ? UNION_ENTITY_HEADER : COMPOSITE_TYPE_HEADER) : USUAL_PROP;
-            result.add(new ResultQueryYieldDetails(yield.alias, yieldType, yieldHibType, yield.column, yieldsDetailsType));
         }
         return result;
     }

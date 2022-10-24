@@ -14,8 +14,8 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.stage1.ITransformableToS2;
 import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
-import ua.com.fielden.platform.eql.stage1.TransformationContext;
-import ua.com.fielden.platform.eql.stage1.TransformationResult;
+import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationResult1;
 import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
@@ -42,15 +42,15 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
     }
 
     @Override
-    public SourceQuery2 transform(final TransformationContext context) {
-        final TransformationContext localContext = isCorrelated ? context.produceForCorrelatedSourceQuery() : context.produceForUncorrelatedSourceQuery();
+    public SourceQuery2 transform(final TransformationContext1 context) {
+        final TransformationContext1 localContext = isCorrelated ? context.produceForCorrelatedSourceQuery() : context.produceForUncorrelatedSourceQuery();
 
         if (sources == null) {
             return new SourceQuery2(transformSourceless(localContext), resultType);
         }
 
-        final TransformationResult<? extends ISources2<?>> sourcesTr = sources.transform(localContext);
-        final TransformationContext enhancedContext = sourcesTr.updatedContext;
+        final TransformationResult1<? extends ISources2<?>> sourcesTr = sources.transform(localContext);
+        final TransformationContext1 enhancedContext = sourcesTr.updatedContext;
         final ISources2<? extends ISources3> sources2 = sourcesTr.item;
         final Conditions2 conditions2 = enhanceWithUserDataFilterConditions(sources2.mainSource(), context, conditions.transform(enhancedContext));
         final Yields2 yields2 = yields.transform(enhancedContext);

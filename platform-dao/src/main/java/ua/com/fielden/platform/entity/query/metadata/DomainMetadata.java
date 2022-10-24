@@ -140,6 +140,10 @@ public class DomainMetadata {
             final boolean eql2) {
         this.dbVersion = dbVersion;
         this.eql2 = eql2;
+        
+        if (eql2) {
+            System.out.println("*** EQL2 mode is on! ***");
+        }
 
         this.hibTypesDefaults = new ConcurrentHashMap<>(entityTypes.size());
         this.persistedEntityMetadataMap = new ConcurrentHashMap<>(entityTypes.size());
@@ -179,7 +183,7 @@ public class DomainMetadata {
 
         this.hibTypesInjector = hibTypesInjector;
         
-        this.eqlDomainMetadata = new EqlDomainMetadata(htd, hibTypesInjector, entityTypes, dbVersion);
+        this.eqlDomainMetadata = eql2 ? null : new EqlDomainMetadata(htd, hibTypesInjector, entityTypes, dbVersion);
 
         // the following operations are a bit heave and benefit from parallel processing
         entityTypes.parallelStream().forEach(entityType -> {

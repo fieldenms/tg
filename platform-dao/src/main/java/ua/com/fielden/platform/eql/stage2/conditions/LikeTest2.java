@@ -5,8 +5,8 @@ import java.util.Objects;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.query.fluent.LikeOptions;
-import ua.com.fielden.platform.eql.stage2.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.TransformationContext2;
+import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.conditions.LikeTest3;
@@ -29,10 +29,10 @@ public class LikeTest2 extends AbstractCondition2<LikeTest3> {
     }
 
     @Override
-    public TransformationResult<LikeTest3> transform(final TransformationContext context) {
-        final TransformationResult<? extends ISingleOperand3> leftOperandTr = leftOperand.transform(context);
-        final TransformationResult<? extends ISingleOperand3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
-        return new TransformationResult<>(new LikeTest3(leftOperandTr.item, rightOperandTr.item, options), rightOperandTr.updatedContext);
+    public TransformationResult2<LikeTest3> transform(final TransformationContext2 context) {
+        final TransformationResult2<? extends ISingleOperand3> leftOperandTr = leftOperand.transform(context);
+        final TransformationResult2<? extends ISingleOperand3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
+        return new TransformationResult2<>(new LikeTest3(leftOperandTr.item, rightOperandTr.item, options), rightOperandTr.updatedContext);
     }
 
     @Override

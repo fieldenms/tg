@@ -2,8 +2,7 @@ package ua.com.fielden.platform.eql.stage1.conditions;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage1.TransformationContext;
-import ua.com.fielden.platform.eql.stage1.operands.SubQuery1;
+import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.TypelessSubQuery1;
 import ua.com.fielden.platform.eql.stage2.conditions.ExistenceTest2;
 
@@ -17,7 +16,7 @@ public class ExistenceTest1 implements ICondition1<ExistenceTest2> {
     }
 
     @Override
-    public ExistenceTest2 transform(final TransformationContext context) {
+    public ExistenceTest2 transform(final TransformationContext1 context) {
         return new ExistenceTest2(negated, subQuery.transform(context));
     }
 

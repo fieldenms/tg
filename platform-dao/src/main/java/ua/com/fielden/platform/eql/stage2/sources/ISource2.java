@@ -18,5 +18,5 @@ public interface ISource2<S3 extends ISource3> extends ITransformableToS3<S3> {
     
     String alias();
     
-    String id();
+    Integer id();
 }

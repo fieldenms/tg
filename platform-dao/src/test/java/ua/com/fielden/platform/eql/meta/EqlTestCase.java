@@ -21,6 +21,7 @@ import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.generation.ioc.HelperIocModule;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
+import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage3.Table;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
@@ -124,7 +125,7 @@ public class EqlTestCase {
     }
     
     protected static final EntQueryGenerator qb(final IFilter filter, final String username, final IDates dates, final Map<String, Object> paramValues) {
-        return new EntQueryGenerator(filter, username, dates, paramValues);
+        return new EntQueryGenerator(filter, username, new QueryNowValue(dates), paramValues);
     }
     
     protected static final EqlDomainMetadata metadata() {

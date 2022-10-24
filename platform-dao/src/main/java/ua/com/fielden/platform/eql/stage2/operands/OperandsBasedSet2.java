@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import ua.com.fielden.platform.eql.stage2.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.TransformationContext2;
+import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.OperandsBasedSet3;
 
@@ -19,16 +19,16 @@ public class OperandsBasedSet2 implements ISetOperand2<OperandsBasedSet3> {
     }
 
     @Override
-    public TransformationResult<OperandsBasedSet3> transform(final TransformationContext context) {
+    public TransformationResult2<OperandsBasedSet3> transform(final TransformationContext2 context) {
         final List<ISingleOperand3> transformedOperands = new ArrayList<>();
-        TransformationContext currentContext = context;
+        TransformationContext2 currentContext = context;
         for (final ISingleOperand2<? extends ISingleOperand3> singleOperand : operands) {
-            final TransformationResult<? extends ISingleOperand3> operandTr = singleOperand.transform(currentContext);
+            final TransformationResult2<? extends ISingleOperand3> operandTr = singleOperand.transform(currentContext);
             transformedOperands.add(operandTr.item);
             currentContext = operandTr.updatedContext;
         }
 
-        return new TransformationResult<>(new OperandsBasedSet3(transformedOperands), currentContext);
+        return new TransformationResult2<>(new OperandsBasedSet3(transformedOperands), currentContext);
     }
 
     @Override

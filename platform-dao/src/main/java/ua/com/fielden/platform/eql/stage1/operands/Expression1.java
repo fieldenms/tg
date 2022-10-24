@@ -5,7 +5,7 @@ import static java.util.stream.Collectors.toList;
 import java.util.List;
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage1.TransformationContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 
@@ -20,7 +20,7 @@ public class Expression1 implements ISingleOperand1<Expression2> {
     }
 
     @Override
-    public Expression2 transform(final TransformationContext context) {
+    public Expression2 transform(final TransformationContext1 context) {
         return items.isEmpty() ? //
                 new Expression2(first.transform(context)) : //
                 new Expression2(first.transform(context), items.stream().map(el -> el.transform(context)).collect(toList()));

@@ -6,7 +6,7 @@ import static java.util.stream.Collectors.toList;
 import java.util.List;
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage1.TransformationContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage2.etc.OrderBys2;
 
 public class OrderBys1 {
@@ -18,7 +18,7 @@ public class OrderBys1 {
         this.models = models;
     }
 
-    public OrderBys2 transform(final TransformationContext context) {
+    public OrderBys2 transform(final TransformationContext1 context) {
         if (models.isEmpty()) {
             return OrderBys2.emptyOrderBys;
         } else {

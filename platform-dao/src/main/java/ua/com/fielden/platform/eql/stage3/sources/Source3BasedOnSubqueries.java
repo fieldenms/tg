@@ -14,11 +14,11 @@ import ua.com.fielden.platform.eql.stage3.operands.SourceQuery3;
 
 public class Source3BasedOnSubqueries implements ISource3 {
     private final List<SourceQuery3> models = new ArrayList<>();
-    public final String id;
+    public final Integer id;
     public final int sqlId;
     private final Map<String, String> columns = new HashMap<>(); //keys can contain strings with dots
     
-    public Source3BasedOnSubqueries(final List<SourceQuery3> models, final String id, final int sqlId) {
+    public Source3BasedOnSubqueries(final List<SourceQuery3> models, final Integer id, final int sqlId) {
         this.models.addAll(models);
         this.id = id;
         this.sqlId = sqlId;

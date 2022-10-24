@@ -2,8 +2,8 @@ package ua.com.fielden.platform.eql.stage2.etc;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage2.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.TransformationContext2;
+import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.etc.OrderBy3;
 import ua.com.fielden.platform.eql.stage3.etc.Yields3;
@@ -26,12 +26,12 @@ public class OrderBy2 {
         this.isDesc = isDesc;
     }
 
-    public TransformationResult<OrderBy3> transform(final TransformationContext context, final Yields3 yields) {
+    public TransformationResult2<OrderBy3> transform(final TransformationContext2 context, final Yields3 yields) {
         if (operand != null) {
-            final TransformationResult<? extends ISingleOperand3> operandTr = operand.transform(context);
-            return new TransformationResult<>(new OrderBy3(operandTr.item, isDesc), operandTr.updatedContext);
+            final TransformationResult2<? extends ISingleOperand3> operandTr = operand.transform(context);
+            return new TransformationResult2<>(new OrderBy3(operandTr.item, isDesc), operandTr.updatedContext);
         } else {
-            return new TransformationResult<>(new OrderBy3(yields.getYieldsMap().get(yieldName), isDesc), context);
+            return new TransformationResult2<>(new OrderBy3(yields.getYieldsMap().get(yieldName), isDesc), context);
         }
     }
     

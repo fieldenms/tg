@@ -11,9 +11,9 @@ import ua.com.fielden.platform.eql.stage3.Table;
 
 public class TablesAndSourceChildren {
     private final Map<String, Table> tables = new HashMap<>();
-    private final Map<String, List<ChildGroup>> sourceChildren = new HashMap<>();
+    private final Map<Integer, List<ChildGroup>> sourceChildren = new HashMap<>();
 
-    public TablesAndSourceChildren(final Map<String, Table> tables, final Map<String, List<ChildGroup>> sourceChildren) {
+    public TablesAndSourceChildren(final Map<String, Table> tables, final Map<Integer, List<ChildGroup>> sourceChildren) {
         this.tables.putAll(tables);
         this.sourceChildren.putAll(sourceChildren);
     }
@@ -22,7 +22,7 @@ public class TablesAndSourceChildren {
         return unmodifiableMap(tables);
     }
 
-    public Map<String, List<ChildGroup>> getSourceChildren() {
+    public Map<Integer, List<ChildGroup>> getSourceChildren() {
         return unmodifiableMap(sourceChildren);
     }
 }
