@@ -30,11 +30,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.JavaFile;
+import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeSpec;
 
 import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelsElement;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
@@ -202,14 +205,18 @@ public class MetaModelLifecycleTest {
     /**
      * Builds a basic entity class:
      * <pre>
-     * public class ${simpleName} extends AbsractEntity {}
+     * {@literal @}KeyType(String.class)
+     * public class ${simpleName} extends AbsractEntity{@literal <}String> {}
      * </pre>
      *
      * @param simpleName
      * @return {@link TypeSpec}
      */
     private TypeSpec buildEntity(final String simpleName) {
-        return TypeSpec.classBuilder(simpleName).addModifiers(Modifier.PUBLIC).superclass(AbstractEntity.class).build();
+        return TypeSpec.classBuilder(simpleName)
+                .addModifiers(Modifier.PUBLIC)
+                .addAnnotation(AnnotationSpec.builder(KeyType.class).addMember("value", "String.class").build())
+                .superclass(ParameterizedTypeName.get(AbstractEntity.class, String.class)).build();
     }
 
     /**
