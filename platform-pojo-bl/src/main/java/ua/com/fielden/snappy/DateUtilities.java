@@ -74,7 +74,10 @@ public class DateUtilities {
         } else if (rangeWidth == MnemonicEnum.DAY_AND_AFTER) {
             return adjustedDate.toDate(); // time portion is already removed.
         } else if (rangeWidth == MnemonicEnum.WEEK) {
-            // set the first day of week.
+            // Set the first day of week, but we may need to first shift adjustedDate back by 1 week.
+            // For example, an application may have the first data of the week as Sunday, which corresponds to 7 and, let's say, adjustedDate represents Tuesday (2).
+            // If we simply execute adjustedDate.withDayOfWeek(7) then we will get a date in the future, corresponding to the next Sunday after the adjustedDate.
+            // But what we need if the Sunday before adjustedDate. This is why we need to to first shift adjustedDate by 1 week into the past, and only then set the date of week to the shifted date.
             final DateTime newDate = adjustedDate.getDayOfWeek() < dates.startOfWeek() ? adjustedDate.minusWeeks(1) : adjustedDate;
             return newDate.withDayOfWeek(dates.startOfWeek()).toDate();
         } else if (rangeWidth == MnemonicEnum.MONTH) {
