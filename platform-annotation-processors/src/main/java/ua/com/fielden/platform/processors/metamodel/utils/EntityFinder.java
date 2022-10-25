@@ -114,6 +114,16 @@ public class EntityFinder extends ElementFinder {
         properties.addAll(findInheritedProperties(entityElement));
         return properties;
     }
+    
+    /**
+     * Finds a property named {@code name} for entity represented by {@code entityElement}. The whole entity type hierarchy is traversed.
+     * @param entityElement
+     * @param name
+     * @return the property element that was found if any, otherwise {@code null}
+     */
+    public PropertyElement findProperty(final EntityElement entityElement, final String name) {
+        return findProperties(entityElement).stream().filter(propEl -> propEl.getSimpleName().toString().equals(name)).findFirst().orElse(null);
+    }
 
     public Pair<String, String> getPropTitleAndDesc(final PropertyElement propElement) {
         // TODO need to replicate the logic from TitlesDescsGetter in application to the Mirror types.
