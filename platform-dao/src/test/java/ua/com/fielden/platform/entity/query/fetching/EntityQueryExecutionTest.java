@@ -23,11 +23,7 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 
 import java.math.BigDecimal;
-import java.sql.Connection;
-import java.sql.DriverManager;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -1198,7 +1194,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         avgOf().beginExpr().prop("price.amount").add().prop("purchasePrice.amount").endExpr().as("aa").modelAsAggregate();
         final List<EntityAggregates> values = aggregateDao.getAllEntities(from(model).model());
         assertEquals("Incorrect count", 1, values.size());
-        assertEquals("Incorrect value", "165.0", values.get(0).get("aa").toString());
+        assertEquals("Incorrect value", new BigDecimal("165.00").setScale(2, RoundingMode.HALF_UP), new BigDecimal(values.get(0).get("aa").toString()).setScale(2, RoundingMode.HALF_UP));
     }
 
     @Test
@@ -1221,7 +1217,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         beginExpr().avgOf().prop("price.amount").add().avgOf().prop("purchasePrice.amount").endExpr().as("aa").modelAsAggregate();
         final List<EntityAggregates> values = aggregateDao.getAllEntities(from(model).model());
         assertEquals("Incorrect count", 1, values.size());
-        assertEquals("Incorrect value", "165.0", values.get(0).get("aa").toString());
+        assertEquals("Incorrect value", new BigDecimal("165.00").setScale(2, RoundingMode.HALF_UP), new BigDecimal(values.get(0).get("aa").toString()).setScale(2, RoundingMode.HALF_UP));
     }
 
     @Test
