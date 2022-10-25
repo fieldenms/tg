@@ -26,6 +26,7 @@ import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -466,6 +467,39 @@ public class ElementFinder {
 
     public boolean isStatic(final VariableElement varElement) {
         return varElement.getModifiers().contains(Modifier.STATIC);
+    }
+    
+    /**
+     * Tests whether the type modeled by {@code typeMirror} is the same type as runtime class {@code type}.
+     * If {@code typeMirror} represents a type variable or a wildcard, then {@code false} is returned.
+     * @param typeMirror
+     * @param type
+     * @return
+     */
+    public boolean isSameType(final TypeMirror typeMirror, final Class<?> type) {
+        final TypeKind typeMirrorKind = typeMirror.getKind();
+        if (typeMirrorKind.isPrimitive() && type.isPrimitive()) {
+            return (typeMirrorKind == TypeKind.BYTE && type.equals(byte.class)) ||
+                    (typeMirrorKind == TypeKind.SHORT && type.equals(short.class)) ||
+                    (typeMirrorKind == TypeKind.INT && type.equals(int.class)) ||
+                    (typeMirrorKind == TypeKind.LONG && type.equals(long.class)) ||
+                    (typeMirrorKind == TypeKind.FLOAT && type.equals(float.class)) ||
+                    (typeMirrorKind == TypeKind.DOUBLE && type.equals(double.class)) ||
+                    (typeMirrorKind == TypeKind.BOOLEAN && type.equals(boolean.class)) ||
+                    (typeMirrorKind == TypeKind.CHAR && type.equals(char.class));
+        }
+        else if (typeMirrorKind == TypeKind.ARRAY && type.isArray()) {
+            return isSameType(((ArrayType) typeMirror).getComponentType(), type.componentType());
+        }
+        else if (typeMirrorKind == TypeKind.VOID && type.equals(void.class)) {
+            return true;
+        }
+        else if (typeMirrorKind == TypeKind.DECLARED) {
+            return equals(toTypeElement(typeMirror), type);
+        }
+        else {
+            return false;
+        }
     }
 
     /**
