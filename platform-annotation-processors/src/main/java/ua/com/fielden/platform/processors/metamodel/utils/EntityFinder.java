@@ -16,6 +16,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
@@ -26,11 +27,13 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
+import ua.com.fielden.platform.processors.metamodel.exceptions.AnomalousStateException;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -167,6 +170,33 @@ public class EntityFinder extends ElementFinder {
         final String desc = (descKey == null) ? "" : (String) entityTitleAnnotationElements.get(descKey).getValue();
 
         return pair(title, desc);
+    }
+    
+    /**
+     * Retrieves the type of entity key from {@link KeyType} annotation at compile time.
+     * @see {@link javax.lang.model.element.Element#getAnnotation(Class)}
+     * @param atKeyType
+     * @return
+     */
+    public TypeMirror getKeyType(final KeyType atKeyType) {
+        try {
+            // should ALWAYS throw, since value() is of type Class, which is unavailable at compile time
+            final Class<?> keyType = atKeyType.value();
+
+            // if it somehow was available, then construct a TypeMirror from it
+            final TypeElement keyTypeElement = elements.getTypeElement(keyType.getCanonicalName());
+            if (keyTypeElement == null) {
+                // keyType Class object was available at compile time but could not be found in the processing environment,
+                // thus TypeMirror can't be constructed
+                throw new AnomalousStateException(
+                        "Key type from %s was loaded at compile time, but was not found in the processing environment."
+                        .formatted(atKeyType.toString()));
+            }
+            return keyTypeElement.asType();
+        } catch (final MirroredTypeException e) {
+//            messager.printMessage(Kind.NOTE, "key type: %s. %s was thrown.".formatted(atKeyType.toString(), e.toString()));
+            return e.getTypeMirror();
+        }
     }
     
     /**
