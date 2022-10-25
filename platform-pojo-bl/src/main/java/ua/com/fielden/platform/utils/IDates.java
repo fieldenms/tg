@@ -21,18 +21,18 @@ public interface IDates {
 
 
     /**
-     * Returns the date when the financial year starts (in many countries it is the first day of month, but sometimes it might be different day like the sixth of April)
+     * Returns the day of the month, as identified by {@link #finYearStartMonth()},  when the financial year starts (in many countries it is the first day of the month, but sometimes it might be a different day, like the 6th of April).
      *
      * @return
      */
-    int financialYearStartDate();
+    int finYearStartDay();
 
     /**
      * Returns the month number (1 - January, 12 - December) when the financial year starts.
      *
      * @return
      */
-    int financialYearStartMonth();
+    int finYearStartMonth();
 
     /**
      * Returns the number of the day that is a start of the week (1 - Monday, ..., 7 - Sunday)

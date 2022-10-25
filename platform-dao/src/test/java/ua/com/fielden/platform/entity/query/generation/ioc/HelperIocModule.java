@@ -23,9 +23,9 @@ public class HelperIocModule extends AbstractModule {
         bindConstant().annotatedWith(Names.named("email.smtp")).to("non-existing-server");
         bindConstant().annotatedWith(Names.named("email.fromAddress")).to("tg@fielden.com.au");
         bindConstant().annotatedWith(Names.named("independent.time.zone")).to(false);
-        bindConstant().annotatedWith(Names.named("weekStart")).to(Integer.valueOf(1));
-        bindConstant().annotatedWith(Names.named("financialYearStartDate")).to(Integer.valueOf(1));
-        bindConstant().annotatedWith(Names.named("financialYearStartMonth")).to(Integer.valueOf(7));
+        bindConstant().annotatedWith(Names.named("dates.weekStart")).to(Integer.valueOf(1));
+        bindConstant().annotatedWith(Names.named("dates.finYearStartDay")).to(Integer.valueOf(1));
+        bindConstant().annotatedWith(Names.named("dates.finYearStartMonth")).to(Integer.valueOf(7));
         bind(IDates.class).to(DefaultDates.class).in(Scopes.SINGLETON);
         bind(IUniversalConstants.class).to(DefaultUniversalConstants.class).in(Scopes.SINGLETON);
     }

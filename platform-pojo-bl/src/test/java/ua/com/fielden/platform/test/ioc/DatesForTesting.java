@@ -74,12 +74,12 @@ public class DatesForTesting implements IDates {
     }
 
     @Override
-    public int financialYearStartDate() {
+    public int finYearStartDay() {
         return 1;
     }
 
     @Override
-    public int financialYearStartMonth() {
+    public int finYearStartMonth() {
         return 7;
     }
 

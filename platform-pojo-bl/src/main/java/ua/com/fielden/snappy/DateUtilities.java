@@ -80,10 +80,10 @@ public class DateUtilities {
         } else if (rangeWidth == MnemonicEnum.YEAR) {
             return adjustedDate.withDayOfYear(1).toDate();// set first day of year as 1-st.
         } else if (rangeWidth == MnemonicEnum.OZ_FIN_YEAR) {
-            final DateTime newDate = (adjustedDate.getMonthOfYear() < dates.financialYearStartMonth() ||
-                    (adjustedDate.getMonthOfYear() == dates.financialYearStartMonth() && adjustedDate.getDayOfMonth() < dates.financialYearStartDate())) ?
+            final DateTime newDate = (adjustedDate.getMonthOfYear() < dates.finYearStartMonth() ||
+                    (adjustedDate.getMonthOfYear() == dates.finYearStartMonth() && adjustedDate.getDayOfMonth() < dates.finYearStartDay())) ?
                             dates.zoned(roll(adjustedDate.toDate(), MnemonicEnum.YEAR, false, dates)) : adjustedDate;
-            return newDate.withMonthOfYear(dates.financialYearStartMonth()).withDayOfMonth(dates.financialYearStartDate()).toDate();// set first day of month of the financial year.
+            return newDate.withMonthOfYear(dates.finYearStartMonth()).withDayOfMonth(dates.finYearStartDay()).toDate();// set first day of month of the financial year.
         } else if (rangeWidth == MnemonicEnum.QRT1) { // first quarter
             return adjustedDate.withMonthOfYear(JANUARY).withDayOfMonth(1).toDate();// set first day of month as 1-st.
         } else if (rangeWidth == MnemonicEnum.QRT2) { // second quarter

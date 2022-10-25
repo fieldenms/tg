@@ -34,20 +34,20 @@ public class DefaultDates implements IDates {
     private final Logger logger = Logger.getLogger(getClass());
     private final boolean independentTimeZone;
     private final Integer weekStart;
-    private final Integer financialYearStartDate;
-    private final Integer financialYearStartMonth;
+    private final Integer finYearStartDate;
+    private final Integer finYearStartMonth;
     private final ThreadLocal<DateTimeZone> threadLocalRequestTimeZone = new ThreadLocal<>();
 
     @Inject
     public DefaultDates(
             final @Named("independent.time.zone") boolean independentTimeZone,
-            final @Named("weekStart") Integer weekStart,
-            final @Named("financialYearStartDate") Integer financialYearStartDate,
-            final @Named("financialYearStartMonth") Integer financialYearStartMonth) {
+            final @Named("dates.weekStart") Integer weekStart,
+            final @Named("dates.finYearStartDay") Integer finYearStartDate,
+            final @Named("dates.finYearStartMonth") Integer finYearStartMonth) {
         this.independentTimeZone = independentTimeZone;
         this.weekStart = weekStart;
-        this.financialYearStartDate = financialYearStartDate;
-        this.financialYearStartMonth = financialYearStartMonth;
+        this.finYearStartDate = finYearStartDate;
+        this.finYearStartMonth = finYearStartMonth;
     }
 
     @Override
@@ -61,13 +61,13 @@ public class DefaultDates implements IDates {
     }
 
     @Override
-    public int financialYearStartDate() {
-        return financialYearStartDate;
+    public int finYearStartDay() {
+        return finYearStartDate;
     }
 
     @Override
-    public int financialYearStartMonth() {
-        return financialYearStartMonth;
+    public int finYearStartMonth() {
+        return finYearStartMonth;
     }
 
     /**
