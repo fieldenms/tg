@@ -20,7 +20,9 @@ public class DayOfWeekOf3 extends SingleOperandFunction3 {
             final String operandSql = operand.sql(dbVersion);
             return format("((DATEPART(DW, %s) + @@DATEFIRST - 1) %% 8 + (DATEPART(DW, %s) + @@DATEFIRST - 1) / 8)", operandSql, operandSql);
         case POSTGRESQL:
-            return format("CAST(EXTRACT(ISODOW FROM %s) AS INT)", operand.sql(dbVersion));
+            // need to typecast explicitly to allow usage of date literals
+            // TODO differentiate between date literals and date columns (need typecast explictly only date literals) 
+            return format("CAST(EXTRACT(ISODOW FROM %s \\:\\:timestamp) AS INT)", operand.sql(dbVersion));
         default:
             return super.sql(dbVersion);
         }   
