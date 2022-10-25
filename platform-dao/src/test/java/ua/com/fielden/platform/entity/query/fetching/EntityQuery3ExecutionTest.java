@@ -1128,10 +1128,5 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         save(new_composite(TgAuthorship.class, chrisDate, "Database Design and Relational Theory").setYear(2012));
         save(new_composite(TgAuthorship.class, chrisDate, "SQL and Relational Theory").setYear(2015));
         save(new_composite(TgAuthorship.class, yurijShcherbyna, "Дискретна математика").setYear(2007));
-
-        save(new_(TgEntityWithComplexSummaries.class, "veh1").setKms(200).setCost(100));
-        save(new_(TgEntityWithComplexSummaries.class, "veh2").setKms(0).setCost(100));
-        save(new_(TgEntityWithComplexSummaries.class, "veh3").setKms(300).setCost(100));
-        save(new_(TgEntityWithComplexSummaries.class, "veh4").setKms(0).setCost(200));
     }
 }
