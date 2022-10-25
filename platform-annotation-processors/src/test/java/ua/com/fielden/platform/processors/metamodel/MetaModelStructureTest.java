@@ -19,6 +19,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.BeforeClass;
@@ -26,6 +27,7 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
@@ -34,7 +36,9 @@ import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
 import ua.com.fielden.platform.processors.test_entities.EntityWithDescTitle;
+import ua.com.fielden.platform.processors.test_entities.EntityWithKeyTypeOfEntityType;
 import ua.com.fielden.platform.processors.test_entities.EntityWithEntityTypedAndOrdinaryProps;
+import ua.com.fielden.platform.processors.test_entities.EntityWithKeyTypeNoKey;
 import ua.com.fielden.platform.processors.test_entities.EntityWithOrdinaryProps;
 import ua.com.fielden.platform.processors.test_entities.EntityWithoutDescTitle;
 import ua.com.fielden.platform.processors.test_entities.NonPersistentButDomainEntity;
@@ -44,6 +48,7 @@ import ua.com.fielden.platform.processors.test_entities.SubEntity;
 import ua.com.fielden.platform.processors.test_entities.SuperEntity;
 import ua.com.fielden.platform.processors.test_utils.CompilationRule;
 import ua.com.fielden.platform.processors.test_utils.exceptions.TestCaseConfigException;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 
 
 /**
@@ -60,10 +65,12 @@ public class MetaModelStructureTest {
     private static ElementFinder elementFinder;
     private static EntityFinder entityFinder;
     private static MetaModelFinder metaModelFinder;
+    private static Types typeUtils;
     
     @BeforeClass
     public static void setupOnce() {
         // these values are guaranteed to have been initialized since the class rule will evaluate this method during the last round of processing
+        typeUtils = rule.getTypes();
         elementFinder = new ElementFinder(rule.getElements(), rule.getTypes());
         entityFinder = new EntityFinder(rule.getElements(), rule.getTypes());
         metaModelFinder = new MetaModelFinder(rule.getElements(), rule.getTypes());
@@ -95,6 +102,32 @@ public class MetaModelStructureTest {
         // Meta-model for EntityWithoutDescTitle does NOT have method desc()
         assertTrue(metaModelFinder.findPropertyMethods(metaModelWithoutDesc).stream()
                 .noneMatch(el -> StringUtils.equals(el.getSimpleName(), "desc")));
+    }
+    
+    @Test
+    public void entity_with_entity_type_as_key_type_has_property_key_metamodeled_with_entity_meta_model_type() {
+        final EntityElement entity = findEntity(EntityWithKeyTypeOfEntityType.class);
+        final MetaModelElement metaModel = findMetaModel(entity);
+        
+        final ExecutableElement keyMethod = metaModelFinder.findDeclaredPropertyMethod(metaModel, AbstractEntity.KEY);
+        assertTrue("\"key\" property must be metamodeled.", keyMethod != null);
+        assertTrue("\"key\" property must be metamodeled with entity meta-model type.", metaModelFinder.isEntityMetaModelMethod(keyMethod));
+        
+        final Class<?> declaredKeyType = AnnotationReflector.getKeyType(EntityWithKeyTypeOfEntityType.class);
+
+        // return type of keyMethod must be a meta-model for declaredKeyType
+        final MetaModelElement expected = findMetaModel(findEntity((Class<? extends AbstractEntity<?>>) declaredKeyType));
+        assertTrue("%s.key must be metamodeled with %s.".formatted(EntityWithKeyTypeOfEntityType.class.getSimpleName(), expected.getSimpleName()),
+                typeUtils.isSameType(keyMethod.getReturnType(), expected.asType()));
+    }
+    
+    @Test
+    public void entity_with_NoType_as_key_type_does_not_have_property_key_metamodeled() {
+        final EntityElement entity = findEntity(EntityWithKeyTypeNoKey.class);
+        final MetaModelElement metaModel = findMetaModel(entity);
+        
+        final ExecutableElement keyMethod = metaModelFinder.findDeclaredPropertyMethod(metaModel, AbstractEntity.KEY);
+        assertTrue("\"key\" property must not be metamodeled.", keyMethod == null);
     }
     
     @Test
