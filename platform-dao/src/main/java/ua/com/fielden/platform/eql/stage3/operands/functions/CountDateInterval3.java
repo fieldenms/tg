@@ -54,19 +54,19 @@ public class CountDateInterval3 extends TwoOperandsFunction3 {
     }
 
     private String sqlForPostgresExtractDay(final String operand1Sql, final String operand2Sql) {
-        return format("EXTRACT(DAY FROM (%s - %s))", operand1Sql, operand2Sql);
+        return format("EXTRACT(DAY FROM (%s \\:\\:timestamp - %s \\:\\:timestamp))", operand1Sql, operand2Sql);
     }
 
     private String sqlForPostgresExtractHour(final String operand1Sql, final String operand2Sql) {
-        return format("EXTRACT(HOUR FROM (%s - %s))", operand1Sql, operand2Sql);
+        return format("EXTRACT(HOUR FROM (%s \\:\\:timestamp - %s \\:\\:timestamp))", operand1Sql, operand2Sql);
     }
 
     private String sqlForPostgresExtractMinute(final String operand1Sql, final String operand2Sql) {
-        return format("EXTRACT(MINUTE FROM (%s - %s))", operand1Sql, operand2Sql);
+        return format("EXTRACT(MINUTE FROM (%s \\:\\:timestamp - %s \\:\\:timestamp))", operand1Sql, operand2Sql);
     }
 
     private String sqlForPostgresExtractSecond(final String operand1Sql, final String operand2Sql) {
-        return format("EXTRACT(SECOND FROM (%s - %s))", operand1Sql, operand2Sql);
+        return format("EXTRACT(SECOND FROM (%s \\:\\:timestamp - %s \\:\\:timestamp))", operand1Sql, operand2Sql);
     }
 
     private String sqlForMssqlAndH2IntervalUnit(final String intervalUnitStr, final String op1Sql, final String op2Sql) {
