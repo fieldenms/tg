@@ -206,8 +206,8 @@ public class WebUiBuilder implements IWebUiBuilder {
 
     /**
      * Generates a HTML representation of the web application UI preferences.
-     * @param iDates
      *
+     * @param dates
      * @return
      */
     public String genWebUiPrefComponent(final IDates dates) {
@@ -222,7 +222,9 @@ public class WebUiBuilder implements IWebUiBuilder {
                 replace("@dateFormat", "\"" + this.dateFormat + "\"").
                 replace("@timeFormat", "\"" + this.timeFormat + "\"").
                 replace("@timeWithMillisFormat", "\"" + this.timeWithMillisFormat + "\"").
-                replace("@firstDayOfWeek", String.valueOf(dates.startOfWeek() % 7/*This converts day number that is from 1 to 7 (1 - Monday) into the day number from 0 to 7 (0 - Sunday)*/));
+                // Need to inject the first day of week, which is used by the date picker component to correctly render a weekly representation of a month.
+                // Because IDates use a number range from 1 to 7 to represent Mon to Sun and JS uses 0 for Sun, we need to convert the value coming from  IDates.
+                replace("@firstDayOfWeek", String.valueOf(dates.startOfWeek() % 7));
     }
 
     public String getAppIndex () {
