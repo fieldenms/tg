@@ -75,7 +75,7 @@ public class DateUtilities {
             return adjustedDate.toDate(); // time portion is already removed.
         } else if (rangeWidth == MnemonicEnum.WEEK) {
             // Set the first day of week, but we may need to first shift adjustedDate back by 1 week.
-            // For example, an application may have the first data of the week as Sunday, which corresponds to 7 and, let's say, adjustedDate represents Tuesday (2).
+            // For example, an application may have the first day of the week as Sunday, which corresponds to 7 and, let's say, adjustedDate represents Tuesday (2).
             // If we simply execute adjustedDate.withDayOfWeek(7) then we will get a date in the future, corresponding to the next Sunday after the adjustedDate.
             // But what we need if the Sunday before adjustedDate. This is why we need to to first shift adjustedDate by 1 week into the past, and only then set the date of week to the shifted date.
             final DateTime newDate = adjustedDate.getDayOfWeek() < dates.startOfWeek() ? adjustedDate.minusWeeks(1) : adjustedDate;
@@ -85,9 +85,13 @@ public class DateUtilities {
         } else if (rangeWidth == MnemonicEnum.YEAR) {
             return adjustedDate.withDayOfYear(1).toDate();// set first day of year as 1-st.
         } else if (rangeWidth == MnemonicEnum.FIN_YEAR) {
-            final DateTime newDate = (adjustedDate.getMonthOfYear() < dates.finYearStartMonth() ||
-                    (adjustedDate.getMonthOfYear() == dates.finYearStartMonth() && adjustedDate.getDayOfMonth() < dates.finYearStartDay())) ?
-                            dates.zoned(roll(adjustedDate.toDate(), MnemonicEnum.YEAR, false, dates)) : adjustedDate;
+            // Set the month of year and day of month to reflect fin year, but we may need to first shift adjustedDate back by 1 year.
+            // For example, an application may have FY starting on the 6th of April, and adjustedDate is the 15th of March 2022.
+            // The start of the FY that in includes 15-Mar-2022 start on the 6th of April 2021. Hence, the need to shift back by 1 year.
+            final DateTime newDate = adjustedDate.getMonthOfYear() < dates.finYearStartMonth() || 
+                                     (adjustedDate.getMonthOfYear() == dates.finYearStartMonth() && adjustedDate.getDayOfMonth() < dates.finYearStartDay())
+                                     ? dates.zoned(roll(adjustedDate.toDate(), MnemonicEnum.YEAR, false, dates))
+                                     : adjustedDate;
             return newDate.withMonthOfYear(dates.finYearStartMonth()).withDayOfMonth(dates.finYearStartDay()).toDate();// set first day of month of the financial year.
         } else if (rangeWidth == MnemonicEnum.QRT1) { // first quarter
             return adjustedDate.withMonthOfYear(JANUARY).withDayOfMonth(1).toDate();// set first day of month as 1-st.
