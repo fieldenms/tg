@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -46,6 +47,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic.Kind;
 
@@ -66,12 +68,15 @@ import com.squareup.javapoet.WildcardTypeName;
 
 import ua.com.fielden.platform.annotations.metamodel.MetaModelForType;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.NoKey;
+import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelsElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelAliasedException;
+import ua.com.fielden.platform.processors.metamodel.exceptions.EntitySourceDefinitionException;
 import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
@@ -342,14 +347,13 @@ public class MetaModelProcessor extends AbstractProcessor {
         final EntityElement entityElement = mmc.getEntityElement();
         final EntityElement entityParent = entityFinder.getParent(entityElement);
         final boolean isEntitySuperclassMetamodeled = entityFinder.isEntityThatNeedsMetaModel(entityParent);
-        // collect properties to process
-        final Set<PropertyElement> properties = new LinkedHashSet<>();
-        if (isEntitySuperclassMetamodeled) {
-            // find only declared properties
-            properties.addAll(entityFinder.findDeclaredProperties(entityElement));
-        } else {
-            // find all properties (declared + inherited from <? extends AbstractEntity))
-            properties.addAll(entityFinder.findProperties(entityElement));
+
+        final Collection<PropertyElement> properties;
+        try {
+            properties = collectProperties(entityElement, isEntitySuperclassMetamodeled);
+        } catch (final EntitySourceDefinitionException e) {
+            messager.printMessage(Kind.NOTE, format("Failed to generate meta-model for %s. %s", entityElement.getSimpleName(), e.getLocalizedMessage()));
+            return false;
         }
 
         // ######################## FIELDS ###########################
@@ -628,6 +632,63 @@ public class MetaModelProcessor extends AbstractProcessor {
 
         messager.printMessage(Kind.NOTE, format("Generated %s for entity %s.", metaModelSpec.name, entityElement.getSimpleName()));
         return true;
+    }
+    
+    /**
+     * Collects entity properties for meta-modeling.
+     * @param entity
+     * @param isParentMetamodeled
+     * @return
+     * @throws EntitySourceDefinitionException
+     */
+    private LinkedHashSet<PropertyElement> collectProperties(final EntityElement entity, final boolean isParentMetamodeled) throws EntitySourceDefinitionException {
+        // map of the following form: String propertyName -> PropertyElement property
+        final LinkedHashMap<String, PropertyElement> properties = new LinkedHashMap<>();
+
+        if (isParentMetamodeled) {
+            entityFinder.findDeclaredProperties(entity).forEach(propEl -> properties.put(propEl.getSimpleName().toString(), propEl));
+        }
+        else {
+            entityFinder.findProperties(entity).forEach(propEl -> properties.put(propEl.getSimpleName().toString(), propEl));
+        }
+        
+        handleKey(properties, entity, isParentMetamodeled);
+
+        return new LinkedHashSet<>(properties.values());
+    }
+    
+    /**
+     * Processes entity key type information, possibly modifying {@code properties}.
+     * @see {@link AbstractEntity}, {@link KeyType}
+     * @param properties
+     * @param entity
+     * @param isParentMetamodeled
+     * @throws EntitySourceDefinitionException if entity key type definition is incorrect or inconsistent
+     */
+    private void handleKey(final LinkedHashMap<String, PropertyElement> properties, final EntityElement entity, final boolean isParentMetamodeled) 
+            throws EntitySourceDefinitionException 
+    {
+        final KeyType atKeyType = entityFinder.findAnnotation(entity, KeyType.class)
+                // Entity definition is missing `@KeyType` i.e., neither the entity type nor its super types have this annotation declared.
+                .orElseThrow(() -> new EntitySourceDefinitionException("Entity %s is missing @KeyType.".formatted(entity.getQualifiedName())));
+
+        // child entity simply inherits "key" property meta-model from its parent
+        if (isParentMetamodeled) {}
+        // for ordinary entities:
+        // if @KeyType(NoKey.class) -> remove from collected properties 
+        // otherwise change "key" PropertyElement type to that of KeyType::value()
+        else {
+            // obtain KeyType::value()
+            final TypeMirror keyType = entityFinder.getKeyType(atKeyType);
+
+            if (elementFinder.isSameType(keyType, NoKey.class)) {
+                properties.remove(AbstractEntity.KEY);
+            }
+            else {
+                // mapping for "key" should always exist, since every entity extends AbstractEntity and properties represent the whole hierarchy 
+                properties.compute(AbstractEntity.KEY, (name, propEl) -> propEl.changeType(keyType));
+            }
+        }
     }
 
     /**
