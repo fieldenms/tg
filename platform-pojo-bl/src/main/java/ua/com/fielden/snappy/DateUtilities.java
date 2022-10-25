@@ -84,7 +84,7 @@ public class DateUtilities {
             return adjustedDate.withDayOfMonth(1).toDate();// set first day of month as 1-st.
         } else if (rangeWidth == MnemonicEnum.YEAR) {
             return adjustedDate.withDayOfYear(1).toDate();// set first day of year as 1-st.
-        } else if (rangeWidth == MnemonicEnum.OZ_FIN_YEAR) {
+        } else if (rangeWidth == MnemonicEnum.FIN_YEAR) {
             final DateTime newDate = (adjustedDate.getMonthOfYear() < dates.finYearStartMonth() ||
                     (adjustedDate.getMonthOfYear() == dates.finYearStartMonth() && adjustedDate.getDayOfMonth() < dates.finYearStartDay())) ?
                             dates.zoned(roll(adjustedDate.toDate(), MnemonicEnum.YEAR, false, dates)) : adjustedDate;
@@ -122,7 +122,7 @@ public class DateUtilities {
                                                                 width == MnemonicEnum.QRT3 ? old.plusMonths(up ? 3 : -3) : //
                                                                         width == MnemonicEnum.QRT4 ? old.plusMonths(up ? 3 : -3) : //
                                                                                 width == MnemonicEnum.YEAR ? old.plusYears(up ? 1 : -1) : //
-                                                                                        width == MnemonicEnum.OZ_FIN_YEAR ? old.plusYears(up ? 1 : -1) : null;
+                                                                                        width == MnemonicEnum.FIN_YEAR ? old.plusYears(up ? 1 : -1) : null;
         if (neew == null) {
             throw new RuntimeException("Incorrect MnemonicEnum specified.");
         }

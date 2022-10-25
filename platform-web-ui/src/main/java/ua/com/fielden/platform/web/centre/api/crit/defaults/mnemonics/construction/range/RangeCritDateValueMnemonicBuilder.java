@@ -287,20 +287,20 @@ implements  IRangeCritDateValueMnemonic,
 
     @Override
     public IRangeCritDateValueMnemonic3ExcludeFrom finYear() {
-        this.period = Optional.of(MnemonicEnum.OZ_FIN_YEAR);
+        this.period = Optional.of(MnemonicEnum.FIN_YEAR);
         return this;
     }
 
     @Override
     public IRangeCritDateValueMnemonic3ExcludeFrom finYearAndBefore() {
-        this.period = Optional.of(MnemonicEnum.OZ_FIN_YEAR);
+        this.period = Optional.of(MnemonicEnum.FIN_YEAR);
         this.beforeOrAfter = Optional.of(DateRangeConditionEnum.BEFORE);
         return this;
     }
 
     @Override
     public IRangeCritDateValueMnemonic3ExcludeFrom finYearAndAfter() {
-        this.period = Optional.of(MnemonicEnum.OZ_FIN_YEAR);
+        this.period = Optional.of(MnemonicEnum.FIN_YEAR);
         this.beforeOrAfter = Optional.of(DateRangeConditionEnum.AFTER);
         return this;
     }
