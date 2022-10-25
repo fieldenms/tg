@@ -61,6 +61,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.exceptions.EntityCentreExecutionException;
+import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
@@ -1137,7 +1138,7 @@ public class DynamicQueryBuilder {
      * @author TG Team
      *
      */
-    protected static class UnsupportedTypeException extends RuntimeException {
+    protected static class UnsupportedTypeException extends AbstractPlatformRuntimeException {
         private static final long serialVersionUID = 8310488278117580979L;
 
         /**
