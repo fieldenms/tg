@@ -1,5 +1,6 @@
 package ua.com.fielden.snappy;
 
+import static java.lang.String.format;
 import static org.joda.time.DateTimeConstants.APRIL;
 import static org.joda.time.DateTimeConstants.JANUARY;
 import static org.joda.time.DateTimeConstants.JULY;
@@ -9,6 +10,7 @@ import java.util.Date;
 
 import org.joda.time.DateTime;
 
+import ua.com.fielden.platform.entity_centre.exceptions.EntityCentreExecutionException;
 import ua.com.fielden.platform.utils.IDates;
 
 /**
@@ -93,7 +95,7 @@ public class DateUtilities {
         } else if (rangeWidth == MnemonicEnum.QRT4) { // fourth quarter
             return adjustedDate.withMonthOfYear(OCTOBER).withDayOfMonth(1).toDate();// set first day of month as 1-st.
         } else {
-            throw new RuntimeException("Incorrect MnemonicEnum specified.");
+            throw new EntityCentreExecutionException(format("Menmonic [%s] is not supported.", rangeWidth));
         }
     }
 
