@@ -1,4 +1,4 @@
-package ua.com.fielden.snappy;
+package ua.com.fielden.platform.entity_centre.mnemonics;
 
 import java.util.Date;
 

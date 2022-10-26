@@ -1,4 +1,4 @@
-package ua.com.fielden.snappy;
+package ua.com.fielden.platform.entity_centre.mnemonics;
 
 /**
  * Represents mnemonics for atomic date range widths (days, weeks, .., quarters, .., years), and some number mnemonics.
@@ -28,4 +28,5 @@ public enum MnemonicEnum {
     DAY_AND_BEFORE,
     /** Day without left limit */
     DAY_AND_AFTER
+
 }

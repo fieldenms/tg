@@ -1,4 +1,4 @@
-package ua.com.fielden.snappy;
+package ua.com.fielden.platform.entity_centre.mnemonics;
 
 import static java.lang.String.format;
 import static org.joda.time.DateTimeConstants.APRIL;
@@ -21,9 +21,9 @@ import ua.com.fielden.platform.utils.IDates;
  * @author TG Team
  *
  */
-public class DateUtilities {
+public class DateMnemonicUtils {
 
-    private DateUtilities() {}
+    private DateMnemonicUtils() {}
     /**
      * Returns <code>true</code> if "rangeWidth" represents one of four quarters, otherwise returns <code>false</code>.
      *

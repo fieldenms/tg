@@ -3,10 +3,10 @@ package ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.construct
 import java.util.Date;
 import java.util.Optional;
 
+import ua.com.fielden.platform.entity_centre.mnemonics.DateRangeConditionEnum;
+import ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum;
+import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritDateValueMnemonic;
-import ua.com.fielden.snappy.DateRangeConditionEnum;
-import ua.com.fielden.snappy.DateRangePrefixEnum;
-import ua.com.fielden.snappy.MnemonicEnum;
 
 public class RangeCritDateValueMnemonicBuilder
 implements  IRangeCritDateValueMnemonic,

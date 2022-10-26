@@ -10,6 +10,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity_centre.mnemonics.DateMnemonicUtils.dateOfRangeThatIncludes;
 import static ua.com.fielden.platform.entity_centre.review.criteria.EntityQueryCriteriaUtils.paramValue;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
@@ -23,7 +24,6 @@ import static ua.com.fielden.platform.utils.EntityUtils.isRangeType;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
 import static ua.com.fielden.platform.utils.Pair.pair;
-import static ua.com.fielden.snappy.DateUtilities.dateOfRangeThatIncludes;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -61,6 +61,9 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.exceptions.EntityCentreExecutionException;
+import ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum;
+import ua.com.fielden.platform.entity_centre.mnemonics.DateRangeSelectorEnum;
+import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
 import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.Finder;
@@ -71,9 +74,6 @@ import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.CentreContext;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
-import ua.com.fielden.snappy.DateRangePrefixEnum;
-import ua.com.fielden.snappy.DateRangeSelectorEnum;
-import ua.com.fielden.snappy.MnemonicEnum;
 
 /**
  * An utility class that is responsible for building query implementation of {@link DynamicEntityQueryCriteria}.
