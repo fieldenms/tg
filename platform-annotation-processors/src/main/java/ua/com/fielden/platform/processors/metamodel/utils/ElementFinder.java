@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 
 import javax.lang.model.AnnotatedConstruct;
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -395,6 +397,27 @@ public class ElementFinder {
             }
         }
         return null;
+    }
+    
+    /**
+     * Returns an optional containing the value of the annotation's element.
+     * @param annotation
+     * @param elementName
+     * @return
+     */
+    public Optional<AnnotationValue> getAnnotationValue(final AnnotationMirror annotation, final String elementName) {
+        return elements.getElementValuesWithDefaults(annotation).entrySet().stream()
+                .filter(entry -> entry.getKey().getSimpleName().toString().equals(elementName))
+                .findAny().map(Entry::getValue);
+    }
+
+    /**
+     * Returns an optional containing the value of the annotation's default element (i.e. the {@code value()} element).
+     * @param annotation
+     * @return
+     */
+    public Optional<AnnotationValue> getAnnotationValue(final AnnotationMirror annotation) {
+        return getAnnotationValue(annotation, "value");
     }
 
     public String getFieldTypeSimpleName(final VariableElement field) {
