@@ -66,55 +66,74 @@ public class DateMnemonicUtils {
      * @return
      */
     public static Date startOfDateRangeThatIncludes(final Date date, final MnemonicEnum rangeWidth, final IDates dates) {
-        final DateTime adjustedDate = dates.zoned(date).withTimeAtStartOfDay();
+        final DateTime zonedDate = dates.zoned(date).withTimeAtStartOfDay();
 
         if (rangeWidth == MnemonicEnum.DAY) {
             // time portion is already removed.
-            return adjustedDate.toDate();
+            return zonedDate.toDate();
         } else if (rangeWidth == MnemonicEnum.DAY_AND_BEFORE) {
             return null; // no left limit!
         } else if (rangeWidth == MnemonicEnum.DAY_AND_AFTER) {
-            return adjustedDate.toDate(); // time portion is already removed.
+            return zonedDate.toDate(); // time portion is already removed.
         } else if (rangeWidth == MnemonicEnum.WEEK) {
             // Set the first day of week, but we may need to first shift adjustedDate back by 1 week.
             // For example, an application may have the first day of the week as Sunday, which corresponds to 7 and, let's say, adjustedDate represents Tuesday (2).
             // If we simply execute adjustedDate.withDayOfWeek(7) then we will get a date in the future, corresponding to the next Sunday after the adjustedDate.
             // But what we need if the Sunday before adjustedDate. This is why we need to to first shift adjustedDate by 1 week into the past, and only then set the date of week to the shifted date.
-            final DateTime newDate = adjustedDate.getDayOfWeek() < dates.startOfWeek() ? adjustedDate.minusWeeks(1) : adjustedDate;
+            final DateTime newDate = zonedDate.getDayOfWeek() < dates.startOfWeek() ? zonedDate.minusWeeks(1) : zonedDate;
             return newDate.withDayOfWeek(dates.startOfWeek()).toDate();
         } else if (rangeWidth == MnemonicEnum.MONTH) {
-            return adjustedDate.withDayOfMonth(1).toDate();// set first day of month as 1-st.
+            return zonedDate.withDayOfMonth(1).toDate();// set first day of month as 1-st.
         } else if (rangeWidth == MnemonicEnum.YEAR) {
-            return adjustedDate.withDayOfYear(1).toDate();// set first day of year as 1-st.
+            return zonedDate.withDayOfYear(1).toDate();// set first day of year as 1-st.
         } else if (rangeWidth == MnemonicEnum.FIN_YEAR) {
             // Set the month of year and day of month to reflect fin year, but we may need to first shift adjustedDate back by 1 year.
             // For example, an application may have FY starting on the 6th of April, and adjustedDate is the 15th of March 2022.
             // The start of the FY that in includes 15-Mar-2022 start on the 6th of April 2021. Hence, the need to shift back by 1 year.
-            final DateTime newDate = adjustedDate.getMonthOfYear() < dates.finYearStartMonth() || 
-                                     (adjustedDate.getMonthOfYear() == dates.finYearStartMonth() && adjustedDate.getDayOfMonth() < dates.finYearStartDay())
-                                     ? dates.zoned(roll(adjustedDate.toDate(), MnemonicEnum.YEAR, false, dates))
-                                     : adjustedDate;
+            final int adjustedFinYearStartDay = adjustFinYearStartDayForTheCaseOfLastDayOfMonth(zonedDate, dates);
+            final DateTime newDate = zonedDate.getMonthOfYear() < dates.finYearStartMonth() || 
+                                     (zonedDate.getMonthOfYear() == dates.finYearStartMonth() && zonedDate.getDayOfMonth() < adjustedFinYearStartDay)
+                                     ? dates.zoned(roll(zonedDate.toDate(), MnemonicEnum.YEAR, false, dates))
+                                     : zonedDate;
             // The value 31 for dates.finYearStartDay() has the semantics of the "last day of the month".
             // This requires additional consideration of the length of the FY start month.
             final DateTime newDateWithFinYearStartMonth = newDate.withMonthOfYear(dates.finYearStartMonth());
-            if (dates.finYearStartDay() == 31) {
+            if (adjustedFinYearStartDay == 31) {
                 final int lastDayOfMonth = YearMonth.from(LocalDate.of(newDateWithFinYearStartMonth.getYear(), newDateWithFinYearStartMonth.getMonthOfYear(), newDateWithFinYearStartMonth.getDayOfMonth()))
                                                      .atEndOfMonth().getDayOfMonth();
                 return newDateWithFinYearStartMonth.withDayOfMonth(lastDayOfMonth).toDate();
             } else { // otherwise simply use dates.finYearStartDay() as is
-                return newDateWithFinYearStartMonth.withDayOfMonth(dates.finYearStartDay()).toDate();
+                return newDateWithFinYearStartMonth.withDayOfMonth(adjustedFinYearStartDay).toDate();
             }
         } else if (rangeWidth == MnemonicEnum.QRT1) { // first quarter
-            return adjustedDate.withMonthOfYear(JANUARY).withDayOfMonth(1).toDate();// set first day of month as 1-st.
+            return zonedDate.withMonthOfYear(JANUARY).withDayOfMonth(1).toDate();// set first day of month as 1-st.
         } else if (rangeWidth == MnemonicEnum.QRT2) { // second quarter
-            return adjustedDate.withMonthOfYear(APRIL).withDayOfMonth(1).toDate();// set first day of month as 1-st.
+            return zonedDate.withMonthOfYear(APRIL).withDayOfMonth(1).toDate();// set first day of month as 1-st.
         } else if (rangeWidth == MnemonicEnum.QRT3) { // third quarter
-            return adjustedDate.withMonthOfYear(JULY).withDayOfMonth(1).toDate();// set first day of month as 1-st.
+            return zonedDate.withMonthOfYear(JULY).withDayOfMonth(1).toDate();// set first day of month as 1-st.
         } else if (rangeWidth == MnemonicEnum.QRT4) { // fourth quarter
-            return adjustedDate.withMonthOfYear(OCTOBER).withDayOfMonth(1).toDate();// set first day of month as 1-st.
+            return zonedDate.withMonthOfYear(OCTOBER).withDayOfMonth(1).toDate();// set first day of month as 1-st.
         } else {
             throw new EntityCentreExecutionException(format("Menmonic [%s] is not supported.", rangeWidth));
         }
+    }
+
+    /**
+     * Returns an adjusted value of {@code dats.finYearStartDay()} to match the last day of {@code date}, in case {@code dats.finYearStartDay()} has the semantics of the "last day of the month",
+     * and the month of {@code date} matches the {@code dats.finYearStartMonth()}.
+     * <p>
+     * Such adjusted value is necessary to correctly compute the need for "rolling" the date forward. 
+     *
+     * @param date
+     * @param dates
+     * @return
+     */
+    private static int adjustFinYearStartDayForTheCaseOfLastDayOfMonth(final DateTime date, final IDates dates) {
+        if (dates.finYearStartDay() == 31 && date.getMonthOfYear() == dates.finYearStartMonth()) {
+            final int dayOfMonth = YearMonth.from(LocalDate.of(date.getYear(), date.getMonthOfYear(), date.getDayOfMonth())).atEndOfMonth().getDayOfMonth();
+            return dayOfMonth;
+        }
+        return dates.finYearStartDay();
     }
 
     /**
