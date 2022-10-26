@@ -6,10 +6,11 @@ package ua.com.fielden.platform.dao.exceptions;
  * @author TG Team
  *
  */
-public class UnexpectedNumberOfReturnedEntities extends RuntimeException {
+public class UnexpectedNumberOfReturnedEntities extends EntityCompanionException {
     private static final long serialVersionUID = 1L;
 
     public UnexpectedNumberOfReturnedEntities(final String msg) {
         super(msg);
     }
+
 }

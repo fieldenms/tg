@@ -29,10 +29,10 @@ import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForCentreDomainTree;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityForIncludedPropertiesLogic;
 import ua.com.fielden.platform.domaintree.testing.MasterSyntheticEntity;
+import ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum;
+import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.snappy.DateRangePrefixEnum;
-import ua.com.fielden.snappy.MnemonicEnum;
 
 /**
  * A test for {@link CentreDomainTreeManager}.

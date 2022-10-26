@@ -18,13 +18,13 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.Entity;
+import ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum;
+import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.UnsupportedTypeException;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.CollectionUtil;
-import ua.com.fielden.snappy.DateRangePrefixEnum;
-import ua.com.fielden.snappy.MnemonicEnum;
 
 /**
  * A test for {@link DynamicQueryBuilder}.

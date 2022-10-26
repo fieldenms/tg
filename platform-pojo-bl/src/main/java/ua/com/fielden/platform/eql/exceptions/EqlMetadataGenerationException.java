@@ -9,15 +9,14 @@ import ua.com.fielden.platform.entity.query.exceptions.EqlException;
  *
  */
 public class EqlMetadataGenerationException extends EqlException {
-
     private static final long serialVersionUID = 1L;
 
     public EqlMetadataGenerationException(final String msg) {
         super(msg);
     }
-    
+
     public EqlMetadataGenerationException(final String msg, final Throwable cause) {
         super(msg, cause);
     }
-    
+   
 }
