@@ -207,7 +207,6 @@ public class WebUiBuilder implements IWebUiBuilder {
     /**
      * Generates a HTML representation of the web application UI preferences.
      *
-     * @param dates
      * @return
      */
     public String genWebUiPrefComponent() {
@@ -224,7 +223,7 @@ public class WebUiBuilder implements IWebUiBuilder {
                 replace("@timeWithMillisFormat", "\"" + this.timeWithMillisFormat + "\"");
     }
 
-    public String getAppIndex (final IDates dates) {
+    public String getAppIndex(final IDates dates) {
         return ResourceLoader.getText("ua/com/fielden/platform/web/index.html")
                 .replace("@panelColor", panelColor.map(val -> "--tg-main-pannel-color: " + val + ";").orElse(""))
                 .replace("@watermark", "'" + watermark.orElse("") + "'")
