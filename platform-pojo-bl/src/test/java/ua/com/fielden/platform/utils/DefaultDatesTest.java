@@ -5,6 +5,7 @@ import static org.joda.time.DateTimeZone.forID;
 import static org.joda.time.DateTimeZone.getDefault;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -14,6 +15,8 @@ import java.util.concurrent.ExecutionException;
 
 import org.joda.time.DateTime;
 import org.junit.Test;
+
+import ua.com.fielden.platform.basic.config.exceptions.ApplicationConfigurationException;
 
 public class DefaultDatesTest {
     private final Date date = new Date(0L);
@@ -326,6 +329,30 @@ public class DefaultDatesTest {
         assertTrue(abs(new DateTime(dates.requestTimeZone().get()).getMillis() - dates.now().getMillis()) < MILLIS_DIFF_THRESHOULD);
     }
 
+    @Test
+    public void validation_during_default_dates_instantiation_prevents_invalid_weekStart() {
+        assertThrows(ApplicationConfigurationException.class, () -> new DefaultDates(false, 0, 1, 7));
+        assertThrows(ApplicationConfigurationException.class, () -> new DefaultDates(false, 8, 1, 7));
+    }
+
+    @Test
+    public void validation_during_default_dates_instantiation_prevents_invalid_finYearStartDay() {
+        assertThrows(ApplicationConfigurationException.class, () -> new DefaultDates(false, 1, 0, 7));
+        assertThrows(ApplicationConfigurationException.class, () -> new DefaultDates(false, 1, 32, 7));
+    }
+
+    @Test
+    public void validation_during_default_dates_instantiation_prevents_invalid_finYearStartMonth() {
+        assertThrows(ApplicationConfigurationException.class, () -> new DefaultDates(false, 1, 1, 0));
+        assertThrows(ApplicationConfigurationException.class, () -> new DefaultDates(false, 1, 1, 13));
+    }
+
+    @Test
+    public void validation_during_default_dates_instantiation_prevents_invalid_finYearStartDay_and_finYearStartMonth_combinations() {
+        assertThrows(ApplicationConfigurationException.class, () -> new DefaultDates(false, 1, 29, 2));
+        assertThrows(ApplicationConfigurationException.class, () -> new DefaultDates(false, 1, 30, 2));
+    }
+    
     private DefaultDates getDefaultDates(final boolean independentTimeZone) {
         return new DefaultDates(independentTimeZone, 1, 1, 7);
     }

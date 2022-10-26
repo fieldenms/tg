@@ -10,6 +10,8 @@ import static org.joda.time.DateTimeZone.getDefault;
 import static org.joda.time.format.DateTimeFormat.forPattern;
 import static ua.com.fielden.platform.utils.EntityUtils.dateWithoutTimeFormat;
 
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.Date;
 import java.util.Optional;
 
@@ -20,6 +22,8 @@ import org.joda.time.DateTimeZone;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+
+import ua.com.fielden.platform.basic.config.exceptions.ApplicationConfigurationException;
 
 /**
  * Default implementation of {@link IDates}, which uses a thread-local state for managing time-zone values specified in client requests.
@@ -34,7 +38,7 @@ public class DefaultDates implements IDates {
     private final Logger logger = Logger.getLogger(getClass());
     private final boolean independentTimeZone;
     private final Integer weekStart;
-    private final Integer finYearStartDate;
+    private final Integer finYearStartDay;
     private final Integer finYearStartMonth;
     private final ThreadLocal<DateTimeZone> threadLocalRequestTimeZone = new ThreadLocal<>();
 
@@ -42,11 +46,30 @@ public class DefaultDates implements IDates {
     public DefaultDates(
             final @Named("independent.time.zone") boolean independentTimeZone,
             final @Named("dates.weekStart") Integer weekStart,
-            final @Named("dates.finYearStartDay") Integer finYearStartDate,
+            final @Named("dates.finYearStartDay") Integer finYearStartDay,
             final @Named("dates.finYearStartMonth") Integer finYearStartMonth) {
+        // Let's validated weekStart, finYearStartDay and finYearStartMonth
+        if (weekStart < 1 || weekStart > 7) {
+            throw new ApplicationConfigurationException(format("Value [%s] is not acceptable for [dates.weekStart]. Expecting a number from 1 (Mon) to 7 (Sun).", weekStart));
+        }
+        if (finYearStartDay < 1 || finYearStartDay > 31) {
+            throw new ApplicationConfigurationException(format("Value [%s] is not acceptable for [dates.finYearStartDay]. Expecting a number from 1 to 31.", finYearStartDay));
+        }
+        if (finYearStartMonth < 1 || finYearStartMonth > 12) {
+            throw new ApplicationConfigurationException(format("Value [%s] is not acceptable for [dates.finYearStartMonth]. Expecting a number from 1 (Jan) to 12 (Dec).", finYearStartMonth));
+        }
+        // Day 31 has a special meaning -- this is the last day of any month.
+        // This aspect is handled in DateUtilities.startOfDateRangeThatIncludes.
+        // Days 29 and 30 for month 2 are not acceptable -- day 31 should be used in case of the last day of Feb needs to be specified.
+        // All other values are acceptable. So, even day 31 for Apr is acceptable, because it simply means the last day of the month.
+        if (finYearStartMonth == 2 && (finYearStartDay == 29 || finYearStartDay == 30)) {
+            throw new ApplicationConfigurationException(format("Value [%s] is not acceptable for [dates.finYearStartDay] with [dates.finYearStartMonth] = %s. Specify 31 if the last day of the month is required.", finYearStartDay, finYearStartMonth));
+        } else {
+            this.finYearStartDay = finYearStartDay;
+        }
+
         this.independentTimeZone = independentTimeZone;
         this.weekStart = weekStart;
-        this.finYearStartDate = finYearStartDate;
         this.finYearStartMonth = finYearStartMonth;
     }
 
@@ -62,7 +85,7 @@ public class DefaultDates implements IDates {
 
     @Override
     public int finYearStartDay() {
-        return finYearStartDate;
+        return finYearStartDay;
     }
 
     @Override
