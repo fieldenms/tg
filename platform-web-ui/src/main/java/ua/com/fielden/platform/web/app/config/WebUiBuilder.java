@@ -14,6 +14,7 @@ import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
@@ -223,11 +224,14 @@ public class WebUiBuilder implements IWebUiBuilder {
                 replace("@timeWithMillisFormat", "\"" + this.timeWithMillisFormat + "\"");
     }
 
-    public String getAppIndex () {
+    public String getAppIndex(final IDates dates) {
         return ResourceLoader.getText("ua/com/fielden/platform/web/index.html")
                 .replace("@panelColor", panelColor.map(val -> "--tg-main-pannel-color: " + val + ";").orElse(""))
                 .replace("@watermark", "'" + watermark.orElse("") + "'")
-                .replace("@cssStyle", watermarkStyle.orElse("") );
+                .replace("@cssStyle", watermarkStyle.orElse("") )
+                // Need to inject the first day of week, which is used by the date picker component to correctly render a weekly representation of a month.
+                // Because IDates use a number range from 1 to 7 to represent Mon to Sun and JS uses 0 for Sun, we need to convert the value coming from  IDates.
+                .replace("@firstDayOfWeek", String.valueOf(dates.startOfWeek() % 7));
     }
 
     @Override

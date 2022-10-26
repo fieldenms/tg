@@ -210,6 +210,7 @@ export class TgFullcalendar extends mixinBehaviors([IronResizableBehavior], Poly
                 hour12: false
             },
             height: 'auto',
+            firstDay: this._appConfig.firstDayOfWeek
           });
           this._calendar.render();
           this.currentView = 'dayGridMonth';
