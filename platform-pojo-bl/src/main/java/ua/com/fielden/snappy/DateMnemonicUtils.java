@@ -6,6 +6,8 @@ import static org.joda.time.DateTimeConstants.JANUARY;
 import static org.joda.time.DateTimeConstants.JULY;
 import static org.joda.time.DateTimeConstants.OCTOBER;
 
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.Date;
 
 import org.joda.time.DateTime;
@@ -92,7 +94,16 @@ public class DateUtilities {
                                      (adjustedDate.getMonthOfYear() == dates.finYearStartMonth() && adjustedDate.getDayOfMonth() < dates.finYearStartDay())
                                      ? dates.zoned(roll(adjustedDate.toDate(), MnemonicEnum.YEAR, false, dates))
                                      : adjustedDate;
-            return newDate.withMonthOfYear(dates.finYearStartMonth()).withDayOfMonth(dates.finYearStartDay()).toDate();// set first day of month of the financial year.
+            // The value 31 for dates.finYearStartDay() has the semantics of the "last day of the month".
+            // This requires additional consideration of the length of the FY start month.
+            final DateTime newDateWithFinYearStartMonth = newDate.withMonthOfYear(dates.finYearStartMonth());
+            if (dates.finYearStartDay() == 31) {
+                final int lastDayOfMonth = YearMonth.from(LocalDate.of(newDateWithFinYearStartMonth.getYear(), newDateWithFinYearStartMonth.getMonthOfYear(), newDateWithFinYearStartMonth.getDayOfMonth()))
+                                                     .atEndOfMonth().getDayOfMonth();
+                return newDateWithFinYearStartMonth.withDayOfMonth(lastDayOfMonth).toDate();
+            } else { // otherwise simply use dates.finYearStartDay() as is
+                return newDateWithFinYearStartMonth.withDayOfMonth(dates.finYearStartDay()).toDate();
+            }
         } else if (rangeWidth == MnemonicEnum.QRT1) { // first quarter
             return adjustedDate.withMonthOfYear(JANUARY).withDayOfMonth(1).toDate();// set first day of month as 1-st.
         } else if (rangeWidth == MnemonicEnum.QRT2) { // second quarter
@@ -134,8 +145,11 @@ public class DateUtilities {
     }
 
     /**
-     * Returns a date that represents ending of date range( that includes specified date and have rangeWidth of DAY or WEEK or MONTH or YEAR ). Important : the range does not
-     * include this ending! </br> {@link #startOfDateRangeThatIncludes(Date, MnemonicEnum)} <= date < {@link #endOfDateRangeThatIncludes(Date, MnemonicEnum)} </br>
+     * Returns a date that represents ending of date range (that includes specified date and have rangeWidth of DAY or WEEK or MONTH or YEAR ).
+     * <p>
+     * <b>Important</b>: the range does not include this ending! 
+     * <br>
+     * {@link #startOfDateRangeThatIncludes(Date, MnemonicEnum)} <= date < {@link #endOfDateRangeThatIncludes(Date, MnemonicEnum)}
      *
      * @param date
      * @param rangeWidth
