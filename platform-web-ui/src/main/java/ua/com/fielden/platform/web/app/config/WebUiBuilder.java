@@ -210,7 +210,7 @@ public class WebUiBuilder implements IWebUiBuilder {
      * @param dates
      * @return
      */
-    public String genWebUiPrefComponent(final IDates dates) {
+    public String genWebUiPrefComponent() {
         if (this.minDesktopWidth <= this.minTabletWidth) {
             throw new IllegalStateException("The desktop width can not be less then or equal tablet width.");
         }
@@ -221,17 +221,17 @@ public class WebUiBuilder implements IWebUiBuilder {
                 replace("@independentTimeZoneSetting", webUiConfig.independentTimeZone() ? format("moment.tz.setDefault('%s');", TimeZone.getDefault().getID()) : "").
                 replace("@dateFormat", "\"" + this.dateFormat + "\"").
                 replace("@timeFormat", "\"" + this.timeFormat + "\"").
-                replace("@timeWithMillisFormat", "\"" + this.timeWithMillisFormat + "\"").
-                // Need to inject the first day of week, which is used by the date picker component to correctly render a weekly representation of a month.
-                // Because IDates use a number range from 1 to 7 to represent Mon to Sun and JS uses 0 for Sun, we need to convert the value coming from  IDates.
-                replace("@firstDayOfWeek", String.valueOf(dates.startOfWeek() % 7));
+                replace("@timeWithMillisFormat", "\"" + this.timeWithMillisFormat + "\"");
     }
 
-    public String getAppIndex () {
+    public String getAppIndex (final IDates dates) {
         return ResourceLoader.getText("ua/com/fielden/platform/web/index.html")
                 .replace("@panelColor", panelColor.map(val -> "--tg-main-pannel-color: " + val + ";").orElse(""))
                 .replace("@watermark", "'" + watermark.orElse("") + "'")
-                .replace("@cssStyle", watermarkStyle.orElse("") );
+                .replace("@cssStyle", watermarkStyle.orElse("") )
+                // Need to inject the first day of week, which is used by the date picker component to correctly render a weekly representation of a month.
+                // Because IDates use a number range from 1 to 7 to represent Mon to Sun and JS uses 0 for Sun, we need to convert the value coming from  IDates.
+                .replace("@firstDayOfWeek", String.valueOf(dates.startOfWeek() % 7));
     }
 
     @Override

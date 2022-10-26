@@ -209,7 +209,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     @Override
     public final String genWebUiPreferences() {
-        return webUiBuilder.genWebUiPrefComponent(injector().getInstance(IDates.class));
+        return webUiBuilder.genWebUiPrefComponent();
     }
 
     @Override
@@ -224,7 +224,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     @Override
     public final String genAppIndex() {
-        final String indexSource = webUiBuilder.getAppIndex().replace("@title", title);
+        final String indexSource = webUiBuilder.getAppIndex(injector().getInstance(IDates.class)).replace("@title", title);
         if (isDevelopmentWorkflow(this.workflow)) {
             return indexSource.replace("@startupResources", "startup-resources-origin");
         } else {

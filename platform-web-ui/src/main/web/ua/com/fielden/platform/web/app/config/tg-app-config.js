@@ -158,7 +158,7 @@ export const TgAppConfig = Polymer({
             type: Number,
             notify: true,
             readOnly: true,
-            value: @firstDayOfWeek
+            value: window.firstDayOfWeek
         }
     },
     
