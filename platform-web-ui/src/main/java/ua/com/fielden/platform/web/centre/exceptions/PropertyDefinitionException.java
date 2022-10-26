@@ -7,7 +7,6 @@ package ua.com.fielden.platform.web.centre.exceptions;
  *
  */
 public class PropertyDefinitionException extends RuntimeException {
-
     private static final long serialVersionUID = 1L;
 
     public PropertyDefinitionException(final String msg) {
@@ -17,4 +16,5 @@ public class PropertyDefinitionException extends RuntimeException {
     public PropertyDefinitionException(final String msg, final Throwable cause) {
         super(msg, cause);
     }
+
 }

@@ -153,6 +153,12 @@ export const TgAppConfig = Polymer({
             type: String,
             readOnly: true,
             value: @timeFormat
+        },
+        firstDayOfWeek: {
+            type: Number,
+            notify: true,
+            readOnly: true,
+            value: window.firstDayOfWeek
         }
     },
     

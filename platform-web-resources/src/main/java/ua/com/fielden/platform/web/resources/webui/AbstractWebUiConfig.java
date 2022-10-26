@@ -41,6 +41,7 @@ import ua.com.fielden.platform.menu.MenuSaveAction;
 import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchy;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig;
 import ua.com.fielden.platform.web.action.StandardMastersWebUiConfig;
@@ -223,7 +224,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
 
     @Override
     public final String genAppIndex() {
-        final String indexSource = webUiBuilder.getAppIndex().replace("@title", title);
+        final String indexSource = webUiBuilder.getAppIndex(injector().getInstance(IDates.class)).replace("@title", title);
         if (isDevelopmentWorkflow(this.workflow)) {
             return indexSource.replace("@startupResources", "startup-resources-origin");
         } else {

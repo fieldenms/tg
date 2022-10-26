@@ -122,6 +122,10 @@ public class BasicWebServerModule extends CommonFactoryModule {
         // authentication parameters
         bindConstant().annotatedWith(Names.named("auth.mode")).to(props.getProperty("auth.mode", AuthMode.RSO.name()));
         bindConstant().annotatedWith(Names.named("auth.sso.provider")).to(props.getProperty("auth.sso.provider", "Identity Provider"));
+        // date related parameters
+        bindConstant().annotatedWith(Names.named("dates.weekStart")).to(Integer.valueOf(props.getProperty("dates.weekStart", "1"))); // 1 - Monday
+        bindConstant().annotatedWith(Names.named("dates.finYearStartDay")).to(Integer.valueOf(props.getProperty("dates.finYearStartDay", "1"))); // 1 - the first day of the month
+        bindConstant().annotatedWith(Names.named("dates.finYearStartMonth")).to(Integer.valueOf(props.getProperty("dates.finYearStartMonth", "7"))); // 7 - July, the 1st of July is the start of Fin Year in Australia
 
         bind(IApplicationSettings.class).to(ApplicationSettings.class).in(Singleton.class);
         bind(IApplicationDomainProvider.class).toInstance(applicationDomainProvider);

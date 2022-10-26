@@ -1,4 +1,4 @@
-package ua.com.fielden.snappy;
+package ua.com.fielden.platform.entity_centre.mnemonics;
 
 /**
  * Enumeration for date range prefixes, which represent "Previous", "Current" or "Next" date atom (see {@link MnemonicEnum}). <br>
