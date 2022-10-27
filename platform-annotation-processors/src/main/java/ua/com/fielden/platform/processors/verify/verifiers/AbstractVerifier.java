@@ -33,6 +33,9 @@ public abstract class AbstractVerifier implements Verifier {
         this.entityFinder = new EntityFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
     }
     
+    /**
+     * Returns a set of elements that did not pass verification.
+     */
     public Set<Element> getViolatingElements() {
         return this.violatingElements;
     }

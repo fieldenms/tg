@@ -14,6 +14,12 @@ import ua.com.fielden.platform.processors.verify.VerifyingProcessor;
  */
 public interface Verifier {
 
+    /**
+     * Performs verification in the current round accoring to implementation-specific rules. Returns {@code true} if verification was passed,
+     * {@code false} otherwise.
+     * @param roundEnv
+     * @return
+     */
     public boolean verify(final RoundEnvironment roundEnv);
 
     /**
