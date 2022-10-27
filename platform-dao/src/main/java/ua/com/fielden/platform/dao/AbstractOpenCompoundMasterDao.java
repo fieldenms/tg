@@ -160,7 +160,7 @@ public abstract class AbstractOpenCompoundMasterDao<T extends AbstractFunctional
     }
 
     @SafeVarargs
-    public final void addViewBinding(final String binding, final Class<? extends AbstractEntity<?>> type, final T2<String, String>... parameters) {
+    public final <P> void addViewBinding(final String binding, final Class<? extends AbstractEntity<?>> type, final T2<String, P>... parameters) {
         this.parameters.add(t3(binding, type, Arrays.stream(parameters).collect(toMap(parameter -> parameter._1, parameter -> value -> getValue(value, parameter._2)))));
     }
 
