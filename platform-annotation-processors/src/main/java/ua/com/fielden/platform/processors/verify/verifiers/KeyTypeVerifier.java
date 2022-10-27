@@ -38,7 +38,8 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
 
     private final List<AbstractComposableVerifierPart> verifiers = List.of(
             new KeyTypePresence(),
-            new KeyTypeValueMatchesAbstractEntityTypeArgument());
+            new KeyTypeValueMatchesAbstractEntityTypeArgument(),
+            new ChildKeyTypeMatchesParentKeyType());
 
     public KeyTypeVerifier(final ProcessingEnvironment procEnv) {
         super(procEnv);
@@ -113,6 +114,48 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
                                 "Key type must match the type argument to %s.".formatted(AbstractEntity.class.getSimpleName()),
                                 el, AT_KEY_TYPE_CLASS, "value");
                     }
+                }
+            }
+
+            return allPassed;
+        }
+    }
+
+    /**
+     * {@link KeyType} declared by a child entity must match the one declared at the super type level.
+     * 
+     * @author TG Team
+     */
+    private class ChildKeyTypeMatchesParentKeyType extends AbstractComposableVerifierPart {
+
+        public boolean verify(final RoundEnvironment roundEnv) {
+            boolean allPassed = true;
+            final List<EntityElement> entitiesWithDeclaredKeyType = roundEnv.getElementsAnnotatedWith(AT_KEY_TYPE_CLASS).stream()
+                    .map(el -> entityFinder.newEntityElement((TypeElement) el))
+                    .toList();
+
+            for (final EntityElement entity : entitiesWithDeclaredKeyType) {
+                final EntityElement parent = entityFinder.getParent(entity); 
+
+                // skip non-child entities and those with an abstract parent
+                // TODO handle hierarchy [non-abstract -> abstract -> non-abstract -> ...] ?
+                if (parent == null || elementFinder.isAbstract(parent)) continue;
+
+                final Optional<KeyType> parentAtKeyType = entityFinder.findAnnotation(parent, AT_KEY_TYPE_CLASS);
+                // parent might be missing @KeyType, which should have been detected by KeyTypePresence verifier-part, so we ignore this case
+                if (parentAtKeyType.isEmpty()) continue;
+
+                final TypeMirror parentKeyType = entityFinder.getKeyType(parentAtKeyType.get());
+                final TypeMirror entityKeyType = entityFinder.getKeyType(entity.getAnnotation(AT_KEY_TYPE_CLASS));
+
+                if (!typeUtils.isSameType(parentKeyType, entityKeyType)) {
+                    violatingElements.add(entity);
+                    allPassed = false;
+
+                    // report error
+                    printMessageWithAnnotationHint(Kind.ERROR,
+                            "Child entity key type must match its parent's (%s) key type.".formatted(parent.getSimpleName()),
+                            entity.element(), AT_KEY_TYPE_CLASS, "value");
                 }
             }
 
