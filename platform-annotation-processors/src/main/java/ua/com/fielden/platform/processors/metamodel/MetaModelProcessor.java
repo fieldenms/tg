@@ -96,6 +96,8 @@ public class MetaModelProcessor extends AbstractProcessor {
 
     private static final String INDENT = "    ";
 
+    private final String classSimpleName = this.getClass().getSimpleName();
+
     private Filer filer;
     private Elements elementUtils;
     private Messager messager;
@@ -120,14 +122,17 @@ public class MetaModelProcessor extends AbstractProcessor {
         this.elementUtils = processingEnv.getElementUtils();
         this.messager = processingEnv.getMessager();
         this.options = processingEnv.getOptions();
-        messager.printMessage(Kind.NOTE, format("Options: %s", options.keySet().stream().map(k -> format("%s=%s", k, options.get(k))).sorted().collect(joining(", "))));
         this.roundNumber = 0;
 
         this.elementFinder = new ElementFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
         this.entityFinder = new EntityFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
         this.metaModelFinder = new MetaModelFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
 
-        messager.printMessage(Kind.NOTE, format("%s initialized.", this.getClass().getSimpleName()));
+        messager.printMessage(Kind.NOTE, format("%s initialized.", classSimpleName));
+        if (!this.options.isEmpty()) {
+            messager.printMessage(Kind.NOTE, format("Options: [%s]",
+                    options.keySet().stream().map(k -> format("%s=%s", k, options.get(k))).sorted().collect(joining(", "))));
+        }
     }
 
     @Override
@@ -135,7 +140,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         this.roundNumber = this.roundNumber + 1;
         final Stopwatch stopwatchProcess = Stopwatch.createStarted();
         
-        messager.printMessage(Kind.NOTE, format(">>> PROCESSING ROUND %d START >>>", roundNumber));
+        messager.printMessage(Kind.NOTE, format(">>> %s: PROCESSING ROUND %d START >>>", classSimpleName, roundNumber));
         messager.printMessage(Kind.NOTE, format("annotations: [%s]", annotations.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
         final Set<? extends Element> rootElements = roundEnv.getRootElements();
         messager.printMessage(Kind.NOTE, format("rootElements: [%s]", rootElements.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
@@ -177,7 +182,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         }
 
         stopwatchProcess.stop();
-        messager.printMessage(Kind.NOTE, format("<<< PROCESSING ROUND %d END [%s millis] <<<", roundNumber, stopwatchProcess.elapsed(TimeUnit.MILLISECONDS)));
+        messager.printMessage(Kind.NOTE, format("<<< %s: PROCESSING ROUND %d END [%s millis] <<<", classSimpleName, roundNumber, stopwatchProcess.elapsed(TimeUnit.MILLISECONDS)));
         // must return false to avoid claiming all annotations (as defined by @SupportedAnnotationTypes("*")) to allow other processors to run
         return false;
     }
