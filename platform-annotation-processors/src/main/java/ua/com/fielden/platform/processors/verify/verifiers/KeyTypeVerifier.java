@@ -36,7 +36,9 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
 
     private static final Class<KeyType> AT_KEY_TYPE_CLASS = KeyType.class;
 
-    private final List<AbstractComposableVerifierPart> verifiers = List.of(new KeyTypePresence());
+    private final List<AbstractComposableVerifierPart> verifiers = List.of(
+            new KeyTypePresence(),
+            new KeyTypeValueMatchesAbstractEntityTypeArgument());
 
     public KeyTypeVerifier(final ProcessingEnvironment procEnv) {
         super(procEnv);
@@ -73,4 +75,71 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
             return entitiesMissingKeyType.isEmpty();
         }
     }
+
+    /**
+     * The type of key as defined by {@link KeyType} must match the one specified as the type argument to {@link AbstractEntity}.
+     */
+    private class KeyTypeValueMatchesAbstractEntityTypeArgument extends AbstractComposableVerifierPart {
+
+        public boolean verify(final RoundEnvironment roundEnv) {
+            boolean allPassed = true;
+            final List<TypeElement> keyTypeAnnotatedElements = roundEnv.getElementsAnnotatedWith(AT_KEY_TYPE_CLASS).stream()
+                    .filter(elementFinder::isTopLevelClass)
+                    .map(el -> (TypeElement) el)
+                    .toList();
+
+            for (final TypeElement el : keyTypeAnnotatedElements) {
+                final TypeMirror keyType = entityFinder.getKeyType(el.getAnnotation(AT_KEY_TYPE_CLASS));
+
+                final DeclaredType parentEntity = (DeclaredType) el.getSuperclass();
+
+                // only if this entity type directly extends AbstractEntity
+                if (elementFinder.equals((TypeElement) parentEntity.asElement(), AbstractEntity.class)) {
+                    final List<? extends TypeMirror> typeArgs = parentEntity.getTypeArguments();
+                    if (typeArgs.isEmpty()) {
+                        violatingElements.add(el);
+                        allPassed = false;
+
+                        messager.printMessage(Kind.ERROR, 
+                                "%s must be parameterized with entity key type.".formatted(AbstractEntity.class.getSimpleName()),
+                                el);
+                    }
+                    else if (!typeUtils.isSameType(typeArgs.get(0), keyType)) {
+                        violatingElements.add(el);
+                        allPassed = false;
+
+                        // report error
+                        printMessageWithAnnotationHint(Kind.ERROR,
+                                "Key type must match the type argument to %s.".formatted(AbstractEntity.class.getSimpleName()),
+                                el, AT_KEY_TYPE_CLASS, "value");
+                    }
+                }
+            }
+
+            return allPassed;
+        }
+    }
+
+    private void printMessageWithAnnotationHint(final Kind kind, final String msg, final Element element, final Class<? extends Annotation> annotationType, final String annotationElementName) {
+        final AnnotationMirror annotMirror = elementFinder.getElementAnnotationMirror(element, annotationType);
+        if (annotMirror == null) {
+            // simplest form of message that is present directly on the element
+            messager.printMessage(kind, msg, element);
+        }
+        else {
+            final Optional<AnnotationValue> annotElementValue = elementFinder.getAnnotationValue(annotMirror, annotationElementName);
+            if (annotElementValue.isPresent()) {
+                // fullest form of error message present on the element's annotation element value
+                messager.printMessage(kind, msg, element, annotMirror, annotElementValue.get());
+            }
+            else {
+                // useful message for debugging
+                messager.printMessage(Kind.OTHER, "ANOMALY: AnnotationValue [%s.%s()] was absent. Element: %s. Annotation: %s."
+                        .formatted(annotMirror.getAnnotationType().asElement().getSimpleName(), annotationElementName, element.getSimpleName(), annotMirror.toString()));
+                // error message present on the element's annotation
+                messager.printMessage(kind, msg, element, annotMirror);
+            }
+        }
+    }
+
 }
