@@ -202,11 +202,13 @@ public class MetaModelProcessor extends AbstractProcessor {
                 // TODO support visible nested classes, in case if we start supporting "components" in a form of nested classes
                 .filter(element -> elementFinder.isTopLevelClass(element))
                 .map(el -> (TypeElement) el).collect(toSet());
-        messager.printMessage(Kind.NOTE, format("annotatedElements: [%s]", annotatedElements.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
+
         if (annotatedElements.isEmpty()) {
-            messager.printMessage(Kind.NOTE, "There is nothing to process.");
+            messager.printMessage(Kind.NOTE, "There are no subjects for meta-modeling.");
             return Stream.empty();
         }
+        messager.printMessage(Kind.NOTE, format("annotatedElements: [%s]",
+                annotatedElements.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
 
         // let's process each type element representing a domain entity
         // all relevant types will have a meta-model concept created for them and their properties explored for the purpose of meta-modelling 

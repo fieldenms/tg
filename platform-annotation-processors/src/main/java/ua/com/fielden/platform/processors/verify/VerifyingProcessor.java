@@ -77,16 +77,23 @@ public class VerifyingProcessor extends AbstractProcessor {
         final Stopwatch stopwatchProcess = Stopwatch.createStarted();
 
         messager.printMessage(Kind.NOTE, format(">>> %s: PROCESSING ROUND %d START >>>", classSimpleName, roundNumber));
-        messager.printMessage(Kind.NOTE, format("annotations: [%s]",
-                annotations.stream().map(el -> el.getSimpleName().toString()).sorted().collect(joining(", "))));
-        messager.printMessage(Kind.NOTE, format("rootElements: [%s]",
-                roundEnv.getRootElements().stream().map(el -> el.getSimpleName().toString()).sorted().collect(joining(", "))));
-
-        final boolean roundPassed = verify(roundEnv);
-        if (roundPassed) {
-            messager.printMessage(Kind.NOTE, "All verifiers were passed.");
+        
+        final Set<? extends Element> rootElements = roundEnv.getRootElements();
+        if (rootElements.isEmpty()) {
+            messager.printMessage(Kind.NOTE, "Nothing to verify.");
         }
-        passed = passed && roundPassed;
+        else {
+            messager.printMessage(Kind.NOTE, format("annotations: [%s]",
+                    annotations.stream().map(el -> el.getSimpleName().toString()).sorted().collect(joining(", "))));
+            messager.printMessage(Kind.NOTE, format("rootElements: [%s]",
+                    rootElements.stream().map(el -> el.getSimpleName().toString()).sorted().collect(joining(", "))));
+
+            final boolean roundPassed = verify(roundEnv);
+            if (roundPassed) {
+                messager.printMessage(Kind.NOTE, "All verifiers were passed.");
+            }
+            passed = passed && roundPassed;
+        }
 
         if (!passed) {
             messager.printMessage(Kind.NOTE, "Claiming this round's annotations to disable other processors.");
