@@ -548,6 +548,10 @@ public class ElementFinder {
         return element.getEnclosingElement().getKind() == ElementKind.PACKAGE;
     }
     
+    public boolean isAbstract(final Element element) {
+        return element.getModifiers().contains(Modifier.ABSTRACT);
+    }
+    
     /**
      * Wraps {@link Elements#getPackageOf} in order to avoid ClassCastException, since Sun's internal implementation of {@link Elements} expects a {@link com.sun.tools.javac.code.Symbol} instance.
      * <p>

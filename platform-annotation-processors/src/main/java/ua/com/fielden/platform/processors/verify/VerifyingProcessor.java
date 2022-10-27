@@ -22,6 +22,7 @@ import javax.tools.Diagnostic.Kind;
 import com.google.auto.service.AutoService;
 import com.google.common.base.Stopwatch;
 
+import ua.com.fielden.platform.processors.verify.verifiers.KeyTypeVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
 
 /**
@@ -49,6 +50,8 @@ public class VerifyingProcessor extends AbstractProcessor {
         this.passed = true;
         this.messager = processingEnv.getMessager();
         this.options = processingEnv.getOptions();
+        // TODO declarative dependency injection
+        registeredVerifiers.add(new KeyTypeVerifier(processingEnv));
 
         messager.printMessage(Kind.NOTE, format("%s initialized.", classSimpleName));
         if (!options.isEmpty()) {
