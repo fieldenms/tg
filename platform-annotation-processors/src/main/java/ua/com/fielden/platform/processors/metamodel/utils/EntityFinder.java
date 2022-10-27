@@ -206,8 +206,8 @@ public class EntityFinder extends ElementFinder {
      * @return
      */
     public boolean isEntityType(final TypeElement element) {
-        return Stream.iterate(element, el -> !equals(el, Object.class) , el -> findSuperclass(el))
-               .filter(el -> equals(el, ROOT_ENTITY_CLASS))
+        return Stream.iterate(element, el -> el != null && !equals(el, Object.class) , el -> findSuperclass(el))
+               .filter(el -> el != null && equals(el, ROOT_ENTITY_CLASS))
                .findFirst().isPresent();
     }
 
