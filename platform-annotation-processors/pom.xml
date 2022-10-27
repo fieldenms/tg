@@ -96,7 +96,9 @@
                             <goal>compile</goal>
                         </goals>
                         <configuration>
-                            <compilerArgument>-proc:none</compilerArgument>
+                          <annotationProcessors>
+                            <ap>com.google.auto.service.processor.AutoServiceProcessor</ap>
+                          </annotationProcessors>
                         </configuration>
                     </execution>
                     <execution>
