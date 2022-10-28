@@ -44,7 +44,7 @@ import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
 import ua.com.fielden.platform.sample.domain.TgDateTestEntity;
 import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummaries;
-import ua.com.fielden.platform.sample.domain.TgEntityWithLoopedCalcProps;
+import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgMakeCount;
@@ -167,6 +167,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgAuthoriser.class);
         add(TgOriginator.class);
         add(TgEntityWithComplexSummaries.class);
+        add(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class);
         add(TgCollectionalSerialisationParent.class);
         add(TgCollectionalSerialisationChild.class);
         add(TgCentreDiffSerialisation.class);

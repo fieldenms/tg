@@ -84,4 +84,5 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
 
         up.setUsername(testUser.getKey(), getInstance(IUser.class));
     }
+
 }

@@ -50,6 +50,8 @@ import ua.com.fielden.platform.sample.domain.TgAuthorship;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummaries;
+import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries;
+import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummariesThatActuallyDeclareThoseSummariesCo;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
@@ -714,9 +716,9 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     
     @Test
     public void eql3_query_executes_correctly61() {
-        final ITgEntityWithComplexSummaries co = getInstance(ITgEntityWithComplexSummaries.class);
-        final EntityResultQueryModel<TgEntityWithComplexSummaries> qry = select(TgEntityWithComplexSummaries.class).model();
-        co.getAllEntities(from(qry).with("EQL3", null).with(fetchIdOnly(TgEntityWithComplexSummaries.class).without("id").with("costPerKm")).model());
+        final TgEntityWithComplexSummariesThatActuallyDeclareThoseSummariesCo co = co(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class);
+        final EntityResultQueryModel<TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries> qry = select(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class).model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(fetchIdOnly(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class).without("id").with("costPerKm")).model());
     }
     
     @Test

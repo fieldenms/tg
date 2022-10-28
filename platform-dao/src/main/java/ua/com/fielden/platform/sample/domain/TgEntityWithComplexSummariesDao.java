@@ -14,6 +14,7 @@ import ua.com.fielden.platform.entity.query.IFilter;
  */
 @EntityType(TgEntityWithComplexSummaries.class)
 public class TgEntityWithComplexSummariesDao extends CommonEntityDao<TgEntityWithComplexSummaries> implements ITgEntityWithComplexSummaries {
+
     @Inject
     public TgEntityWithComplexSummariesDao(final IFilter filter) {
         super(filter);

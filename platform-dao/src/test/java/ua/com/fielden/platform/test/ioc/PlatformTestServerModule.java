@@ -153,6 +153,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(ITeAverageFuelUsage.class).to(TeAverageFuelUsageDao.class);
         bind(ITgVehicleFuelUsage.class).to(TgVehicleFuelUsageDao.class);
         bind(ITgEntityWithComplexSummaries.class).to(TgEntityWithComplexSummariesDao.class);
+        bind(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummariesCo.class).to(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummariesDao.class);
 
         bind(ITgAuthorship.class).to(TgAuthorshipDao.class);
         bind(ITgAuthorRoyalty.class).to(TgAuthorRoyaltyDao.class);

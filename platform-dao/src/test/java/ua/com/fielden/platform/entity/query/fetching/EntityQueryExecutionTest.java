@@ -77,6 +77,8 @@ import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummaries;
+import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries;
+import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummariesThatActuallyDeclareThoseSummariesCo;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgMakeCount;
@@ -131,6 +133,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     private final ITgAverageFuelUsage averageFuelUsageDao = getInstance(ITgAverageFuelUsage.class);
     private final ITgOrgUnit5 orgUnit5Dao = getInstance(ITgOrgUnit5.class);
     private final ITgEntityWithComplexSummaries coEntityWithComplexSummaries = getInstance(ITgEntityWithComplexSummaries.class);
+    private final TgEntityWithComplexSummariesThatActuallyDeclareThoseSummariesCo coEntityWithComplexSummariesThatActuallyDeclareThoseSummaries = getInstance(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummariesCo.class);
     private final ICompoundCondition0<TgVehicle> singleResultQueryStub = select(TgVehicle.class).where().prop("key").eq().val("CAR1");
     private final ITgPublishedYearly coPublishedYearly = getInstance(ITgPublishedYearly.class);
 
@@ -1814,18 +1817,16 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     
     ///////////////////////////////////////////////////// CASE EXPRESSION IN SUMMARY PROPS  ////////////////////////////////////////////////
     @Test
-    @Ignore
-    // TODO need to find the way to populate data for TgEntityWithComplexSummaries
     public void test_case_when_expression_in_summary_property_when_condition_is_satisfied() {
-        final EntityResultQueryModel<TgEntityWithComplexSummaries> qry = select(TgEntityWithComplexSummaries.class).model();
-        final TgEntityWithComplexSummaries summaryEntity = coEntityWithComplexSummaries.getEntity(from(qry).with(fetchOnly(TgEntityWithComplexSummaries.class).with("costPerKm").without("id").without("version")).model());
+        final EntityResultQueryModel<TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries> qry = select(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class).model();
+        final TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries summaryEntity = coEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.getEntity(from(qry).with(fetchOnly(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class).with("costPerKm").without("id").without("version")).model());
         assertEquals(new BigDecimal("1"), summaryEntity.getCostPerKm());
     }
     
     @Test
     public void test_case_when_expression_in_summary_property_when_condition_is_not_satisfied() {
-        final EntityResultQueryModel<TgEntityWithComplexSummaries> qry = select(TgEntityWithComplexSummaries.class).where().prop("kms").eq().val(0).model();
-        final TgEntityWithComplexSummaries summaryEntity = coEntityWithComplexSummaries.getEntity(from(qry).with(fetchOnly(TgEntityWithComplexSummaries.class).with("costPerKm").without("id").without("version")).model());
+        final EntityResultQueryModel<TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries> qry = select(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class).where().prop("kms").eq().val(0).model();
+        final TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries summaryEntity = coEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.getEntity(from(qry).with(fetchOnly(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class).with("costPerKm").without("id").without("version")).model());
         assertNull(summaryEntity.getCostPerKm());
     }
 
@@ -1859,7 +1860,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final TgVehicle vehicle = coVehicle.getEntity(from(qry).with(fetch).model());
         assertTrue(isEntityInstrumented(vehicle.getModel()));
     }
-    
+
     @Test
     public void vehicle_model_property_retrieved_with_instrumented_fetch_with_make_subproperty_is_instrumented() {
         final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
@@ -1875,12 +1876,12 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final TgFuelUsage fuelUsage = fuelUsageDao.getEntity(from(qry).with(fetch).model());
         assertTrue(isEntityInstrumented(fuelUsage.getVehicle()));
     }
-    
+
     public static boolean isPropertyInstrumented(final AbstractEntity<?> entity, final String propName) {
         final Object value = entity.get(propName);
         return isEntityInstrumented(value);
     }
-    
+
     public static boolean isEntityInstrumented(final Object entity) {
         return entity == null ? false : entity.getClass().getName().contains("$$Enhancer");
     }
@@ -1986,10 +1987,10 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         save(new_composite(TgAuthorship.class, chrisDate, "SQL and Relational Theory").setYear(2015));
         save(new_composite(TgAuthorship.class, yurijShcherbyna, "Дискретна математика").setYear(2007));
 
-//        save(new_(TgEntityWithComplexSummaries.class, "veh1").setKms(200).setCost(100));
-//        save(new_(TgEntityWithComplexSummaries.class, "veh2").setKms(0).setCost(100));
-//        save(new_(TgEntityWithComplexSummaries.class, "veh3").setKms(300).setCost(100));
-//        save(new_(TgEntityWithComplexSummaries.class, "veh4").setKms(0).setCost(200));
+        save(new_(TgEntityWithComplexSummaries.class, "veh1").setKms(200).setCost(100));
+        save(new_(TgEntityWithComplexSummaries.class, "veh2").setKms(0).setCost(100));
+        save(new_(TgEntityWithComplexSummaries.class, "veh3").setKms(300).setCost(100));
+        save(new_(TgEntityWithComplexSummaries.class, "veh4").setKms(0).setCost(200));
     }
 
 }
