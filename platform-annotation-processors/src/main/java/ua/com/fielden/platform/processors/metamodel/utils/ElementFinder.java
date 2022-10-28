@@ -545,7 +545,7 @@ public class ElementFinder {
     }
 
     public boolean isTopLevelClass(final Element element) {
-        return element.getEnclosingElement().getKind() == ElementKind.PACKAGE;
+        return element.getKind() == ElementKind.CLASS && element.getEnclosingElement().getKind() == ElementKind.PACKAGE;
     }
     
     public boolean isAbstract(final Element element) {
