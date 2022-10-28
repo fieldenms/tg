@@ -154,7 +154,7 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
 
                     // report error
                     printMessageWithAnnotationHint(Kind.ERROR,
-                            "Child entity key type must match its parent's (%s) key type.".formatted(parent.getSimpleName()),
+                            "Key type must match the supertype's (%s) key type.".formatted(parent.getSimpleName()),
                             entity.element(), AT_KEY_TYPE_CLASS, "value");
                 }
             }
