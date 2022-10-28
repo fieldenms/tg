@@ -85,8 +85,9 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
         if (!allAggregated) {
             return T2.t2(sourcesTr, false);
         } else {
-            return T2.t2(new TransformationResult1<>(sourcesTr.item, sourcesTr.updatedContext.cloneForAggregates()), true);
-        } 
+            // Need to repeat the transformation of sources in order to actually yield all calculated properties. This way they will look as usual properties (contain no aggregation) at query source usage level.
+            return T2.t2(sources.transform(context.cloneForAggregates()), true);
+        }
     }
     
     /**
