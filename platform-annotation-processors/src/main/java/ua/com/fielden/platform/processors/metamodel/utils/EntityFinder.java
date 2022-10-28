@@ -213,6 +213,15 @@ public class EntityFinder extends ElementFinder {
     }
     
     /**
+     * Determines the type of key for an entity element by looking for a {@link KeyType} declaration in its type hierarchy.
+     * @param entity
+     * @return
+     */
+    public Optional<TypeMirror> determineKeyType(final EntityElement entity) {
+        return findAnnotation(entity, KeyType.class).map(this::getKeyType);
+    }
+    
+    /**
      * An entity is any class that inherits from {@link AbstractEntity}, which itself is also considered to be an entity.
      *
      * @param element
