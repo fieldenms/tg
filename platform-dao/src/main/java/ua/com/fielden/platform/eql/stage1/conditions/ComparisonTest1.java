@@ -3,7 +3,7 @@ package ua.com.fielden.platform.eql.stage1.conditions;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
-import ua.com.fielden.platform.eql.stage1.TransformationContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.conditions.ComparisonTest2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
@@ -20,7 +20,7 @@ public class ComparisonTest1 implements ICondition1<ComparisonTest2> {
     }
 
     @Override
-    public ComparisonTest2 transform(final TransformationContext context) {
+    public ComparisonTest2 transform(final TransformationContext1 context) {
         return new ComparisonTest2(leftOperand.transform(context), operator, rightOperand.transform(context));
     }
 

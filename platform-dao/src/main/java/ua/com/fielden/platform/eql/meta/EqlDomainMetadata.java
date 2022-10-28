@@ -87,11 +87,11 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 import ua.com.fielden.platform.eql.meta.EqlPropertyMetadata.Builder;
 import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
-import ua.com.fielden.platform.eql.stage1.TransformationContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage1.sources.YieldInfoNode;
 import ua.com.fielden.platform.eql.stage1.sources.YieldInfoNodesGenerator;
-import ua.com.fielden.platform.eql.stage2.PathsToTreeTransformator;
+import ua.com.fielden.platform.eql.stage2.PathsToTreeTransformer;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
@@ -198,21 +198,21 @@ public class EqlDomainMetadata {
      * @return
      */
     private <T extends AbstractEntity<?>> EntityInfo<?> generateEnhancedEntityInfoForSyntheticType(final EntityTypeInfo<T> parentInfo, final Class<? extends AbstractEntity<?>> actualType) {
-        final TransformationContext context = new TransformationContext(this);
+        final TransformationContext1 context = new TransformationContext1(this);
         final Yields2 yields = gen.generateAsSyntheticEntityQuery(parentInfo.entityModels.get(0), parentInfo.entityType).transform(context).yields;
         final Map<String, YieldInfoNode> yieldInfoNodes = YieldInfoNodesGenerator.generate(yields.getYields());
         return Source1BasedOnSubqueries.produceEntityInfoForDefinedEntityType(this, yieldInfoNodes, actualType/*parentInfo.entityType*/);
     }
 
     private void validateCalcProps() {
-        final PathsToTreeTransformator p2tt = new PathsToTreeTransformator(this, gen);
+        final PathsToTreeTransformer p2tt = new PathsToTreeTransformer(this, gen);
         for (final EntityInfo<?> et : domainInfo.values()) {
             if (et.getCategory() != UNION) {
-                final Source2BasedOnPersistentType source = new Source2BasedOnPersistentType(et.javaType(), et, "dummy_id");
+                final Source2BasedOnPersistentType source = new Source2BasedOnPersistentType(et.javaType(), et, gen.nextSourceId() /*"dummy_id"*/); //TODO analyze
                 for (final AbstractPropInfo<?> prop : et.getProps().values()) {
                     if (prop.expression != null && !prop.name.equals(KEY)) {
                        try {
-                            p2tt.groupChildren(setOf(new Prop2(source, asList(prop))));    
+                            p2tt.transform(setOf(new Prop2(source, asList(prop))));    
                         } catch (final Exception e) {
                             throw new EqlException("There is an error in expression of calculated property [" + et.javaType().getSimpleName() + ":" + prop.name + "]: " + e.getMessage());
                         }
@@ -220,7 +220,7 @@ public class EqlDomainMetadata {
                         for (final AbstractPropInfo<?> subprop : ((ComponentTypePropInfo<?>) prop).getProps().values()) {
                             if (subprop.expression != null) {
                                 try {
-                                    p2tt.groupChildren(setOf(new Prop2(source, asList(prop, subprop))));    
+                                    p2tt.transform(setOf(new Prop2(source, asList(prop, subprop))));    
                                 } catch (final Exception e) {
                                     throw new EqlException("There is an error in expression of calculated property [" + et.javaType().getSimpleName() + ":" + prop.name  + "." + subprop.name + "]: " + e.getMessage());
                                 }
@@ -321,7 +321,7 @@ public class EqlDomainMetadata {
     }
 
     private Optional<EqlPropertyMetadata> generateIdPropertyMetadata(final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo) {
-        final EqlPropertyMetadata idProperty = new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).required().column(id).build();
+    	final EqlPropertyMetadata idProperty = new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).required().column(id).build();
         final EqlPropertyMetadata idPropertyInOne2One = new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).required().column(id).build();
         switch (parentInfo.category) {
         case PERSISTENT:
@@ -335,7 +335,8 @@ public class EqlDomainMetadata {
             } else if (isEntityType(getKeyType(parentInfo.entityType))) {
                 return of(new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).expression(expr().prop(KEY).model()).implicit().build());
             } else {
-                return empty();
+            	// FIXME reconsider this implementation taking into account its role combined with actual yields information in the process of getting final EntityPropInfo for Synthetic Entity 
+                return of(idProperty);
             }
         default:
             return empty();
@@ -376,7 +377,7 @@ public class EqlDomainMetadata {
     }
 
     private ExpressionModel generateUnionCommonDescPropExpressionModel(final List<Field> unionMembers, final String contextPropName) {
-        final List<String> unionMembersNames = unionMembers.stream().filter(et -> hasDescProperty((Class<? extends AbstractEntity<?>>) et.getType())).map(et -> et.getName()).collect(Collectors.toList());
+        final List<String> unionMembersNames = unionMembers.stream().filter(et -> hasDescProperty((Class<? extends AbstractEntity<?>>) et.getType())).map(et -> et.getName()).collect(toList());
         return generateUnionEntityPropertyContextualExpression(unionMembersNames, DESC, contextPropName);
     }
 
@@ -423,18 +424,18 @@ public class EqlDomainMetadata {
              .collect(toList());
     }
 
-    private String getColumnName(final String propName, final MapTo mapTo, final String parentPrefix) {
+    private static String getColumnName(final String propName, final MapTo mapTo, final String parentPrefix) {
         return (parentPrefix != null ? parentPrefix + "_" : "") + (isNotEmpty(mapTo.value()) ? mapTo.value() : propName.toUpperCase() + "_");
     }
 
-    private PropColumn generateColumn(final String columnName, final IsProperty isProperty) {
+    private static PropColumn generateColumn(final String columnName, final IsProperty isProperty) {
         final Integer length = isProperty.length() > 0 ? isProperty.length() : null;
         final Integer precision = isProperty.precision() >= 0 ? isProperty.precision() : null;
         final Integer scale = isProperty.scale() >= 0 ? isProperty.scale() : null;
         return new PropColumn(removeObsoleteUnderscore(columnName), length, precision, scale);
     }
 
-    private List<EqlPropertyMetadata> getCompositeUserTypeSubpropsMetadata(final ICompositeUserTypeInstantiate hibType, final String parentColumnPrefix, final ExpressionModel expr) {
+    private static List<EqlPropertyMetadata> getCompositeUserTypeSubpropsMetadata(final ICompositeUserTypeInstantiate hibType, final String parentColumnPrefix, final ExpressionModel expr) {
         final String[] propNames = hibType.getPropertyNames();
         final Object[] propHibTypes = hibType.getPropertyTypes();
         final Class<?> headerPropType = hibType.returnedClass();
@@ -554,7 +555,7 @@ public class EqlDomainMetadata {
         return new EqlPropertyMetadata.Builder(propName, javaType, hibType).notRequired().expression(expressionModel).implicit().build();
     }
 
-    private final Table generateTable(final String tableName, final List<EqlPropertyMetadata> propsMetadatas) {
+    private final static Table generateTable(final String tableName, final List<EqlPropertyMetadata> propsMetadatas) {
         final Map<String, String> columns = new HashMap<>();
         for (final EqlPropertyMetadata el : propsMetadatas) {
 
@@ -579,7 +580,7 @@ public class EqlDomainMetadata {
      * @param propsMetadata
      * @return
      */
-    private final TableStructForBatchInsertion generateTableWithPropColumnInfo(final String tableName, final List<EqlPropertyMetadata> propsMetadata) {
+    private final static TableStructForBatchInsertion generateTableWithPropColumnInfo(final String tableName, final List<EqlPropertyMetadata> propsMetadata) {
         final List<PropColumnInfo> columns = new ArrayList<>();
         for (final EqlPropertyMetadata el : propsMetadata) {
             if (!el.name.equals(ID) && !el.name.equals(VERSION)) {

@@ -58,7 +58,7 @@ Polymer({
 
     ready: function () {
         this._datePrefixes = ["PREV", "CURR", "NEXT"];
-        this._dateMnemonics = ["DAY", "WEEK", "MONTH", "QRT1", "QRT2", "QRT3", "QRT4", "YEAR", "OZ_FIN_YEAR"];
+        this._dateMnemonics = ["DAY", "WEEK", "MONTH", "QRT1", "QRT2", "QRT3", "QRT4", "YEAR", "FIN_YEAR"];
         this._andBefores = ["THIS", "BEFORE", "AFTER"];
         this._prefixTitles = ["Previous", "Current", "Next"];
         this._mnemonicTitles = ["Day", "Week", "Month", "1-st quarter", "2-nd quarter", "3-rd quarter", "4-th quarter", "Year", "Financial year"];

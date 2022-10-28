@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.expression.exception;
 
+import ua.com.fielden.platform.exceptions.AbstractPlatformCheckedException;
 import ua.com.fielden.platform.expression.IExpressionErrorPosition;
 
 /**
@@ -8,7 +9,7 @@ import ua.com.fielden.platform.expression.IExpressionErrorPosition;
  * 
  * @author TG Team
  */
-public abstract class RecognitionException extends Exception implements IExpressionErrorPosition {
+public abstract class RecognitionException extends AbstractPlatformCheckedException implements IExpressionErrorPosition {
 
     private final Integer errorPosition;
 

@@ -12,6 +12,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -31,7 +32,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 public class MigrationUtils {
     private static final Set<String> PROPS_TO_IGNORE = setOf(ID, VERSION);
 
-    public static final EntityMd generateEntityMd(final String tableName, final List<EqlPropertyMetadata> propsMetadatas) {
+    public static final EntityMd generateEntityMd(final String tableName, final Collection<EqlPropertyMetadata> propsMetadatas) {
         final var props = new ArrayList<PropMd>();
         for (final EqlPropertyMetadata el : propsMetadatas) {
             if (el.column != null && !PROPS_TO_IGNORE.contains(el.name)) {

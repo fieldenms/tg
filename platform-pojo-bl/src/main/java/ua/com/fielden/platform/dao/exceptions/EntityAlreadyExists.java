@@ -16,4 +16,5 @@ public class EntityAlreadyExists extends EntityCompanionException {
     public EntityAlreadyExists(final String msg, final Throwable cause) {
         super(msg, cause);
     }
+
 }

@@ -3,8 +3,8 @@ package ua.com.fielden.platform.eql.stage2.operands;
 import java.util.Objects;
 import java.util.Set;
 
-import ua.com.fielden.platform.eql.stage2.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.TransformationContext2;
+import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage3.operands.QueryBasedSet3;
 import ua.com.fielden.platform.eql.stage3.operands.SubQuery3;
 
@@ -16,9 +16,9 @@ public class QueryBasedSet2 implements ISetOperand2<QueryBasedSet3> {
     }
 
     @Override
-    public TransformationResult<QueryBasedSet3> transform(final TransformationContext context) {
-        final TransformationResult<SubQuery3> modelTr = model.transform(context);
-        return new TransformationResult<>(new QueryBasedSet3(modelTr.item), modelTr.updatedContext);
+    public TransformationResult2<QueryBasedSet3> transform(final TransformationContext2 context) {
+        final TransformationResult2<SubQuery3> modelTr = model.transform(context);
+        return new TransformationResult2<>(new QueryBasedSet3(modelTr.item), modelTr.updatedContext);
     }
 
     @Override

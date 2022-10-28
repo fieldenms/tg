@@ -2,7 +2,6 @@ package ua.com.fielden.platform.eql.stage1.sources;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage1.TransformationContext;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 
 public abstract class AbstractSource1<S2 extends ISource2<?>> implements ISource1<S2> {
@@ -11,9 +10,9 @@ public abstract class AbstractSource1<S2 extends ISource2<?>> implements ISource
      * Business name for query source. Can be also dot.notated, but should stick to property alias naming rules (e.g. no dots in beginning/end).
      */
     protected final String alias;
-    public final int id;
+    public final Integer id;
 
-    public AbstractSource1(final String alias, final int id) {
+    public AbstractSource1(final String alias, final Integer id) {
         this.id = id; // id is not taken into consideration in hashCode() and equals(..) methods on purpose -- Stage1 elements have no need to reference uniquely one another.
         this.alias = alias;
     }
@@ -21,10 +20,6 @@ public abstract class AbstractSource1<S2 extends ISource2<?>> implements ISource
     @Override
     public String getAlias() {
         return alias;
-    }
-
-    public String transformId(final TransformationContext context) {
-        return context.sourceIdPrefix == null ? Integer.toString(id) : context.sourceIdPrefix + "_" + Integer.toString(id);
     }
 
     @Override

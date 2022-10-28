@@ -5,8 +5,8 @@ import java.util.Objects;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
-import ua.com.fielden.platform.eql.stage2.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.TransformationContext2;
+import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.conditions.ComparisonTest3;
@@ -29,10 +29,10 @@ public class ComparisonTest2 extends AbstractCondition2<ComparisonTest3> {
     }
 
     @Override
-    public TransformationResult<ComparisonTest3> transform(final TransformationContext context) {
-        final TransformationResult<? extends ISingleOperand3> leftOperandTr = leftOperand.transform(context);
-        final TransformationResult<? extends ISingleOperand3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
-        return new TransformationResult<>(new ComparisonTest3(leftOperandTr.item, operator, rightOperandTr.item), rightOperandTr.updatedContext);
+    public TransformationResult2<ComparisonTest3> transform(final TransformationContext2 context) {
+        final TransformationResult2<? extends ISingleOperand3> leftOperandTr = leftOperand.transform(context);
+        final TransformationResult2<? extends ISingleOperand3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
+        return new TransformationResult2<>(new ComparisonTest3(leftOperandTr.item, operator, rightOperandTr.item), rightOperandTr.updatedContext);
     }
 
     @Override

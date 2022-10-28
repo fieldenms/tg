@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage1.operands;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage1.TransformationContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage2.operands.Value2;
 
 public class Value1 implements ISingleOperand1<Value2> {
@@ -19,7 +19,7 @@ public class Value1 implements ISingleOperand1<Value2> {
     }
 
     @Override
-    public Value2 transform(final TransformationContext context) {
+    public Value2 transform(final TransformationContext1 context) {
         return new Value2(value, ignoreNull);
     }
 

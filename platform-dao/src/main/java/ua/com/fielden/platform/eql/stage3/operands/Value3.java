@@ -5,26 +5,22 @@ import java.util.Objects;
 import ua.com.fielden.platform.entity.query.DbVersion;
 
 public class Value3 implements ISingleOperand3 {
-    public final Object value;
-    public final int paramId;
+    public final Object value; // can be 'null' in case of yield stmt
+    public final String paramName;
     public final Object hibType;
 
-    public Value3(final Object value, final int paramId, final Object hibType) {
+    public Value3(final Object value, final String paramName, final Object hibType) {
         this.value = value;
-        this.paramId = paramId;
+        this.paramName = paramName;
         this.hibType = hibType;
     }
 
-    public String getParamName() {
-        return paramId != 0 ? "P_" + paramId : null;
-    }
-    
     @Override
     public String sql(final DbVersion dbVersion) {
         if (value == null) {
             return " NULL ";
         } else {
-            return paramId == 0 ? (value instanceof String ? "'" + value + "'" : value.toString()) : ":" + getParamName();    
+            return paramName == null ? (value instanceof String ? "'" + value + "'" : value.toString()) : ":" + paramName;    
         }
     }
 
@@ -48,7 +44,7 @@ public class Value3 implements ISingleOperand3 {
         
         final Value3 other = (Value3) obj;
         
-        return Objects.equals(value, other.value) && paramId == other.paramId;
+        return Objects.equals(value, other.value) && paramName == other.paramName;
     }
 
     @Override

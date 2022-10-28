@@ -23,14 +23,16 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implem
 
     protected final fetch<T> originalFetch;
     private DomainMetadataAnalyser domainMetadataAnalyser;
+    public final boolean topLevel;
 
     private final Map<String, EntityRetrievalModel<? extends AbstractEntity<?>>> entityProps = new HashMap<>();
     private final Set<String> primProps = new HashSet<String>();
     private final Set<String> proxiedProps = new HashSet<String>();
 
-    public AbstractRetrievalModel(final fetch<T> originalFetch, final DomainMetadataAnalyser domainMetadataAnalyser) {
+    protected AbstractRetrievalModel(final fetch<T> originalFetch, final DomainMetadataAnalyser domainMetadataAnalyser, final boolean topLevel) {
         this.originalFetch = originalFetch;
         this.domainMetadataAnalyser = domainMetadataAnalyser;
+        this.topLevel = topLevel;
     }
 
     public fetch<T> getOriginalFetch() {
@@ -64,6 +66,11 @@ public abstract class AbstractRetrievalModel<T extends AbstractEntity<?>> implem
     @Override
     public boolean isInstrumented() {
         return originalFetch.isInstrumented();
+    }
+
+    @Override
+    public boolean topLevel() {
+        return topLevel;
     }
 
     @Override

@@ -8,28 +8,28 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
-import ua.com.fielden.platform.eql.stage2.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.TransformationContext2;
+import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnTable;
 
 public class Source2BasedOnPersistentType extends AbstractSource2 implements ISource2<Source3BasedOnTable> {
     private final Class<? extends AbstractEntity<?>> sourceType;
 
-    public Source2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final EntityInfo<?> entityInfo, final String alias, final String id) {
+    public Source2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final EntityInfo<?> entityInfo, final String alias, final Integer id) {
         super(id, alias, entityInfo);
         this.sourceType = sourceType;
     }
 
-    public Source2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final EntityInfo<?> entityInfo, final String id) {
+    public Source2BasedOnPersistentType(final Class<? extends AbstractEntity<?>> sourceType, final EntityInfo<?> entityInfo, final Integer id) {
         this(sourceType, entityInfo, null, id);               
     }
 
     @Override
-    public TransformationResult<Source3BasedOnTable> transform(final TransformationContext context) {
-        final TransformationContext newContext = context.cloneWithNextSqlId();
+    public TransformationResult2<Source3BasedOnTable> transform(final TransformationContext2 context) {
+        final TransformationContext2 newContext = context.cloneWithNextSqlId();
         final Source3BasedOnTable transformedSource = new Source3BasedOnTable(newContext.getTable(sourceType().getName()), id, newContext.sqlId);
-        return new TransformationResult<>(transformedSource, newContext);
+        return new TransformationResult2<>(transformedSource, newContext);
     }
 
     @Override

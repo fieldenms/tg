@@ -137,12 +137,12 @@ Polymer({
      */
     _calcText: function (_datePrefix, _dateMnemonic, _andBefore) {
         /* this._datePrefixes = ["PREV", "CURR", "NEXT"];
-        this._dateMnemonics = ["DAY", "WEEK", "MONTH", "QRT1", "QRT2", "QRT3", "QRT4", "YEAR", "OZ_FIN_YEAR"];
+        this._dateMnemonics = ["DAY", "WEEK", "MONTH", "QRT1", "QRT2", "QRT3", "QRT4", "YEAR", "FIN_YEAR"];
         this._andBefores = ["THIS", "BEFORE", "AFTER"];
         this._prefixTitles = ["Previous", "Current", "Next"];
         this._mnemonicTitles = ["Day", "Week", "Month", "1-st quarter", "2-nd quarter", "3-rd quarter", "4-th quarter", "Year", "Financial year"];
         this._andBeforeTitles = ["", " and before", " and after"]; */
-        const _mnemonicIds = ['WEEK', 'MONTH', 'QRT1', 'QRT2', 'QRT3', 'QRT4', 'YEAR', 'OZ_FIN_YEAR'];
+        const _mnemonicIds = ['WEEK', 'MONTH', 'QRT1', 'QRT2', 'QRT3', 'QRT4', 'YEAR', 'FIN_YEAR'];
         const _mnemonicTitles = ['week', 'month', 'year\'s 1-st quarter', 'year\'s 2-nd quarter', 'year\'s 3-rd quarter', 'year\'s 4-th quarter', 'year', 'financial year'];
         const _andBeforeSuffix = _andBefore === true ? ' and before' : (_andBefore === false ? ' and after' : '');
         if ('DAY' === _dateMnemonic) {

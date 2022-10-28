@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import ua.com.fielden.platform.eql.stage2.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.TransformationContext2;
+import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.etc.GroupBy3;
 import ua.com.fielden.platform.eql.stage3.etc.GroupBys3;
@@ -24,19 +24,19 @@ public class GroupBys2 {
         this.groups = groups;
     }
 
-    public TransformationResult<GroupBys3> transform(final TransformationContext context) {
+    public TransformationResult2<GroupBys3> transform(final TransformationContext2 context) {
         if (groups.isEmpty()) {
-            return new TransformationResult<>(null, context);
+            return new TransformationResult2<>(null, context);
         }
         
         final List<GroupBy3> transformed = new ArrayList<>();
-        TransformationContext currentContext = context;
+        TransformationContext2 currentContext = context;
         for (final GroupBy2 groupBy : groups) {
-            final TransformationResult<GroupBy3> groupByTr = groupBy.transform(currentContext);
+            final TransformationResult2<GroupBy3> groupByTr = groupBy.transform(currentContext);
             transformed.add(groupByTr.item);
             currentContext = groupByTr.updatedContext;
         }
-        return new TransformationResult<>(new GroupBys3(transformed), currentContext);
+        return new TransformationResult2<>(new GroupBys3(transformed), currentContext);
     }
 
     public Set<Prop2> collectProps() {
