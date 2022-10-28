@@ -77,6 +77,19 @@ public class EntityFinder extends ElementFinder {
                 .map(PropertyElement::new)
                 .collect(toCollection(LinkedHashSet::new));
     }
+    
+    /**
+     * Returns a property element, representing a property named {@code propName} if it is declared by {@code entity}, otherwise returns {@code null}.
+     *
+     * @param entity
+     * @param propName
+     * @return
+     */
+    public PropertyElement findDeclaredProperty(final EntityElement entity, final String propName) {
+        return findDeclaredProperties(entity).stream()
+                .filter(el -> el.getSimpleName().toString().equals(propName))
+                .findAny().orElse(null);
+    }
 
     /**
      * Finds properties, which are inherited by entity, represented by {@code entityElement}.
