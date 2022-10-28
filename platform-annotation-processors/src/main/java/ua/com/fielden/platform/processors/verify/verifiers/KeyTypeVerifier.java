@@ -16,8 +16,10 @@ import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic.Kind;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.NoKey;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
+import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 
 /**
  * Performs verification of a domain model with respect to the {@link KeyType} annotation.
@@ -27,7 +29,8 @@ import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
  *  <li>Entity definition is missing {@link KeyType} i.e., neither the entity type nor its super types have this annotation declared. Abstract entities should be able have no {@link KeyType} annotation present.</li>
  *  <li>The type of key as defined by {@link KeyType} does not match the one specified as the type argument to {@link AbstractEntity}.</li>
  *  <li>Child entity declares {@link KeyType} that does not match the type at the super type level.</li>
- *  <li>Entity declares property {@code key} having a type that does not match the one defined by {@link KeyType}.</li>
+ *  <li>Entity declares property {@code key} having a type that does not match the one defined by {@link KeyType}.
+ *      Additionally, if {@link NoKey} is specified, then it's forbidden to declare property {@code key}.</li>
  * </ol> 
  * 
  * @author TG Team
@@ -39,7 +42,8 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
     private final List<AbstractComposableVerifierPart> verifiers = List.of(
             new KeyTypePresence(),
             new KeyTypeValueMatchesAbstractEntityTypeArgument(),
-            new ChildKeyTypeMatchesParentKeyType());
+            new ChildKeyTypeMatchesParentKeyType(),
+            new DeclaredKeyPropertyTypeMatchesAtKeyTypeValue());
 
     public KeyTypeVerifier(final ProcessingEnvironment procEnv) {
         super(procEnv);
@@ -159,6 +163,51 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
                 }
             }
 
+            return allPassed;
+        }
+    }
+    
+    /**
+     * If an entity declares property {@code key}, then its type must match the key type defined by {@link KeyType}.
+     * Additionally, if {@link NoKey} is specified, then it's forbidden to declare property {@code key}.
+     */
+    private class DeclaredKeyPropertyTypeMatchesAtKeyTypeValue extends AbstractComposableVerifierPart {
+
+        @Override
+        public boolean verify(final RoundEnvironment roundEnv) {
+            boolean allPassed = true;
+
+            final List<EntityElement> entities = roundEnv.getRootElements().stream()
+                    .filter(el -> elementFinder.isTopLevelClass(el))
+                    .map(el -> (TypeElement) el)
+                    .filter(el -> entityFinder.isEntityType(el))
+                    .map(el -> entityFinder.newEntityElement(el))
+                    .toList();
+            
+            for (final EntityElement entity : entities) {
+                final PropertyElement keyProp = entityFinder.findDeclaredProperty(entity, AbstractEntity.KEY);
+                if (keyProp == null) continue;
+
+                final Optional<TypeMirror> maybeKeyType = entityFinder.determineKeyType(entity);
+                // missing @KeyType could mean an abstract entity or an invalid definition, either way this verifier has other responsibilities
+                if (maybeKeyType.isEmpty()) continue;
+                
+                final TypeMirror keyType = maybeKeyType.get();
+                if (elementFinder.isSameType(keyType, NoKey.class)) {
+                    allPassed = false;
+                    this.violatingElements.add(entity);
+                    messager.printMessage(Kind.ERROR, "Entity with NoKey as key type can not declare property \"key\".", keyProp.element());
+                }
+                else {
+                    final TypeMirror keyPropType = keyProp.getType();
+                    if (!typeUtils.isSameType(keyPropType, keyType)) {
+                        allPassed = false;
+                        this.violatingElements.add(entity);
+                        messager.printMessage(Kind.ERROR, "\"key\" property type must be consistent with @KeyType definition.", keyProp.element());
+                    }
+                }
+            }
+            
             return allPassed;
         }
     }
