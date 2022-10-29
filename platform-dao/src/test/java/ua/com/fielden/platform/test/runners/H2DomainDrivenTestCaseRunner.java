@@ -14,6 +14,7 @@ import java.util.stream.Stream;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test.DbCreator;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
+import ua.com.fielden.platform.test.PlatformDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.test.db_creators.H2DbCreator;
 import ua.com.fielden.platform.test_config.ITestContext;
 
@@ -60,7 +61,7 @@ public class H2DomainDrivenTestCaseRunner extends AbstractDomainDrivenTestCaseRu
         @Override
         public Properties mkDbProps(String dbUri) {
             final Properties props = new Properties();
-            props.setProperty("config.domain", "ua.com.fielden.platform.test.PlatformDomainDrivenTestCaseConfiguration");
+            props.setProperty("config.domain", PlatformDomainDrivenTestCaseConfiguration.class.getName());
             props.setProperty("hibernate.dialect", "org.hibernate.dialect.H2Dialect");
             // referential integrity is disabled to enable table truncation and test data re-population out of order
             props.setProperty("hibernate.connection.url", format("jdbc:h2:%s;INIT=SET REFERENTIAL_INTEGRITY FALSE", dbUri));

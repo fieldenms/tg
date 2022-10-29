@@ -31,7 +31,7 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
  * @author TG Team
  *
  */
-@RunWith(H2OrPostgresqlContextSelector.class)
+@RunWith(H2OrPostgreSqlOrSqlServerContextSelector.class)
 public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
 
     public static final String UNIT_TEST_USER = User.system_users.UNIT_TEST_USER.name();
