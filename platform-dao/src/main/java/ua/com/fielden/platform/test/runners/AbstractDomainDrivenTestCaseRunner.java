@@ -63,7 +63,11 @@ public abstract class AbstractDomainDrivenTestCaseRunner extends BlockJUnit4Clas
         super(klass);
         // assert if the provided test case is supported
         if (!AbstractDomainDrivenTestCase.class.isAssignableFrom(klass)) {
-            throw new IllegalArgumentException(format("Test case [%s] should extend [%s].", klass.getName(), AbstractDomainDrivenTestCase.class.getName()));
+            throw new DomainDriventTestException(format("Test case [%s] should extend [%s].", klass.getName(), AbstractDomainDrivenTestCase.class.getName()));
+        }
+       
+        if (dbCreatorType == null) {
+            throw new DomainDriventTestException("DbCreator type was not provided, but is required.");
         }
         
         // databaseUri value should be specified in POM or come from the command line
