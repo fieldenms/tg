@@ -107,6 +107,7 @@ import ua.com.fielden.platform.security.user.UserRole;
 import ua.com.fielden.platform.security.user.UserRoleCo;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntityQueryExecutionTest extends AbstractDaoTestCase {
@@ -1374,7 +1375,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         assertEquals("Incorrect value", "0", values.get(0).get("zero_years").toString());
         assertEquals(BigDecimal.class, values.get(0).get("avgPrice").getClass());
         assertEquals("Incorrect value", 0, ((BigDecimal) values.get(0).get("avgPrice")).compareTo(new BigDecimal("150")));
-        assertEquals("Incorrect value", "66.7", values.get(0).get("third_of_price").toString());
+        assertTrue("Incorrect value", EntityUtils.equalsEx(new BigDecimal("66.7"), values.get(0).get("third_of_price")));
     }
 
     @Test
