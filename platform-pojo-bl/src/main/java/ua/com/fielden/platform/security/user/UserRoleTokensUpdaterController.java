@@ -31,8 +31,8 @@ public class UserRoleTokensUpdaterController implements ICollectionModificationC
     private final IEntityDao<UserRoleTokensUpdater> co$UserRoleTokensUpdater;
 
     public UserRoleTokensUpdaterController(
-            final EntityFactory factory, 
-            final IEntityDao<UserRole> coUserRole, 
+            final EntityFactory factory,
+            final IEntityDao<UserRole> coUserRole,
             final IEntityDao<UserRoleTokensUpdater> co$UserRoleTokensUpdater,
             final ISecurityTokenNodeTransformation tokenTransformation,
             final ISecurityTokenProvider securityTokenProvider) {
@@ -82,7 +82,7 @@ public class UserRoleTokensUpdaterController implements ICollectionModificationC
     }
 
     private static List<SecurityTokenInfo> lineariseToken(final SecurityTokenNode tokenNode, final EntityFactory factory) {
-        final SecurityTokenInfo tokenEntity = factory.newEntity(SecurityTokenInfo.class, null, tokenNode.getToken().getName(), tokenNode.getLongDesc()).setTitle(tokenNode.getShortDesc());
+        final SecurityTokenInfo tokenEntity = factory.newEntity(SecurityTokenInfo.class, null, tokenNode.getToken(), tokenNode.getLongDesc()).setTitle(tokenNode.getShortDesc());
         final List<SecurityTokenInfo> listOfTokens = new ArrayList<>();
         listOfTokens.add(tokenEntity);
         final List<SecurityTokenNode> children = tokenNode.daughters();

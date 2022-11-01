@@ -466,6 +466,9 @@ Polymer({
         }.bind(this);
 
         self._run = (function (event) {
+            //TODO set timer
+            console.time("dialog openening");
+
             console.log(this.shortDesc + ": execute");
 
             const postMasterInfoRetrieve = function () {

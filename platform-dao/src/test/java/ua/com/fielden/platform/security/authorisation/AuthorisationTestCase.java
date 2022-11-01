@@ -1,6 +1,10 @@
 package ua.com.fielden.platform.security.authorisation;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.junit.Before;
 import org.junit.Test;
@@ -24,7 +28,7 @@ public class AuthorisationTestCase extends AbstractDaoTestCase {
     private final String permissiveUsername = "TESTUSER";
     private final String restrictiveUsername = "TESTUSERRESTRICTIVE";
     private final String roleName = "ADMINISTRATION";
-    
+
     @Test
     public void permissive_user_should_be_able_to_delete_fuel_types() {
         final TgFuelType ft = co$(TgFuelType.class).findByKey(fuelType);
@@ -50,22 +54,22 @@ public class AuthorisationTestCase extends AbstractDaoTestCase {
         }
     }
 
-    @Test 
+    @Test
     public void originally_permissive_user_becomes_restrictive_once_its_role_gets_deactivated() {
         final IUserProvider up = getInstance(IUserProvider.class);
         up.setUsername(UNIT_TEST_USER, co$(User.class));
-        
+
         final UserRole role = co$(UserRole.class).findByKey(roleName);
         assertTrue(role.isActive());
-        // let's now deactivate the role 
+        // let's now deactivate the role
         save(role.setActive(false));
-        
-        
+
+
         // switch back to a permissive user and try to performing a "permissive" action
         up.setUsername(permissiveUsername, co$(User.class));
         final TgFuelType ft = co$(TgFuelType.class).findByKey(fuelType);
         assertNotNull(ft);
-        
+
         try {
             co$(TgFuelType.class).delete(ft);
             fail();
@@ -73,7 +77,7 @@ public class AuthorisationTestCase extends AbstractDaoTestCase {
             assertEquals("Permission denied due to token [Delete Fuel Type] restriction.", ex.getMessage());
         }
     }
-    
+
     @Before
     public void setUp() {
         // set permissive user as the current user before each test
@@ -90,9 +94,9 @@ public class AuthorisationTestCase extends AbstractDaoTestCase {
         save(new_(TgPerson.class, "Permissive Person").setUser(coUser.save(new_(User.class, permissiveUsername).setBase(true))));
         save(new_(TgPerson.class, "Restrictive Person").setUser(coUser.save(new_(User.class, restrictiveUsername).setBase(true))));
 
-        
+
         // now create a user role
-        
+
         final UserRole adminRole = save(new_(UserRole.class, roleName, "A role, which has a full access to the the system and should be used only for users who need administrative previligies.").setActive(true));
         // ... and associate it with our user
         final User testUser = co$(User.class).findByKey(permissiveUsername);
@@ -101,7 +105,7 @@ public class AuthorisationTestCase extends AbstractDaoTestCase {
         // now let's reuse our standard logic for associating roles and security tokens, which is the last step in this security setup process
         // please note that in this test case only a top level security token is used
         // in case of sub tokens, a tree -- not just a single node would need to be created
-        final SecurityTokenNode node = SecurityTokenNode.makeTopLevelNode(DeleteFuelTypeToken.class);
+        final SecurityTokenNode node = new SecurityTokenNode(DeleteFuelTypeToken.class.getName(), "Delete Fuel Type", "Controls deletion of fuel types.");
         final SecurityTokenAssociator predicate = new SecurityTokenAssociator(adminRole, co$(SecurityRoleAssociation.class));
         predicate.eval(node);
 

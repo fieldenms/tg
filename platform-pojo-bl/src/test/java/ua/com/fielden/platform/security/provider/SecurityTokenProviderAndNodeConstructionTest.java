@@ -20,30 +20,25 @@ import ua.com.fielden.security.tokens.open_compound_master.OpenUserMasterAction_
 
 /**
  * A test case to ensure correct configuration of security tokens as provided for security tooling (the tree structure).
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class SecurityTokenProviderAndNodeConstructionTest {
 
     @Test
     public void the_default_type_hierarchy_based_association_between_tokens_does_not_have_to_be_followed() {
-        final SecurityTokenNode superNode = new SecurityTokenNode(Top1LevelSecurityToken.class);
+        final SecurityTokenNode superNode = new SecurityTokenNode(Top1LevelSecurityToken.class.getName(), shortDesc(Top1LevelSecurityToken.class), longDesc(Top1LevelSecurityToken.class));
         assertEquals("Incorrect token.", Top1LevelSecurityToken.class, superNode.getToken());
         assertEquals("Incorrect short desc.", shortDesc(Top1LevelSecurityToken.class), superNode.getShortDesc());
         assertEquals("Incorrect long desc.", longDesc(Top1LevelSecurityToken.class), superNode.getLongDesc());
         assertNull("Incorrect super node.", superNode.getSuperTokenNode());
         assertEquals("Incorrect number of sub tokens", 0, superNode.getSubTokenNodes().size());
 
-        try {
-            new SecurityTokenNode(Lower1LevelSecurityToken.class);
-            fail("A sub token node at incorrect state was allowed to be created.");
-        } catch (final Exception e) {
-        }
-
-        final SecurityTokenNode subNode = new SecurityTokenNode(Lower1LevelSecurityToken.class, superNode);
-
-        final SecurityTokenNode subSubNode = new SecurityTokenNode(Top1LevelSecurityToken.class, subNode);
+        final SecurityTokenNode subNode = new SecurityTokenNode(Lower1LevelSecurityToken.class.getName(), shortDesc(Lower1LevelSecurityToken.class), longDesc(Lower1LevelSecurityToken.class));
+        superNode.add(subNode);
+        final SecurityTokenNode subSubNode = new SecurityTokenNode(Top1LevelSecurityToken.class.getName(), shortDesc(Top1LevelSecurityToken.class), longDesc(Top1LevelSecurityToken.class));
+        subNode.add(subSubNode);
 
         assertEquals("Incorrect token.", Lower1LevelSecurityToken.class, subNode.getToken());
         assertEquals("Incorrect short desc.", shortDesc(Lower1LevelSecurityToken.class), subNode.getShortDesc());

@@ -3,7 +3,6 @@ package ua.com.fielden.platform.devdb_support;
 import ua.com.fielden.platform.algorithm.search.ITreeNodePredicate;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
-import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
 import ua.com.fielden.platform.security.user.UserRole;
@@ -11,11 +10,11 @@ import ua.com.fielden.platform.security.user.UserRole;
 /**
  * A predicate, which saves associations between nodes' state as security token and the specified role while traversing the tree. Its primary purpose is to create associations
  * between the specified role and all security tokens.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
-public class SecurityTokenAssociator implements ITreeNodePredicate<Class<? extends ISecurityToken>, SecurityTokenNode> {
+public class SecurityTokenAssociator implements ITreeNodePredicate<String, SecurityTokenNode> {
 
     private final UserRole role;
     private final IEntityDao<SecurityRoleAssociation> controller;

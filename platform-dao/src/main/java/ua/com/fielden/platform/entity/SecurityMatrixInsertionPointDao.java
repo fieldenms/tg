@@ -24,8 +24,8 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.security.provider.ISecurityTokenNodeTransformation;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
 import ua.com.fielden.platform.security.user.SecurityRoleAssociation;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
 import ua.com.fielden.platform.security.user.UserRole;
 
 @EntityType(SecurityMatrixInsertionPoint.class)
@@ -66,7 +66,7 @@ public class SecurityMatrixInsertionPointDao extends CommonEntityDao<SecurityMat
         tokenTreeNode.setParent(parentNode.orElse(null))
                      .setChildren(tokenNode.daughters().stream().map(child -> createTokenNodeEntity(of(tokenTreeNode), child)).collect(toCollection(LinkedHashSet::new)))
                      .setTitle(tokenNode.getShortDesc())
-                     .setKey(tokenNode.getToken().getName())
+                     .setKey(tokenNode.getToken())
                      .setDesc(tokenNode.getLongDesc());
         return tokenTreeNode;
     }

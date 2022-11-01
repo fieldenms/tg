@@ -11,7 +11,6 @@ import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
 import ua.com.fielden.platform.devdb_support.SecurityTokenAssociator;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.TgPerson;
-import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.provider.ISecurityTokenProvider;
 import ua.com.fielden.platform.security.provider.SecurityTokenNode;
 import ua.com.fielden.platform.security.user.IUser;
@@ -37,7 +36,7 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
 
     public static final String UNIT_TEST_USER = User.system_users.UNIT_TEST_USER.name();
     public static final String UNIT_TEST_ROLE = "UNIT_TEST_ROLE";
-    
+
     @Override
     protected List<Class<? extends AbstractEntity<?>>> domainEntityTypes() {
         return PlatformTestDomainTypes.entityTypes;
@@ -49,7 +48,7 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
     @Override
     protected void populateDomain() {
         resetIdGenerator();
-        
+
         final UniversalConstantsForTesting constants = (UniversalConstantsForTesting) getInstance(IUniversalConstants.class);
         constants.setNow(new DateTime());
 
@@ -59,7 +58,7 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
         final User vu = new_(User.class, User.system_users.VIRTUAL_USER.name()).setBase(true).setEmail(User.system_users.VIRTUAL_USER.name() + "@unit-test.software").setActive(true);
         final IUserProvider up = getInstance(IUserProvider.class);
         up.setUser(vu);
-        
+
         final User testUser;
         if (useSavedDataPopulationScript()) {
            testUser = coUser.findUser(UNIT_TEST_USER);
@@ -67,7 +66,7 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
             // some tests require current person, thus, need to persist a person who would be a user at the same time
             testUser = coUser.save(new_(User.class, UNIT_TEST_USER).setBase(true).setEmail(UNIT_TEST_USER + "@unit-test.software").setActive(true));
             save(new_(TgPerson.class, "Person who is a user").setUser(testUser));
-    
+
             // add a test user role
             final UserRole admin = save(new_(UserRole.class, UNIT_TEST_ROLE, "Test role with access to all security tokens.").setActive(true));
             // associate the test role with the test user
@@ -77,7 +76,7 @@ public abstract class AbstractDaoTestCase extends AbstractDomainDrivenTestCase {
             final ISecurityTokenProvider provider = getInstance(ISecurityTokenProvider.class);
             final SortedSet<SecurityTokenNode> topNodes = provider.getTopLevelSecurityTokenNodes();
             final SecurityTokenAssociator predicate = new SecurityTokenAssociator(admin, co$(SecurityRoleAssociation.class));
-            final ISearchAlgorithm<Class<? extends ISecurityToken>, SecurityTokenNode> alg = new BreadthFirstSearch<Class<? extends ISecurityToken>, SecurityTokenNode>();
+            final ISearchAlgorithm<String, SecurityTokenNode> alg = new BreadthFirstSearch<String, SecurityTokenNode>();
             for (final SecurityTokenNode securityNode : topNodes) {
                 alg.search(securityNode, predicate);
             }

@@ -1461,6 +1461,8 @@ Polymer({
                 // focuses dialog view in case if it has recently been opened and re-fitting started (which will be followed by reflow process and scrolling to the top);
                 //  (e.g. in master dialog view it focuses input in error, preferred input or first input -- see 'focusView' in 'tg-entity-master-behavior') 
                 this._focusDialogView();
+                //TODO set timer
+                console.timeEnd("dialog openening")
             }.bind(this), 100);
             this._setIsRunning(false);
         }

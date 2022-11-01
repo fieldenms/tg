@@ -1,17 +1,14 @@
 package ua.com.fielden.platform.security.provider;
 
-import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.isTopLevel;
-import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.longDesc;
-import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.shortDesc;
-
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
 import ua.com.fielden.platform.algorithm.search.ITreeNode;
-import ua.com.fielden.platform.security.ISecurityToken;
 
 /**
  * A node in a tree-like structure for representing security tokens in a hierarchical order. Natural ordering happens according to token's short description.
@@ -19,19 +16,15 @@ import ua.com.fielden.platform.security.ISecurityToken;
  * @author TG Team
  *
  */
-public class SecurityTokenNode implements Comparable<SecurityTokenNode>, ITreeNode<Class<? extends ISecurityToken>> {
+public class SecurityTokenNode implements Comparable<SecurityTokenNode>, ITreeNode<String> {
     /**
      * Security token type represented by this node.
      */
-    private final Class<? extends ISecurityToken> token;
-    /**
-     * A node representing a super token. Can be null is this token is the top level one.
-     */
-    private final SecurityTokenNode superTokenNode;
+    private final String token;
     /**
      * A list of nodes representing direct sub-tokens.
      */
-    private final SortedSet<SecurityTokenNode> subTokenNodes;
+    private final Map<String, SecurityTokenNode> subTokenNodes;
     /**
      * Short security token description.
      */
@@ -42,44 +35,21 @@ public class SecurityTokenNode implements Comparable<SecurityTokenNode>, ITreeNo
     private final String longDesc;
 
     /**
-     * A convenient factory method for creating nodes representing top level security tokens, which is mainly useful for creation of unit tests.
-     *
-     * @param topLevelToken
-     * @return
+     * A node representing a super token. Can be null is this token is the top level one.
      */
-    public static SecurityTokenNode makeTopLevelNode(final Class<? extends ISecurityToken> topLevelToken) {
-        return new SecurityTokenNode(topLevelToken, null);
-    }
+    private SecurityTokenNode superTokenNode;
 
-    /**
+        /**
      * A principle constructor.
      *
      * @param token
      * @param superTokenNode
      */
-    public SecurityTokenNode(final Class<? extends ISecurityToken> token, final SecurityTokenNode superTokenNode) {
-        if (superTokenNode == null && !isTopLevel(token)) {
-            throw new IllegalArgumentException("Security token " + token.getName() + " is not a top level token, but super toke node is not provided.");
-        }
-
-        this.shortDesc = shortDesc(token);
-        this.longDesc = longDesc(token);
+    public SecurityTokenNode(final String token, final String shortDesc, final String longDesc) {
         this.token = token;
-        this.superTokenNode = superTokenNode;
-        this.subTokenNodes = new TreeSet<>();
-
-        if (superTokenNode != null) {
-            superTokenNode.add(this);
-        }
-    }
-
-    /**
-     * A convenient constructor for top level tokens.
-     *
-     * @param token
-     */
-    public SecurityTokenNode(final Class<? extends ISecurityToken> token) {
-        this(token, null);
+        this.shortDesc = shortDesc;
+        this.longDesc = longDesc;
+        this.subTokenNodes = new HashMap<>();
     }
 
     /**
@@ -88,9 +58,21 @@ public class SecurityTokenNode implements Comparable<SecurityTokenNode>, ITreeNo
      * @param subTokenNode
      * @return
      */
-    private SecurityTokenNode add(final SecurityTokenNode subTokenNode) {
-        subTokenNodes.add(subTokenNode);
+    public SecurityTokenNode add(final SecurityTokenNode subTokenNode) {
+        if (subTokenNode.getSuperTokenNode() != null) {
+            subTokenNode.getSuperTokenNode().remove(subTokenNode);
+        }
+        subTokenNodes.put(subTokenNode.getToken(), subTokenNode);
+        subTokenNode.superTokenNode = this;
         return this;
+    }
+
+    public SecurityTokenNode remove(final SecurityTokenNode subTokenNode) {
+        if (subTokenNode.getSuperTokenNode() == this) {
+            subTokenNode.superTokenNode = null;
+            return subTokenNodes.remove(subTokenNode.getToken());
+        }
+        return null;
     }
 
     public String getShortDesc() {
@@ -101,7 +83,7 @@ public class SecurityTokenNode implements Comparable<SecurityTokenNode>, ITreeNo
         return longDesc;
     }
 
-    public Class<? extends ISecurityToken> getToken() {
+    public String getToken() {
         return token;
     }
 
@@ -110,7 +92,11 @@ public class SecurityTokenNode implements Comparable<SecurityTokenNode>, ITreeNo
     }
 
     public SortedSet<SecurityTokenNode> getSubTokenNodes() {
-        return Collections.unmodifiableSortedSet(subTokenNodes);
+        return Collections.unmodifiableSortedSet(new TreeSet<>(subTokenNodes.values()));
+    }
+
+    public SecurityTokenNode getSubTokenNode(final String token) {
+        return subTokenNodes.get(token);
     }
 
     @Override
@@ -134,21 +120,21 @@ public class SecurityTokenNode implements Comparable<SecurityTokenNode>, ITreeNo
     @Override
     public int compareTo(final SecurityTokenNode anotherToken) {
         final int comparedByShortDesc = shortDesc.compareTo(anotherToken.shortDesc);
-        return comparedByShortDesc == 0 ? getToken().getName().compareTo(anotherToken.getToken().getName()) : comparedByShortDesc;
+        return comparedByShortDesc == 0 ? token.compareTo(anotherToken.getToken()) : comparedByShortDesc;
     }
 
     @Override
     public String toString() {
         return shortDesc;
     }
-    
+
     @Override
     public List<SecurityTokenNode> daughters() {
-        return new ArrayList<>(subTokenNodes);
+        return new ArrayList<>(new TreeSet<>(subTokenNodes.values()));
     }
 
     @Override
-    public Class<? extends ISecurityToken> state() {
+    public String state() {
         return token;
     }
 
