@@ -37,7 +37,6 @@ import javax.annotation.processing.Filer;
 import javax.annotation.processing.Generated;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
@@ -54,7 +53,6 @@ import javax.tools.Diagnostic.Kind;
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 
-import com.google.auto.service.AutoService;
 import com.google.common.base.Stopwatch;
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
@@ -90,7 +88,6 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  *
  */
-@AutoService(Processor.class)
 @SupportedAnnotationTypes("*")
 public class MetaModelProcessor extends AbstractProcessor {
 

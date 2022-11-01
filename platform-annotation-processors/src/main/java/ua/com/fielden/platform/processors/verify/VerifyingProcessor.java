@@ -11,7 +11,6 @@ import java.util.concurrent.TimeUnit;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
@@ -19,7 +18,6 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic.Kind;
 
-import com.google.auto.service.AutoService;
 import com.google.common.base.Stopwatch;
 
 import ua.com.fielden.platform.processors.verify.verifiers.KeyTypeVerifier;
@@ -33,7 +31,6 @@ import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
  * 
  * @author TG Team
  */
-@AutoService(Processor.class)
 @SupportedAnnotationTypes("*")
 public class VerifyingProcessor extends AbstractProcessor {
     
