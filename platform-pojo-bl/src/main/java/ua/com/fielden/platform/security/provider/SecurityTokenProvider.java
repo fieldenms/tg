@@ -2,13 +2,12 @@ package ua.com.fielden.platform.security.provider;
 
 import static java.util.Collections.emptySet;
 import static java.util.Optional.ofNullable;
-import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.isSuperTokenOf;
-import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.isTopLevel;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -60,16 +59,16 @@ import ua.com.fielden.platform.utils.CollectionUtil;
  * The result is presented as as a tree-like structure containing all tokens with correctly determined association between them.
  * <p>
  * <b>A fundamental assumption:</b> simple class names uniquely identify security tokens and entities!
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class SecurityTokenProvider implements ISecurityTokenProvider {
     public static final String ERR_DUPLICATE_SECURITY_TOKENS = "Not all security tokens are unique in their simple class name. This is required.";
 
-    /** 
-     * A map between token classes and their names. 
-     * Used as a cache for obtaining class by name. 
+    /**
+     * A map between token classes and their names.
+     * Used as a cache for obtaining class by name.
      */
     private final Map<String, Class<? extends ISecurityToken>> tokenClassesByName = new HashMap<>();
     private final Map<String, Class<? extends ISecurityToken>> tokenClassesBySimpleName = new HashMap<>();
@@ -96,7 +95,7 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
      *
      * @param path -- a path to classes or a jar (requires jar file name too) where security tokens are located.
      * @param packageName -- a package name containing security tokens (sub-packages are traversed automatically).
-     * @param extraTokens -- additional tokens that belong neither to the standard platform ones not to the application specific ones, loaded dynamically "tokens.path". 
+     * @param extraTokens -- additional tokens that belong neither to the standard platform ones not to the application specific ones, loaded dynamically "tokens.path".
      * @param redundantTokens -- tokens to be removed for consideration; in most cases this would only be relevant for some of the platform-level tokens that are not applicable for some applications.
      */
     public SecurityTokenProvider(
@@ -105,6 +104,7 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
             final Set<Class<? extends ISecurityToken>> extraTokens,
             final Set<Class<? extends ISecurityToken>> redundantTokens
     ) {
+        long start = System.currentTimeMillis();
         final Set<Class<? extends ISecurityToken>> platformLevelTokens = CollectionUtil.setOf(
                 User_CanSave_Token.class,
                 User_CanRead_Token.class,
@@ -142,12 +142,19 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         allTokens.addAll(platformLevelTokens);
         allTokens.addAll(extraTokens);
         allTokens.removeAll(redundantTokens);
-
+        long finish = System.currentTimeMillis();
+        long timeElapsed = finish - start;
+        System.out.println("Token List Creation: " + timeElapsed);
+        System.out.println("Number Of Tokens To Load: " + allTokens.size());
+        start = System.currentTimeMillis();
         allTokens.forEach(type -> { tokenClassesByName.put(type.getName(), type); tokenClassesBySimpleName.put(type.getSimpleName(), type); });
         if (tokenClassesByName.size() != tokenClassesBySimpleName.size()) {
             throw new SecurityException(ERR_DUPLICATE_SECURITY_TOKENS);
         }
         topLevelSecurityTokenNodes = buildTokenNodes(allTokens);
+        finish = System.currentTimeMillis();
+        timeElapsed = finish - start;
+        System.out.println("Token map and tree creation: " + timeElapsed);
     }
 
     @Override
@@ -168,48 +175,35 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
     }
 
     private SortedSet<SecurityTokenNode> buildTokenNodes(final Set<Class<? extends ISecurityToken>> allTokens) {
-        final SortedSet<SecurityTokenNode> topTokenNodes = new TreeSet<>();
-        // iterate over all tokens and determine top level tokens
-        // add them to a separate list and remove from a list over which iteration occurs
-        for (final Iterator<Class<? extends ISecurityToken>> iter = allTokens.iterator(); iter.hasNext();) {
-            final Class<? extends ISecurityToken> token = iter.next();
-            if (isTopLevel(token)) {
-                topTokenNodes.add(new SecurityTokenNode(token));
-                iter.remove();
-            }
-        }
-        // iterate over the top token nodes and recursively builds all sub token nodes
-        for (final Iterator<SecurityTokenNode> iter = topTokenNodes.iterator(); iter.hasNext() && !allTokens.isEmpty();) {
-            digg(iter.next(), allTokens); // allTokens is mutated by digg
-        }
+        final Map<Class<? extends ISecurityToken>, SecurityTokenNode> topTokenNodes = new HashMap<>();
 
-        return topTokenNodes;
+        allTokens.forEach(token -> {
+            final List<Class<? extends ISecurityToken>> tokenHierarchy = genHierarchyPath(token);
+            tokenHierarchy.stream().reduce((SecurityTokenNode)null, (tokenNode, tokenClass) -> {
+                SecurityTokenNode nextNode = tokenNode == null ? topTokenNodes.get(tokenClass) : tokenNode.getSubTokenNode(tokenClass);
+                if (nextNode == null) {
+                    nextNode = new SecurityTokenNode(tokenClass, tokenNode);
+                    if (tokenNode == null) {
+                        topTokenNodes.put(tokenClass, nextNode);
+                    }
+                }
+                return nextNode;
+            }, (prev, next) -> next);
+        });
+
+        return new TreeSet<>(topTokenNodes.values());
     }
 
-    /**
-     * Determines and creates token nodes representing sub tokens for the passed in current token node.
-     * 
-     * @param superTokenNode
-     *            -- current token node for which sub tokens are being searched
-     * @param remainingTokens
-     *            -- a list of remaining tokens used for search; all found sub tokens are removed from this list.
-     */
-    private void digg(final SecurityTokenNode superTokenNode, final Set<Class<? extends ISecurityToken>> remainingTokens) {
-        final SortedSet<SecurityTokenNode> toBeRemoved = new TreeSet<>();
-        // find all direct sub tokens of the current super token
-        for (final Iterator<Class<? extends ISecurityToken>> iter = remainingTokens.iterator(); iter.hasNext();) {
-            final Class<? extends ISecurityToken> token = iter.next();
-            if (isSuperTokenOf(superTokenNode.getToken(), token)) {
-                toBeRemoved.add(new SecurityTokenNode(token, superTokenNode));
-                // remove the found sub-token from the list of remaining tokens to reduce the number of items used further in the search
-                iter.remove();
-            }
+    @SuppressWarnings("unchecked")
+    private List<Class<? extends ISecurityToken>> genHierarchyPath(final Class<? extends ISecurityToken> token) {
+        final List<Class<? extends ISecurityToken>> tokenHierarchyList = new ArrayList<>();
+        Class<?> parentNode = token;
+        while (ISecurityToken.class.isAssignableFrom(parentNode)) {
+            tokenHierarchyList.add((Class<? extends ISecurityToken>)parentNode);
+            parentNode = parentNode.getSuperclass();
         }
-
-        // recursively find all sub tokens of just found sub tokens
-        for (final SecurityTokenNode node : toBeRemoved) {
-            digg(node, remainingTokens);
-        }
+        Collections.reverse(tokenHierarchyList);
+        return tokenHierarchyList;
     }
 
 }
