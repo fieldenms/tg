@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.processors.test_utils;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -13,6 +15,8 @@ import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
+import javax.tools.Diagnostic;
+import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaCompiler.CompilationTask;
 import javax.tools.JavaFileManager;
@@ -37,6 +41,7 @@ public final class Compilation {
     private JavaCompiler compiler;
     private JavaFileManager fileManager;
     private Iterable<String> options;
+    private final List<Diagnostic<? extends JavaFileObject>> diagnostics = new ArrayList<>();
 
     /**
      * Only a single annotation processor is allowed to ensure that the processing environment is not shared with other processors, which could lead to unexpected behaviour.
@@ -87,15 +92,24 @@ public final class Compilation {
     }
 
     private boolean compile(final EvaluatingProcessor processor) {
+        final DiagnosticCollector<JavaFileObject> diagnosticListener = new DiagnosticCollector<>();
         final CompilationTask task = compiler.getTask(
                 null, // Writer for additional output from the compiler (null => System.err)                
                 fileManager,
-                null, // diagnostic listener
+                diagnosticListener,
                 options,
                 null, // names of classes to be processed by annotation processing (?)
                 javaSources);
         task.setProcessors(List.of(processor));
-        return task.call();
+        final boolean success = task.call();
+
+        this.diagnostics.addAll(diagnosticListener.getDiagnostics());
+
+        return success;
+    }
+
+    public List<Diagnostic<? extends JavaFileObject>> getDiagnostics() {
+        return Collections.unmodifiableList(diagnostics);
     }
 
     /**
