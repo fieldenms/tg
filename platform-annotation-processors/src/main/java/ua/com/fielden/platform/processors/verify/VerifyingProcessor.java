@@ -27,6 +27,9 @@ import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
 
 /**
  * Annotation processor responsible for verifying source definitions in a domain model.
+ * <p>
+ * The processor itself does not define any specific verification logic. Instead it delegates to implementations of the {@link Verifier} interface,
+ * providing them its own inputs and respective processing/round environments.
  * 
  * @author TG Team
  */

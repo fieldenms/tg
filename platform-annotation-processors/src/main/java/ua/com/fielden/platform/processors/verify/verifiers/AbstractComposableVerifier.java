@@ -11,6 +11,7 @@ import javax.lang.model.element.Element;
 
 /**
  * Abstract representation of a verifier that is composed of other more specific verifiers (also called <i>verifier-part</i>).
+ * @see {@link AbstractComposableVerifierPart}
  * 
  * @author TG Team
  */

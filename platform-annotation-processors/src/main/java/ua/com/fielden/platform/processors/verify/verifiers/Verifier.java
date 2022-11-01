@@ -9,8 +9,8 @@ import ua.com.fielden.platform.processors.verify.VerifyingProcessor;
 
 /**
  * Interface for implementation of domain model verifiers to be used with {@link VerifyingProcessor}.
+ * 
  * @author TG Team
- *
  */
 public interface Verifier {
 
