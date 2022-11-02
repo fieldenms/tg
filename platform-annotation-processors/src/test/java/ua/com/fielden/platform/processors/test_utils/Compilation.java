@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -111,7 +112,7 @@ public final class Compilation {
      */
     public boolean compileAndEvaluatef(final ThrowableConsumer<ProcessingEnvironment> evaluator) throws Throwable {
         final EvaluatingProcessor evaluatingProcessor = new EvaluatingProcessor(evaluator);
-        final boolean success = compile(evaluatingProcessor);
+        final boolean success = doCompile(evaluatingProcessor);
         evaluatingProcessor.throwIfStatementThrew();
         return success;
     }
@@ -126,8 +127,12 @@ public final class Compilation {
     public boolean compileAndEvaluate(final Consumer<ProcessingEnvironment> evaluator) throws Throwable {
         return compileAndEvaluatef((procEnv) -> evaluator.accept(procEnv));
     }
+    
+    public boolean compile() throws Throwable {
+        return compileAndEvaluate((procEnv) -> {});
+    }
 
-    private boolean compile(final EvaluatingProcessor processor) {
+    private boolean doCompile(final EvaluatingProcessor processor) {
         final CompilationTask task = compiler.getTask(
                 null, // Writer for additional output from the compiler (null => System.err)                
                 fileManager,
@@ -146,6 +151,17 @@ public final class Compilation {
 
     public List<Diagnostic<? extends JavaFileObject>> getDiagnostics() {
         return Collections.unmodifiableList(diagnostics);
+    }
+
+    public List<Diagnostic<? extends JavaFileObject>> getErrors() {
+        return diagnostics.stream()
+                .filter(diag -> diag.getKind().equals(Diagnostic.Kind.ERROR))
+                .collect(Collectors.toUnmodifiableList());
+    }
+    
+    /** A convenient method that prints collected diagnostics to {@link System#out}. */
+    public void printDiagnostics() {
+        System.out.println(diagnostics.stream().map(Diagnostic::toString).collect(Collectors.joining("\n")));
     }
 
     /**
