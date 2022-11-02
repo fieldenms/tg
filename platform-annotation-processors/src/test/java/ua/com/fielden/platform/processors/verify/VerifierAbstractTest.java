@@ -27,18 +27,6 @@ import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
 public abstract class VerifierAbstractTest {
     
     /**
-     * A convenient method that replaces 2 repetitive lines of code.
-     * @param compilation
-     * @return
-     * @throws Throwable
-     */
-    protected static boolean compileAndPrintDiagnostics(final Compilation compilation) throws Throwable {
-        final boolean success = compilation.compile();
-        compilation.printDiagnostics();
-        return success;
-    }
-
-    /**
      * Returns a provider of a {@link Verifier} implementation that will be initialized by the {@link VerifyingProcessor} during tests.
      * @return
      */
