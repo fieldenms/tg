@@ -3,10 +3,13 @@ package ua.com.fielden.platform.processors.verify;
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Messager;
@@ -35,6 +38,7 @@ import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
 public class VerifyingProcessor extends AbstractProcessor {
     
     private final String classSimpleName = this.getClass().getSimpleName();
+    private final Set<Function<ProcessingEnvironment, Verifier>> registeredVerifiersProviders;
     private final Set<Verifier> registeredVerifiers = new HashSet<>();
 
     private Messager messager;
@@ -42,6 +46,20 @@ public class VerifyingProcessor extends AbstractProcessor {
     private int roundNumber;
     /** Round-cumulative indicator of whether all verifiers were passed. */
     private boolean passed;
+
+    public VerifyingProcessor() {
+        // specify default verifiers here
+        this.registeredVerifiersProviders = Set.of((procEnv) -> new KeyTypeVerifier(procEnv));
+    }
+
+    /**
+     * Creates an instance of this processor that will use the specified verifiers.
+     * This constructor is required for unit testing of verifiers.
+     * @param verifierProviders
+     */
+    VerifyingProcessor(final Collection<Function<ProcessingEnvironment, Verifier>> verifierProviders) {
+        this.registeredVerifiersProviders = verifierProviders.stream().collect(Collectors.toUnmodifiableSet());
+    }
     
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
@@ -50,8 +68,9 @@ public class VerifyingProcessor extends AbstractProcessor {
         this.passed = true;
         this.messager = processingEnv.getMessager();
         this.options = processingEnv.getOptions();
-        // TODO declarative dependency injection
-        registeredVerifiers.add(new KeyTypeVerifier(processingEnv));
+
+        // instantiate registered verifiers
+        registeredVerifiers.addAll(registeredVerifiersProviders.stream().map(p -> p.apply(processingEnv)).toList());
 
         messager.printMessage(Kind.NOTE, format("%s initialized.", classSimpleName));
         if (!options.isEmpty()) {
