@@ -37,7 +37,7 @@ import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
  */
 public class KeyTypeVerifier extends AbstractComposableVerifier {
 
-    private static final Class<KeyType> AT_KEY_TYPE_CLASS = KeyType.class;
+    static final Class<KeyType> AT_KEY_TYPE_CLASS = KeyType.class;
 
     private final List<AbstractComposableVerifierPart> verifiers = List.of(
             new KeyTypePresence(),
@@ -59,7 +59,9 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
      * 
      * @author TG Team
      */
-    private class KeyTypePresence extends AbstractComposableVerifierPart {
+    class KeyTypePresence extends AbstractComposableVerifierPart {
+        static final String ENTITY_DEFINITION_IS_MISSING_KEY_TYPE = "Entity definition is missing @%s.".formatted(
+                AT_KEY_TYPE_CLASS.getSimpleName());
 
         public boolean verify(final RoundEnvironment roundEnv) {
             final List<EntityElement> entitiesMissingKeyType = roundEnv.getRootElements().stream()
@@ -74,7 +76,7 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
                     .toList();
 
             entitiesMissingKeyType.forEach(entity -> messager.printMessage(Kind.ERROR, 
-                    "Entity definition is missing @%s.".formatted(AT_KEY_TYPE_CLASS.getSimpleName()), entity.element()));
+                    ENTITY_DEFINITION_IS_MISSING_KEY_TYPE, entity.element()));
             violatingElements.addAll(entitiesMissingKeyType);
 
             return entitiesMissingKeyType.isEmpty();
