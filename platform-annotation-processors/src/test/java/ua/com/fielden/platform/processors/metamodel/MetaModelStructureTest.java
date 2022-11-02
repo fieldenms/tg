@@ -27,7 +27,6 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
@@ -36,9 +35,9 @@ import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
 import ua.com.fielden.platform.processors.test_entities.EntityWithDescTitle;
-import ua.com.fielden.platform.processors.test_entities.EntityWithKeyTypeOfEntityType;
 import ua.com.fielden.platform.processors.test_entities.EntityWithEntityTypedAndOrdinaryProps;
 import ua.com.fielden.platform.processors.test_entities.EntityWithKeyTypeNoKey;
+import ua.com.fielden.platform.processors.test_entities.EntityWithKeyTypeOfEntityType;
 import ua.com.fielden.platform.processors.test_entities.EntityWithOrdinaryProps;
 import ua.com.fielden.platform.processors.test_entities.EntityWithoutDescTitle;
 import ua.com.fielden.platform.processors.test_entities.NonPersistentButDomainEntity;
@@ -46,7 +45,7 @@ import ua.com.fielden.platform.processors.test_entities.NonPersistentButWithMeta
 import ua.com.fielden.platform.processors.test_entities.PersistentEntity;
 import ua.com.fielden.platform.processors.test_entities.SubEntity;
 import ua.com.fielden.platform.processors.test_entities.SuperEntity;
-import ua.com.fielden.platform.processors.test_utils.CompilationRule;
+import ua.com.fielden.platform.processors.test_utils.ProcessingRule;
 import ua.com.fielden.platform.processors.test_utils.exceptions.TestCaseConfigException;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 
@@ -61,7 +60,7 @@ public class MetaModelStructureTest {
     public static final String TEST_META_MODELS_PKG_NAME = TEST_ENTITIES_PKG_NAME + MetaModelConstants.META_MODEL_PKG_NAME_SUFFIX;
 
     @ClassRule
-    public static CompilationRule rule = new CompilationRule(List.of(), new MetaModelProcessor());
+    public static ProcessingRule rule = new ProcessingRule(List.of(), new MetaModelProcessor());
     private static ElementFinder elementFinder;
     private static EntityFinder entityFinder;
     private static MetaModelFinder metaModelFinder;
