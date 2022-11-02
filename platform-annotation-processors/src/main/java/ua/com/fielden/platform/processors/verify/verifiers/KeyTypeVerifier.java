@@ -86,7 +86,11 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
     /**
      * The type of key as defined by {@link KeyType} must match the one specified as the type argument to {@link AbstractEntity}.
      */
-    private class KeyTypeValueMatchesAbstractEntityTypeArgument extends AbstractComposableVerifierPart {
+    class KeyTypeValueMatchesAbstractEntityTypeArgument extends AbstractComposableVerifierPart {
+        static final String ABSTRACT_ENTITY_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE = 
+                "%s must be parameterized with entity key type.".formatted(AbstractEntity.class.getSimpleName());
+        static final String KEY_TYPE_MUST_MATCH_THE_TYPE_ARGUMENT_TO_ABSTRACT_ENTITY =
+                "Key type must match the type argument to %s.".formatted(AbstractEntity.class.getSimpleName());
 
         public boolean verify(final RoundEnvironment roundEnv) {
             boolean allPassed = true;
@@ -107,17 +111,14 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
                         violatingElements.add(el);
                         allPassed = false;
 
-                        messager.printMessage(Kind.ERROR, 
-                                "%s must be parameterized with entity key type.".formatted(AbstractEntity.class.getSimpleName()),
-                                el);
+                        messager.printMessage(Kind.ERROR, ABSTRACT_ENTITY_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE, el);
                     }
                     else if (!typeUtils.isSameType(typeArgs.get(0), keyType)) {
                         violatingElements.add(el);
                         allPassed = false;
 
                         // report error
-                        printMessageWithAnnotationHint(Kind.ERROR,
-                                "Key type must match the type argument to %s.".formatted(AbstractEntity.class.getSimpleName()),
+                        printMessageWithAnnotationHint(Kind.ERROR, KEY_TYPE_MUST_MATCH_THE_TYPE_ARGUMENT_TO_ABSTRACT_ENTITY,
                                 el, AT_KEY_TYPE_CLASS, "value");
                     }
                 }

@@ -82,4 +82,36 @@ public class KeyTypeVerifierTest extends VerifierAbstractTest {
     }
     // <<<<<<<<<<<<<<<<<<<< 1. @KeyType presence <<<<<<<<<<<<<<<<<<<<
 
+    // >>>>>>>>>>>>>>>>>>>> 2. @KeyType value and AbstractEntity parameterization >>>>>>>>>>>>>>>>>>>>
+    @Test
+    public void value_of_KeyType_and_type_argument_of_AbstractEntity_must_match() throws Throwable {
+        final TypeSpec superEntity = TypeSpec.classBuilder("EntityMismatchKeyTypeAndAbstractEntityTypeArg")
+                .addAnnotation(buildKeyType(Double.class))
+                .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                .build();
+
+        final Compilation compilation = buildCompilation(superEntity);
+        final boolean success = compileAndPrintDiagnostics(compilation);
+        assertFalse("Compilation should have failed.", success);
+
+        assertErrorReported(compilation,
+                KeyTypeVerifier.KeyTypeValueMatchesAbstractEntityTypeArgument.KEY_TYPE_MUST_MATCH_THE_TYPE_ARGUMENT_TO_ABSTRACT_ENTITY);
+    }
+
+    @Test
+    public void AbstractEntity_must_be_parameterized() throws Throwable {
+         final TypeSpec superEntity = TypeSpec.classBuilder("EntityThatExtendsRawAbstractEntity")
+                .addAnnotation(buildKeyType(String.class))
+                .superclass(ClassName.get(AbstractEntity.class))
+                .build();
+
+        final Compilation compilation = buildCompilation(superEntity);
+        final boolean success = compileAndPrintDiagnostics(compilation);
+        assertFalse("Compilation should have failed.", success);
+
+        assertErrorReported(compilation,
+                KeyTypeVerifier.KeyTypeValueMatchesAbstractEntityTypeArgument.ABSTRACT_ENTITY_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE);
+    }
+    // <<<<<<<<<<<<<<<<<<<< 2. @KeyType value and AbstractEntity parameterization <<<<<<<<<<<<<<<<<<<<
+
 }
