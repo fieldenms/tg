@@ -1,18 +1,15 @@
 package ua.com.fielden.platform.processors.verify.verifiers;
 
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.processors.verify.verifiers.KeyTypeVerifier.AT_KEY_TYPE_CLASS;
+import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.assertErrorReported;
+import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.compileAndPrintDiagnostics;
 
-import java.util.List;
-import java.util.Locale;
 import java.util.function.Function;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Modifier;
-import javax.tools.Diagnostic;
-import javax.tools.JavaFileObject;
 
 import org.junit.Test;
 
@@ -37,7 +34,8 @@ public class KeyTypeVerifierTest extends VerifierAbstractTest {
     protected Function<ProcessingEnvironment, Verifier> verifierProvider() {
         return (procEnv) -> new KeyTypeVerifier(procEnv);
     }
-
+    
+    // >>>>>>>>>>>>>>>>>>>> 1. @KeyType presence >>>>>>>>>>>>>>>>>>>>
     @Test
     public void entity_missing_KeyType_does_not_pass_verification() throws Throwable {
         // build an entity
@@ -49,10 +47,7 @@ public class KeyTypeVerifierTest extends VerifierAbstractTest {
         final boolean success = compileAndPrintDiagnostics(compilation);
         assertFalse("Compilation should have failed.", success);
 
-        final List<Diagnostic<? extends JavaFileObject>> errors = compilation.getErrors();
-        assertEquals("Incorrect number of errors reported.", 1, errors.size());
-        assertEquals("Incorrect error message.",
-                KeyTypeVerifier.KeyTypePresence.ENTITY_DEFINITION_IS_MISSING_KEY_TYPE, errors.get(0).getMessage(Locale.getDefault()));
+        assertErrorReported(compilation, KeyTypeVerifier.KeyTypePresence.ENTITY_DEFINITION_IS_MISSING_KEY_TYPE);
     }
     
     @Test
@@ -85,5 +80,6 @@ public class KeyTypeVerifierTest extends VerifierAbstractTest {
         final boolean success = compileAndPrintDiagnostics(compilation);
         assertTrue("Compilation should have succeeded.", success);
     }
+    // <<<<<<<<<<<<<<<<<<<< 1. @KeyType presence <<<<<<<<<<<<<<<<<<<<
 
 }
