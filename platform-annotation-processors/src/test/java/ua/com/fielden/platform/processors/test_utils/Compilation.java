@@ -1,11 +1,10 @@
 package ua.com.fielden.platform.processors.test_utils;
 
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 import java.util.Set;
 import java.util.function.Consumer;
 
@@ -30,17 +29,25 @@ import ua.com.fielden.platform.types.try_wrapper.ThrowableConsumer;
 /**
  * An abstraction for compiling java sources that is based on {@link CompilationTask} with the primary purpose of evaluating additional statements in the annotation processing environment.
  * <p>
+ * In order to obtain independent results it is recommended to use a fresh instance for every invokation of a method responsible for compilation.
+ * In other words, compiling more than once with the same instance of this class does not guarantee the result will be independent of the
+ * previous compilation. 
+ * <p>
  * Makes a convenient annotation processor testing utility.
  * 
  * @author TG Team
- *
  */
 public final class Compilation {
+    /** Java compiler option to perform only annotation processing (without subsequent compilation) */
+    public static final String OPTION_PROC_ONLY = "-proc:only";
+
     private Collection<? extends JavaFileObject> javaSources;
     private Processor processor;
     private JavaCompiler compiler;
     private JavaFileManager fileManager;
     private Iterable<String> options;
+    private DiagnosticCollector<JavaFileObject> diagnosticListener = new DiagnosticCollector<>();
+
     private final List<Diagnostic<? extends JavaFileObject>> diagnostics = new ArrayList<>();
 
     /**
@@ -52,16 +59,45 @@ public final class Compilation {
      * @param fileManager
      * @param options
      */
-    public Compilation(final Collection<? extends JavaFileObject> javaSources, final Processor processor, final JavaCompiler compiler, final JavaFileManager fileManager, final Iterable<String> options) {
+    public Compilation(final Collection<? extends JavaFileObject> javaSources) {
         this.javaSources = javaSources;
-        this.processor = processor;
-        this.compiler = compiler == null ? ToolProvider.getSystemJavaCompiler() : compiler;
-        this.fileManager = fileManager == null ? this.compiler.getStandardFileManager(null, Locale.getDefault(), StandardCharsets.UTF_8) : fileManager;
-        this.options = options;
+        this.compiler = ToolProvider.getSystemJavaCompiler();
+        this.fileManager = compiler.getStandardFileManager(null, null, null);
     }
 
-    public Compilation(final Collection<? extends JavaFileObject> javaSources) {
-        this(javaSources, null, null, null, null);
+    public Compilation setJavaSources(final Collection<? extends JavaFileObject> javaSources) {
+        this.javaSources = javaSources;
+        return this;
+    }
+
+    public Compilation setProcessor(final Processor processor) {
+        this.processor = processor;
+        return this;
+    }
+
+    public Compilation setCompiler(final JavaCompiler compiler) {
+        this.compiler = compiler;
+        return this;
+    }
+
+    public Compilation setFileManager(final JavaFileManager fileManager) {
+        this.fileManager = fileManager;
+        return this;
+    }
+
+    public Compilation setOptions(final Iterable<String> options) {
+        this.options = options;
+        return this;
+    }
+    
+    public Compilation setOptions(final String... options) {
+        this.options = Arrays.asList(options);
+        return this;
+    }
+
+    public Compilation setDiagnosticListener(final DiagnosticCollector<JavaFileObject> diagnosticListener) {
+        this.diagnosticListener = diagnosticListener;
+        return this;
     }
 
     /**
@@ -92,7 +128,6 @@ public final class Compilation {
     }
 
     private boolean compile(final EvaluatingProcessor processor) {
-        final DiagnosticCollector<JavaFileObject> diagnosticListener = new DiagnosticCollector<>();
         final CompilationTask task = compiler.getTask(
                 null, // Writer for additional output from the compiler (null => System.err)                
                 fileManager,
@@ -103,7 +138,8 @@ public final class Compilation {
         task.setProcessors(List.of(processor));
         final boolean success = task.call();
 
-        this.diagnostics.addAll(diagnosticListener.getDiagnostics());
+        diagnostics.clear();
+        diagnostics.addAll(diagnosticListener.getDiagnostics());
 
         return success;
     }

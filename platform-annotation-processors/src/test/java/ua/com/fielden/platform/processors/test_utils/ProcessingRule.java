@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.processors.test_utils;
 
+import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
+
 import java.util.Collection;
 import java.util.List;
 
@@ -70,8 +72,13 @@ public class ProcessingRule implements TestRule {
             public void evaluate() throws Throwable {
                 final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
                 final JavaFileManager fileManager = new InMemoryJavaFileManager(compiler.getStandardFileManager(null, null, null));
-                final List<String> options = List.of("-proc:only");
-                final Compilation compilation = new Compilation(javaSources, processor, compiler, fileManager, options);
+                final Compilation compilation = new Compilation(javaSources)
+                        .setProcessor(processor)
+                        .setCompiler(compiler)
+                        .setFileManager(fileManager)
+                        // perform only annotation processing without subsequent compilation
+                        .setOptions(OPTION_PROC_ONLY);
+
                 compilation.compileAndEvaluatef((procEnv) -> {
                     elements = procEnv.getElementUtils();
                     types = procEnv.getTypeUtils();
