@@ -8,6 +8,9 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.DbVersion.H2;
+import static ua.com.fielden.platform.entity.query.DbVersion.MSSQL;
+import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
@@ -37,6 +40,7 @@ import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperator0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
@@ -1704,13 +1708,26 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void test_subqueries_in_yield_stmt3() {
-        final PrimitiveResultQueryModel sumPriceModel = select(TgVehicle.class).yield().sumOf().prop("price.amount").modelAsPrimitive();
-        final PrimitiveResultQueryModel avgPriceModel = select(TgVehicle.class).yield().sumOf().model(sumPriceModel).modelAsPrimitive();
-        final EntityResultQueryModel<TgVehicle> query = select(TgVehicle.class).where().beginExpr().model(avgPriceModel).add().prop("price.amount").endExpr().ge().val(10).model();
-        final List<TgVehicle> vehicles = coVehicle.getAllEntities(from(query).with(orderBy().prop("key").asc().model()).model());
-        assertEquals("Incorrect key", "CAR1", vehicles.get(0).getKey());
-        assertEquals("Incorrect key", "CAR2", vehicles.get(1).getKey());
+    public void execution_of_aggregated_functions_on_the_correlated_scalar_subquery_succeeds_under_postgresql_and_h2() {
+        if (getDbCreator().dbVersion() == H2 || getDbCreator().dbVersion() == POSTGRESQL) {
+            final PrimitiveResultQueryModel vehiclesCountPerStationModel = select(TgVehicle.class).where().prop("station").eq().extProp("id").yield().countAll().modelAsPrimitive();
+            final AggregatedResultQueryModel maxVehiclesCountStationModel = select(TgOrgUnit5.class).yield().maxOf().model(vehiclesCountPerStationModel).as("maxVehiclesCountPerStation").modelAsAggregate();
+            final EntityAggregates result = aggregateDao.getEntity(from(maxVehiclesCountStationModel).model());
+            assertEquals("Incorrect value of max vehicles count", "1", result.get("maxVehiclesCountPerStation").toString());
+        }
+    }
+
+    @Test
+    public void execution_of_aggregated_functions_on_the_correlated_scalar_subquery_fails_under_mssql() {
+        if (getDbCreator().dbVersion() == MSSQL) {
+            final PrimitiveResultQueryModel vehiclesCountPerStationModel = select(TgVehicle.class).where().prop("station").eq().extProp("id").yield().countAll().modelAsPrimitive();
+            final AggregatedResultQueryModel maxVehiclesCountStationModel = select(TgOrgUnit5.class).yield().maxOf().model(vehiclesCountPerStationModel).as("maxVehiclesCountPerStation").modelAsAggregate();
+            try {
+                aggregateDao.getEntity(from(maxVehiclesCountStationModel).model());
+                fail("Should have failed due to the current limitation of MSSQL -- {Error 130: Cannot perform an aggregate function on an expression containing an aggregate or a subquery.}. ");
+            } catch (final Exception e) {
+            }
+        }
     }
 
     @Test
