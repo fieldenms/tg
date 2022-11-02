@@ -104,7 +104,6 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
             final Set<Class<? extends ISecurityToken>> extraTokens,
             final Set<Class<? extends ISecurityToken>> redundantTokens
     ) {
-        long start = System.currentTimeMillis();
         final Set<Class<? extends ISecurityToken>> platformLevelTokens = CollectionUtil.setOf(
                 User_CanSave_Token.class,
                 User_CanRead_Token.class,
@@ -142,19 +141,11 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         allTokens.addAll(platformLevelTokens);
         allTokens.addAll(extraTokens);
         allTokens.removeAll(redundantTokens);
-        long finish = System.currentTimeMillis();
-        long timeElapsed = finish - start;
-        System.out.println("Token List Creation: " + timeElapsed);
-        System.out.println("Number Of Tokens To Load: " + allTokens.size());
-        start = System.currentTimeMillis();
         allTokens.forEach(type -> { tokenClassesByName.put(type.getName(), type); tokenClassesBySimpleName.put(type.getSimpleName(), type); });
         if (tokenClassesByName.size() != tokenClassesBySimpleName.size()) {
             throw new SecurityException(ERR_DUPLICATE_SECURITY_TOKENS);
         }
         topLevelSecurityTokenNodes = buildTokenNodes(allTokens);
-        finish = System.currentTimeMillis();
-        timeElapsed = finish - start;
-        System.out.println("Token map and tree creation: " + timeElapsed);
     }
 
     @Override
@@ -178,11 +169,16 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         final Map<Class<? extends ISecurityToken>, SecurityTokenNode> topTokenNodes = new HashMap<>();
 
         allTokens.forEach(token -> {
+            //First get list of super classes then for each element create node if it doesn't exists in hierarchy of SecurityTokenNode and add it to hierarchy
             final List<Class<? extends ISecurityToken>> tokenHierarchy = genHierarchyPath(token);
             tokenHierarchy.stream().reduce((SecurityTokenNode)null, (tokenNode, tokenClass) -> {
+                //Token node is equal to zero if tokenClass is top most that implements ISecurityToken otherwise token node was created for super class of tokenClass.
                 SecurityTokenNode nextNode = tokenNode == null ? topTokenNodes.get(tokenClass) : tokenNode.getSubTokenNode(tokenClass);
+                //If there are no next token node for token class then create new one and it to hierarchy as sub node for current token or as top most node.
                 if (nextNode == null) {
+                    //token of next node is sub class of token of tokenNode
                     nextNode = new SecurityTokenNode(tokenClass, tokenNode);
+                    //Next token is top most
                     if (tokenNode == null) {
                         topTokenNodes.put(tokenClass, nextNode);
                     }
@@ -194,6 +190,12 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         return new TreeSet<>(topTokenNodes.values());
     }
 
+    /**
+     * Linearises the class hierarchy of specified token starting from class that directly implements ISecurityToken to the class specified as token.
+     *
+     * @param token
+     * @return
+     */
     @SuppressWarnings("unchecked")
     private List<Class<? extends ISecurityToken>> genHierarchyPath(final Class<? extends ISecurityToken> token) {
         final List<Class<? extends ISecurityToken>> tokenHierarchyList = new ArrayList<>();
