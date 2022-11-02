@@ -19,6 +19,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -1837,14 +1838,16 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     @Test
     public void test_case_when_expression_in_summary_property_when_condition_is_satisfied() {
         final EntityResultQueryModel<TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries> qry = select(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class).model();
-        final TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries summaryEntity = coEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.getEntity(from(qry).with(fetchOnly(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class).with("costPerKm").without("id").without("version")).model());
+        final TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries summaryEntity = coEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.getEntity(
+                from(qry).with(fetchNone(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class).with("costPerKm")).model());
         assertEquals(new BigDecimal("1"), summaryEntity.getCostPerKm());
     }
     
     @Test
     public void test_case_when_expression_in_summary_property_when_condition_is_not_satisfied() {
         final EntityResultQueryModel<TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries> qry = select(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class).where().prop("kms").eq().val(0).model();
-        final TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries summaryEntity = coEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.getEntity(from(qry).with(fetchOnly(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class).with("costPerKm").without("id").without("version")).model());
+        final TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries summaryEntity = coEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.getEntity(
+                from(qry).with(fetchNone(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class).with("costPerKm")).model());
         assertNull(summaryEntity.getCostPerKm());
     }
 
