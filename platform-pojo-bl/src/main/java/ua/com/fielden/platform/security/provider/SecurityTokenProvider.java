@@ -165,20 +165,31 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         return ofNullable(classBySimpleName != null ? classBySimpleName : (Class<T>) tokenClassesByName.get(tokenClassSimpleName));
     }
 
-    private SortedSet<SecurityTokenNode> buildTokenNodes(final Set<Class<? extends ISecurityToken>> allTokens) {
+    /**
+     * Transforms a set of security tokens into a hierarchy of {@link SecurityTokenNode} nodes.
+     * <p>
+     * The result is a forest of trees (i.e., multiple trees), ordered according to the comparator, implemented by {@link SecurityTokenNode}.
+     * Roots for each trees represent one of the top most security tokens.
+     * 
+     * @param allTokens
+     * @return
+     */
+    private static SortedSet<SecurityTokenNode> buildTokenNodes(final Set<Class<? extends ISecurityToken>> allTokens) {
         final Map<Class<? extends ISecurityToken>, SecurityTokenNode> topTokenNodes = new HashMap<>();
 
         allTokens.forEach(token -> {
-            //First get list of super classes then for each element create node if it doesn't exists in hierarchy of SecurityTokenNode and add it to hierarchy
+            // First get a list of super classes and then for each such class that doesn't exist in the hierarchy of SecurityTokenNodes, create a node and add it to the hierarchy.
             final List<Class<? extends ISecurityToken>> tokenHierarchy = genHierarchyPath(token);
-            tokenHierarchy.stream().reduce((SecurityTokenNode)null, (tokenNode, tokenClass) -> {
-                //Token node is equal to zero if tokenClass is top most that implements ISecurityToken otherwise token node was created for super class of tokenClass.
+            tokenHierarchy.stream().reduce((SecurityTokenNode) null, (tokenNode, tokenClass) -> {
+                // Argument tokenNode can only be null if tokenClass is the top most class, implementing ISecurityToken.
+                // Otherwise tokenNode was created for a super class of tokenClass.
                 SecurityTokenNode nextNode = tokenNode == null ? topTokenNodes.get(tokenClass) : tokenNode.getSubTokenNode(tokenClass);
-                //If there are no next token node for token class then create new one and it to hierarchy as sub node for current token or as top most node.
+                // If there is no next token node for tokenClass then create a new one, and
+                // add it to the hierarchy as a sub-node of tokenNode or, if tokenNode is null, nextNode becomes top most node.
                 if (nextNode == null) {
-                    //token of next node is sub class of token of tokenNode
+                    // a token for the next node is a sub class of the token represented by tokenNode
                     nextNode = new SecurityTokenNode(tokenClass, tokenNode);
-                    //Next token is top most
+                    // Is next token the top most?
                     if (tokenNode == null) {
                         topTokenNodes.put(tokenClass, nextNode);
                     }
@@ -197,11 +208,11 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
      * @return
      */
     @SuppressWarnings("unchecked")
-    private List<Class<? extends ISecurityToken>> genHierarchyPath(final Class<? extends ISecurityToken> token) {
+    private static List<Class<? extends ISecurityToken>> genHierarchyPath(final Class<? extends ISecurityToken> token) {
         final List<Class<? extends ISecurityToken>> tokenHierarchyList = new ArrayList<>();
         Class<?> parentNode = token;
         while (ISecurityToken.class.isAssignableFrom(parentNode)) {
-            tokenHierarchyList.add((Class<? extends ISecurityToken>)parentNode);
+            tokenHierarchyList.add((Class<? extends ISecurityToken>) parentNode);
             parentNode = parentNode.getSuperclass();
         }
         Collections.reverse(tokenHierarchyList);
