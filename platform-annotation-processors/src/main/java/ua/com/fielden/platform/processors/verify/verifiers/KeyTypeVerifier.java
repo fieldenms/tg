@@ -133,7 +133,10 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
      * 
      * @author TG Team
      */
-    private class ChildKeyTypeMatchesParentKeyType extends AbstractComposableVerifierPart {
+    class ChildKeyTypeMatchesParentKeyType extends AbstractComposableVerifierPart {
+        static String keyTypeMustMatchTheSupertypesKeyType(final String supertypeSimpleName) {
+            return "Key type must match the supertype's (%s) key type.".formatted(supertypeSimpleName);
+        }
 
         public boolean verify(final RoundEnvironment roundEnv) {
             boolean allPassed = true;
@@ -160,8 +163,7 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
                     allPassed = false;
 
                     // report error
-                    printMessageWithAnnotationHint(Kind.ERROR,
-                            "Key type must match the supertype's (%s) key type.".formatted(parent.getSimpleName()),
+                    printMessageWithAnnotationHint(Kind.ERROR, keyTypeMustMatchTheSupertypesKeyType(parent.getSimpleName().toString()),
                             entity.element(), AT_KEY_TYPE_CLASS, "value");
                 }
             }

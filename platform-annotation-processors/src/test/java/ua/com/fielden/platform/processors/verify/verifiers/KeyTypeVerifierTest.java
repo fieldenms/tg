@@ -114,4 +114,27 @@ public class KeyTypeVerifierTest extends VerifierAbstractTest {
     }
     // <<<<<<<<<<<<<<<<<<<< 2. @KeyType value and AbstractEntity parameterization <<<<<<<<<<<<<<<<<<<<
 
+    // >>>>>>>>>>>>>>>>>>>> 3. Declaration of @KeyType by a child entity >>>>>>>>>>>>>>>>>>>>
+    @Test
+    public void KeyType_declared_by_child_entity_must_match_KeyType_declared_by_its_supertype() throws Throwable {
+         // build a supertype entity
+        final TypeSpec superEntity = TypeSpec.classBuilder("EntityWithKeyType")
+                .addAnnotation(buildKeyType(String.class))
+                .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                .build();
+        // build a subtype entity
+        final TypeSpec subEntity = TypeSpec.classBuilder("SubEntityWithoutKeyType")
+                // specify a different key type
+                .addAnnotation(buildKeyType(Double.class))
+                // leave the package name empty
+                .superclass(ClassName.get("", superEntity.name))
+                .build();
+
+        final Compilation compilation = buildCompilation(superEntity, subEntity);
+        final boolean success = compileAndPrintDiagnostics(compilation);
+        assertFalse("Compilation should have failed.", success);
+        assertErrorReported(compilation, KeyTypeVerifier.ChildKeyTypeMatchesParentKeyType.keyTypeMustMatchTheSupertypesKeyType(superEntity.name));
+    }
+    // <<<<<<<<<<<<<<<<<<<< 3. Declaration of @KeyType by a child entity <<<<<<<<<<<<<<<<<<<<
+
 }
