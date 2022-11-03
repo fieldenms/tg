@@ -176,7 +176,16 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         return ofNullable(classBySimpleName != null ? classBySimpleName : (Class<T>) tokenClassesByName.get(tokenClassSimpleName));
     }
 
-    private SortedSet<SecurityTokenNode> buildTokenNodes(final Set<Class<? extends ISecurityToken>> allTokens) {
+    /**
+     * Transforms a set of security tokens into a hierarchy of {@link SecurityTokenNode} nodes.
+     * <p>
+     * The result is a forest of trees (i.e., multiple trees), ordered according to the comparator, implemented by {@link SecurityTokenNode}.
+     * Roots for each trees represent one of the top most security tokens.
+     *
+     * @param allTokens
+     * @return
+     */
+    private static SortedSet<SecurityTokenNode> buildTokenNodes(final Set<Class<? extends ISecurityToken>> allTokens) {
         final Map<Class<? extends ISecurityToken>, SecurityTokenNode> topTokenNodes = new HashMap<>();
 
         allTokens.forEach(token -> {
@@ -198,12 +207,18 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         return new TreeSet<>(topTokenNodes.values());
     }
 
+    /**
+     * Linearises the class hierarchy of specified token starting from class that directly implements ISecurityToken to the class specified as token.
+     *
+     * @param token
+     * @return
+     */
     @SuppressWarnings("unchecked")
-    private List<Class<? extends ISecurityToken>> genHierarchyPath(final Class<? extends ISecurityToken> token) {
+    private static List<Class<? extends ISecurityToken>> genHierarchyPath(final Class<? extends ISecurityToken> token) {
         final List<Class<? extends ISecurityToken>> tokenHierarchyList = new ArrayList<>();
         Class<?> parentNode = token;
         while (ISecurityToken.class.isAssignableFrom(parentNode)) {
-            tokenHierarchyList.add((Class<? extends ISecurityToken>)parentNode);
+            tokenHierarchyList.add((Class<? extends ISecurityToken>) parentNode);
             parentNode = parentNode.getSuperclass();
         }
         Collections.reverse(tokenHierarchyList);
