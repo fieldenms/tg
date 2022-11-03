@@ -18,8 +18,8 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
-import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -41,7 +41,6 @@ import ua.com.fielden.platform.dao.EntityWithMoneyDao;
 import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IComparisonOperator0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
@@ -59,6 +58,7 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
+import ua.com.fielden.platform.sample.domain.ITeAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.ITgAuthor;
 import ua.com.fielden.platform.sample.domain.ITgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.ITgBogie;
@@ -76,6 +76,10 @@ import ua.com.fielden.platform.sample.domain.ITgVehicleModel;
 import ua.com.fielden.platform.sample.domain.ITgWagon;
 import ua.com.fielden.platform.sample.domain.ITgWagonSlot;
 import ua.com.fielden.platform.sample.domain.ITgWorkshop;
+import ua.com.fielden.platform.sample.domain.TeAverageFuelUsage;
+import ua.com.fielden.platform.sample.domain.TeFuelUsageByType;
+import ua.com.fielden.platform.sample.domain.TeFuelUsageByTypeCo;
+import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAuthorship;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
@@ -92,6 +96,8 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit5WithSummaries;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit5WithSummariesCo;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
 import ua.com.fielden.platform.sample.domain.TgPublishedYearly;
 import ua.com.fielden.platform.sample.domain.TgTimesheet;
@@ -1849,6 +1855,32 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries summaryEntity = coEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.getEntity(
                 from(qry).with(fetchNone(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class).with("costPerKm")).model());
         assertNull(summaryEntity.getCostPerKm());
+    }
+
+    ///////////////////////////////////////////////////// AGGREGATES ON SUBQUERIES IN ENTITY CENTRE TOTALS QUERY  ////////////////////////////////////////////////
+    
+    @Test
+    public void calculated_props_are_actually_yielded_in_the_source_query_if_the_top_query_yields_are_all_recognised_as_totals_in_case_of_persistent_entity() {
+        // SELECT from SELECT here is emulating the approach utilised by DynamicQueryBuilder.createJoinCondition() method in order to overcome MSSQL inability to aggregate scalar sub-queries. 
+        final EntityResultQueryModel<TgOrgUnit5WithSummaries> qry = select(select(TgOrgUnit5WithSummaries.class).model()).model();
+        final TgOrgUnit5WithSummaries summaryEntity = getInstance(TgOrgUnit5WithSummariesCo.class).getEntity(from(qry).with(fetchNone(TgOrgUnit5WithSummaries.class).with("minVehiclesCount")).model());
+        assertEquals(Integer.valueOf(1), summaryEntity.getMinVehiclesCount());
+    }
+    
+    @Test
+    public void calculated_props_are_actually_yielded_in_the_source_query_if_the_top_query_yields_are_all_recognised_as_totals_in_case_of_synthetic_based_on_persistent_entity() {
+        // SELECT from SELECT here is emulating the approach utilised by DynamicQueryBuilder.createJoinCondition() method in order to overcome MSSQL inability to aggregate scalar sub-queries. 
+        final EntityResultQueryModel<TeAverageFuelUsage> qry = select(select(TeAverageFuelUsage.class).model()).model();
+        final TeAverageFuelUsage summaryEntity = getInstance(ITeAverageFuelUsage.class).getEntity(from(qry).with(fetchNone(TeAverageFuelUsage.class).with("countAll")).model());
+        assertEquals(Integer.valueOf(0), summaryEntity.getCountAll());
+    }
+
+    @Test
+    public void calculated_props_are_actually_yielded_in_the_source_query_if_the_top_query_yields_are_all_recognised_as_totals_in_case_of_synthetic_entity() {
+        // SELECT from SELECT here is emulating the approach utilised by DynamicQueryBuilder.createJoinCondition() method in order to overcome MSSQL inability to aggregate scalar sub-queries. 
+        final EntityResultQueryModel<TeFuelUsageByType> qry = select(select(TeFuelUsageByType.class).model()).model();
+        final TeFuelUsageByType summaryEntity = getInstance(TeFuelUsageByTypeCo.class).getEntity(from(qry).with(fetchNone(TeFuelUsageByType.class).with("countAll")).model());
+        assertEquals(Integer.valueOf(0), summaryEntity.getCountAll());
     }
 
     ///////////////////////////////////////////////////// ENTITY INSTRUMENTATION WHILE RETRIEVING WITH EQL ///////////////////////////////////////
