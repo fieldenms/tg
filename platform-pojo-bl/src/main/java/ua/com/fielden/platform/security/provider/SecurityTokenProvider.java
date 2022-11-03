@@ -19,6 +19,8 @@ import java.util.TreeSet;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 
+import ua.com.fielden.platform.algorithm.search.ISearchAlgorithm;
+import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
@@ -106,7 +108,6 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
             final Set<Class<? extends ISecurityToken>> extraTokens,
             final Set<Class<? extends ISecurityToken>> redundantTokens
     ) {
-        long start = System.currentTimeMillis();
         final Set<Class<? extends ISecurityToken>> platformLevelTokens = CollectionUtil.setOf(
                 User_CanSave_Token.class,
                 User_CanRead_Token.class,
@@ -144,19 +145,11 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
         allTokens.addAll(platformLevelTokens);
         allTokens.addAll(extraTokens);
         allTokens.removeAll(redundantTokens);
-        long finish = System.currentTimeMillis();
-        long timeElapsed = finish - start;
-        System.out.println("Token List Creation: " + timeElapsed);
-        System.out.println("Number Of Tokens To Load: " + allTokens.size());
-        start = System.currentTimeMillis();
         allTokens.forEach(type -> { tokenClassesByName.put(type.getName(), type); tokenClassesBySimpleName.put(type.getSimpleName(), type); });
         if (tokenClassesByName.size() != tokenClassesBySimpleName.size()) {
             throw new SecurityException(ERR_DUPLICATE_SECURITY_TOKENS);
         }
         topLevelSecurityTokenNodes = buildTokenNodes(allTokens);
-        finish = System.currentTimeMillis();
-        timeElapsed = finish - start;
-        System.out.println("Token map and tree creation: " + timeElapsed);
     }
 
     @Override
@@ -186,25 +179,58 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
      * @return
      */
     private static SortedSet<SecurityTokenNode> buildTokenNodes(final Set<Class<? extends ISecurityToken>> allTokens) {
-        final Map<Class<? extends ISecurityToken>, SecurityTokenNode> topTokenNodes = new HashMap<>();
-
-        allTokens.forEach(token -> {
-            final List<Class<? extends ISecurityToken>> tokenHierarchy = genHierarchyPath(token);
-            tokenHierarchy.stream().reduce((SecurityTokenNode)null, (tokenNode, tokenClass) -> {
-                SecurityTokenNode nextNode = tokenNode == null ? topTokenNodes.get(tokenClass) : tokenNode.getSubTokenNode(tokenClass.getName());
-                if (nextNode == null) {
-                    nextNode = new SecurityTokenNode(tokenClass.getName(), shortDesc(token), longDesc(token));
-                    if (tokenNode == null) {
-                        topTokenNodes.put(tokenClass, nextNode);
-                    } else {
-                        tokenNode.add(nextNode);
-                    }
-                }
-                return nextNode;
-            }, (prev, next) -> next);
-        });
-
+        final Map<String, SecurityTokenNode> topTokenNodes = new HashMap<>();
+        allTokens.forEach(token -> addTokenToHierarchy(token, topTokenNodes));
         return new TreeSet<>(topTokenNodes.values());
+    }
+
+    /**
+     * Adds the {@link SecurityTokenNode} instance for specified token into the specified topTokenNodes hierarchy if it doesn't exists.
+     *
+     * @param token
+     * @param topTokenNodes
+     */
+    public static void addTokenToHierarchy(final Class<? extends ISecurityToken> token, final Map<String, SecurityTokenNode> topTokenNodes) {
+        // First get a list of super classes and then for each such class that doesn't exist in the hierarchy of SecurityTokenNodes, create a node and add it to the hierarchy.
+        final List<Class<? extends ISecurityToken>> tokenHierarchy = genHierarchyPath(token);
+        tokenHierarchy.stream().reduce((SecurityTokenNode)null, (tokenNode, tokenClass) -> {
+            // Argument tokenNode can only be null if tokenClass is the top most class, implementing ISecurityToken.
+            // Otherwise tokenNode was created for a super class of tokenClass.
+            SecurityTokenNode nextNode = tokenNode == null ? topTokenNodes.get(tokenClass.getName()) : tokenNode.getSubTokenNode(tokenClass.getName());
+            // If there is no next token node for tokenClass then create a new one, and
+            // add it to the hierarchy as a sub-node of tokenNode or, if tokenNode is null, nextNode becomes top most node.
+            if (nextNode == null) {
+                // a token for the next node is a sub class of the token represented by tokenNode
+                nextNode = new SecurityTokenNode(tokenClass.getName(), shortDesc(token), longDesc(token));
+                // Is next token the top most?
+                if (tokenNode == null) {
+                    topTokenNodes.put(tokenClass.getName(), nextNode);
+                } else {
+                    tokenNode.add(nextNode);
+                }
+            }
+            return nextNode;
+        }, (prev, next) -> next);
+    }
+
+    /**
+     * Removes the {@link SecurityTokenNode} instance for the specified token class from the specified hierarchy of topTokenNodes.
+     *
+     * @param token
+     * @param topTokenNodes
+     */
+    public static void removeTokenFromHierarchy(final Class<? extends ISecurityToken> token, final Map<String, SecurityTokenNode> topTokenNodes) {
+        final ISearchAlgorithm<String, SecurityTokenNode> alg = new BreadthFirstSearch<>();
+        for (final SecurityTokenNode securityNode : new ArrayList<>(topTokenNodes.values())) {
+            final var tokenNode = alg.search(securityNode, node -> node.getToken().equals(token.getName()));
+            if (tokenNode != null) {
+                if (tokenNode.getSuperTokenNode() != null) {
+                    tokenNode.getSuperTokenNode().remove(tokenNode);
+                } else {
+                    topTokenNodes.remove(tokenNode.getToken());
+                }
+            }
+        }
     }
 
     /**
