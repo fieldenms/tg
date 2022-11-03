@@ -7,10 +7,10 @@ import ua.com.fielden.platform.eql.stage3.Table;
 
 public class Source3BasedOnTable implements ISource3 {
     public final Table table;
-    public final String id;
+    public final Integer id;
     public final int sqlId;
     
-    public Source3BasedOnTable(final Table table, final String id, final int sqlId) {
+    public Source3BasedOnTable(final Table table, final Integer id, final int sqlId) {
         this.table = table;
         this.id = id;
         this.sqlId = sqlId;

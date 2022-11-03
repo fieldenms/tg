@@ -44,7 +44,6 @@ import ua.com.fielden.platform.roa.HttpHeaders;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.SerialiserEngines;
 import ua.com.fielden.platform.serialisation.jackson.EntitySerialiser;
-import ua.com.fielden.platform.snappy.SnappyQuery;
 import ua.com.fielden.platform.utils.StreamCouldNotBeResolvedException;
 import ua.com.fielden.platform.web_api.IWebApi;
 
@@ -454,10 +453,6 @@ public class RestServerUtil {
      */
     public LifecycleQueryContainer restoreLifecycleQueryContainer(final Representation representation) {
         return serialiser.deserialise(getStream(representation), LifecycleQueryContainer.class);
-    }
-
-    public SnappyQuery restoreSnappyQuery(final Representation representation) {
-        return serialiser.deserialise(getStream(representation), SnappyQuery.class);
     }
 
     /**

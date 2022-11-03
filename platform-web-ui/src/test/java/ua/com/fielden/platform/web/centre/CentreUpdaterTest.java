@@ -1,6 +1,9 @@
 package ua.com.fielden.platform.web.centre;
 
 import static java.math.RoundingMode.HALF_UP;
+import static ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum.NEXT;
+import static ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum.PREV;
+import static ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum.MONTH;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
@@ -17,9 +20,6 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.VAL
 import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.VALUE2;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createMockNotFoundEntity;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createNotFoundMockString;
-import static ua.com.fielden.snappy.DateRangePrefixEnum.NEXT;
-import static ua.com.fielden.snappy.DateRangePrefixEnum.PREV;
-import static ua.com.fielden.snappy.MnemonicEnum.MONTH;
 
 import java.math.BigDecimal;
 import java.util.Currency;

@@ -15,7 +15,7 @@ public class ResultQueryAutoYieldTest extends EqlStage2TestCase {
     @Test
     public void auto_yield_for_type_based_query_works() {
         final ResultQuery2 actQry = qry(select(BOGIE).model());
-        final Source2BasedOnPersistentType bogie = source("1", BOGIE);
+        final Source2BasedOnPersistentType bogie = source(1, BOGIE);
         final Yields2 yields = mkYields(
                 mkYield(prop(bogie, pi(BOGIE, "key")), "key"),
                 mkYield(prop(bogie, pi(BOGIE, "desc")), "desc"),

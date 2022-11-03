@@ -25,11 +25,11 @@ import ua.com.fielden.platform.domaintree.impl.EnhancementLinkedRootsSet;
 import ua.com.fielden.platform.domaintree.impl.EnhancementPropertiesMap;
 import ua.com.fielden.platform.domaintree.impl.EnhancementRootsMap;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
+import ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum;
+import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
-import ua.com.fielden.snappy.DateRangePrefixEnum;
-import ua.com.fielden.snappy.MnemonicEnum;
 
 /**
  * Criteria (entity centre) domain tree manager. Includes support for checking (from base {@link AbstractDomainTreeManager}). <br>

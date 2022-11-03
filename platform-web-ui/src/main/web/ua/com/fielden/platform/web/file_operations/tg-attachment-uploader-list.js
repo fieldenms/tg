@@ -76,7 +76,8 @@ const template = html`
                 url="[[url]]"
                 upload-size-limit-kb="[[uploadSizeLimitKb]]"
                 mime-types-accepted="[[mimeTypesAccepted]]"
-                process-uploading-stopped="[[_perUploaderListenerOnUploadingStopped]]"></tg-attachment-uploader>
+                process-uploading-stopped="[[_perUploaderListenerOnUploadingStopped]]"
+                event-source-class="[[eventSourceClass]]"></tg-attachment-uploader>
         </template>
     </div>
     <div id="openDialogOrDrop" class="dropHereContainer" on-tap="_openFileDialog">
@@ -103,6 +104,13 @@ Polymer({
         /* URI that points to a file processing resource. */
         url: {
             type: String,
+        },
+
+        /**
+         * Event source class that is used to identify what process is sending the server event.
+         */
+        eventSourceClass: {
+            type: String
         },
 
         /* The limit of data to be uploaded for processing in Kibibytes. */

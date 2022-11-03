@@ -5,8 +5,8 @@ import java.util.Objects;
 import org.hibernate.type.IntegerType;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.DateIntervalUnit;
-import ua.com.fielden.platform.eql.stage2.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.TransformationContext2;
+import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.CountDateInterval3;
@@ -21,10 +21,10 @@ public class CountDateInterval2 extends TwoOperandsFunction2<CountDateInterval3>
     }
 
     @Override
-    public TransformationResult<CountDateInterval3> transform(final TransformationContext context) {
-        final TransformationResult<? extends ISingleOperand3> firstOperandTr = operand1.transform(context);
-        final TransformationResult<? extends ISingleOperand3> secondOperandTr = operand2.transform(firstOperandTr.updatedContext);
-        return new TransformationResult<>(new CountDateInterval3(intervalUnit, firstOperandTr.item, secondOperandTr.item, type, hibType), secondOperandTr.updatedContext);
+    public TransformationResult2<CountDateInterval3> transform(final TransformationContext2 context) {
+        final TransformationResult2<? extends ISingleOperand3> firstOperandTr = operand1.transform(context);
+        final TransformationResult2<? extends ISingleOperand3> secondOperandTr = operand2.transform(firstOperandTr.updatedContext);
+        return new TransformationResult2<>(new CountDateInterval3(intervalUnit, firstOperandTr.item, secondOperandTr.item, type, hibType), secondOperandTr.updatedContext);
     }
     
     @Override

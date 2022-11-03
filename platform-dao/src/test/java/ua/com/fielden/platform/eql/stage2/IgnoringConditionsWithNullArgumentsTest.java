@@ -19,9 +19,8 @@ public class IgnoringConditionsWithNullArgumentsTest extends EqlStage2TestCase {
     @Test
     public void condition_is_correctly_ignored_01() {
         final ResultQuery2 actQry = qryCountAll(select(MODEL).where().prop(KEY).eq().iVal(null));
-        final String model1 = "1";
 
-        final Source2BasedOnPersistentType model = source(model1, MODEL);
+        final Source2BasedOnPersistentType model = source(1, MODEL);
 
         final ISources2<? extends ISources3> sources = sources(model);
         final ResultQuery2 expQry = qryCountAll(sources);
@@ -35,9 +34,8 @@ public class IgnoringConditionsWithNullArgumentsTest extends EqlStage2TestCase {
         paramValues.put(KEY, null);
         
         final ResultQuery2 actQry = qryCountAll(select(MODEL).where().prop(KEY).eq().iParam("keyValue"), paramValues);
-        final String model1 = "1";
 
-        final Source2BasedOnPersistentType model = source(model1, MODEL);
+        final Source2BasedOnPersistentType model = source(1, MODEL);
 
         final ISources2<? extends ISources3> sources = sources(model);
         final ResultQuery2 expQry = qryCountAll(sources);

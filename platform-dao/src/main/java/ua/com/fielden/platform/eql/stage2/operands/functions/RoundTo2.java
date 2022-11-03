@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.operands.functions;
 
-import ua.com.fielden.platform.eql.stage2.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.TransformationContext2;
+import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.RoundTo3;
@@ -13,10 +13,10 @@ public class RoundTo2 extends TwoOperandsFunction2<RoundTo3> {
     }
 
     @Override
-    public TransformationResult<RoundTo3> transform(final TransformationContext context) {
-        final TransformationResult<? extends ISingleOperand3> firstOperandTransformationResult = operand1.transform(context);
-        final TransformationResult<? extends ISingleOperand3> secondOperandTransformationResult = operand2.transform(firstOperandTransformationResult.updatedContext);
-        return new TransformationResult<>(new RoundTo3(firstOperandTransformationResult.item, secondOperandTransformationResult.item, type, hibType), secondOperandTransformationResult.updatedContext);
+    public TransformationResult2<RoundTo3> transform(final TransformationContext2 context) {
+        final TransformationResult2<? extends ISingleOperand3> firstOperandTransformationResult = operand1.transform(context);
+        final TransformationResult2<? extends ISingleOperand3> secondOperandTransformationResult = operand2.transform(firstOperandTransformationResult.updatedContext);
+        return new TransformationResult2<>(new RoundTo3(firstOperandTransformationResult.item, secondOperandTransformationResult.item, type, hibType), secondOperandTransformationResult.updatedContext);
     }
     
     @Override

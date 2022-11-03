@@ -1,14 +1,19 @@
 package ua.com.fielden.platform.web.test.eventsources;
 
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
+
 import java.math.BigDecimal;
-import java.util.Date;
+import java.util.Map;
+
+import com.google.inject.Inject;
 
 import rx.Observable;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.observables.TgPersistentEntityWithPropertiesChangeSubject;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
+import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.sse.AbstractEventSource;
-
-import com.google.inject.Inject;
 
 /**
  * This is a demo event source listening to changes and creation of new instance of type {@link TgPersistentEntityWithProperties}.
@@ -20,10 +25,12 @@ import com.google.inject.Inject;
  *
  */
 public class TgPersistentEntityWithPropertiesEventSrouce extends AbstractEventSource<TgPersistentEntityWithProperties, TgPersistentEntityWithPropertiesChangeSubject> {
+    private final IDates dates;
 
     @Inject
-    protected TgPersistentEntityWithPropertiesEventSrouce(final TgPersistentEntityWithPropertiesChangeSubject observableKind) {
-        super(observableKind);
+    protected TgPersistentEntityWithPropertiesEventSrouce(final TgPersistentEntityWithPropertiesChangeSubject observableKind, final IDates dates, final ISerialiser serialiser) {
+        super(observableKind, serialiser);
+        this.dates = dates;
     }
 
     /**
@@ -37,8 +44,8 @@ public class TgPersistentEntityWithPropertiesEventSrouce extends AbstractEventSo
     }
 
     @Override
-    protected String eventToData(final TgPersistentEntityWithProperties event) {
-        return String.format("{\"id\": %s, \"key\": \"%s\", \"changeDate\": \"%s\"}", event.getId(), event.getKey(), new Date());
+    protected Map<String, Object> eventToData(final TgPersistentEntityWithProperties event) {
+        return mapOf(t2("id", event.getId()), t2("key", event.getKey()), t2("changeDate", dates.now().toDate()));
     }
 
 }

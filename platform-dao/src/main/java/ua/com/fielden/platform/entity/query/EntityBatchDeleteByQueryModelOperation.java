@@ -16,7 +16,7 @@ import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage3.operands.ResultQuery3;
 
 public class EntityBatchDeleteByQueryModelOperation {
@@ -46,7 +46,7 @@ public class EntityBatchDeleteByQueryModelOperation {
             return new DeletionModel(deletionSql, sqlParamValues);
         } else {
             final var eqlMetaData = executionContext.getDomainMetadata().eqlDomainMetadata;
-            final TransformationResult<ResultQuery3> s2tr = transform(new QueryProcessingModel(finalModel, null, null, paramValues, true), null, null, executionContext.dates(), eqlMetaData); 
+            final TransformationResult2<ResultQuery3> s2tr = transform(new QueryProcessingModel(finalModel, null, null, paramValues, true), null, null, executionContext.dates(), eqlMetaData); 
             final ResultQuery3 entQuery3 = s2tr.item;
             final String selectionSql = entQuery3.sql(domainMetadataAnalyser.getDbVersion());
             final String deletionSql = produceDeletionSql(selectionSql, tableName, eqlMetaData.dbVersion);

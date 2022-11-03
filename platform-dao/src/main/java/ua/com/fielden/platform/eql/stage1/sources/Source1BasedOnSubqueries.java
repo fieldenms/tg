@@ -23,7 +23,7 @@ import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PrimTypePropInfo;
-import ua.com.fielden.platform.eql.stage1.TransformationContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.SourceQuery1;
 import ua.com.fielden.platform.eql.stage2.etc.Yield2;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
@@ -35,17 +35,17 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
     private final List<SourceQuery1> models = new ArrayList<>();
     private final boolean isSyntheticEntity;
 
-    public Source1BasedOnSubqueries(final String alias, final List<SourceQuery1> models, final int id, final boolean isSyntheticEntity) {
+    public Source1BasedOnSubqueries(final String alias, final List<SourceQuery1> models, final Integer id, final boolean isSyntheticEntity) {
         super(alias, id);
         this.isSyntheticEntity = isSyntheticEntity;
         this.models.addAll(models);
     }
     
     @Override
-    public Source2BasedOnSubqueries transform(final TransformationContext context) {
+    public Source2BasedOnSubqueries transform(final TransformationContext1 context) {
         final List<SourceQuery2> transformedQueries = models.stream().map(m -> m.transform(context)).collect(toList());
         validateYields(transformedQueries);
-        return new Source2BasedOnSubqueries(transformedQueries, alias, transformId(context), produceEntityInfo(context.domainInfo, transformedQueries, sourceType(), isSyntheticEntity));
+        return new Source2BasedOnSubqueries(transformedQueries, alias, id, produceEntityInfo(context.domainInfo, transformedQueries, sourceType(), isSyntheticEntity));
     }
     
     @Override

@@ -171,11 +171,6 @@ public class EntityContainerEnhancer<E extends AbstractEntity<?>> {
         return propValues;
     }
 
-    private <T extends AbstractEntity<?>> IRetrievalModel<T> produceRetrievalModel(final fetch<T> fetchModel) {
-        return EntityAggregates.class.equals(fetchModel.getEntityType()) ? new EntityAggregatesRetrievalModel<>(fetchModel, domainMetadataAnalyser) : //
-                new EntityRetrievalModel<>(fetchModel, domainMetadataAnalyser);
-    }
-
     private <T extends AbstractEntity<?>> List<EntityContainer<E>> enhancePropertyWithLinkToParent(final List<EntityContainer<E>> entities, final String propertyName, final EntityRetrievalModel<T> fetchModel, final String linkPropName, final Map<String, Object> paramValues)
             throws Exception {
         // Obtaining map between property id and list of entities where this property occurs

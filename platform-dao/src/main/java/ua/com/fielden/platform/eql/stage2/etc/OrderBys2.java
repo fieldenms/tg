@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import ua.com.fielden.platform.eql.stage2.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.TransformationContext2;
+import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.etc.OrderBy3;
 import ua.com.fielden.platform.eql.stage3.etc.OrderBys3;
@@ -25,19 +25,19 @@ public class OrderBys2 {
         this.models = models;
     }
 
-    public TransformationResult<OrderBys3> transform(final TransformationContext context, final Yields3 yields) {
+    public TransformationResult2<OrderBys3> transform(final TransformationContext2 context, final Yields3 yields) {
         if (models.isEmpty()) {
-            return new TransformationResult<>(null, context);
+            return new TransformationResult2<>(null, context);
         }
         
         final List<OrderBy3> transformed = new ArrayList<>();
-        TransformationContext currentContext = context;
+        TransformationContext2 currentContext = context;
         for (final OrderBy2 orderBy : models) {
-            final TransformationResult<OrderBy3> orderByTr = orderBy.transform(currentContext, yields);
+            final TransformationResult2<OrderBy3> orderByTr = orderBy.transform(currentContext, yields);
             transformed.add(orderByTr.item);
             currentContext = orderByTr.updatedContext;
         }
-        return new TransformationResult<>(new OrderBys3(transformed), currentContext);
+        return new TransformationResult2<>(new OrderBys3(transformed), currentContext);
     }
 
     public Set<Prop2> collectProps() {

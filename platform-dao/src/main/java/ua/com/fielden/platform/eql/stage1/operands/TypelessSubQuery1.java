@@ -4,8 +4,8 @@ import static ua.com.fielden.platform.eql.stage2.etc.Yields2.nullYields;
 
 import ua.com.fielden.platform.eql.stage1.ITransformableToS2;
 import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
-import ua.com.fielden.platform.eql.stage1.TransformationContext;
-import ua.com.fielden.platform.eql.stage1.TransformationResult;
+import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationResult1;
 import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
@@ -22,15 +22,15 @@ public class TypelessSubQuery1 extends AbstractQuery1 implements ITransformableT
     }
 
     @Override
-    public TypelessSubQuery2 transform(final TransformationContext context) {
-        final TransformationContext localContext = context.produceForCorrelatedSubquery();
+    public TypelessSubQuery2 transform(final TransformationContext1 context) {
+        final TransformationContext1 localContext = context.produceForCorrelatedSubquery();
         
         if (sources == null) {
             return new TypelessSubQuery2(transformSourceless(localContext));
         }
         
-        final TransformationResult<? extends ISources2<?>> sourcesTr = sources.transform(localContext);
-        final TransformationContext enhancedContext = sourcesTr.updatedContext;
+        final TransformationResult1<? extends ISources2<?>> sourcesTr = sources.transform(localContext);
+        final TransformationContext1 enhancedContext = sourcesTr.updatedContext;
         final ISources2<? extends ISources3> sources2 = sourcesTr.item;
         final Conditions2 conditions2 = enhanceWithUserDataFilterConditions(sources2.mainSource(), context, conditions.transform(enhancedContext));
         final Yields2 yields2 = yields.getYields().isEmpty() ? nullYields : yields.transform(enhancedContext);
