@@ -4,6 +4,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.processors.verify.verifiers.KeyTypeVerifier.AT_KEY_TYPE_CLASS;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.assertErrorReported;
+import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.buildProperty;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.compileAndPrintDiagnostics;
 
 import java.util.function.Function;
@@ -20,6 +21,7 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.NoKey;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.verify.VerifierAbstractTest;
 
@@ -136,5 +138,38 @@ public class KeyTypeVerifierTest extends VerifierAbstractTest {
         assertErrorReported(compilation, KeyTypeVerifier.ChildKeyTypeMatchesParentKeyType.keyTypeMustMatchTheSupertypesKeyType(superEntity.name));
     }
     // <<<<<<<<<<<<<<<<<<<< 3. Declaration of @KeyType by a child entity <<<<<<<<<<<<<<<<<<<<
+
+    // >>>>>>>>>>>>>>>>>>>> 4. Explicit declaration of property "key" by an entity >>>>>>>>>>>>>>>>>>>>
+    @Test
+    public void the_type_of_explicitly_declared_property_key_must_match_the_value_of_KeyType() throws Throwable {
+        final TypeSpec incorrectEntity = TypeSpec.classBuilder("EntityWithPropertyKey")
+                .addAnnotation(buildKeyType(String.class))
+                .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                .addField(buildProperty(Double.class, AbstractEntity.KEY))
+                .build();
+
+        final Compilation compilation = buildCompilation(incorrectEntity);
+        final boolean success = compileAndPrintDiagnostics(compilation);
+        assertFalse("Compilation should have failed.", success);
+        assertErrorReported(compilation,
+                KeyTypeVerifier.DeclaredKeyPropertyTypeMatchesAtKeyTypeValue.KEY_PROPERTY_TYPE_MUST_BE_CONSISTENT_WITH_KEYTYPE_DEFINITION);
+    }
+    
+    @Test
+    public void property_key_must_not_be_declared_if_entity_key_type_is_NoKey() throws Throwable {
+        final TypeSpec incorrectEntity = TypeSpec.classBuilder("EntityWith_NoKey")
+                .addAnnotation(buildKeyType(NoKey.class))
+                .superclass(ParameterizedTypeName.get(AbstractEntity.class, NoKey.class))
+                // no matter what type is chosen for property "key"
+                .addField(buildProperty(String.class, AbstractEntity.KEY))
+                .build();
+
+        final Compilation compilation = buildCompilation(incorrectEntity);
+        final boolean success = compileAndPrintDiagnostics(compilation);
+        assertFalse("Compilation should have failed.", success);
+        assertErrorReported(compilation,
+                KeyTypeVerifier.DeclaredKeyPropertyTypeMatchesAtKeyTypeValue.ENTITY_WITH_NOKEY_AS_KEY_TYPE_CAN_NOT_DECLARE_PROPERTY_KEY);        
+    }
+    // <<<<<<<<<<<<<<<<<<<< 4. Explicit declaration of property "key" by an entity <<<<<<<<<<<<<<<<<<<<
 
 }

@@ -176,7 +176,9 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
      * If an entity declares property {@code key}, then its type must match the key type defined by {@link KeyType}.
      * Additionally, if {@link NoKey} is specified, then it's forbidden to declare property {@code key}.
      */
-    private class DeclaredKeyPropertyTypeMatchesAtKeyTypeValue extends AbstractComposableVerifierPart {
+    class DeclaredKeyPropertyTypeMatchesAtKeyTypeValue extends AbstractComposableVerifierPart {
+        static final String ENTITY_WITH_NOKEY_AS_KEY_TYPE_CAN_NOT_DECLARE_PROPERTY_KEY = "Entity with NoKey as key type can not declare property \"key\".";
+        static final String KEY_PROPERTY_TYPE_MUST_BE_CONSISTENT_WITH_KEYTYPE_DEFINITION = "\"key\" property type must be consistent with @KeyType definition.";
 
         @Override
         public boolean verify(final RoundEnvironment roundEnv) {
@@ -201,14 +203,14 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
                 if (elementFinder.isSameType(keyType, NoKey.class)) {
                     allPassed = false;
                     this.violatingElements.add(entity);
-                    messager.printMessage(Kind.ERROR, "Entity with NoKey as key type can not declare property \"key\".", keyProp.element());
+                    messager.printMessage(Kind.ERROR, ENTITY_WITH_NOKEY_AS_KEY_TYPE_CAN_NOT_DECLARE_PROPERTY_KEY, keyProp.element());
                 }
                 else {
                     final TypeMirror keyPropType = keyProp.getType();
                     if (!typeUtils.isSameType(keyPropType, keyType)) {
                         allPassed = false;
                         this.violatingElements.add(entity);
-                        messager.printMessage(Kind.ERROR, "\"key\" property type must be consistent with @KeyType definition.", keyProp.element());
+                        messager.printMessage(Kind.ERROR, KEY_PROPERTY_TYPE_MUST_BE_CONSISTENT_WITH_KEYTYPE_DEFINITION, keyProp.element());
                     }
                 }
             }
