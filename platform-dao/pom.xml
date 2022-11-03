@@ -42,14 +42,6 @@
 			</exclusions>
 		</dependency>
 
-        <!-- H2 RDBMS JDBC dependency; The use of H2 is discouraged -->
-        <dependency>
-            <groupId>com.h2database</groupId>
-            <artifactId>h2</artifactId>
-            <version>1.4.199</version>
-            <scope>test</scope>
-        </dependency>
-
         <!-- https://mvnrepository.com/artifact/org.postgresql/postgresql -->
         <dependency>
             <groupId>org.postgresql</groupId>
@@ -103,40 +95,6 @@
 		</dependency>
 	</dependencies>
 
-    <profiles>
-        <profile>
-            <id>h2-all</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <databaseUri.prefix>./src/test/resources/db/TEST_DB_</databaseUri.prefix>
-                <fork.count>4</fork.count>
-            </properties>
-        </profile>
-        <profile>
-            <id>psql-Jenkins</id>
-            <properties>
-                <databaseUri.prefix>//localhost:5432/tgpsa_ci_</databaseUri.prefix>
-                <fork.count>6</fork.count>
-            </properties>
-        </profile>
-        <profile>
-            <id>psql-01es</id>
-            <properties>
-                <databaseUri.prefix>//localhost:5432/ci_</databaseUri.prefix>
-                <fork.count>4</fork.count>
-            </properties>
-        </profile>
-        <profile>
-            <id>sqlServer-01es</id>
-            <properties>
-                <databaseUri.prefix>//localhost:1433;encrypt=true;trustServerCertificate=true;queryTimeout=60;sendStringParametersAsUnicode=false;database=CI_</databaseUri.prefix>
-                <fork.count>4</fork.count>
-            </properties>
-        </profile>
-    </profiles>
-
 	<build>
 		<resources>
 			<resource>
@@ -164,22 +122,6 @@
 						</goals>
 					</execution>
 				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<configuration>
-					<forkCount>${fork.count}</forkCount>
-					<reuseForks>true</reuseForks>
-					<argLine>-server -Xms256m -Xmx1024m
-						-Djava.system.class.loader=ua.com.fielden.platform.classloader.TgSystemClassLoader</argLine>
-					<systemPropertyVariables>
-                        <databaseUri>${databaseUri.prefix}${surefire.forkNumber}</databaseUri>
-						<loadDdlScriptFromFile>false</loadDdlScriptFromFile>
-						<saveDdlScriptToFile>false</saveDdlScriptToFile>
-						<legacyTests.databaseUri>./src/test/resources/db/TEST_DB_LEGACY_${surefire.forkNumber}</legacyTests.databaseUri>
-					</systemPropertyVariables>
-				</configuration>
 			</plugin>
 		</plugins>
 	</build>
