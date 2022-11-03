@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.processors.metamodel.exceptions;
 
-public class AnomalousStateException extends RuntimeException {
+import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
+
+public class AnomalousStateException extends AbstractPlatformRuntimeException {
     private static final long serialVersionUID = 1L;
 
     public AnomalousStateException(final String message) {
