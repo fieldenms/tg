@@ -193,26 +193,6 @@ public abstract class AbstractOpenCompoundMasterDao<T extends AbstractFunctional
         return queryParams;
     }
 
-    /* “type matching” reference implementation */
-    private enum PTYPE {
-        String, IConvertableToPath
-    }
-
-    private static <P> Object getValue(final Object value, final P propName) {
-        final String propertyName = switch (PTYPE.valueOf(propName.getClass().getSimpleName())) {
-        case String:
-            yield (String) propName;
-        case IConvertableToPath:
-            yield ((IConvertableToPath) propName).toPath();
-        default:
-            throw new CompoundMasterException("Unexpected value [%s] of type [%s].".formatted(propName, propName.getClass().getSimpleName()));
-        };
-        return THIS.equals(propertyName) ? value : ((AbstractEntity<?>) value).get(propertyName);
-    }
-
-    /*
-     * Alternative, more orthodox instanceof-based implementation
-     *
     private static <P> Object getValue(final Object value, final P propName) {
         if (propName instanceof final String strProp) {
             return THIS.equals(strProp) ? value : ((AbstractEntity<?>) value).get(strProp);
@@ -224,5 +204,4 @@ public abstract class AbstractOpenCompoundMasterDao<T extends AbstractFunctional
 
         throw new CompoundMasterException("Unexpected value [%s] of type [%s].".formatted(propName, propName.getClass().getSimpleName()));
     }
-    */
 }
