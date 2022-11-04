@@ -1,1 +1,2 @@
 ua.com.fielden.platform.processors.metamodel.MetaModelProcessor
+ua.com.fielden.platform.processors.security.tokens.SecurityTokensProcessor
