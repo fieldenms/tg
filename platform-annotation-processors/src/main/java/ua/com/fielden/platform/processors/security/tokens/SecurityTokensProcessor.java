@@ -23,7 +23,7 @@ import javax.tools.Diagnostic.Kind;
 
 import com.google.common.base.Stopwatch;
 
-import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
+import ua.com.fielden.platform.processors.utils.ElementFinder;
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.tokens.attachment.AttachmentDownload_CanExecute_Token;
 import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanDelete_Token;

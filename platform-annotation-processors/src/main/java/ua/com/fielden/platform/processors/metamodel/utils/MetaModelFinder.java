@@ -34,6 +34,7 @@ import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelsElement;
 import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
+import ua.com.fielden.platform.processors.utils.ElementFinder;
 
 /**
  * A class to provide utility methods for identifying various parts of domain meta-models.
