@@ -487,6 +487,23 @@ public class ElementFinder {
         return types.directSupertypes(typeMirror).stream().anyMatch(tm -> isSubtype(tm, type));
     }
 
+    /**
+     * Tests whether an instance of {@link TypeMirror} ({@code typeMirror}) is strictly a subtype of a {@link Class} instance ({@code type}).
+     * A type <b>is not</b> a strict subtype of itself.
+     *
+     * @param typeMirror
+     *            the child type
+     * @param type
+     *            the parent type
+     * @return {@code true} if and only if the first type is a strict subtype of the second
+     */
+    public boolean isStrictlySubtype(final TypeMirror typeMirror, final Class<?> type) {
+        if (equals(toTypeElement(typeMirror), type)) {
+            return false;
+        }
+        return types.directSupertypes(typeMirror).stream().anyMatch(tm -> isStrictlySubtype(tm, type));
+    }
+
     public boolean isTopLevelClass(final Element element) {
         return element.getEnclosingElement().getKind() == ElementKind.PACKAGE;
     }
