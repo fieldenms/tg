@@ -14,6 +14,7 @@ import java.util.SortedSet;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.joda.time.DateTime;
 
 import fielden.test_app.close_leave.TgCloseLeaveExample;
@@ -98,7 +99,7 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
         LOGGER.info("Obtaining Hibernate dialect...");
         final Class<?> dialectType = Class.forName(props.getProperty("hibernate.dialect"));
-        final Dialect dialect = (Dialect) dialectType.newInstance();
+        final Dialect dialect = (Dialect) dialectType.getDeclaredConstructor().newInstance();
         LOGGER.info(format("Running with dialect %s...", dialect));
         final DataPopulationConfig config = new DataPopulationConfig(props);
         LOGGER.info("Generating DDL and running it against the target DB...");
@@ -106,9 +107,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         // use TG DDL generation or 
         // Hibernate DDL generation final List<String> createDdl = DbUtils.generateSchemaByHibernate()
         final List<String> createDdl = config.getDomainMetadata().generateDatabaseDdl(dialect);
-        final List<String> ddl = dialect instanceof H2Dialect ? 
-                                 DbUtils.prependDropDdlForH2(createDdl) : 
-                                 DbUtils.prependDropDdlForSqlServer(createDdl);
+        final List<String> ddl = dialect instanceof H2Dialect ?           DbUtils.prependDropDdlForH2(createDdl) :
+                                 dialect instanceof PostgreSQL82Dialect ? DbUtils.prependDropDdlForPostgresql(createDdl) :
+                                                                          DbUtils.prependDropDdlForSqlServer(createDdl);
         DbUtils.execSql(ddl, config.getInstance(HibernateUtil.class).getSessionFactory().getCurrentSession());
         
         final PopulateDb popDb = new PopulateDb(config, props);
