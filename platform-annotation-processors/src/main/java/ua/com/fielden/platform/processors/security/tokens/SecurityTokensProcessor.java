@@ -2,12 +2,11 @@ package ua.com.fielden.platform.processors.security.tokens;
 
 import static java.util.stream.Collectors.joining;
 
-import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
@@ -18,13 +17,14 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.TypeKind;
 import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic.Kind;
 
 import com.google.common.base.Stopwatch;
 
-import ua.com.fielden.platform.processors.utils.ElementFinder;
 import ua.com.fielden.platform.security.ISecurityToken;
+import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.security.tokens.attachment.AttachmentDownload_CanExecute_Token;
 import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanDelete_Token;
 import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanReadModel_Token;
@@ -57,6 +57,7 @@ import ua.com.fielden.platform.security.tokens.user.User_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.user.User_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.user.User_CanSave_Token;
 import ua.com.fielden.platform.security.tokens.web_api.GraphiQL_CanExecute_Token;
+import ua.com.fielden.platform.utils.StreamUtils;
 
 /**
  * Annotation processor that builds and generates a hierarchy of security token nodes.
@@ -110,7 +111,7 @@ public class SecurityTokensProcessor extends AbstractProcessor {
     private Messager messager;
     private Map<String, String> options;
 
-    private ElementFinder elementFinder;
+    private SecurityTokenFinder tokenFinder;
     private int roundNumber;
     private final Set<TypeElement> collectedTokens = new HashSet<>();
     private boolean aborted = false;
@@ -129,7 +130,7 @@ public class SecurityTokensProcessor extends AbstractProcessor {
         this.options = processingEnv.getOptions();
 
         this.roundNumber = 0;
-        this.elementFinder = new ElementFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
+        this.tokenFinder = new SecurityTokenFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
 
         messager.printMessage(Kind.NOTE, "%s initialized.".formatted(classSimpleName));
         if (!this.options.isEmpty()) {
@@ -177,8 +178,13 @@ public class SecurityTokensProcessor extends AbstractProcessor {
         }
     }
 
-    private Collection<? extends TypeElement> collectTokens(final Set<? extends Element> rootElements) throws Exception {
-        return List.of();
+    private Set<TypeElement> collectTokens(final Set<? extends Element> rootElements) throws Exception {
+        return rootElements.stream()
+                .filter(el -> el.asType().getKind().equals(TypeKind.DECLARED))
+                .map(el -> (TypeElement) el)
+                .filter(el -> tokenFinder.isSecurityToken(el.asType()))
+                .collect(Collectors.toSet());
+    }
     }
 
     private void generate() throws Exception {
