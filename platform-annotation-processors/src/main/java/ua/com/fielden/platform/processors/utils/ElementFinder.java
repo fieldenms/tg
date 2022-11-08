@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.processors.utils;
 
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -7,6 +8,7 @@ import static java.util.stream.Stream.iterate;
 import static ua.com.fielden.platform.utils.StreamUtils.stopAfter;
 
 import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -32,6 +34,7 @@ import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
+import ua.com.fielden.platform.processors.exception.ProcessingException;
 import ua.com.fielden.platform.processors.metamodel.elements.AbstractForwardingElement;
 import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderException;
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelException;
@@ -536,6 +539,29 @@ public class ElementFinder {
      */
     public TypeElement toTypeElement(final TypeMirror typeMirror) {
         return typeMirror.getKind() == TypeKind.DECLARED ? (TypeElement) ((DeclaredType) typeMirror).asElement() : null;
+    }
+
+    /**
+     * Searches for the representation of a class in the processing environment.
+     * <p>
+     * <i>Note:</i> This method will throw a runtime exception if a class with the same qualified name was found in several modules.
+     * 
+     * @param clazz
+     * @return class representation if was found and was uniquely determinable in the processing environment
+     * @throws ProcessingException
+     *             if the class was not found at all or could not be uniquely determined
+     */
+    public TypeElement getTypeElement(final Class<?> clazz) {
+        final Set<? extends TypeElement> all = elements.getAllTypeElements(clazz.getName());
+        if (all.isEmpty()) {
+            throw new ProcessingException("%s was not found in the processing environment.".formatted(clazz.getName()));
+        }
+        else if (all.size() > 1) {
+            throw new ProcessingException("%s is not uniquely determinable in the processing environment. Found in modules: [%s]"
+                    .formatted(clazz.getName(), all.stream().map(te -> elements.getModuleOf(te))
+                            .map(m -> m == null ? "null" : m.getQualifiedName()).collect(joining(", "))));
+        }
+        else return all.iterator().next();
     }
 
 }

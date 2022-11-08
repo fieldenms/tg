@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.processors.security.tokens;
 
-import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -17,8 +16,7 @@ public class SecurityTokenFinder extends ElementFinder {
 
     public TypeMirror getISecurityToken() {
         if (iSecurityToken == null) {
-            // TODO handle not found
-            iSecurityToken = elements.getTypeElement(ISecurityToken.class.getName()).asType();
+            iSecurityToken = getTypeElement(ISecurityToken.class).asType();
         }
         return iSecurityToken;
     }
