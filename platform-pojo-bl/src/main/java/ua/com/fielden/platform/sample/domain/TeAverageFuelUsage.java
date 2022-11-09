@@ -5,13 +5,16 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import java.math.BigDecimal;
 import java.util.Date;
 
+import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyCategory;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.types.Money;
@@ -41,6 +44,26 @@ public class TeAverageFuelUsage extends AbstractEntity<TeVehicle> {
     @Title(value = "Title", desc = "Desc")
     private Money cost;
 
+    @IsProperty
+    @CritOnly
+    @Title("Date period")
+    private Date datePeriod;
+    
+    @IsProperty
+    @Readonly
+    @Calculated(value="COUNT(SELF)", category = CalculatedPropertyCategory.AGGREGATED_EXPRESSION)
+    private Integer countAll;
+
+    @Observable
+    protected TeAverageFuelUsage setCountAll(final Integer countAll) {
+        this.countAll = countAll;
+        return this;
+    }
+
+    public Integer getCountAll() {
+        return countAll;
+    }
+
     @Observable
     public TeAverageFuelUsage setCost(final Money cost) {
         this.cost = cost;
@@ -50,14 +73,6 @@ public class TeAverageFuelUsage extends AbstractEntity<TeVehicle> {
     public Money getCost() {
         return cost;
     }
-
-    
-
-
-    @IsProperty
-    @CritOnly
-    @Title("Date period")
-    private Date datePeriod;
 
     @Observable
     public TeAverageFuelUsage setDatePeriod(final Date datePeriod) {

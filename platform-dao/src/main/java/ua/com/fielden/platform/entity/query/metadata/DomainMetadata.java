@@ -49,10 +49,12 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -222,12 +224,12 @@ public class DomainMetadata {
         
         final ColumnDefinitionExtractor columnDefinitionExtractor = new ColumnDefinitionExtractor(hibTypesInjector, this.hibTypesDefaults);
         
-        final List<Class<? extends AbstractEntity<?>>> persystentTypes = entityTypes.stream().filter(et -> isPersistedEntityType(et)).collect(Collectors.toList());
+        final List<Class<? extends AbstractEntity<?>>> persistentTypes = entityTypes.stream().filter(et -> isPersistedEntityType(et)).collect(Collectors.toList());
         
-        final List<String> ddlTables = new LinkedList<>();
-        final List<String> ddlFKs = new LinkedList<>();
+        final Set<String> ddlTables = new LinkedHashSet<>();
+        final Set<String> ddlFKs = new LinkedHashSet<>();
         
-        for (final Class<? extends AbstractEntity<?>> entityType : persystentTypes) {
+        for (final Class<? extends AbstractEntity<?>> entityType : persistentTypes) {
             final TableDdl tableDefinition = new TableDdl(columnDefinitionExtractor, entityType);
             ddlTables.add(tableDefinition.createTableSchema(dialect, ""));
             ddlTables.add(tableDefinition.createPkSchema(dialect));
@@ -243,12 +245,12 @@ public class DomainMetadata {
     public List<String> generateDatabaseDdl(final Dialect dialect, final Class<? extends AbstractEntity<?>> type, final Class<? extends AbstractEntity<?>>... types) {
         final ColumnDefinitionExtractor columnDefinitionExtractor = new ColumnDefinitionExtractor(hibTypesInjector, this.hibTypesDefaults);
         
-        final List<Class<? extends AbstractEntity<?>>> persystentTypes = StreamUtils.of(type, types).filter(et -> isPersistedEntityType(et)).collect(Collectors.toList());
+        final List<Class<? extends AbstractEntity<?>>> persistentTypes = StreamUtils.of(type, types).filter(et -> isPersistedEntityType(et)).collect(Collectors.toList());
         
-        final List<String> ddlTables = new LinkedList<>();
-        final List<String> ddlFKs = new LinkedList<>();
+        final Set<String> ddlTables = new LinkedHashSet<>();
+        final Set<String> ddlFKs = new LinkedHashSet<>();
         
-        for (final Class<? extends AbstractEntity<?>> entityType : persystentTypes) {
+        for (final Class<? extends AbstractEntity<?>> entityType : persistentTypes) {
             final TableDdl tableDefinition = new TableDdl(columnDefinitionExtractor, entityType);
             ddlTables.add(tableDefinition.createTableSchema(dialect, "\n"));
             ddlTables.add(tableDefinition.createPkSchema(dialect));
