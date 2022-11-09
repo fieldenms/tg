@@ -8,8 +8,8 @@ import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.util.Types;
 
-import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
+import ua.com.fielden.platform.processors.utils.ElementFinder;
 
 /**
  * Abstract base verifier providing common behaviour.

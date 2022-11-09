@@ -3,13 +3,8 @@ package ua.com.fielden.platform.processors.verify.verifiers;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.annotation.processing.Messager;
-import javax.annotation.processing.ProcessingEnvironment;
+import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
-import javax.lang.model.util.Types;
-
-import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
-import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 
 /**
  * Abstract class for all <i>verifier-parts</i>, i.e., verifiers that are part of {@link AbstractComposableVerifier}.
