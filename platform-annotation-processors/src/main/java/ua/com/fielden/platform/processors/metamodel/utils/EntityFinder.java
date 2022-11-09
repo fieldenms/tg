@@ -16,6 +16,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
@@ -26,12 +27,14 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.utils.ElementFinder;
+import ua.com.fielden.platform.processors.metamodel.exceptions.AnomalousStateException;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -75,6 +78,19 @@ public class EntityFinder extends ElementFinder {
                 .map(PropertyElement::new)
                 .collect(toCollection(LinkedHashSet::new));
     }
+    
+    /**
+     * Returns a property element, representing a property named {@code propName} if it is declared by {@code entity}, otherwise returns {@code null}.
+     *
+     * @param entity
+     * @param propName
+     * @return
+     */
+    public PropertyElement findDeclaredProperty(final EntityElement entity, final String propName) {
+        return findDeclaredProperties(entity).stream()
+                .filter(el -> el.getSimpleName().toString().equals(propName))
+                .findAny().orElse(null);
+    }
 
     /**
      * Finds properties, which are inherited by entity, represented by {@code entityElement}.
@@ -114,6 +130,16 @@ public class EntityFinder extends ElementFinder {
         final Set<PropertyElement> properties = findDeclaredProperties(entityElement);
         properties.addAll(findInheritedProperties(entityElement));
         return properties;
+    }
+    
+    /**
+     * Finds a property named {@code name} for entity represented by {@code entityElement}. The whole entity type hierarchy is traversed.
+     * @param entityElement
+     * @param name
+     * @return the property element that was found if any, otherwise {@code null}
+     */
+    public PropertyElement findProperty(final EntityElement entityElement, final String name) {
+        return findProperties(entityElement).stream().filter(propEl -> propEl.getSimpleName().toString().equals(name)).findFirst().orElse(null);
     }
 
     public Pair<String, String> getPropTitleAndDesc(final PropertyElement propElement) {
@@ -161,14 +187,50 @@ public class EntityFinder extends ElementFinder {
     }
     
     /**
+     * Retrieves the type of entity key from {@link KeyType} annotation at compile time.
+     * @see {@link javax.lang.model.element.Element#getAnnotation(Class)}
+     * @param atKeyType
+     * @return
+     */
+    public TypeMirror getKeyType(final KeyType atKeyType) {
+        try {
+            // should ALWAYS throw, since value() is of type Class, which is unavailable at compile time
+            final Class<?> keyType = atKeyType.value();
+
+            // if it somehow was available, then construct a TypeMirror from it
+            final TypeElement keyTypeElement = elements.getTypeElement(keyType.getCanonicalName());
+            if (keyTypeElement == null) {
+                // keyType Class object was available at compile time but could not be found in the processing environment,
+                // thus TypeMirror can't be constructed
+                throw new AnomalousStateException(
+                        "Key type from %s was loaded at compile time, but was not found in the processing environment."
+                        .formatted(atKeyType.toString()));
+            }
+            return keyTypeElement.asType();
+        } catch (final MirroredTypeException e) {
+//            messager.printMessage(Kind.NOTE, "key type: %s. %s was thrown.".formatted(atKeyType.toString(), e.toString()));
+            return e.getTypeMirror();
+        }
+    }
+    
+    /**
+     * Determines the type of key for an entity element by looking for a {@link KeyType} declaration in its type hierarchy.
+     * @param entity
+     * @return
+     */
+    public Optional<TypeMirror> determineKeyType(final EntityElement entity) {
+        return findAnnotation(entity, KeyType.class).map(this::getKeyType);
+    }
+    
+    /**
      * An entity is any class that inherits from {@link AbstractEntity}, which itself is also considered to be an entity.
      *
      * @param element
      * @return
      */
     public boolean isEntityType(final TypeElement element) {
-        return Stream.iterate(element, el -> !equals(el, Object.class) , el -> findSuperclass(el))
-               .filter(el -> equals(el, ROOT_ENTITY_CLASS))
+        return Stream.iterate(element, el -> el != null && !equals(el, Object.class) , el -> findSuperclass(el))
+               .filter(el -> el != null && equals(el, ROOT_ENTITY_CLASS))
                .findFirst().isPresent();
     }
 
