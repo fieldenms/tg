@@ -9,7 +9,7 @@ import ua.com.fielden.platform.entity.query.IFilter;
 /** 
  * DAO implementation for companion object {@link TgEntityWithComplexSummariesThatActuallyDeclareThoseSummariesCo}.
  * 
- * @author Developers
+ * @author TG Team
  *
  */
 @EntityType(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class)

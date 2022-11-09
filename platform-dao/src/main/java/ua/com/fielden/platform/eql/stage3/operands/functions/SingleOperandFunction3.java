@@ -27,16 +27,17 @@ abstract class SingleOperandFunction3 extends AbstractFunction3 {
             return true;
         }
         
+        if (!(obj instanceof SingleOperandFunction3)) {
+            return false;
+        }
+
         if (!super.equals(obj)) {
             return false;
         }        
 
-        if (!(obj instanceof SingleOperandFunction3)) {
-            return false;
-        }
-        
         final SingleOperandFunction3 other = (SingleOperandFunction3) obj;
         
         return Objects.equals(operand, other.operand);
     }
+
 }

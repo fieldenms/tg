@@ -21,7 +21,7 @@ public class DayOfWeekOf3 extends SingleOperandFunction3 {
             return format("((DATEPART(DW, %s) + @@DATEFIRST - 1) %% 8 + (DATEPART(DW, %s) + @@DATEFIRST - 1) / 8)", operandSql, operandSql);
         case POSTGRESQL:
             // need to typecast explicitly to allow usage of date literals
-            // TODO differentiate between date literals and date columns (need typecast explictly only date literals) 
+            // TODO differentiate between date literals and date columns – only date literals need to be typecasted explicitly. 
             return format("CAST(EXTRACT(ISODOW FROM %s \\:\\:timestamp) AS INT)", operand.sql(dbVersion));
         default:
             return super.sql(dbVersion);
@@ -37,6 +37,7 @@ public class DayOfWeekOf3 extends SingleOperandFunction3 {
     
     @Override
     public boolean equals(final Object obj) {
-        return this == obj || super.equals(obj) && obj instanceof DayOfWeekOf3; 
+        return this == obj || obj instanceof DayOfWeekOf3 && super.equals(obj); 
     }
+
 }

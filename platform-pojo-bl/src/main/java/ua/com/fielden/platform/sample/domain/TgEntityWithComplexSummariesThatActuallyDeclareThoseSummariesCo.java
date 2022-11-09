@@ -5,7 +5,7 @@ import ua.com.fielden.platform.dao.IEntityDao;
 /** 
  * Companion object for entity {@link TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries}.
  * 
- * @author Developers
+ * @author TG Team
  *
  */
 public interface TgEntityWithComplexSummariesThatActuallyDeclareThoseSummariesCo extends IEntityDao<TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries> {

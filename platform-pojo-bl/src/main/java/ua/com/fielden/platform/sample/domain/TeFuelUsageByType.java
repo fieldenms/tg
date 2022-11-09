@@ -20,13 +20,13 @@ import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 @KeyType(DynamicEntityKey.class)
 @CompanionObject(TeFuelUsageByTypeCo.class)
 public class TeFuelUsageByType extends AbstractEntity<DynamicEntityKey> {
-    private static final EntityResultQueryModel<TeFuelUsageByType> model_ =
+    protected static final EntityResultQueryModel<TeFuelUsageByType> model_ =
             select(TeVehicleFuelUsage.class).
                     groupBy().prop("vehicle").
                     groupBy().prop("fuelType").
                     yield().prop("vehicle").as("vehicle").
                     yield().prop("fuelType").as("fuelType").
-                    yield().sumOf().prop("qty").as("qty"). //
+                    yield().sumOf().prop("qty").as("qty").
                     modelAsEntity(TeFuelUsageByType.class);
     
     

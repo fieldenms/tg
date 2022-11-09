@@ -6,7 +6,14 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 
 import org.junit.Test;
 
-public class ExpressionModelTest {
+/**
+ * A test case to ensure that EQL expressions that contains aggregate functions are recognised as expressions with aggregations.
+ * This information is used to correctly implement dynamic query transformations for queries with aggregations. 
+ *
+ * @author TG Team
+ *
+ */
+public class ExpressionModelContainsAggregationsTest {
 
     @Test
     public void expression_with_sumOf_function_contains_aggregations() {
