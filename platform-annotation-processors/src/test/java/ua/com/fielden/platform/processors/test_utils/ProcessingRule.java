@@ -4,10 +4,12 @@ import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_P
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 
 import javax.annotation.processing.Processor;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import javax.tools.Diagnostic;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
@@ -77,7 +79,8 @@ public class ProcessingRule implements TestRule {
                         .setCompiler(compiler)
                         .setFileManager(fileManager)
                         // perform only annotation processing without subsequent compilation
-                        .setOptions(OPTION_PROC_ONLY);
+                        .setOptions(OPTION_PROC_ONLY)
+                        .setDiagnosticListener(new PrintingDiagnosticCollector<JavaFileObject>());
 
                 compilation.compileAndEvaluatef((procEnv) -> {
                     elements = procEnv.getElementUtils();
