@@ -12,7 +12,7 @@
 
 	<properties>
 		<restlet.version>2.4.3</restlet.version>
-		<jetty.version>9.4.48.v20220622</jetty.version>
+		<jetty.version>9.4.49.v20220914</jetty.version>
 	</properties>
 
 	<dependencies>
