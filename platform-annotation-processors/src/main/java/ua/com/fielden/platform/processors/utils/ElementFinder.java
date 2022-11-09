@@ -8,7 +8,6 @@ import static java.util.stream.Stream.iterate;
 import static ua.com.fielden.platform.utils.StreamUtils.stopAfter;
 
 import java.lang.annotation.Annotation;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
@@ -548,20 +547,15 @@ public class ElementFinder {
     }
 
     /**
-     * Tests whether an instance of {@link TypeMirror} ({@code typeMirror}) is strictly a subtype of a {@link Class} instance ({@code type}).
-     * A type <b>is not</b> a strict subtype of itself.
+     * Tests whether an instance of {@link TypeMirror} ({@code typeMirror}) is <b>strictly</b> a subtype of a {@link Class} instance ({@code type}).
+     * Works in the same way as {@link #isSubtype(TypeMirror, Class)}, except that a type <b>is not</b> considered to be a subtype of itself.
      *
-     * @param typeMirror
-     *            the child type
-     * @param type
-     *            the parent type
+     * @param typeMirror the child type
+     * @param type the parent type
      * @return {@code true} if and only if the first type is a strict subtype of the second
      */
     public boolean isStrictlySubtype(final TypeMirror typeMirror, final Class<?> type) {
-        if (equals(toTypeElement(typeMirror), type)) {
-            return false;
-        }
-        return types.directSupertypes(typeMirror).stream().anyMatch(tm -> isStrictlySubtype(tm, type));
+        return !equals(toTypeElement(typeMirror), type) && isSubtype(typeMirror, type);
     }
 
     public boolean isTopLevelClass(final Element element) {
