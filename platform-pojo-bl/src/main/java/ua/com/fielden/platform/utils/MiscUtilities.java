@@ -109,6 +109,18 @@ public class MiscUtilities {
     }
 
     /**
+     * Returns a substring of {@code str} starting from the first {@code match} if found, otherwise returns the original string.
+     * 
+     * @param str
+     * @param match
+     * @return
+     */
+    public static String substringFrom(final String str, final String match) {
+        final int index = str.indexOf(match);
+        return index == -1 ? str : str.substring(index);
+    }
+
+    /**
      * Converts the content of the input stream into a string.
      *
      * @param ins
