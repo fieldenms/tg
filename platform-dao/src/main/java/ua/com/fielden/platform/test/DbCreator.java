@@ -14,9 +14,11 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Set;
 
 import org.apache.logging.log4j.Logger;
 import org.hibernate.dialect.Dialect;
@@ -46,7 +48,7 @@ public abstract class DbCreator {
     public final Connection conn;
     public final Collection<PersistedEntityMetadata<?>> entityMetadatas;
 
-    private final List<String> dataScripts = new ArrayList<>();
+    private final Set<String> dataScripts = new LinkedHashSet<>();
     private final List<String> truncateScripts = new ArrayList<>();
     
     
@@ -119,7 +121,7 @@ public abstract class DbCreator {
         if (!dataScripts.isEmpty()) {
             // apply data population script
             logger.debug("Executing data population script.");
-            batchExecSql(dataScripts, conn, 100);
+            batchExecSql(new ArrayList<>(dataScripts), conn, 100);
             conn.commit();
         } else {
             try {
@@ -189,7 +191,7 @@ public abstract class DbCreator {
             }
             truncateScripts.addAll(Files.readLines(truncateTablesScriptFile, StandardCharsets.UTF_8));
 
-            batchExecSql(dataScripts, conn, 100);
+            batchExecSql(new ArrayList<>(dataScripts), conn, 100);
         } catch (final IOException ex) {
             throw new DomainDriventTestException("Could not resotre data population and truncation scripts from files.", ex);
         }
@@ -211,7 +213,7 @@ public abstract class DbCreator {
 
             if (testCase.saveDataPopulationScriptToFile()) {
                 // flush data population script to file for later use
-                saveScriptToFile(dataScripts, dataScriptFile(testCaseType));
+                saveScriptToFile(new ArrayList<>(dataScripts), dataScriptFile(testCaseType));
 
                 // flush table truncation script to file for later use
                 saveScriptToFile(truncateScripts, truncateScriptFile(testCaseType));

@@ -11,13 +11,13 @@ import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
  * @author TG Team
  *
  */
-public class H2TgDomainDrivenTestCaseInSsoAuthModeRunner extends H2TgDomainDrivenTestCaseRunner {
+public class H2DomainDrivenTestCaseInSsoAuthModeRunner extends H2DomainDrivenTestCaseRunner {
 
-    public H2TgDomainDrivenTestCaseInSsoAuthModeRunner(final Class<?> klass) throws Exception {
+    public H2DomainDrivenTestCaseInSsoAuthModeRunner(final Class<?> klass) throws Exception {
         super(klass);
     }
     
-    public H2TgDomainDrivenTestCaseInSsoAuthModeRunner(final Class<?> klass, final IDomainDrivenTestCaseConfiguration config) throws Exception {
+    public H2DomainDrivenTestCaseInSsoAuthModeRunner(final Class<?> klass, final IDomainDrivenTestCaseConfiguration config) throws Exception {
         super(klass, config);
     }
 
