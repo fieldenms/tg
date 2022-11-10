@@ -216,7 +216,7 @@ public class SecurityTokensProcessor extends AbstractProcessor {
         return !(collectedTokens.isEmpty() && elementUtils.getTypeElement(GENERATED_CLASS_NAME) != null);
     }
 
-    private Set<TypeElement> collectTokens(final Set<? extends Element> rootElements) throws Exception {
+    Set<TypeElement> collectTokens(final Set<? extends Element> rootElements) {
         return rootElements.stream()
                 .filter(el -> el.asType().getKind().equals(TypeKind.DECLARED))
                 .map(el -> (TypeElement) el)
