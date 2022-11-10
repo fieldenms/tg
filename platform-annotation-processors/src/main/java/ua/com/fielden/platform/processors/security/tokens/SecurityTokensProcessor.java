@@ -67,6 +67,9 @@ import ua.com.fielden.platform.utils.StreamUtils;
 @SupportedAnnotationTypes("*")
 public class SecurityTokensProcessor extends AbstractProcessor {
     public static final Set<Class<? extends ISecurityToken>> PLATFORM_TOKENS;
+    private static final String GENERATED_PKG_NAME = "tokens";
+    private static final String GENERATED_CLASS_SIMPLE_NAME = "TokensHierarchy";
+    private static final String GENERATED_CLASS_NAME = "%s.%s".formatted(GENERATED_PKG_NAME, GENERATED_CLASS_SIMPLE_NAME);
 
     static {
         PLATFORM_TOKENS = Set.of(
@@ -178,8 +181,18 @@ public class SecurityTokensProcessor extends AbstractProcessor {
     private void doProcess(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) throws Exception {
         collectedTokens.addAll(collectTokens(roundEnv.getRootElements()));
         if (roundEnv.processingOver()) {
-            generate();
+            if (shouldGenerate()) {
+                generate();
+            }
+            else {
+                messager.printMessage(Kind.NOTE, "No generation is required.");
+            }
         }
+    }
+
+    private boolean shouldGenerate() {
+        // don't generate if no tokens were collected and generated class already exists
+        return !(collectedTokens.isEmpty() && elementUtils.getTypeElement(GENERATED_CLASS_NAME) != null);
     }
 
     private Set<TypeElement> collectTokens(final Set<? extends Element> rootElements) throws Exception {
