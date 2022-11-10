@@ -157,10 +157,14 @@ public class SecurityTokensProcessor extends AbstractProcessor {
 
             try {
                 doProcess(annotations, roundEnv);
-            } catch (final Exception e) {
+            }
+            // we want to catch both checked and unchecked exceptions to record the fact that it was thrown 
+            // and be able to skip subsequent rounds
+            catch (final Exception e) {
                 aborted = true;
                 messager.printMessage(Kind.ERROR, "Exception was thrown, aborting.");
-                messager.printMessage(Kind.ERROR, e.toString());
+                messager.printMessage(Kind.ERROR, "%s\n%s".formatted(e.toString(),
+                        Arrays.stream(e.getStackTrace()).map(StackTraceElement::toString).collect(Collectors.joining("\n"))));
             }
         }
 
