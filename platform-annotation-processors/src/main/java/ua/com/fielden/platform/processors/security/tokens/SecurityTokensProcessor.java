@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
@@ -24,6 +25,7 @@ import javax.tools.Diagnostic.Kind;
 import com.google.common.base.Stopwatch;
 
 import ua.com.fielden.platform.security.ISecurityToken;
+import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.security.tokens.attachment.AttachmentDownload_CanExecute_Token;
 import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanDelete_Token;
@@ -202,9 +204,44 @@ public class SecurityTokensProcessor extends AbstractProcessor {
                 .filter(el -> tokenFinder.isSecurityToken(el.asType()))
                 .collect(Collectors.toSet());
     }
+
+    /**
+     * Returns a set of security tokens to be included for generation.
+     * 
+     * @return
+     */
+    private Set<TypeElement> getIncludedTokens() {
+        final Set<TypeElement> tokens = new HashSet<>();
+        tokens.addAll(collectedTokens);
+        PLATFORM_TOKENS.stream().map(el -> tokenFinder.getTypeElement(el)).forEach(el -> tokens.add(el));
+
+        return tokens;
     }
 
     private void generate() throws Exception {
+        final Set<TypeElement> includedTokens = getIncludedTokens();
+        verifyTokens(includedTokens);
+        messager.printMessage(Kind.NOTE, "Included tokens: [%s]".formatted(includedTokens.stream().map(el -> el.getSimpleName().toString())
+                .collect(joining(", "))));
+        generateStructure(includedTokens);
+    }
+
+    private void generateStructure(final Collection<? extends TypeElement> tokens) {
+    }
+    }
+
+    /**
+     * Performs verification of a collection of security tokens. Throws a runtime exception in case verification was not passed.
+     * 
+     * @param tokens
+     * @throws SecurityException
+     */
+    private void verifyTokens(final Collection<? extends TypeElement> tokens) {
+        // simple class names uniquely identify security tokens and entities!
+        if (StreamUtils.distinct(tokens.stream(), el -> el.getSimpleName().toString()).count() != tokens.size()) {
+            throw new SecurityException(SecurityTokenProvider.ERR_DUPLICATE_SECURITY_TOKENS);
+        }
+    }
     }
 
 }
