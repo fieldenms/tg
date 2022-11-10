@@ -2,9 +2,17 @@ package ua.com.fielden.platform.processors.security.tokens;
 
 import static java.util.stream.Collectors.joining;
 
+import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -17,15 +25,23 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 import javax.tools.Diagnostic.Kind;
 
 import com.google.common.base.Stopwatch;
+import com.squareup.javapoet.CodeBlock;
+import com.squareup.javapoet.JavaFile;
+import com.squareup.javapoet.ParameterizedTypeName;
+import com.squareup.javapoet.TypeSpec;
 
 import ua.com.fielden.platform.security.ISecurityToken;
 import ua.com.fielden.platform.security.exceptions.SecurityException;
+import ua.com.fielden.platform.security.provider.SecurityTokenNode;
 import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.security.tokens.attachment.AttachmentDownload_CanExecute_Token;
 import ua.com.fielden.platform.security.tokens.attachment.Attachment_CanDelete_Token;
@@ -72,6 +88,7 @@ public class SecurityTokensProcessor extends AbstractProcessor {
     private static final String GENERATED_PKG_NAME = "tokens";
     private static final String GENERATED_CLASS_SIMPLE_NAME = "TokensHierarchy";
     private static final String GENERATED_CLASS_NAME = "%s.%s".formatted(GENERATED_PKG_NAME, GENERATED_CLASS_SIMPLE_NAME);
+    private static final String INDENT = "    ";
 
     static {
         PLATFORM_TOKENS = Set.of(
@@ -113,6 +130,7 @@ public class SecurityTokensProcessor extends AbstractProcessor {
 
     private Filer filer;
     private Elements elementUtils;
+    private Types typeUtils;
     private Messager messager;
     private Map<String, String> options;
 
@@ -131,6 +149,7 @@ public class SecurityTokensProcessor extends AbstractProcessor {
         super.init(processingEnv);
         this.filer = processingEnv.getFiler();
         this.elementUtils = processingEnv.getElementUtils();
+        this.typeUtils = processingEnv.getTypeUtils();
         this.messager = processingEnv.getMessager();
         this.options = processingEnv.getOptions();
 
@@ -227,7 +246,87 @@ public class SecurityTokensProcessor extends AbstractProcessor {
     }
 
     private void generateStructure(final Collection<? extends TypeElement> tokens) {
+        messager.printMessage(Kind.NOTE, "Generating %s".formatted(GENERATED_CLASS_NAME));
+
+        final String tokenTreeFieldName = "TOKENS";
+        final String tokenMapFieldName = "TOKEN_NAMES_MAP";
+
+        final SortedSet<SecurityTokenNode> topLevelTokens = buildTokenNodes(tokens);
+        // code for populating the token tree
+        final CodeBlock.Builder tokenTreePopulationCode = CodeBlock.builder();
+        topLevelTokens.forEach(node -> tokenTreePopulationCode.addStatement(buildTokenTreePopulationStatement(tokenTreeFieldName, node)));
+        messager.printMessage(Kind.NOTE, "Top-level tokens: [%s]".formatted(topLevelTokens.stream().map(tok -> tok.getToken())
+                .collect(joining(", "))));
+
+        final TypeSpec ts = TypeSpec.classBuilder(GENERATED_CLASS_SIMPLE_NAME)
+                .addModifiers(Modifier.PUBLIC)
+                // public final static SortedSet<SecurityTokenNode> TOKENS;
+                .addField(ParameterizedTypeName.get(SortedSet.class, SecurityTokenNode.class), tokenTreeFieldName,
+                        Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                // public final static Map<String, String> TOKEN_NAMES_MAP;
+                .addField(ParameterizedTypeName.get(Map.class, String.class, String.class), tokenMapFieldName,
+                        Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                /*
+                 static {...}
+                 */
+                .addStaticBlock(CodeBlock.builder()
+                        // TOKENS = new TreeSet<SecurityTokenNode>();
+                        .addStatement("%s = new $T()".formatted(tokenTreeFieldName), ParameterizedTypeName.get(TreeSet.class,
+                                SecurityTokenNode.class))
+                        // TOKEN_NAMES_MAP = new HashMap<String, String>();
+                        .addStatement("%s = new $T()".formatted(tokenMapFieldName),
+                                ParameterizedTypeName.get(HashMap.class, String.class, String.class))
+                        // // build the tree of tokens
+                        // TOKENS.add(...)
+                        .add(tokenTreePopulationCode.build())
+                        // // TODO fill in the map 
+                        // TOKEN_NAMES_MAP.put(..., ...);
+                        .build())
+                .build();
+
+        final JavaFile javaFile = JavaFile.builder(GENERATED_PKG_NAME, ts).indent(INDENT).build();
+        try {
+            javaFile.writeTo(filer);
+        } catch (final IOException ex) {
+            messager.printMessage(Kind.ERROR, ex.getMessage());
+            return;
+        }
+
+        messager.printMessage(Kind.NOTE, "Generated %s.%s".formatted(javaFile.packageName, ts.name));
     }
+
+    /**
+     * Builds code that populates the token tree with a token node and its sub-nodes recursively.
+     * For example, assume that {@code fieldName = "tokens"}:
+     * 
+     * <pre>
+     * tokens.add(new SecurityTokenNode("example.Token")
+     *         .add(new SecurityTokenNode("example.SubToken")));
+     * </pre>
+     * 
+     * @see #buildTokenTreePopulationStatementRecursive(SecurityTokenNode)
+     * 
+     * @param fieldName
+     * @param node
+     * @return
+     */
+    private String buildTokenTreePopulationStatement(final String fieldName, final SecurityTokenNode node) {
+        return "%s.add(%s)".formatted(fieldName, buildTokenTreePopulationStatementRecursive(node));
+    }
+
+    /**
+     * Recursively builds a token tree population statement with a token node and its sub-nodes.
+     * 
+     * @param node
+     * @return
+     */
+    private String buildTokenTreePopulationStatementRecursive(final SecurityTokenNode node) {
+        final StringBuilder statement = new StringBuilder("new SecurityTokenNode(\"%s\", \"%s\", \"%s\")".formatted(
+                node.getToken(), /*shortDesc*/"", /*longDesc*/""));
+        for (final SecurityTokenNode subTokenNode : node.getSubTokenNodes()) {
+        statement.append(".add(%s)".formatted(buildTokenTreePopulationStatementRecursive(subTokenNode)));
+        }
+        return statement.toString();
     }
 
     /**
@@ -242,6 +341,79 @@ public class SecurityTokensProcessor extends AbstractProcessor {
             throw new SecurityException(SecurityTokenProvider.ERR_DUPLICATE_SECURITY_TOKENS);
         }
     }
+
+    /**
+     * Transforms a flat collection of security tokens into a hierarchy of {@link SecurityTokenNode} nodes.
+     * <p>
+     * The result is a forest of trees (i.e., multiple trees), ordered according to the comparator, implemented by {@link SecurityTokenNode}.
+     * Tree roots represent the top-level tokens.
+     *
+     * @param allTokens
+     * @return
+     */
+    private SortedSet<SecurityTokenNode> buildTokenNodes(final Collection<? extends TypeElement> allTokens) {
+        final Map<String, SecurityTokenNode> topTokenNodes = new HashMap<>();
+        allTokens.forEach(token -> addTokenToHierarchy(token, topTokenNodes));
+        return new TreeSet<>(topTokenNodes.values());
+    }
+
+    /**
+     * Adds the {@link SecurityTokenNode} instance for specified token into the specified topTokenNodes hierarchy if it doesn't exists.
+     * Populates the token hierarchy {@code topTokenNodes} with a token represented by {@code tokenElement} and its sub-tokens if they
+     * don't already exist.
+     *
+     * @param tokenElement token to be inserted
+     * @param topTokenNodes token hierarchy
+     */
+    private void addTokenToHierarchy(final TypeElement tokenElement, final Map<String, SecurityTokenNode> topTokenNodes) {
+        // First get a list of super classes and then for each such class that doesn't exist in the hierarchy of SecurityTokenNodes, create a node and add it to the hierarchy.
+        final List<TypeElement> tokenHierarchy = genHierarchyPath(tokenElement);
+        tokenHierarchy.stream().reduce((SecurityTokenNode) null, (tokenNode, tokenEl) -> {
+            final String tokenName = tokenEl.getQualifiedName().toString();
+            // Argument tokenNode can only be null if tokenClass is the top most class, implementing ISecurityToken.
+            // Otherwise tokenNode was created for a super class of tokenClass.
+            SecurityTokenNode nextNode = tokenNode == null ? topTokenNodes.get(tokenName) : tokenNode
+                    .getSubTokenNode(tokenName);
+            // If there is no next token node for tokenClass then create a new one, and
+            // add it to the hierarchy as a sub-node of tokenNode or, if tokenNode is null, nextNode becomes top most node.
+            if (nextNode == null) {
+                // a token for the next node is a sub class of the token represented by tokenNode
+                nextNode = new SecurityTokenNode(tokenName, determineShortDesc(tokenElement), determineLongDesc(tokenElement));
+                // Is next token the top most?
+                if (tokenNode == null) {
+                    topTokenNodes.put(tokenName, nextNode);
+                }
+                else {
+                    tokenNode.add(nextNode);
+                }
+            }
+            return nextNode;
+        }, (prev, next) -> next);
+    }
+
+    /**
+     * Linearises the class hierarchy of specified token starting from class that directly implements ISecurityToken to the class specified as token.
+     *
+     * @param token
+     * @return
+     */
+    private List<TypeElement> genHierarchyPath(final TypeElement token) {
+        final TypeMirror rootTokenType = tokenFinder.getTypeElement(ISecurityToken.class).asType();
+        final List<TypeElement> hierarchy = Stream.iterate(
+                /*seed*/    token,
+                /*hasNext*/ t -> typeUtils.isSubtype(t.asType(), rootTokenType),
+                /*next*/    t -> tokenFinder.toTypeElement(t.getSuperclass()))
+                .collect(Collectors.toList()); // collect to modifiable list
+        Collections.reverse(hierarchy);
+        return hierarchy;
+    }
+
+    private String determineLongDesc(final TypeElement tokenElement) {
+        return "";
+    }
+
+    private String determineShortDesc(final TypeElement tokenElement) {
+        return "";
     }
 
 }
