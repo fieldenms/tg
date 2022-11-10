@@ -6,7 +6,9 @@ import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.shortDesc;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.SortedSet;
 import java.util.TreeSet;
 
@@ -31,7 +33,7 @@ public class SecurityTokenNode implements Comparable<SecurityTokenNode>, ITreeNo
     /**
      * A list of nodes representing direct sub-tokens.
      */
-    private final SortedSet<SecurityTokenNode> subTokenNodes;
+    private final Map<Class<? extends ISecurityToken>, SecurityTokenNode> subTokenNodes;
     /**
      * Short security token description.
      */
@@ -66,7 +68,7 @@ public class SecurityTokenNode implements Comparable<SecurityTokenNode>, ITreeNo
         this.longDesc = longDesc(token);
         this.token = token;
         this.superTokenNode = superTokenNode;
-        this.subTokenNodes = new TreeSet<>();
+        this.subTokenNodes = new HashMap<>();
 
         if (superTokenNode != null) {
             superTokenNode.add(this);
@@ -89,7 +91,7 @@ public class SecurityTokenNode implements Comparable<SecurityTokenNode>, ITreeNo
      * @return
      */
     private SecurityTokenNode add(final SecurityTokenNode subTokenNode) {
-        subTokenNodes.add(subTokenNode);
+        subTokenNodes.put(subTokenNode.getToken(), subTokenNode);
         return this;
     }
 
@@ -110,7 +112,11 @@ public class SecurityTokenNode implements Comparable<SecurityTokenNode>, ITreeNo
     }
 
     public SortedSet<SecurityTokenNode> getSubTokenNodes() {
-        return Collections.unmodifiableSortedSet(subTokenNodes);
+        return Collections.unmodifiableSortedSet(new TreeSet<>(subTokenNodes.values()));
+    }
+
+    public SecurityTokenNode getSubTokenNode(final Class<? extends ISecurityToken> token) {
+        return subTokenNodes.get(token);
     }
 
     @Override
@@ -141,10 +147,10 @@ public class SecurityTokenNode implements Comparable<SecurityTokenNode>, ITreeNo
     public String toString() {
         return shortDesc;
     }
-    
+
     @Override
     public List<SecurityTokenNode> daughters() {
-        return new ArrayList<>(subTokenNodes);
+        return new ArrayList<>(new TreeSet<>(subTokenNodes.values()));
     }
 
     @Override

@@ -35,38 +35,52 @@ public class CountDateInterval3 extends TwoOperandsFunction3 {
     }
 
     private String sqlForPostgres(final String op1Sql, final String op2Sql) {
+        final String yearSql = sqlForPostgresExtractYear(op1Sql, op2Sql);
+        final String monthSql = sqlForPostgresExtractMonth(op1Sql, op2Sql);
         final String daySql = sqlForPostgresExtractDay(op1Sql, op2Sql);
         final String hourSql = sqlForPostgresExtractHour(op1Sql, op2Sql);
         final String minuteSql = sqlForPostgresExtractMinute(op1Sql, op2Sql);
         final String secondSql = sqlForPostgresExtractSecond(op1Sql, op2Sql);
         switch (intervalUnit) {
         case SECOND:
-            return format("24 * 60 * 60 * %s + 60 * 60 * %s + 60 * %s + %s", daySql, hourSql, minuteSql, secondSql);
+            return format("24 * 60 * 60 * (%s) + 60 * 60 * (%s) + 60 * (%s) + %s", daySql, hourSql, minuteSql, secondSql);
         case MINUTE:
-            return format("24 * 60 * %s  + 60 * %s + %s", daySql, hourSql, minuteSql);
+            return format("24 * 60 * (%s)  + 60 * (%s) + %s", daySql, hourSql, minuteSql);
         case HOUR:
-            return format("24 * %s + %s", daySql, hourSql);
+            return format("24 * (%s) + %s", daySql, hourSql);
         case DAY:
             return daySql;
+        case MONTH:
+            return format("12 * (%s) + %s", yearSql, monthSql);
+        case YEAR:
+            return yearSql;
         default:
             throw new EqlStage3ProcessingException("Unexpected interval unit: " + intervalUnit);
         }
     }
 
+    private String sqlForPostgresExtractYear(final String operand1Sql, final String operand2Sql) {
+        return format("EXTRACT(YEAR FROM (%s \\:\\:timestamp)) - EXTRACT(YEAR FROM (%s \\:\\:timestamp))", operand1Sql, operand2Sql);
+    }
+
+    private String sqlForPostgresExtractMonth(final String operand1Sql, final String operand2Sql) {
+        return format("EXTRACT(MONTH FROM (%s \\:\\:timestamp)) - EXTRACT(MONTH FROM (%s \\:\\:timestamp))", operand1Sql, operand2Sql);
+    }
+
     private String sqlForPostgresExtractDay(final String operand1Sql, final String operand2Sql) {
-        return format("EXTRACT(DAY FROM (%s - %s))", operand1Sql, operand2Sql);
+        return format("EXTRACT(DAY FROM (DATE_TRUNC('day', %s \\:\\:timestamp) - DATE_TRUNC('day', %s \\:\\:timestamp)))", operand1Sql, operand2Sql);
     }
 
     private String sqlForPostgresExtractHour(final String operand1Sql, final String operand2Sql) {
-        return format("EXTRACT(HOUR FROM (%s - %s))", operand1Sql, operand2Sql);
+        return format("EXTRACT(HOUR FROM (%s \\:\\:timestamp)) - EXTRACT(HOUR FROM (%s \\:\\:timestamp))", operand1Sql, operand2Sql);
     }
 
     private String sqlForPostgresExtractMinute(final String operand1Sql, final String operand2Sql) {
-        return format("EXTRACT(MINUTE FROM (%s - %s))", operand1Sql, operand2Sql);
+        return format("EXTRACT(MINUTE FROM (%s \\:\\:timestamp)) - EXTRACT(MINUTE FROM (%s \\:\\:timestamp))", operand1Sql, operand2Sql);
     }
 
     private String sqlForPostgresExtractSecond(final String operand1Sql, final String operand2Sql) {
-        return format("EXTRACT(SECOND FROM (%s - %s))", operand1Sql, operand2Sql);
+        return format("EXTRACT(SECOND FROM (%s \\:\\:timestamp)) - EXTRACT(SECOND FROM (%s \\:\\:timestamp))", operand1Sql, operand2Sql);
     }
 
     private String sqlForMssqlAndH2IntervalUnit(final String intervalUnitStr, final String op1Sql, final String op2Sql) {

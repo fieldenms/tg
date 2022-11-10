@@ -50,6 +50,8 @@ import ua.com.fielden.platform.sample.domain.TgAuthorship;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummaries;
+import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries;
+import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummariesThatActuallyDeclareThoseSummariesCo;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
@@ -714,9 +716,9 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     
     @Test
     public void eql3_query_executes_correctly61() {
-        final ITgEntityWithComplexSummaries co = getInstance(ITgEntityWithComplexSummaries.class);
-        final EntityResultQueryModel<TgEntityWithComplexSummaries> qry = select(TgEntityWithComplexSummaries.class).model();
-        co.getAllEntities(from(qry).with("EQL3", null).with(fetchIdOnly(TgEntityWithComplexSummaries.class).without("id").with("costPerKm")).model());
+        final TgEntityWithComplexSummariesThatActuallyDeclareThoseSummariesCo co = co(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class);
+        final EntityResultQueryModel<TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries> qry = select(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class).model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(fetchIdOnly(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class).without("id").with("costPerKm")).model());
     }
     
     @Test
@@ -1199,10 +1201,5 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         save(new_composite(TgAuthorship.class, chrisDate, "Database Design and Relational Theory").setYear(2012));
         save(new_composite(TgAuthorship.class, chrisDate, "SQL and Relational Theory").setYear(2015));
         save(new_composite(TgAuthorship.class, yurijShcherbyna, "Дискретна математика").setYear(2007));
-
-        save(new_(TgEntityWithComplexSummaries.class, "veh1").setKms(200).setCost(100));
-        save(new_(TgEntityWithComplexSummaries.class, "veh2").setKms(0).setCost(100));
-        save(new_(TgEntityWithComplexSummaries.class, "veh3").setKms(300).setCost(100));
-        save(new_(TgEntityWithComplexSummaries.class, "veh4").setKms(0).setCost(200));
     }
 }

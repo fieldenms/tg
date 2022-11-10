@@ -20,7 +20,9 @@ public class AddDateInterval3 extends TwoOperandsFunction3 {
     public String sql(final DbVersion dbVersion) {
         switch (dbVersion) {
         case POSTGRESQL:
-            return format("('1 %s' * %s + %s)",  intervalUnit, operand1.sql(dbVersion), operand2.sql(dbVersion));
+            // Date operator needs to be explicitly typecasted to timestamp.
+            // For more details, please refer to https://stackoverflow.com/questions/7475876/using-hibernate-query-colon-gets-treated-as-parameter-escaping-colon
+            return format("(INTERVAL '1 %s' * %s + %s \\:\\:timestamp)",  intervalUnit, operand1.sql(dbVersion), operand2.sql(dbVersion));
         case H2:
             return format("DATEADD('%s', %s, %s)",  intervalUnit, operand1.sql(dbVersion), operand2.sql(dbVersion));
         case MSSQL:

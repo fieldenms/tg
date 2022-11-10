@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.test.server;
 
 import static java.lang.String.format;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
 
 import java.io.FileInputStream;
@@ -11,14 +13,17 @@ import java.util.List;
 import java.util.Properties;
 import java.util.SortedSet;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
+import org.hibernate.dialect.PostgreSQL82Dialect;
 import org.joda.time.DateTime;
 
 import fielden.test_app.close_leave.TgCloseLeaveExample;
 import ua.com.fielden.platform.algorithm.search.ISearchAlgorithm;
 import ua.com.fielden.platform.algorithm.search.bfs.BreadthFirstSearch;
+import ua.com.fielden.platform.basic.config.exceptions.ApplicationConfigurationException;
 import ua.com.fielden.platform.devdb_support.DomainDrivenDataPopulation;
 import ua.com.fielden.platform.devdb_support.SecurityTokenAssociator;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -90,15 +95,47 @@ public class PopulateDb extends DomainDrivenDataPopulation {
 
     public static void main(final String[] args) throws Exception {
         LOGGER.info("Initialising...");
-        final String configFileName = args.length == 1 ? args[0] : "src/main/resources/application.properties";
-        final Properties props = new Properties();
+        final var props = new Properties();
+        final String propsFileSuffix; // is used to load either application-PostreSql.properties or application-SqlServer.properties
+        // Three system properties are required: databaseUri, databaseUser and databasePasswd.
+        final var databseUri = System.getProperty("databaseUri");
+        if (isEmpty(databseUri)) {
+            throw new ApplicationConfigurationException("Property 'databaseUri' is required.");
+        } else {
+            final String jdbcUri;
+            if (databseUri.contains("5432")) {
+                propsFileSuffix = "PostgreSql";
+                jdbcUri = "jdbc:postgresql:" + databseUri; 
+            } else {
+                propsFileSuffix = "SqlServer";
+                jdbcUri = "jdbc:sqlserver:" + databseUri; 
+ 
+            }
+            props.put("hibernate.connection.url", jdbcUri);
+        }
+        final var dbUser = System.getProperty("databaseUser");
+        if (isEmpty(dbUser)) {
+            throw new ApplicationConfigurationException("Property 'databaseUser' is required.");
+        } else {
+            props.put("hibernate.connection.username", dbUser);
+        }
+        final var dbPasswd = System.getProperty("databasePasswd");
+        if (isEmpty(dbPasswd)) {
+            throw new ApplicationConfigurationException("Property 'databasePasswd' is required.");
+        } else {
+            props.put("hibernate.connection.password", dbPasswd);
+        }
+        // Default application-PostreSql.properties and application-SqlServer.properties do not have any of the properties already assigned from system properties databaseUri, databaseUser and databasePasswd.
+        // However, if some alternative application.properties is provided, which contains those properties, the values from the file will get used.
+        final String configFileName = args.length == 1 ? args[0] : "src/main/resources/application-%s.properties".formatted(propsFileSuffix);
         try (final FileInputStream in = new FileInputStream(configFileName)) {
             props.load(in);
         }
-
+        
+        
         LOGGER.info("Obtaining Hibernate dialect...");
         final Class<?> dialectType = Class.forName(props.getProperty("hibernate.dialect"));
-        final Dialect dialect = (Dialect) dialectType.newInstance();
+        final Dialect dialect = (Dialect) dialectType.getDeclaredConstructor().newInstance();
         LOGGER.info(format("Running with dialect %s...", dialect));
         final DataPopulationConfig config = new DataPopulationConfig(props);
         LOGGER.info("Generating DDL and running it against the target DB...");
@@ -106,9 +143,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         // use TG DDL generation or 
         // Hibernate DDL generation final List<String> createDdl = DbUtils.generateSchemaByHibernate()
         final List<String> createDdl = config.getDomainMetadata().generateDatabaseDdl(dialect);
-        final List<String> ddl = dialect instanceof H2Dialect ? 
-                                 DbUtils.prependDropDdlForH2(createDdl) : 
-                                 DbUtils.prependDropDdlForSqlServer(createDdl);
+        final List<String> ddl = dialect instanceof H2Dialect ?           DbUtils.prependDropDdlForH2(createDdl) :
+                                 dialect instanceof PostgreSQL82Dialect ? DbUtils.prependDropDdlForPostgresql(createDdl) :
+                                                                          DbUtils.prependDropDdlForSqlServer(createDdl);
         DbUtils.execSql(ddl, config.getInstance(HibernateUtil.class).getSessionFactory().getCurrentSession());
         
         final PopulateDb popDb = new PopulateDb(config, props);
