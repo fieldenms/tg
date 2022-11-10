@@ -13,8 +13,8 @@ import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
-import ua.com.fielden.platform.eql.stage2.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.TransformationContext2;
+import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.Value2;
 import ua.com.fielden.platform.eql.stage3.etc.Yield3;
@@ -47,15 +47,15 @@ public class Yields2 {
         return unmodifiableSortedMap(yieldsMap);
     }
     
-    public TransformationResult<Yields3> transform(final TransformationContext context) {
+    public TransformationResult2<Yields3> transform(final TransformationContext2 context) {
         final List<Yield3> yieldsList = new ArrayList<>(); 
-        TransformationContext currentContext = context;
+        TransformationContext2 currentContext = context;
         for (final Yield2 yield : yieldsMap.values()) {
-            final TransformationResult<Yield3> yieldTr = yield.transform(currentContext);
+            final TransformationResult2<Yield3> yieldTr = yield.transform(currentContext);
             currentContext = yieldTr.updatedContext;
             yieldsList.add(yieldTr.item);
         }
-        return new TransformationResult<>(new Yields3(yieldsList), currentContext);
+        return new TransformationResult2<>(new Yields3(yieldsList), currentContext);
     }
     
     public Set<Prop2> collectProps() {

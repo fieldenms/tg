@@ -49,10 +49,12 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
@@ -140,6 +142,10 @@ public class DomainMetadata {
             final boolean eql2) {
         this.dbVersion = dbVersion;
         this.eql2 = eql2;
+        
+        if (eql2) {
+            System.out.println("*** EQL2 mode is on! ***");
+        }
 
         this.hibTypesDefaults = new ConcurrentHashMap<>(entityTypes.size());
         this.persistedEntityMetadataMap = new ConcurrentHashMap<>(entityTypes.size());
@@ -179,7 +185,7 @@ public class DomainMetadata {
 
         this.hibTypesInjector = hibTypesInjector;
         
-        this.eqlDomainMetadata = new EqlDomainMetadata(htd, hibTypesInjector, entityTypes, dbVersion);
+        this.eqlDomainMetadata = eql2 ? null : new EqlDomainMetadata(htd, hibTypesInjector, entityTypes, dbVersion);
 
         // the following operations are a bit heave and benefit from parallel processing
         entityTypes.parallelStream().forEach(entityType -> {
@@ -218,12 +224,12 @@ public class DomainMetadata {
         
         final ColumnDefinitionExtractor columnDefinitionExtractor = new ColumnDefinitionExtractor(hibTypesInjector, this.hibTypesDefaults);
         
-        final List<Class<? extends AbstractEntity<?>>> persystentTypes = entityTypes.stream().filter(et -> isPersistedEntityType(et)).collect(Collectors.toList());
+        final List<Class<? extends AbstractEntity<?>>> persistentTypes = entityTypes.stream().filter(et -> isPersistedEntityType(et)).collect(Collectors.toList());
         
-        final List<String> ddlTables = new LinkedList<>();
-        final List<String> ddlFKs = new LinkedList<>();
+        final Set<String> ddlTables = new LinkedHashSet<>();
+        final Set<String> ddlFKs = new LinkedHashSet<>();
         
-        for (final Class<? extends AbstractEntity<?>> entityType : persystentTypes) {
+        for (final Class<? extends AbstractEntity<?>> entityType : persistentTypes) {
             final TableDdl tableDefinition = new TableDdl(columnDefinitionExtractor, entityType);
             ddlTables.add(tableDefinition.createTableSchema(dialect, ""));
             ddlTables.add(tableDefinition.createPkSchema(dialect));
@@ -239,12 +245,12 @@ public class DomainMetadata {
     public List<String> generateDatabaseDdl(final Dialect dialect, final Class<? extends AbstractEntity<?>> type, final Class<? extends AbstractEntity<?>>... types) {
         final ColumnDefinitionExtractor columnDefinitionExtractor = new ColumnDefinitionExtractor(hibTypesInjector, this.hibTypesDefaults);
         
-        final List<Class<? extends AbstractEntity<?>>> persystentTypes = StreamUtils.of(type, types).filter(et -> isPersistedEntityType(et)).collect(Collectors.toList());
+        final List<Class<? extends AbstractEntity<?>>> persistentTypes = StreamUtils.of(type, types).filter(et -> isPersistedEntityType(et)).collect(Collectors.toList());
         
-        final List<String> ddlTables = new LinkedList<>();
-        final List<String> ddlFKs = new LinkedList<>();
+        final Set<String> ddlTables = new LinkedHashSet<>();
+        final Set<String> ddlFKs = new LinkedHashSet<>();
         
-        for (final Class<? extends AbstractEntity<?>> entityType : persystentTypes) {
+        for (final Class<? extends AbstractEntity<?>> entityType : persistentTypes) {
             final TableDdl tableDefinition = new TableDdl(columnDefinitionExtractor, entityType);
             ddlTables.add(tableDefinition.createTableSchema(dialect, "\n"));
             ddlTables.add(tableDefinition.createPkSchema(dialect));

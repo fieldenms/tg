@@ -8,9 +8,10 @@ import static ua.com.fielden.platform.eql.meta.EqlDomainMetadata.typeResolver;
 import java.util.Objects;
 import java.util.Set;
 
-import ua.com.fielden.platform.eql.stage2.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.TransformationContext2;
+import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage3.operands.Value3;
+import ua.com.fielden.platform.types.tuples.T2;
 
 public class Value2 implements ISingleOperand2<Value3> {
     private final Object value;
@@ -49,12 +50,13 @@ public class Value2 implements ISingleOperand2<Value3> {
     }
     
     @Override
-    public TransformationResult<Value3> transform(final TransformationContext context) {
+    public TransformationResult2<Value3> transform(final TransformationContext2 context) {
         if (needsParameter()) {
-            final Value3 transformed = new Value3(value, context.paramId, hibType());
-            return new TransformationResult<>(transformed, context.cloneWithParamValue(transformed.getParamName(), transformed.value));
+            final T2<String, TransformationContext2> paramTr = context.obtainParamNameAndUpdateContext(value);
+            final Value3 transformed = new Value3(value, paramTr._1, hibType());
+            return new TransformationResult2<>(transformed, paramTr._2);
         } else {
-            return new TransformationResult<>(new Value3(value, 0, hibType()), context);
+            return new TransformationResult2<>(new Value3(value, null, hibType()), context);
         }
     }
 

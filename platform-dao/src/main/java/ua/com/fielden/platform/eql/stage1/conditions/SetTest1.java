@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage1.conditions;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage1.TransformationContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.ISetOperand1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.conditions.SetTest2;
@@ -21,7 +21,7 @@ public class SetTest1 implements ICondition1<SetTest2> {
     }
 
     @Override
-    public SetTest2 transform(final TransformationContext context) {
+    public SetTest2 transform(final TransformationContext1 context) {
         return new SetTest2(leftOperand.transform(context), negated, rightOperand.transform(context));
     }
 

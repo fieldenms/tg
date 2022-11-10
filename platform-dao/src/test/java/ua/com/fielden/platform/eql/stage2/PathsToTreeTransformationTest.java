@@ -11,11 +11,8 @@ import org.junit.Test;
 import ua.com.fielden.platform.eql.meta.EqlStage2TestCase;
 import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage2.operands.ResultQuery2;
-import ua.com.fielden.platform.eql.stage2.sources.Child;
 import ua.com.fielden.platform.eql.stage2.sources.ChildGroup;
-import ua.com.fielden.platform.sample.domain.TeVehicleMake;
 import ua.com.fielden.platform.sample.domain.TeWorkOrder;
-import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.types.tuples.T2;
 
 public class PathsToTreeTransformationTest extends EqlStage2TestCase {
@@ -44,12 +41,12 @@ public class PathsToTreeTransformationTest extends EqlStage2TestCase {
                 //qryCountAll2(select(VEHICLE).where().anyOfProps("initDate", "station.name", "station.parent.name", "replacedBy.initDate").isNotNull());
         final ResultQuery2 actQry = res._2;
         
-        final PathsToTreeTransformator p2tt = new PathsToTreeTransformator(DOMAIN_METADATA.eqlDomainMetadata, res._1);
-        Map<String, List<Child>> children = p2tt.transform(actQry.collectProps());
-        for (Entry<String, List<Child>> el : children.entrySet()) {
+        final PathsToTreeTransformer p2tt = new PathsToTreeTransformer(DOMAIN_METADATA.eqlDomainMetadata, res._1);
+        final Map<Integer, List<ChildGroup>> children = p2tt.transform(actQry.collectProps());
+        for (final Entry<Integer, List<ChildGroup>> el : children.entrySet()) {
             System.out.println("\n<<< QrySource: " + el.getKey());
             int i = 1;
-            for (Child child : el.getValue()) {
+            for (ChildGroup child : el.getValue()) {
                 System.out.println(child);
                 i  = i + 1;
                 
@@ -62,8 +59,8 @@ public class PathsToTreeTransformationTest extends EqlStage2TestCase {
         System.out.println("=====================================================================");
         System.out.println("=====================================================================");
         
-        Map<String, List<ChildGroup>> children2 = p2tt.groupChildren(actQry.collectProps());
-        for (Entry<String, List<ChildGroup>> el : children2.entrySet()) {
+        final Map<Integer, List<ChildGroup>> children2 = p2tt.transform(actQry.collectProps());
+        for (final  Entry<Integer, List<ChildGroup>> el : children2.entrySet()) {
             System.out.println("<<< QrySource: " + el.getKey());
             int i = 1;
             for (ChildGroup child : el.getValue()) {

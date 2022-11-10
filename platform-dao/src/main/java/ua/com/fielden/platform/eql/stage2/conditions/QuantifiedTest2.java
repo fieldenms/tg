@@ -6,8 +6,8 @@ import java.util.Set;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.eql.meta.Quantifier;
-import ua.com.fielden.platform.eql.stage2.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.TransformationContext2;
+import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.SubQuery2;
@@ -34,11 +34,11 @@ public class QuantifiedTest2 extends AbstractCondition2<QuantifiedTest3> {
     }
 
     @Override
-    public TransformationResult<QuantifiedTest3> transform(final TransformationContext context) {
-        final TransformationResult<? extends ISingleOperand3> leftOperandTr = leftOperand.transform(context);
-        final TransformationResult<SubQuery3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
+    public TransformationResult2<QuantifiedTest3> transform(final TransformationContext2 context) {
+        final TransformationResult2<? extends ISingleOperand3> leftOperandTr = leftOperand.transform(context);
+        final TransformationResult2<SubQuery3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
         
-        return new TransformationResult<>(new QuantifiedTest3(leftOperandTr.item, operator, quantifier, rightOperandTr.item), rightOperandTr.updatedContext);
+        return new TransformationResult2<>(new QuantifiedTest3(leftOperandTr.item, operator, quantifier, rightOperandTr.item), rightOperandTr.updatedContext);
     }
 
     @Override

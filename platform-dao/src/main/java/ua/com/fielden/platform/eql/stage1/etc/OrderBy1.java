@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage1.etc;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage1.TransformationContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.etc.OrderBy2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
@@ -24,7 +24,7 @@ public class OrderBy1 {
         this.yieldName = yieldName;
     }
 
-    public OrderBy2 transform(final TransformationContext context) {
+    public OrderBy2 transform(final TransformationContext1 context) {
         return operand != null ? new OrderBy2(operand.transform(context), isDesc) : new OrderBy2(yieldName, isDesc);
     }
 

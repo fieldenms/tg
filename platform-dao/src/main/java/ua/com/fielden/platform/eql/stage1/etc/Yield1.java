@@ -2,7 +2,7 @@ package ua.com.fielden.platform.eql.stage1.etc;
 
 import java.util.Objects;
 
-import ua.com.fielden.platform.eql.stage1.TransformationContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.etc.Yield2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
@@ -18,7 +18,7 @@ public class Yield1 {
         this.hasRequiredHint = hasRequiredHint;
     }
     
-    public Yield2 transform(final TransformationContext context) {
+    public Yield2 transform(final TransformationContext1 context) {
         return new Yield2(operand.transform(context), alias, hasRequiredHint);
     }
 

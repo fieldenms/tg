@@ -37,7 +37,6 @@ import ua.com.fielden.platform.security.annotations.SessionCache;
 import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.annotations.TrustedDeviceSessionDuration;
 import ua.com.fielden.platform.security.annotations.UntrustedDeviceSessionDuration;
-import ua.com.fielden.platform.security.provider.SecurityTokenProvider;
 import ua.com.fielden.platform.security.session.UserSession;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
@@ -62,21 +61,11 @@ import ua.com.fielden.platform.utils.IUniversalConstants;
 public class PlatformTestServerModule extends BasicWebServerModule {
 
     private final List<Class<? extends AbstractEntity<?>>> domainTypes;
-    
-    public PlatformTestServerModule(final Map<Class, Class> defaultHibernateTypes, //
-            final IApplicationDomainProvider applicationDomainProvider,//
-            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
-            final Class<? extends IFilter> automaticDataFilterType, //
-            final SecurityTokenProvider tokenProvider,//
-            final Properties props) throws Exception {
-        super(defaultHibernateTypes, applicationDomainProvider, serialisationClassProviderType, automaticDataFilterType, tokenProvider, props);
-        domainTypes = applicationDomainProvider.entityTypes();
-    }
 
-    public PlatformTestServerModule(final Map<Class, Class> defaultHibernateTypes, //
-            final IApplicationDomainProvider applicationDomainProvider,//
-            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
-            final Class<? extends IFilter> automaticDataFilterType, //
+    public PlatformTestServerModule(final Map<Class, Class> defaultHibernateTypes,
+            final IApplicationDomainProvider applicationDomainProvider,
+            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
+            final Class<? extends IFilter> automaticDataFilterType,
             final Properties props) throws Exception {
         super(defaultHibernateTypes, applicationDomainProvider, serialisationClassProviderType, automaticDataFilterType, null, props);
         domainTypes = applicationDomainProvider.entityTypes();
@@ -109,6 +98,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(ITgOrgUnit3.class).to(TgOrgUnit3Dao.class);
         bind(ITgOrgUnit4.class).to(TgOrgUnit4Dao.class);
         bind(ITgOrgUnit5.class).to(TgOrgUnit5Dao.class);
+        bind(TgOrgUnit5WithSummariesCo.class).to(TgOrgUnit5WithSummariesDao.class);
 
         bind(ITgBogieLocation.class).to(TgBogieLocationDao.class);
         bind(ITgBogie.class).to(TgBogieDao.class);
@@ -138,6 +128,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(ITgAuthor.class).to(TgAuthorDao.class);
         bind(ITgFuelUsage.class).to(TgFuelUsageDao.class);
         bind(ITeVehicleFuelUsage.class).to(TeVehicleFuelUsageDao.class);
+        bind(TeFuelUsageByTypeCo.class).to(TeFuelUsageByTypeDao.class);
         bind(ITgWorkOrder.class).to(TgWorkOrderDao.class);
         bind(ITeWorkOrder.class).to(TeWorkOrderDao.class);
         bind(ITgModelCount.class).to(TgModelCountDao.class);
@@ -164,6 +155,7 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(ITeAverageFuelUsage.class).to(TeAverageFuelUsageDao.class);
         bind(ITgVehicleFuelUsage.class).to(TgVehicleFuelUsageDao.class);
         bind(ITgEntityWithComplexSummaries.class).to(TgEntityWithComplexSummariesDao.class);
+        bind(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummariesCo.class).to(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummariesDao.class);
 
         bind(ITgAuthorship.class).to(TgAuthorshipDao.class);
         bind(ITgAuthorRoyalty.class).to(TgAuthorRoyaltyDao.class);

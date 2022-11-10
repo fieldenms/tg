@@ -8,6 +8,9 @@ import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.query.DbVersion.H2;
+import static ua.com.fielden.platform.entity.query.DbVersion.MSSQL;
+import static ua.com.fielden.platform.entity.query.DbVersion.POSTGRESQL;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.expr;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
@@ -15,6 +18,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAndInstrument;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchNone;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
@@ -23,6 +27,7 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -53,6 +58,7 @@ import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
+import ua.com.fielden.platform.sample.domain.ITeAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.ITgAuthor;
 import ua.com.fielden.platform.sample.domain.ITgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.ITgBogie;
@@ -70,12 +76,18 @@ import ua.com.fielden.platform.sample.domain.ITgVehicleModel;
 import ua.com.fielden.platform.sample.domain.ITgWagon;
 import ua.com.fielden.platform.sample.domain.ITgWagonSlot;
 import ua.com.fielden.platform.sample.domain.ITgWorkshop;
+import ua.com.fielden.platform.sample.domain.TeAverageFuelUsage;
+import ua.com.fielden.platform.sample.domain.TeFuelUsageByType;
+import ua.com.fielden.platform.sample.domain.TeFuelUsageByTypeCo;
+import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAuthorship;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummaries;
+import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries;
+import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummariesThatActuallyDeclareThoseSummariesCo;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgMakeCount;
@@ -84,6 +96,8 @@ import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit4;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit5WithSummaries;
+import ua.com.fielden.platform.sample.domain.TgOrgUnit5WithSummariesCo;
 import ua.com.fielden.platform.sample.domain.TgPersonName;
 import ua.com.fielden.platform.sample.domain.TgPublishedYearly;
 import ua.com.fielden.platform.sample.domain.TgTimesheet;
@@ -95,15 +109,16 @@ import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgWagon;
 import ua.com.fielden.platform.sample.domain.TgWagonSlot;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
-import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
 import ua.com.fielden.platform.security.user.IUser;
-import ua.com.fielden.platform.security.user.UserAndRoleAssociationCo;
-import ua.com.fielden.platform.security.user.UserRoleCo;
+import ua.com.fielden.platform.security.user.SecurityRoleAssociationCo;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.security.user.UserAndRoleAssociation;
+import ua.com.fielden.platform.security.user.UserAndRoleAssociationCo;
 import ua.com.fielden.platform.security.user.UserRole;
+import ua.com.fielden.platform.security.user.UserRoleCo;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntityQueryExecutionTest extends AbstractDaoTestCase {
@@ -130,6 +145,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     private final ITgAverageFuelUsage averageFuelUsageDao = getInstance(ITgAverageFuelUsage.class);
     private final ITgOrgUnit5 orgUnit5Dao = getInstance(ITgOrgUnit5.class);
     private final ITgEntityWithComplexSummaries coEntityWithComplexSummaries = getInstance(ITgEntityWithComplexSummaries.class);
+    private final TgEntityWithComplexSummariesThatActuallyDeclareThoseSummariesCo coEntityWithComplexSummariesThatActuallyDeclareThoseSummaries = getInstance(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummariesCo.class);
     private final ICompoundCondition0<TgVehicle> singleResultQueryStub = select(TgVehicle.class).where().prop("key").eq().val("CAR1");
     private final ITgPublishedYearly coPublishedYearly = getInstance(ITgPublishedYearly.class);
 
@@ -360,7 +376,6 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         assertEquals("Incorrect duration in years", "1", result.get("result").toString());
     }
     
-    
     /////////////////////////////////////// QUERING KEYS OF ENTITIES WITH COMPOSITE KEYS /////////////////////////////////////////
 
     @Test
@@ -426,7 +441,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         condition(null).and().begin().condition(null).end().and().beginExpr().caseWhen().condition(null).then().now().when().condition(null).then().val(1).end().endExpr().isNotNull().modelAsAggregate();
 
         final AggregatedResultQueryModel qry = select(TgVehicleModel.class).
-                groupBy().prop("make").
+                groupBy().prop("make.key").
                 yield().countOf().prop("make").as("dmakes"). //
                 yield().prop("make.key").as("key").
                 modelAsAggregate();
@@ -783,7 +798,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
 
     @Test
     public void test0_1() {
-        final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("sumOfPrices.amount").ge().val("100").model();
+        final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("sumOfPrices.amount").ge().val(100).model();
         final List<TgVehicle> models = coVehicle.getAllEntities(from(model).with(fetch(TgVehicle.class).with("sumOfPrices").with("constValueProp").with("calc0")).model());
         final TgVehicle vehicle = models.get(0);
         assertEquals("Incorrect key", "CAR2", vehicle.getKey());
@@ -793,28 +808,29 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
 
     @Test
     public void test0_2() {
-        final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("calc2").ge().val("100").model();
+        final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("calc2").ge().val(100).model();
+        System.out.println("\n\n\n OOO \n\n\n");
         final List<TgVehicle> models = coVehicle.getAllEntities(from(model).model());
         assertEquals("Incorrect key", 2, models.size());
     }
 
     @Test
     public void test0_4() {
-        final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("calc3").ge().val("100").model();
+        final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("calc3").ge().val(100).model();
         final List<TgVehicle> models = coVehicle.getAllEntities(from(model).model());
         assertEquals("Incorrect key", 1, models.size());
     }
 
     @Test
     public void test0_6() {
-        final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("calc4").ge().val("100").model();
+        final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("calc4").ge().val(100).model();
         final List<TgVehicle> models = coVehicle.getAllEntities(from(model).model());
         assertEquals("Incorrect key", 2, models.size());
     }
 
     @Test
     public void test0_7() {
-        final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("calc5").ge().val("100").model();
+        final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("calc5").ge().val(100).model();
         final List<TgVehicle> models = coVehicle.getAllEntities(from(model).model());
         final TgVehicle vehicle = models.get(0);
         assertEquals("Incorrect key", "CAR2", vehicle.getKey());
@@ -822,7 +838,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
 
     @Test
     public void test0_8() {
-        final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("calc6").ge().val("100").model();
+        final EntityResultQueryModel<TgVehicle> model = select(TgVehicle.class).where().prop("calc6").ge().val(100).model();
         final List<TgVehicle> models = coVehicle.getAllEntities(from(model).model());
         assertEquals("Incorrect key", 0, models.size());
     }
@@ -987,7 +1003,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
 
     @Test
     public void test0_3() {
-        final EntityResultQueryModel<TgFuelUsage> model = select(TgFuelUsage.class).where().prop("vehicle.sumOfPrices").ge().val("100").model();
+        final EntityResultQueryModel<TgFuelUsage> model = select(TgFuelUsage.class).where().prop("vehicle.sumOfPrices").ge().val(100).model();
         final List<TgFuelUsage> models = fuelUsageDao.getAllEntities(from(model).with(fetch(TgFuelUsage.class)).model());
         final TgFuelUsage fuelUsage = models.get(0);
         assertEquals("Incorrect key", "CAR2", fuelUsage.getVehicle().getKey());
@@ -995,7 +1011,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
 
     @Test
     public void test0_5() {
-        final EntityResultQueryModel<TgFuelUsage> model = select(TgFuelUsage.class).where().prop("vehicle.calc3").ge().val("100").model();
+        final EntityResultQueryModel<TgFuelUsage> model = select(TgFuelUsage.class).where().prop("vehicle.calc3").ge().val(100).model();
         final List<TgFuelUsage> models = fuelUsageDao.getAllEntities(from(model).with(fetch(TgFuelUsage.class)).model());
         final TgFuelUsage fuelUsage = models.get(0);
         assertEquals("Incorrect key", "CAR2", fuelUsage.getVehicle().getKey());
@@ -1193,7 +1209,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         avgOf().beginExpr().prop("price.amount").add().prop("purchasePrice.amount").endExpr().as("aa").modelAsAggregate();
         final List<EntityAggregates> values = aggregateDao.getAllEntities(from(model).model());
         assertEquals("Incorrect count", 1, values.size());
-        assertEquals("Incorrect value", "165.0", values.get(0).get("aa").toString());
+        assertEquals("Incorrect value", new BigDecimal("165.00").setScale(2, RoundingMode.HALF_UP), new BigDecimal(values.get(0).get("aa").toString()).setScale(2, RoundingMode.HALF_UP));
     }
 
     @Test
@@ -1216,7 +1232,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         beginExpr().avgOf().prop("price.amount").add().avgOf().prop("purchasePrice.amount").endExpr().as("aa").modelAsAggregate();
         final List<EntityAggregates> values = aggregateDao.getAllEntities(from(model).model());
         assertEquals("Incorrect count", 1, values.size());
-        assertEquals("Incorrect value", "165.0", values.get(0).get("aa").toString());
+        assertEquals("Incorrect value", new BigDecimal("165.00").setScale(2, RoundingMode.HALF_UP), new BigDecimal(values.get(0).get("aa").toString()).setScale(2, RoundingMode.HALF_UP));
     }
 
     @Test
@@ -1370,7 +1386,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         assertEquals("Incorrect value", "0", values.get(0).get("zero_years").toString());
         assertEquals(BigDecimal.class, values.get(0).get("avgPrice").getClass());
         assertEquals("Incorrect value", 0, ((BigDecimal) values.get(0).get("avgPrice")).compareTo(new BigDecimal("150")));
-        assertEquals("Incorrect value", "66.7", values.get(0).get("third_of_price").toString());
+        assertTrue("Incorrect value", EntityUtils.equalsEx(new BigDecimal("66.7"), values.get(0).get("third_of_price")));
     }
 
     @Test
@@ -1446,6 +1462,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     }
     
     @Test
+    @Ignore // H2 fails to execute legitimate SQL
     public void vehicle_is_fetched_with_persisted_collectional_association() {
         final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR2").model();
         final fetch<TgVehicle> fetchModel = fetch(TgVehicle.class).with("model", fetch(TgVehicleModel.class).with("make")).with("vehicleFuelUsages", fetchAll(TgVehicleFuelUsage.class));
@@ -1455,6 +1472,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     }
 
     @Test
+    @Ignore // H2 fails to execute legitimate SQL
     public void vehicle_is_fetched_with_synthetic_parameterised_collectional_association() {
         final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR2").model();
         final fetch<TgVehicle> fetchModel = fetch(TgVehicle.class).with("model", fetch(TgVehicleModel.class).with("make")).with("vehicleFuelUsages", fetchAll(TgVehicleFuelUsage.class));
@@ -1477,7 +1495,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
 
     @Test
     public void test_aggregates_fetching_with_nullable_props() {
-        final AggregatedResultQueryModel model = select(TgFuelUsage.class).yield().prop("vehicle.station").as("station").yield().sumOf().prop("qty").as("totalQty").modelAsAggregate();
+        final AggregatedResultQueryModel model = select(TgFuelUsage.class).groupBy().prop("vehicle.station").yield().prop("vehicle.station").as("station").yield().sumOf().prop("qty").as("totalQty").modelAsAggregate();
         final fetch<EntityAggregates> fetchModel = fetchAggregates().with("station", fetch(TgOrgUnit5.class));
         final EntityAggregates value = aggregateDao.getAllEntities(from(model).with(fetchModel).model()).get(0);
         assertEquals("Incorrect key", "orgunit1 orgunit2 orgunit3 orgunit4 orgunit5", ((TgOrgUnit5) value.get("station")).getKey().toString());
@@ -1697,13 +1715,26 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void test_subqueries_in_yield_stmt3() {
-        final PrimitiveResultQueryModel sumPriceModel = select(TgVehicle.class).yield().sumOf().prop("price.amount").modelAsPrimitive();
-        final PrimitiveResultQueryModel avgPriceModel = select(TgVehicle.class).yield().sumOf().model(sumPriceModel).modelAsPrimitive();
-        final EntityResultQueryModel<TgVehicle> query = select(TgVehicle.class).where().beginExpr().model(avgPriceModel).add().prop("price.amount").endExpr().ge().val(10).model();
-        final List<TgVehicle> vehicles = coVehicle.getAllEntities(from(query).with(orderBy().prop("key").asc().model()).model());
-        assertEquals("Incorrect key", "CAR1", vehicles.get(0).getKey());
-        assertEquals("Incorrect key", "CAR2", vehicles.get(1).getKey());
+    public void execution_of_aggregated_functions_on_the_correlated_scalar_subquery_succeeds_under_postgresql_and_h2() {
+        if (getDbCreator().dbVersion() == H2 || getDbCreator().dbVersion() == POSTGRESQL) {
+            final PrimitiveResultQueryModel vehiclesCountPerStationModel = select(TgVehicle.class).where().prop("station").eq().extProp("id").yield().countAll().modelAsPrimitive();
+            final AggregatedResultQueryModel maxVehiclesCountStationModel = select(TgOrgUnit5.class).yield().maxOf().model(vehiclesCountPerStationModel).as("maxVehiclesCountPerStation").modelAsAggregate();
+            final EntityAggregates result = aggregateDao.getEntity(from(maxVehiclesCountStationModel).model());
+            assertEquals("Incorrect value of max vehicles count", "1", result.get("maxVehiclesCountPerStation").toString());
+        }
+    }
+
+    @Test
+    public void execution_of_aggregated_functions_on_the_correlated_scalar_subquery_fails_under_mssql() {
+        if (getDbCreator().dbVersion() == MSSQL) {
+            final PrimitiveResultQueryModel vehiclesCountPerStationModel = select(TgVehicle.class).where().prop("station").eq().extProp("id").yield().countAll().modelAsPrimitive();
+            final AggregatedResultQueryModel maxVehiclesCountStationModel = select(TgOrgUnit5.class).yield().maxOf().model(vehiclesCountPerStationModel).as("maxVehiclesCountPerStation").modelAsAggregate();
+            try {
+                aggregateDao.getEntity(from(maxVehiclesCountStationModel).model());
+                fail("Should have failed due to the current limitation of MSSQL -- {Error 130: Cannot perform an aggregate function on an expression containing an aggregate or a subquery.}. ");
+            } catch (final Exception e) {
+            }
+        }
     }
 
     @Test
@@ -1812,16 +1843,44 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
     ///////////////////////////////////////////////////// CASE EXPRESSION IN SUMMARY PROPS  ////////////////////////////////////////////////
     @Test
     public void test_case_when_expression_in_summary_property_when_condition_is_satisfied() {
-        final EntityResultQueryModel<TgEntityWithComplexSummaries> qry = select(TgEntityWithComplexSummaries.class).model();
-        final TgEntityWithComplexSummaries summaryEntity = coEntityWithComplexSummaries.getEntity(from(qry).with(fetchOnly(TgEntityWithComplexSummaries.class).with("costPerKm").without("id").without("version")).model());
+        final EntityResultQueryModel<TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries> qry = select(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class).model();
+        final TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries summaryEntity = coEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.getEntity(
+                from(qry).with(fetchNone(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class).with("costPerKm")).model());
         assertEquals(new BigDecimal("1"), summaryEntity.getCostPerKm());
     }
     
     @Test
     public void test_case_when_expression_in_summary_property_when_condition_is_not_satisfied() {
-        final EntityResultQueryModel<TgEntityWithComplexSummaries> qry = select(TgEntityWithComplexSummaries.class).where().prop("kms").eq().val(0).model();
-        final TgEntityWithComplexSummaries summaryEntity = coEntityWithComplexSummaries.getEntity(from(qry).with(fetchOnly(TgEntityWithComplexSummaries.class).with("costPerKm").without("id").without("version")).model());
+        final EntityResultQueryModel<TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries> qry = select(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class).where().prop("kms").eq().val(0).model();
+        final TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries summaryEntity = coEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.getEntity(
+                from(qry).with(fetchNone(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class).with("costPerKm")).model());
         assertNull(summaryEntity.getCostPerKm());
+    }
+
+    ///////////////////////////////////////////////////// AGGREGATES ON SUBQUERIES IN ENTITY CENTRE TOTALS QUERY  ////////////////////////////////////////////////
+    
+    @Test
+    public void calculated_props_are_actually_yielded_in_the_source_query_if_the_top_query_yields_are_all_recognised_as_totals_in_case_of_persistent_entity() {
+        // SELECT from SELECT here is emulating the approach utilised by DynamicQueryBuilder.createJoinCondition() method in order to overcome MSSQL inability to aggregate scalar sub-queries. 
+        final EntityResultQueryModel<TgOrgUnit5WithSummaries> qry = select(select(TgOrgUnit5WithSummaries.class).model()).model();
+        final TgOrgUnit5WithSummaries summaryEntity = getInstance(TgOrgUnit5WithSummariesCo.class).getEntity(from(qry).with(fetchNone(TgOrgUnit5WithSummaries.class).with("minVehiclesCount")).model());
+        assertEquals(Integer.valueOf(1), summaryEntity.getMinVehiclesCount());
+    }
+    
+    @Test
+    public void calculated_props_are_actually_yielded_in_the_source_query_if_the_top_query_yields_are_all_recognised_as_totals_in_case_of_synthetic_based_on_persistent_entity() {
+        // SELECT from SELECT here is emulating the approach utilised by DynamicQueryBuilder.createJoinCondition() method in order to overcome MSSQL inability to aggregate scalar sub-queries. 
+        final EntityResultQueryModel<TeAverageFuelUsage> qry = select(select(TeAverageFuelUsage.class).model()).model();
+        final TeAverageFuelUsage summaryEntity = getInstance(ITeAverageFuelUsage.class).getEntity(from(qry).with(fetchNone(TeAverageFuelUsage.class).with("countAll")).model());
+        assertEquals(Integer.valueOf(0), summaryEntity.getCountAll());
+    }
+
+    @Test
+    public void calculated_props_are_actually_yielded_in_the_source_query_if_the_top_query_yields_are_all_recognised_as_totals_in_case_of_synthetic_entity() {
+        // SELECT from SELECT here is emulating the approach utilised by DynamicQueryBuilder.createJoinCondition() method in order to overcome MSSQL inability to aggregate scalar sub-queries. 
+        final EntityResultQueryModel<TeFuelUsageByType> qry = select(select(TeFuelUsageByType.class).model()).model();
+        final TeFuelUsageByType summaryEntity = getInstance(TeFuelUsageByTypeCo.class).getEntity(from(qry).with(fetchNone(TeFuelUsageByType.class).with("countAll")).model());
+        assertEquals(Integer.valueOf(0), summaryEntity.getCountAll());
     }
 
     ///////////////////////////////////////////////////// ENTITY INSTRUMENTATION WHILE RETRIEVING WITH EQL ///////////////////////////////////////
@@ -1854,7 +1913,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final TgVehicle vehicle = coVehicle.getEntity(from(qry).with(fetch).model());
         assertTrue(isEntityInstrumented(vehicle.getModel()));
     }
-    
+
     @Test
     public void vehicle_model_property_retrieved_with_instrumented_fetch_with_make_subproperty_is_instrumented() {
         final EntityResultQueryModel<TgVehicle> qry = select(TgVehicle.class).where().prop("key").eq().val("CAR1").model();
@@ -1875,7 +1934,7 @@ public class EntityQueryExecutionTest extends AbstractDaoTestCase {
         final Object value = entity.get(propName);
         return isEntityInstrumented(value);
     }
-    
+
     public static boolean isEntityInstrumented(final Object entity) {
         return entity == null ? false : entity.getClass().getName().contains("$$Enhancer");
     }

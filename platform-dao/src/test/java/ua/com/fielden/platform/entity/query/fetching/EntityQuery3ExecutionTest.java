@@ -14,11 +14,13 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.order
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.math.BigDecimal;
+import java.util.Currency;
 import java.util.List;
 
 import org.junit.Ignore;
 import org.junit.Test;
 
+import ua.com.fielden.platform.dao.EntityWithTaxMoneyDao;
 import ua.com.fielden.platform.dao.IEntityAggregatesOperations;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -28,6 +30,7 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
+import ua.com.fielden.platform.persistence.types.EntityWithTaxMoney;
 import ua.com.fielden.platform.sample.domain.ITeAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.ITeVehicle;
 import ua.com.fielden.platform.sample.domain.ITeVehicleFuelUsage;
@@ -47,6 +50,8 @@ import ua.com.fielden.platform.sample.domain.TgAuthorship;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummaries;
+import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries;
+import ua.com.fielden.platform.sample.domain.TgEntityWithComplexSummariesThatActuallyDeclareThoseSummariesCo;
 import ua.com.fielden.platform.sample.domain.TgFuelType;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
@@ -71,7 +76,75 @@ import ua.com.fielden.platform.types.Money;
 
 public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     private final IEntityAggregatesOperations aggregateDao = getInstance(IEntityAggregatesOperations.class);
+    
+    @Test
+    public void eql3_query_executes_correctly_for_vehicle_deep_tree() {
+        final EntityResultQueryModel<TeVehicle> qry = select(TeVehicle.class).
+                yield().prop("id").as("id").
+                yield().prop("version").as("version").
+                yield().prop("key").as("key").
+                yield().prop("desc").as("desc").
+                yield().prop("model").as("model").
+                yield().prop("model.id").as("model.id").
+                yield().prop("model.version").as("model.version").
+                yield().prop("model.key").as("model.key").
+                yield().prop("model.desc").as("model.desc").
+                yield().prop("model.make").as("model.make").
+                yield().prop("model.make.id").as("model.make.id").
+                yield().prop("model.make.version").as("model.make.version").
+                yield().prop("model.make.key").as("model.make.key").
+                yield().prop("model.make.desc").as("model.make.desc").
+                modelAsEntity(TeVehicle.class);
+        
+        getInstance(ITeVehicle.class).getAllEntities(from(qry).with("EQL3", null).model());
+    }
+    
+    @Test
+    public void eql3_query_executes_correctly_for_vehicle_deep_tree_without_headers() {
+        final EntityResultQueryModel<TeVehicle> qry = select(TeVehicle.class).
+                yield().prop("id").as("id").
+                yield().prop("version").as("version").
+                yield().prop("key").as("key").
+                yield().prop("desc").as("desc").
+                yield().prop("model.id").as("model.id").
+                yield().prop("model.version").as("model.version").
+                yield().prop("model.key").as("model.key").
+                yield().prop("model.desc").as("model.desc").
+                yield().prop("model.make.id").as("model.make.id").
+                yield().prop("model.make.version").as("model.make.version").
+                yield().prop("model.make.key").as("model.make.key").
+                yield().prop("model.make.desc").as("model.make.desc").
+                modelAsEntity(TeVehicle.class);
+        
+        getInstance(ITeVehicle.class).getAllEntities(from(qry).with("EQL3", null).model());
+    }
 
+    @Test
+    public void test_complex_money_yielding_() {
+        final EntityResultQueryModel<EntityWithTaxMoney> qry = select(EntityWithTaxMoney.class).model();
+        getInstance(EntityWithTaxMoneyDao.class).getAllEntities(from(qry).model());
+    }
+
+    @Test
+    public void test_complex_money_yielding2_() {
+        final EntityResultQueryModel<EntityWithTaxMoney> qry = select(EntityWithTaxMoney.class).
+                yield().prop("money.amount").as("money.amount").
+                yield().prop("money.taxAmount").as("money.taxAmount").
+                yield().prop("money.currency").as("money.currency").
+                modelAsEntity(EntityWithTaxMoney.class);
+        getInstance(EntityWithTaxMoneyDao.class).getAllEntities(from(qry).model());
+    }
+    
+    @Test
+    public void test_complex_money_yielding3_() {
+        final EntityResultQueryModel<EntityWithTaxMoney> qry = select().
+                yield().val(new BigDecimal("100.6")).as("money.amount").
+                yield().val(new BigDecimal("20.2")).as("money.taxAmount").
+                yield().val(Currency.getAvailableCurrencies().iterator().next()).as("money.currency").    
+                modelAsEntity(EntityWithTaxMoney.class);
+        getInstance(EntityWithTaxMoneyDao.class).getAllEntities(from(qry).model());
+    }
+    
     private List<EntityAggregates> run(final AggregatedResultQueryModel qry) {
         return aggregateDao.getAllEntities(from(qry).with("EQL3", null).model());
     }
@@ -643,9 +716,9 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     
     @Test
     public void eql3_query_executes_correctly61() {
-        final ITgEntityWithComplexSummaries co = getInstance(ITgEntityWithComplexSummaries.class);
-        final EntityResultQueryModel<TgEntityWithComplexSummaries> qry = select(TgEntityWithComplexSummaries.class).model();
-        co.getAllEntities(from(qry).with("EQL3", null).with(fetchIdOnly(TgEntityWithComplexSummaries.class).without("id").with("costPerKm")).model());
+        final TgEntityWithComplexSummariesThatActuallyDeclareThoseSummariesCo co = co(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class);
+        final EntityResultQueryModel<TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries> qry = select(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class).model();
+        co.getAllEntities(from(qry).with("EQL3", null).with(fetchIdOnly(TgEntityWithComplexSummariesThatActuallyDeclareThoseSummaries.class).without("id").with("costPerKm")).model());
     }
     
     @Test
@@ -1128,10 +1201,5 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         save(new_composite(TgAuthorship.class, chrisDate, "Database Design and Relational Theory").setYear(2012));
         save(new_composite(TgAuthorship.class, chrisDate, "SQL and Relational Theory").setYear(2015));
         save(new_composite(TgAuthorship.class, yurijShcherbyna, "Дискретна математика").setYear(2007));
-
-        save(new_(TgEntityWithComplexSummaries.class, "veh1").setKms(200).setCost(100));
-        save(new_(TgEntityWithComplexSummaries.class, "veh2").setKms(0).setCost(100));
-        save(new_(TgEntityWithComplexSummaries.class, "veh3").setKms(300).setCost(100));
-        save(new_(TgEntityWithComplexSummaries.class, "veh4").setKms(0).setCost(200));
     }
 }

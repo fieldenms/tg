@@ -31,6 +31,22 @@ public abstract class AbstractPropInfo<T> implements IResolvable<T> {
     
     public abstract AbstractPropInfo<T> cloneWithoutExpression();
     
+    /**
+     * Represents a calculated property explicitly defined at the Entity level.
+     * @return
+     */
+    public boolean isExplicitlyCalculated() {
+    	throw new UnsupportedOperationException("TODO implement and use"); 
+    }
+
+    /**
+     * Represents either a key for Composite Entity or a common property for a Union Entity.
+     * @return
+     */
+    public boolean isImplicitlyCalculated() {
+    	throw new UnsupportedOperationException("TODO implement and use");
+    }
+
     public boolean hasExpression() {
         return expression != null;
     }

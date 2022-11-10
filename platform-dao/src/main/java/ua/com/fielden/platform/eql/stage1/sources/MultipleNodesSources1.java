@@ -3,8 +3,8 @@ package ua.com.fielden.platform.eql.stage1.sources;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
-import ua.com.fielden.platform.eql.stage1.TransformationContext;
-import ua.com.fielden.platform.eql.stage1.TransformationResult;
+import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.TransformationResult1;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
@@ -25,11 +25,12 @@ public class MultipleNodesSources1 implements ISources1<MultipleNodesSources2> {
     }
 
     @Override
-    public TransformationResult<MultipleNodesSources2> transform(TransformationContext context) {
-        final TransformationResult<? extends ISources2<?>> lsTransformed = leftSource.transform(context);
-        final TransformationResult<? extends ISources2<?>> rsTransformed = rightSource.transform(lsTransformed.updatedContext);
+    public TransformationResult1<MultipleNodesSources2> transform(TransformationContext1 context) {
+        final TransformationResult1<? extends ISources2<?>> lsTransformed = leftSource.transform(context);
+        final TransformationResult1<? extends ISources2<?>> rsTransformed = rightSource.transform(lsTransformed.updatedContext);
+        // TODO reconsider this approach -- join conditions props should be resolved against left and right sources trees (not just these sources alone)
         final Conditions2 jcTransformed = joinConditions.transform(rsTransformed.updatedContext);
-        return new TransformationResult<>(new MultipleNodesSources2(lsTransformed.item, rsTransformed.item, joinType, jcTransformed), rsTransformed.updatedContext);
+        return new TransformationResult1<>(new MultipleNodesSources2(lsTransformed.item, rsTransformed.item, joinType, jcTransformed), rsTransformed.updatedContext);
     }
 
     @Override

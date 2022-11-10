@@ -5,7 +5,7 @@ import java.util.Set;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 
 public interface ITransformableToS3<S3> {
-    TransformationResult<S3> transform(TransformationContext context);
+    TransformationResult2<S3> transform(TransformationContext2 context);
 
     Set<Prop2> collectProps();
 }
