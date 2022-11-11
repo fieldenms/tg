@@ -11,6 +11,8 @@ import static ua.com.fielden.platform.eql.stage1.etc.GroupBys1.emptyGroupBys;
 import static ua.com.fielden.platform.eql.stage1.etc.OrderBys1.emptyOrderBys;
 import static ua.com.fielden.platform.eql.stage1.etc.Yields1.emptyYields;
 
+import java.util.Map;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
@@ -49,6 +51,10 @@ public class EqlStage1TestCase extends EqlTestCase {
     
     protected static <T extends AbstractEntity<?>> ResultQuery1 resultQry(final EntityResultQueryModel<T> qry) {
         return qb().generateAsResultQuery(qry, null, null);
+    }
+    
+    protected static <T extends AbstractEntity<?>> ResultQuery1 resultQry(final EntityResultQueryModel<T> qry, final Map<String, Object> paramValues) {
+        return qb(paramValues).generateAsResultQuery(qry, null, null);
     }
 
     protected static ResultQuery1 resultQry(final AggregatedResultQueryModel qry) {

@@ -1,9 +1,10 @@
-package ua.com.fielden.platform.entity.query;
+package ua.com.fielden.platform.eql.stage1;
 
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.emptyCondition;
@@ -21,17 +22,18 @@ import org.junit.Test;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IWhere0;
-import ua.com.fielden.platform.entity.query.generation.BaseEntQueryCompositionTCase;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
+import ua.com.fielden.platform.eql.meta.EqlStage1TestCase;
+import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
+import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TgFuelUsage;
-import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.test.ioc.DatesForTesting;
 import ua.com.fielden.platform.utils.IDates;
 
-public class CritConditionOperatorTest extends BaseEntQueryCompositionTCase {
-    private static final IWhere0<TgVehicle> select_veh_where = select(VEHICLE).where();
+public class CritConditionOperatorTest extends EqlStage1TestCase {
+    private static final IWhere0<TeVehicle> select_veh_where = select(VEHICLE).where();
 
     private static final String critProp = "fuelTypeCrit";
     private static final String persistedProp = "lastFuelUsage.fuelType.key";
@@ -224,4 +226,15 @@ public class CritConditionOperatorTest extends BaseEntQueryCompositionTCase {
         return buildCondition(property, propertyName, false, dates);
     }
 
+    protected static Conditions1 conditions(final ICompoundCondition0<?> condition) {
+        return resultQry(condition.model()).conditions;
+    }
+
+    protected static Conditions1 conditions(final ICompoundCondition0<?> condition, final Map<String, Object> paramValues) {
+        return resultQry(condition.model(), paramValues).conditions;
+    }
+   
+    protected static void assertModelsEquals(final Conditions1 exp, final Conditions1 act) {
+        assertEquals(("Condition models are different! exp: " + exp.toString() + " act: " + act.toString()), exp, act);
+    }
 }
