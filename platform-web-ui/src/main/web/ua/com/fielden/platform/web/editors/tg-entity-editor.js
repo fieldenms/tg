@@ -692,7 +692,7 @@ export class TgEntityEditor extends TgEditor {
             // Entity is converted to a string representation of itself that is the same as string representation of its key or [key is not assigned] string if there is no key.
             // This includes correct conversion of simple and composite entities. Top-level union entities are not supported -- only as part of other entities as a property values.
             const key = entities[index].toString();
-            entities[index].key = key;
+            entities[index]['@key'] = key;
             const isNew = this.result.pushValue(entities[index]);
             // if a new value was observed for the first time then capture its index
             // so that later this new item could be focused
@@ -879,7 +879,7 @@ export class TgEntityEditor extends TgEditor {
         // value accpetance logic...
         if (hasValuesToProcess) {
             // compose a string value, which would be a comma separated string in case of multi
-            const selectedValuesAsStr = Object.values(this.result.selectedValues).map(obj => obj.key).join(this.separator);// 'key' field contains converted representation of the entity
+            const selectedValuesAsStr = Object.values(this.result.selectedValues).map(obj => obj['@key']).join(this.separator);// 'key' field contains converted representation of the entity
                 
 
             if (!this.multi) {

@@ -440,7 +440,7 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
         const self = this;
         let activeEntity = null;
         this.traverseProperties(function (name) {
-            if (self.get(name) !== null) {
+            if (_isEntity(self[name])) {
                 activeEntity = self.get(name);
             }
         });
