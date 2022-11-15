@@ -127,6 +127,22 @@ public class EntityFinder extends ElementFinder {
         properties.addAll(findInheritedProperties(entityElement));
         return properties;
     }
+    
+    /**
+     * Finds a property of an entity by traversing it and its hierarchy below {@code rootType}, which is not searched.
+     * @param entity
+     * @param name
+     * @param rootType the type at which traversal stops
+     * @return
+     */
+    public PropertyElement findPropertyBelow(final EntityElement entity, final String name, final Class<?> rootType) {
+        return Optional.ofNullable(findDeclaredProperty(entity, name))
+                .orElseGet(() -> findSuperclassesBelow(entity, rootType).stream()
+                                    .map(this::newEntityElement)
+                                    .map(el -> findDeclaredProperty(el, name))
+                                    .filter(p -> p != null)
+                                    .findFirst().orElse(null));
+    }
 
     public Pair<String, String> getPropTitleAndDesc(final PropertyElement propElement) {
         // TODO need to replicate the logic from TitlesDescsGetter in application to the Mirror types.
