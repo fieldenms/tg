@@ -66,6 +66,7 @@ import com.squareup.javapoet.WildcardTypeName;
 
 import ua.com.fielden.platform.annotations.metamodel.MetaModelForType;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
@@ -343,14 +344,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         final EntityElement entityParent = entityFinder.getParent(entityElement);
         final boolean isEntitySuperclassMetamodeled = entityFinder.isEntityThatNeedsMetaModel(entityParent);
         // collect properties to process
-        final Set<PropertyElement> properties = new LinkedHashSet<>();
-        if (isEntitySuperclassMetamodeled) {
-            // find only declared properties
-            properties.addAll(entityFinder.findDeclaredProperties(entityElement));
-        } else {
-            // find all properties (declared + inherited from <? extends AbstractEntity))
-            properties.addAll(entityFinder.findProperties(entityElement));
-        }
+        final Set<PropertyElement> properties = collectPropertiesForMetamodeling(entityElement, isEntitySuperclassMetamodeled);
 
         // ######################## FIELDS ###########################
         final SortedSet<FieldSpec> fieldSpecs = new TreeSet<>((f1, f2) -> f1.name.compareTo(f2.name));
@@ -628,6 +622,41 @@ public class MetaModelProcessor extends AbstractProcessor {
 
         messager.printMessage(Kind.NOTE, format("Generated %s for entity %s.", metaModelSpec.name, entityElement.getSimpleName()));
         return true;
+    }
+
+    /**
+     * Collects properties of an entity that need to be metamodeled.
+     * @param entity
+     * @param isEntitySuperclassMetamodeled
+     * @return
+     */
+    private Set<PropertyElement> collectPropertiesForMetamodeling(final EntityElement entity, final boolean isEntitySuperclassMetamodeled) 
+    {
+        final Set<PropertyElement> props = new LinkedHashSet<>();
+
+        if (isEntitySuperclassMetamodeled) props.addAll(entityFinder.findDeclaredProperties(entity));
+        else                               props.addAll(entityFinder.findProperties(entity));
+
+        // property "id"
+        // include only for persistent entities
+        if (entityFinder.isPersistentEntityType(entity) || entityFinder.doesExtendPersistentEntity(entity)) {
+            props.add(new PropertyElement(entityFinder.findField(entity, AbstractEntity.ID)));
+        }
+
+        // include property "desc" in the following cases:
+        // 1. property "desc" is declared by entity or one of its supertypes below AbstractEntity
+        // 2. entity or any of its supertypes is annotated with @DescTitle
+        final PropertyElement descProp = entityFinder.findPropertyBelow(entity, AbstractEntity.DESC, AbstractEntity.class);
+        if (descProp != null) {
+            props.add(descProp);
+        }
+        else if (entityFinder.findAnnotation(entity, DescTitle.class).isPresent()) {
+            props.add(new PropertyElement(entityFinder.findField(entity, AbstractEntity.DESC)));
+        }
+        // in other cases we need to exclude it
+        else props.removeIf(p -> p.getSimpleName().toString().equals(AbstractEntity.DESC));
+
+        return props;
     }
 
     /**

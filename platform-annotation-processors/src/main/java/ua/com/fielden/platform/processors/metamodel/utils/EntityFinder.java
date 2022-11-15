@@ -23,7 +23,6 @@ import javax.lang.model.util.Types;
 
 import ua.com.fielden.platform.annotations.metamodel.MetaModelForType;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
@@ -101,21 +100,10 @@ public class EntityFinder extends ElementFinder {
      * @return
      */
     public Set<PropertyElement> findInheritedProperties(final EntityElement entityElement) {
-        final Set<PropertyElement> props = findInheritedFields(entityElement, ROOT_ENTITY_CLASS).stream()
+        return findInheritedFields(entityElement, ROOT_ENTITY_CLASS).stream()
                 .filter(this::isProperty)
                 .map(PropertyElement::new)
                 .collect(toCollection(LinkedHashSet::new));
-        // let's see if we need to include "id" as a property -- only persistent entities are of interest
-        if (isPersistentEntityType(entityElement) || doesExtendPersistentEntity(entityElement)) {
-            final var idProp = findField(entityElement, AbstractEntity.ID);
-            props.add(new PropertyElement(idProp));
-        }
-        // and now similar for property "desc", which may need to be removed
-        if (findAnnotation(entityElement, DescTitle.class).isEmpty()) {
-            final var descProp = findField(entityElement, AbstractEntity.DESC);
-            props.remove(new PropertyElement(descProp));
-        }
-        return props;
     }
 
     /**
