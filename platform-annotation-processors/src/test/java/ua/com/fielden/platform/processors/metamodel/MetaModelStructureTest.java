@@ -162,8 +162,10 @@ public class MetaModelStructureTest {
             // find the metamodeled prop
             // TODO the logic handling transformations between entity properties and meta-model properties should be abstracted
             // consider that transformation of names changes, then this code would have to be modified too
-            final Optional<ExecutableElement> maybeMetamodeledProp = metamodeledProps.stream().filter(el -> el.getSimpleName().equals(prop.getSimpleName())).findAny();
-            assertTrue(maybeMetamodeledProp.isPresent());
+            final Optional<ExecutableElement> maybeMetamodeledProp = metamodeledProps.stream()
+                    .filter(el -> el.getSimpleName().toString().equals(prop.getSimpleName().toString()))
+                    .findAny();
+            assertTrue("Property \"%s\" was not metamodeled.".formatted(prop.getSimpleName()), maybeMetamodeledProp.isPresent());
 
             final ExecutableElement metamodeledProp = maybeMetamodeledProp.get();
             if (prop.hasClassOrInterfaceType() && entityFinder.isEntityThatNeedsMetaModel(prop.getTypeAsTypeElementOrThrow())) {
@@ -197,7 +199,9 @@ public class MetaModelStructureTest {
         
         final Set<PropertyElement> subEntityDeclaredProps = entityFinder.findDeclaredProperties(subEntity);
         final Set<ExecutableElement> subEntityDeclaredMetamodeledProps = metaModelFinder.findDeclaredPropertyMethods(subEntityMetaModel);
-        assertEquals(subEntityDeclaredProps.size(), subEntityDeclaredMetamodeledProps.size());
+        // since SubEntity is persistent and annotated with @DescTitle, its meta-model will also have 2 additional properties:
+        // "id" and "desc"
+        assertEquals(subEntityDeclaredProps.size(), subEntityDeclaredMetamodeledProps.size() - 2);
 
         for (final PropertyElement prop: subEntityDeclaredProps) {
             // find the metamodeled prop by name
