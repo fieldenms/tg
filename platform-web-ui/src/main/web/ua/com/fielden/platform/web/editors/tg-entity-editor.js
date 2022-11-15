@@ -166,304 +166,322 @@ export class TgEntityEditor extends TgEditor {
     }
 
     static get properties () {
-       return {
-           /* Indicates whether a search is in progress. This property controls visibility of the progress indecator.
-               * It is bound to iron-ajax property loading, which basicaly controlls spinner visibility. */
-           searching: {
-               type: Boolean,
-               value: false
-           },
+        return {
+            /* 
+             * Indicates whether a search is in progress. This property controls visibility of the progress indecator.
+             * It is bound to iron-ajax property loading, which basicaly controlls spinner visibility. 
+             */
+            searching: {
+                type: Boolean,
+                value: false
+            },
 
-           /**
-            * Dynamically created 'tg-entity-editor-result' instance. It is created when first meaningful results appear after search query is completed (_onFound function).
-            */
-           result: {
-               type: Object
-           },
+            /**
+             * Dynamically created 'tg-entity-editor-result' instance. It is created when first meaningful results appear after search query is completed (_onFound function).
+             */
+            result: {
+                type: Object
+            },
 
-           /**
-            * Entity master instance for this autocompleter.
-            */
-           entityMaster: {
-               type: Object,
-               computed: '_computeEntityMaster(multi, autocompletionType, propertyName, noLabelFloat)'
-           },
+            /**
+             * Entity master instance for this autocompleter.
+             */
+            entityMaster: {
+                type: Object,
+                computed: '_computeEntityMaster(multi, autocompletionType, propertyName, noLabelFloat)'
+            },
 
-           /**
-            * Entity master instance for creating new entity.
-            */
+            /**
+             * Entity master instance for creating new entity.
+             */
             newEntityMaster: {
                 type: Object,
                 computed: '_computeNewEntityMaster(multi, autocompletionType, propertyName, noLabelFloat)'
             },
 
-           /**
-            * Action to open master on title click.
-            */
-           tgOpenMasterAction: {
-               type: Object,
-               value: null
-           },
+            /**
+             * Action to open master on title click.
+             */
+            tgOpenMasterAction: {
+                type: Object,
+                value: null
+            },
 
-           /**
-            * Indicates whether title action is available for tapping and is visible.
-            */
-           actionAvailable: {
-               type: Boolean,
-               computed: '_computeActionAvailability(entityMaster, newEntityMaster, entity, _disabled, currentState)'
-           },
+            /**
+             * Indicates whether title action is available for tapping and is visible.
+             */
+            actionAvailable: {
+                type: Boolean,
+                computed: '_computeActionAvailability(entityMaster, newEntityMaster, entity, _disabled, currentState)'
+            },
 
-           /**
-            * Promise that starts on validate() call of the host master and fullfils iff this validation attempt gets successfully resolved.
-            * 
-            * If this attempt gets superseded by other attempt then the promise instance will never be resolved.
-            * However, 'lastValidationAttemptPromise' property gets replaced in this case.
-            */
-           lastValidationAttemptPromise: {
-               type: Object,
-               value: null
-           },
+            /**
+             * Promise that starts on validate() call of the host master and fullfils iff this validation attempt gets successfully resolved.
+             * 
+             * If this attempt gets superseded by other attempt then the promise instance will never be resolved.
+             * However, 'lastValidationAttemptPromise' property gets replaced in this case.
+             */
+            lastValidationAttemptPromise: {
+                type: Object,
+                value: null
+            },
 
-           _searchQuery: {
-               type: String,
-               value: ''
-           },
-   
-           /*
-            * A string with comma separated property names that shoould be displayed in addition to key.
-            */
-           additionalProperties: {
-               type: String,
-               value: ''
-           },
-   
-           _asyncSearchHandle: {
-               type: Object,
-               value: null
-           },
-   
-           /**
-            * Property that indicated whether the result overlay is open or closed.
-            */
-           opened: {
-               type: Boolean,
-               value: false
-           },
-   
-           searchingOrOpen: {
-               type: Boolean,
-               computed: '_computeSearchingOrOpened(searching, opened)'
-           },
-   
-           searchingOrClosed: {
-               type: Boolean,
-               computed: '_computeSearchingOrClosed(searching, opened)'
-           },
-   
-           /* Indicates whether multiple (true) or a single (false, default) value is acceptable. */
-           multi: {
-               type: Boolean,
-               value: false
-           },
-   
-           /**
-            * The type that identifies the master (entity type) or centre (miType + saveAsName).
-            */
-           autocompletionType: {
-               type: String
-           },
-   
-           /**
-            * Returns 'true' if this editor is a part of Entity Master, 'false' in case if it is a part of Entity Centre.
-            *
-            * Should not be null, should be initialised using generation logic.
-            */
-           asPartOfEntityMaster: {
-               type: Boolean
-           },
-   
-           /**
-            * Default implementation for unsuccessful postSearched callback (external property from tg-entity-binder).
-            */
-           postSearchedDefaultError: {
-               type: Function
-           },
-   
-           /**
-            * External utility function for processing responses (from tg-entity-binder).
-            */
-           processResponse: {
-               type: Function
-           },
-   
-           /**
-            * External utility function for processing unsuccessful responses (from tg-entity-binder).
-            */
-           processError: {
-               type: Function
-           },
-   
-           /**
-            * The function which creates 'modifiedPropertiesHolder' for the autocompletion context.
-            */
-           createModifiedPropertiesHolder: {
-               type: Function
-           },
-   
-           /**
-            * In case if new entity is operated on, this instance holds an original fully-fledged contextually produced entity, otherwise 'null'.
-            * It is updated everytime when refresh process successfully completes.
-            */
-           originallyProducedEntity: {
-               type: Object
-           },
-   
-           /**
-            * Determines whether the selection criteria entity are required to be send inside the centre context.
-            *
-            * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'selectionCrit' as relevant for context.
-            */
-           requireSelectionCriteria: {
-               type: String
-           },
-           /**
-            * Determines whether the selected entities are required to be send inside the centre context.
-            *
-            * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'selectedEntities' as relevant for context.
-            */
-           requireSelectedEntities: {
-               type: String
-           },
-           /**
-            * Determines whether the master entity (main entity for dependent centre) are required to be send inside the centre context.
-            *
-            * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'masterEntity' as relevant for context.
-            */
-           requireMasterEntity: {
-               type: String
-           },
-   
-           /**
-            * The external function to be bound from tg-selection-criteria for retrieving 'selected entities as part of the context'.
-            */
-           getSelectedEntities: {
-               type: Function
-           },
-   
-           /**
-            * The external function to be bound from tg-selection-criteria for retrieving 'master entity as part of the context'.
-            */
-           getMasterEntity: {
-               type: Function
-           },
-   
-           _replaceFromIndex: {
-               type: Number,
-               value: 0
-           },
-   
-           _replaceToIndex: {
-               type: Number,
-               value: 0
-           },
-   
-           /** A state to maintain information about the page number of the matching values to be retrieved. */
-           _dataPage: {
-               type: Number,
-               value: 1
-           },
-   
-           separator: {
-               type: String,
-               value: ","
-           },
-   
-           _blurEventHandler: {
-               type: Function
-           },
+            _searchQuery: {
+                type: String,
+                value: ''
+            },
+    
+            /*
+             * A string with comma separated property names that shoould be displayed in addition to key.
+             */
+            additionalProperties: {
+                type: String,
+                value: ''
+            },
+    
+            _asyncSearchHandle: {
+                type: Object,
+                value: null
+            },
+    
+            /**
+             * Property that indicated whether the result overlay is open or closed.
+             */
+            opened: {
+                type: Boolean,
+                value: false
+            },
+    
+            searchingOrOpen: {
+                type: Boolean,
+                computed: '_computeSearchingOrOpened(searching, opened)'
+            },
+    
+            searchingOrClosed: {
+                type: Boolean,
+                computed: '_computeSearchingOrClosed(searching, opened)'
+            },
+
+            /* Indicates whether multiple (true) or a single (false, default) value is acceptable. */
+            multi: {
+                type: Boolean,
+                value: false
+            },
+    
+            /**
+             * The type that identifies the master (entity type) or centre (miType + saveAsName).
+             */
+            autocompletionType: {
+                type: String
+            },
+    
+            /**
+             * Returns 'true' if this editor is a part of Entity Master, 'false' in case if it is a part of Entity Centre.
+             *
+             * Should not be null, should be initialised using generation logic.
+             */
+            asPartOfEntityMaster: {
+                type: Boolean
+            },
+    
+            /**
+             * Default implementation for unsuccessful postSearched callback (external property from tg-entity-binder).
+             */
+            postSearchedDefaultError: {
+                type: Function
+            },
+    
+            /**
+             * External utility function for processing responses (from tg-entity-binder).
+             */
+            processResponse: {
+                type: Function
+            },
+    
+            /**
+             * External utility function for processing unsuccessful responses (from tg-entity-binder).
+             */
+            processError: {
+                type: Function
+            },
+    
+            /**
+             * The function which creates 'modifiedPropertiesHolder' for the autocompletion context.
+             */
+            createModifiedPropertiesHolder: {
+                type: Function
+            },
+    
+            /**
+             * In case if new entity is operated on, this instance holds an original fully-fledged contextually produced entity, otherwise 'null'.
+             * It is updated everytime when refresh process successfully completes.
+             */
+            originallyProducedEntity: {
+                type: Object
+            },
+    
+            /**
+             * Determines whether the selection criteria entity are required to be send inside the centre context.
+             *
+             * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'selectionCrit' as relevant for context.
+             */
+            requireSelectionCriteria: {
+                type: String
+            },
+            /**
+             * Determines whether the selected entities are required to be send inside the centre context.
+             *
+             * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'selectedEntities' as relevant for context.
+             */
+            requireSelectedEntities: {
+                type: String
+            },
+            /**
+             * Determines whether the master entity (main entity for dependent centre) are required to be send inside the centre context.
+             *
+             * 'null' -- if not applicable, for e.g. this is a master's (not centre's) editor, or in Centre DSL end-app dev has not been marked 'masterEntity' as relevant for context.
+             */
+            requireMasterEntity: {
+                type: String
+            },
+    
+            /**
+             * The external function to be bound from tg-selection-criteria for retrieving 'selected entities as part of the context'.
+             */
+            getSelectedEntities: {
+                type: Function
+            },
+    
+            /**
+             * The external function to be bound from tg-selection-criteria for retrieving 'master entity as part of the context'.
+             */
+            getMasterEntity: {
+                type: Function
+            },
+    
+            _replaceFromIndex: {
+                type: Number,
+                value: 0
+            },
+    
+            _replaceToIndex: {
+                type: Number,
+                value: 0
+            },
+    
+            /** A state to maintain information about the page number of the matching values to be retrieved. */
+            _dataPage: {
+                type: Number,
+                value: 1
+            },
+    
+            separator: {
+                type: String,
+                value: ","
+            },
+    
+            _blurEventHandler: {
+                type: Function
+            },
+
+            /**
+             * The title of property that is a part of union entity. This might be null, undefined or empty if the search type is not of union entity. 
+             */
+            _typeTitle: {
+                type: String,
+                value: null 
+            },
+
+            /**
+             * The title that should be used instead of propTitle for editor lable
+             */
+            _editorPropTitle: {
+                type: String,
+                computed: '_computeEditorPropTitle(propTitle, _typeTitle)'
+            },
    
            /**
             * Overridden from TgEditor: this specific event is invoked after some key has been pressed.
             *
             * Designated to be bound to child elements.
             */
-           _onInput: {
-               type: Function,
-               value: function () {
-                   return (function (event) {
-                       // clear any search request is already in progress
-                       this._cancelSearch();
-                       // and perform new search only if input has some text in it
-                       if (this.decoratedInput().value) {
-                           this._asyncSearchHandle = setTimeout(() => this._search("*"), 700);
-                       } else { // otherwise, close the result dialog
-                           this.result && this.result.close();
-                       }
-                   }).bind(this);
-               }
-           },
+            _onInput: {
+                type: Function,
+                value: function () {
+                    return (function (event) {
+                        // clear any search request is already in progress
+                        this._cancelSearch();
+                        // and perform new search only if input has some text in it
+                        if (this.decoratedInput().value) {
+                            this._asyncSearchHandle = setTimeout(() => this._search("*"), 700);
+                        } else { // otherwise, close the result dialog
+                            this.result && this.result.close();
+                        }
+                    }).bind(this);
+                }
+            },
    
-           /**
-            * OVERRIDDEN FROM TgEditorBehavior: this specific <input> event is invoked after some key has been pressed.
-            *
-            * This keydown handler implements navigation over the list of matching values, selection of multiple values with Space (this is automatic) and acceptance of selected value with Enter.
-            * This is also the keydown event handler for the resul list.
-            */
-           _onKeydown: {
-               type: Function,
-               value: function () {
-                   return (function (event) {
-                       if (event.keyCode === 13 && this.opened === true) { // 'Enter' has been pressed
-                           this._done();
-                           tearDownEvent(event);
-                       } else if ((event.keyCode === 38 /*up*/ || event.keyCode === 40 /*down*/) && !event.ctrlKey) { // up/down arrow keys
-                           // By default up/down arrow keys work like home/end for and input field
-                           // That's why this event should be suppressed.
-                           tearDownEvent(event);
-   
-                           // Let's now handle the up/down logic that should perform search result list navigation
-                           if (event.keyCode === 38) {
-                               this._selectPrevOnKeyUp(event);
-                           } else if (event.keyCode === 40) {
-                               this._selectNextOnKeyDown(event);
-                           }
-   
-                           // return false as part of stopping the event from propagation
-                           return false;
-                       }
-                   }).bind(this);
-               }
-           },
-   
-           _url: {
-               type: String,
-               computed: '_computeUrl(autocompletionType, propertyName)'
-           },
-   
-           /**
-            * OVERRIDDEN FROM TgEditorBehavior: this specific entityEditor's event was overridden to prevent commiting the value prematurely.
-            */
-           _onChange: {
-               type: Function,
-               value: function () {
-                   return (function (event) {
-                       console.log("_onChange (for entity editor):", event);
-   
-                       if (this.opened === false) {
-                           const parentFunction = TgEditor.properties._onChange.value.call(this);
-                           parentFunction.call(this, event);
-                       }
-                   }).bind(this);
-               }
-           },
-   
-           /**
-            * The function that retrives boundClientRect and offsetHeight from wrapping decorator (paper-input-container).
-            */
-           _retrieveContainerSizes: {
-               type: Function
-           },
-            
+            /**
+             * OVERRIDDEN FROM TgEditorBehavior: this specific <input> event is invoked after some key has been pressed.
+             *
+             * This keydown handler implements navigation over the list of matching values, selection of multiple values with Space (this is automatic) and acceptance of selected value with Enter.
+             * This is also the keydown event handler for the resul list.
+             */
+            _onKeydown: {
+                type: Function,
+                value: function () {
+                    return (function (event) {
+                        if (event.keyCode === 13 && this.opened === true) { // 'Enter' has been pressed
+                            this._done();
+                            tearDownEvent(event);
+                        } else if ((event.keyCode === 38 /*up*/ || event.keyCode === 40 /*down*/) && !event.ctrlKey) { // up/down arrow keys
+                            // By default up/down arrow keys work like home/end for and input field
+                            // That's why this event should be suppressed.
+                            tearDownEvent(event);
+
+                            // Let's now handle the up/down logic that should perform search result list navigation
+                            if (event.keyCode === 38) {
+                                this._selectPrevOnKeyUp(event);
+                            } else if (event.keyCode === 40) {
+                                this._selectNextOnKeyDown(event);
+                            }
+
+                            // return false as part of stopping the event from propagation
+                            return false;
+                        }
+                    }).bind(this);
+                }
+            },
+
+            _url: {
+                type: String,
+                computed: '_computeUrl(autocompletionType, propertyName)'
+            },
+
+            /**
+             * OVERRIDDEN FROM TgEditorBehavior: this specific entityEditor's event was overridden to prevent commiting the value prematurely.
+             */
+            _onChange: {
+                type: Function,
+                value: function () {
+                    return (function (event) {
+                        console.log("_onChange (for entity editor):", event);
+
+                        if (this.opened === false) {
+                            const parentFunction = TgEditor.properties._onChange.value.call(this);
+                            parentFunction.call(this, event);
+                        }
+                    }).bind(this);
+                }
+            },
+
+            /**
+             * The function that retrives boundClientRect and offsetHeight from wrapping decorator (paper-input-container).
+             */
+            _retrieveContainerSizes: {
+                type: Function
+            },
+                
             /**
              * Additional headers for every 'iron-ajax' client-side requests. These only contain 
              * our custom 'Time-Zone' header that indicates real time-zone for the client application.
@@ -474,7 +492,7 @@ export class TgEntityEditor extends TgEditor {
                 type: String,
                 value: _timeZoneHeader
             }
-       };
+        };
     }
     
     static get observers () {
@@ -595,6 +613,10 @@ export class TgEntityEditor extends TgEditor {
 
     _computeSearchingOrClosed (searching, opened) {
         return searching === true || opened == false;
+    }
+
+    _computeEditorPropTitle (propTitle, _typeTitle) {
+        return `${propTitle} ${_typeTitle ? `(${_typeTitle})`: " "}`;
     }
 
     /**
@@ -788,7 +810,7 @@ export class TgEntityEditor extends TgEditor {
         this.searching = false;
         const ajax = this.$.ajaxSearcher;
         if (ajax.lastRequest) {
-          ajax.lastRequest.abort();
+            ajax.lastRequest.abort();
         }
     }
 
@@ -885,6 +907,10 @@ export class TgEntityEditor extends TgEditor {
             if (!this.multi) {
                 // if this is a single selection config then need to simply assign the value
                 this._editingValue = selectedValuesAsStr;
+                const type = this.result.selectedValues.type();
+                if (type.isUnionEntity()) {
+                    this._typeTitle = entityType.prop(this.result.selectedValues._activeProperty()).title();
+                }
             } else {
                 // in case of multi selection config things get a little more interesting
                 // as we need to insert the value into the right position of an existing text in the input field
@@ -916,10 +942,10 @@ export class TgEntityEditor extends TgEditor {
     _isFocused () {
         const activeElement = this.shadowRoot.activeElement
         return activeElement === this.decoratedInput()  ||
-               activeElement === this.$.progressSpinner ||
-               activeElement === this.$.searcherButton  ||
-               activeElement === this.$.acceptButton    || 
-               document.activeElement === this.result;
+            activeElement === this.$.progressSpinner ||
+            activeElement === this.$.searcherButton  ||
+            activeElement === this.$.acceptButton    || 
+            document.activeElement === this.result;
     }
 
     /**
