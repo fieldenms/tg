@@ -87,6 +87,16 @@ const template = html`
             padding-right: 0.5em;
         }
 
+        .type-name {
+            font-size: x-small;
+            background-color: var(--paper-grey-200);
+            color: #737373;
+            line-height: 18px;
+            border-radius: 9px;
+            padding-left: 8px;
+            padding-right: 8px;
+        }
+
         .tg-snatchback-button {
             color: #03A9F4;
         }
@@ -125,7 +135,8 @@ const template = html`
         <iron-selector id="selector" class="tg-snatchback" multi$="[[multi]]" attr-for-selected="value" on-iron-deselect="_itemDeselected" on-iron-select="_itemSelected">
             <!-- begin of dom-repeat -->
             <template is="dom-repeat" items="[[_values]]" as="v">
-                <paper-item id$="[[_makeId(index)]]" value$="[[v.@key]]" tabindex="-1" noink class="tg-item vertical-layout"> <!-- please note that union entities are not supported in autocompletion results and, most likely, will never be. Otherwise consider finding .key places here and adjust accordingly using property getter. -->
+                <paper-item id$="[[_makeId(index)]]" value$="[[v.@key]]" tabindex="-1" noink class="tg-item vertical-layout">
+                <!-- please note that union entities are not supported in autocompletion results and, most likely, will never be. Otherwise consider finding .key places here and adjust accordingly using property getter. -->
                 </paper-item>
             </template>
             <!-- end of dom-repeat -->
@@ -371,6 +382,13 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                     () => this._propValueByName(v, 'desc'),
                     withDesc === true
                 );
+
+                //Add type description if entity editor is for union entity
+                const entityType = v.type();
+                if (v.type().isUnionEntity()) {
+                    const title = entityType.prop(v._activeProperty()).title();
+                    html = html + `<span class="type-name">${title}</span>`
+                }
 
                 // add values for additional properties with highlighting of matching parts if required
                 for (let propName in this.additionalProperties) {

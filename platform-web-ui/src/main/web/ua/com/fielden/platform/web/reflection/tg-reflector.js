@@ -434,17 +434,27 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
     /**
      * Returns 'active entity' in this union entity.
      * 
-     * This method closely resembles methods 'AbstractUnionEntity.activeEntity' and 'AbstractUnionEntity.getNameOfAssignedUnionProperty'.
+     * This method closely resembles methods 'AbstractUnionEntity.activeEntity'.
      */
     Entity.prototype._activeEntity = function () {
+        const activeProperty = this._activeProperty();
+        return activeProperty != null ? this.get(activeProperty) : null;
+    }
+
+     /**
+     * Returns 'active property' in this union entity.
+     * 
+     * This method closely resembles methods 'AbstractUnionEntity.getNameOfAssignedUnionProperty'.
+     */
+      Entity.prototype._activeProperty = function () {
         const self = this;
-        let activeEntity = null;
+        let activeProperty = null;
         this.traverseProperties(function (name) {
             if (_isEntity(self[name])) {
-                activeEntity = self.get(name);
+                activeProperty = name;
             }
         });
-        return activeEntity;
+        return activeProperty;
     }
 
     /**
