@@ -19,6 +19,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.BeforeClass;
@@ -35,6 +36,8 @@ import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
 import ua.com.fielden.platform.processors.test_entities.EntityWithDescTitle;
 import ua.com.fielden.platform.processors.test_entities.EntityWithEntityTypedAndOrdinaryProps;
+import ua.com.fielden.platform.processors.test_entities.EntityWithKeyTypeNoKey;
+import ua.com.fielden.platform.processors.test_entities.EntityWithKeyTypeOfEntityType;
 import ua.com.fielden.platform.processors.test_entities.EntityWithOrdinaryProps;
 import ua.com.fielden.platform.processors.test_entities.EntityWithPropertyDesc;
 import ua.com.fielden.platform.processors.test_entities.EntityWithoutDescTitleAndPropertyDesc;
@@ -45,8 +48,9 @@ import ua.com.fielden.platform.processors.test_entities.NonPersistentButWithMeta
 import ua.com.fielden.platform.processors.test_entities.PersistentEntity;
 import ua.com.fielden.platform.processors.test_entities.SubEntity;
 import ua.com.fielden.platform.processors.test_entities.SuperEntity;
-import ua.com.fielden.platform.processors.test_utils.CompilationRule;
+import ua.com.fielden.platform.processors.test_utils.ProcessingRule;
 import ua.com.fielden.platform.processors.test_utils.exceptions.TestCaseConfigException;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 
 
 /**
@@ -59,14 +63,16 @@ public class MetaModelStructureTest {
     public static final String TEST_META_MODELS_PKG_NAME = TEST_ENTITIES_PKG_NAME + MetaModelConstants.META_MODEL_PKG_NAME_SUFFIX;
 
     @ClassRule
-    public static CompilationRule rule = new CompilationRule(List.of(), new MetaModelProcessor());
+    public static ProcessingRule rule = new ProcessingRule(List.of(), new MetaModelProcessor());
     private static ElementFinder elementFinder;
     private static EntityFinder entityFinder;
     private static MetaModelFinder metaModelFinder;
+    private static Types typeUtils;
     
     @BeforeClass
     public static void setupOnce() {
         // these values are guaranteed to have been initialized since the class rule will evaluate this method during the last round of processing
+        typeUtils = rule.getTypes();
         elementFinder = new ElementFinder(rule.getElements(), rule.getTypes());
         entityFinder = new EntityFinder(rule.getElements(), rule.getTypes());
         metaModelFinder = new MetaModelFinder(rule.getElements(), rule.getTypes());
@@ -134,6 +140,32 @@ public class MetaModelStructureTest {
     }
     // <<<<<<<<<<<<<<<<<<<< METAMODELING OF PROPERTY `desc` <<<<<<<<<<<<<<<<<<<<
 
+    @Test
+    public void entity_with_entity_type_as_key_type_has_property_key_metamodeled_with_entity_meta_model_type() {
+        final EntityElement entity = findEntity(EntityWithKeyTypeOfEntityType.class);
+        final MetaModelElement metaModel = findMetaModel(entity);
+        
+        final ExecutableElement keyMethod = metaModelFinder.findDeclaredPropertyMethod(metaModel, AbstractEntity.KEY);
+        assertTrue("\"key\" property must be metamodeled.", keyMethod != null);
+        assertTrue("\"key\" property must be metamodeled with entity meta-model type.", metaModelFinder.isEntityMetaModelMethod(keyMethod));
+        
+        final Class<?> declaredKeyType = AnnotationReflector.getKeyType(EntityWithKeyTypeOfEntityType.class);
+
+        // return type of keyMethod must be a meta-model for declaredKeyType
+        final MetaModelElement expected = findMetaModel(findEntity((Class<? extends AbstractEntity<?>>) declaredKeyType));
+        assertTrue("%s.key must be metamodeled with %s.".formatted(EntityWithKeyTypeOfEntityType.class.getSimpleName(), expected.getSimpleName()),
+                typeUtils.isSameType(keyMethod.getReturnType(), expected.asType()));
+    }
+    
+    @Test
+    public void entity_with_NoType_as_key_type_does_not_have_property_key_metamodeled() {
+        final EntityElement entity = findEntity(EntityWithKeyTypeNoKey.class);
+        final MetaModelElement metaModel = findMetaModel(entity);
+        
+        final ExecutableElement keyMethod = metaModelFinder.findDeclaredPropertyMethod(metaModel, AbstractEntity.KEY);
+        assertTrue("\"key\" property must not be metamodeled.", keyMethod == null);
+    }
+    
     @Test
     public void ordinary_properties_are_metamodeled_with_PropertyMetaModel() {
         final EntityElement entity = findEntity(EntityWithOrdinaryProps.class);
