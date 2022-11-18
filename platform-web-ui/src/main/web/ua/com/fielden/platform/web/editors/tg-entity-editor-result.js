@@ -135,7 +135,7 @@ const template = html`
         <iron-selector id="selector" class="tg-snatchback" multi$="[[multi]]" attr-for-selected="value" on-iron-deselect="_itemDeselected" on-iron-select="_itemSelected">
             <!-- begin of dom-repeat -->
             <template is="dom-repeat" items="[[_values]]" as="v">
-                <paper-item id$="[[_makeId(index)]]" value$="[[v.@key]]" tabindex="-1" noink class="tg-item vertical-layout">
+                <paper-item id$="[[_makeId(index)]]" value$="[[_getKeyFor(v)]]" tabindex="-1" noink class="tg-item vertical-layout">
                 <!-- please note that union entities are not supported in autocompletion results and, most likely, will never be. Otherwise consider finding .key places here and adjust accordingly using property getter. -->
                 </paper-item>
             </template>
@@ -327,6 +327,10 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         }
 
         return !existingValue;
+    }
+
+    _getKeyFor (entity) {
+        return entity['@key'];
     }
 
     /*

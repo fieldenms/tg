@@ -83,7 +83,7 @@ const customLabelTemplate = html`
            disabled$="[[_disabled]]" 
            slot="label"
            tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]">
-        <span on-tap="_labelTap">[[propTitle]]</span>
+        <span on-tap="_labelTap">[[_editorPropTitle]]</span>
         <iron-icon id="actionAvailability" icon="[[_actionIcon(actionAvailable, entity)]]" action-available$="[[actionAvailable]]" on-tap="_labelTap"></iron-icon>
     </label>`;
 const customInputTemplate = html`
@@ -907,10 +907,6 @@ export class TgEntityEditor extends TgEditor {
             if (!this.multi) {
                 // if this is a single selection config then need to simply assign the value
                 this._editingValue = selectedValuesAsStr;
-                const type = this.result.selectedValues.type();
-                if (type.isUnionEntity()) {
-                    this._typeTitle = entityType.prop(this.result.selectedValues._activeProperty()).title();
-                }
             } else {
                 // in case of multi selection config things get a little more interesting
                 // as we need to insert the value into the right position of an existing text in the input field
@@ -1298,6 +1294,21 @@ export class TgEntityEditor extends TgEditor {
         dialog.setAttribute("tabindex", "-1");
         dialog.setAttribute("id", "result");
         return dialog;
+    }
+
+    _entityChanged (newValue, oldValue) {
+        super._entityChanged(newValue, oldValue);
+        if (!this.multi && this.reflector().isEntity(newValue) && typeof newValue[this.propertyName] !== 'undefined') {
+            const entityValue = this.reflector().tg_getFullValue(newValue, this.propertyName);
+            if (entityValue != null) {
+                const entityType = entityValue.type();
+                if (entityType.isUnionEntity()) {
+                    this._typeTitle = entityType.prop(entityValue._activeProperty()).title();
+                    return;
+                }
+            }
+        }
+        this._typeTitle = null;
     }
 }
 
