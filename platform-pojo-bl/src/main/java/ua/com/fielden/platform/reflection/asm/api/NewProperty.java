@@ -39,11 +39,13 @@ public final class NewProperty<T> {
     private List<Type> typeArguments = new ArrayList<Type>();
     private String title;
     private String desc;
+
     /**
      * Stores all annotations that are directly present on this property except for {@link IsProperty},
      * which is stored in a separate field {@link #atIsProperty}.
      */
     private final List<Annotation> annotations = new ArrayList<Annotation>();
+
     /**
      * Stores the instance of {@link IsProperty} annotation, since it requires frequent access.
      * Should never be null after initialization.
