@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.reflection.asm.exceptions;
 
+import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 
 /**
@@ -7,12 +8,8 @@ import ua.com.fielden.platform.reflection.asm.api.NewProperty;
  * 
  * @author TG Team
  */
-public class NewPropertyRuntimeException extends RuntimeException {
+public class NewPropertyRuntimeException extends AbstractPlatformRuntimeException {
     private static final long serialVersionUID = 1L;
-    
-    public NewPropertyRuntimeException() {
-        super();
-    }
     
     public NewPropertyRuntimeException(final String msg) {
         super(msg);
