@@ -131,7 +131,7 @@ public final class NewProperty<T> {
 
     // TODO obsolete constructor
     @Deprecated
-    public NewProperty(final String name, final Class<T> type, final boolean changeSignature, final String title, final String desc, 
+    private NewProperty(final String name, final Class<T> type, final boolean changeSignature, final String title, final String desc, 
             final Annotation... annotations) 
     {
         this(name, type, title, desc, annotations);
@@ -176,14 +176,12 @@ public final class NewProperty<T> {
      * @param desc property description as in {@link Title} annotation
      * @param annotations annotations directly present on this property (see note)
      */
-    public NewProperty(final String name, final Class<T> rawType, final List<Type> typeArguments, final String title, final String desc, 
-            final Annotation... annotations) 
-    {
-        this.deprecated = false;
+    public NewProperty(final String name, final Class<T> rawType, final List<Type> typeArguments, final String title, final String desc, final Annotation... annotations) {
         this.name = name;
         this.type = rawType;
-        if (!typeArguments.isEmpty()) this.typeArguments.addAll(typeArguments);
-        this.changeSignature = false;
+        if (!typeArguments.isEmpty()) { 
+            this.typeArguments.addAll(typeArguments);
+        }
         this.title = title;
         this.desc = desc;
         
@@ -222,10 +220,20 @@ public final class NewProperty<T> {
      * @param desc property description as in {@link Title} annotation
      * @param annotations annotations directly present on this property (see note)
      */
-    public static <T> NewProperty<T> create(final String name, final Class<T> rawType, final String title, final String desc, 
-            final Annotation... annotations) 
-    {
+    public static <T> NewProperty<T> create(final String name, final Class<T> rawType, final String title, final String desc, final Annotation... annotations) {
         return new NewProperty<T>(name, rawType, List.of(), title, desc, annotations);
+    }
+
+    /**
+     * A simplified version of factory method to {@link #create(String, Class, String, String, Annotation...)}. 
+     * 
+     * @param <T>
+     * @param name
+     * @param rawType
+     * @return
+     */
+    public static <T> NewProperty<T> create(final String name, final Class<T> rawType) {
+        return new NewProperty<T>(name, rawType, List.of(), null, null, new Annotation[0]);
     }
 
     /**
@@ -247,7 +255,6 @@ public final class NewProperty<T> {
     public NewProperty(final String name, final Class<T> rawType, final String title, final String desc, final Annotation... annotations) {
         this(name, rawType, List.of(), title, desc, annotations);
     }
-
 
     /**
      * A convenient factory method for creating a new property representation with a parameterized type.

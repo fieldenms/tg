@@ -264,8 +264,8 @@ public class PropertyTypeDeterminatorCheckingEnhancementsTest {
         final String NEW_PROPERTY_EXPRESSION = "2 * 3 - [integerProp]";
         final String NEW_PROPERTY = "newProperty";
         final Calculated calculated = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION).newInstance();
-        final NewProperty pd1 = new NewProperty(NEW_PROPERTY, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
-        final NewProperty pd2 = new NewProperty(NEW_PROPERTY + 1, Money.class, false, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
+        final NewProperty pd1 = new NewProperty(NEW_PROPERTY, Money.class, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
+        final NewProperty pd2 = new NewProperty(NEW_PROPERTY + 1, Money.class, NEW_PROPERTY_TITLE, NEW_PROPERTY_DESC, calculated);
         // first enhancement
         final Class<? extends AbstractEntity<?>> oneTimeEnhancedType = (Class<? extends AbstractEntity<?>>) cl.startModification(EntityBeingEnhanced.class).addProperties(pd1).endModification();
         // second enhancement

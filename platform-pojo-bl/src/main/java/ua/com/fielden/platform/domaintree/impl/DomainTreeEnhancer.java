@@ -453,12 +453,12 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
                                 final String originationProperty = prop.getOriginationProperty() == null ? "" : prop.getOriginationProperty();
                                 final Annotation calcAnnotation = new CalculatedAnnotation().contextualExpression(prop.getContextualExpression()).rootTypeName(predefinedRootTypeName).contextPath(prop.getContextPath()).origination(originationProperty).attribute(prop.getAttribute()).category(prop.category()).newInstance();
                                 final IsProperty isPropAnnot = prop.getPrecision() != null && prop.getScale() != null ? new IsPropertyAnnotation(prop.getPrecision(), prop.getScale()).newInstance() : NewProperty.DEFAULT_IS_PROPERTY_ANNOTATION;
-                                newProperties[i++] = new NewProperty(nameWithProp.getKey(), prop.resultType(), false, prop.getTitle(), prop.getDesc(),
+                                newProperties[i++] = new NewProperty(nameWithProp.getKey(), prop.resultType(), prop.getTitle(), prop.getDesc(),
                                                                      isPropAnnot,
                                                                      calcAnnotation);
                             } else { // this should be CustomProperty!
                                 final CustomProperty prop = (CustomProperty) iProp;
-                                newProperties[i++] = new NewProperty(nameWithProp.getKey(), prop.resultType(), false, prop.getTitle(), prop.getDesc(), new CustomPropAnnotation().newInstance());
+                                newProperties[i++] = new NewProperty(nameWithProp.getKey(), prop.resultType(), prop.getTitle(), prop.getDesc(), new CustomPropAnnotation().newInstance());
                             }
                         }
                         // determine a "real" parent type:
