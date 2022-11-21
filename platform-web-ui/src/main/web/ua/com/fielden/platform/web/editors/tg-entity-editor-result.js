@@ -20,6 +20,8 @@ import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/cla
 import {html, PolymerElement} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import {microTask} from '/resources/polymer/@polymer/polymer/lib/utils/async.js';
 
+const typeColors = ['#c7ddf5', '#e2d810', '#ffd79d', '#daf2dc', '#ffcce7', '#d7ccc8'];
+
 const template = html`
     <style>
         :host {
@@ -170,6 +172,14 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                 type: Boolean,
                 value: false
             },
+
+            autocompletionType: {
+                type: String
+            },
+
+            propertyName: {
+                type: String
+            },
     
             /* An array of entities that match the search request.
              * Should NOT be manipulated directly -- only via methods pushValue and clearSelection.*/
@@ -178,6 +188,11 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                 value: function() {
                     return [];
                 }
+            },
+
+            _typeColors: {
+                type: Object,
+                computed: '_calcColors(autocompletionType, propertyName, multi)'
             },
     
             _foundSome: {
@@ -276,7 +291,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
             }
         };
     }
-    
+
     constructor () {
         super();
         this.noAutoFocus = true;
@@ -390,8 +405,9 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                 //Add type description if entity editor is for union entity
                 const entityType = v.type();
                 if (v.type().isUnionEntity()) {
-                    const title = entityType.prop(v._activeProperty()).title();
-                    html = html + `<span class="type-name">${title}</span>`
+                    const activeProp = v._activeProperty();
+                    const title = entityType.prop(activeProp).title();
+                    html = html + `<span class="type-name" style="background-color:${this._typeColors[activeProp] || "#eeeeee"}">${title}</span>`;
                 }
 
                 // add values for additional properties with highlighting of matching parts if required
@@ -618,6 +634,19 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         const visibleHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
         const itemHeight = 24 + 2 * 6 + 1; // see tg-item styles with min-height, top / bottom padding and top border
         return visibleHeight - top - 10 < 3 * itemHeight; // three items do not fit, so visible height is small for showing items
+    }
+
+    _calcColors (autocompletionType, propertyName, multi) {
+        const type = this.reflector.findTypeByName(autocompletionType);
+        if (!multi && type) {
+            const propertyType = type.prop(propertyName).type();
+            if (propertyType.isUnionEntity() && propertyType.unionProps()) {
+                const colors = {};
+                propertyType.unionProps().forEach((prop, idx) => colors[prop] = typeColors[idx]);
+                return colors;
+            }
+        }
+        return {};
     }
 }
 

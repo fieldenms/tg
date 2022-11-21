@@ -442,19 +442,14 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
     }
 
      /**
-     * Returns 'active property' in this union entity.
-     * 
-     * This method closely resembles methods 'AbstractUnionEntity.getNameOfAssignedUnionProperty'.
-     */
+      * Returns 'active property' in this union entity. Active property is a property among union properties that is not null.
+      * If there are no such property then null is ruturned. 
+      * 
+      * This method closely resembles methods 'AbstractUnionEntity.getNameOfAssignedUnionProperty'.
+      */
       Entity.prototype._activeProperty = function () {
-        const self = this;
-        let activeProperty = null;
-        this.traverseProperties(function (name) {
-            if (_isEntity(self[name])) {
-                activeProperty = name;
-            }
-        });
-        return activeProperty;
+        const type = this.constructor.prototype.type.call(this);
+        return type.unionProps().find(prop => this[prop] != null) || null;
     }
 
     /**
@@ -823,7 +818,7 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
      *
      */
     EntityType.prototype.isUnionEntity = function () {
-        return typeof this['_unionCommonProps'] !== 'undefined';
+        return typeof this['_unionCommonProps'] !== 'undefined' && typeof this['_unionProps'] !== 'undefined';
     }
 
     /** 
@@ -831,6 +826,13 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
      */
     EntityType.prototype.unionCommonProps = function () {
         return this._unionCommonProps;
+    }
+
+    /** 
+     * Returns the property names for union properties in case of union entity; not defined otherwise.
+     */
+     EntityType.prototype.unionProps = function () {
+        return this._unionProps;
     }
 
     /**

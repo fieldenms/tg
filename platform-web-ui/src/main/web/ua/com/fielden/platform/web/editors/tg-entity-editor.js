@@ -1287,6 +1287,8 @@ export class TgEntityEditor extends TgEditor {
         dialog.noAutoFocus = true;
         dialog.acceptValues = this._done.bind(this);
         dialog.loadMore = this._loadMore.bind(this);
+        dialog.autocompletionType = this.autocompletionType;
+        dialog.propertyName = this.propertyName;
         dialog.multi = this.multi;
         if (this.additionalProperties) {
             dialog.additionalProperties = JSON.parse(this.additionalProperties);
