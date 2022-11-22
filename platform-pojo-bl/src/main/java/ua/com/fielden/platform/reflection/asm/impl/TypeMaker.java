@@ -210,15 +210,11 @@ public class TypeMaker<T> {
             propertyInitializers.put(prop.getName(), prop.getValue());
         }
         else if (collectional) { // automatically initialize collectional properties
-            final Object initValue;
             try {
-                initValue = collectionalInitValue(prop.getRawType());
-            } catch (Exception e) {
-                throw new CollectionalPropertyInitializationException(
-                        String.format("Failed to initialize new collectional property %s.", prop.toString(IsProperty.class)),
-                        e);
+                propertyInitializers.put(prop.getName(), collectionalInitValue(prop.getRawType()));
+            } catch (final Exception ex) {
+                throw new CollectionalPropertyInitializationException("Failed to initialize new collectional property %s.".formatted(prop.toString(IsProperty.class)), ex);
             }
-            propertyInitializers.put(prop.getName(), initValue);
         }
 
         addAccessor(prop.getName(), genericType);
