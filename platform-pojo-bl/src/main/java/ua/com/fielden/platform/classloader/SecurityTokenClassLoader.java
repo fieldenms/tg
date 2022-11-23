@@ -6,14 +6,15 @@ import java.net.URLClassLoader;
 import ua.com.fielden.platform.reflection.ClassesRetriever;
 
 /**
- * A replacement for the system class loader, which has the ability to register derived loaders, and uses them in an attempt to find requested classes.
+ * This URL class loader exposes method {@link #addURL(URL)} to support dynamic loading of classes from files.
+ * The main need for this class loader is to be able to find and load dynamically classes that represent security tokens.  
  *
  * @author TG Team
  *
  */
-public class TgSystemClassLoader extends URLClassLoader {
+public class SecurityTokenClassLoader extends URLClassLoader {
 
-    public TgSystemClassLoader(final ClassLoader parent) {
+    public SecurityTokenClassLoader(final ClassLoader parent) {
         super(new URL[0], parent);
     }
 
