@@ -27,6 +27,7 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 
 public class DomainMetadataUtils {
 
@@ -74,7 +75,7 @@ public class DomainMetadataUtils {
     }
 
     private static Class<? extends AbstractEntity<?>> getRootType(final Calculated calcAnnotation) throws ClassNotFoundException {
-        return (Class<? extends AbstractEntity<?>>) ClassLoader.getSystemClassLoader().loadClass(calcAnnotation.rootTypeName());
+        return (Class<? extends AbstractEntity<?>>) DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader()).loadClass(calcAnnotation.rootTypeName());
     }
     
     public static <ET extends AbstractEntity<?>> List<EntityResultQueryModel<ET>> produceUnionEntityModels(final Class<ET> entityType) {

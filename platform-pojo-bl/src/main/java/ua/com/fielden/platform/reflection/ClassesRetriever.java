@@ -16,6 +16,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 
 import ua.com.fielden.platform.classloader.TgSystemClassLoader;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -26,6 +27,8 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 public class ClassesRetriever {
+    private static final TgSystemClassLoader URL_CLASS_LOADER = new TgSystemClassLoader(ClassLoader.getSystemClassLoader());
+
     /**
      * Let's hide default constructor, which is not needed for a static class.
      */
@@ -186,16 +189,20 @@ public class ClassesRetriever {
     }
 
     /**
-     * Finds and loads class for the passed class name.
+     * Finds and loads class for with {@code className}.
      *
      * @param className
      * @return
      */
     public static Class<?> findClass(final String className) {
         try {
-            return ClassLoader.getSystemClassLoader().loadClass(className);
-        } catch (final ClassNotFoundException e) {
-            throw new ReflectionException(format("Failed to load class [%s]", className),e);
+            return DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader()).loadClass(className);
+        } catch (final ClassNotFoundException ex) {
+            try {
+                return URL_CLASS_LOADER.loadClass(className);
+            } catch (final ClassNotFoundException e) {
+                throw new ReflectionException(format("Failed to load class [%s]", className),e);
+            }
         }
     }
 
@@ -218,7 +225,7 @@ public class ClassesRetriever {
                 for (final File file : nextDirectory.getKey().listFiles()) {
                     if (file.getName().endsWith(".class")) {
                         final String name = nextDirectory.getValue() + '.' + stripFilenameExtension(file.getName());
-                        final Class<?> clazz = ClassLoader.getSystemClassLoader().loadClass(name);
+                        final Class<?> clazz = URL_CLASS_LOADER.loadClass(name);
                         if (filter == null || filter.isSatisfies(clazz)) {
                             classes.add(clazz);
                         }
@@ -263,7 +270,7 @@ public class ClassesRetriever {
                     if (className.endsWith(".class")) {
                         className = stripFilenameExtension(className);
                         if (className.startsWith(packageName + "/")) {
-                            final Class<?> clazz = ClassLoader.getSystemClassLoader().loadClass(className.replace('/', '.'));
+                            final Class<?> clazz = URL_CLASS_LOADER.loadClass(className.replace('/', '.'));
                             if (filter != null && filter.isSatisfies(clazz)) {
                                 classes.add(clazz);
                             } else if (filter == null) {
@@ -287,7 +294,7 @@ public class ClassesRetriever {
     private static String stripFilenameExtension(final String className) {
         return className.substring(0, className.lastIndexOf('.'));
     }
-
+    
     /**
      * Adds specified path to the class path. It works only if the system class loader is an instance of TgSystemClassLoader.
      *
@@ -296,8 +303,7 @@ public class ClassesRetriever {
      */
     private static void addPath(final String path) throws Exception {
         final File file = new File(path);
-        final TgSystemClassLoader urlClassLoader = (TgSystemClassLoader) ClassLoader.getSystemClassLoader();
-        urlClassLoader.addURL(file.toURI().toURL());
+        URL_CLASS_LOADER.addURL(file.toURI().toURL());
     }
 
 }

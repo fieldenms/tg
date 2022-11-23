@@ -12,6 +12,7 @@ import net.bytebuddy.dynamic.DynamicType.Builder;
 import net.bytebuddy.dynamic.loading.ClassLoadingStrategy;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 
 /**
  * 
@@ -60,7 +61,7 @@ public class MockNotFoundEntityMaker {
             return (Class<? extends T>) TYPES.get(entityType.getName(), () -> {
                 final Builder<T> buddy = new ByteBuddy().subclass(entityType);
                 return buddy.name(entityType.getName() + MOCK_TYPE_ENDING).make()
-                        .load(ClassLoader.getSystemClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
+                        .load(DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader()), ClassLoadingStrategy.Default.WRAPPER)
                         .getLoaded();
             });
         } catch (final ExecutionException ex) {
