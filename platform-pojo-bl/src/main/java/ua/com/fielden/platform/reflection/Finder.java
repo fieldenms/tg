@@ -28,6 +28,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -424,7 +425,7 @@ public class Finder {
     public static Field getFieldByName(final Class<?> type, final String name) {
         Class<?> klass = type;
         if (AbstractUnionEntity.class.isAssignableFrom(klass)) {
-            final List<String> commonPropertiesList = AbstractUnionEntity.commonProperties((Class<AbstractUnionEntity>) type);
+            final Set<String> commonPropertiesList = AbstractUnionEntity.commonProperties((Class<AbstractUnionEntity>) type);
             if (commonPropertiesList.contains(name)) {
                 return getFieldByName(AbstractUnionEntity.unionProperties(((Class<AbstractUnionEntity>) type)).get(0).getType(), name);
             }
@@ -445,7 +446,7 @@ public class Finder {
         }
         throw new ReflectionException(format("Failed to locate field [%s] in type [%s]", name, type.getName()));
     }
-    
+
     /**
      * The same as {@link #getFieldByName(Class, String)}, but side effect free.
      * 
@@ -584,7 +585,7 @@ public class Finder {
     private static List<Field> getUnionEntityFields(final Class<? extends AbstractUnionEntity> type) {
         final List<Field> fields = new ArrayList<>();
         final List<Field> unionProperties = AbstractUnionEntity.unionProperties(type);
-        final List<String> commonProperties = AbstractUnionEntity.commonProperties(type);
+        final Set<String> commonProperties = AbstractUnionEntity.commonProperties(type);
         for (final String propertyName : commonProperties) {
             fields.add(getFieldByName(unionProperties.get(0).getType(), propertyName));
         }
@@ -699,7 +700,7 @@ public class Finder {
         final Optional<Field> field;
         final Object valueToRetrieveFrom;
         final List<String> unionProperties = getFieldNames(unionProperties(value.getClass()));
-        final List<String> commonProperties = commonProperties(value.getClass());
+        final Set<String> commonProperties = commonProperties(value.getClass());
 
         try {
             if (unionProperties.contains(property)) { // union properties:
@@ -821,12 +822,12 @@ public class Finder {
     /////////////////////////////// Miscellaneous utilities ///////////////////////////////////////////////////
 
     /**
-     * Returns a list of properties that are present in all of the types passed into the method.
+     * Returns a set of properties that are present in all of the types passed into the method.
      *
      * @param entityTypes
      * @return
      */
-    public static List<String> findCommonProperties(final List<Class<? extends AbstractEntity<?>>> entityTypes) {
+    public static Set<String> findCommonProperties(final List<Class<? extends AbstractEntity<?>>> entityTypes) {
         final List<List<Field>> propertiesSet = new ArrayList<>();
         for (int classIndex = 0; classIndex < entityTypes.size(); classIndex++) {
             final List<Field> fields = new ArrayList<>();
@@ -835,7 +836,7 @@ public class Finder {
             }
             propertiesSet.add(fields);
         }
-        final List<String> commonProperties = new ArrayList<>();
+        final Set<String> commonProperties = new LinkedHashSet<>();
         if (propertiesSet.size() > 0) {
             for (final Field property : propertiesSet.get(0)) {
                 boolean common = true;

@@ -138,7 +138,7 @@ public class FinderTest {
         types.add(SimpleEntityWithCommonProperties.class);
         types.add(ComplexEntity.class);
         types.add(DynamicKeyEntity.class);
-        final List<String> commonProperties = Finder.findCommonProperties(types);
+        final Set<String> commonProperties = Finder.findCommonProperties(types);
         assertEquals("The number of common properties must be 2", 2, commonProperties.size());
         assertFalse("Key can not be common property", commonProperties.contains("key"));
         assertTrue("Desc must be common property", commonProperties.contains("desc"));
@@ -153,7 +153,7 @@ public class FinderTest {
         types.add(ComplexEntity.class);
         types.add(DynamicKeyEntity.class);
         types.add(EntityWithoutDesc.class);
-        final List<String> commonProperties = Finder.findCommonProperties(types);
+        final Set<String> commonProperties = Finder.findCommonProperties(types);
         assertEquals("The number of common properties must be 1.", 1, commonProperties.size());
         assertFalse("Key can not be common property", commonProperties.contains("key"));
         assertFalse("Desc can not be common property", commonProperties.contains("desc"));
@@ -590,7 +590,7 @@ public class FinderTest {
     public void properties_for_union_types_are_the_union_of_union_properties_and_their_common_properties() {
         // first let's build a collection of expected properties
         final List<Field> unionProperties = Finder.findRealProperties(UnionEntityForReflector.class);
-        final List<String> commonProperties = Finder.findCommonProperties(unionProperties.stream().map(f -> (Class<? extends AbstractEntity<?>>) f.getType()).collect(toList()));
+        final Set<String> commonProperties = Finder.findCommonProperties(unionProperties.stream().map(f -> (Class<? extends AbstractEntity<?>>) f.getType()).collect(toList()));
         final List<String> expectedProperties = new ArrayList<>(commonProperties);
         unionProperties.forEach(f -> expectedProperties.add(f.getName()));
         

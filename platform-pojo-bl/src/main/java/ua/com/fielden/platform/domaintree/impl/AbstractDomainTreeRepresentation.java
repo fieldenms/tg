@@ -201,7 +201,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
     private static Pair<List<Field>, List<Field>> commonAndUnion(final Class<? extends AbstractUnionEntity> unionClass) {
         final List<Field> unionProperties = AbstractUnionEntity.unionProperties(unionClass);
         final Class<? extends AbstractEntity> concreteUnionClass = (Class<? extends AbstractEntity>) unionProperties.get(0).getType();
-        final List<String> commonNames = AbstractUnionEntity.commonProperties(unionClass);
+        final Set<String> commonNames = AbstractUnionEntity.commonProperties(unionClass);
         final List<Field> commonProperties = constructKeysAndProperties(concreteUnionClass, commonNames);
         return new Pair<>(commonProperties, unionProperties);
     }
@@ -259,7 +259,7 @@ public abstract class AbstractDomainTreeRepresentation extends AbstractDomainTre
      * @param names
      * @return
      */
-    private static List<Field> constructKeysAndProperties(final Class<?> type, final List<String> names) {
+    private static List<Field> constructKeysAndProperties(final Class<?> type, final Set<String> names) {
         final List<Field> allProperties = constructKeysAndProperties(type);
         final List<Field> properties = new ArrayList<>();
         for (final Field f : allProperties) {
