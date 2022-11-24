@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
-import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.asm.impl.TypeMaker.GET_ORIG_TYPE_METHOD_NAME;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
@@ -12,7 +11,6 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.logging.log4j.Logger;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -33,8 +31,6 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  */
 public class DynamicEntityClassLoader extends InjectionClassLoader {
-
-    private static final Logger LOGGER = getLogger(DynamicEntityClassLoader.class);
     /**
      * A cache of instances of this type of the form: {@code parentClassLoader -> thisInstance}.
      */
@@ -47,13 +43,12 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
     }
 
     /**
-     * Clears the cache of generated classes, registered by the dynamic class loader.
+     * Runs a cleanup routine on the cache of generated classes, registered by the dynamic class loader.
      * 
      * @return a total number of generated classes current cached.
      */
-    public static long clearCache() {
+    public static long cleanUp() {
         cache.cleanUp();
-        cache.invalidateAll();
         return cache.size();
     }
 
