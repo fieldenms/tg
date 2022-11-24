@@ -40,6 +40,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -692,11 +693,11 @@ public class EntityUtils {
      * @return
      */
     public static boolean isSyntheticEntityType(final Class<?> type) {
-        if (!isEntityType(type)) {
+        if (!isEntityType(type) || isUnionEntityType(type)) {
             return false;
         } else {
             try {
-                return syntheticTypes.get(type, () -> looksSynthetic(type.asSubclass(AbstractEntity.class)) && !isUnionEntityType(type));
+                return syntheticTypes.get(type, () -> findSyntheticModelFieldFor(type.asSubclass(AbstractEntity.class)) != null);
             } catch (final Exception ex) {
                 final String msg = format("Could not determine synthetic nature of entity type [%s].", type.getSimpleName());
                 logger.error(msg, ex);
@@ -711,22 +712,23 @@ public class EntityUtils {
      * It became required to traverse the type hierarchy instead of relying on declared fields with the implementation of issue <a href="https://github.com/fieldenms/tg/issues/1692">#1692</a>, which started generating types as subclasses of the original ones.
      *
      * @param <T>
-     * @param entityType
-     * @return
+     * @param entityType to be analysed.
+     * @return either a field corresponding to {@code model_} or {@code models_}, or {@code null}. 
      */
-    private static <T extends AbstractEntity<?>> boolean looksSynthetic(final Class<T> entityType) {
+    public static <T extends AbstractEntity<?>> Field findSyntheticModelFieldFor(final Class<T> entityType) {
         Class<?> klass = entityType;
         while (klass != AbstractEntity.class) { // iterated thought hierarchy
             for (final Field field : klass.getDeclaredFields()) {
                 if (isStatic(field.getModifiers())) {
-                    if ("model_".equals(field.getName()) && EntityResultQueryModel.class.equals(field.getType()) || "models_".equals(field.getName()) && List.class.equals(field.getType())) {
-                        return true;
+                    if ("model_".equals(field.getName()) && EntityResultQueryModel.class.equals(field.getType()) || 
+                        "models_".equals(field.getName()) && List.class.equals(field.getType())) {
+                        return field;
                     }
                 }
             }
             klass = klass.getSuperclass(); // move to the next super class in the hierarchy in search for more declared fields
         }
-        return false;
+        return null;
     }
 
     /**
@@ -802,52 +804,6 @@ public class EntityUtils {
      */
     public static boolean isIntrospectionAllowed(final Class<? extends AbstractEntity<?>> type) {
         return !isIntrospectionDenied(type) && (isSyntheticEntityType(type) || isPersistedEntityType(type));
-    }
-
-    /**
-     * Returns list of query models, which given entity type is based on (assuming it is after all).
-     *
-     * @param entityType
-     * @return
-     */
-    public static <T extends AbstractEntity<?>> List<EntityResultQueryModel<T>> getEntityModelsOfQueryBasedEntityType(final Class<T> entityType) {
-        final List<EntityResultQueryModel<T>> result = new ArrayList<>();
-        try {
-            final Field exprField = Finder.getFieldByName(entityType, "model_");
-            exprField.setAccessible(true);
-            final Object value = exprField.get(null);
-            if (value instanceof EntityResultQueryModel) {
-                result.add((EntityResultQueryModel<T>) value);
-                return result;
-            } else {
-                throw new ReflectionException(format("The expected type of field 'model_' in [%s] is [EntityResultQueryModel], but actual [%s].",
-                                                     entityType.getSimpleName(), exprField.getType().getSimpleName()));
-            }
-        } catch (final Exception ex) {
-            logger.debug(ex);
-            if (ex instanceof ReflectionException) {
-                throw (ReflectionException) ex;
-            }
-        }
-
-        try {
-            final Field exprField = Finder.getFieldByName(entityType, "models_");
-            exprField.setAccessible(true);
-            final Object value = exprField.get(null);
-            if (value instanceof List<?>) { // this is a bit weak type checking due to the absence of generics reification
-                result.addAll((List<EntityResultQueryModel<T>>) exprField.get(null));
-                return result;
-            } else {
-                throw new ReflectionException(format("The expected type of field 'models_' in [%s] is [List<EntityResultQueryModel>], actual [%s].", entityType.getSimpleName(), exprField.getType().getSimpleName()));
-            }
-        } catch (final Exception ex) {
-            logger.debug(ex);
-            if (ex instanceof ReflectionException) {
-                throw (ReflectionException) ex;
-            }
-        }
-
-        return result;
     }
 
     /**
