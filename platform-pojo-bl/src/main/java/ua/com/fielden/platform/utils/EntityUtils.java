@@ -24,7 +24,6 @@ import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.PROPERTY_SPLITTER;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.StreamUtils.takeWhile;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 
@@ -697,16 +696,37 @@ public class EntityUtils {
             return false;
         } else {
             try {
-                return syntheticTypes.get(type, () -> {
-                        final boolean foundModelField = listOf(type.getDeclaredFields()).stream().anyMatch(field -> isStatic(field.getModifiers()) && //
-                                ("model_".equals(field.getName()) && EntityResultQueryModel.class.equals(field.getType()) || "models_".equals(field.getName()) && List.class.equals(field.getType())));
-                        return foundModelField && !isUnionEntityType(type);});
+                return syntheticTypes.get(type, () -> looksSynthetic(type.asSubclass(AbstractEntity.class)) && !isUnionEntityType(type));
             } catch (final Exception ex) {
                 final String msg = format("Could not determine synthetic nature of entity type [%s].", type.getSimpleName());
                 logger.error(msg, ex);
                 throw new ReflectionException(msg, ex);
             }
         }
+    }
+
+    /**
+     * A helper method to determine if {@code entityType} contains either static field "mode_" or "models_" of the appropriate types, which indicates that {@code entityType} is a synthetic entity.
+     * <p>
+     * It became required to traverse the type hierarchy instead of relying on declared fields with the implementation of issue <a href="https://github.com/fieldenms/tg/issues/1692">#1692</a>, which started generating types as subclasses of the original ones.
+     *
+     * @param <T>
+     * @param entityType
+     * @return
+     */
+    private static <T extends AbstractEntity<?>> boolean looksSynthetic(final Class<T> entityType) {
+        Class<?> klass = entityType;
+        while (klass != AbstractEntity.class) { // iterated thought hierarchy
+            for (final Field field : klass.getDeclaredFields()) {
+                if (isStatic(field.getModifiers())) {
+                    if ("model_".equals(field.getName()) && EntityResultQueryModel.class.equals(field.getType()) || "models_".equals(field.getName()) && List.class.equals(field.getType())) {
+                        return true;
+                    }
+                }
+            }
+            klass = klass.getSuperclass(); // move to the next super class in the hierarchy in search for more declared fields
+        }
+        return false;
     }
 
     /**
@@ -717,9 +737,22 @@ public class EntityUtils {
      * @return
      */
     public static boolean isSyntheticBasedOnPersistentEntityType(final Class<? extends AbstractEntity<?>> type) {
-        return isSyntheticEntityType(type) && isPersistedEntityType(type.getSuperclass());
+        if (!isSyntheticEntityType(type)) {
+            return false;
+        }
+        // Let's traverse the type hierarchy to identify if there is a persistent super type...
+        // Such traversal is now required because generation of new types extends the original type.
+        // And so, there can be situations where a generated type has a synthetic-based-on-persistent type as its super type, and also needs to be recognised as being synthetic-based-on-persistent.
+        // Due to the fact that a generated type can be based on a generated that is based on... etc., type hierarchy traversal is required.
+        Class<?> superType = type.getSuperclass();
+        while (superType != AbstractEntity.class) {
+            if (isPersistedEntityType(superType)) {
+                return true;
+            }
+            superType = superType.getSuperclass();
+        }
+        return false;
     }
-
 
     /**
      * Determines whether the provided entity type models a union-type.
@@ -780,7 +813,7 @@ public class EntityUtils {
     public static <T extends AbstractEntity<?>> List<EntityResultQueryModel<T>> getEntityModelsOfQueryBasedEntityType(final Class<T> entityType) {
         final List<EntityResultQueryModel<T>> result = new ArrayList<>();
         try {
-            final Field exprField = entityType.getDeclaredField("model_");
+            final Field exprField = Finder.getFieldByName(entityType, "model_");
             exprField.setAccessible(true);
             final Object value = exprField.get(null);
             if (value instanceof EntityResultQueryModel) {
@@ -790,12 +823,15 @@ public class EntityUtils {
                 throw new ReflectionException(format("The expected type of field 'model_' in [%s] is [EntityResultQueryModel], but actual [%s].",
                                                      entityType.getSimpleName(), exprField.getType().getSimpleName()));
             }
-        } catch (final NoSuchFieldException | IllegalAccessException ex) {
+        } catch (final Exception ex) {
             logger.debug(ex);
+            if (ex instanceof ReflectionException) {
+                throw (ReflectionException) ex;
+            }
         }
 
         try {
-            final Field exprField = entityType.getDeclaredField("models_");
+            final Field exprField = Finder.getFieldByName(entityType, "models_");
             exprField.setAccessible(true);
             final Object value = exprField.get(null);
             if (value instanceof List<?>) { // this is a bit weak type checking due to the absence of generics reification
@@ -804,8 +840,11 @@ public class EntityUtils {
             } else {
                 throw new ReflectionException(format("The expected type of field 'models_' in [%s] is [List<EntityResultQueryModel>], actual [%s].", entityType.getSimpleName(), exprField.getType().getSimpleName()));
             }
-        } catch (final NoSuchFieldException | IllegalAccessException ex) {
+        } catch (final Exception ex) {
             logger.debug(ex);
+            if (ex instanceof ReflectionException) {
+                throw (ReflectionException) ex;
+            }
         }
 
         return result;
