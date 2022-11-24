@@ -11,6 +11,7 @@ import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.reflection.Finder.getFieldValue;
 import static ua.com.fielden.platform.reflection.asm.api.test_utils.NewPropertyTestUtils.assertPropertyEquals;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertFieldExists;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertGeneratedPropertyAccessorSignature;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertGeneratedPropertyCorrectness;
@@ -24,7 +25,6 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -82,12 +82,10 @@ public class DynamicEntityTypePropertiesModificationTest {
     private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
-    private DynamicEntityClassLoader cl;
 
     @Before
     public void setUp() {
         observed = false;
-        cl = DynamicEntityClassLoader.forceInstance(ClassLoader.getSystemClassLoader());
     }
 
     @Test
@@ -95,7 +93,7 @@ public class DynamicEntityTypePropertiesModificationTest {
         final Field oldField = EntityBeingEnhanced.class.getDeclaredField("prop1");
 
         final NewProperty<Double> np = NewProperty.fromField(oldField).changeType(Double.class);
-        final Class<? extends AbstractEntity<?>> newType = cl.startModification(EntityBeingEnhanced.class)
+        final Class<? extends AbstractEntity<?>> newType = startModification(EntityBeingEnhanced.class)
                 .modifyProperties(np)
                 .endModification();
 
@@ -123,7 +121,7 @@ public class DynamicEntityTypePropertiesModificationTest {
         final NewProperty<Double> np1 = NewProperty.fromField(oldField1).changeType(Double.class);
         final NewProperty<TopLevelEntity> np2 = NewProperty.fromField(oldField2).changeType(TopLevelEntity.class);
         final NewProperty<String> np3 = NewProperty.fromField(oldField3).changeType(String.class);
-        final Class<? extends AbstractEntity<?>> newType = cl.startModification(origType)
+        final Class<? extends AbstractEntity<?>> newType = startModification(origType)
                 .modifyProperties(np1, np2, np3)
                 .endModification();
 
@@ -157,7 +155,7 @@ public class DynamicEntityTypePropertiesModificationTest {
         final NewProperty<TopLevelEntity> np2 = NewProperty.fromField(oldField2).changeType(TopLevelEntity.class);
         final NewProperty<String> np3 = NewProperty.fromField(oldField3).changeType(String.class);
 
-        final TypeMaker<? extends AbstractEntity<?>> builder = cl.startModification(origType);
+        final TypeMaker<? extends AbstractEntity<?>> builder = startModification(origType);
         List.of(np1, np2, np3).forEach(builder::modifyProperties);
         final Class<? extends AbstractEntity<?>> newType = builder.endModification();
 
@@ -184,13 +182,13 @@ public class DynamicEntityTypePropertiesModificationTest {
     public void inherited_properties_can_be_modified() throws Exception {
         // 1. create a generated type
         final NewProperty<Integer> np1 = NewProperty.fromField(Entity.class, "observableProperty").changeType(Integer.class);
-        final Class<? extends Entity> newType1 = cl.startModification(Entity.class)
+        final Class<? extends Entity> newType1 = startModification(Entity.class)
                 .modifyProperties(np1)
                 .endModification();
 
         // 2. try to modify newType1 by modifying a property from its original type
         final NewProperty<BigDecimal> np2 = NewProperty.fromField(Entity.class, "money").changeType(BigDecimal.class);
-        final Class<? extends Entity> newType2 = cl.startModification(newType1)
+        final Class<? extends Entity> newType2 = startModification(newType1)
                 .modifyProperties(np2)
                 .endModification();
 
@@ -202,7 +200,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     public void modifying_a_property_with_the_same_name_more_than_once_leads_to_a_runtime_exception() throws Exception {
         final NewProperty<Double> np = NewProperty.fromField(EntityBeingEnhanced.class.getDeclaredField("prop1"))
                 .changeType(Double.class);
-        final TypeMaker<EntityBeingEnhanced> builder = cl.startModification(EntityBeingEnhanced.class)
+        final TypeMaker<EntityBeingEnhanced> builder = startModification(EntityBeingEnhanced.class)
                 .modifyProperties(np);
 
         assertThrows(RuntimeException.class, () -> {
@@ -214,7 +212,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     public void modification_of_a_non_existent_property_leads_to_a_runtime_exception() throws Exception {
         final NewProperty<Double> np = NewProperty.fromField(EntityBeingEnhanced.class.getDeclaredField("prop1"))
                 .changeType(Double.class);
-        final TypeMaker<Entity> builder = cl.startModification(Entity.class);
+        final TypeMaker<Entity> builder = startModification(Entity.class);
 
         assertThrows(RuntimeException.class, () -> {
             builder.modifyProperties(np);
@@ -227,7 +225,7 @@ public class DynamicEntityTypePropertiesModificationTest {
                 NewProperty.fromField(Entity.class, "firstProperty").changeType(String.class),
                 NewProperty.fromField(Entity.class, "entity").changeType(TopLevelEntity.class),
                 NewProperty.fromField(Entity.class, "observableProperty").setValueOrThrow(123d));
-        final Class<? extends AbstractEntity<?>> newType = cl.startModification(Entity.class)
+        final Class<? extends AbstractEntity<?>> newType = startModification(Entity.class)
                 .modifyProperties(newProperties)
                 .endModification();
 
@@ -243,13 +241,13 @@ public class DynamicEntityTypePropertiesModificationTest {
 
     @Test
     public void generated_types_can_be_used_as_original_types_for_modification() throws Exception {
-        final Class<? extends AbstractEntity<?>> newType1 = cl.startModification(Entity.class)
+        final Class<? extends AbstractEntity<?>> newType1 = startModification(Entity.class)
                 .modifyProperties(NewProperty.fromField(Entity.class, "firstProperty").changeType(String.class))
                 .endModification();
 
         final List<NewProperty<?>> newProperties = List.of(NewProperty.fromField(newType1, "firstProperty").changeType(Double.class),
                 NewProperty.fromField(newType1, "number").setValueOrThrow(123));
-        final Class<? extends AbstractEntity<?>> newType2 = cl.startModification(newType1)
+        final Class<? extends AbstractEntity<?>> newType2 = startModification(newType1)
                 .modifyProperties(newProperties)
                 .endModification();
 
@@ -269,7 +267,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     public void a_modified_property_hides_the_original_property_in_the_generated_type() throws Exception {
         final Field origProp = Finder.findFieldByName(Entity.class, "firstProperty");
         final NewProperty<String> np = NewProperty.fromField(origProp).changeType(String.class);
-        final Class<? extends AbstractEntity<?>> newType = cl.startModification(Entity.class)
+        final Class<? extends AbstractEntity<?>> newType = startModification(Entity.class)
                 .modifyProperties(np)
                 .endModification();
 
@@ -281,7 +279,7 @@ public class DynamicEntityTypePropertiesModificationTest {
 
     @Test
     public void a_property_can_be_modified_to_have_its_type_set_to_a_generated_type() throws Exception {
-        final Class<? extends AbstractEntity<?>> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
+        final Class<? extends AbstractEntity<?>> modEntityBeingEnhanced = startModification(EntityBeingEnhanced.class)
                 .addProperties(npMoney)
                 .endModification();
 
@@ -292,7 +290,7 @@ public class DynamicEntityTypePropertiesModificationTest {
                 .changeType(modEntityBeingEnhanced);
         final NewProperty<? extends AbstractEntity<?>> np2 = NewProperty.fromField(EntityBeingModified.class, "prop2")
                 .changeType(modEntityBeingEnhanced);
-        final Class<? extends AbstractEntity<?>> modEntityBeingModified = cl.startModification(EntityBeingModified.class)
+        final Class<? extends AbstractEntity<?>> modEntityBeingModified = startModification(EntityBeingModified.class)
                 .modifyProperties(np1, np2)
                 .endModification();
 
@@ -322,7 +320,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     @Test
     public void for_each_modified_property_generated_type_declares_a_field_and_acessor_and_setter() throws Exception {
         final NewProperty<String> np = NewProperty.fromField(Entity.class, "observableProperty").changeType(String.class);
-        final Class<? extends Entity> newType = cl.startModification(Entity.class)
+        final Class<? extends Entity> newType = startModification(Entity.class)
                 .modifyProperties(np)
                 .endModification();
 
@@ -344,7 +342,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     @Test
     public void accessor_method_is_generated_correctly_for_a_modified_property() throws Exception {
         final NewProperty<String> np = NewProperty.fromField(Entity.class, "observableProperty").changeType(String.class);
-        final Class<? extends Entity> newType = cl.startModification(Entity.class)
+        final Class<? extends Entity> newType = startModification(Entity.class)
                 .modifyProperties(np)
                 .endModification();
 
@@ -363,7 +361,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     @Test
     public void setters_are_generated_correctly_for_modified_collectional_properties() throws Exception {
         final NewProperty<?> np = NewProperty.fromField(EntityWithCollectionalPropety.class, "items").setTypeArguments(String.class);
-        final Class<? extends EntityWithCollectionalPropety> newType = cl.startModification(EntityWithCollectionalPropety.class)
+        final Class<? extends EntityWithCollectionalPropety> newType = startModification(EntityWithCollectionalPropety.class)
                 .modifyProperties(np)
                 .endModification();
 
@@ -387,7 +385,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     @Test
     public void accessor_returns_correct_value_after_setter_invokation_for_modified_properties() throws Exception {
         final NewProperty<String> np = NewProperty.fromField(Entity.class, "observableProperty").changeType(String.class);
-        final Class<? extends Entity> newType = cl.startModification(Entity.class)
+        final Class<? extends Entity> newType = startModification(Entity.class)
                 .modifyProperties(np)
                 .endModification();
 
@@ -411,7 +409,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     @Test
     public void setter_is_observed_for_a_modified_property() throws Exception {
         final NewProperty<Money> np = NewProperty.fromField(Entity.class, "observableProperty").changeType(Money.class);
-        final Class<? extends AbstractEntity<?>> newType = cl.startModification(Entity.class)
+        final Class<? extends AbstractEntity<?>> newType = startModification(Entity.class)
                 .modifyProperties(np)
                 .endModification();
 
@@ -433,7 +431,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     public void raw_type_of_parameterized_property_type_can_be_modified() throws Exception {
         // from List<Double> to Set<Double>
         final NewProperty<?> np1 = NewProperty.fromField(EntityWithCollectionalPropety.class, "items").changeType(Set.class);
-        final Class<? extends EntityWithCollectionalPropety> newType = cl.startModification(EntityWithCollectionalPropety.class)
+        final Class<? extends EntityWithCollectionalPropety> newType = startModification(EntityWithCollectionalPropety.class)
                 .modifyProperties(np1)
                 .endModification();
 
@@ -444,7 +442,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     public void collectional_property_with_modified_raw_type_is_generated_with_correct_initializer() throws Exception {
          // from List<Double> to Set<Double>
         final NewProperty<?> np1 = NewProperty.fromField(EntityWithCollectionalPropety.class, "items").changeType(Set.class);
-        final Class<? extends EntityWithCollectionalPropety> newType = cl.startModification(EntityWithCollectionalPropety.class)
+        final Class<? extends EntityWithCollectionalPropety> newType = startModification(EntityWithCollectionalPropety.class)
                 .modifyProperties(np1)
                 .endModification();
 
@@ -464,7 +462,7 @@ public class DynamicEntityTypePropertiesModificationTest {
                 .setTypeArguments(String.class)
                 // for consistency, since this is a collectional property
                 .changeIsPropertyValue(String.class);
-        final Class<? extends EntityWithCollectionalPropety> newType1 = cl.startModification(EntityWithCollectionalPropety.class)
+        final Class<? extends EntityWithCollectionalPropety> newType1 = startModification(EntityWithCollectionalPropety.class)
                 .modifyProperties(np1)
                 .endModification();
         assertGeneratedPropertyCorrectness(np1, newType1);
@@ -472,7 +470,7 @@ public class DynamicEntityTypePropertiesModificationTest {
         // 2. in this test EntityWithCollectionalProperty.prop1 is modified
         // type argument EntityBeingEnhanced is replaced by a generated type based on it
         // enhance(EntityBeingEnhanced)
-        final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
+        final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = startModification(EntityBeingEnhanced.class)
                 .addProperties(npMoney)
                 .endModification();
         assertGeneratedPropertyCorrectness(npMoney, modEntityBeingEnhanced);
@@ -484,7 +482,7 @@ public class DynamicEntityTypePropertiesModificationTest {
         // enhance(EntityWithCollectionalProperty)
         //      prop1: Collection<EntityBeingEnhanced> -> Collection<modEntityBeingEnhanced>
         final Class<? extends EntityWithCollectionalPropety> modEntityWithCollectionalProperty =
-                cl.startModification(EntityWithCollectionalPropety.class)
+                startModification(EntityWithCollectionalPropety.class)
                 .modifyProperties(np2)
                 .endModification();
 
@@ -498,7 +496,7 @@ public class DynamicEntityTypePropertiesModificationTest {
         final NewProperty<BigInteger> np = NewProperty.fromField(EntityBeingModifiedWithInnerTypes.class, "integerProp")
                 .changeType(BigInteger.class);
         final Class<? extends EntityBeingModifiedWithInnerTypes> newType = 
-                cl.startModification(EntityBeingModifiedWithInnerTypes.class)
+                startModification(EntityBeingModifiedWithInnerTypes.class)
                 .modifyProperties(np)
                 .endModification();
         // EntityBeingModifiedWithInnerTypes class contains an inner type that also has a field named "integerProp"
@@ -519,7 +517,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     public void modified_one2Many_special_case_property_is_generated_correctly() throws Exception {
         // enhance(DetailsEntityForOneToManyAssociation)
         final Class<? extends DetailsEntityForOneToManyAssociation> modOneToManyDetailsEntity = 
-                cl.startModification(DetailsEntityForOneToManyAssociation.class)
+                startModification(DetailsEntityForOneToManyAssociation.class)
                 .addProperties(npMoney)
                 .endModification();
 
@@ -529,7 +527,7 @@ public class DynamicEntityTypePropertiesModificationTest {
                 NewProperty.fromField(MasterEntityWithOneToManyAssociation.class, "one2manyAssociationSpecialCase")
                 .changeType(modOneToManyDetailsEntity);
         final Class<? extends MasterEntityWithOneToManyAssociation> modOneToManyMasterEntity = 
-                cl.startModification(MasterEntityWithOneToManyAssociation.class)
+                startModification(MasterEntityWithOneToManyAssociation.class)
                 .modifyProperties(npOne2ManySpecialCase)
                 .endModification();
 
@@ -541,7 +539,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     @Test
     public void modified_one2Many_collectional_property_is_generated_correctly_when_IsProperty_is_not_provided() throws Exception {
         final Class<? extends DetailsEntityForOneToManyAssociation> modOneToManyDetailsEntity =
-                cl.startModification(DetailsEntityForOneToManyAssociation.class)
+                startModification(DetailsEntityForOneToManyAssociation.class)
                 .addProperties(npMoney)
                 .endModification();
 
@@ -552,7 +550,7 @@ public class DynamicEntityTypePropertiesModificationTest {
                 .setTypeArguments(modOneToManyDetailsEntity)
                 .changeIsPropertyValue(modOneToManyDetailsEntity);
         final Class<? extends MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPropValue> modOneToManyMasterEntity = 
-                cl.startModification(MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPropValue.class)
+                startModification(MasterEntityWithOneToManyCollectionalAssociationProvidedWithLinkPropValue.class)
                 .modifyProperties(npOne2ManyCollectional)
                 .endModification();
 
@@ -563,7 +561,7 @@ public class DynamicEntityTypePropertiesModificationTest {
     public void initialization_value_of_a_property_can_be_modified() throws Exception {
         // 1. modify a simple property
         final NewProperty<?> np = NewProperty.fromField(EntityBeingEnhanced.class, "prop1").setValueOrThrow("Hello");
-        final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = cl.startModification(EntityBeingEnhanced.class)
+        final Class<? extends EntityBeingEnhanced> modEntityBeingEnhanced = startModification(EntityBeingEnhanced.class)
                 .modifyProperties(np)
                 .endModification();
 
@@ -574,7 +572,7 @@ public class DynamicEntityTypePropertiesModificationTest {
         // 2. modify a collectional property
         final NewProperty<?> npColl = NewProperty.fromField(EntityWithCollectionalPropety.class, "prop1").setValueOrThrow(new TreeSet<>());
         final Class<? extends EntityWithCollectionalPropety> modEntityWithCollectionalPropety =
-                cl.startModification(EntityWithCollectionalPropety.class)
+                startModification(EntityWithCollectionalPropety.class)
                 .modifyProperties(npColl)
                 .endModification();
 
@@ -599,7 +597,7 @@ public class DynamicEntityTypePropertiesModificationTest {
             assertNotEquals(newPropType, origField.getType());
 
             final NewProperty np = NewProperty.changeType(name, newPropType);
-            final Class<? extends AbstractEntity<String>> newType = cl.startModification(Entity.class)
+            final Class<? extends AbstractEntity<String>> newType = startModification(Entity.class)
                     .modifyProperties(np)
                     .endModification();
 
@@ -652,7 +650,7 @@ public class DynamicEntityTypePropertiesModificationTest {
         final List<Type> newTypeArguments = List.of(String.class);
 
         final NewProperty np = NewProperty.changeTypeSignature(name, (Class<?>) newTypeArguments.get(0));
-        final Class<? extends EntityWithCollectionalPropety> newType = cl.startModification(EntityWithCollectionalPropety.class)
+        final Class<? extends EntityWithCollectionalPropety> newType = startModification(EntityWithCollectionalPropety.class)
                 .modifyProperties(np)
                 .endModification();
 

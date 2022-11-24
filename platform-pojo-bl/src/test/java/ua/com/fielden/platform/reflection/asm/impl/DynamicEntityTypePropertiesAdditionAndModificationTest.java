@@ -2,6 +2,7 @@ package ua.com.fielden.platform.reflection.asm.impl;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertSame;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertFieldDeclared;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertFieldExists;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertGeneratedPropertyCorrectness;
@@ -9,7 +10,6 @@ import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestU
 
 import java.lang.reflect.Field;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import com.google.inject.Injector;
@@ -40,12 +40,6 @@ public class DynamicEntityTypePropertiesAdditionAndModificationTest {
     private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
-    private DynamicEntityClassLoader cl;
-
-    @Before
-    public void setUp() {
-        cl = DynamicEntityClassLoader.forceInstance(ClassLoader.getSystemClassLoader());
-    }
 
     @Test
     public void generated_types_can_have_both_added_and_modified_properties() throws Exception {
@@ -53,7 +47,7 @@ public class DynamicEntityTypePropertiesAdditionAndModificationTest {
         final NewProperty<Double> np = NewProperty.fromField(EntityBeingEnhanced.class, "prop1").changeType(Double.class);
 
         // first modify, then add
-        final Class<? extends EntityBeingEnhanced> newType1 = cl.startModification(EntityBeingEnhanced.class)
+        final Class<? extends EntityBeingEnhanced> newType1 = startModification(EntityBeingEnhanced.class)
                 .modifyTypeName(EntityBeingEnhanced.class.getName() + "_modify_then_add")
                 .modifyProperties(np)
                 .addProperties(np1)
@@ -62,7 +56,7 @@ public class DynamicEntityTypePropertiesAdditionAndModificationTest {
         assertGeneratedPropertyCorrectness(np1, newType1);
         
         // first add, then modify
-        final Class<? extends EntityBeingEnhanced> newType2 = cl.startModification(EntityBeingEnhanced.class)
+        final Class<? extends EntityBeingEnhanced> newType2 = startModification(EntityBeingEnhanced.class)
                 .modifyTypeName(EntityBeingEnhanced.class.getName() + "_add_then_modify")
                 .addProperties(np1)
                 .modifyProperties(np)
@@ -103,7 +97,7 @@ public class DynamicEntityTypePropertiesAdditionAndModificationTest {
         newCircularChild.set("prop1", newCircularParent);
         newCircularParent.set("prop1", newCircularChild);
 
-        final Class<? extends CircularChild> mod1CircularChild = cl.startModification(CircularChild.class)
+        final Class<? extends CircularChild> mod1CircularChild = startModification(CircularChild.class)
                 .addProperties(np1)
                 .endModification();
         final CircularChild newMod1CircularChild = assertInstantiation(mod1CircularChild, factory);
@@ -111,7 +105,7 @@ public class DynamicEntityTypePropertiesAdditionAndModificationTest {
 
         // enhance(CircularParent)
         //   prop1: CircularChild -> modCircularChild
-        final Class<? extends CircularParent> modCircularParent = cl.startModification(CircularParent.class)
+        final Class<? extends CircularParent> modCircularParent = startModification(CircularParent.class)
                 .modifyProperties(NewProperty.fromField(CircularParent.class, "prop1").changeType(mod1CircularChild))
                 .endModification();
         final CircularParent newModCircularParent = assertInstantiation(modCircularParent, factory);
@@ -119,7 +113,7 @@ public class DynamicEntityTypePropertiesAdditionAndModificationTest {
         
         // enhance(mod1CircularChild)
         //   prop1: CircularParent -> modCircularParent
-        final Class<? extends CircularChild> mod2CircularChild = cl.startModification(mod1CircularChild)
+        final Class<? extends CircularChild> mod2CircularChild = startModification(mod1CircularChild)
                 .modifyProperties(NewProperty.fromField(mod1CircularChild, "prop1").changeType(modCircularParent))
                 .endModification();
         final CircularChild newMod2CircularChild = assertInstantiation(mod2CircularChild, factory);

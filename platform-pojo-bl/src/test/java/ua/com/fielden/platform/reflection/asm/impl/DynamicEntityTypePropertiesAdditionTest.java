@@ -13,6 +13,7 @@ import static ua.com.fielden.platform.reflection.Finder.findProperties;
 import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
 import static ua.com.fielden.platform.reflection.Finder.getFieldValue;
 import static ua.com.fielden.platform.reflection.asm.api.test_utils.NewPropertyTestUtils.assertAnnotationsEquals;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertFieldExists;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertGeneratedPropertyCorrectness;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertHasProperties;
@@ -93,7 +94,6 @@ public class DynamicEntityTypePropertiesAdditionTest {
     private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
-    private DynamicEntityClassLoader cl;
 
     private static final IsProperty atIsPropertyWithPrecision = new IsPropertyAnnotation(19, 4).newInstance();
     private static final Calculated atCalculated = new CalculatedAnnotation().contextualExpression(NEW_PROPERTY_EXPRESSION).newInstance();
@@ -127,16 +127,10 @@ public class DynamicEntityTypePropertiesAdditionTest {
             "PropertyDescriptor property", "PropertyDescriptor property description",
             new IsPropertyAnnotation(TopLevelEntity.class).newInstance());
 
-    @Before
-    public void setUp() {
-        cl = DynamicEntityClassLoader.forceInstance(ClassLoader.getSystemClassLoader());
-        Reflector.cleanUp();
-    }
-
     @Test
     public void properties_can_be_added() throws Exception {
         // 1. add a single property
-        final Class<? extends AbstractEntity<String>> newType1 = cl.startModification(DEFAULT_ORIG_TYPE)
+        final Class<? extends AbstractEntity<String>> newType1 = startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(npBool)
                 .endModification();
 
@@ -153,7 +147,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
 
         // 2. add multiple properties at once
         final List<NewProperty<?>> newProperties = List.of(npBool, np1, np2);
-        final Class<? extends AbstractEntity<String>> newType2 = cl.startModification(DEFAULT_ORIG_TYPE)
+        final Class<? extends AbstractEntity<String>> newType2 = startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(newProperties)
                 .endModification();
 
@@ -173,7 +167,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
 
 
         // 3. add multiple properties sequentially
-        final TypeMaker<? extends AbstractEntity<String>> builder = cl.startModification(DEFAULT_ORIG_TYPE);
+        final TypeMaker<? extends AbstractEntity<String>> builder = startModification(DEFAULT_ORIG_TYPE);
         newProperties.forEach(builder::addProperties);
         final Class<? extends AbstractEntity<String>> newType3 = builder.endModification();
 
@@ -195,7 +189,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
     @Test
     public void added_properties_are_annotated_with_Generated() throws Exception {
         final List<NewProperty<?>> newProperties = List.of(np1, npBool, npRawList, npParamPropDescriptor);
-        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+        final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(newProperties)
                 .endModification();
         
@@ -209,8 +203,8 @@ public class DynamicEntityTypePropertiesAdditionTest {
 
     @Test
     public void generated_types_can_be_renamed_after_adding_new_properties() throws Exception {
-        final String newTypeName = DEFAULT_ORIG_TYPE.getName() + "_enhanced";
-        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+        final String newTypeName = DynamicTypeNamingService.nextTypeName(DEFAULT_ORIG_TYPE.getName());
+        final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(np1)
                 .modifyTypeName(newTypeName)
                 .endModification();
@@ -226,14 +220,14 @@ public class DynamicEntityTypePropertiesAdditionTest {
 
     @Test
     public void only_distinct_properties_are_added() throws Exception {
-        final Class<? extends AbstractEntity<String>> newType1 = cl.startModification(DEFAULT_ORIG_TYPE)
+        final Class<? extends AbstractEntity<String>> newType1 = startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(np1, np1, np1)
                 .endModification(); 
 
         assertEquals("Incorrect number of properties in the generated type.", 
                 Finder.findProperties(DEFAULT_ORIG_TYPE).size() + 1, Finder.findProperties(newType1).size());
 
-        final Class<? extends AbstractEntity<String>> newType2 = cl.startModification(DEFAULT_ORIG_TYPE)
+        final Class<? extends AbstractEntity<String>> newType2 = startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(np1)
                 .addProperties(np1)
                 .addProperties(np1)
@@ -253,7 +247,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
      */
     @Test
     public void for_each_modified_property_generated_type_contains_a_field_and_acessor_and_setter_methods() throws Exception {
-        final Class<? extends Entity> newType = cl.startModification(Entity.class)
+        final Class<? extends Entity> newType = startModification(Entity.class)
                 .addProperties(np1)
                 .endModification();
         
@@ -277,7 +271,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
     @Test
     public void adding_a_property_with_the_same_name_as_one_declared_by_the_original_type_has_no_effect() throws Exception {
         final NewProperty<Money> np = NewProperty.create("money", Money.class, "title", "desc");
-        final Class<? extends Entity> newType = cl.startModification(Entity.class)
+        final Class<? extends Entity> newType = startModification(Entity.class)
                 .addProperties(np)
                 .endModification();
         
@@ -291,12 +285,12 @@ public class DynamicEntityTypePropertiesAdditionTest {
     // Would this change have any undesirable side-effects?
     @Test
     public void adding_a_property_with_the_same_name_as_one_inherited_by_the_original_type_succeeds() throws Exception {
-        final Class<? extends Entity> newType1 = cl.startModification(Entity.class)
+        final Class<? extends Entity> newType1 = startModification(Entity.class)
                 .addProperties(np1)
                 .endModification();
 
         final NewProperty<Money> np = NewProperty.create("money", Money.class, "title", "desc");
-        final Class<? extends Entity> newType2 = cl.startModification(newType1)
+        final Class<? extends Entity> newType2 = startModification(newType1)
                 .addProperties(np)
                 .endModification();
         
@@ -309,7 +303,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
     @Test
     @Ignore
     public void new_properties_are_ordered_as_provided_appearing_at_the_end_of_the_class() throws Exception {
-        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+        final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(np1, np2, npBool)
                 .endModification();
         final int size = newType.getDeclaredFields().length;
@@ -323,10 +317,10 @@ public class DynamicEntityTypePropertiesAdditionTest {
 
     @Test
     public void properties_can_be_added_to_enhanced_types() throws Exception {
-        final Class<? extends AbstractEntity<String>> newType1 = cl.startModification(DEFAULT_ORIG_TYPE)
+        final Class<? extends AbstractEntity<String>> newType1 = startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(np1)
                 .endModification();
-        final Class<? extends AbstractEntity<String>> newType2 = cl.startModification(newType1)
+        final Class<? extends AbstractEntity<String>> newType2 = startModification(newType1)
                 .addProperties(np2)
                 .endModification();
 
@@ -350,7 +344,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
         final NewProperty<Double> npExplicitInit = NewProperty.create("newPropWithInitializedValue", Double.class, 
                 "title", "desc").setValue(value);
 
-        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+        final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(npExplicitInit)
                 .endModification();
 
@@ -363,7 +357,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
 
     @Test
     public void MetaProperty_can_be_obtained_for_an_added_property() throws Exception {
-        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+        final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(np1)
                 .endModification();
 
@@ -378,7 +372,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
 
     @Test
     public void setter_is_observed_for_an_added_property() throws Exception {
-        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+        final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(np1)
                 .endModification();
 
@@ -411,7 +405,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
     public void the_type_of_added_raw_PropertyDescriptor_property_is_parameterized_with_the_value_of_IsProperty() throws Exception {
         final Function<String, String> formatter = MiscUtilities.stringFormatter(npRawPropDescriptor.getName());
 
-        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+        final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(npRawPropDescriptor)
                 .endModification();
 
@@ -451,7 +445,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
     public void the_type_of_added_parameterized_PropertyDescriptor_property_is_parameterized_with_provided_type_arguments() throws Exception {
         final Function<String, String> formatter = MiscUtilities.stringFormatter(npParamPropDescriptor.getName());
 
-        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+        final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(npParamPropDescriptor)
                 .endModification();
 
@@ -493,7 +487,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
     public void the_type_of_added_raw_collectional_property_is_parameterized_with_the_value_of_IsProperty() throws Exception {
         final Function<String, String> formatter = MiscUtilities.stringFormatter(npRawList.getName());
 
-        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+        final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(npRawList)
                 .endModification();
 
@@ -533,7 +527,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
     public void the_type_of_added_parameterized_collectional_property_is_parameterized_with_provided_type_arguments() throws Exception {
         final Function<String, String> formatter = MiscUtilities.stringFormatter(npParamList.getName());
 
-        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+        final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(npParamList)
                 .endModification();
 
@@ -565,7 +559,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
     public void added_collectional_properties_are_initialized_by_default() throws Exception {
         // test both raw collectional properties and parameterized ones
         for (final NewProperty<? extends Collection> np: List.of(npRawList, npParamList)) {
-            final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+            final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
                     .addProperties(np)
                     .endModification();
 
@@ -589,7 +583,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
                 final Class<? extends Collection> collectionType = pair.getKey();
                 final Collection<String> expectedInitValue = pair.getValue();
 
-                final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+                final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
                         .addProperties(np.changeType(collectionType))
                         .endModification();
 
@@ -617,7 +611,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
                 final Class<? extends Collection> collectionType = pair.getKey();
                 final Collection<String> expectedValue = pair.getValue();
 
-                final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+                final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
                         .addProperties(np.changeType(collectionType))
                         .endModification();
 
@@ -636,7 +630,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
         for (final NewProperty<? extends Collection> np: List.of(npRawList, npParamList)) {
             final Function<String, String> formatter = MiscUtilities.stringFormatter(np.getName());
 
-            final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+            final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
                     .addProperties(np)
                     .endModification();
 
@@ -670,7 +664,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
         for (final NewProperty<? extends Collection> np: List.of(npRawList, npParamList)) {
             final Function<String, String> formatter = MiscUtilities.stringFormatter(np.getName());
 
-            final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+            final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
                     .addProperties(np)
                     .endModification();
 
@@ -710,7 +704,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
         for (final NewProperty<? extends Collection> np: List.of(npRawList, npParamList)) {
             final Function<String, String> formatter = MiscUtilities.stringFormatter(np.getName());
 
-            final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+            final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
                     .addProperties(np)
                     .endModification();
 
@@ -757,7 +751,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
         final BeforeChange bc = new BeforeChangeAnnotation(handlers).newInstance();
         final NewProperty<String> np = NewProperty.create("testPropertyWithBCE", String.class, "title", "desc", bc);
 
-        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+        final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(np)
                 .endModification();
 
@@ -792,7 +786,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
                 "One2Many Special Case Association Property", "One2Many Special Case Association Property Description",
                 atIsProperty);
 
-        final var newType = cl.startModification(MasterEntityWithOneToManyAssociation.class)
+        final var newType = startModification(MasterEntityWithOneToManyAssociation.class)
                 .addProperties(np)
                 .endModification();
 
@@ -811,7 +805,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
                 "One2Many Collectional Association Property", "One2Many Collectional Association Property Description",
                 atIsProperty);
 
-        final var newType = cl.startModification(MasterEntityWithOneToManyAssociation.class)
+        final var newType = startModification(MasterEntityWithOneToManyAssociation.class)
                 .addProperties(np)
                 .endModification();
 
@@ -829,7 +823,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
     public void test_to_ensure_that_property_name_with_dangerous_character_works() throws Exception {
         final String propName = "//firstProperty//";
         final NewProperty<String> exoticProperty = NewProperty.create(propName, String.class, "title", "desc");
-        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+        final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(exoticProperty)
                 .endModification();
         try {
@@ -842,7 +836,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
     @Test
     public void class_annotations_can_be_added_after_adding_properties() throws Exception {
         final DescTitle atDescTitle = new DescTitleAnnotation("Title", "Description").newInstance();
-        final Class<? extends TopLevelEntity> newType = cl.startModification(TopLevelEntity.class)
+        final Class<? extends TopLevelEntity> newType = startModification(TopLevelEntity.class)
                 .addProperties(np1)
                 .addClassAnnotations(atDescTitle)
                 .endModification();

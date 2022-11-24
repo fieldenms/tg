@@ -179,7 +179,7 @@ public class ClassesRetriever {
      */
     public static Class<?> findClass(final String className) {
         try {
-            return DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader()).loadClass(className);
+            return DynamicEntityClassLoader.loadType(className);
         } catch (final ClassNotFoundException ex) {
             try {
                 return URL_CLASS_LOADER.loadClass(className);

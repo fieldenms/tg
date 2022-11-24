@@ -7,6 +7,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
@@ -17,7 +18,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.junit.Before;
 import org.junit.Test;
 
 import com.google.inject.Injector;
@@ -30,7 +30,6 @@ import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Finder;
-import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.entities.TopLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.EntityWithConstructors;
@@ -53,35 +52,28 @@ public class DynamicEntityTypeGenerationTest {
     private final EntityModuleWithPropertyFactory module = new CommonTestEntityModuleWithPropertyFactory();
     private final Injector injector = new ApplicationInjectorFactory().add(module).getInjector();
     private final EntityFactory factory = injector.getInstance(EntityFactory.class);
-    private DynamicEntityClassLoader cl;
 
-    @Before
-    public void setUp() {
-        cl = DynamicEntityClassLoader.forceInstance(ClassLoader.getSystemClassLoader());
-        Reflector.cleanUp();
-    }
-    
     @Test
     public void generated_types_have_the_same_class_loader() throws Exception {
         // generated types that share the same original type
-        final Class<? extends AbstractEntity<String>> newType1 = cl.startModification(DEFAULT_ORIG_TYPE)
+        final Class<? extends AbstractEntity<String>> newType1 = startModification(DEFAULT_ORIG_TYPE)
                 .modifyTypeName(DEFAULT_ORIG_TYPE.getName() + "_enhanced1")
                 .endModification();
         final ClassLoader expectedCL = newType1.getClassLoader();
 
-        final Class<? extends AbstractEntity<String>> newType2 = cl.startModification(DEFAULT_ORIG_TYPE)
+        final Class<? extends AbstractEntity<String>> newType2 = startModification(DEFAULT_ORIG_TYPE)
                 .modifyTypeName(DEFAULT_ORIG_TYPE.getName() + "_enhanced2")
                 .endModification();
         assertEquals(expectedCL, newType2.getClassLoader());
         
         // generated type that has a different original type
-        final Class<? extends AbstractEntity<String>> newType3 = cl.startModification(TopLevelEntity.class)
+        final Class<? extends AbstractEntity<String>> newType3 = startModification(TopLevelEntity.class)
                 .modifyTypeName(TopLevelEntity.class.getName() + "_enhanced3")
                 .endModification();
         assertEquals(expectedCL, newType3.getClassLoader());
         
         // generated type that is based on another generated type
-        final Class<? extends AbstractEntity<String>> newType4 = cl.startModification(newType3)
+        final Class<? extends AbstractEntity<String>> newType4 = startModification(newType3)
                 .modifyTypeName(newType3.getName() + "_enhanced4")
                 .endModification();
         assertEquals(expectedCL, newType4.getClassLoader());
@@ -91,19 +83,19 @@ public class DynamicEntityTypeGenerationTest {
     public void members_of_java_top_level_package_can_not_be_enhanced() {
         assertThrows("%s class should not be allowed to undergo modification.".formatted(String.class), 
                 IllegalArgumentException.class, () -> {
-                    cl.startModification(String.class);
+                    startModification(String.class);
                 });
     }
     
     @Test
     public void a_generated_type_is_generated_as_a_subclass_of_the_original_type() throws Exception {
-        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+        final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
                 .endModification();
         
         assertEquals("Incorrect type hierarchy.", DEFAULT_ORIG_TYPE, newType.getSuperclass());
         
         // the same applies for generated types based on other generated types
-        final Class<? extends AbstractEntity<String>> newTypeFromNewType = cl.startModification(newType)
+        final Class<? extends AbstractEntity<String>> newTypeFromNewType = startModification(newType)
                 .endModification();
         
         assertEquals("Incorrect type hierarchy.", newType, newTypeFromNewType.getSuperclass());
@@ -111,7 +103,7 @@ public class DynamicEntityTypeGenerationTest {
     
     @Test
     public void generated_types_do_not_redeclare_properties_of_original_type() throws Exception {
-        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+        final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
                 .endModification();
 
         // a field is represented as *type name & field name* pair
@@ -126,8 +118,8 @@ public class DynamicEntityTypeGenerationTest {
 
     @Test
     public void class_name_can_be_specified_for_a_generated_type() throws Exception {
-        final String newTypeName = DEFAULT_ORIG_TYPE.getName() + "_enhanced";
-        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+        final String newTypeName = DynamicTypeNamingService.nextTypeName(DEFAULT_ORIG_TYPE.getName());
+        final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
                 .modifyTypeName(newTypeName)
                 .endModification();
 
@@ -136,7 +128,7 @@ public class DynamicEntityTypeGenerationTest {
     
     @Test
     public void generated_types_are_implicitly_named_with_unique_class_names_that_are_prefixed_by_the_original_type_name() throws Exception {
-        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+        final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
                 .endModification();
         
         assertTrue("Incorrect generated type name prefix.", newType.getName().startsWith(
@@ -147,21 +139,21 @@ public class DynamicEntityTypeGenerationTest {
     public void startModification_method_must_be_used_as_the_API_entry_point() {
         assertThrows("An exception should have been thrown due to omitted startModification call.",
                 IllegalStateException.class, () -> {
-                    final TypeMaker<Entity> tp = new TypeMaker<Entity>(cl, Entity.class);
+                    final TypeMaker<Entity> tp = new TypeMaker<Entity>(null, Entity.class);
                     tp.addProperties(NewProperty.create("newTestProp", String.class, "Title", "Desc"))
                         .endModification();
                 });
 
         assertThrows("An exception should have been thrown due to omitted startModification call.",
                 IllegalStateException.class, () -> {
-                    final TypeMaker<Entity> tp = new TypeMaker<Entity>(cl, Entity.class);
+                    final TypeMaker<Entity> tp = new TypeMaker<Entity>(null, Entity.class);
                     tp.endModification();
                 });
     }
 
     @Test
     public void generated_types_can_be_instantiated_using_entity_factory() throws Exception {
-        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+        final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
                 .endModification();
         final AbstractEntity<?> entity = factory.newByKey(newType, "key");
 
@@ -171,7 +163,7 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void adding_valid_class_annotations_is_possible() throws Exception {
         final DescTitle newAnnot = new DescTitleAnnotation("Title", "Description").newInstance();
-        final Class<? extends AbstractEntity<?>> newType = cl.startModification(TopLevelEntity.class)
+        final Class<? extends AbstractEntity<?>> newType = startModification(TopLevelEntity.class)
                 .addClassAnnotations(newAnnot)
                 .endModification();
 
@@ -185,7 +177,7 @@ public class DynamicEntityTypeGenerationTest {
     public void adding_invalid_class_annotations_results_in_a_runtime_exception() throws Exception {
         assertThrows("Adding a non-class-level annotation should fail.", 
                 IllegalArgumentException.class, () -> {
-                    cl.startModification(TopLevelEntity.class)
+                    startModification(TopLevelEntity.class)
                     .addClassAnnotations(new IsPropertyAnnotation().newInstance())
                     .endModification();
                 });
@@ -193,8 +185,7 @@ public class DynamicEntityTypeGenerationTest {
 
     @Test
     public void a_generated_type_is_generated_with_the_same_class_annotations_as_the_original_type() throws Exception {
-        final Class<? extends AbstractEntity<?>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
-                .endModification();
+        final Class<? extends AbstractEntity<?>> newType = startModification(DEFAULT_ORIG_TYPE).endModification();
         assertArrayEquals("Class-level annotations declared by the generated type do not match those of the original type.",
                 DEFAULT_ORIG_TYPE.getDeclaredAnnotations(), newType.getDeclaredAnnotations());
     }
@@ -205,7 +196,7 @@ public class DynamicEntityTypeGenerationTest {
         final DescTitle oldAnnot = DEFAULT_ORIG_TYPE.getDeclaredAnnotation(DescTitle.class);
         assertNotNull("Original type must be annotated with the annotation being tested.", oldAnnot);
 
-        final Class<? extends AbstractEntity<?>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
+        final Class<? extends AbstractEntity<?>> newType = startModification(DEFAULT_ORIG_TYPE)
                 .addClassAnnotations(newAnnot)
                 .endModification();
 
@@ -216,18 +207,15 @@ public class DynamicEntityTypeGenerationTest {
 
     @Test
     public void original_type_of_a_generated_one_is_recorded_and_can_be_accessed_with_a_generated_method() throws Exception {
-        final Class<? extends AbstractEntity<String>> newType = cl.startModification(DEFAULT_ORIG_TYPE)
-                .endModification();
+        final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE).endModification();
 
         assertEquals(DEFAULT_ORIG_TYPE, DynamicEntityClassLoader.getOriginalType(newType));
     }
 
     @Test
     public void generated_types_based_on_other_generated_types_inherit_their_original_type() throws Exception {
-        final Class<? extends AbstractEntity<String>> newType1 = cl.startModification(DEFAULT_ORIG_TYPE)
-                .endModification();
-        final Class<? extends AbstractEntity<String>> newType2 = cl.startModification(newType1)
-                .endModification();
+        final Class<? extends AbstractEntity<String>> newType1 = startModification(DEFAULT_ORIG_TYPE).endModification();
+        final Class<? extends AbstractEntity<String>> newType2 = startModification(newType1).endModification();
 
         assertEquals(DEFAULT_ORIG_TYPE, DynamicEntityClassLoader.getOriginalType(newType1));
         assertEquals(DEFAULT_ORIG_TYPE, DynamicEntityClassLoader.getOriginalType(newType2));
@@ -235,7 +223,7 @@ public class DynamicEntityTypeGenerationTest {
     
     @Test
     public void a_generated_type_declares_visible_constructors_of_the_original_type_and_inherits_runtime_annotations() throws Exception {
-        final Class<? extends EntityWithConstructors> newType = cl.startModification(EntityWithConstructors.class)
+        final Class<? extends EntityWithConstructors> newType = startModification(EntityWithConstructors.class)
                 .endModification();
         
         final Map<Boolean, List<Constructor<?>>> constructors = Arrays.stream(EntityWithConstructors.class.getDeclaredConstructors())
@@ -255,4 +243,5 @@ public class DynamicEntityTypeGenerationTest {
                     origVisibleConstructor.getDeclaredAnnotations(), newConstructor.getDeclaredAnnotations());
         }
     }
+
 }

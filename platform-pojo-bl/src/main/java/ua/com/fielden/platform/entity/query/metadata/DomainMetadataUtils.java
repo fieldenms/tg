@@ -75,7 +75,7 @@ public class DomainMetadataUtils {
     }
 
     private static Class<? extends AbstractEntity<?>> getRootType(final Calculated calcAnnotation) throws ClassNotFoundException {
-        return (Class<? extends AbstractEntity<?>>) DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader()).loadClass(calcAnnotation.rootTypeName());
+        return (Class<? extends AbstractEntity<?>>) DynamicEntityClassLoader.loadType(calcAnnotation.rootTypeName());
     }
     
     public static <ET extends AbstractEntity<?>> List<EntityResultQueryModel<ET>> produceUnionEntityModels(final Class<ET> entityType) {

@@ -2,6 +2,7 @@ package fielden.stresstests;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
 
 import java.util.List;
 import java.util.concurrent.Executors;
@@ -43,7 +44,7 @@ public class GetOriginalTypeStressTest {
     public static void main(final String[] args) throws Exception {
         final Supplier<Class<? extends AbstractEntity<String>>> fun = () -> {
             try {
-                return (Class<? extends AbstractEntity<String>>) DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader()).startModification(Entity.class)
+                return (Class<? extends AbstractEntity<String>>) startModification(Entity.class)
                         .modifyTypeName(DynamicTypeNamingService.nextTypeName(Entity.class.getName())).endModification();
             } catch (ClassNotFoundException e) {
                 e.printStackTrace();

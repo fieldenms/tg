@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.report.query.generation;
 
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getCachedByteArray;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
+
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +14,6 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.development.EntityDescriptor;
 
 /**
@@ -51,11 +53,9 @@ public class AnalysisResultClass extends AbstractEntity<String> {
         final List<NewProperty> newProperties = createNewProperties(enhancedType, usedDistributions, distributionED);
         newProperties.addAll(createNewProperties(enhancedType, usedAggregations, aggregationED));
 
-        final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
-
         try {
-            final Class<?> generatedClass = cl.startModification(AnalysisResultClass.class).addProperties(newProperties.toArray(new NewProperty[0])).endModification();
-            return new AnalysisResultClassBundle<>(null, (Class<AbstractEntity<?>>) generatedClass, cl.getCachedByteArray(generatedClass.getName()), null);
+            final Class<?> generatedClass = startModification(AnalysisResultClass.class).addProperties(newProperties.toArray(new NewProperty[0])).endModification();
+            return new AnalysisResultClassBundle<>(null, (Class<AbstractEntity<?>>) generatedClass, getCachedByteArray(generatedClass.getName()), null);
         } catch (final ClassNotFoundException e) {
             throw new IllegalStateException(e);
         }

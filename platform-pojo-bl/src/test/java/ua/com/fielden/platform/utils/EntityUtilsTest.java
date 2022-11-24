@@ -10,6 +10,7 @@ import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.coalesce;
@@ -63,7 +64,6 @@ import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.keygen.KeyNumber;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TgMeterReading;
@@ -693,11 +693,10 @@ public class EntityUtilsTest {
         final Calculated totalCountCalculation = new CalculatedAnnotation().contextualExpression("COUNT(SELF)").newInstance();
         final NewProperty<Integer> total_count_prop = new NewProperty<>("total_count_", Integer.class, "Count", "The number of matching values.", totalCountCalculation);
 
-        final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
         var count = 1;
-        var newType = cl.startModification(baseType).addProperties(total_count_prop).endModification();
+        var newType = startModification(baseType).addProperties(total_count_prop).endModification();
         while (count < maxNestedLevels) {
-            newType = cl.startModification(newType).addProperties(total_count_prop).endModification();
+            newType = startModification(newType).addProperties(total_count_prop).endModification();
             count++;
         }
         return newType;

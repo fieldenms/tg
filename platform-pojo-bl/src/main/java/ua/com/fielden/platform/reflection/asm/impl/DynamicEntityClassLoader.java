@@ -2,7 +2,6 @@ package ua.com.fielden.platform.reflection.asm.impl;
 
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.asm.impl.TypeMaker.GET_ORIG_TYPE_METHOD_NAME;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.io.ByteArrayInputStream;
@@ -10,8 +9,6 @@ import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.util.Map;
 import java.util.Optional;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
@@ -22,8 +19,6 @@ import com.google.common.cache.CacheBuilder;
 
 import net.bytebuddy.dynamic.loading.InjectionClassLoader;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.reflection.asm.exceptions.DynamicEntityClassLoaderException;
-import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -39,65 +34,27 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class DynamicEntityClassLoader extends InjectionClassLoader {
 
-    private static final String ERR_COULD_NOT_CREAT_CLASS_LOADER = "Could not create a new %s".formatted(DynamicEntityClassLoader.class.getSimpleName());    
     private static final Logger LOGGER = getLogger(DynamicEntityClassLoader.class);
     /**
      * A cache of instances of this type of the form: {@code parentClassLoader -> thisInstance}.
      */
-    private static final Cache<ClassLoader, DynamicEntityClassLoader> instances = CacheBuilder.newBuilder().weakKeys().initialCapacity(100).concurrencyLevel(50).build();
+    private static final DynamicEntityClassLoader instance = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
 
-    private final Cache<Class<?>, byte[]> cache = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).concurrencyLevel(50).build();
+    private static final Cache<Class<?>, byte[]> cache = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).concurrencyLevel(50).build();
 
-    /**
-     * Returns an instance of this class loader type with the specified parent class loader. 
-     * The returned instance might be retrieved from cache, which uses {@code parent} as a lookup key.
-     *
-     * @param parent
-     * @return
-     */
-    public static DynamicEntityClassLoader getInstance(final ClassLoader parent) {
-        try {
-            return instances.get(parent, () -> new DynamicEntityClassLoader(parent));
-        } catch (final ExecutionException ex) {
-            LOGGER.error(ERR_COULD_NOT_CREAT_CLASS_LOADER, ex);
-            throw new DynamicEntityClassLoaderException(ERR_COULD_NOT_CREAT_CLASS_LOADER, ex);
-        }
-    }
-    
-    /**
-     * Forcefully creates and returns a new instance of this class loader type with the specified parent class loader regardless of any cached instances.
-     * Primarily used in testing environments.
-     *
-     * @param parent
-     * @return
-     */
-    public static DynamicEntityClassLoader forceInstance(final ClassLoader parent) {
-        return new DynamicEntityClassLoader(parent);
-    }
-    
     private DynamicEntityClassLoader(final ClassLoader parent) {
         super(parent, /*sealed*/ false);
     }
 
     /**
-     * Clears class caches for every registered dynamic class loader.
-     *
-     * @return a tuple of sizes – the first one for the cache of dynamic class loaders, the second one is a total number of generated classes across all dynamic class loaders.
+     * Clears the cache of generated classes, registered by the dynamic class loader.
+     * 
+     * @return a total number of generated classes current cached.
      */
-    public static T2<Long, Long> clearCaches() {
-        final AtomicLong count = new AtomicLong(0L);
-        instances.asMap().values().forEach(decl -> {decl.clearCache(); count.addAndGet(decl.cache.size());});
-        instances.cleanUp();
-        instances.invalidateAll();
-        return t2(instances.size(), count.get());
-    }
-
-    /**
-     * Clears class cache.
-     */
-    public void clearCache() {
+    public static long clearCache() {
         cache.cleanUp();
         cache.invalidateAll();
+        return cache.size();
     }
 
     /**
@@ -106,7 +63,7 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
      * @param typeName - fully-qualified name in binary form (i.e., the result of {@link Class#getName()}.
      * @return
      */
-    private Optional<Pair<Class<?>, byte[]>> lookupCache(final String typeName) {
+    private static Optional<Pair<Class<?>, byte[]>> lookupCache(final String typeName) {
         return cache.asMap().entrySet().stream()
                 .filter(entry -> entry.getKey().getName().equals(typeName))
                 .findFirst()
@@ -118,11 +75,9 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
      * If an entry for the given {@link Class} already exists, it will be overwritten.
      *
      * @param typePair
-     * @return
      */
-    public DynamicEntityClassLoader cacheClass(final Pair<Class<?>, byte[]> typePair) {
+    private static void cacheClass(final Pair<Class<?>, byte[]> typePair) {
         cache.put(typePair.getKey(), typePair.getValue());
-        return this;
     }
 
     /**
@@ -131,7 +86,7 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
      * @param name binary name of a class
      * @return byte array representing a cached class or <code>null</code> if the class wasn't found
      */
-    public byte[] getCachedByteArray(final String name) {
+    public static byte[] getCachedByteArray(final String name) {
         return lookupCache(name).map(Pair::getValue).orElse(null);
     }
     
@@ -161,7 +116,18 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
                 .map(pair -> (InputStream) new ByteArrayInputStream(pair.getValue()))
                 .orElseGet(() -> super.getResourceAsStream(name));
     }
-    
+
+    /**
+     * A static wrapper to call {@code loadClass} for the singleton.
+     * 
+     * @param typeName
+     * @return
+     * @throws ClassNotFoundException
+     */
+    public static Class<?> loadType(final String typeName) throws ClassNotFoundException {
+        return instance.loadClass(typeName);
+    }
+
     /**
      * Initiates modification of the given type. This could be either a dynamic or a static type (created manually by a developer).
      *
@@ -169,8 +135,8 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
      * @return
      * @throws ClassNotFoundException
      */
-    public <T> TypeMaker<T> startModification(final Class<T> origType) throws ClassNotFoundException {
-        return new TypeMaker<T>(this, origType).startModification();
+    public static <T> TypeMaker<T> startModification(final Class<T> origType) throws ClassNotFoundException {
+        return new TypeMaker<T>(instance, origType).startModification();
     }
 
     /**
