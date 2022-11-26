@@ -582,15 +582,17 @@ public final class DomainTreeEnhancer extends AbstractDomainTree implements IDom
         if (StringUtils.isEmpty(path)) { // replace current root type with new one
             return pair(enhancedType, additionalByteArrays);
         }
-        final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(root, path);
 
-        final Class<?> typeToAdapt = transformed.getKey();
-        final String nameOfThePropertyToAdapt = transformed.getValue();
         try {
+            final var owningTypeAndField = Finder.findFieldByNameWithOwningType(root, path);
+            final Class<?> typeToAdapt = owningTypeAndField._1;
+            final Field field = owningTypeAndField._2;
             // change type if simple field and change signature in case of collectional field
-            final boolean isCollectional = Collection.class.isAssignableFrom(PropertyTypeDeterminator.determineClass(transformed.getKey(), transformed.getValue(), true, false));
-            final NewProperty propertyToBeModified = !isCollectional ? NewProperty.changeType(nameOfThePropertyToAdapt, enhancedType)
-                    : NewProperty.changeTypeSignature(nameOfThePropertyToAdapt, enhancedType);
+            final boolean isCollectional = Collection.class.isAssignableFrom(PropertyTypeDeterminator.determineClass(typeToAdapt, field.getName(), true, false));
+            final NewProperty propertyToBeModified = !isCollectional 
+                                                     ? NewProperty.fromField(field).changeType(enhancedType)
+                                                     : NewProperty.fromField(field).setTypeArguments(enhancedType);
+                                                
             final Class<?> nextEnhancedType = startModification(typeToAdapt)
                     .modifyProperties(propertyToBeModified)
                     /* TODO .modifySupertypeName(nameOfTheTypeToAdapt).*/

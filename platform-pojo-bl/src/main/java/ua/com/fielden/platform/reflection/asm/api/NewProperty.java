@@ -54,9 +54,6 @@ public final class NewProperty<T> {
     private T value; // property's initalized value
     private boolean isInitialized = false;
 
-    @Deprecated public /*final*/ boolean changeSignature; // TODO remove
-    public /*final*/ boolean deprecated;
-    
     /**
      * Constructs a property from the given <code>field</code>. To also initialize its value use {@link #fromField(Field, Object)} instead. 
      * To initialize the value explicitly use {@link #setValueOrThrow(Object)}.
@@ -115,28 +112,6 @@ public final class NewProperty<T> {
      */
     public static NewProperty<?> fromField(final Class<?> type, final String name, final Object object) throws NewPropertyException {
         return NewProperty.fromField(Finder.getFieldByName(type, name), object);
-    }
-
-    // TODO remove
-    @Deprecated
-    public static NewProperty changeType(final String name, final Class<?> type) {
-        return new NewProperty(name, type, false, null, null, new Annotation[0]);
-    }
-
-    // TODO remove
-    @Deprecated
-    public static NewProperty changeTypeSignature(final String name, final Class<?> type) {
-        return new NewProperty(name, type, true, null, null, new Annotation[0]);
-    }
-
-    // TODO obsolete constructor
-    @Deprecated
-    private NewProperty(final String name, final Class<T> type, final boolean changeSignature, final String title, final String desc, 
-            final Annotation... annotations) 
-    {
-        this(name, type, title, desc, annotations);
-        this.changeSignature = changeSignature;
-        this.deprecated = true;
     }
 
     /**

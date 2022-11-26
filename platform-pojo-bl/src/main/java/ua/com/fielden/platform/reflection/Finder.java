@@ -13,6 +13,7 @@ import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pd;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.Reflector.MAXIMUM_CACHE_SIZE;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
@@ -56,6 +57,7 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.either.Right;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -479,15 +481,27 @@ public class Finder {
      * @return
      */
     public static Field findFieldByName(final Class<?> type, final String dotNotationExp) {
-        // check if passed "dotNotationExp" is correct:
-        PropertyTypeDeterminator.determinePropertyType(type, dotNotationExp);
-        if (dotNotationExp.endsWith("()")) {
-            throw new MethodFoundException("Illegal situation : a method was found from the dot-notation expression == [" + dotNotationExp + "]");
-        }
-        final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(type, dotNotationExp);
-        return getFieldByName(transformed.getKey(), transformed.getValue());
+        return findFieldByNameWithOwningType(type, dotNotationExp)._2;
     }
-    
+
+    /**
+     * The same as {@link #findFieldByName(Class, String)}, but the returned tuple includes the type, where the last property or method in the {@code dotNotationExp} belongs.
+     * This could a declaring type, but also the last type reached during the path traversal.
+     *
+     * @param type
+     * @param dotNotationExpr
+     * @return
+     */
+    public static T2<Class<?>, Field> findFieldByNameWithOwningType(final Class<?> type, final String dotNotationExpr) {
+        // check if passed "dotNotationExpr" is correct:
+        PropertyTypeDeterminator.determinePropertyType(type, dotNotationExpr);
+        if (dotNotationExpr.endsWith("()")) {
+            throw new MethodFoundException("Illegal situation : a method was found from the dot-notation expression == [" + dotNotationExpr + "]");
+        }
+        final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(type, dotNotationExpr);
+        return t2(transformed.getKey(), getFieldByName(transformed.getKey(), transformed.getValue()));
+    }
+
     /**
      * The same as {@link Finder#findFieldByName(Class, String)}, but side effect free.
      * 

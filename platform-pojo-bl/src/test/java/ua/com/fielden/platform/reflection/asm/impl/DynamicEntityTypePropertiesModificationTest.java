@@ -581,129 +581,130 @@ public class DynamicEntityTypePropertiesModificationTest {
         assertEquals("Incorrect property initialization value.", npColl.getValue(), instanceColl.get(npColl.getName()));
     }
 
-    @Test
-    public void deprecated_NewProperty_can_be_used_to_modify_property_type() throws Exception {
-        // Here we are testing 2 things:
-        // 1. changing the type of *simple* property
-        // 2. changing the raw type of a parameterized type property
-        for (final var nameAndNewType: List.of(Pair.pair("firstProperty", BigDecimal.class),
-                                               Pair.pair("entities", Set.class)))
-        {
-            final String name = nameAndNewType.getKey();
-            final Field origField = assertFieldExists(Entity.class, name);
+//    @Test
+//    public void deprecated_NewProperty_can_be_used_to_modify_property_type() throws Exception {
+//        // Here we are testing 2 things:
+//        // 1. changing the type of *simple* property
+//        // 2. changing the raw type of a parameterized type property
+//        for (final var nameAndNewType: List.of(Pair.pair("firstProperty", BigDecimal.class),
+//                                               Pair.pair("entities", Set.class)))
+//        {
+//            final String name = nameAndNewType.getKey();
+//            final Field origField = assertFieldExists(Entity.class, name);
+//
+//            final Class<?> newPropType = nameAndNewType.getValue();
+//            // make sure that new property type is actually different
+//            assertNotEquals(newPropType, origField.getType());
+//
+//            final NewProperty np = NewProperty.changeType(name, newPropType);
+//            final Class<? extends AbstractEntity<String>> newType = startModification(Entity.class)
+//                    .modifyProperties(np)
+//                    .endModification();
+//
+//            // manually assert all assumptions, since np is a deprecated instance and does not contain enough information
+//            // for DynamicEntityTypeTestUtils.assertGeneratedPropertyCorrectness to be used
+//            final Field field = assertFieldExists(newType, name);
+//            assertEquals("Incorrect raw type of modified property %s.".formatted(name),
+//                    newPropType, field.getType());
+//            // type arguments were not modified so they should remain the same
+//            final List<Type> origTypeArguments = extractTypeArguments(origField.getGenericType());
+//            assertEquals("Incorrect type arguments of modified property %s.".formatted(name),
+//                    origTypeArguments, extractTypeArguments(field.getGenericType()));
+//
+//            // acessor method
+//            final Method accessor;
+//            try {
+//                accessor = Reflector.obtainPropertyAccessor(newType, name);
+//            } catch (final Exception e) {
+//                fail("Accessor method for modified property %s was not found.".formatted(name));
+//                return;
+//            }
+//
+//            assertEquals("Incorrect number of accessor parameters.", 0, accessor.getParameterCount());
+//            assertEquals("Incorrect accessor return raw type.", newPropType, accessor.getReturnType());
+//            assertEquals("Incorrect accessor return type arguments.", 
+//                    origTypeArguments, extractTypeArguments(accessor.getGenericReturnType()));
+//
+//            // setter method
+//            final Method setter;
+//            try {
+//                setter = Reflector.obtainPropertySetter(newType, name);
+//            } catch (final Exception e) {
+//                fail("Setter method for modified property %s was not found.".formatted(name));
+//                return;
+//            }
+//
+//            assertEquals("Incorrect number of setter parameters.", 1, setter.getParameterCount());
+//            assertEquals("Incorrect setter parameter raw type.", newPropType, setter.getParameterTypes()[0]);
+//            assertEquals("Incorrect setter parameter type arguments.", 
+//                    origTypeArguments, extractTypeArguments(setter.getGenericParameterTypes()[0]));
+//            assertEquals("Incorrect setter return type.", newType, setter.getReturnType());
+//        }
+//    }
+//
+//    @Test
+//    public void deprecated_NewProperty_can_be_used_to_modify_property_type_arguments() throws Exception {
+//        final String name = "items";
+//        final Field origField = assertFieldExists(EntityWithCollectionalPropety.class, name);
+//        final Class<?> origFieldType = origField.getType();
+//        final List<Type> newTypeArguments = List.of(String.class);
+//
+//        final NewProperty np = NewProperty.changeTypeSignature(name, (Class<?>) newTypeArguments.get(0));
+//        final Class<? extends EntityWithCollectionalPropety> newType = startModification(EntityWithCollectionalPropety.class)
+//                .modifyProperties(np)
+//                .endModification();
+//
+//        // manually assert all assumptions, since np is a deprecated instance and does not contain enough information
+//        // for DynamicEntityTypeTestUtils.assertGeneratedPropertyCorrectness to be used
+//        final Field newField = assertFieldExists(newType, name);
+//        assertEquals("Incorrect raw type of modified property %s.".formatted(name),
+//                origFieldType, newField.getType());
+//        assertEquals("Incorrect type arguments of modified property %s.".formatted(name),
+//                newTypeArguments, extractTypeArguments(newField.getGenericType()));
+//
+//        // acessor method
+//        final Method accessor;
+//        try {
+//            accessor = Reflector.obtainPropertyAccessor(newType, name);
+//        } catch (final Exception e) {
+//            fail("Accessor method for modified property %s was not found.".formatted(name));
+//            return;
+//        }
+//
+//        assertEquals("Incorrect number of accessor parameters.", 0, accessor.getParameterCount());
+//        assertEquals("Incorrect accessor return raw type.", origFieldType, accessor.getReturnType());
+//        assertEquals("Incorrect accessor return type arguments.", 
+//                newTypeArguments, extractTypeArguments(accessor.getGenericReturnType()));
+//
+//        // setter method
+//        final Method setter;
+//        try {
+//            setter = Reflector.obtainPropertySetter(newType, name);
+//        } catch (final Exception e) {
+//            fail("Setter method for modified property %s was not found.".formatted(name));
+//            return;
+//        }
+//
+//        assertEquals("Incorrect number of setter parameters.", 1, setter.getParameterCount());
+//        assertEquals("Incorrect setter parameter raw type.", origFieldType, setter.getParameterTypes()[0]);
+//        assertEquals("Incorrect setter parameter type arguments.", 
+//                newTypeArguments, extractTypeArguments(setter.getGenericParameterTypes()[0]));
+//        assertEquals("Incorrect setter return type.", newType, setter.getReturnType());
+//
+//        // instantiate the generated type and try to set the value of modified property 
+//        final EntityWithCollectionalPropety instance = assertInstantiation(newType, factory);
+//        final List<String> list1 = List.of("hello");
+//        setter.invoke(instance, list1);
+//        assertEquals("The value of modified collectional property %s was set incorrectly.".formatted(name),
+//                list1, getFieldValue(findFieldByName(newType, name), instance));
+//
+//        // now set the value once again to make sure the setter indeed is generated correctly
+//        // the old collection contents should be cleared, then provided elements should be added
+//        final List<String> list2 = List.of("world");
+//        setter.invoke(instance, list2);
+//        assertEquals("The value of added collectional property %s was set incorrectly.".formatted(name),
+//                list2, getFieldValue(findFieldByName(newType, name), instance));
+//
+//    }
 
-            final Class<?> newPropType = nameAndNewType.getValue();
-            // make sure that new property type is actually different
-            assertNotEquals(newPropType, origField.getType());
-
-            final NewProperty np = NewProperty.changeType(name, newPropType);
-            final Class<? extends AbstractEntity<String>> newType = startModification(Entity.class)
-                    .modifyProperties(np)
-                    .endModification();
-
-            // manually assert all assumptions, since np is a deprecated instance and does not contain enough information
-            // for DynamicEntityTypeTestUtils.assertGeneratedPropertyCorrectness to be used
-            final Field field = assertFieldExists(newType, name);
-            assertEquals("Incorrect raw type of modified property %s.".formatted(name),
-                    newPropType, field.getType());
-            // type arguments were not modified so they should remain the same
-            final List<Type> origTypeArguments = extractTypeArguments(origField.getGenericType());
-            assertEquals("Incorrect type arguments of modified property %s.".formatted(name),
-                    origTypeArguments, extractTypeArguments(field.getGenericType()));
-
-            // acessor method
-            final Method accessor;
-            try {
-                accessor = Reflector.obtainPropertyAccessor(newType, name);
-            } catch (final Exception e) {
-                fail("Accessor method for modified property %s was not found.".formatted(name));
-                return;
-            }
-
-            assertEquals("Incorrect number of accessor parameters.", 0, accessor.getParameterCount());
-            assertEquals("Incorrect accessor return raw type.", newPropType, accessor.getReturnType());
-            assertEquals("Incorrect accessor return type arguments.", 
-                    origTypeArguments, extractTypeArguments(accessor.getGenericReturnType()));
-
-            // setter method
-            final Method setter;
-            try {
-                setter = Reflector.obtainPropertySetter(newType, name);
-            } catch (final Exception e) {
-                fail("Setter method for modified property %s was not found.".formatted(name));
-                return;
-            }
-
-            assertEquals("Incorrect number of setter parameters.", 1, setter.getParameterCount());
-            assertEquals("Incorrect setter parameter raw type.", newPropType, setter.getParameterTypes()[0]);
-            assertEquals("Incorrect setter parameter type arguments.", 
-                    origTypeArguments, extractTypeArguments(setter.getGenericParameterTypes()[0]));
-            assertEquals("Incorrect setter return type.", newType, setter.getReturnType());
-        }
-    }
-
-    @Test
-    public void deprecated_NewProperty_can_be_used_to_modify_property_type_arguments() throws Exception {
-        final String name = "items";
-        final Field origField = assertFieldExists(EntityWithCollectionalPropety.class, name);
-        final Class<?> origFieldType = origField.getType();
-        final List<Type> newTypeArguments = List.of(String.class);
-
-        final NewProperty np = NewProperty.changeTypeSignature(name, (Class<?>) newTypeArguments.get(0));
-        final Class<? extends EntityWithCollectionalPropety> newType = startModification(EntityWithCollectionalPropety.class)
-                .modifyProperties(np)
-                .endModification();
-
-        // manually assert all assumptions, since np is a deprecated instance and does not contain enough information
-        // for DynamicEntityTypeTestUtils.assertGeneratedPropertyCorrectness to be used
-        final Field newField = assertFieldExists(newType, name);
-        assertEquals("Incorrect raw type of modified property %s.".formatted(name),
-                origFieldType, newField.getType());
-        assertEquals("Incorrect type arguments of modified property %s.".formatted(name),
-                newTypeArguments, extractTypeArguments(newField.getGenericType()));
-
-        // acessor method
-        final Method accessor;
-        try {
-            accessor = Reflector.obtainPropertyAccessor(newType, name);
-        } catch (final Exception e) {
-            fail("Accessor method for modified property %s was not found.".formatted(name));
-            return;
-        }
-
-        assertEquals("Incorrect number of accessor parameters.", 0, accessor.getParameterCount());
-        assertEquals("Incorrect accessor return raw type.", origFieldType, accessor.getReturnType());
-        assertEquals("Incorrect accessor return type arguments.", 
-                newTypeArguments, extractTypeArguments(accessor.getGenericReturnType()));
-
-        // setter method
-        final Method setter;
-        try {
-            setter = Reflector.obtainPropertySetter(newType, name);
-        } catch (final Exception e) {
-            fail("Setter method for modified property %s was not found.".formatted(name));
-            return;
-        }
-
-        assertEquals("Incorrect number of setter parameters.", 1, setter.getParameterCount());
-        assertEquals("Incorrect setter parameter raw type.", origFieldType, setter.getParameterTypes()[0]);
-        assertEquals("Incorrect setter parameter type arguments.", 
-                newTypeArguments, extractTypeArguments(setter.getGenericParameterTypes()[0]));
-        assertEquals("Incorrect setter return type.", newType, setter.getReturnType());
-
-        // instantiate the generated type and try to set the value of modified property 
-        final EntityWithCollectionalPropety instance = assertInstantiation(newType, factory);
-        final List<String> list1 = List.of("hello");
-        setter.invoke(instance, list1);
-        assertEquals("The value of modified collectional property %s was set incorrectly.".formatted(name),
-                list1, getFieldValue(findFieldByName(newType, name), instance));
-
-        // now set the value once again to make sure the setter indeed is generated correctly
-        // the old collection contents should be cleared, then provided elements should be added
-        final List<String> list2 = List.of("world");
-        setter.invoke(instance, list2);
-        assertEquals("The value of added collectional property %s was set incorrectly.".formatted(name),
-                list2, getFieldValue(findFieldByName(newType, name), instance));
-
-    }
 }

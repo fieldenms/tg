@@ -406,9 +406,7 @@ public class TypeMaker<T> {
                     .formatted(illegalNp.toString(true)));
         }
 
-        distinctPropertyReplacements.stream()
-            .map(prop -> prop.deprecated ? undeprecateProperty(prop) : prop)
-            .forEach(this::addProperty);
+        distinctPropertyReplacements.stream().forEach(this::addProperty);
 
         return this;
     }
@@ -422,17 +420,6 @@ public class TypeMaker<T> {
      */
     public TypeMaker<T> modifyProperties(final NewProperty<?>... propertyReplacements) {
         return modifyProperties(Arrays.asList(propertyReplacements));
-    }
-
-    private NewProperty<?> undeprecateProperty(final NewProperty<?> property) {
-        // operates on deprecated NewProperty; only name and raw type information
-        final Field origField = Finder.findFieldByName(origType, property.getName());
-
-        if (property.changeSignature) {
-            // NewProperty.type represents a type argument
-            return NewProperty.fromField(origField).setTypeArguments(property.getRawType());
-        }
-        return NewProperty.fromField(origField).changeType(property.getRawType());
     }
 
     /**
