@@ -99,7 +99,7 @@ public class TypeMaker<T> {
     private String modifiedName;
 
     /**
-     * Enables lazy access to declared properties of the original type.
+     * Enables access to declared properties of the original type.
      */
     private final Set<String> origTypeDeclaredProperties;
     /**
