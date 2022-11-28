@@ -34,14 +34,24 @@ import com.google.common.base.Stopwatch;
  */
 abstract public class AbstractPlatformAnnotationProcessor extends AbstractProcessor {
 
+    // processing environment
     protected Messager messager;
     protected Filer filer;
     protected Elements elementUtils;
     protected Types typeUtils;
     protected Map<String, String> options;
     protected DateTime initDateTime;
-    protected int roundNumber;
+
+    // logging-related
     private final String classSimpleName = this.getClass().getSimpleName();
+    private int roundNumber;
+    /**
+     * A counter for the round number that makes sense during incremental compilation, when starting to process affected sources.
+     * Gets reset after a "batch" of affected sources has been processed, since there might be more of them.
+     */
+    private int batchRoundNumber;
+    /** Indicates whether the last round of processing initial inputs has already been passed. Makes sense during incremental compilation. */
+    private boolean pastLastRound;
 
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
@@ -52,7 +62,8 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
         this.elementUtils = processingEnv.getElementUtils();
         this.typeUtils = processingEnv.getTypeUtils();
         this.options = processingEnv.getOptions();
-        this.roundNumber = 0; 
+        this.roundNumber = this.batchRoundNumber = 0; 
+        this.pastLastRound = false;
 
         printNote("%s initialized.", classSimpleName);
         if (!this.options.isEmpty()) {
@@ -69,9 +80,27 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
     @Override
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
         this.roundNumber = this.roundNumber + 1;
+        this.batchRoundNumber = this.batchRoundNumber + 1;
         final Stopwatch stopwatchProcess = Stopwatch.createStarted();
-        
-        printNote(">>> %s: PROCESSING ROUND %d START >>>", classSimpleName, roundNumber);
+        final boolean processingOver = roundEnv.processingOver();
+
+        // processing initial inputs
+        if (!pastLastRound) {
+            printNote(">>> %s: PROCESSING ROUND %d START >>>", classSimpleName, roundNumber);
+            if (processingOver) {
+                printNote("Last round of processing initial inputs.");
+            }
+        }
+        // processing affected sources
+        else {
+            printNote(">>> %s: PROCESSING ROUND %d (%d) START >>>", classSimpleName, roundNumber, batchRoundNumber);
+            if (processingOver) {
+                printNote("Last round of processing sources affected by previous inputs.");
+            }
+            else {
+                printNote("Processing affected sources.");
+            }
+        }
         printNote("annotations: [%s]", annotations.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", ")));
         printNote("rootElements: [%s]", roundEnv.getRootElements().stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", ")));
 
@@ -79,6 +108,11 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
 
         stopwatchProcess.stop();
         printNote("<<< %s: PROCESSING ROUND %d END [%s millis] <<<", classSimpleName, roundNumber, stopwatchProcess.elapsed(MILLISECONDS));
+
+        if (roundEnv.processingOver()) {
+            this.pastLastRound = true;
+            this.batchRoundNumber = 0; // reset affected sources batch round counter
+        }
 
         return claimAnnotations;
     }
@@ -103,5 +137,9 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
      */
     protected void printNote(final String msg, final Object... args) {
         messager.printMessage(NOTE, msg.formatted(args));
+    }
+
+    protected int getRoundNumber() {
+        return roundNumber;
     }
 }

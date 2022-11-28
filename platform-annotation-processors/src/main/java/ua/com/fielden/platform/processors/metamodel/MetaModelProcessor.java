@@ -120,7 +120,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         allGeneratedMetaModels.addAll(generatedMetaModels);
 
         // generation or re-generation of the meta-models entry point class should occur only during the first round of processing
-        if (roundNumber == 1) {
+        if (getRoundNumber() == 1) {
             if (maybeMetaModelsElement.isEmpty()) {
                 // if the MetaModels class does not yet exist, let's generate it to include meta-models, which were generated during this first round 
                 writeMetaModelsClass(generatedMetaModels);
