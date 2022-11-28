@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.reflection.asm.api;
 
+import static java.util.stream.Collectors.joining;
+
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -8,12 +10,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.StringJoiner;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -234,7 +233,7 @@ public final class NewProperty<T> {
      * A convenient factory method for creating a new property representation with a parameterized type.
      * <p>
      * Refer to {@link #NewProperty(String, ParameterizedType, String, String, Annotation...)} for details.
-     * 
+     *
      * @param name simple name of the property
      * @param type parameterized type of the property
      * @param title property title as in {@link Title} annotation
@@ -262,7 +261,7 @@ public final class NewProperty<T> {
     
     /**
      * Tests whether an annotation is present for a specific annotation type.
-     * 
+     *
      * @param annotationType
      * @return
      */
@@ -272,7 +271,7 @@ public final class NewProperty<T> {
 
     /**
      * Returns an annotation for the specified annotation type. Returns <code>null</code> if such annotation is not in the list.
-     * 
+     *
      * @param annotationType
      * @return
      */
@@ -287,7 +286,7 @@ public final class NewProperty<T> {
 
     /**
      * Add the specified annotation to the list of property annotations only if it hasn't been added yet.
-     * 
+     *
      * @param annotation
      * @return
      */
@@ -541,15 +540,6 @@ public final class NewProperty<T> {
         return changeTypeArguments(Arrays.asList(typeArguments));
     }
     
-    /**
-     * Returns a string representation of this property in its fullest form (with all annotations included).
-     * For shorter representations see {@link #toString(boolean)} and {@link #toString(Class...)}.
-     */
-    @Override
-    public String toString() {
-        return toString(false);
-    }
-
     @Override
     public int hashCode() {
         return 31 * name.hashCode();
@@ -568,39 +558,29 @@ public final class NewProperty<T> {
         final NewProperty<?> that = (NewProperty<?>) obj;
         return this.name.equals(that.name);
     }
-    
-    /**
-     * Returns a string representation of this property without any annotations.
-     * @param ommitAnnotations - controls whether to omit annotations
-     * @return
-     */
-    public String toString(final boolean ommitAnnotations) {
-        final StringBuilder strBuilder = new StringBuilder();
-        if (!ommitAnnotations) {
-            strBuilder.append(getAnnotations().stream().map(Annotation::toString).collect(Collectors.joining(" ")));
-            strBuilder.append(' ');
-        }
 
-        return strBuilder.append(String.format("%s %s", genericTypeAsDeclared().getTypeName(), name)).toString();
+    /**
+     * Returns a string representation of this property in its fullest form (with all annotations included).
+     * For shorter representations see {@link #toString(boolean)}.
+     */
+    @Override
+    public String toString() {
+        return toString(false);
     }
-    
+
     /**
-     * Returns a string representation of this property including the provided annotations only.
+     * Returns a string representation of this property with or without its annotations.
      *
-     * @param withAnnotations - annotation types to include
+     * @param withoutAnnotations - controls whether to omit annotations for the string representation
      * @return
      */
-    public String toString(final Class<?>... withAnnotations) {
-        final Set<Class<?>> withAnnotationsSet = new HashSet<>(Arrays.asList(withAnnotations));
-
+    public String toString(final boolean withoutAnnotations) {
         final StringBuilder strBuilder = new StringBuilder();
-        strBuilder.append(annotations.stream()
-                .filter(annot -> withAnnotationsSet.contains(annot.annotationType()))
-                .map(Annotation::toString)
-                .collect(Collectors.joining(" ")));
-        if (!strBuilder.isEmpty()) strBuilder.append(' ');
-
-        return strBuilder.append(String.format("%s %s", genericTypeAsDeclared().getTypeName(), name)).toString();
+        strBuilder.append(String.format("%s: %s", name, genericTypeAsDeclared().getTypeName()));
+        if (!withoutAnnotations) {
+            strBuilder.append(", annotations: " + getAnnotations().stream().map(a -> "@" + a.annotationType().getSimpleName()).collect(joining(", ")));
+        }
+        return strBuilder.toString();
     }
 
     /**
