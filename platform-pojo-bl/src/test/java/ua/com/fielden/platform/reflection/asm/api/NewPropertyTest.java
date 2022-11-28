@@ -3,6 +3,7 @@ package ua.com.fielden.platform.reflection.asm.api;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
@@ -242,8 +243,22 @@ public class NewPropertyTest {
         final Field field = Finder.getFieldByName(Entity.class, "firstProperty");
         assertFalse(field.getType().isInstance(value));
 
-        Assert.assertThrows(NewPropertyException.class, () -> {
-            NewProperty.fromField(field).setValueOrThrow(value);
-        });
+        Assert.assertThrows(NewPropertyException.class, () -> NewProperty.fromField(field).setValueOrThrow(value));
     }
+
+    @Test
+    public void new_properties_are_equal_iff_their_names_are_equal() {
+        final var name = "propName";
+        assertEquals(NewProperty.create(name, String.class, null, null), NewProperty.create(name, Double.class, null, null));
+        assertNotEquals(NewProperty.create(name + "1", String.class, null, null), NewProperty.create(name, String.class, null, null));
+    }
+
+    @Test
+    public void new_property_cannot_be_instantiated_with_blank_name_or_null_type() {
+        Assert.assertThrows(NewPropertyException.class, () -> NewProperty.create(null, String.class, null, null));
+        Assert.assertThrows(NewPropertyException.class, () -> NewProperty.create("", String.class, null, null));
+        Assert.assertThrows(NewPropertyException.class, () -> NewProperty.create(" ", String.class, null, null));
+        Assert.assertThrows(NewPropertyException.class, () -> NewProperty.create("name", (Class<String>) null, null, null));
+    }
+
 }

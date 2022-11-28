@@ -10,9 +10,12 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.StringUtils;
 
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Title;
@@ -26,19 +29,22 @@ import ua.com.fielden.platform.reflection.asm.exceptions.NewPropertyException;
  * A convenient abstraction for representing data needed for dynamic construction of properties.
  * 
  * @param <T> The raw type of this property. This type parameter provides a compile-time safe way to initialize property's value using
- * {@link #setValue(Object)}. If the type is unknown and <code>NewProperty&lt?&gt</code> is being used, then 
- * {@link #setValueOrThrow(Object)} can be used to initialize its value. 
- * 
+ * {@link #setValue(Object)}. If the type is unknown and {@code NewProperty<?>} is being used, then 
+ * {@link #setValueOrThrow(Object)} can be used to initialize its value.
+ * <p>
+ * The context of using multiple instances of {@code NewProperty} is expected to be the process of enhancement of the same entity.
+ * Hence, the identify for instances of {@code NewProperty} is determined by field {@code name}, which stands for the property name.
+ *
  * @author TG Team
  */
 public final class NewProperty<T> {
     public static final IsProperty DEFAULT_IS_PROPERTY_ANNOTATION = new IsPropertyAnnotation().newInstance();
 
-    private String name;
-    private Class<T> type;
-    private List<Type> typeArguments = new ArrayList<Type>();
-    private String title;
-    private String desc;
+    private final String name;
+    private final Class<T> type;
+    private final List<Type> typeArguments = new ArrayList<Type>();
+    private final String title;
+    private final String desc;
 
     /**
      * Stores all annotations that are directly present on this property except for {@link IsProperty},
@@ -152,11 +158,16 @@ public final class NewProperty<T> {
      * @param annotations annotations directly present on this property (see note)
      */
     public NewProperty(final String name, final Class<T> rawType, final List<Type> typeArguments, final String title, final String desc, final Annotation... annotations) {
+        if (StringUtils.isBlank(name)) {
+            throw new NewPropertyException("New propety name cannot be blank.");
+        }
+        if (rawType == null) {
+            throw new NewPropertyException("New propety type cannot be null.");
+        }
+
         this.name = name;
         this.type = rawType;
-        if (!typeArguments.isEmpty()) { 
-            this.typeArguments.addAll(typeArguments);
-        }
+        this.typeArguments.addAll(typeArguments);
         this.title = title;
         this.desc = desc;
         
@@ -164,12 +175,12 @@ public final class NewProperty<T> {
             this.annotations.add(titleAnnotation());
         }
 
-        // is @IsProperty provided? 
-        final Annotation atIsProp = Arrays.stream(annotations)
+        // is @IsProperty provided?
+        final Optional<Annotation> maybeIsProperty = Arrays.stream(annotations)
                 .filter(annot -> annot.annotationType() == IsProperty.class)
-                .findAny().orElse(null);
-        if (atIsProp != null) {
-            this.atIsProperty = (IsProperty) atIsProp;
+                .findAny();
+        if (maybeIsProperty.isPresent()) {
+            this.atIsProperty = (IsProperty) maybeIsProperty.get();
             // this::addAnnotation is used to avoid the possibility of old code breaking, since it could be providing duplicate annotations
             // and also to avoid the possibility of adding @Title twice
             Arrays.stream(annotations)
@@ -197,18 +208,6 @@ public final class NewProperty<T> {
      */
     public static <T> NewProperty<T> create(final String name, final Class<T> rawType, final String title, final String desc, final Annotation... annotations) {
         return new NewProperty<T>(name, rawType, List.of(), title, desc, annotations);
-    }
-
-    /**
-     * A simplified version of factory method to {@link #create(String, Class, String, String, Annotation...)}. 
-     * 
-     * @param <T>
-     * @param name
-     * @param rawType
-     * @return
-     */
-    public static <T> NewProperty<T> create(final String name, final Class<T> rawType) {
-        return new NewProperty<T>(name, rawType, List.of(), null, null, new Annotation[0]);
     }
 
     /**
@@ -381,11 +380,6 @@ public final class NewProperty<T> {
     public String getName() {
         return name;
     }
-    
-    public NewProperty<T> setName(final String name) {
-        this.name = name;
-        return this;
-    }
 
     public Class<T> getRawType() {
         return type;
@@ -494,7 +488,7 @@ public final class NewProperty<T> {
      * @throws NewPropertyException
      */
     @SuppressWarnings("unchecked")
-    public NewProperty<T> setValueOrThrow(final Object value) throws NewPropertyException {
+    public NewProperty<T> setValueOrThrow(final Object value) {
         if (!type.isInstance(value)) {
             throw new NewPropertyException(String.format(
                     "Couldn't initialize property value: uncompatible types. Property raw type: %s. Value type given: %s.",
@@ -555,6 +549,25 @@ public final class NewProperty<T> {
     public String toString() {
         return toString(false);
     }
+
+    @Override
+    public int hashCode() {
+        return 31 * name.hashCode();
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+
+        if (!(obj instanceof NewProperty)) {
+            return false;
+        }
+
+        final NewProperty<?> that = (NewProperty<?>) obj;
+        return this.name.equals(that.name);
+    }
     
     /**
      * Returns a string representation of this property without any annotations.
@@ -573,6 +586,7 @@ public final class NewProperty<T> {
     
     /**
      * Returns a string representation of this property including the provided annotations only.
+     *
      * @param withAnnotations - annotation types to include
      * @return
      */
@@ -624,4 +638,5 @@ public final class NewProperty<T> {
             }
         };
     }
+
 }
