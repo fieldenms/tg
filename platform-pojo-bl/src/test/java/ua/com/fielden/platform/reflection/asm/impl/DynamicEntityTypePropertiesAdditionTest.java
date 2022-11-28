@@ -33,7 +33,6 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
 
-import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -146,7 +145,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
         assertAnnotationsEquals(npBool, field1);
 
         // 2. add multiple properties at once
-        final List<NewProperty<?>> newProperties = List.of(npBool, np1, np2);
+        final Set<NewProperty<?>> newProperties = Set.of(npBool, np1, np2);
         final Class<? extends AbstractEntity<String>> newType2 = startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(newProperties)
                 .endModification();
@@ -188,7 +187,7 @@ public class DynamicEntityTypePropertiesAdditionTest {
     
     @Test
     public void added_properties_are_annotated_with_Generated() throws Exception {
-        final List<NewProperty<?>> newProperties = List.of(np1, npBool, npRawList, npParamPropDescriptor);
+        final Set<NewProperty<?>> newProperties = Set.of(np1, npBool, npRawList, npParamPropDescriptor);
         final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
                 .addProperties(newProperties)
                 .endModification();

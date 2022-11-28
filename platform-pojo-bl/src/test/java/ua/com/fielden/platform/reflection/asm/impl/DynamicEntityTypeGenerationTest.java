@@ -31,6 +31,7 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
+import ua.com.fielden.platform.reflection.asm.exceptions.TypeMakerException;
 import ua.com.fielden.platform.reflection.asm.impl.entities.TopLevelEntity;
 import ua.com.fielden.platform.reflection.test_entities.EntityWithConstructors;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
@@ -176,7 +177,7 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void adding_invalid_class_annotations_results_in_a_runtime_exception() throws Exception {
         assertThrows("Adding a non-class-level annotation should fail.", 
-                IllegalArgumentException.class, () -> {
+                TypeMakerException.class, () -> {
                     startModification(TopLevelEntity.class)
                     .addClassAnnotations(new IsPropertyAnnotation().newInstance())
                     .endModification();

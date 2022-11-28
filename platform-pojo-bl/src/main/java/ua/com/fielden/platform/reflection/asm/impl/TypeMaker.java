@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
-import static java.lang.String.format;
-import static java.util.stream.Collectors.toCollection;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
@@ -17,9 +16,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -53,7 +54,7 @@ import ua.com.fielden.platform.reflection.Reflector;
 import ua.com.fielden.platform.reflection.asm.annotation.GeneratedAnnotation;
 import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.exceptions.CollectionalPropertyInitializationException;
-import ua.com.fielden.platform.utils.StreamUtils;
+import ua.com.fielden.platform.reflection.asm.exceptions.TypeMakerException;
 
 /**
  * This class provides an API for modifying types at runtime by means of bytecode manipulation.
@@ -96,26 +97,31 @@ public class TypeMaker<T> {
     private final Class<T> origType;
     private DynamicType.Builder<T> builder;
     private String modifiedName;
+
     /**
      * Enables lazy access to declared properties of the original type.
      */
-    private List<Field> origTypeDeclaredProperties;
+    private final Set<String> origTypeDeclaredProperties;
     /**
      * Enables lazy access to all (declared + inherited) properties of the original type.
      */
-    private List<Field> origTypeProperties;
+    private final Set<String> origTypeProperties = new LinkedHashSet<>();
     /**
      * Holds mappings of the form: {@code property name -> initialized value}.
      */
-    private Map<String, Object> propertyInitializers = new HashMap<>();
+    private final Map<String, Object> propertyInitializers = new HashMap<>();
     /**
      * Storage for names of both added and modified properties.
      */
-    private Set<String> addedPropertiesNames = new HashSet<>();
+    private final Set<String> addedPropertiesNames = new LinkedHashSet<>();
 
     public TypeMaker(final DynamicEntityClassLoader loader, final Class<T> origType) {
         this.cl = loader;
         this.origType = origType;
+        this.origTypeDeclaredProperties = Arrays.stream(origType.getDeclaredFields())
+                                         .filter(field -> field.isAnnotationPresent(IsProperty.class))
+                                         .map(Field::getName)
+                                         .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     /**
@@ -149,15 +155,14 @@ public class TypeMaker<T> {
 
     /**
      * Enhances currently modified type by adding the specified properties. 
-     * If any of the specified properties conflicts with an existing one (e.g. has the same name), then it is discarded.
-     * If {@code properties} contains duplicates, then they are discarded to obtain only distinct properties.
+     * If any of the specified properties conflicts with an existing one (e.i., has the same name), then it is discarded.
      * <p>
-     * Added properties are additionally annotated with {@link Generated}.
+     * Added properties are annotated with {@link Generated}.
      *
-     * @param properties properties to be added
+     * @param properties to be added
      * @return this instance to continue building
      */
-    public TypeMaker<T> addProperties(final List<NewProperty<?>> properties) {
+    public TypeMaker<T> addProperties(final Set<NewProperty<?>> properties) {
         if (builder == null) {
             throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
         }
@@ -166,15 +171,10 @@ public class TypeMaker<T> {
             return this;
         }
 
-        final HashSet<String> existingPropNames = getOrigTypeDeclaredProperties().stream()
-                .map(Field::getName)
-                .collect(toCollection(HashSet::new));
-
-        StreamUtils.distinct(
-                properties.stream().filter(prop -> !addedPropertiesNames.contains(prop.getName()) &&
-                                                   !existingPropNames.contains(prop.getName())), 
-                prop -> prop.getName()) // distinguish properties by name
-            .forEach(this::addProperty);
+        properties.stream()
+        .filter(prop -> !addedPropertiesNames.contains(prop.getName()) && 
+                        !origTypeDeclaredProperties.contains(prop.getName())) 
+        .forEach(this::addProperty);
 
         return this;
     }
@@ -190,7 +190,7 @@ public class TypeMaker<T> {
      * @return this instance to continue building
      */
     public TypeMaker<T> addProperties(final NewProperty<?>... properties) {
-        return addProperties(Arrays.asList(properties));
+        return addProperties(linkedSetOf(properties));
     }
 
     private void addProperty(final NewProperty<?> prop) {
@@ -198,7 +198,7 @@ public class TypeMaker<T> {
         builder = builder.defineField(prop.getName(), genericType, Visibility.PRIVATE)
                 // annotations
                 .annotateField(prop.getAnnotations())
-                // Generated annotation might already be present
+                // annotation @Generated might already be present
                 .annotateField(prop.containsAnnotationDescriptorFor(GENERATED_ANNOTATION.annotationType()) ? 
                                List.of() :
                                List.of(GENERATED_ANNOTATION));
@@ -213,7 +213,7 @@ public class TypeMaker<T> {
             try {
                 propertyInitializers.put(prop.getName(), collectionalInitValue(prop.getRawType()));
             } catch (final Exception ex) {
-                throw new CollectionalPropertyInitializationException("Failed to initialize new collectional property %s.".formatted(prop.toString(IsProperty.class)), ex);
+                throw new CollectionalPropertyInitializationException("Failed to initialize new collectional property %s.".formatted(prop.toString()), ex);
             }
         }
 
@@ -303,7 +303,7 @@ public class TypeMaker<T> {
      */
     public TypeMaker<T> addClassAnnotations(final Annotation... annotations) {
         if (builder == null) {
-            throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
+            throw new TypeMakerException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
         }
 
         if (annotations == null || annotations.length == 0) {
@@ -322,15 +322,13 @@ public class TypeMaker<T> {
             // check retention policy
             final Retention retention = annot.annotationType().getAnnotation(Retention.class);
             if (retention == null || retention.value() != RetentionPolicy.RUNTIME) {
-                throw new IllegalArgumentException(format("The provided annotation %s should have runtime retention policy.",
-                        annot.annotationType().getSimpleName()));
+                throw new TypeMakerException("The provided annotation %s should have runtime retention policy.".formatted(annot.annotationType().getSimpleName()));
             }
 
             // check target
             final Target target = annot.annotationType().getAnnotation(Target.class);
             if (target == null || !Arrays.stream(target.value()).anyMatch(t -> t == ElementType.TYPE)) {
-                throw new IllegalArgumentException(format("The provided annotation %s should have 'type' target.",
-                        annot.annotationType().getSimpleName()));
+                throw new TypeMakerException("The provided annotation %s should have 'type' target.".formatted(annot.annotationType().getSimpleName()));
             }          
         });
 
@@ -340,17 +338,17 @@ public class TypeMaker<T> {
     }
 
     /**
-     * Modifies type's name with the specified <code>newTypeName</code>. 
+     * Modifies type's name with the specified {@code newTypeName}. 
      * 
-     * @param newTypeName - must be fully-qualified in a binary format (e.g. <code>foo.Bar</code> )
+     * @param newTypeName - must be fully-qualified in a binary format (e.g., {@code foo.Bar}).
      * @return
      */
     public TypeMaker<T> modifyTypeName(final String newTypeName) {
-        if (StringUtils.isEmpty(newTypeName)) {
-            throw new IllegalStateException("New type name is 'null' or empty.");
+        if (StringUtils.isBlank(newTypeName)) {
+            throw new TypeMakerException("New type name cannot be blank.");
         }
         if (builder == null) {
-            throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
+            throw new TypeMakerException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
         }
         builder = builder.name(newTypeName);
         modifiedName = newTypeName;
@@ -374,39 +372,33 @@ public class TypeMaker<T> {
      * @param propertyReplacements
      * @return this instance to continue building
      */
-    public TypeMaker<T> modifyProperties(final List<NewProperty<?>> propertyReplacements) throws IllegalArgumentException {
+    public TypeMaker<T> modifyProperties(final Set<NewProperty<?>> propertyReplacements) throws IllegalArgumentException {
         if (builder == null) {
-            throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
+            throw new TypeMakerException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
         }
 
         if (propertyReplacements == null || propertyReplacements.isEmpty()) {
             return this;
         }
 
-        // distinguish properties by name
-        final List<NewProperty<?>> distinctPropertyReplacements = StreamUtils.distinct(propertyReplacements.stream(),
-                prop -> prop.getName()).toList();
-
         // modifying a property that doesn't exist in the original type's hierarchy is illegal
-        final List<String> existingPropNames = getOrigTypeProperties().stream().map(Field::getName).toList();
-        final NewProperty<?> nonExistentNp = distinctPropertyReplacements.stream()
+        final Set<String> existingPropNames = getOrigTypeProperties();
+        final Optional<NewProperty<?>> nonExistentNp = propertyReplacements.stream()
                 .filter(prop -> !existingPropNames.contains(prop.getName()))
-                .findAny().orElse(null);
-        if (nonExistentNp != null) {
-            throw new IllegalArgumentException("Unable to modify property \"%s\" that does not belong to the original type."
-                    .formatted(nonExistentNp.getName()));
+                .findAny();
+        if (nonExistentNp.isPresent()) {
+            throw new TypeMakerException("Unable to modify property [%s] that does not belong to the original type.".formatted(nonExistentNp.get().getName()));
         }
 
         // modifying the same property multiple times is illegal
-        final NewProperty<?> illegalNp = distinctPropertyReplacements.stream()
+        final NewProperty<?> illegalNp = propertyReplacements.stream()
             .filter(prop -> addedPropertiesNames.contains(prop.getName()))
             .findAny().orElse(null);
         if (illegalNp != null) {
-            throw new IllegalArgumentException("Property \"%s\" was already added or modified for this type."
-                    .formatted(illegalNp.toString(true)));
+            throw new TypeMakerException("Property [%s] was already added or modified for this type.".formatted(illegalNp.toString(true)));
         }
 
-        distinctPropertyReplacements.stream().forEach(this::addProperty);
+        propertyReplacements.stream().forEach(this::addProperty);
 
         return this;
     }
@@ -419,7 +411,7 @@ public class TypeMaker<T> {
      * @return this instance to continue building
      */
     public TypeMaker<T> modifyProperties(final NewProperty<?>... propertyReplacements) {
-        return modifyProperties(Arrays.asList(propertyReplacements));
+        return modifyProperties(linkedSetOf(propertyReplacements));
     }
 
     /**
@@ -518,25 +510,14 @@ public class TypeMaker<T> {
     }
 
     /**
-     * Lazily finds and returns declared properties of the original type.
-     * @return
-     */
-    private List<Field> getOrigTypeDeclaredProperties() {
-        if (origTypeDeclaredProperties == null) {
-            origTypeDeclaredProperties = Arrays.stream(origType.getDeclaredFields())
-                    .filter(field -> field.isAnnotationPresent(IsProperty.class))
-                    .toList(); 
-        }
-        return origTypeDeclaredProperties;
-    }
-    
-    /**
      * Lazily finds and returns all (declared + inherited) properties of the original type.
+     * Lazy initialisation in this case makes sense due to a more rare use of property modifications.
+     * 
      * @return
      */
-    private List<Field> getOrigTypeProperties() {
-        if (origTypeProperties == null) {
-            origTypeProperties = Finder.findProperties(origType); 
+    private Set<String> getOrigTypeProperties() {
+        if (origTypeProperties.isEmpty()) {
+            Finder.streamProperties(origType).map(Field::getName).forEach(origTypeProperties::add);
         }
         return origTypeProperties;
     }

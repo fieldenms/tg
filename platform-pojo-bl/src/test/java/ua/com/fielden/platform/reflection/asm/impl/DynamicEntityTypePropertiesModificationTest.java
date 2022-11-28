@@ -16,6 +16,7 @@ import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestU
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertGeneratedPropertyCorrectness;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertGeneratedPropertySetterSignature;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityTypeTestUtils.assertInstantiation;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.reflect.Field;
@@ -55,6 +56,7 @@ import ua.com.fielden.platform.reflection.asm.impl.entities.TopLevelEntity;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.utils.CollectionUtil;
 
 /**
  * A test case to ensure correct dynamic modification of entity types by means of changing existing properties.
@@ -216,7 +218,7 @@ public class DynamicEntityTypePropertiesModificationTest {
 
     @Test
     public void modified_properties_are_annotated_with_Generated() throws Exception {
-        final List<NewProperty<?>> newProperties = List.of(
+        final Set<NewProperty<?>> newProperties = linkedSetOf(
                 NewProperty.fromField(Entity.class, "firstProperty").changeType(String.class),
                 NewProperty.fromField(Entity.class, "entity").changeType(TopLevelEntity.class),
                 NewProperty.fromField(Entity.class, "observableProperty").setValueOrThrow(123d));
@@ -240,7 +242,7 @@ public class DynamicEntityTypePropertiesModificationTest {
                 .modifyProperties(NewProperty.fromField(Entity.class, "firstProperty").changeType(String.class))
                 .endModification();
 
-        final List<NewProperty<?>> newProperties = List.of(NewProperty.fromField(newType1, "firstProperty").changeType(Double.class),
+        final Set<NewProperty<?>> newProperties =  linkedSetOf(NewProperty.fromField(newType1, "firstProperty").changeType(Double.class),
                 NewProperty.fromField(newType1, "number").setValueOrThrow(123));
         final Class<? extends AbstractEntity<?>> newType2 = startModification(newType1)
                 .modifyProperties(newProperties)
