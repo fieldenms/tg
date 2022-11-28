@@ -110,31 +110,31 @@ public class StreamUtils {
     }
 
     /**
-     * Returns a stream of distinct elements from <code>stream</code>, where uniqueness of an element is determined by <code>uniquenessMapper</code>.
+     * Returns a stream of distinct elements from {@code stream}, where unique identity of an element is determined by {@code uidMapper}.
      * <p>
-     * It is assumed that the return type of <code>uniquenessMapper</code> will have a proper implementation of <code>hashCode()</code>, otherwise the resulting stream may still contain duplicates.
+     * It is required that the return type of {@code uidMapper} has proper implementation of {@code hashCode()} and {@code equals()}.
      * <p>
      * The order of the original stream's elements is preserved.
      *
      * @param stream
-     * @param uniquenessMapper a function that maps the original element to its unique representation
+     * @param uidMapper a function that maps the original element to its unique identity.
      * @return
      */
-    public static <T, R> Stream<T> distinct(final Stream<T> stream, final Function<T, R> uniquenessMapper) {
-        return StreamSupport.stream(distinct(stream.spliterator(), uniquenessMapper), false);
+    public static <T, R> Stream<T> distinct(final Stream<T> stream, final Function<T, R> uidMapper) {
+        return StreamSupport.stream(distinct(stream.spliterator(), uidMapper), false);
     }
 
-    private static <T, R> Spliterator<T> distinct(final Spliterator<T> splitr, final Function<T, R> mapper) {
+    private static <T, R> Spliterator<T> distinct(final Spliterator<T> splitr, final Function<T, R> uidMapper) {
         return new Spliterators.AbstractSpliterator<T>(splitr.estimateSize(), 0) {
             final LinkedHashSet<R> uniqs = new LinkedHashSet<>();
 
             @Override
             public boolean tryAdvance(final Consumer<? super T> consumer) {
                 return splitr.tryAdvance(elem -> {
-                    final R uniqRepr = mapper.apply(elem);
-                    if (!uniqs.contains(uniqRepr)) {
+                    final R uid = uidMapper.apply(elem);
+                    if (!uniqs.contains(uid)) {
                         consumer.accept(elem);
-                        uniqs.add(uniqRepr);
+                        uniqs.add(uid);
                     }
                 });
             }
