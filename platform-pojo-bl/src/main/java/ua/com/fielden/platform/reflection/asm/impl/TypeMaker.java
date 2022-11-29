@@ -133,7 +133,7 @@ public class TypeMaker<T> {
      */
     public TypeMaker<T> startModification() throws ClassNotFoundException {
         if (skipAdaptation(origType.getName())) {
-            throw new IllegalArgumentException("Java system classes should not be enhanced.");
+            throw new TypeMakerException("Java system classes should not be enhanced.");
         }
         // no need for looking up the specified type in cache,
         // which was useful before, since ASM operates on byte[] directly
@@ -164,7 +164,7 @@ public class TypeMaker<T> {
      */
     public TypeMaker<T> addProperties(final Set<NewProperty<?>> properties) {
         if (builder == null) {
-            throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
+            throw new TypeMakerException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
         }
 
         if (properties == null || properties.isEmpty()) {
@@ -462,7 +462,7 @@ public class TypeMaker<T> {
      */
     public Class<? extends T> endModification() {
         if (builder == null) {
-            throw new IllegalStateException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
+            throw new TypeMakerException(CURRENT_BUILDER_IS_NOT_SPECIFIED);
         }
 
         if (!DynamicEntityClassLoader.isGenerated(origType)) {

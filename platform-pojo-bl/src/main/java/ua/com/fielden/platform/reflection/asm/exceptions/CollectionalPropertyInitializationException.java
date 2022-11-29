@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.reflection.asm.exceptions;
 
-import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
 import ua.com.fielden.platform.reflection.asm.impl.TypeMaker;
 
 /**
@@ -10,7 +9,7 @@ import ua.com.fielden.platform.reflection.asm.impl.TypeMaker;
  * 
  * @author TG Team
  */
-public class CollectionalPropertyInitializationException extends AbstractPlatformRuntimeException {
+public class CollectionalPropertyInitializationException extends TypeMakerException {
     private static final long serialVersionUID = 1L;
     
     public CollectionalPropertyInitializationException(final String msg) {
