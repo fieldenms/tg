@@ -83,7 +83,7 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void members_of_java_top_level_package_can_not_be_enhanced() {
         assertThrows("%s class should not be allowed to undergo modification.".formatted(String.class), 
-                IllegalArgumentException.class, () -> {
+                TypeMakerException.class, () -> {
                     startModification(String.class);
                 });
     }
@@ -139,14 +139,14 @@ public class DynamicEntityTypeGenerationTest {
     @Test
     public void startModification_method_must_be_used_as_the_API_entry_point() {
         assertThrows("An exception should have been thrown due to omitted startModification call.",
-                IllegalStateException.class, () -> {
+                TypeMakerException.class, () -> {
                     final TypeMaker<Entity> tp = new TypeMaker<Entity>(null, Entity.class);
                     tp.addProperties(NewProperty.create("newTestProp", String.class, "Title", "Desc"))
                         .endModification();
                 });
 
         assertThrows("An exception should have been thrown due to omitted startModification call.",
-                IllegalStateException.class, () -> {
+                TypeMakerException.class, () -> {
                     final TypeMaker<Entity> tp = new TypeMaker<Entity>(null, Entity.class);
                     tp.endModification();
                 });
