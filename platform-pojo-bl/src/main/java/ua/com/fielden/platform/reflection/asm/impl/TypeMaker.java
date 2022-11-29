@@ -145,8 +145,8 @@ public class TypeMaker<T> {
                 // of bridge methods by Java compiler. This is the case for generation of subclasses.
                 .with(MethodGraph.Compiler.Default.forJVMHierarchy())
                 .subclass(origType, 
-                // do not implicitly define any constructors, since this is done manually later
-                ConstructorStrategy.Default.NO_CONSTRUCTORS)
+                          // do not implicitly define any constructors, since this is done manually later
+                          ConstructorStrategy.Default.NO_CONSTRUCTORS)
                 // grab all declared class-level annotations
                 .annotateType(origType.getDeclaredAnnotations());
 
@@ -199,9 +199,9 @@ public class TypeMaker<T> {
                 // annotations
                 .annotateField(prop.getAnnotations())
                 // annotation @Generated might already be present
-                .annotateField(prop.containsAnnotationDescriptorFor(GENERATED_ANNOTATION.annotationType()) ? 
-                               List.of() :
-                               List.of(GENERATED_ANNOTATION));
+                .annotateField(prop.containsAnnotationDescriptorFor(GENERATED_ANNOTATION.annotationType()) 
+                               ? List.of()
+                               : List.of(GENERATED_ANNOTATION));
 
         final boolean collectional = prop.isCollectional();
         if (prop.isInitialized()) {
@@ -243,15 +243,14 @@ public class TypeMaker<T> {
     }
 
     private void addAccessor(final String propName, final Type propType) {
-        final String prefix = propType.equals(Boolean.class) || propType.equals(boolean.class) ?
-                Accessor.IS.startsWith : Accessor.GET.startsWith;
+        final String prefix = propType.equals(Boolean.class) || propType.equals(boolean.class) ? Accessor.IS.startsWith : Accessor.GET.startsWith;
         builder = builder.defineMethod(prefix + StringUtils.capitalize(propName), propType, Visibility.PUBLIC)
-                .intercept(FieldAccessor.ofField(propName));
+                         .intercept(FieldAccessor.ofField(propName));
     }
 
     private void addSetter(final String propName, final Type propType, final boolean collectional) {
         final var building = builder.defineMethod(Mutator.SETTER.startsWith + StringUtils.capitalize(propName), TargetType.DESCRIPTION, Visibility.PUBLIC)
-                .withParameter(propType, propName, ParameterManifestation.FINAL);
+                                    .withParameter(propType, propName, ParameterManifestation.FINAL);
 
         final ReceiverTypeDefinition<T> building1;
         if (collectional) {
@@ -424,8 +423,9 @@ public class TypeMaker<T> {
     }
 
     private void generateConstructors() {
-        final Implementation impl = propertyInitializers.isEmpty() ? SuperMethodCall.INSTANCE
-                : SuperMethodCall.INSTANCE.andThen(MethodDelegation.to(new ConstructorInterceptor(propertyInitializers)));
+        final Implementation impl = propertyInitializers.isEmpty() 
+                                    ? SuperMethodCall.INSTANCE
+                                    : SuperMethodCall.INSTANCE.andThen(MethodDelegation.to(new ConstructorInterceptor(propertyInitializers)));
 
         final List<Constructor<?>> visibleConstructors = Arrays.stream(origType.getDeclaredConstructors())
                 .filter(constr -> !Modifier.isPrivate(constr.getModifiers()))
