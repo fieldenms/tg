@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
 import static ua.com.fielden.platform.reflection.asm.impl.TypeMaker.GET_ORIG_TYPE_METHOD_NAME;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.io.ByteArrayInputStream;
@@ -17,6 +18,8 @@ import com.google.common.cache.CacheBuilder;
 
 import net.bytebuddy.dynamic.loading.InjectionClassLoader;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.reflection.asm.exceptions.DynamicEntityClassLoaderException;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -36,7 +39,7 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
      */
     private static final DynamicEntityClassLoader instance = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
 
-    private static final Cache<Class<?>, byte[]> cache = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).concurrencyLevel(50).build();
+    private static final Cache<Class<?>, T2<byte[], Class<?>>> cache = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).concurrencyLevel(50).build();
 
     private DynamicEntityClassLoader(final ClassLoader parent) {
         super(parent, /*sealed*/ false);
@@ -62,7 +65,7 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
         return cache.asMap().entrySet().stream()
                 .filter(entry -> entry.getKey().getName().equals(typeName))
                 .findFirst()
-                    .map(entry -> pair(entry.getKey(), entry.getValue()));
+                    .map(entry -> pair(entry.getKey(), entry.getValue()._1));
     }
     
     /**
@@ -72,7 +75,7 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
      * @param typePair
      */
     private static void cacheClass(final Pair<Class<?>, byte[]> typePair) {
-        cache.put(typePair.getKey(), typePair.getValue());
+        cache.put(typePair.getKey(), t2(typePair.getValue(), determineOriginalType(typePair.getKey())));
     }
 
     /**
@@ -148,25 +151,38 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
     }
 
     /**
-     * Returns an original type for the specified one (the type from which <code>type</code> was generated). 
-     * If <code>type</code> is not a generated one - simply returns it.
+     * Returns an original type for the specified one (the type from which {@code type} was generated).
+     * The expectation is that all generated types get cached before they are used.
+     * <p> 
+     * If {@code type} is not a generated one - simply returns that type back.
      *
      * @param type
      * @return
      */
     @SuppressWarnings("unchecked")
     public static <T extends AbstractEntity<?>> Class<T> getOriginalType(final Class<?> type) {
-        if (isGenerated(type)) {
-            try {
-                final Method getOrigType = type.getMethod(GET_ORIG_TYPE_METHOD_NAME);
-                return (Class<T>) getOrigType.invoke(null);
-            } catch (final RuntimeException ex) {
-                throw ex;
-            } catch (final Exception ex) {
-                throw new IllegalStateException(ex);
-            }
+        final var t2 = cache.getIfPresent(type);
+        if (t2 != null) {
+            return (Class<T>) t2._2;
         } else {
             return (Class<T>) type;
+        }
+    }
+
+    /**
+     * Determines the original type by using static method with name {@code GET_ORIG_TYPE_METHOD_NAME}, which is expected to be present in all generated types.
+     *
+     * @param <T>
+     * @param type
+     * @return
+     */
+    @SuppressWarnings("unchecked")
+    private static <T extends AbstractEntity<?>> Class<T> determineOriginalType(final Class<?> type) {
+        try {
+            final Method getOrigType = type.getMethod(GET_ORIG_TYPE_METHOD_NAME);
+            return (Class<T>) getOrigType.invoke(null);
+        } catch (final Exception ex) {
+            throw new DynamicEntityClassLoaderException("Could not determine the original type for generated type [%s]".formatted(type.getSimpleName()), ex);
         }
     }
 

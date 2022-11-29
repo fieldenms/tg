@@ -28,7 +28,6 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
  * pool-1-thread-4  Blocked CPU usage on sample: 189ms
  * java.lang.ClassLoader.loadClass(String, boolean) ClassLoader.java:404
  * java.lang.ClassLoader.loadClass(String) ClassLoader.java:357
- * ua.com.fielden.platform.classloader.TgSystemClassLoader.loadClass(String) TgSystemClassLoader.java:74
  * ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType(Class) DynamicEntityClassLoader.java:107
  * </pre>   
  * If the problem does not exist (i.e. it was resolve) then no "red" sections should be observed.
