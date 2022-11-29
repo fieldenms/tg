@@ -10,6 +10,7 @@ import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -18,6 +19,7 @@ import static ua.com.fielden.platform.reflection.AnnotationReflector.getProperty
 import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
@@ -50,6 +52,7 @@ import ua.com.fielden.platform.dao.exceptions.UnexpectedNumberOfReturnedEntities
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityForCollectionModification;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.EntityType;
@@ -103,9 +106,9 @@ public class EntityResourceUtils {
      * However, we also have similar logic in {@link EntityJsonDeserialiser}, which also deserialises instrumented instances.
      */
     public static final Function<String, PropertyDescriptor<?>> PROPERTY_DESCRIPTOR_FROM_STRING = str -> entityWithMocksFromString(PropertyDescriptor::fromString, str, PropertyDescriptor.class);
-    
+
     private EntityResourceUtils() {}
-    
+
     public static <T extends AbstractEntity<?>, V extends AbstractEntity<?>> IFetchProvider<V> fetchForProperty(final ICompanionObjectFinder coFinder, final Class<T> entityType, final String propertyName) {
         if (EntityQueryCriteria.class.isAssignableFrom(entityType)) {
             final Class<? extends AbstractEntity<?>> originalType = EntityResourceUtils.getOriginalType(entityType);
@@ -117,17 +120,17 @@ public class EntityResourceUtils {
             return coFinder.find(entityType).getFetchProvider().fetchFor(propertyName);
         }
     }
-    
+
     /**
      * Returns <code>true</code> in case where the <code>warning</code> does not represent special 'conflicting' warning, <code>false</code> otherwise.
-     * 
+     *
      * @param warning
      * @return
      */
     public static boolean isNonConflicting(final Warning warning) {
         return !CONFLICT_WARNING.equals(warning.getMessage()) && !CENTRE_CONFIG_CONFLICT_WARNING.equals(warning.getMessage());
     }
-    
+
     /**
      * Returns fetch provider for property or, if the property should not be fetched according to default strategy, returns the 'default' property fetch provider with 'keys'
      * (simple an composite) and 'desc' (if 'desc' exists in domain entity).
@@ -141,7 +144,7 @@ public class EntityResourceUtils {
         final IFetchProvider<? extends AbstractEntity<?>> fetchProvider = coFinder.find(entityType).getFetchProvider();
         return fetchForPropertyOrDefault(fetchProvider, propertyName);
     }
-    
+
     /**
      * Returns fetch provider for property or, if the property should not be fetched according to default strategy, returns the 'default' property fetch provider with 'keys'
      * (simple an composite) and 'desc' (if 'desc' exists in domain entity).
@@ -155,7 +158,7 @@ public class EntityResourceUtils {
             ? fetchProvider.fetchFor(propertyName)
             : fetchProvider.with(propertyName).fetchFor(propertyName);
     }
-    
+
     /**
      * Determines the version that is shipped with 'modifiedPropertiesHolder'.
      *
@@ -230,10 +233,10 @@ public class EntityResourceUtils {
 
         return entity;
     }
-    
+
     /**
      * Logs property application / validation in a table form to easily debug data flow in method 'apply'.
-     * 
+     *
      * @param actionCaption
      * @param apply
      * @param shortLog -- specifies shorter or wider (with 'type' and staleness) view of information
@@ -268,7 +271,7 @@ public class EntityResourceUtils {
             System.out.println(builder.toString()); // use logger instead of sysout if needed
         }
     }
-    
+
     /**
      * Validates / applies the property value against the entity.
      *
@@ -325,48 +328,54 @@ public class EntityResourceUtils {
             }, type, name, valAndOrigVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
         }
     }
-    
+
     /**
      * Creates lightweight mock entity instance which will be invalid against {@link EntityExistsValidator} due to empty ID.
      * ToString conversion will give us {@link AbstractEntity#KEY_NOT_ASSIGNED}.
      * <p>
      * This mock instance contains the string query by which the entity was not found.
-     * 
+     *
      * @param type
      * @param stringQuery -- string query by which the entity was not found
-     * 
+     *
      * @return
      */
     public static AbstractEntity<?> createMockNotFoundEntity(final Class<? extends AbstractEntity> type, final String stringQuery) {
         if (isEmpty(stringQuery)) {
             throw new EntityResourceUtilsException("Mock 'not found' entity could not be created due to empty 'stringQuery'.");
         }
+        if (isUnionEntityType(type)) {
+            final List<Field> unionProps = unionProperties((Class<AbstractUnionEntity>)type);
+            final Class<? extends AbstractEntity<?>> unionPropType = (Class<? extends AbstractEntity<?>>)unionProps.get(0).getType();
+            final AbstractEntity<?> unionPropValue = newPlainEntity(MockNotFoundEntityMaker.mock(unionPropType), null).setDesc(stringQuery);
+            return newPlainEntity(MockNotFoundEntityMaker.mock(type), null).set(unionProps.get(0).getName(), unionPropValue);
+        }
         return  newPlainEntity(MockNotFoundEntityMaker.mock(type), null).setDesc(stringQuery);
     }
-    
+
     /**
      * Creates a string that can be used for 'not found mock' entity serialisation.
-     * 
+     *
      * @param stringQuery
      * @return
      */
     public static String createNotFoundMockString(final String stringQuery) {
         return NOT_FOUND_MOCK_PREFIX + stringQuery;
     }
-    
+
     /**
      * Returns indication whether <code>obj</code> represents 'mock not found entity'.
-     * 
+     *
      * @param obj
      * @return
      */
     public static boolean isMockNotFoundEntity(final Object obj) {
         return obj instanceof AbstractEntity && MockNotFoundEntityMaker.isMockNotFoundValue((AbstractEntity<?>)obj);
     }
-    
+
     /**
      * Converts <code>entity</code> to serialisation string.
-     * 
+     *
      * @param specificConverter -- used to convert entity if it is not 'not found mock', otherwise the standard scheme for 'not found mocks' is used
      * @param entity
      * @return
@@ -378,10 +387,10 @@ public class EntityResourceUtils {
             return specificConverter.apply(entity);
         }
     }
-    
+
     /**
      * Converts serialisation <code>str</code> to entity.
-     * 
+     *
      * @param specificConverter -- used to convert string if it does not represent 'not found mock', otherwise the standard scheme for 'not found mocks' is used
      * @param str
      * @param type
@@ -393,7 +402,7 @@ public class EntityResourceUtils {
         }
         return specificConverter.apply(str);
     }
-    
+
     /**
      * Validates the property on subject of conflicts and <code>perform[s]Action</code>.
      *
@@ -491,7 +500,7 @@ public class EntityResourceUtils {
     private static <M extends AbstractEntity<?>> void validateUnmodifiedPropertyValue(final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale, final boolean isCriteriaEntity) {
         processPropertyValue(false, true, type, name, valAndOrigVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
     }
-    
+
     /**
      * Disregards the 'required' errors for those properties, that were not 'touched' directly by the user (for both criteria and simple entities).
      *
@@ -506,7 +515,7 @@ public class EntityResourceUtils {
         });
         return entity;
     }
-    
+
     /**
      * Disregards the 'required' errors for those properties, that were provided with some value and then cleared back to empty value during editing of new entity.
      *
@@ -523,7 +532,7 @@ public class EntityResourceUtils {
         }
         return entity;
     }
-    
+
     /**
      * Disregards the 'required' errors for crit-only properties on masters for non-criteria entity types.
      *
@@ -541,7 +550,7 @@ public class EntityResourceUtils {
             });
         }
     }
-    
+
     /**
      * Determines property type.
      * <p>
@@ -703,7 +712,7 @@ public class EntityResourceUtils {
      * Finds entity value by <code>searchString</code> from autocompleter.
      * <p>
      * This method takes care of proper composite entity search string decomposition (including situations with {@link PropertyDescriptor} as key member) and early checking for search string correctness.
-     * 
+     *
      * @param searchString
      * @param entityType -- the type of entity being looked for
      * @param fetch -- fetch model for resultant entity
@@ -718,7 +727,7 @@ public class EntityResourceUtils {
             final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(fetch).model();
             try {
                 final AbstractEntity<?> converted = companion.getEntity(qem);
-                
+
                 return orElseFindByKey(converted, companion, fetch, compositeKeyAsString);
             } catch (final UnexpectedNumberOfReturnedEntities e) {
                 return null;
