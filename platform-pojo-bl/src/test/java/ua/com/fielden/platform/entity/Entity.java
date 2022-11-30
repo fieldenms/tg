@@ -106,9 +106,6 @@ public class Entity extends AbstractEntity<String> {
 
     @IsProperty(Entity.class)
     private PropertyDescriptor<Entity> propertyDescriptor;
-    
-//    @IsProperty
-//    private Optional<String> maybeText;
 
     public Integer getFirstProperty() {
         return firstProperty;
