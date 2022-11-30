@@ -293,24 +293,6 @@ public class DynamicEntityTypePropertiesAdditionTest {
         assertThrows(NoSuchFieldException.class, () -> newType2.getDeclaredField("money"));
     }
 
-    // TODO is this property useful?
-    // is not satisfied in case collectional properties are added or modified, 
-    // since special fields for ByteBuddy auxiliary types will be generated
-    @Test
-    @Ignore
-    public void new_properties_are_ordered_as_provided_appearing_at_the_end_of_the_class() throws Exception {
-        final Class<? extends AbstractEntity<String>> newType = startModification(DEFAULT_ORIG_TYPE)
-                .addProperties(np1, np2, npBool)
-                .endModification();
-        final int size = newType.getDeclaredFields().length;
-        assertEquals("The last field of class should correspond to a last 'freshly added' property.", 
-                npBool.getName(), newType.getDeclaredFields()[size - 1].getName());
-        assertEquals("The last - 1 field of class should correspond to a last - 1 'freshly added' property.",
-                np2.getName(), newType.getDeclaredFields()[size - 2].getName());
-        assertEquals("The last - 2 field of class should correspond to a last - 2 'freshly added' property.",
-                np1.getName(), newType.getDeclaredFields()[size - 3].getName());
-    }
-
     @Test
     public void properties_can_be_added_to_enhanced_types() throws Exception {
         final Class<? extends AbstractEntity<String>> newType1 = startModification(DEFAULT_ORIG_TYPE)
