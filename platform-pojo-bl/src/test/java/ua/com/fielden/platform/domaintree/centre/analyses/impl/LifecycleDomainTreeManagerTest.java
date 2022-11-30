@@ -259,13 +259,6 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
         centre.initAnalysisManagerByDefault("Lifecycle report (new)", AnalysisType.LIFECYCLE);
         final ILifecycleDomainTreeManager dtm2 = (ILifecycleDomainTreeManager) centre.getAnalysisManager("Lifecycle report (new)");
 
-        // TODO It is not clear why the following code exists -- hence, commented it out to avoid output pollution during testing.
-        // final Field[] fields = centre.getEnhancer().getManagedType(MasterEntity.class).getFields(); 
-        //final List<Field> fields = Finder.findRealProperties((Class<? extends AbstractEntity<?>>)centre.getEnhancer().getManagedType(MasterEntity.class));
-        //for (final Field f : fields) {
-        //    System.err.println(f.getName());
-        //}
-
         assertNull("The default LifecycleProperty should be Null.", dtm2.getLifecycleProperty());
         // assertFalse("At the first time, the included properties should not contain any category.", lastN(dtm, 5).contains("available"));
         assertEquals("Date properties are included. The included properties should contain categories from previous analysis!.", Arrays.asList("__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY", "future", "now", "past"), lastN(dtm2, 8));
