@@ -397,7 +397,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                     searchQuery,
                     '',
                     '',
-                    v['@key'],
+                    v.toString(),
                     () => this._propValueByName(v, 'desc'),
                     withDesc === true
                 );
