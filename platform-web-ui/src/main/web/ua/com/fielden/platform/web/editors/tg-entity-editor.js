@@ -902,9 +902,19 @@ export class TgEntityEditor extends TgEditor {
         if (hasValuesToProcess) {
             // compose a string value, which would be a comma separated string in case of multi
             const selectedValuesAsStr = Object.values(this.result.selectedValues).map(obj => obj.toString()).join(this.separator);// 'key' field contains converted representation of the entity
-                
-
             if (!this.multi) {
+                const selectedEntity = Object.values(this.result.selectedValues)[0];
+                if (selectedEntity.type().isUnionEntity()) {
+                    const activeProp = selectedEntity._activeProperty();
+                    //If selected entity is union entity then add additional meta property to binding entity in order to correctly initialise modifPropertyHolder for this property.
+                    const prevActiveProp = this.entity[`@${this.propertyName}_activeProperty`];
+                    this.entity[`@${this.propertyName}_activeProperty`] = activeProp;
+                    if (this._editingValue === selectedValuesAsStr && activeProp !== prevActiveProp) {
+                        //If editing value doesn't changes then check whether active property of original entity changes. If it so then kick in value change process to validate it properly.
+                        const pseudoNewValue = this.convertFromString(selectedValuesAsStr)
+                        this._acceptedValueChanged(pseudoNewValue, pseudoNewValue);
+                    }
+                }
                 // if this is a single selection config then need to simply assign the value
                 this._editingValue = selectedValuesAsStr;
             } else {

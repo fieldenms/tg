@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static java.util.Locale.getDefault;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static java.util.Optional.ofNullable;
 import static java.util.regex.Pattern.quote;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
@@ -286,11 +287,12 @@ public class EntityResourceUtils {
      * @param isCriteriaEntity
      */
     private static <M extends AbstractEntity<?>> void processPropertyValue(final boolean apply, final boolean shouldApplyOriginalValue, final Class<M> type, final String name, final Map<String, Object> valAndOrigVal, final M entity, final ICompanionObjectFinder companionFinder, final boolean isEntityStale, final boolean isCriteriaEntity) {
+        final Optional<String> optActiveProp = ofNullable((String)valAndOrigVal.get("activeProperty"));
         if (apply) {
             // in case where application is necessary (modified touched, modified untouched, unmodified touched) the value (valueToBeApplied) should be checked on existence and then (if successful) it should be applied
             final String valueToBeAppliedName = shouldApplyOriginalValue ? "origVal" : "val";
             final Object valToBeApplied = valAndOrigVal.get(valueToBeAppliedName);
-            final Object convertedValue = convert(type, name, valToBeApplied, reflectedValueId(valAndOrigVal, valueToBeAppliedName), companionFinder);
+            final Object convertedValue = convert(type, name, valToBeApplied, reflectedValueId(valAndOrigVal, valueToBeAppliedName), optActiveProp, companionFinder);
             final Object valueToBeApplied;
             if (valToBeApplied != null && convertedValue == null) {
                 final Class<?> propType = determinePropertyType(type, name);
@@ -313,7 +315,7 @@ public class EntityResourceUtils {
             }, () -> {
                 return valueToBeApplied;
             }, () -> {
-                return shouldApplyOriginalValue ? valueToBeApplied : convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder);
+                return shouldApplyOriginalValue ? valueToBeApplied : convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), optActiveProp, companionFinder);
             }, type, name, valAndOrigVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
         } else {
             // in case where no application is needed (unmodified untouched) the value should be validated only
@@ -321,10 +323,10 @@ public class EntityResourceUtils {
                 // do nothing
             }, () -> {
                 return shouldApplyOriginalValue
-                        ? convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder)
-                                : convert(type, name, valAndOrigVal.get("val"), reflectedValueId(valAndOrigVal, "val"), companionFinder);
+                        ? convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), optActiveProp, companionFinder)
+                                : convert(type, name, valAndOrigVal.get("val"), reflectedValueId(valAndOrigVal, "val"), optActiveProp, companionFinder);
             }, () -> {
-                return convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), companionFinder);
+                return convert(type, name, valAndOrigVal.get("origVal"), reflectedValueId(valAndOrigVal, "origVal"), optActiveProp, companionFinder);
             }, type, name, valAndOrigVal, entity, companionFinder, isEntityStale, isCriteriaEntity);
         }
     }
@@ -591,7 +593,7 @@ public class EntityResourceUtils {
      *
      * @return
      */
-    private static <M extends AbstractEntity<?>> Object convert(final Class<M> type, final String propertyName, final Object reflectedValue, final Optional<Long> reflectedValueId, final ICompanionObjectFinder companionFinder) {
+    private static <M extends AbstractEntity<?>> Object convert(final Class<M> type, final String propertyName, final Object reflectedValue, final Optional<Long> reflectedValueId, final Optional<String> optActiveProp, final ICompanionObjectFinder companionFinder) {
         if (reflectedValue == null) {
             return null;
         }
@@ -617,7 +619,7 @@ public class EntityResourceUtils {
                     // regardless of whether entityPropertyType is composite or not, the entity should be retrieved by non-empty reflectedValueId that has been arrived from the client application
                     return propertyCompanion.findById(true, reflectedValueId.get(), fetch);
                 } else {
-                    return findAndFetchBy(reflectedValueAsString, entityPropertyType, fetch, propertyCompanion);
+                    return findAndFetchBy(reflectedValueAsString, entityPropertyType, optActiveProp, fetch, propertyCompanion);
                 }
             }
             // prev implementation => return propertyCompanion.findByKeyAndFetch(getFetchProvider().fetchFor(propertyName).fetchModel(), reflectedValue);
@@ -715,11 +717,12 @@ public class EntityResourceUtils {
      *
      * @param searchString
      * @param entityType -- the type of entity being looked for
+     * @param optActiveProp
      * @param fetch -- fetch model for resultant entity
      * @param companion -- companion for the entity being looked for
      * @return
      */
-    public static AbstractEntity<?> findAndFetchBy(final String searchString, final Class<AbstractEntity<?>> entityType, final fetch<AbstractEntity<?>> fetch, final IEntityDao<AbstractEntity<?>> companion) {
+    public static AbstractEntity<?> findAndFetchBy(final String searchString, final Class<AbstractEntity<?>> entityType, final Optional<String> optActiveProp, final fetch<AbstractEntity<?>> fetch, final IEntityDao<AbstractEntity<?>> companion) {
         if (isCompositeEntity(entityType)) {
             //logger.debug(format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
             final String compositeKeyAsString = MiscUtilities.prepare(prepSearchStringForCompositeKey(entityType, searchString));
@@ -732,6 +735,23 @@ public class EntityResourceUtils {
             } catch (final UnexpectedNumberOfReturnedEntities e) {
                 return null;
             }
+        } else if (isUnionEntityType(entityType)) {
+            return optActiveProp.map(activeProp -> {
+                final EntityResultQueryModel<AbstractEntity<?>> model = select(entityType).where().prop(activeProp + "." + KEY).iLike().val(searchString).model().setFilterable(true);
+                final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(fetch).model();
+                return companion.getEntity(qem);
+            }).orElseGet(() -> {
+                final EntityResultQueryModel<AbstractEntity<?>> model = select(entityType).where().prop(KEY).iLike().val(searchString).model().setFilterable(true);
+                final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(fetch).model();
+                final List<AbstractEntity<?>> entities = companion.getAllEntities(qem);
+                if (entities.isEmpty()) {
+                    return null;
+                } else if (entities.size() == 1) {
+                    return (AbstractEntity)entities.get(0);
+                } else {
+                    return null;//TODO createMockMoreThanOneEntity()
+                }
+            });
         } else {
             //logger.debug(format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
             final String[] keys = MiscUtilities.prepare(Arrays.asList(searchString));
