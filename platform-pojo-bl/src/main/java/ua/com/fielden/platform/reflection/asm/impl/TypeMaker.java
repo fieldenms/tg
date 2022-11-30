@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
+import static java.util.stream.Collectors.toCollection;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
 
 import java.lang.annotation.Annotation;
@@ -99,13 +100,9 @@ public class TypeMaker<T> {
     private String modifiedName;
 
     /**
-     * Enables access to declared properties of the original type.
-     */
-    private final Set<String> origTypeDeclaredProperties;
-    /**
      * Enables lazy access to all (declared + inherited) properties of the original type.
      */
-    private final Set<String> origTypeProperties = new LinkedHashSet<>();
+    private final Set<String> origTypeProperties;// = new LinkedHashSet<>();
     /**
      * Holds mappings of the form: {@code property name -> initialized value}.
      */
@@ -118,10 +115,9 @@ public class TypeMaker<T> {
     public TypeMaker(final DynamicEntityClassLoader loader, final Class<T> origType) {
         this.cl = loader;
         this.origType = origType;
-        this.origTypeDeclaredProperties = Arrays.stream(origType.getDeclaredFields())
-                                         .filter(field -> field.isAnnotationPresent(IsProperty.class))
-                                         .map(Field::getName)
-                                         .collect(Collectors.toCollection(LinkedHashSet::new));
+        this.origTypeProperties = Finder.streamProperties(origType, IsProperty.class)
+                                        .map(Field::getName)
+                                        .collect(toCollection(LinkedHashSet::new));
     }
 
     /**
@@ -155,7 +151,7 @@ public class TypeMaker<T> {
 
     /**
      * Enhances currently modified type by adding the specified properties. 
-     * If any of the specified properties conflicts with an existing one (e.i., has the same name), then it is discarded.
+     * If any of the specified properties conflicts with an existing one (e.i., has the same name), then it is ignored.
      * <p>
      * Added properties are annotated with {@link Generated}.
      *
@@ -173,7 +169,7 @@ public class TypeMaker<T> {
 
         properties.stream()
         .filter(prop -> !addedPropertiesNames.contains(prop.getName()) && 
-                        !origTypeDeclaredProperties.contains(prop.getName())) 
+                        !origTypeProperties.contains(prop.getName())) 
         .forEach(this::addProperty);
 
         return this;
@@ -381,9 +377,8 @@ public class TypeMaker<T> {
         }
 
         // modifying a property that doesn't exist in the original type's hierarchy is illegal
-        final Set<String> existingPropNames = getOrigTypeProperties();
         final Optional<NewProperty<?>> nonExistentNp = propertyReplacements.stream()
-                .filter(prop -> !existingPropNames.contains(prop.getName()))
+                .filter(prop -> !origTypeProperties.contains(prop.getName()))
                 .findAny();
         if (nonExistentNp.isPresent()) {
             throw new TypeMakerException("Unable to modify property [%s] that does not belong to the original type.".formatted(nonExistentNp.get().getName()));
@@ -507,19 +502,6 @@ public class TypeMaker<T> {
 
     private boolean skipAdaptation(final String name) {
         return name.startsWith("java.");
-    }
-
-    /**
-     * Lazily finds and returns all (declared + inherited) properties of the original type.
-     * Lazy initialisation in this case makes sense due to a more rare use of property modifications.
-     * 
-     * @return
-     */
-    private Set<String> getOrigTypeProperties() {
-        if (origTypeProperties.isEmpty()) {
-            Finder.streamProperties(origType).map(Field::getName).forEach(origTypeProperties::add);
-        }
-        return origTypeProperties;
     }
 
 }

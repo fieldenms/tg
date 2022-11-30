@@ -264,36 +264,33 @@ public class DynamicEntityTypePropertiesAdditionTest {
                         .filter(method -> method.getName().equals("set" + capitalize(np1.getName())))
                         .count());
     }
-    
-    // TODO Instead of merely having no effect, method addProperties() could throw a runtime exception.
-    // Would this change have any undesirable side-effects?
+
     @Test
     public void adding_a_property_with_the_same_name_as_one_declared_by_the_original_type_has_no_effect() throws Exception {
-        final NewProperty<Money> np = NewProperty.create("money", Money.class, "title", "desc");
+        // property with name "money" is already present in Entity
+        final NewProperty<Money> existingProp = NewProperty.create("money", Money.class, "title", "desc");
         final Class<? extends Entity> newType = startModification(Entity.class)
-                .addProperties(np)
+                .addProperties(existingProp) // should be ignored
                 .endModification();
         
-        assertThrows(NoSuchFieldException.class, () -> {
-            newType.getDeclaredField(np.getName());
-        });
+        assertThrows(NoSuchFieldException.class, () -> newType.getDeclaredField(existingProp.getName()));
     }
-    
-    // TODO Make this kind of modification illegal. Instead of "adding" a property that already exists in the original type's hierarchy,
-    // consider modifying it, i.e., use modifyProperties() instead.
-    // Would this change have any undesirable side-effects?
+
     @Test
-    public void adding_a_property_with_the_same_name_as_one_inherited_by_the_original_type_succeeds() throws Exception {
+    public void adding_a_property_with_the_same_name_as_one_inherited_by_the_original_type_has_no_effect() throws Exception {
+        // let's add a genuinely new property
         final Class<? extends Entity> newType1 = startModification(Entity.class)
                 .addProperties(np1)
                 .endModification();
 
-        final NewProperty<Money> np = NewProperty.create("money", Money.class, "title", "desc");
+        // and now try to add a property, which exists in Entity, to the generated type that is based on Entity
+        final NewProperty<Money> existingProp = NewProperty.create("money", Money.class, "title", "desc");
         final Class<? extends Entity> newType2 = startModification(newType1)
-                .addProperties(np)
+                .addProperties(existingProp) // should be ignored
                 .endModification();
         
-        assertFieldExists(newType2, np.getName());
+        assertFieldExists(newType2, "money");
+        assertThrows(NoSuchFieldException.class, () -> newType2.getDeclaredField("money"));
     }
 
     // TODO is this property useful?
