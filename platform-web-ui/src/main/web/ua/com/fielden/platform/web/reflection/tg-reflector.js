@@ -1224,9 +1224,6 @@ const _convertFullPropertyValue = function (bindingView, propertyName, fullValue
         if (fullValue.get('id') !== null) {
             bindingView['@' + propertyName + '_id'] = fullValue.get('id');
         }
-        if (fullValue.type().isUnionEntity()) {
-            bindingView['@' + propertyName + '_activeProperty'] = fullValue._activeProperty();
-        }
         try {
             const desc = fullValue.get('desc');
             bindingView['@' + propertyName + '_desc'] = _convert(desc);

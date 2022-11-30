@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.entity;
 
 import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
+import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -234,5 +236,27 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
             }
         }
         return commonMethods;
+    }
+
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (!(obj instanceof AbstractUnionEntity)) {
+            return false;
+        }
+        // let's ensure that types match
+        final AbstractUnionEntity that = (AbstractUnionEntity) obj;
+        if (this.getType() != that.getType()) {
+            return false;
+        }
+
+        return areEqual(this.activeEntity(), that.activeEntity());
+    }
+
+    @Override
+    public int hashCode() {
+        return ofNullable(activeEntity()).map(AbstractEntity::hashCode).orElse(0) * 23;
     }
 }

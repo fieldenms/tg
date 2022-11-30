@@ -907,8 +907,9 @@ export class TgEntityEditor extends TgEditor {
                 if (selectedEntity.type().isUnionEntity()) {
                     const activeProp = selectedEntity._activeProperty();
                     //If selected entity is union entity then add additional meta property to binding entity in order to correctly initialise modifPropertyHolder for this property.
-                    const prevActiveProp = this.entity[`@${this.propertyName}_activeProperty`];
                     this.entity[`@${this.propertyName}_activeProperty`] = activeProp;
+                    const prevValue = this.reflector().tg_getFullValue(this.entity, this.propertyName);
+                    const prevActiveProp = prevValue ? prevValue._activeProperty() : '';
                     if (this._editingValue === selectedValuesAsStr && activeProp !== prevActiveProp) {
                         //If editing value doesn't changes then check whether active property of original entity changes. If it so then kick in value change process to validate it properly.
                         const pseudoNewValue = this.convertFromString(selectedValuesAsStr)

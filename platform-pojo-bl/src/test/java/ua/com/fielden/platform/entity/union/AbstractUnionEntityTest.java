@@ -2,6 +2,7 @@ package ua.com.fielden.platform.entity.union;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -10,6 +11,8 @@ import java.lang.reflect.Field;
 import java.util.List;
 
 import org.junit.Test;
+
+import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -20,13 +23,11 @@ import ua.com.fielden.platform.sample.domain.EntityTwo;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 
-import com.google.inject.Injector;
-
 /**
  * A test case covering union rules and definition of {@link AbstractUnionEntity} descendants.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class AbstractUnionEntityTest {
     final Injector injector = new ApplicationInjectorFactory().add(new CommonTestEntityModuleWithPropertyFactory()).getInjector();
@@ -156,5 +157,22 @@ public class AbstractUnionEntityTest {
 
         one.setDesc("NEW DESC");
         assertEquals("Incorrect desc.", one.getDesc(), unionEntity.getDesc());
+    }
+
+    @Test
+    public void union_entities_with_same_key_representations_but_different_active_properties_arent_equal() {
+        final UnionEntity unionEntity1 = factory.newEntity(UnionEntity.class);
+
+        final EntityOne one = factory.newEntity(EntityOne.class, 1L, "1");
+        one.setDesc("DESC1");
+        unionEntity1.setPropertyOne(one);
+
+        final UnionEntity unionEntity2 = factory.newEntity(UnionEntity.class);
+
+        final EntityTwo two = factory.newEntity(EntityTwo.class, 2L, 1);
+        two.setDesc("DESC2");
+        unionEntity2.setPropertyTwo(two);
+
+        assertNotEquals(unionEntity1, unionEntity2);
     }
 }

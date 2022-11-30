@@ -902,8 +902,20 @@ export const TgEntityBinderBehavior = {
                 const originalValue = convert(_originalBindingEntity.get(propertyName));
                 const valId = bindingEntity['@' + propertyName + '_id'];
                 const origValId = _originalBindingEntity['@' + propertyName + '_id'];
+
+
+                const propertyType = self._reflector().tg_determinePropertyType(_originalBindingEntity.type(), propertyName);
+                const isUnionEntity = propertyType instanceof self._reflector()._getEntityTypePrototype() && propertyType.isUnionEntity();
+                
+                const originalFullValue = self._reflector().tg_getFullValue(_originalBindingEntity, propertyName);
+                const calculatedOrigActiveProp =  isUnionEntity && originalFullValue ? originalFullValue._activeProperty() : '';
+                
+                const fullValue = self._reflector().tg_getFullValue(bindingEntity, propertyName);
+                const calculatedActiveProp = isUnionEntity && fullValue ? fullValue._activeProperty() : '';
+
                 const activeProp = bindingEntity['@' + propertyName + '_activeProperty'];
-                const origActiveProp = _originalBindingEntity['@' + propertyName + '_activeProperty'];
+
+                
                 
                 // VERY IMPORTANT: the property is considered to be 'modified'
                 //                 in the case when its value does not equal to original value
@@ -912,7 +924,7 @@ export const TgEntityBinderBehavior = {
                 //                 The 'modified' property is marked by existence of 'val' sub-property.
                 //
                 //                 All modified properties will be applied on the server upon the validation prototype.
-                if (!self._reflector().equalsEx(value, originalValue) || !self._reflector().equalsEx(activeProp, origActiveProp)) {
+                if (!self._reflector().equalsEx(value, originalValue) || !self._reflector().equalsEx(activeProp || calculatedActiveProp, calculatedOrigActiveProp)) {
                     // the property is 'modified'
                     modPropHolder[propertyName] = {
                         'val': value,
