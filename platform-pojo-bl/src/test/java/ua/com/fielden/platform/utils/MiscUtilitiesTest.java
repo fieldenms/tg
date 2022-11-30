@@ -32,7 +32,7 @@ public class MiscUtilitiesTest {
         final InputStream ins = MiscUtilities.convertToInputStream(MULTI_LINE);
         assertEquals("Incorrect value of the converted string.", MULTI_LINE, MiscUtilities.convertToString(ins));
     }
-    
+
     @Test
     public void stringFormatter_returns_a_function_that_formats_a_supplied_string() {
         final Function<String, String> formatter = MiscUtilities.stringFormatter(123);
@@ -40,8 +40,7 @@ public class MiscUtilitiesTest {
 
         // the number of special format characters should be equal to the number of arguments given to stringFormatter()
         assertThrows("Incorrect number of special format characters should produce an exception.",
-                MissingFormatArgumentException.class, () -> {
-                    formatter.apply("The numbers are %s and %s.");
-                });
+                MissingFormatArgumentException.class, () -> formatter.apply("The numbers are %s and %s."));
     }
+
 }
