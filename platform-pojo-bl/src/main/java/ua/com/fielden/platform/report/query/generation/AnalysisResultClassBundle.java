@@ -17,14 +17,12 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 public class AnalysisResultClassBundle<T extends AbstractEntity<?>> {
 
     private final Class<T> generatedClass;
-    private final byte[] generatedClassRepresentation;
     private final List<IQueryComposer<T>> queries;
     private final ICentreDomainTreeManagerAndEnhancer cdtmeWithWhichAnalysesQueryHaveBeenCreated;
 
-    public AnalysisResultClassBundle(final ICentreDomainTreeManagerAndEnhancer cdtmeWithWhichAnalysesQueryHaveBeenCreated, final Class<T> generatedClass, final byte[] generatedClassRepresentation, final List<IQueryComposer<T>> queries) {
+    public AnalysisResultClassBundle(final ICentreDomainTreeManagerAndEnhancer cdtmeWithWhichAnalysesQueryHaveBeenCreated, final Class<T> generatedClass, final List<IQueryComposer<T>> queries) {
         this.cdtmeWithWhichAnalysesQueryHaveBeenCreated = cdtmeWithWhichAnalysesQueryHaveBeenCreated;
         this.generatedClass = generatedClass;
-        this.generatedClassRepresentation = generatedClassRepresentation;
         this.queries = new ArrayList<>();
         if (queries != null) {
             this.queries.addAll(queries);
@@ -33,10 +31,6 @@ public class AnalysisResultClassBundle<T extends AbstractEntity<?>> {
 
     public Class<T> getGeneratedClass() {
         return generatedClass;
-    }
-
-    public byte[] getGeneratedClassRepresentation() {
-        return generatedClassRepresentation;
     }
 
     public List<IQueryComposer<T>> getQueries() {

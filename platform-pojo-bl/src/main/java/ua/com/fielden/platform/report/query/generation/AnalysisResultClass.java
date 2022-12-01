@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.report.query.generation;
 
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getCachedByteArray;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
 
 import java.lang.annotation.Annotation;
@@ -55,7 +54,7 @@ public class AnalysisResultClass extends AbstractEntity<String> {
 
         try {
             final Class<?> generatedClass = startModification(AnalysisResultClass.class).addProperties(newProperties.toArray(new NewProperty[0])).endModification();
-            return new AnalysisResultClassBundle<>(null, (Class<AbstractEntity<?>>) generatedClass, getCachedByteArray(generatedClass.getName()), null);
+            return new AnalysisResultClassBundle<>(null, (Class<AbstractEntity<?>>) generatedClass, null);
         } catch (final ClassNotFoundException e) {
             throw new IllegalStateException(e);
         }

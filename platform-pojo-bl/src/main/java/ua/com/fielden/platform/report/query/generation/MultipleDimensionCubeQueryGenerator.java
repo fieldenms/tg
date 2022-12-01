@@ -47,7 +47,7 @@ public class MultipleDimensionCubeQueryGenerator<T extends AbstractEntity<?>> ex
                 resultQueryList.add(createQueryAndGroupBy(classBundle.getGeneratedClass(), groups));
             }
         }
-        return new AnalysisResultClassBundle<>(getCdtme(), classBundle.getGeneratedClass(), classBundle.getGeneratedClassRepresentation(), resultQueryList);
+        return new AnalysisResultClassBundle<>(getCdtme(), classBundle.getGeneratedClass(), resultQueryList);
     }
 
     @Override

@@ -1,26 +1,21 @@
 package ua.com.fielden.platform.reflection.asm.impl;
 
+import static java.util.stream.Collectors.toMap;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.asm.impl.TypeMaker.GET_ORIG_TYPE_METHOD_NAME;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.Pair.pair;
 
-import java.io.ByteArrayInputStream;
-import java.io.InputStream;
+import java.lang.ref.WeakReference;
 import java.lang.reflect.Method;
 import java.util.Map;
-import java.util.Optional;
-import java.util.stream.Collectors;
+import java.util.concurrent.ConcurrentHashMap;
 
-import org.apache.commons.lang3.StringUtils;
-
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
+import org.apache.logging.log4j.Logger;
 
 import net.bytebuddy.dynamic.loading.InjectionClassLoader;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.reflection.asm.exceptions.DynamicEntityClassLoaderException;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.utils.Pair;
 
 /**
  * A class loader for dynamically constructed or modified entity types.
@@ -34,12 +29,18 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  */
 public class DynamicEntityClassLoader extends InjectionClassLoader {
+    private static final Logger LOGGER = getLogger(DynamicEntityClassLoader.class);
     /**
      * A cache of instances of this type of the form: {@code parentClassLoader -> thisInstance}.
      */
     private static final DynamicEntityClassLoader instance = new DynamicEntityClassLoader(ClassLoader.getSystemClassLoader());
 
-    private static final Cache<Class<?>, T2<byte[], Class<?>>> cache = CacheBuilder.newBuilder().weakKeys().initialCapacity(1000).concurrencyLevel(50).build();
+    /**
+     * A cache of generated types.
+     * The key values are the simple names of the generated types, which is used as a convenience to get the generated type by name.
+     * The value is a tuple, containing a generated type and the original type, used to produce the generated one.
+     */
+    private static final ConcurrentHashMap<String, T2<WeakReference<Class<?>>, Class<?>>> cache = new ConcurrentHashMap<>(/*initialCapacity*/ 1000, /*loadFactor*/ 0.75f, /*concurrencyLevel*/50);  
 
     private DynamicEntityClassLoader(final ClassLoader parent) {
         super(parent, /*sealed*/ false);
@@ -51,68 +52,46 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
      * @return a total number of generated classes current cached.
      */
     public static long cleanUp() {
-        cache.cleanUp();
+        int count = 0;
+        for (final var entry : cache.entrySet()) {
+            try {
+                final var t3 = entry.getValue();
+                if (t3 == null || t3._1.get() == null) {
+                    cache.remove(entry.getKey());
+                    count++;
+                }
+            } catch (final Exception ex) {
+                LOGGER.error("Error occurred during cache cleanup.", ex);
+            }
+        }
+        LOGGER.info("Cache size [%s]. Evicted from cache [%s] entries.".formatted(cache.size(), count));
         return cache.size();
     }
 
-    /**
-     * Tries to retrieve a type with <code>typeName</code> from cache.
-     *
-     * @param typeName - fully-qualified name in binary form (i.e., the result of {@link Class#getName()}.
-     * @return
-     */
-    private static Optional<Pair<Class<?>, byte[]>> lookupCache(final String typeName) {
-        return cache.asMap().entrySet().stream()
-                .filter(entry -> entry.getKey().getName().equals(typeName))
-                .findFirst()
-                    .map(entry -> pair(entry.getKey(), entry.getValue()._1));
-    }
-    
     /**
      * Creates a new cache entry that maps {@link Class} to its byte representation.
      * If an entry for the given {@link Class} already exists, it will be overwritten.
      *
      * @param typePair
      */
-    private static void cacheClass(final Pair<Class<?>, byte[]> typePair) {
-        cache.put(typePair.getKey(), t2(typePair.getValue(), determineOriginalType(typePair.getKey())));
+    private static void cacheClass(final Class<?> genType) {
+        cache.put(genType.getSimpleName(), t2(new WeakReference<>(genType), determineOriginalType(genType)));
     }
 
-    /**
-     * Returns an array of bytes for a cached {@link Class} with binary name equal to <code>name</code>.
-     *
-     * @param name binary name of a class
-     * @return byte array representing a cached class or <code>null</code> if the class wasn't found
-     */
-    public static byte[] getCachedByteArray(final String name) {
-        return lookupCache(name).map(Pair::getValue).orElse(null);
-    }
-    
     /**
      * {@inheritDoc}
      */
     @Override
     protected Map<String, Class<?>> doDefineClasses(final Map<String, byte[]> typeDefinitions) throws ClassNotFoundException {
-        return typeDefinitions.entrySet().stream().collect(Collectors.toMap(
-                Map.Entry::getKey, 
-                entry -> doDefineClass(entry.getKey(), entry.getValue())));
+        return typeDefinitions.entrySet().stream()
+                .collect(toMap(Map.Entry::getKey, entry -> doDefineClass(entry.getKey(), entry.getValue())));
     }
-    
-    protected Class<?> doDefineClass(final String name, final byte[] bytes) {
-        return lookupCache(name).map(Pair::getKey).orElseGet(() -> {
-            // the class hasn't been defined, so load it and cache for later reuse
-            final Class klass = defineClass(name, bytes, 0, bytes.length);
-            cacheClass(pair(klass, bytes));
-            return klass;
-        });
-    }
-    
-    @Override
-    public InputStream getResourceAsStream(final String name) {
-        // name is a resource name so convert it to binary form
-        return lookupCache(toBinaryName(name))
-                .map(pair -> (InputStream) new ByteArrayInputStream(pair.getValue()))
-                .orElseGet(() -> super.getResourceAsStream(name));
+
+    private Class<?> doDefineClass(final String name, final byte[] bytes) {
+        // define the class, load it and cache for later reuse
+        final Class klass = defineClass(name, bytes, 0, bytes.length);
+        cacheClass(klass);
+        return klass;
     }
 
     /**
@@ -161,9 +140,9 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
      */
     @SuppressWarnings("unchecked")
     public static <T extends AbstractEntity<?>> Class<T> getOriginalType(final Class<?> type) {
-        final var t2 = cache.getIfPresent(type);
-        if (t2 != null) {
-            return (Class<T>) t2._2;
+        final var t3 = cache.get(type.getSimpleName());
+        if (t3 != null) {
+            return (Class<T>) t3._2;
         } else {
             return (Class<T>) type;
         }
@@ -184,16 +163,6 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
         } catch (final Exception ex) {
             throw new DynamicEntityClassLoaderException("Could not determine the original type for generated type [%s]".formatted(type.getSimpleName()), ex);
         }
-    }
-
-    /**
-     * Converts a resource name of a java class to its binary form.
-     *
-     * @param resourceName
-     * @return binary name of a class or null if <code>resourceName</code> doesn't represent a java class.
-     */
-    private static String toBinaryName(final String resourceName) {
-        return resourceName.endsWith(".class") ? StringUtils.substringBeforeLast(resourceName, ".class").replace('/', '.') : null;
     }
 
 }
