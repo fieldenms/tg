@@ -1315,7 +1315,7 @@ export class TgEntityEditor extends TgEditor {
             const entityValue = this.reflector().tg_getFullValue(newValue, this.propertyName);
             if (entityValue != null) {
                 const entityType = entityValue.type();
-                if (entityType.isUnionEntity()) {
+                if (entityType.isUnionEntity() && typeof newValue["@" + this.propertyName + "_error"] === 'undefined') {
                     this._typeTitle = entityType.prop(entityValue._activeProperty()).title();
                     return;
                 }
