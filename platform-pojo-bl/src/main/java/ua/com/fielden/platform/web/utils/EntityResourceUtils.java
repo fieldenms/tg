@@ -13,8 +13,11 @@ import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
+import static ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker.mock;
+import static ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker.setErrorMessage;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.MORE_THEN_ONE_FOUND_ERR;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
@@ -349,10 +352,10 @@ public class EntityResourceUtils {
         if (isUnionEntityType(type)) {
             final List<Field> unionProps = unionProperties((Class<AbstractUnionEntity>)type);
             final Class<? extends AbstractEntity<?>> unionPropType = (Class<? extends AbstractEntity<?>>)unionProps.get(0).getType();
-            final AbstractEntity<?> unionPropValue = newPlainEntity(MockNotFoundEntityMaker.mock(unionPropType), null).setDesc(stringQuery);
-            return newPlainEntity(MockNotFoundEntityMaker.mock(type), null).set(unionProps.get(0).getName(), unionPropValue);
+            final AbstractEntity<?> unionPropValue = newPlainEntity(unionPropType, null).setDesc(stringQuery);
+            return newPlainEntity(mock(type), null).set(unionProps.get(0).getName(), unionPropValue);
         }
-        return  newPlainEntity(MockNotFoundEntityMaker.mock(type), null).setDesc(stringQuery);
+        return newPlainEntity(mock(type), null).setDesc(stringQuery);
     }
 
     /**
@@ -749,7 +752,7 @@ public class EntityResourceUtils {
                 } else if (entities.size() == 1) {
                     return (AbstractEntity)entities.get(0);
                 } else {
-                    return null;//TODO createMockMoreThanOneEntity()
+                    return createMockMoreThanOneEntity(entityType, searchString);
                 }
             });
         } else {
@@ -765,6 +768,10 @@ public class EntityResourceUtils {
             }
             return companion.findByKeyAndFetch(true, fetch, key);
         }
+    }
+
+    private static AbstractEntity createMockMoreThanOneEntity(final Class<? extends AbstractEntity> type, final String stringQuery) {
+        return setErrorMessage(createMockNotFoundEntity(type, stringQuery), MORE_THEN_ONE_FOUND_ERR);
     }
 
     /**
