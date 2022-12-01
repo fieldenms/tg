@@ -907,13 +907,12 @@ export const TgEntityBinderBehavior = {
                 const propertyType = self._reflector().tg_determinePropertyType(_originalBindingEntity.type(), propertyName);
                 const isUnionEntity = propertyType instanceof self._reflector()._getEntityTypePrototype() && propertyType.isUnionEntity();
                 
-                const originalFullValue = self._reflector().tg_getFullValue(_originalBindingEntity, propertyName);
-                const calculatedOrigActiveProp =  isUnionEntity && originalFullValue ? originalFullValue._activeProperty() : '';
+                const origActiveProp =  _originalBindingEntity['@' + propertyName + '_activeProperty'] || null;
                 
                 const fullValue = self._reflector().tg_getFullValue(bindingEntity, propertyName);
-                const calculatedActiveProp = isUnionEntity && fullValue ? fullValue._activeProperty() : '';
+                const calculatedActiveProp = isUnionEntity && fullValue ? fullValue._activeProperty() : null;
 
-                const activeProp = bindingEntity['@' + propertyName + '_activeProperty'];
+                const activeProp = bindingEntity['@' + propertyName + '_activeProperty'] || null;
 
                 
                 
@@ -924,13 +923,13 @@ export const TgEntityBinderBehavior = {
                 //                 The 'modified' property is marked by existence of 'val' sub-property.
                 //
                 //                 All modified properties will be applied on the server upon the validation prototype.
-                if (!self._reflector().equalsEx(value, originalValue) || !self._reflector().equalsEx(activeProp || calculatedActiveProp, calculatedOrigActiveProp)) {
+                if (!self._reflector().equalsEx(value, originalValue) || !self._reflector().equalsEx(activeProp || calculatedActiveProp, origActiveProp)) {
                     // the property is 'modified'
                     modPropHolder[propertyName] = {
                         'val': value,
                         'origVal': originalValue
                     };
-                    if (typeof activeProp !== 'undefined') {
+                    if (activeProp !== null) {
                         modPropHolder[propertyName]['activeProperty'] = activeProp;
                     }
                     modPropHolder['@modified'] = true;

@@ -1761,7 +1761,12 @@ export const TgReflector = Polymer({
      * Converts original value of property with 'propertyName' name from fully-fledged entity 'entity' into the 'originalBindingView' binding entity.
      */
     tg_convertOriginalPropertyValue: function (originalBindingView, propertyName, entity) {
-        _convertFullPropertyValue(originalBindingView, propertyName, entity.getOriginal(propertyName));
+        const fullValue = entity.getOriginal(propertyName);
+        _convertFullPropertyValue(originalBindingView, propertyName, fullValue);
+        if (_isEntity(fullValue) && fullValue.type().isUnionEntity()) {
+            originalBindingView[`@${propertyName}_activeProperty`] = fullValue._activeProperty(); 
+        }
+
     },
 
     /**

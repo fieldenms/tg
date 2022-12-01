@@ -910,7 +910,7 @@ export class TgEntityEditor extends TgEditor {
                     this.entity[`@${this.propertyName}_activeProperty`] = activeProp;
                     const prevValue = this.reflector().tg_getFullValue(this.entity, this.propertyName);
                     const prevActiveProp = prevValue ? prevValue._activeProperty() : '';
-                    if (this._editingValue === selectedValuesAsStr && activeProp !== prevActiveProp) {
+                    if (this._commValue === selectedValuesAsStr && activeProp !== prevActiveProp) {
                         //If editing value doesn't changes then check whether active property of original entity changes. If it so then kick in value change process to validate it properly.
                         const pseudoNewValue = this.convertFromString(selectedValuesAsStr)
                         this._acceptedValueChanged(pseudoNewValue, pseudoNewValue);
