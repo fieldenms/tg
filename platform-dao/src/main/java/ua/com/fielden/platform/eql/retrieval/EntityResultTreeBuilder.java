@@ -11,8 +11,6 @@ import java.util.Map;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
-import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
-import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.EqlPropertyMetadata;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -115,16 +113,16 @@ final class EntityResultTreeBuilder {
                 currentGroup = prop._1;
                 
                 if (prop._2.isUnionEntity()) {
-                    currentResultType = prop._2.getJavaType();
+                    currentResultType = prop._2.javaType;
                 } else if (prop._2.isEntity()) {
-                    currentResultType = prop._2.getJavaType();
-                    currentGroupDetails.add(t2(ID, new ResultQueryYieldDetails(ID, Long.class, prop._2.getHibType(), prop._2.getColumn(), YieldDetailsType.USUAL_PROP)));
+                    currentResultType = prop._2.javaType;
+                    currentGroupDetails.add(t2(ID, new ResultQueryYieldDetails(ID, Long.class, prop._2.hibType, prop._2.column, YieldDetailsType.USUAL_PROP)));
                 } else if (prop._2.isCompositeProperty()) {
                     currentHibType = prop._2.getHibTypeAsCompositeUserType();
                 } else {
                     currentGroup = null; // no group is actually created for simple prop
                     localIndex = localIndex + 1;
-                    singles.put(localIndex, new YieldDetails(prop._1, prop._2.getHibType(), prop._2.getColumn()));
+                    singles.put(localIndex, new YieldDetails(prop._1, prop._2.hibType, prop._2.column));
                 }
             }
         }
@@ -157,7 +155,7 @@ final class EntityResultTreeBuilder {
         
         for (final T2<String, ResultQueryYieldDetails> prop : properties) {
             localIndex = localIndex + 1;
-            singles.put(localIndex, new YieldDetails(prop._1, prop._2.getHibType(), prop._2.getColumn()));
+            singles.put(localIndex, new YieldDetails(prop._1, prop._2.hibType, prop._2.column));
         }
         
         return T2.t2(new ValueTree(hibType, singles), localIndex);

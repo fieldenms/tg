@@ -1,18 +1,17 @@
 package ua.com.fielden.platform.eql.retrieval;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.COMPOSITE_TYPE_HEADER;
-import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.UNION_ENTITY_HEADER;
-import static ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType.USUAL_PROP;
 import static ua.com.fielden.platform.eql.retrieval.EntityHibernateRetrievalQueryProducer.mkQueryProducerWithPagination;
 import static ua.com.fielden.platform.eql.retrieval.EntityHibernateRetrievalQueryProducer.mkQueryProducerWithoutPagination;
 import static ua.com.fielden.platform.eql.retrieval.EntityResultTreeBuilder.build;
+import static ua.com.fielden.platform.eql.retrieval.YieldDetailsType.COMPOSITE_TYPE_HEADER;
+import static ua.com.fielden.platform.eql.retrieval.YieldDetailsType.UNION_ENTITY_HEADER;
+import static ua.com.fielden.platform.eql.retrieval.YieldDetailsType.USUAL_PROP;
 import static ua.com.fielden.platform.eql.stage3.EqlQueryTransformer.transform;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
-import static org.apache.logging.log4j.LogManager.getLogger;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.SortedSet;
@@ -31,8 +30,6 @@ import ua.com.fielden.platform.entity.query.EntityContainer;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.QueryExecutionContext;
 import ua.com.fielden.platform.entity.query.QueryProcessingModel;
-import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails;
-import ua.com.fielden.platform.entity.query.generation.elements.ResultQueryYieldDetails.YieldDetailsType;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
