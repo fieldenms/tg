@@ -149,26 +149,8 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
         return aggregateDao.getAllEntities(from(qry).with("EQL3", null).model());
     }
     
-    private List<EntityAggregates> runOnEql2(final AggregatedResultQueryModel qry) {
-        return aggregateDao.getAllEntities(from(qry).with("EQL2", null).model());
-    }
-    
     private void run(final ICompoundCondition0<? extends AbstractEntity<?>> qryStart) {
         run(qryStart.yield().countAll().as("KOUNT").modelAsAggregate());
-    }
-
-    private void runOnEql2(final ICompoundCondition0<? extends AbstractEntity<?>> qryStart) {
-        runOnEql2(qryStart.yield().countAll().as("KOUNT").modelAsAggregate());
-    }
-
-    private void failWhileRunningOnEql2(final ICompoundCondition0<? extends AbstractEntity<?>> qryStart) {
-        run(qryStart);
-        try {
-            runOnEql2(qryStart);
-            fail("Should have failed while trying to run sql with incorrect joins order.");
-        } catch (final Exception e) {
-            e.printStackTrace();
-        }
     }
 
     @Test
@@ -1026,36 +1008,6 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     @Test
     public void eql3_query_executes_correctly109() {
         run(select(TeVehicle.class).where().anyOfProps("modelMakeKey8").isNotNull());
-    }
-
-    @Test
-    public void eql3_query_executes_correctly110() {
-        failWhileRunningOnEql2(select(TeVehicle.class).where().prop("replacedByTwice.key").isNotNull());
-    }
-
-    @Test
-    public void eql3_query_executes_correctly111() {
-        failWhileRunningOnEql2(select(TeWorkOrder.class).where().prop("vehicleModel.key").isNotNull());
-    }
-    
-    @Test
-    public void eql3_query_executes_correctly112() {
-        failWhileRunningOnEql2(select(TeWorkOrder.class).where().prop("replacedByMake.key").isNotNull());
-    }
-
-    @Test
-    public void eql3_query_executes_correctly113() {
-        failWhileRunningOnEql2(select(TeWorkOrder.class).where().prop("replacedByTwiceMake").isNotNull());
-    }
-
-    @Test
-    public void eql3_query_executes_correctly114() {
-        failWhileRunningOnEql2(select(TeWorkOrder.class).where().prop("replacedByTwiceMake.key").isNotNull());
-    }
-
-    @Test
-    public void eql3_query_executes_correctly115() {
-        failWhileRunningOnEql2(select(TeWorkOrder.class).where().anyOfProps("replacedByMake.key", "replacedByTwiceMake.key", "vehicle.replacedByTwice.key").isNotNull());
     }
 
     @Test

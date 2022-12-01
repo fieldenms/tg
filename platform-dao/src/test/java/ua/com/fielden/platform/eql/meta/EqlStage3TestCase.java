@@ -6,11 +6,11 @@ import static java.util.Collections.emptyMap;
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.DbVersion.H2;
-import static ua.com.fielden.platform.eql.retrieval.EntityContainerFetcher.getResultPropsInfos;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
+import static ua.com.fielden.platform.eql.retrieval.EntityContainerFetcher.getResultPropsInfos;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,16 +20,17 @@ import java.util.List;
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
+import org.junit.Assert;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
-import ua.com.fielden.platform.entity.query.QueryModelResult;
 import ua.com.fielden.platform.entity.query.QueryProcessingModel;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompoundCondition0;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.eql.retrieval.QueryModelResult;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage3.EqlQueryTransformer;
 import ua.com.fielden.platform.eql.stage3.QueryBlocks3;
@@ -113,9 +114,9 @@ public class EqlStage3TestCase extends EqlTestCase {
         final QueryModelResult<T> expQmr = transformToModelResult(new QueryProcessingModel<T, EntityResultQueryModel<T>>(exp, null, null, emptyMap(), true));
         final QueryModelResult<T> actQmr = transformToModelResult(new QueryProcessingModel<T, EntityResultQueryModel<T>>(act, null, null, emptyMap(), true));
         
-        assertEquals("Qry model results (SQL) are different!", expQmr.getSql(), actQmr.getSql());
-        assertEquals("Qry model results (Result Type) are different!", expQmr.getResultType(), actQmr.getResultType());
-        assertEquals("Qry model results (Fetch Model) are different!", expQmr.getFetchModel(), actQmr.getFetchModel());
+        assertEquals("Qry model results (SQL) are different!", expQmr.sql, actQmr.sql);
+        assertEquals("Qry model results (Result Type) are different!", expQmr.resultType, actQmr.resultType);
+        assertEquals("Qry model results (Fetch Model) are different!", expQmr.fetchModel, actQmr.fetchModel);
         assertEquals("Qry model results (Param values) are different!", expQmr.getParamValues(), actQmr.getParamValues());
         assertEquals("Qry model results (Yielded props infos) are different!", expQmr.getYieldedPropsInfo(), actQmr.getYieldedPropsInfo());
     }
@@ -124,7 +125,6 @@ public class EqlStage3TestCase extends EqlTestCase {
         qry.setFilterable(true);
         return qry(qry);
     }
-
     
     protected static Source3BasedOnTable source(final Class<? extends AbstractEntity<?>> sourceType, final Integer sourceForContextId) {
         return new Source3BasedOnTable(tables.get(sourceType.getName()), sourceForContextId, nextSqlId());
