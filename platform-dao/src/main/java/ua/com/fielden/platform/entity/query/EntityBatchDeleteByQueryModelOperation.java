@@ -10,8 +10,6 @@ import java.util.Map;
 import org.hibernate.Query;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.generation.EntQueryGenerator;
-import ua.com.fielden.platform.entity.query.generation.elements.EntQuery;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.metadata.PersistedEntityMetadata;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
@@ -37,21 +35,12 @@ public class EntityBatchDeleteByQueryModelOperation {
     private <T extends AbstractEntity<?>> DeletionModel getModelSql(final EntityResultQueryModel<T> model, final Map<String, Object> paramValues, final DomainMetadataAnalyser domainMetadataAnalyser) {
         final AggregatedResultQueryModel finalModel = select(model.getResultType()).where().prop(ID).in().model(model).yield().prop(ID).as(ID).modelAsAggregate();
         final String tableName = ((PersistedEntityMetadata<AbstractEntity<?>>) domainMetadataAnalyser.getEntityMetadata(model.getResultType())).getTable();
-        if (executionContext.getDomainMetadata().eql2) {
-            final EntQueryGenerator gen = new EntQueryGenerator(domainMetadataAnalyser, null, null, executionContext.dates());
-            final EntQuery entQuery = gen.generateEntQueryAsResultQuery(finalModel, null, finalModel.getResultType(), null, paramValues);
-            final String selectionSql = entQuery.sql();
-            final String deletionSql = produceDeletionSql(selectionSql, tableName, domainMetadataAnalyser.getDbVersion());
-            final Map<String, Object> sqlParamValues = entQuery.getValuesForSqlParams();
-            return new DeletionModel(deletionSql, sqlParamValues);
-        } else {
-            final var eqlMetaData = executionContext.getDomainMetadata().eqlDomainMetadata;
-            final TransformationResult2<ResultQuery3> s2tr = transform(new QueryProcessingModel(finalModel, null, null, paramValues, true), null, null, executionContext.dates(), eqlMetaData); 
-            final ResultQuery3 entQuery3 = s2tr.item;
-            final String selectionSql = entQuery3.sql(domainMetadataAnalyser.getDbVersion());
-            final String deletionSql = produceDeletionSql(selectionSql, tableName, eqlMetaData.dbVersion);
-            return new DeletionModel(deletionSql, s2tr.updatedContext.getParamValues());
-        }
+        final var eqlMetaData = executionContext.getDomainMetadata().eqlDomainMetadata;
+        final TransformationResult2<ResultQuery3> s2tr = transform(new QueryProcessingModel(finalModel, null, null, paramValues, true), null, null, executionContext.dates(), eqlMetaData); 
+        final ResultQuery3 entQuery3 = s2tr.item;
+        final String selectionSql = entQuery3.sql(domainMetadataAnalyser.getDbVersion());
+        final String deletionSql = produceDeletionSql(selectionSql, tableName, eqlMetaData.dbVersion);
+        return new DeletionModel(deletionSql, s2tr.updatedContext.getParamValues());
     }
 
     private String produceDeletionSql(final String selectionSql, final String tableName, final DbVersion dbVersion) {
