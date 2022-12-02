@@ -188,7 +188,7 @@ export class TgEntityEditor extends TgEditor {
              */
             entityMaster: {
                 type: Object,
-                computed: '_computeEntityMaster(multi, autocompletionType, propertyName, noLabelFloat)'
+                computed: '_computeEntityMaster(multi, autocompletionType, entity, propertyName, noLabelFloat)'
             },
 
             /**
@@ -196,7 +196,7 @@ export class TgEntityEditor extends TgEditor {
              */
             newEntityMaster: {
                 type: Object,
-                computed: '_computeNewEntityMaster(multi, autocompletionType, propertyName, noLabelFloat)'
+                computed: '_computeNewEntityMaster(multi, autocompletionType, entity, propertyName, noLabelFloat)'
             },
 
             /**
@@ -212,7 +212,7 @@ export class TgEntityEditor extends TgEditor {
              */
             actionAvailable: {
                 type: Boolean,
-                computed: '_computeActionAvailability(entityMaster, newEntityMaster, entity, _disabled, currentState)'
+                computed: '_computeActionAvailability(entityMaster, newEntityMaster, entity, propertyName, _disabled, currentState)'
             },
 
             /**
@@ -550,7 +550,17 @@ export class TgEntityEditor extends TgEditor {
         // get meta-property to analyse if it is in error and its last attempted value
         const metaProperty = this.reflector().tg_getFullEntity(entity).prop(propertyName);
         // if the property is in error then lastInvalidValue() holds attempted value; otherwise attempted value was successful is currently in entity's property value
-        const lastAttemptedValue = this.reflector().isError(metaProperty.validationResult()) ? metaProperty.lastInvalidValue() : this.reflector().tg_getFullValue(entity, propertyName);
+        let lastAttemptedValue;
+        if (this.reflector().isError(metaProperty.validationResult())) {
+            lastAttemptedValue = metaProperty.lastInvalidValue();
+        } else {
+            const val = this.reflector().tg_getFullValue(entity, propertyName);
+            if (val && val.type().isUnionEntity()) {
+                lastAttemptedValue = val._activeEntity();
+            } else {
+                lastAttemptedValue = val;
+            }
+        } 
         
         if (this.reflector().isEntity(lastAttemptedValue) && !this.reflector().isMockNotFoundEntity(lastAttemptedValue) && lastAttemptedValue.isPersisted() && lastAttemptedValue.get('id') >= 0) {
             return lastAttemptedValue; // last attempted value i.e. the value that is visible in the editor (either in error or not) if it is not empty, is persisted and does not represent 'value not found' case
@@ -1151,27 +1161,34 @@ export class TgEntityEditor extends TgEditor {
     /**
      * Computes entity master object for entity-typed property represented by this autocompleter (only for non-multi).
      */
-    _computeEntityMaster (multi, autocompletionType, propertyName, noLabelFloat) {
-        return this._getEntityMaster(multi, autocompletionType, propertyName, noLabelFloat, true);
+    _computeEntityMaster (multi, autocompletionType, entity, propertyName, noLabelFloat) {
+        return this._getEntityMaster(multi, autocompletionType, entity, propertyName, noLabelFloat, true);
     }
 
     /**
      * Computes new entity master object for entity-typed property represented by this autocompleter (only for non-multi).
      */
-    _computeNewEntityMaster(multi, autocompletionType, propertyName, noLabelFloat) {
-        return this._getEntityMaster(multi, autocompletionType, propertyName, noLabelFloat, false);
+    _computeNewEntityMaster(multi, autocompletionType, entity, propertyName, noLabelFloat) {
+        return this._getEntityMaster(multi, autocompletionType, entity, propertyName, noLabelFloat, false);
     }
 
-    _getEntityMaster(multi, autocompletionType, propertyName, noLabelFloat, edit) {
-        if (!allDefined(arguments)) {
+    _getEntityMaster(multi, autocompletionType, entity, propertyName, noLabelFloat, edit) {
+        if (!allDefined(arguments) || !entity) {
             return null;
         }
         const type = this.reflector().findTypeByName(autocompletionType);
         if (!multi && !noLabelFloat && type) {
-            if (edit) {
-                return type.prop(propertyName).type().entityMaster();
+            const propertyType = type.prop(propertyName).type();
+            if (propertyType.isUnionEntity()) {
+                const val = this._valueToEdit(entity, propertyName);
+                if (val && edit) {
+                    return val.type().entityMaster();
+                }
+            } else if (edit) {
+                return propertyType.entityMaster();
+            } else {
+                return propertyType.newEntityMaster();
             }
-            return type.prop(propertyName).type().newEntityMaster();
         }
         return null;
     }
@@ -1179,12 +1196,12 @@ export class TgEntityEditor extends TgEditor {
     /**
      * Computes whether title action is available for tapping and visible.
      */
-    _computeActionAvailability (entityMaster, newEntityMaster, entity, _disabled, currentState) {
-        if (!entityMaster || !newEntityMaster || !entity || !currentState || typeof _disabled === 'undefined') {
+    _computeActionAvailability (entityMaster, newEntityMaster, entity, propertyName, _disabled, currentState) {
+        if ((!entityMaster && !newEntityMaster) || !entity || !currentState || typeof _disabled === 'undefined') {
             return false;
         }
         return currentState === 'EDIT' // currentState is not 'EDIT' e.g. where refresh / saving process is in progress
-            && (!_disabled || this._valueToEdit(entity, this.propertyName));
+            && (!_disabled || (this._valueToEdit(entity, propertyName) && entityMaster));
     }
 
     _actionIcon (actionAvailable, entity) {
@@ -1311,17 +1328,20 @@ export class TgEntityEditor extends TgEditor {
 
     _entityChanged (newValue, oldValue) {
         super._entityChanged(newValue, oldValue);
-        if (!this.multi && this.reflector().isEntity(newValue) && typeof newValue[this.propertyName] !== 'undefined') {
-            const entityValue = this.reflector().tg_getFullValue(newValue, this.propertyName);
+        this._typeTitle = this._calculateTypeTitle(newValue);
+    }
+
+    _calculateTypeTitle (entity) {
+        if (!this.multi && this.reflector().isEntity(entity) && typeof entity[this.propertyName] !== 'undefined') {
+            const entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
             if (entityValue != null) {
                 const entityType = entityValue.type();
-                if (entityType.isUnionEntity() && typeof newValue["@" + this.propertyName + "_error"] === 'undefined') {
-                    this._typeTitle = entityType.prop(entityValue._activeProperty()).title();
-                    return;
+                if (entityType.isUnionEntity() && typeof entity["@" + this.propertyName + "_error"] === 'undefined') {
+                    return entityType.prop(entityValue._activeProperty()).title();
                 }
             }
         }
-        this._typeTitle = null;
+        return null;
     }
 }
 
