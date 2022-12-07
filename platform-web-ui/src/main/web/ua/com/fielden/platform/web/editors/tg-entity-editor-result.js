@@ -190,11 +190,6 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                 }
             },
 
-            _typeColors: {
-                type: Object,
-                computed: '_calcColors(autocompletionType, propertyName, multi)'
-            },
-    
             _foundSome: {
                 type: Boolean,
                 value: false
@@ -404,10 +399,11 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
 
                 //Add type description if entity editor is for union entity
                 const entityType = v.type();
-                if (v.type().isUnionEntity()) {
+                if (entityType.isUnionEntity()) {
                     const activeProp = v._activeProperty();
                     const title = entityType.prop(activeProp).title();
-                    html = html + `<span class="type-name" style="background-color:${this._typeColors[activeProp] || "#eeeeee"}">${title}</span>`;
+                    const color = typeColors[entityType.unionProps().indexOf(activeProp)];
+                    html = html + `<span class="type-name" style="background-color:${color || "#eeeeee"}">${title}</span>`;
                 }
 
                 // add values for additional properties with highlighting of matching parts if required
@@ -634,19 +630,6 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         const visibleHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
         const itemHeight = 24 + 2 * 6 + 1; // see tg-item styles with min-height, top / bottom padding and top border
         return visibleHeight - top - 10 < 3 * itemHeight; // three items do not fit, so visible height is small for showing items
-    }
-
-    _calcColors (autocompletionType, propertyName, multi) {
-        const type = this.reflector.findTypeByName(autocompletionType);
-        if (!multi && type) {
-            const propertyType = type.prop(propertyName).type();
-            if (propertyType.isUnionEntity() && propertyType.unionProps()) {
-                const colors = {};
-                propertyType.unionProps().forEach((prop, idx) => colors[prop] = typeColors[idx]);
-                return colors;
-            }
-        }
-        return {};
     }
 }
 
