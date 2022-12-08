@@ -902,20 +902,10 @@ export const TgEntityBinderBehavior = {
                 const originalValue = convert(_originalBindingEntity.get(propertyName));
                 const valId = bindingEntity['@' + propertyName + '_id'];
                 const origValId = _originalBindingEntity['@' + propertyName + '_id'];
+                const activeProp = bindingEntity['@' + propertyName + '_activeProperty'];
+                const origActiveProp = _originalBindingEntity['@' + propertyName + '_activeProperty'];
+                const wasActivePropertySelected = bindingEntity['@' + propertyName + '_activePropertyWasSelected'];
 
-
-                const propertyType = self._reflector().tg_determinePropertyType(_originalBindingEntity.type(), propertyName);
-                const isUnionEntity = propertyType instanceof self._reflector()._getEntityTypePrototype() && propertyType.isUnionEntity();
-                
-                const origActiveProp =  _originalBindingEntity['@' + propertyName + '_activeProperty'] || null;
-                
-                const fullValue = self._reflector().tg_getFullValue(bindingEntity, propertyName);
-                const calculatedActiveProp = isUnionEntity && fullValue ? fullValue._activeProperty() : null;
-
-                const activeProp = bindingEntity['@' + propertyName + '_activeProperty'] || null;
-
-                
-                
                 // VERY IMPORTANT: the property is considered to be 'modified'
                 //                 in the case when its value does not equal to original value
                 //                 OR if active property was changed. The active property might be changed if entity is union 
@@ -923,13 +913,13 @@ export const TgEntityBinderBehavior = {
                 //                 The 'modified' property is marked by existence of 'val' sub-property.
                 //
                 //                 All modified properties will be applied on the server upon the validation prototype.
-                if (!self._reflector().equalsEx(value, originalValue) || !self._reflector().equalsEx(activeProp || calculatedActiveProp, origActiveProp)) {
+                if (!self._reflector().equalsEx(value, originalValue) || !self._reflector().equalsEx(typeof wasActivePropertySelected === 'undefined' || wasActivePropertySelected ? activeProp : null, origActiveProp)) {
                     // the property is 'modified'
                     modPropHolder[propertyName] = {
                         'val': value,
                         'origVal': originalValue
                     };
-                    if (activeProp !== null) {
+                    if (typeof activeProp !== 'undefined' && (typeof wasActivePropertySelected === 'undefined' || wasActivePropertySelected)) {
                         modPropHolder[propertyName]['activeProperty'] = activeProp;
                     }
                     modPropHolder['@modified'] = true;

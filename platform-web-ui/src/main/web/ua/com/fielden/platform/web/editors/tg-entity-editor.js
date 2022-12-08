@@ -110,7 +110,7 @@ const inputLayerTemplate = html`
             <span style$="[[_valueStyle(item, index)]]">[[item.value]]</span>
             <span hidden$="[[!item.separator]]" style="white-space: pre;">[[item.separator]]</span>
         </template>
-        <span style="color:#737373" hidden$="[[!_hasDesc(entity)]]">&nbsp;&ndash;&nbsp;<i>[[_formatDesc(entity)]]</i></span>
+        <span style="color:#737373" hidden$="[[!_hasDesc(entity, propertyName)]]">&nbsp;&ndash;&nbsp;<i>[[_formatDesc(entity, propertyName)]]</i></span>
     </div>`;
 const customIconButtonsTemplate = html`
     <paper-icon-button id="searcherButton" hidden$="[[searchingOrOpen]]" on-tap="_searchOnTap" icon="search" class="search-button custom-icon-buttons" tabindex="-1" disabled$="[[_disabled]]" tooltip-text="Show search result"></paper-icon-button>
@@ -892,6 +892,13 @@ export class TgEntityEditor extends TgEditor {
         }
     }
 
+    _editingValueChanged (newValue, oldValue) {
+        if (this._refreshCycleStarted !== true && this.entity && typeof this.entity[`@${this.propertyName}_activePropertyWasSelected`] === 'undefined') {
+            this.entity[`@${this.propertyName}_activePropertyWasSelected`] = false;
+        }
+        super._editingValueChanged(newValue, oldValue);
+    }
+
     /*
      * This method handles an explicit user action for accepting selected values from an autocompleted list.
      * However, there is no guarantee that there are actually selected values.
@@ -917,9 +924,9 @@ export class TgEntityEditor extends TgEditor {
                 if (selectedEntity.type().isUnionEntity()) {
                     const activeProp = selectedEntity._activeProperty();
                     //If selected entity is union entity then add additional meta property to binding entity in order to correctly initialise modifPropertyHolder for this property.
+                    const prevActiveProp = this.entity[`@${this.propertyName}_activeProperty`];
                     this.entity[`@${this.propertyName}_activeProperty`] = activeProp;
-                    const prevValue = this.reflector().tg_getFullValue(this.entity, this.propertyName);
-                    const prevActiveProp = prevValue ? prevValue._activeProperty() : '';
+                    this.entity[`@${this.propertyName}_activePropertyWasSelected`] = true;
                     if (this._commValue === selectedValuesAsStr && activeProp !== prevActiveProp) {
                         //If editing value doesn't changes then check whether active property of original entity changes. If it so then kick in value change process to validate it properly.
                         const pseudoNewValue = this.convertFromString(selectedValuesAsStr)
@@ -1267,20 +1274,18 @@ export class TgEntityEditor extends TgEditor {
         return [{value: entityValue.toString()}]; // entityValue never empty
     }
 
-    _hasDesc (entity) {
-        if (entity !== null) {
-            const entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
-            if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription()) {
-                return !!entityValue.get('desc');
-            }
-        }
-        return false;
+    _hasDesc (entity, propertyName) {
+        return !!this._formatDesc(entity, propertyName);
     }
 
-    _formatDesc (entity) {
-        if (entity !== null) {
-            const entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
-            if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription() && entityValue.get('desc')) {
+    _formatDesc (entity, propertyName) {
+        if (entity && propertyName) {
+
+            // get meta-property to analyse if it is in error and its last attempted value
+            const metaProperty = this.reflector().tg_getFullEntity(entity).prop(propertyName);
+            const entityValue = this.reflector().isError(metaProperty.validationResult()) ? metaProperty.lastInvalidValue() : this.reflector().tg_getFullValue(entity, propertyName);
+
+            if (this.reflector().isEntity(entityValue) && !this.reflector().isMockNotFoundEntity(entityValue) && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription() && entityValue.get('desc')) {
                 return entityValue.get('desc');
             }
         }

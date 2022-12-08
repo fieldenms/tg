@@ -657,7 +657,7 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
      */
     Entity.prototype.toString = function () {
         const convertedKey = _toString(_convert(this.get('key')), this.constructor.prototype.type.call(this), 'key');
-        return convertedKey === '' && !this.constructor.prototype.type.call(this).isUnionEntity() ? KEY_NOT_ASSIGNED : convertedKey;
+        return convertedKey === '' /*&& !this.constructor.prototype.type.call(this).isUnionEntity()*/ ? KEY_NOT_ASSIGNED : convertedKey;
     }
     
     return Entity;
@@ -1224,6 +1224,9 @@ const _convertFullPropertyValue = function (bindingView, propertyName, fullValue
         if (fullValue.get('id') !== null) {
             bindingView['@' + propertyName + '_id'] = fullValue.get('id');
         }
+        if (fullValue.type().isUnionEntity()) {
+            bindingView[`@${propertyName}_activeProperty`] = fullValue._activeProperty(); 
+        }
         try {
             const desc = fullValue.get('desc');
             bindingView['@' + propertyName + '_desc'] = _convert(desc);
@@ -1763,10 +1766,6 @@ export const TgReflector = Polymer({
     tg_convertOriginalPropertyValue: function (originalBindingView, propertyName, entity) {
         const fullValue = entity.getOriginal(propertyName);
         _convertFullPropertyValue(originalBindingView, propertyName, fullValue);
-        if (_isEntity(fullValue) && fullValue.type().isUnionEntity()) {
-            originalBindingView[`@${propertyName}_activeProperty`] = fullValue._activeProperty(); 
-        }
-
     },
 
     /**
