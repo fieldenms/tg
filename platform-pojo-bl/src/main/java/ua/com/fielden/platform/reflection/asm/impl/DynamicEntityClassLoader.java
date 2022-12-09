@@ -64,7 +64,7 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
                 LOGGER.error("Error occurred during cache cleanup.", ex);
             }
         }
-        LOGGER.info("Cache size [%s]. Evicted from cache [%s] entries.".formatted(cache.size(), count));
+        LOGGER.info("Cache size [%s]. Evicted [%s] entries from cache.".formatted(cache.size(), count));
         return cache.size();
     }
 
