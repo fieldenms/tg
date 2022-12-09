@@ -1,5 +1,6 @@
 package fielden.stresstests;
 
+import static java.util.concurrent.ThreadLocalRandom.current;
 import static java.util.stream.Collectors.toList;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
@@ -27,17 +28,26 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.types.Money;
 
 /**
- * A stress test for the getting the original type from generated classes.
- * This test aims at simulating a thread-contention problem that occurs when many threads are trying to obtain the original type for the generated ones.
+ * A stress test for generation of entity types.
+ * This test aims at simulating a contention problem that occurs when many threads are trying to generate new entity types concurrently, which could be related to the use of a single class loader, responsible for defining new types.
+ * <p>
  * If the problem exists, it can be observed by running the test, attaching YourKit to that process and review the result of section "Threads". 
- * Lots of solid "red" segments (not the segments with flames) would indicate that problem exists, and selecting one of those "red" sections should show the following stack trace:
+ * Lots of solid "red" segments (not the segments with flames) would indicate that a contention problem exists, and selecting one of those "red" sections should show the following stack trace:
  * <pre>
- * pool-1-thread-4  Blocked CPU usage on sample: 189ms
- * java.lang.ClassLoader.loadClass(String, boolean) ClassLoader.java:404
- * java.lang.ClassLoader.loadClass(String) ClassLoader.java:357
- * ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType(Class) DynamicEntityClassLoader.java:142
+ * pool-2-thread-7  Blocked CPU usage on sample: 438ms
+ * java.lang.ClassLoader.defineClass1(Native Method)
+ * java.lang.ClassLoader.defineClass(ClassLoader.java:1013)
+ * java.lang.ClassLoader.defineClass(ClassLoader.java:875)
+ * ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.doDefineClass(DynamicEntityClassLoader.java:92)
  * </pre>   
- * If the problem does not exist (i.e. it was resolve) then no "red" sections should be observed.
+ * If the problem does not exist then no "red" sections should be observed.
+ * <p>
+ * At the time when this test was created, we are using a singleton instance of {@link DynamicEntityClassLoader}, responsible for defining all generated types.
+ * Because of this, intensive generation of new entities will experience a contention problem due to synchronous nature of class loaders.
+ * However, in practice this should not be a problem if the number of concurrently generated entities if not significant.
+ * <p>
+ * One can use parameters {@code limitProducers}, {@code limitThreadsInPool}, {@code minGenDelay}, {@code maxGenDelay} and {@code timeUnit} to control the simulation for concurrent entity generation.
+ * 
  * @author TG Team
  *
  */
@@ -67,11 +77,16 @@ public class EntityGenerationStressTest {
 
         final var limitProducers = 25;
         final var limitThreadsInPool = 10;
+        final var minGenDelay = 3;
+        final var maxGenDelay = 10;
+        final var timeUnit = TimeUnit.MILLISECONDS;
         LOGGER.info("Configuring [%s] producers to be executed by ScheduledExecutorService with [%s] threads.".formatted(limitProducers, limitThreadsInPool));
         final ScheduledExecutorService exec = Executors.newScheduledThreadPool(limitThreadsInPool);
         final List<ScheduledFuture<?>> producers = Stream.iterate(1, v -> v + 1)
                 .limit(limitProducers)
-                .map(v -> exec.scheduleWithFixedDelay(() ->fun.get(), ThreadLocalRandom.current().nextInt(3, 10), ThreadLocalRandom.current().nextInt(2, 10), TimeUnit.MILLISECONDS))
+                .map(v -> exec.scheduleWithFixedDelay(() ->fun.get(), 
+                        /* initial generation delay */ current().nextInt(minGenDelay, maxGenDelay),
+                                /* generation delay */ current().nextInt(minGenDelay, maxGenDelay), timeUnit))
                 .collect(toList());
 
         final ScheduledFuture<?> cleaner = exec.scheduleWithFixedDelay(() -> DynamicEntityClassLoader.cleanUp(), limitThreadsInPool, 2, TimeUnit.SECONDS);
