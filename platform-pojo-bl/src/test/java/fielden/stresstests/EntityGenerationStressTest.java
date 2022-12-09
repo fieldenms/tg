@@ -17,8 +17,14 @@ import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.Entity;
+import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
+import ua.com.fielden.platform.entity.annotation.factory.IsPropertyAnnotation;
+import ua.com.fielden.platform.reflection.asm.api.NewProperty;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
+import ua.com.fielden.platform.types.Money;
 
 /**
  * A stress test for the getting the original type from generated classes.
@@ -35,20 +41,26 @@ import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
  * @author TG Team
  *
  */
-public class GetOriginalTypeStressTest {
+public class EntityGenerationStressTest {
 
-    private static final Logger LOGGER = getLogger(GetOriginalTypeStressTest.class);
+    private static final Logger LOGGER = getLogger(EntityGenerationStressTest.class);
 
-    private GetOriginalTypeStressTest() {}
+    private EntityGenerationStressTest() {}
 
     public static void main(final String[] args) throws Exception {
-        LOGGER.info("Starting the load test...");
+        LOGGER.info("Straring the load test for generating new entities...");
         final Supplier<Class<? extends AbstractEntity<String>>> fun = () -> {
             try {
+                final IsProperty atIsPropertyWithPrecision = new IsPropertyAnnotation(19, 4).newInstance();
+                final Calculated atCalculated = new CalculatedAnnotation().contextualExpression("2 * 3 - [finalProperty]").newInstance();
+                final NewProperty<Money> np1 = NewProperty.create("new_calculated_prop1", Money.class, "title", "description", atIsPropertyWithPrecision, atCalculated);
+                final NewProperty<Money> np2 = NewProperty.create("new_calculated_prop2", Money.class, "title", "description", atIsPropertyWithPrecision, atCalculated);
                 return (Class<? extends AbstractEntity<String>>) startModification(Entity.class)
-                        .modifyTypeName(DynamicTypeNamingService.nextTypeName(Entity.class.getName())).endModification();
-            } catch (ClassNotFoundException e) {
-                e.printStackTrace();
+                        .addProperties(np1, np2)
+                        .modifyTypeName(DynamicTypeNamingService.nextTypeName(Entity.class.getName()))
+                        .endModification();
+            } catch (final ClassNotFoundException ex) {
+                LOGGER.error("Could not generate entity.", ex);
                 return null;
             }
         };
@@ -59,13 +71,13 @@ public class GetOriginalTypeStressTest {
         final ScheduledExecutorService exec = Executors.newScheduledThreadPool(limitThreadsInPool);
         final List<ScheduledFuture<?>> producers = Stream.iterate(1, v -> v + 1)
                 .limit(limitProducers)
-                .map(v -> exec.scheduleWithFixedDelay(new AccessOriginalType(fun.get()), ThreadLocalRandom.current().nextInt(3, 10), ThreadLocalRandom.current().nextInt(2, 10), TimeUnit.MILLISECONDS))
+                .map(v -> exec.scheduleWithFixedDelay(() ->fun.get(), ThreadLocalRandom.current().nextInt(3, 10), ThreadLocalRandom.current().nextInt(2, 10), TimeUnit.MILLISECONDS))
                 .collect(toList());
 
         final ScheduledFuture<?> cleaner = exec.scheduleWithFixedDelay(() -> DynamicEntityClassLoader.cleanUp(), limitThreadsInPool, 2, TimeUnit.SECONDS);
 
         // put the main thread to sleep for the duration of the stress test
-        final var testDurationInMillis = 1000*60*5;
+        final var testDurationInMillis = 1000*60*1;
         LOGGER.info("Test started and should run for %s minutes...".formatted(TimeUnit.MINUTES.convert(testDurationInMillis, TimeUnit.MILLISECONDS)));
         Thread.sleep(testDurationInMillis);
         // let's not terminate the whole process after the specified period of time and exit
@@ -79,30 +91,6 @@ public class GetOriginalTypeStressTest {
         exec.shutdown();
         LOGGER.info("Completed the test.");
         System.exit(0);
-    }
-
-    /**
-     * A task to access original type multiple times.
-     *
-     */
-    static class AccessOriginalType implements Runnable {
-        private final Class<? extends AbstractEntity<String>> newType;
-        
-        public AccessOriginalType(final Class<? extends AbstractEntity<String>> newType) {
-            this.newType = newType;
-        }
-
-        @Override
-        public void run() {
-            try {
-                for (int index = 0; index < 1000; index++) {
-                    DynamicEntityClassLoader.getOriginalType(newType).getSimpleName();
-                }
-                //System.out.println(DynamicEntityClassLoader.getOriginalType(newType).getSimpleName());
-            } catch (final Exception ex) {
-                
-            }
-        }
     }
 
 
