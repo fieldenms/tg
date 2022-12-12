@@ -146,6 +146,16 @@ public class DynamicQueryBuilder {
         public static String queryPropertyParamName(final String propertyName) {
             return QP_PREFIX + propertyName;
         }
+        
+        /**
+         * Creates parameter name for {@link QueryProperty} instance (should be used to expand mnemonics value into conditions from EQL critCondition operator).
+         *
+         * @param propertyPath
+         * @return
+         */
+        public static String queryPropertyParamName(final IConvertableToPath propertyPath) {
+            return QP_PREFIX + propertyPath.toPath();
+        }
 
         public QueryProperty(final Class<?> entityClass, final String propertyName) {
             this.entityClass = entityClass;
