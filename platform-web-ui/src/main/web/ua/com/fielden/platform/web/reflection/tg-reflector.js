@@ -438,7 +438,7 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
      */
     Entity.prototype._activeEntity = function () {
         const activeProperty = this._activeProperty();
-        return activeProperty != null ? this.get(activeProperty) : null;
+        return activeProperty !== null ? this.get(activeProperty) : null;
     }
 
      /**
@@ -449,7 +449,7 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
       */
       Entity.prototype._activeProperty = function () {
         const type = this.constructor.prototype.type.call(this);
-        return type.unionProps().find(prop => this[prop] != null) || null;
+        return type.unionProps().find(prop => this[prop] !== null) || null;
     }
 
     /**
@@ -657,7 +657,7 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
      */
     Entity.prototype.toString = function () {
         const convertedKey = _toString(_convert(this.get('key')), this.constructor.prototype.type.call(this), 'key');
-        return convertedKey === '' /*&& !this.constructor.prototype.type.call(this).isUnionEntity()*/ ? KEY_NOT_ASSIGNED : convertedKey;
+        return convertedKey === '' ? KEY_NOT_ASSIGNED : convertedKey;
     }
     
     return Entity;
@@ -1764,8 +1764,7 @@ export const TgReflector = Polymer({
      * Converts original value of property with 'propertyName' name from fully-fledged entity 'entity' into the 'originalBindingView' binding entity.
      */
     tg_convertOriginalPropertyValue: function (originalBindingView, propertyName, entity) {
-        const fullValue = entity.getOriginal(propertyName);
-        _convertFullPropertyValue(originalBindingView, propertyName, fullValue);
+        _convertFullPropertyValue(originalBindingView, propertyName, entity.getOriginal(propertyName));
     },
 
     /**

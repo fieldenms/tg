@@ -84,7 +84,7 @@ const customLabelTemplate = html`
            slot="label"
            tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]">
         <span on-tap="_labelTap">[[_editorPropTitle]]</span>
-        <iron-icon id="actionAvailability" icon="[[_actionIcon(actionAvailable, entity)]]" action-available$="[[actionAvailable]]" on-tap="_labelTap"></iron-icon>
+        <iron-icon id="actionAvailability" icon="[[_actionIcon(actionAvailable, entity, propertyName)]]" action-available$="[[actionAvailable]]" on-tap="_labelTap"></iron-icon>
     </label>`;
 const customInputTemplate = html`
     <iron-input bind-value="{{_editingValue}}" class="custom-input-wrapper">
@@ -433,8 +433,8 @@ export class TgEntityEditor extends TgEditor {
                     return (function (event) {
                         if (event.keyCode === 13 && this.opened === true) { // 'Enter' has been pressed
                             this._done();
+                            //Should use stopPropagation method instead of tearDownEvent from polymer utils because tearDownEvent for some unknown reasons prevents next onChangeEvent. 
                             event.stopPropagation();
-                            //tearDownEvent(event);
                         } else if ((event.keyCode === 38 /*up*/ || event.keyCode === 40 /*down*/) && !event.ctrlKey) { // up/down arrow keys
                             // By default up/down arrow keys work like home/end for and input field
                             // That's why this event should be suppressed.
@@ -499,7 +499,7 @@ export class TgEntityEditor extends TgEditor {
     static get observers () {
         return [
             "_changeTitle(entity)", 
-            "_changeLayerExistance(_editingValue, entity)"
+            "_changeLayerExistance(_editingValue, entity, propertyName)"
         ];
     }
 
@@ -627,7 +627,7 @@ export class TgEntityEditor extends TgEditor {
     }
 
     _computeEditorPropTitle (propTitle, _typeTitle) {
-        return `${propTitle} ${_typeTitle ? `(${_typeTitle})`: " "}`;
+        return `${propTitle}${_typeTitle ? ` (${_typeTitle})`: ""}`;
     }
 
     /**
@@ -1205,16 +1205,16 @@ export class TgEntityEditor extends TgEditor {
      * Computes whether title action is available for tapping and visible.
      */
     _computeActionAvailability (entityMaster, newEntityMaster, entity, propertyName, _disabled, currentState) {
-        if ((!entityMaster && !newEntityMaster) || !entity || !currentState || typeof _disabled === 'undefined') {
+        if ((!entityMaster && !newEntityMaster) || !entity || !propertyName || !currentState || typeof _disabled === 'undefined') {
             return false;
         }
         return currentState === 'EDIT' // currentState is not 'EDIT' e.g. where refresh / saving process is in progress
             && (!_disabled || (this._valueToEdit(entity, propertyName) && entityMaster));
     }
 
-    _actionIcon (actionAvailable, entity) {
+    _actionIcon (actionAvailable, entity, propertyName) {
         if (actionAvailable) {
-            if (this._valueToEdit(entity, this.propertyName)) {
+            if (this._valueToEdit(entity, propertyName)) {
                 return "editor:mode-edit";
             }
             return "add-circle-outline";
@@ -1281,25 +1281,23 @@ export class TgEntityEditor extends TgEditor {
 
     _formatDesc (entity, propertyName) {
         if (entity && propertyName) {
-
-            // get meta-property to analyse if it is in error and its last attempted value
-            const metaProperty = this.reflector().tg_getFullEntity(entity).prop(propertyName);
-            const entityValue = this.reflector().isError(metaProperty.validationResult()) ? metaProperty.lastInvalidValue() : this.reflector().tg_getFullValue(entity, propertyName);
-
-            if (this.reflector().isEntity(entityValue) && !this.reflector().isMockNotFoundEntity(entityValue) && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription() && entityValue.get('desc')) {
+            const entityValue = this.reflector().tg_getFullValue(entity, propertyName);
+            if (entityValue !== null && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription() && entityValue.get('desc')) {
                 return entityValue.get('desc');
             }
         }
         return '';
     }
 
-    _changeLayerExistance (_editingValue, entity) {
+    _changeLayerExistance (_editingValue, entity, propertyName) {
         if (!allDefined(arguments)) {
             return;
         }
         if (entity !== null) {
-            const entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
-            this._hasLayer = entityValue !== null && this.convertToString(this.reflector().tg_convert(entityValue)) === _editingValue && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription();
+            const metaProperty = this.reflector().tg_getFullEntity(entity).prop(propertyName);
+            const isMock = this.reflector().isError(metaProperty.validationResult()) && this.reflector().isMockNotFoundEntity(metaProperty.lastInvalidValue());
+            const entityValue = this.reflector().tg_getFullValue(entity, propertyName);
+            this._hasLayer = entityValue !== null && !isMock && this.convertToString(this.reflector().tg_convert(entityValue)) === _editingValue && !Array.isArray(entityValue) && entityValue.type().shouldDisplayDescription();
         } else {
             this._hasLayer = false;
         }
@@ -1321,8 +1319,6 @@ export class TgEntityEditor extends TgEditor {
         dialog.noAutoFocus = true;
         dialog.acceptValues = this._done.bind(this);
         dialog.loadMore = this._loadMore.bind(this);
-        dialog.autocompletionType = this.autocompletionType;
-        dialog.propertyName = this.propertyName;
         dialog.multi = this.multi;
         if (this.additionalProperties) {
             dialog.additionalProperties = JSON.parse(this.additionalProperties);

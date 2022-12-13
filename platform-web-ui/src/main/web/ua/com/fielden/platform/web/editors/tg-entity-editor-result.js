@@ -137,9 +137,7 @@ const template = html`
         <iron-selector id="selector" class="tg-snatchback" multi$="[[multi]]" attr-for-selected="value" on-iron-deselect="_itemDeselected" on-iron-select="_itemSelected">
             <!-- begin of dom-repeat -->
             <template is="dom-repeat" items="[[_values]]" as="v">
-                <paper-item id$="[[_makeId(index)]]" value$="[[_getKeyFor(v)]]" tabindex="-1" noink class="tg-item vertical-layout">
-                <!-- please note that union entities are not supported in autocompletion results and, most likely, will never be. Otherwise consider finding .key places here and adjust accordingly using property getter. -->
-                </paper-item>
+                <paper-item id$="[[_makeId(index)]]" value$="[[_getKeyFor(v)]]" tabindex="-1" noink class="tg-item vertical-layout"></paper-item>
             </template>
             <!-- end of dom-repeat -->
         </iron-selector>
@@ -171,14 +169,6 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
             multi: {
                 type: Boolean,
                 value: false
-            },
-
-            autocompletionType: {
-                type: String
-            },
-
-            propertyName: {
-                type: String
             },
     
             /* An array of entities that match the search request.
@@ -330,7 +320,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
     /* Pushes the specified value into the tail of array _values if that value is not yet present.
      * Returns true if the value was new, false otherwise. */
     pushValue (value) {
-        const existingValue = this._values.find(obj => obj['@key'] === value['@key']);
+        const existingValue = this._values.find(obj => this._getKeyFor(obj) === this._getKeyFor(value));
 
         if (!existingValue) {
             this.push('_values', value);
@@ -484,7 +474,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         this._selectedIndex = this._unmakeId(event.detail.item.id);
 
         const value = event.detail.item.getAttribute("value");
-        this.selectedValues[value] = this._values.find(obj => obj['@key'] === value);
+        this.selectedValues[value] = this._values.find(obj => this._getKeyFor(obj) === value);
     }
 
     _itemDeselected (event) {
