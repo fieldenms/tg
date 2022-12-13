@@ -58,14 +58,14 @@ public class EntityGenerationStressTest {
     private EntityGenerationStressTest() {}
 
     public static void main(final String[] args) throws Exception {
-        LOGGER.info("Straring the load test for generating new entities...");
+        LOGGER.info("Starting the load test for generating new entities...");
         final Supplier<Class<? extends AbstractEntity<String>>> fun = () -> {
             try {
                 final IsProperty atIsPropertyWithPrecision = new IsPropertyAnnotation(19, 4).newInstance();
                 final Calculated atCalculated = new CalculatedAnnotation().contextualExpression("2 * 3 - [finalProperty]").newInstance();
                 final NewProperty<Money> np1 = NewProperty.create("new_calculated_prop1", Money.class, "title", "description", atIsPropertyWithPrecision, atCalculated);
                 final NewProperty<Money> np2 = NewProperty.create("new_calculated_prop2", Money.class, "title", "description", atIsPropertyWithPrecision, atCalculated);
-                return (Class<? extends AbstractEntity<String>>) startModification(Entity.class)
+                return startModification(Entity.class)
                         .addProperties(np1, np2)
                         .modifyTypeName(DynamicTypeNamingService.nextTypeName(Entity.class.getName()))
                         .endModification();

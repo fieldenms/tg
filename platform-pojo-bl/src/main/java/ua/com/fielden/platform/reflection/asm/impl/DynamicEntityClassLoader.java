@@ -69,8 +69,10 @@ public class DynamicEntityClassLoader extends InjectionClassLoader {
     }
 
     /**
-     * Creates a new cache entry that maps {@link Class} to its byte representation.
-     * If an entry for the given {@link Class} already exists, it will be overwritten.
+     * Creates a new cache entry for the generated type.
+     * <p>
+     * The mapping has the following form: {@code [genTypeSimpleName : (genType, origType)]}.
+     * If an entry for the given type already exists, it will be overwritten.
      *
      * @param typePair
      */
