@@ -4,6 +4,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.error.Result.warning;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
 
 import java.math.BigDecimal;
@@ -24,8 +25,6 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
@@ -297,11 +296,10 @@ public class FactoryForTestingEntities {
     }
     
     public T2<AbstractEntity<?>, Class<AbstractEntity<?>>> createUninstrumentedGeneratedEntity(final boolean proxiedType, final Class entityType, final Class miType) {
-        final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
         final Class<AbstractEntity<?>> entityTypeGenerated;
         try {
             entityTypeGenerated = (Class<AbstractEntity<?>>) 
-                    cl.startModification(entityType)
+                    startModification(entityType)
                     .modifyTypeName(nextTypeName(entityType.getName()))
                     .addClassAnnotations(new MiTypeAnnotation().newInstance(miType))
                 .endModification();
@@ -312,11 +310,10 @@ public class FactoryForTestingEntities {
     }
 
     public T2<AbstractEntity<?>, Class<AbstractEntity<?>>> createInstrumentedGeneratedEntity(final boolean proxiedType, final Class entityType, final Class miType) {
-        final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
         final Class<AbstractEntity<?>> entityTypeGenerated;
         try {
             entityTypeGenerated = (Class<AbstractEntity<?>>) 
-                    cl.startModification(entityType)
+                    startModification(entityType)
                     .modifyTypeName(nextTypeName(entityType.getName()))
                     .addClassAnnotations(new MiTypeAnnotation().newInstance(miType))
                 .endModification();

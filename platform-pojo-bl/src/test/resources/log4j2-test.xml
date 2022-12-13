@@ -13,8 +13,11 @@
   	<Logger name="ua.com.fielden.platform.entity" level="error" additivity="false">
       <AppenderRef ref="Console"/>
     </Logger>
+    <Logger name="ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader" level="info" additivity="false">
+      <AppenderRef ref="Console"/>
+    </Logger>
 
-    <Root level="error">
+    <Root level="info">
       <AppenderRef ref="Console"/>
     </Root>
   </Loggers>
