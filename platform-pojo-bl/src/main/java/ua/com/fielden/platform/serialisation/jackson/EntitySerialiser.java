@@ -142,7 +142,7 @@ public class EntitySerialiser<T extends AbstractEntity<?>> {
             }
         }
         if (AbstractUnionEntity.class.isAssignableFrom(type)) {
-            entityTypeInfo.set_unionCommonProps(commonProperties((Class<AbstractUnionEntity>) type));
+            entityTypeInfo.set_unionCommonProps(new ArrayList<>(commonProperties((Class<AbstractUnionEntity>) type)));
         }
         if (AbstractFunctionalEntityToOpenCompoundMaster.class.isAssignableFrom(type)) {
             entityTypeInfo.set_compoundOpenerType(getKeyType(type).getName());

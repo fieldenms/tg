@@ -275,7 +275,7 @@ public class DomainMetadata {
         final SortedMap<String, PropertyMetadata> propsMetadata = generatePropertyMetadatasForEntity(parentInfo);
         
         final Class<? extends AbstractUnionEntity> entityType = (Class<? extends AbstractUnionEntity>) parentInfo.entityType;
-        final List<String> commonProps = commonProperties(entityType);
+        final Set<String> commonProps = commonProperties(entityType);
         final List<Field> unionProps = unionProperties(entityType);
         final List<String> unionPropsNames = unionProps.stream().map(up -> up.getName()).collect(toList());
         final Class<?> unionEntityPropType = unionProps.get(0).getType();

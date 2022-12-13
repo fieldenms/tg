@@ -5,7 +5,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
@@ -23,9 +22,7 @@ import ua.com.fielden.platform.domaintree.testing.EvenSlaverEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntity;
 import ua.com.fielden.platform.domaintree.testing.MasterEntityDatePropCategorizer.MasterEntityDatePropCategory;
 import ua.com.fielden.platform.domaintree.testing.MasterEntitySimpleEntityPropCategorizer.MasterEntitySimpleEntityPropCategory;
-import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.equery.lifecycle.LifecycleModel.GroupingPeriods;
-import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -190,7 +187,6 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
     private List<String> lastN(final ILifecycleDomainTreeManager dtm, final int n) {
         final List<String> all = dtm.getRepresentation().includedProperties(MasterEntity.class);
         final List<String> some = new ArrayList<>(all.subList(all.size() - n, all.size()));
-        System.out.println("sublist == " + some);
         return some;
     }
 
@@ -222,7 +218,7 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
 
         assertNull("The default LifecycleProperty should be Null.", dtm.getLifecycleProperty());
         // assertFalse("At the first time, the included properties should not contain any category.", lastN(dtm, 5).contains("available"));
-        assertEquals("Only date properties are included.", Arrays.asList("__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY"), lastN(dtm, 5));
+        assertEquals("Only date properties are included.", List.of("__YEAR", "__MONTH", "__FORTNIGHT", "__WEEK", "__DAY"), lastN(dtm, 5));
         assertEquals("At the first time, the checked properties should be empty.", Arrays.asList(), dtm.getSecondTick().checkedProperties(MasterEntity.class));
         assertEquals("At the first time, the used properties should be empty as well as 'checked' properties.", Arrays.asList(), dtm.getSecondTick().usedProperties(MasterEntity.class));
         assertEquals("At the first time, no categories exist in the domain (no lifecycle property has been selected).", Arrays.asList(), dtm.getSecondTick().allCategories(MasterEntity.class));
@@ -262,12 +258,6 @@ public class LifecycleDomainTreeManagerTest extends AbstractAnalysisDomainTreeMa
 
         centre.initAnalysisManagerByDefault("Lifecycle report (new)", AnalysisType.LIFECYCLE);
         final ILifecycleDomainTreeManager dtm2 = (ILifecycleDomainTreeManager) centre.getAnalysisManager("Lifecycle report (new)");
-
-        // final Field[] fields = centre.getEnhancer().getManagedType(MasterEntity.class).getFields();
-        final List<Field> fields = Finder.findRealProperties((Class<? extends AbstractEntity<?>>)centre.getEnhancer().getManagedType(MasterEntity.class));
-        for (final Field f : fields) {
-            System.err.println(f.getName());
-        }
 
         assertNull("The default LifecycleProperty should be Null.", dtm2.getLifecycleProperty());
         // assertFalse("At the first time, the included properties should not contain any category.", lastN(dtm, 5).contains("available"));
