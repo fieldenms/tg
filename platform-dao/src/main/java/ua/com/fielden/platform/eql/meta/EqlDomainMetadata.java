@@ -91,10 +91,10 @@ import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage1.sources.YieldInfoNode;
 import ua.com.fielden.platform.eql.stage1.sources.YieldInfoNodesGenerator;
-import ua.com.fielden.platform.eql.stage2.PathsToTreeTransformer;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
+import ua.com.fielden.platform.eql.stage2.sources.enhance.PathsToTreeTransformer;
 import ua.com.fielden.platform.eql.stage3.Table;
 import ua.com.fielden.platform.utils.EntityUtils;
 

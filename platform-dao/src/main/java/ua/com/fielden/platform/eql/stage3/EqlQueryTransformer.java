@@ -1,8 +1,5 @@
 package ua.com.fielden.platform.eql.stage3;
 
-import java.util.List;
-import java.util.Map;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.QueryProcessingModel;
@@ -11,12 +8,12 @@ import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
 import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.ResultQuery1;
-import ua.com.fielden.platform.eql.stage2.PathsToTreeTransformer;
-import ua.com.fielden.platform.eql.stage2.TablesAndSourceChildren;
+import ua.com.fielden.platform.eql.stage2.TablesAndSourceTreeResult;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.ResultQuery2;
-import ua.com.fielden.platform.eql.stage2.sources.ChildGroup;
+import ua.com.fielden.platform.eql.stage2.sources.enhance.PathsToTreeTransformer;
+import ua.com.fielden.platform.eql.stage2.sources.enhance.TreeResult;
 import ua.com.fielden.platform.eql.stage3.operands.ResultQuery3;
 import ua.com.fielden.platform.utils.IDates;
 
@@ -46,8 +43,8 @@ public class EqlQueryTransformer {
         final ResultQuery1 query1 = gen.generateAsResultQuery(qem.queryModel, qem.orderModel, qem.fetchModel);
 		final ResultQuery2 query2 = query1.transform(context1);
         final PathsToTreeTransformer p2tt = new PathsToTreeTransformer(eqlDomainMetadata, gen);
-        final Map<Integer, List<ChildGroup>> childGroupsMap = p2tt.transform(query2.collectProps());
-        final TransformationContext2 context2 = new TransformationContext2(new TablesAndSourceChildren(eqlDomainMetadata.getTables(), childGroupsMap));
+        final TreeResult treeResult = p2tt.transform(query2.collectProps());
+        final TransformationContext2 context2 = new TransformationContext2(new TablesAndSourceTreeResult(eqlDomainMetadata.getTables(), treeResult));
 		return query2.transform(context2);
     }
 }

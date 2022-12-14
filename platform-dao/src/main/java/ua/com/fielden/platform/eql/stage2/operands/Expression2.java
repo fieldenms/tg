@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.stage2.operands;
 import static java.util.Collections.emptyList;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;

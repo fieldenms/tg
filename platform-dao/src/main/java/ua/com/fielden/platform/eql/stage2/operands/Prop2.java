@@ -9,18 +9,17 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import ua.com.fielden.platform.eql.exceptions.EqlStage2ProcessingException;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
-import ua.com.fielden.platform.eql.stage2.PathsToTreeTransformer;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
+import ua.com.fielden.platform.eql.stage2.sources.enhance.PathsToTreeTransformer;
 import ua.com.fielden.platform.eql.stage3.operands.Expression3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.Prop3;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.types.Money;
-import ua.com.fielden.platform.types.tuples.T3;
+import ua.com.fielden.platform.types.tuples.T2;
 
 /**
  * A structure to represent a dot-notated property, resolved to its respective source. This information is used at Stage 3 to build up table joins to retrieve the information expressed by the property.
@@ -58,15 +57,13 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
             return new TransformationResult2<>(new Prop3(lastPart().name, null, type, hibType), context);
         }
         
-        final T3<String, ISource3, Expression2> resolution = context.resolve(source.id(), name);
-
-        if (resolution._2 != null) {
-            return new TransformationResult2<>(new Prop3(resolution._1, resolution._2, type, hibType), context);
-        } else if (resolution._3 != null) {
-            final TransformationResult2<Expression3> exprTr = resolution._3.transform(context);
+        if (lastPart().hasExpression()) {
+            final Expression2 expr2 = context.resolveExpression(source.id(), name);
+            final TransformationResult2<Expression3> exprTr = expr2.transform(context);
             return new TransformationResult2<>(exprTr.item.isSingle() ? exprTr.item.first : exprTr.item, exprTr.updatedContext);
         } else {
-        	throw new EqlStage2ProcessingException("Unexpected state while resolving property  [%s].".formatted(resolution._1));
+            final T2<String, ISource3> resolution = context.resolve(source.id(), name);
+            return new TransformationResult2<>(new Prop3(resolution._1, resolution._2, type, hibType), context);
         }
     }
 
