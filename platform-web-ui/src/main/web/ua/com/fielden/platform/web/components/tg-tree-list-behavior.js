@@ -74,6 +74,7 @@ const generateChildrenModel = function (children, parentEntity, additionalInfoCb
         parent.additionalInfoNodes = (additionalInfoCb ? additionalInfoCb(parent) : []).map(entity => {
             entity.relatedTo = parent;
             entity.over = false;
+            entity.selected = false;
             return entity;
         });
         return parent;
@@ -390,6 +391,26 @@ export const TgTreeListBehavior = {
                 this.set("_entities." + idx + ".opened", true);
                 this.splice("_entities", idx + 1 + entity.additionalInfoNodes.length, 0, ...getChildrenToAdd.bind(this)(entity, true, false));
             }
+            this.updateTree(idx, this._entities.length);
+        }
+    },
+
+    updateTree: function (from, to) {
+        for (let i = from; i < to; i++) {
+            if (this.isEntityRendered(i)) {
+                this.notifyPath("_entities." + i + "." + "selected"); 
+            }
+        }
+    },
+
+    setSelected: function (idx, selected) {
+        const entity = this._entities[idx];
+        if (entity && entity.selected !== selected) {
+            this.set("_entities." + idx + ".selected", selected);
+            entity.additionalInfoNodes && entity.additionalInfoNodes.forEach((item, additionalInfoIdx) => {
+                this.set("_entities." + (additionalInfoIdx + idx + 1) + ".selected", selected);
+            });
+            this.fire("tg-tree-item-selected", {entity: entity, select: selected});
         }
     },
 
@@ -462,7 +483,7 @@ export const TgTreeListBehavior = {
 
     _regenerateModel: function () {
         this._treeModel = generateChildrenModel(this.model, null, this.additionalInfoCb); 
-        this._entities = this._treeModel.slice();
+        this._entities = composeChildren.bind(this)(this._treeModel, true, false);
     },
 
     /**
