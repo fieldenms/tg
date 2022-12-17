@@ -101,6 +101,8 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(TgOrgUnit5WithSummariesCo.class).to(TgOrgUnit5WithSummariesDao.class);
 
         bind(ITgBogieLocation.class).to(TgBogieLocationDao.class);
+        bind(UnionEntityWithSkipExistsValidationCo.class).to(UnionEntityWithSkipExistsValidationDao.class);
+        bind(EntityWithUnionEntityWithSkipExistsValidationCo.class).to(EntityWithUnionEntityWithSkipExistsValidationDao.class);
         bind(ITgBogie.class).to(TgBogieDao.class);
         bind(TgSynBogieCo.class).to(TgSynBogieDao.class);
         bind(ITgBogieClass.class).to(TgBogieClassDao.class);

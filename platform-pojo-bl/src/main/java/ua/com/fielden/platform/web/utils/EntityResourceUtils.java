@@ -616,7 +616,7 @@ public class EntityResourceUtils {
                 return extractPropertyDescriptor(reflectedValueAsString, enclosingEntityType).orElse(null);
             } else {
                 final fetch<AbstractEntity<?>> fetch = fetchForProperty(companionFinder, type, propertyName).fetchModel();
-                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.<IEntityDao<AbstractEntity<?>>, AbstractEntity<?>> find(entityPropertyType, true);
+                final IEntityDao<AbstractEntity<?>> propertyCompanion = companionFinder.<IEntityDao<AbstractEntity<?>>, AbstractEntity<?>> find(entityPropertyType, !isUnionEntityType(entityPropertyType));
                 if (reflectedValueId.isPresent()) {
                     logger.debug(format("ID-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId.get(), reflectedValue));
                     // regardless of whether entityPropertyType is composite or not, the entity should be retrieved by non-empty reflectedValueId that has been arrived from the client application
@@ -770,7 +770,7 @@ public class EntityResourceUtils {
         }
     }
 
-    private static AbstractEntity createMockMoreThanOneEntity(final Class<? extends AbstractEntity> type, final String stringQuery) {
+    public static AbstractEntity createMockMoreThanOneEntity(final Class<? extends AbstractEntity> type, final String stringQuery) {
         return setErrorMessage(createMockNotFoundEntity(type, stringQuery), MORE_THEN_ONE_FOUND_ERR);
     }
 

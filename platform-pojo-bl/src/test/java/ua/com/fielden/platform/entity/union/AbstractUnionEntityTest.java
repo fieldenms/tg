@@ -1,11 +1,16 @@
 package ua.com.fielden.platform.entity.union;
 
+import static java.lang.String.format;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.meta.MetaProperty.ERR_REQUIRED;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 
 import java.lang.reflect.Field;
 import java.util.List;
@@ -59,6 +64,22 @@ public class AbstractUnionEntityTest {
             fail("Creation should have been prevented");
         } catch (final Exception e) {
         }
+    }
+
+    @Test
+    public void union_entity_without_active_property_is_not_valid() {
+        final var unionEntity = factory.newEntity(UnionEntity.class);
+        final var isValidResult = unionEntity.isValid();
+        assertFalse(isValidResult.isSuccessful());
+        final var expectedError = format(ERR_REQUIRED, getTitleAndDesc(KEY, UnionEntity.class).getKey(), getEntityTitleAndDesc(UnionEntity.class).getKey());
+        assertEquals(expectedError, isValidResult.getMessage());
+    }
+
+    @Test
+    public void union_entity_with_active_property_is_valid() {
+        final var unionEntity = factory.newEntity(UnionEntity.class)
+            .setPropertyOne(factory.newEntity(EntityOne.class, 1L, "KEY VALUE"));
+        assertTrue(unionEntity.isValid().isSuccessful());
     }
 
     @Test

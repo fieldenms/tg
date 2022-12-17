@@ -21,6 +21,7 @@ import java.util.Set;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -44,6 +45,8 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
     public static final String ERR_WAS_NOT_FOUND = "%s was not found.";
     public static final String EXISTS_BUT_NOT_ACTIVE_ERR = "%s [%s] exists, but is not active.";
     public static final String ERR_DIRTY = "Dirty entity %s (%s) is not acceptable.";
+    public static final String ERR_UNION_UNINSTRUMENTED = "Uninstrumented union entity (%s) is not acceptable.";
+    public static final String ERR_UNION_INVALID = "%s is invalid. Reason: %s";
 
     private final Class<T> type;
     private final ICompanionObjectFinder coFinder;
@@ -56,6 +59,17 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
     public EntityExistsValidator(final Class<T> type, final ICompanionObjectFinder coFinder) {
         this.type = type;
         this.coFinder = coFinder;
+    }
+
+    /** Indicates whether new entities should be skipped in this validator. It retrieves corresponding field and annotation to determine this information. */
+    private static boolean skipNewEntities(final Class<? extends AbstractEntity<?>> entityType, final String propertyName) {
+        final var seevAnnotation = getAnnotation(findFieldByName(entityType, propertyName), SkipEntityExistsValidation.class);
+        return seevAnnotation != null && seevAnnotation.skipNew();
+    }
+
+    /** Retrieves entity title from non-empty {@code newValue}'s type. It retrieves corresponding type annotation to determine this information. */
+    private String entityTitle(final T newValue) {
+        return getEntityTitleAndDesc(newValue.getType()).getKey();
     }
 
     @Override
@@ -75,14 +89,31 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
         try {
             if (newValue == null) {
                 return successful(entity);
+            } else if (newValue instanceof AbstractUnionEntity) {
+                // If union-typed property is marked with @SkipEntityExistsValidation, this validator will be completely by-passed.
+                // If union-typed property is marked with @SkipEntityExistsValidation(skipNew = true), union instance with non-persisted active entity will be skipped.
+                //   However, union entity must be valid and it is only possible if @SkipEntityExistsValidation[(skipNew = true)] is also present on concrete property of union entity type.
+                // If union-typed property is marked with @SkipEntityExistsValidation(skipActiveOnly = true), full validation will be performed i.e. skipActiveOnly concept is not applicable in this context.
+                if (isMockNotFoundValue(newValue)) {
+                    return failure(entity, format(getErrorMessage(newValue).orElse(WAS_NOT_FOUND_CONCRETE_ERR), entityTitle(newValue), newValue.getDesc())); // using newValue.getDesc() depends on the fact the it contains the value typed by the user
+                } else if (!newValue.isInstrumented()) {
+                    return failure(entity, format(ERR_UNION_UNINSTRUMENTED, entityTitle(newValue)));
+                } else {
+                    final var isValid = newValue.isValid();
+                    if (!isValid.isSuccessful()) {
+                        return failure(entity, new Exception(format(ERR_UNION_INVALID, entityTitle(newValue), isValid.getEx().getMessage()), isValid.getEx()));
+                    } else if (!newValue.isPersisted() && !skipNewEntities(entity.getType(), property.getName()) || newValue.isPersisted() && !co.entityExists(newValue)) {
+                        return failure(format(WAS_NOT_FOUND_CONCRETE_ERR, entityTitle(newValue), newValue.toString())); // key is present if isValid is successful; that's why newValue.toString() is safe
+                    } else {
+                        return successful(entity);
+                    }
+                }
             } else if (newValue.isInstrumented() && newValue.isDirty()) { // if entity uninstrumented its dirty state is irrelevant and cannot be checked
-                final SkipEntityExistsValidation seevAnnotation =  getAnnotation(findFieldByName(entity.getType(), property.getName()), SkipEntityExistsValidation.class);
-                if (seevAnnotation != null && seevAnnotation.skipNew() && !newValue.isPersisted()) {
+                if (!newValue.isPersisted() && skipNewEntities(entity.getType(), property.getName())) { // isPersisted check is anticipated to be much lighter than skipNewEntities (getting field and annotation)
                     return successful(entity);
                 }
-                final String entityTitle = getEntityTitleAndDesc(newValue.getType()).getKey();
                 // let's differentiate between dirty and new instances
-                return failure(entity, !newValue.isPersisted() ? format(ERR_WAS_NOT_FOUND, entityTitle) : format(ERR_DIRTY, newValue, entityTitle));
+                return failure(entity, !newValue.isPersisted() ? format(ERR_WAS_NOT_FOUND, entityTitle(newValue)) : format(ERR_DIRTY, newValue, entityTitle(newValue)));
             }
 
             // the notion of existence is different for activatable and non-activatable entities,
@@ -114,16 +145,14 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             }
 
             if (!exists || !activeEnough) {
-                final String entityTitle = getEntityTitleAndDesc(newValue.getType()).getKey();
                 if (!exists) {
                     if (isMockNotFoundValue) {
-                        final String errorMsg = getErrorMessage(newValue);
                         // using newValue.getDesc() depends on the fact the it contains the value typed by the user
-                        return failure(entity, format(errorMsg != null ? errorMsg :  WAS_NOT_FOUND_CONCRETE_ERR, entityTitle, newValue.getDesc()));
+                        return failure(entity, format(WAS_NOT_FOUND_CONCRETE_ERR, entityTitle(newValue), newValue.getDesc()));
                     }
-                    return failure(entity, isPropertyDescriptor || isMockNotFoundValue || KEY_NOT_ASSIGNED.equals(newValue.toString()) ? format(ERR_WAS_NOT_FOUND, entityTitle) : format(WAS_NOT_FOUND_CONCRETE_ERR, entityTitle, newValue.toString()));
+                    return failure(entity, isPropertyDescriptor || KEY_NOT_ASSIGNED.equals(newValue.toString()) ? format(ERR_WAS_NOT_FOUND, entityTitle(newValue)) : format(WAS_NOT_FOUND_CONCRETE_ERR, entityTitle(newValue), newValue.toString()));
                 } else {
-                    return failure(entity, format(EXISTS_BUT_NOT_ACTIVE_ERR, entityTitle, newValue.toString()));
+                    return failure(entity, format(EXISTS_BUT_NOT_ACTIVE_ERR, entityTitle(newValue), newValue.toString()));
                 }
             } else {
                 return successful(entity);

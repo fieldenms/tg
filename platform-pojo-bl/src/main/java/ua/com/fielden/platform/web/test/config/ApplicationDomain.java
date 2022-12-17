@@ -19,6 +19,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.EntityOne;
 import ua.com.fielden.platform.sample.domain.EntityThree;
 import ua.com.fielden.platform.sample.domain.EntityTwo;
+import ua.com.fielden.platform.sample.domain.EntityWithUnionEntityWithSkipExistsValidation;
 import ua.com.fielden.platform.sample.domain.ExportAction;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TeVehicleFinDetails;
@@ -94,6 +95,7 @@ import ua.com.fielden.platform.sample.domain.TgWebApiEntitySyntheticMulti;
 import ua.com.fielden.platform.sample.domain.TgWebApiEntitySyntheticSingle;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
+import ua.com.fielden.platform.sample.domain.UnionEntityWithSkipExistsValidation;
 import ua.com.fielden.platform.sample.domain.UnionEntityWithoutSecondDescTitle;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityChild;
@@ -181,6 +183,8 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(EntityThree.class);
 
         add(TgBogieLocation.class);
+        add(UnionEntityWithSkipExistsValidation.class);
+        add(EntityWithUnionEntityWithSkipExistsValidation.class);
         add(TgWorkshop.class);
         add(TgWagonSlot.class);
         add(TgWagon.class);

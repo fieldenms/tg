@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.proxy;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isMockNotFoundType;
@@ -107,7 +108,7 @@ public class MockNotFoundEntityMaker {
      * @param mock
      * @return
      */
-    public static <T extends AbstractEntity<?>> String getErrorMessage(final T mock) {
+    public static <T extends AbstractEntity<?>> Optional<String> getErrorMessage(final T mock) {
         if (isMockNotFoundValue(mock)) {
             try {
                 final Field msgField = findFieldByName(mock.getClass(), errorMsgPropName);
@@ -115,11 +116,11 @@ public class MockNotFoundEntityMaker {
                 msgField.setAccessible(true);
                 final Optional<?> msgVal = ofNullable(msgField.get(mock));
                 msgField.setAccessible(isAccessible);
-                return msgVal.map(Object::toString).orElse(null);
+                return msgVal.map(Object::toString);
             } catch (final IllegalAccessException e) {
                 throw new MockException(format(COULD_NOT_ACCESS_ERROR_MSG_ERR, errorMsgPropName, mock.getClass()));
             }
         }
-        return null;
+        return empty();
     }
 }
