@@ -295,16 +295,27 @@ export const TgTreeListBehavior = {
         });
     },
 
-    expandSubTree: function(parentItem, refreshLoaded) {
-        parentItem.opened = true;
-        if (parentItem.entity.hasChildren && refreshLoaded && parentItem.entity.subtreeRefreshable) {
-            parentItem.children = [generateLoadingIndicator(parentItem)];
-        }
-        parentItem.children.forEach(treeEntity => {
-            if (treeEntity.entity.hasChildren && (refreshLoaded || wasLoaded(treeEntity))) {
-                this.expandSubTree(treeEntity, refreshLoaded);
-            }
+    expandAll: function () {
+        const entities = this._entities.filter(entity => entity.parent === null && entity.entity.hasChildren);
+        entities.forEach(entity => {
+            this.expandSubTree(entity);
         });
+        this.splice("_entities", 0, this._entities.length, ...composeChildren.bind(this)(this._treeModel, true, false));
+        this.async(refreshTree.bind(this), 1);
+    },
+
+    expandSubTree: function(parentItem, refreshLoaded) {
+        if (parentItem.entity.hasChildren) {
+            parentItem.opened = true;
+            if (refreshLoaded && parentItem.entity.subtreeRefreshable) {
+                parentItem.children = [generateLoadingIndicator(parentItem)];
+            }
+            parentItem.children.forEach(treeEntity => {
+                if (treeEntity.entity.hasChildren && (refreshLoaded || wasLoaded(treeEntity))) {
+                    this.expandSubTree(treeEntity, refreshLoaded);
+                }
+            });
+        }
     },
 
     expandSubTreeView: function (parentItem, refreshLoaded) {
