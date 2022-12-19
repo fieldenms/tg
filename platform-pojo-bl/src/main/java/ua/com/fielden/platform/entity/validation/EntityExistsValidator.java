@@ -93,7 +93,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                 // If union-typed property is marked with @SkipEntityExistsValidation, this validator will be completely by-passed.
                 // If union-typed property is marked with @SkipEntityExistsValidation(skipNew = true), union instance with non-persisted active entity will be skipped.
                 //   However, union entity must be valid and it is only possible if @SkipEntityExistsValidation[(skipNew = true)] is also present on concrete property of union entity type.
-                // If union-typed property is marked with @SkipEntityExistsValidation(skipActiveOnly = true), full validation will be performed i.e. skipActiveOnly concept is not applicable in this context.
+                // If union-typed property is marked with @SkipEntityExistsValidation(skipActiveOnly = true), full validation will be performed at this stage (see https://github.com/fieldenms/tg/issues/1450).
                 if (isMockNotFoundValue(newValue)) {
                     return failure(entity, format(getErrorMessage(newValue).orElse(WAS_NOT_FOUND_CONCRETE_ERR), entityTitle(newValue), newValue.getDesc())); // using newValue.getDesc() depends on the fact the it contains the value typed by the user
                 } else if (!newValue.isInstrumented()) {

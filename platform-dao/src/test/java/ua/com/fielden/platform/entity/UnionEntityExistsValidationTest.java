@@ -44,8 +44,10 @@ public class UnionEntityExistsValidationTest extends AbstractDaoTestCase {
 
     @Test
     public void valid_union_entity_can_be_assigned() {
+        co$(TgWorkshop.class).save((TgWorkshop) co$(TgWorkshop.class).new_().setKey("W1"));
+
         final var bogie = co$(TgBogie.class).new_();
-        final var workshop = co$(TgWorkshop.class).save((TgWorkshop) co$(TgWorkshop.class).new_().setKey("W1"));
+        final var workshop = co(TgWorkshop.class).findByKey("W1");
         bogie.setLocation(co$(TgBogieLocation.class).new_().setWorkshop(workshop));
 
         assertNotNull(bogie.getLocation());
@@ -96,8 +98,10 @@ public class UnionEntityExistsValidationTest extends AbstractDaoTestCase {
 
     @Test
     public void union_entity_with_existing_active_property__that_has_been_deleted__can_not_be_assigned() {
+        co$(TgWorkshop.class).save((TgWorkshop) co$(TgWorkshop.class).new_().setKey("W1"));
+
         final var bogie = co$(TgBogie.class).new_();
-        final var workshop = co$(TgWorkshop.class).save((TgWorkshop) co$(TgWorkshop.class).new_().setKey("W1"));
+        final var workshop = co(TgWorkshop.class).findByKey("W1");
         final var bogieLocation = co$(TgBogieLocation.class).new_().setWorkshop(workshop);
 
         co$(TgWorkshop.class).delete(workshop);
