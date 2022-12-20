@@ -152,13 +152,15 @@ const generateLoadingIndicator = function (parent) {
     return loaderIndicator;
 };
 
-const refreshTree = function () {
-    const props = ["opened", "highlight"];
-    this._entities.forEach((entity, idx) => {
+const refreshTree = function (from, to) {
+    const props = ["opened", "highlight", "selected"];
+    const actFrom = from || 0;
+    const actTo = to || this._entities.length;
+    for (let idx = actFrom; idx < actTo; idx++) {
         if (this.isEntityRendered(idx)) {
             props.forEach(prop => this.notifyPath("_entities." + idx + "." + prop)); 
         }
-    });
+    }
 };
 
 export const TgTreeListBehavior = {
@@ -407,15 +409,7 @@ export const TgTreeListBehavior = {
                 this.set("_entities." + idx + ".opened", true);
                 this.splice("_entities", idx + 1 + entity.additionalInfoNodes.length, 0, ...getChildrenToAdd.bind(this)(entity, true, false));
             }
-            this.updateTree(idx, this._entities.length);
-        }
-    },
-
-    updateTree: function (from, to) {
-        for (let i = from; i < to; i++) {
-            if (this.isEntityRendered(i)) {
-                this.notifyPath("_entities." + i + "." + "selected"); 
-            }
+            refreshTree.bind(this)(idx);
         }
     },
 
