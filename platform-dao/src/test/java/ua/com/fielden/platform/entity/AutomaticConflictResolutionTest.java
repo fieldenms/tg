@@ -11,6 +11,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.sample.domain.TgBogie;
+import ua.com.fielden.platform.sample.domain.TgBogieClass;
 import ua.com.fielden.platform.sample.domain.TgCategory;
 import ua.com.fielden.platform.sample.domain.TgSystem;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
@@ -30,7 +31,7 @@ public class AutomaticConflictResolutionTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void identical_concurrent_changes_should_have_been_resolved() {
+    public void identical_concurrent_changes_get_resolved() {
         final TgCategory cat1_v1 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
         final TgCategory cat1_v2 = co$(TgCategory.class).findByKeyAndFetch(fetchAll(TgCategory.class), "Cat1");
 
@@ -66,6 +67,16 @@ public class AutomaticConflictResolutionTest extends AbstractDaoTestCase {
     }
 
     @Test
+    public void concurrent_modification_of_refCount_due_to_new_activatable_dependencies_does_not_lead_to_conflict_resolution_errors_for_entities_with_not_auto_conflict_resolution() {
+        final TgBogieClass bc = co(TgBogieClass.class).findByKey("BC1");
+        assertEquals(Integer.valueOf(0), bc.getRefCount());
+
+        save(new_(TgBogie.class, "Bogie2").setBogieClass(bc));
+        save(new_(TgBogie.class, "Bogie3").setBogieClass(bc));
+        assertEquals(Integer.valueOf(2), co(TgBogieClass.class).findByKey("BC1").getRefCount());
+    }
+
+    @Test
     public void identical_concurrent_changes_of_entity_without_auto_conflict_resolutions_results_in_a_conflict_error() {
         final TgBogie bogie1_v1 = co$(TgBogie.class).findByKeyAndFetch(fetchAll(TgBogie.class), "Bogie1");
         final TgBogie bogie2_v1 = co$(TgBogie.class).findByKeyAndFetch(fetchAll(TgBogie.class), "Bogie1");
@@ -83,7 +94,6 @@ public class AutomaticConflictResolutionTest extends AbstractDaoTestCase {
         } catch (final EntityCompanionException ex) {
             assertEquals(format("%s Tg Bogie [Bogie1] could not be saved.", ERR_COULD_NOT_RESOLVE_CONFLICTING_CHANGES), ex.getMessage());
         }
-
     }
 
     @Override
@@ -108,8 +118,9 @@ public class AutomaticConflictResolutionTest extends AbstractDaoTestCase {
         final TgCategory cat1WithSelfReference = save(cat1.setParent(cat1));
 
         save(new_(TgSystem.class, "Sys1").setActive(true).setCategory(cat1WithSelfReference));
-        
-        // entities with @MapEntityTo(autoConflictResolution = false)
+
+       //entities with @MapEntityTo(autoConflictResolution = false)
+        save(new_(TgBogieClass.class, "BC1"));
         save(new_(TgBogie.class, "Bogie1"));
     }
 
