@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.sample.domain;
 
-import org.junit.Ignore;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
@@ -14,10 +12,9 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 
 @KeyType(String.class)
-@MapEntityTo
+@MapEntityTo(autoConflictResolution = false)
 @DescTitle("Description")
 @KeyTitle("Bogie")
-@Ignore
 @CompanionObject(ITgBogie.class)
 public class TgBogie extends AbstractEntity<String> {
 
