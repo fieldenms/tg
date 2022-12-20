@@ -199,6 +199,11 @@ export const TgTreeListBehavior = {
             notify: true,
             observer: "_curentMatchedItemChanged"
         },
+
+        leftOffset: {
+            type: Number,
+            value: 0
+        },
         
         /**
          * The tree model that holds some visual specific properties and is created from model.
@@ -436,7 +441,7 @@ export const TgTreeListBehavior = {
     },
 
     itemStyle: function (entity) {
-        let paddingLeft = 0;
+        let paddingLeft = this.leftOffset || 0;
         let parent = entity.entity ? entity.parent : entity.relatedTo.parent;
         while (parent) {
             paddingLeft += 32;
