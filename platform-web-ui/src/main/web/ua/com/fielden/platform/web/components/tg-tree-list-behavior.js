@@ -352,7 +352,8 @@ export const TgTreeListBehavior = {
         entities.forEach(entity => {
             this.collapseSubTree(entity);
         });
-        this._entities = this._treeModel.slice();
+        this._entities = composeChildren.bind(this)(this._treeModel, true, false);
+        this.async(refreshTree.bind(this), 1);
     },
 
     collapseSubTreeView: function(parentItem) {
