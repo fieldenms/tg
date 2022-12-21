@@ -1,12 +1,10 @@
 package ua.com.fielden.platform.sample.domain;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.query.IFilter;
-import ua.com.fielden.platform.sample.domain.ITgBogie;
-import ua.com.fielden.platform.sample.domain.TgBogie;
-
-import com.google.inject.Inject;
 
 @EntityType(TgBogie.class)
 public class TgBogieDao extends CommonEntityDao<TgBogie> implements ITgBogie {
@@ -15,4 +13,10 @@ public class TgBogieDao extends CommonEntityDao<TgBogie> implements ITgBogie {
     protected TgBogieDao(final IFilter filter) {
         super(filter);
     }
+
+    @Override
+    public TgBogie new_() {
+        return super.new_().setActive(true);
+    }
+
 }

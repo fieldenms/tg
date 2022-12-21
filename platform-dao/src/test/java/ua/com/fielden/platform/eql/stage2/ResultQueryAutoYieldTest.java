@@ -23,7 +23,16 @@ public class ResultQueryAutoYieldTest extends EqlStage2TestCase {
                 mkYield(prop(bogie, pi(BOGIE, "version")), "version"),
                 mkYield(prop(bogie, pi(BOGIE, "location")), "location"),
                 mkYield(prop(bogie, pi(BOGIE, "location"), pi(BOGIE, "location", "wagonSlot")), "location.wagonSlot"),
-                mkYield(prop(bogie, pi(BOGIE, "location"), pi(BOGIE, "location", "workshop")), "location.workshop")
+                mkYield(prop(bogie, pi(BOGIE, "location"), pi(BOGIE, "location", "workshop")), "location.workshop"),
+                mkYield(prop(bogie, pi(BOGIE, "bogieClass")), "bogieClass"),
+                mkYield(prop(bogie, pi(BOGIE, "active")), "active"),
+                mkYield(prop(bogie, pi(BOGIE, "createdBy")), "createdBy"),
+                mkYield(prop(bogie, pi(BOGIE, "createdDate")), "createdDate"),
+                mkYield(prop(bogie, pi(BOGIE, "createdTransactionGuid")), "createdTransactionGuid"),
+                mkYield(prop(bogie, pi(BOGIE, "lastUpdatedBy")), "lastUpdatedBy"),
+                mkYield(prop(bogie, pi(BOGIE, "lastUpdatedDate")), "lastUpdatedDate"),
+                mkYield(prop(bogie, pi(BOGIE, "lastUpdatedTransactionGuid")), "lastUpdatedTransactionGuid"),
+                mkYield(prop(bogie, pi(BOGIE, "refCount")), "refCount")
                 );
         assertEquals(yields, actQry.yields);
     }

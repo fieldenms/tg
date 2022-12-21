@@ -97,7 +97,7 @@ public class EntityContainerFetcher {
         final DateTime st = new DateTime();
         final List<?> res = query.list();
         final Period pd = new Period(st, new DateTime());
-        logger.info(format("Query exec duration: %s m %s s %s ms for type [%s].", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), modelResult.resultType.getSimpleName()));
+        logger.debug(format("Query exec duration: %s m %s s %s ms for type [%s].", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), modelResult.resultType.getSimpleName()));
         
         return entityRawResultConverter.transformFromNativeResult(resultTree, res);
     }

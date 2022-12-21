@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.utils;
 
 import java.util.Iterator;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -8,6 +9,7 @@ import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
@@ -103,6 +105,38 @@ public class StreamUtils {
                     return hadNext && stillGoing;
                 }
                 return false;
+            }
+        };
+    }
+
+    /**
+     * Returns a stream of distinct elements from {@code stream}, where unique identity of an element is determined by {@code uidMapper}.
+     * <p>
+     * It is required that the return type of {@code uidMapper} has proper implementation of {@code hashCode()} and {@code equals()}.
+     * <p>
+     * The order of the original stream's elements is preserved.
+     *
+     * @param stream
+     * @param uidMapper a function that maps the original element to its unique identity.
+     * @return
+     */
+    public static <T, R> Stream<T> distinct(final Stream<T> stream, final Function<T, R> uidMapper) {
+        return StreamSupport.stream(distinct(stream.spliterator(), uidMapper), false);
+    }
+
+    private static <T, R> Spliterator<T> distinct(final Spliterator<T> splitr, final Function<T, R> uidMapper) {
+        return new Spliterators.AbstractSpliterator<T>(splitr.estimateSize(), 0) {
+            final LinkedHashSet<R> uniqs = new LinkedHashSet<>();
+
+            @Override
+            public boolean tryAdvance(final Consumer<? super T> consumer) {
+                return splitr.tryAdvance(elem -> {
+                    final R uid = uidMapper.apply(elem);
+                    if (!uniqs.contains(uid)) {
+                        consumer.accept(elem);
+                        uniqs.add(uid);
+                    }
+                });
             }
         };
     }
