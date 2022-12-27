@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.entity.validation;
 
 import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY_NOT_ASSIGNED;
+import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
 import static ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker.getErrorMessage;
 import static ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker.isMockNotFoundValue;
@@ -13,6 +15,7 @@ import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.utils.EntityUtils.copy;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 
 import java.lang.annotation.Annotation;
@@ -45,7 +48,6 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
     public static final String ERR_WAS_NOT_FOUND = "%s was not found.";
     public static final String EXISTS_BUT_NOT_ACTIVE_ERR = "%s [%s] exists, but is not active.";
     public static final String ERR_DIRTY = "Dirty entity %s (%s) is not acceptable.";
-    public static final String ERR_UNION_UNINSTRUMENTED = "Uninstrumented union entity (%s) is not acceptable.";
     public static final String ERR_UNION_INVALID = "%s is invalid. Reason: %s";
 
     private final Class<T> type;
@@ -94,16 +96,16 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                 // If union-typed property is marked with @SkipEntityExistsValidation(skipNew = true), union instance with non-persisted active entity will be skipped.
                 //   However, union entity must be valid and it is only possible if @SkipEntityExistsValidation[(skipNew = true)] is also present on concrete property of union entity type.
                 // If union-typed property is marked with @SkipEntityExistsValidation(skipActiveOnly = true), full validation will be performed at this stage (see https://github.com/fieldenms/tg/issues/1450).
-                if (isMockNotFoundValue(newValue)) {
+                if (isMockNotFoundValue(newValue)) { // for whichever implementation (instrumented or not), mock is considered invalid and its specific message is taken or otherwise standard 'not found' message is used
                     return failure(entity, format(getErrorMessage(newValue).orElse(WAS_NOT_FOUND_CONCRETE_ERR), entityTitle(newValue), newValue.getDesc())); // using newValue.getDesc() depends on the fact the it contains the value typed by the user
-                } else if (!newValue.isInstrumented()) {
-                    return failure(entity, format(ERR_UNION_UNINSTRUMENTED, entityTitle(newValue)));
                 } else {
-                    final var isValid = newValue.isValid();
+                    // need to create instrumented copy of uninstrumented 'newValue' union to check its integrity constraints (if 'newValue' is uninstrumented)
+                    final var newValueToCheck = !newValue.isInstrumented() ? copy(newValue, co.new_(), ID, VERSION) : newValue; // KEY and DESC are not considered as "real" props for union -- no need to skip them during copying of unistrumented instance
+                    final var isValid = newValueToCheck.isValid();
                     if (!isValid.isSuccessful()) {
-                        return failure(entity, new Exception(format(ERR_UNION_INVALID, entityTitle(newValue), isValid.getEx().getMessage()), isValid.getEx()));
-                    } else if (!newValue.isPersisted() && !skipNewEntities(entity.getType(), property.getName()) || newValue.isPersisted() && !co.entityExists(newValue)) {
-                        return failure(format(WAS_NOT_FOUND_CONCRETE_ERR, entityTitle(newValue), newValue.toString())); // key is present if isValid is successful; that's why newValue.toString() is safe
+                        return failure(entity, new Exception(format(ERR_UNION_INVALID, entityTitle(newValueToCheck), isValid.getEx().getMessage()), isValid.getEx()));
+                    } else if (!newValueToCheck.isPersisted() && !skipNewEntities(entity.getType(), property.getName()) || newValueToCheck.isPersisted() && !co.entityExists(newValueToCheck)) {
+                        return failure(format(WAS_NOT_FOUND_CONCRETE_ERR, entityTitle(newValueToCheck), newValueToCheck.toString())); // key is present if isValid is successful; that's why newValue.toString() is safe
                     } else {
                         return successful(entity);
                     }

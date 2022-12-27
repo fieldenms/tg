@@ -40,7 +40,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -158,8 +157,7 @@ public class EntityUtils {
      * @return
      */
     public static BigDecimal toDecimal(final Number number, final int scale) {
-        if (number instanceof BigDecimal) {
-            final BigDecimal decimal = (BigDecimal) number;
+        if (number instanceof final BigDecimal decimal) {
             return decimal.scale() == scale ? decimal : decimal.setScale(scale, RoundingMode.HALF_UP);
         }
         return new BigDecimal(number.toString(), new MathContext(scale, RoundingMode.HALF_UP));
@@ -1140,8 +1138,9 @@ public class EntityUtils {
      * @param fromEntity
      * @param toEntity
      * @param skipProperties -- a sequence of property names, which may include ID and VERSION.
+     * @return {@code toEntity} instance
      */
-    public static <T extends AbstractEntity> void copy(final AbstractEntity<?> fromEntity, final T toEntity, final String... skipProperties) {
+    public static <T extends AbstractEntity> T copy(final AbstractEntity<?> fromEntity, final T toEntity, final String... skipProperties) {
         // convert an array with property names to be skipped into a set for more efficient use
         final Set<String> skipPropertyName = new HashSet<>(Arrays.asList(skipProperties));
 
@@ -1169,6 +1168,7 @@ public class EntityUtils {
                     }
                 }
             });
+        return toEntity;
     }
 
     /**
