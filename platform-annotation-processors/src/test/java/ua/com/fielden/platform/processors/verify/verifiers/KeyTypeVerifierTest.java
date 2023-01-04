@@ -84,10 +84,12 @@ public class KeyTypeVerifierTest extends VerifierAbstractTest {
     }
     // <<<<<<<<<<<<<<<<<<<< 1. @KeyType presence <<<<<<<<<<<<<<<<<<<<
 
-    // >>>>>>>>>>>>>>>>>>>> 2. @KeyType value and AbstractEntity parameterization >>>>>>>>>>>>>>>>>>>>
+    // >>>>>>>>>>>>>>>>>>>> 2. @KeyType value and AbstractEntity type family parameterization >>>>>>>>>>>>>>>>>>>>
+    // AbstractEntity type family includes AbstractEntity and those descendants that are parameterized with a key type
+
     @Test
     public void value_of_KeyType_and_type_argument_of_AbstractEntity_must_match() throws Throwable {
-        final TypeSpec superEntity = TypeSpec.classBuilder("EntityMismatchKeyTypeAndAbstractEntityTypeArg")
+        final TypeSpec superEntity = TypeSpec.classBuilder("Example")
                 .addAnnotation(buildKeyType(Double.class))
                 .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                 .build();
@@ -112,7 +114,7 @@ public class KeyTypeVerifierTest extends VerifierAbstractTest {
         assertFalse("Compilation should have failed.", success);
 
         assertErrorReported(compilation,
-                KeyTypeVerifier.KeyTypeValueMatchesAbstractEntityTypeArgument.ABSTRACT_ENTITY_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE);
+                KeyTypeVerifier.KeyTypeValueMatchesAbstractEntityTypeArgument.SUPERTYPE_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE);
     }
     // <<<<<<<<<<<<<<<<<<<< 2. @KeyType value and AbstractEntity parameterization <<<<<<<<<<<<<<<<<<<<
 

@@ -551,6 +551,10 @@ public class ElementFinder {
     public boolean isAbstract(final Element element) {
         return element.getModifiers().contains(Modifier.ABSTRACT);
     }
+
+    public boolean isGeneric(final TypeElement element) {
+        return element != null && !element.getTypeParameters().isEmpty();
+    }
     
     /**
      * Wraps {@link Elements#getPackageOf} in order to avoid ClassCastException, since Sun's internal implementation of {@link Elements} expects a {@link com.sun.tools.javac.code.Symbol} instance.
