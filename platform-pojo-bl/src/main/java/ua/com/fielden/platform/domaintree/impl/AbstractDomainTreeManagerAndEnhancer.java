@@ -25,7 +25,6 @@ import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickMa
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.ITickRepresentationWithMutability;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeManager.TickManager;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTreeRepresentation.AbstractTickRepresentation;
-import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
@@ -261,11 +260,6 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
         }
 
         @Override
-        public List<ByteArray> getManagedTypeArrays(final Class<?> type) {
-            return baseEnhancer().getManagedTypeArrays(type);
-        }
-
-        @Override
         public ICalculatedProperty addCalculatedProperty(final ICalculatedProperty calculatedProperty) {
             return baseEnhancer().addCalculatedProperty(calculatedProperty);
         }
@@ -320,8 +314,8 @@ public abstract class AbstractDomainTreeManagerAndEnhancer implements IDomainTre
         }
 
         @Override
-        public Map<Class<?>, Pair<Class<?>, Map<String, ByteArray>>> originalAndEnhancedRootTypesAndArrays() {
-            return baseEnhancer().originalAndEnhancedRootTypesAndArrays();
+        public Map<Class<?>, Class<?>> originalAndEnhancedRootTypes() {
+            return baseEnhancer().originalAndEnhancedRootTypes();
         }
 
         @Override

@@ -2,10 +2,12 @@ package ua.com.fielden.platform.entity.query.metadata;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.SortedMap;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 
 public class ModelledEntityMetadata<ET extends AbstractEntity<?>> extends AbstractEntityMetadata<ET> {
     private final List<EntityResultQueryModel<ET>> models = new ArrayList<EntityResultQueryModel<ET>>();
@@ -13,11 +15,10 @@ public class ModelledEntityMetadata<ET extends AbstractEntity<?>> extends Abstra
     public ModelledEntityMetadata(final List<EntityResultQueryModel<ET>> models, final Class<ET> type, final SortedMap<String, PropertyMetadata> props) {
         super(type, props);
 
-        if (models != null) {
-            if (models.size() == 0) {
-                throw new IllegalArgumentException("Zero models for entity type: " + type);
-            }
+        if (models != null && !models.isEmpty()) {
             this.models.addAll(models);
+        } else {
+            throw new EqlMetadataGenerationException("No model definitions were found for synthetic entity [%s].".formatted(type));
         }
     }
 
@@ -27,26 +28,19 @@ public class ModelledEntityMetadata<ET extends AbstractEntity<?>> extends Abstra
 
     @Override
     public int hashCode() {
-        final int prime = 31;
-        int result = super.hashCode();
-        result = prime * result + ((models == null) ? 0 : models.hashCode());
-        return result;
+        return 31 * models.hashCode();
     }
 
     @Override
     public boolean equals(Object obj) {
-        if (this == obj)
+        if (this == obj) {
             return true;
-        if (!super.equals(obj))
+        }
+        if (!(obj instanceof ModelledEntityMetadata)) {
             return false;
-        if (!(obj instanceof ModelledEntityMetadata))
-            return false;
-        ModelledEntityMetadata<?> other = (ModelledEntityMetadata<?>) obj;
-        if (models == null) {
-            if (other.models != null)
-                return false;
-        } else if (!models.equals(other.models))
-            return false;
-        return true;
+        }
+        final ModelledEntityMetadata<?> that = (ModelledEntityMetadata<?>) obj;
+        return Objects.equals(this.models, that.models);
     }
+
 }

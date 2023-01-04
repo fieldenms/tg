@@ -11,7 +11,6 @@ import java.lang.annotation.Target;
  * @author TG Team
  * 
  */
-
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ ElementType.FIELD })
 public @interface Generated {

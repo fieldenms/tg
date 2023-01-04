@@ -41,8 +41,8 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
             props.setProperty("tokens.path", "../platform-pojo-bl/target/classes");
             props.setProperty("tokens.package", "ua.com.fielden.platform.security.tokens");
             props.setProperty("workflow", "development");
-            props.setProperty("email.smtp", "non-existing-server");
-            props.setProperty("email.fromAddress", "tg@fielden.com.au");
+            props.setProperty("email.smtp", "localhost");
+            props.setProperty("email.fromAddress", "tg@localhost");
 
             final ApplicationDomain applicationDomainProvider = new ApplicationDomain();
             module = new TgTestApplicationServerModule(HibernateSetup.getHibernateTypes(), applicationDomainProvider, applicationDomainProvider.domainTypes(), SerialisationClassProvider.class, ExampleDataFilter.class, DefaultUniversalConstants.class, DefaultDates.class, props);

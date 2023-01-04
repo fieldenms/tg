@@ -24,7 +24,6 @@ import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.PROPERTY_SPLITTER;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.StreamUtils.takeWhile;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.dslName;
 
@@ -41,6 +40,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -693,20 +693,42 @@ public class EntityUtils {
      * @return
      */
     public static boolean isSyntheticEntityType(final Class<?> type) {
-        if (!isEntityType(type)) {
+        if (!isEntityType(type) || isUnionEntityType(type)) {
             return false;
         } else {
             try {
-                return syntheticTypes.get(type, () -> {
-                        final boolean foundModelField = listOf(type.getDeclaredFields()).stream().anyMatch(field -> isStatic(field.getModifiers()) && //
-                                ("model_".equals(field.getName()) && EntityResultQueryModel.class.equals(field.getType()) || "models_".equals(field.getName()) && List.class.equals(field.getType())));
-                        return foundModelField && !isUnionEntityType(type);});
+                return syntheticTypes.get(type, () -> findSyntheticModelFieldFor(type.asSubclass(AbstractEntity.class)) != null);
             } catch (final Exception ex) {
                 final String msg = format("Could not determine synthetic nature of entity type [%s].", type.getSimpleName());
                 logger.error(msg, ex);
                 throw new ReflectionException(msg, ex);
             }
         }
+    }
+
+    /**
+     * A helper method to determine if {@code entityType} contains either static field "mode_" or "models_" of the appropriate types, which indicates that {@code entityType} is a synthetic entity.
+     * <p>
+     * It became required to traverse the type hierarchy instead of relying on declared fields with the implementation of issue <a href="https://github.com/fieldenms/tg/issues/1692">#1692</a>, which started generating types as subclasses of the original ones.
+     *
+     * @param <T>
+     * @param entityType to be analysed.
+     * @return either a field corresponding to {@code model_} or {@code models_}, or {@code null}. 
+     */
+    public static <T extends AbstractEntity<?>> Field findSyntheticModelFieldFor(final Class<T> entityType) {
+        Class<?> klass = entityType;
+        while (klass != AbstractEntity.class) { // iterated thought hierarchy
+            for (final Field field : klass.getDeclaredFields()) {
+                if (isStatic(field.getModifiers())) {
+                    if ("model_".equals(field.getName()) && EntityResultQueryModel.class.equals(field.getType()) || 
+                        "models_".equals(field.getName()) && List.class.equals(field.getType())) {
+                        return field;
+                    }
+                }
+            }
+            klass = klass.getSuperclass(); // move to the next super class in the hierarchy in search for more declared fields
+        }
+        return null;
     }
 
     /**
@@ -717,9 +739,22 @@ public class EntityUtils {
      * @return
      */
     public static boolean isSyntheticBasedOnPersistentEntityType(final Class<? extends AbstractEntity<?>> type) {
-        return isSyntheticEntityType(type) && isPersistedEntityType(type.getSuperclass());
+        if (!isSyntheticEntityType(type)) {
+            return false;
+        }
+        // Let's traverse the type hierarchy to identify if there is a persistent super type...
+        // Such traversal is now required because generation of new types extends the original type.
+        // And so, there can be situations where a generated type has a synthetic-based-on-persistent type as its super type, and also needs to be recognised as being synthetic-based-on-persistent.
+        // Due to the fact that a generated type can be based on a generated that is based on... etc., type hierarchy traversal is required.
+        Class<?> superType = type.getSuperclass();
+        while (superType != AbstractEntity.class) {
+            if (isPersistedEntityType(superType)) {
+                return true;
+            }
+            superType = superType.getSuperclass();
+        }
+        return false;
     }
-
 
     /**
      * Determines whether the provided entity type models a union-type.
@@ -769,46 +804,6 @@ public class EntityUtils {
      */
     public static boolean isIntrospectionAllowed(final Class<? extends AbstractEntity<?>> type) {
         return !isIntrospectionDenied(type) && (isSyntheticEntityType(type) || isPersistedEntityType(type));
-    }
-
-    /**
-     * Returns list of query models, which given entity type is based on (assuming it is after all).
-     *
-     * @param entityType
-     * @return
-     */
-    public static <T extends AbstractEntity<?>> List<EntityResultQueryModel<T>> getEntityModelsOfQueryBasedEntityType(final Class<T> entityType) {
-        final List<EntityResultQueryModel<T>> result = new ArrayList<>();
-        try {
-            final Field exprField = entityType.getDeclaredField("model_");
-            exprField.setAccessible(true);
-            final Object value = exprField.get(null);
-            if (value instanceof EntityResultQueryModel) {
-                result.add((EntityResultQueryModel<T>) value);
-                return result;
-            } else {
-                throw new ReflectionException(format("The expected type of field 'model_' in [%s] is [EntityResultQueryModel], but actual [%s].",
-                                                     entityType.getSimpleName(), exprField.getType().getSimpleName()));
-            }
-        } catch (final NoSuchFieldException | IllegalAccessException ex) {
-            logger.debug(ex);
-        }
-
-        try {
-            final Field exprField = entityType.getDeclaredField("models_");
-            exprField.setAccessible(true);
-            final Object value = exprField.get(null);
-            if (value instanceof List<?>) { // this is a bit weak type checking due to the absence of generics reification
-                result.addAll((List<EntityResultQueryModel<T>>) exprField.get(null));
-                return result;
-            } else {
-                throw new ReflectionException(format("The expected type of field 'models_' in [%s] is [List<EntityResultQueryModel>], actual [%s].", entityType.getSimpleName(), exprField.getType().getSimpleName()));
-            }
-        } catch (final NoSuchFieldException | IllegalAccessException ex) {
-            logger.debug(ex);
-        }
-
-        return result;
     }
 
     /**

@@ -12,7 +12,7 @@
 
 	<properties>
 		<restlet.version>2.4.3</restlet.version>
-		<jetty.version>9.4.48.v20220622</jetty.version>
+		<jetty.version>9.4.49.v20220914</jetty.version>
 	</properties>
 
 	<dependencies>
@@ -130,13 +130,20 @@
 		</dependency>
 		<!-- end of RESTlet and Jetty libraries -->
 
-		<!-- unit test dependencies -->		
-		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
-			<version>1.4.199</version>
-			<scope>test</scope>
-		</dependency>
+        <!-- https://mvnrepository.com/artifact/org.postgresql/postgresql -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.5.0</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.microsoft.sqlserver/mssql-jdbc -->
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>10.2.1.jre17</version>
+            <scope>test</scope>
+        </dependency>
 
 	</dependencies>
 	<build>
@@ -154,21 +161,5 @@
 				</excludes>
 			</resource>
 		</resources>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<configuration>
-					<forkCount>2</forkCount>
-					<reuseForks>true</reuseForks>
-					<argLine>-server -Xms256m -Xmx1024m -Djava.system.class.loader=ua.com.fielden.platform.classloader.TgSystemClassLoader</argLine>
-					<systemPropertyVariables>
-						<databaseUri>./src/test/resources/db/TEST_DB_WEB_${surefire.forkNumber}</databaseUri>
-						<legacyTests.databaseUri>./src/test/resources/db/TEST_DB_WEB_LEGACY_${surefire.forkNumber}</legacyTests.databaseUri>
-					</systemPropertyVariables>
-				</configuration>
-			</plugin>
-		</plugins>
-		
 	</build>
 </project>

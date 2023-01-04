@@ -117,8 +117,6 @@
                     <artifactId>maven-surefire-plugin</artifactId>
                     <version>2.22.2</version>
                     <configuration>
-                        <!-- forkMode>pertest</forkMode -->
-                        <argLine>-Djava.system.class.loader=ua.com.fielden.platform.classloader.TgSystemClassLoader</argLine>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -190,6 +188,49 @@
                     </execution>
                 </executions>
             </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-enforcer-plugin</artifactId>
+                <version>3.1.0</version>
+                <executions>
+                    <execution>
+                        <id>enforce-property</id>
+                        <phase>test</phase>
+                        <goals>
+                            <goal>enforce</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <requireProperty>
+                                    <property>databaseUri.prefix</property>
+                                    <message>The value for property "databaseUri.prefix" is required. You can set it as "-PdatabaseUri.prefix=[JDBC URI pattern]".</message>
+                                </requireProperty>
+                                <requireProperty>
+                                    <property>fork.count</property>
+                                    <message>The value for property "fork.count" is required. You can set it as "-Pfork.count=2".</message>
+                                </requireProperty>
+                            </rules>
+                            <fail>true</fail>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <configuration>
+                    <forkCount>${fork.count}</forkCount>
+                    <reuseForks>true</reuseForks>
+                    <argLine>-server -Xms256m -Xmx1024m</argLine>
+                    <systemPropertyVariables>
+                        <databaseUri>${databaseUri.prefix}${surefire.forkNumber}</databaseUri>
+                        <loadDdlScriptFromFile>false</loadDdlScriptFromFile>
+                        <saveDdlScriptToFile>false</saveDdlScriptToFile>
+                        <legacyTests.databaseUri>./src/test/resources/db/TEST_DB_LEGACY_${surefire.forkNumber}</legacyTests.databaseUri>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+
             <plugin>
                 <!-- explicitly define maven-deploy-plugin after other to force exec order -->
                 <artifactId>maven-deploy-plugin</artifactId>
