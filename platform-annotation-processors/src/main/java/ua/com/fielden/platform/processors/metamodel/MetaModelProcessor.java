@@ -93,8 +93,7 @@ import ua.com.fielden.platform.utils.Pair;
 public class MetaModelProcessor extends AbstractProcessor {
 
     private static final String INDENT = "    ";
-
-    private final String classSimpleName = this.getClass().getSimpleName();
+    private static final String CLASS_SIMPLE_NAME = MetaModelProcessor.class.getSimpleName();
 
     private Filer filer;
     private Elements elementUtils;
@@ -126,7 +125,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         this.entityFinder = new EntityFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
         this.metaModelFinder = new MetaModelFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
 
-        messager.printMessage(Kind.NOTE, format("%s initialized.", classSimpleName));
+        messager.printMessage(Kind.NOTE, format("%s initialized.", CLASS_SIMPLE_NAME));
         if (!this.options.isEmpty()) {
             messager.printMessage(Kind.NOTE, format("Options: [%s]",
                     options.keySet().stream().map(k -> format("%s=%s", k, options.get(k))).sorted().collect(joining(", "))));
@@ -138,7 +137,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         this.roundNumber = this.roundNumber + 1;
         final Stopwatch stopwatchProcess = Stopwatch.createStarted();
         
-        messager.printMessage(Kind.NOTE, format(">>> %s: PROCESSING ROUND %d START >>>", classSimpleName, roundNumber));
+        messager.printMessage(Kind.NOTE, format(">>> %s: PROCESSING ROUND %d START >>>", CLASS_SIMPLE_NAME, roundNumber));
         messager.printMessage(Kind.NOTE, format("annotations: [%s]", annotations.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
         final Set<? extends Element> rootElements = roundEnv.getRootElements();
         messager.printMessage(Kind.NOTE, format("rootElements: [%s]", rootElements.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
@@ -180,7 +179,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         }
 
         stopwatchProcess.stop();
-        messager.printMessage(Kind.NOTE, format("<<< %s: PROCESSING ROUND %d END [%s millis] <<<", classSimpleName, roundNumber, stopwatchProcess.elapsed(TimeUnit.MILLISECONDS)));
+        messager.printMessage(Kind.NOTE, format("<<< %s: PROCESSING ROUND %d END [%s millis] <<<", CLASS_SIMPLE_NAME, roundNumber, stopwatchProcess.elapsed(TimeUnit.MILLISECONDS)));
         // must return false to avoid claiming all annotations (as defined by @SupportedAnnotationTypes("*")) to allow other processors to run
         return false;
     }
