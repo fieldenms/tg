@@ -105,7 +105,7 @@ public class ElementFinder {
         }
         final TypeElement superclassTypeElement = toTypeElement(superclass);
         // ignore interfaces
-        return superclassTypeElement.getKind() == ElementKind.INTERFACE ? null : superclassTypeElement;
+        return superclassTypeElement == null || superclassTypeElement.getKind() == ElementKind.INTERFACE ? null : superclassTypeElement;
     }
 
     /**
@@ -578,9 +578,10 @@ public class ElementFinder {
     }
 
     /**
-     * Converts {@link TypeMirror} to {@link TypeElement}.
+     * Converts {@link TypeMirror} to {@link TypeElement}, but only if argument {@code typeMirror} represents a declared type kind.
+     *
      * @param typeMirror
-     * @return a {@link TypeElement} if conversion was successful, otherwise null
+     * @return a {@link TypeElement} if conversion was successful, otherwise {@code null}.
      */
     public TypeElement toTypeElement(final TypeMirror typeMirror) {
         return typeMirror.getKind() == TypeKind.DECLARED ? (TypeElement) ((DeclaredType) typeMirror).asElement() : null;
