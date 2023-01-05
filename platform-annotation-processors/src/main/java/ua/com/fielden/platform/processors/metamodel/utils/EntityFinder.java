@@ -229,8 +229,7 @@ public class EntityFinder extends ElementFinder {
      */
     public boolean isEntityType(final TypeElement element) {
         return Stream.iterate(element, el -> el != null && !equals(el, Object.class) , el -> findSuperclass(el))
-               .filter(el -> el != null && equals(el, ROOT_ENTITY_CLASS))
-               .findFirst().isPresent();
+               .anyMatch(el -> el != null && equals(el, ROOT_ENTITY_CLASS));
     }
 
     /**
