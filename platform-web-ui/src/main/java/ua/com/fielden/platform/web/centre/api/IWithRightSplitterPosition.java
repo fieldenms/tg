@@ -21,5 +21,5 @@ public interface IWithRightSplitterPosition<T extends AbstractEntity<?>> extends
      * @param percentage
      * @return
      */
-    IEcbCompletion<T> withRightSplitterPosition(int percentage);
+    IAlternativeView<T> withRightSplitterPosition(int percentage);
 }

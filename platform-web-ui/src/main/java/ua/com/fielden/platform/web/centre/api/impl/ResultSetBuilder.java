@@ -42,11 +42,12 @@ import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.OrderDirection;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.SummaryPropDef;
-import ua.com.fielden.platform.web.centre.api.IEcbCompletion;
 import ua.com.fielden.platform.web.centre.api.IWithRightSplitterPosition;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector;
+import ua.com.fielden.platform.web.centre.api.alternative_view.IAlternativeView;
+import ua.com.fielden.platform.web.centre.api.alternative_view.IAlternativeViewPreferred;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
 import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointConfig0;
@@ -528,14 +529,24 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
 
         @Override
-        public IEcbCompletion<T> withRightSplitterPosition(final int percentage) {
+        public IAlternativeView<T> withRightSplitterPosition(final int percentage) {
             return ResultSetBuilder.this.withRightSplitterPosition(percentage);
+        }
+
+        @Override
+        public IAlternativeViewPreferred<T> addAlternativeView(final EntityActionConfig actionConfig) {
+            return ResultSetBuilder.this.addAlternativeView(actionConfig);
         }
     }
 
     @Override
     public IInsertionPointConfig0<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
         return new InsertionPointConfigBuilder<>(this, actionConfig, whereToInsertView);
+    }
+
+    @Override
+    public IAlternativeViewPreferred<T> addAlternativeView(final EntityActionConfig actionConfig) {
+        return new AlternativeViewConfigBuilder<>(this, actionConfig);
     }
 
     @Override
@@ -695,7 +706,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IEcbCompletion<T> withRightSplitterPosition(final int percentage) {
+    public IAlternativeView<T> withRightSplitterPosition(final int percentage) {
         if (percentage < 0 || percentage > 100) {
             throw new EntityCentreConfigurationException(ERR_SPLITTER_POSITION_OUT_OF_BOUNDS);
         }
