@@ -65,7 +65,11 @@ public class ColumnDefinition {
         final StringBuilder sb = new StringBuilder();
         sb.append(name);
         sb.append(" ");
-        sb.append(dialect.getTypeName(sqlType, length, precision, scale));
+        if (length == Integer.MAX_VALUE && String.class.equals(javaType) && dialect.getClass().getSimpleName().startsWith("Postgre")) {
+            sb.append("text");
+        } else {
+            sb.append(dialect.getTypeName(sqlType, length, precision, scale));
+        }
         
         if (!nullable) {
             sb.append(" NOT NULL");
