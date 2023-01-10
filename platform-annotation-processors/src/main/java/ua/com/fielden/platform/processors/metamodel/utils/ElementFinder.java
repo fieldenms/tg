@@ -72,6 +72,19 @@ public class ElementFinder {
     }
 
     /**
+     * A shortcut for {@link Elements#getTypeElement(CharSequence)}.
+     * @param clazz
+     * @return type element representing {@code clazz} or {@code null} 
+     */
+    public TypeElement getTypeElement(final Class<?> clazz) {
+        return elements.getTypeElement(clazz.getCanonicalName());
+    }
+
+    public Optional<TypeElement> getTypeElementOpt(final Class<?> clazz) {
+        return Optional.ofNullable(getTypeElement(clazz));
+    }
+
+    /**
      * A {@link TypeElement} instance is equal to a {@link Class} instance if both objects have the same qualified (canonical) name.
      * <p>
      * A local class, local interface, or anonymous class does not have a canonical name.
