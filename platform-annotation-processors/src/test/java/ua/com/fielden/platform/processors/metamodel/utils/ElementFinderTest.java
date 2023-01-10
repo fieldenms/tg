@@ -4,11 +4,18 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.utils.CollectionUtil.isEqualContents;
 
+import java.util.Collection;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import javax.lang.model.element.Element;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
@@ -17,6 +24,8 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import com.google.testing.compile.CompilationRule;
+
+import ua.com.fielden.platform.utils.CollectionUtil;
 
 /**
  * A test case for utility functions in {@link ElementFinder}.
@@ -82,9 +91,40 @@ public class ElementFinderTest {
         assertEquals(List.of(), finder.findSuperclasses(finder.getTypeElement(Sub.class), String.class));
     }
 
+    @Test
+    public void findDeclaredFields_returns_declared_fields_of_a_type_that_satisfy_predicate() {
+        // without any predicate all declared fields are returned
+        assertEqualContents(List.of("STRING", "str", "i"),
+                streamSimpleNames(finder.findDeclaredFields(finder.getTypeElement(Sub.class))).toList());
+        // with predicate
+        final Predicate<VariableElement> isFinal = (f -> f.getModifiers().contains(Modifier.FINAL));
+        assertEqualContents(List.of("STRING", "i"),
+                streamSimpleNames(finder.findDeclaredFields(finder.getTypeElement(Sub.class), isFinal)).toList());
+    }
+
     private static interface ISuper {}
     private static interface ISub extends ISuper {}
-    private static class Super implements ISuper {}
-    private static class Sub extends Super implements ISub {}
+
+    private static class Super implements ISuper {
+        int n;
+        private double d;
+    }
+
+    private static class Sub extends Super implements ISub {
+        final static String STRING = "hello";
+        String str;
+        final int i = 10;
+    }
+
+    private static <T extends Element> Stream<String> streamSimpleNames(final Collection<T> c) {
+        return c.stream().map(e -> e.getSimpleName().toString());
+    }
+
+    private static void assertEqualContents(final Collection<?> c1, final Collection<?> c2) {
+        if (isEqualContents(c1, c2)) {}
+        else {
+            fail("expected:<%s> but was:<%s>".formatted(CollectionUtil.toString(c1, ", "), CollectionUtil.toString(c2, ", ")));
+        }
+    }
 
 }
