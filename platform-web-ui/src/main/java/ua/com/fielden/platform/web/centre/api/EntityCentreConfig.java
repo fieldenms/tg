@@ -7,6 +7,7 @@ import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
+import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints.ALTERNATIVE_VIEW;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.FRONT;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.INSERTION_POINT;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.PRIMARY_RESULT_SET;
@@ -854,10 +855,22 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      */
     public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
         if (TOP_LEVEL == actionKind) {
-            if (!getTopLevelActions().isPresent()) {
+            final Optional<List<Pair<EntityActionConfig, Optional<String>>>> optionalActions = getTopLevelActions();
+            final List<EntityActionConfig> altViewActions = getInsertionPointConfigs().stream()
+                    .filter(insPointConfig -> insPointConfig.getInsertionPointAction().whereToInsertView.isPresent()
+                            && insPointConfig.getInsertionPointAction().whereToInsertView.get() == ALTERNATIVE_VIEW
+                            && !insPointConfig.getActions().isEmpty())
+                    .flatMap(insPointConfig -> insPointConfig.getActions().stream())
+                    .collect(Collectors.toList());
+            if (!optionalActions.isPresent() && altViewActions.isEmpty()) {
                 throw new IllegalArgumentException("No top-level action exists.");
             }
-            return getTopLevelActions().get().get(actionNumber).getKey();
+            if (optionalActions.isPresent() && actionNumber < optionalActions.get().size()) {
+                return optionalActions.get().get(actionNumber).getKey();
+            } else {
+                final int altActionIndex = actionNumber - optionalActions.map(actions -> actions.size()).orElse(0);
+                return altViewActions.get(altActionIndex);
+            }
         } else if (PRIMARY_RESULT_SET == actionKind) {
             if (!getResultSetPrimaryEntityAction().isPresent()) {
                 throw new IllegalArgumentException("No primary result-set action exists.");

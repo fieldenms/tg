@@ -1171,6 +1171,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final DomContainer rightInsertionPointsDom = new DomContainer();
         final DomContainer bottomInsertionPointsDom = new DomContainer();
         final List<String> alternativeViewsDom = new ArrayList<>();
+        final AtomicInteger alternativeViewActionOrder = new AtomicInteger(this.dslDefaultConfig.getTopLevelActions().map(actions -> actions.size()).orElse(0));
         for (final InsertionPointBuilder el : insertionPointActionsElements) {
             final DomElement insertionPoint = el.render();
             el.toolbar().ifPresent(toolbar -> {
@@ -1187,7 +1188,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 bottomInsertionPointsDom.add(insertionPoint);
             } else if (el.whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW) {
                 final Optional<DomElement> switchButtons = switchViewButtons(insertionPointActionsElements, Optional.of(el));
-                alternativeViewsDom.add(insertionPoint.toString().replace(SWITCH_VIEW_ACTION_DOM, switchButtons.map(domElem -> domElem.toString()).orElse("")));
+                final Optional<DomElement> topActions = alternativeViewActions(el, importPaths, functionalActionsObjects, alternativeViewActionOrder);
+                alternativeViewsDom.add(insertionPoint.toString()
+                        .replace(SWITCH_VIEW_ACTION_DOM, switchButtons.map(domElem -> domElem.toString()).orElse(""))
+                        .replace(EGI_FUNCTIONAL_ACTION_DOM, topActions.map(domElem -> domElem.toString()).orElse("")));
             } else {
                 throw new IllegalArgumentException("Unexpected insertion point type.");
             }
@@ -1298,6 +1302,20 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         };
         logger.debug("Done.");
         return representation;
+    }
+
+    private Optional<DomElement> alternativeViewActions(final InsertionPointBuilder el, final LinkedHashSet<String> importPaths, final StringBuilder functionalActionsObjects, final AtomicInteger alternativeViewActionOrder) {
+        if (!el.getActions().isEmpty()) {
+            final DomElement domContainer = new DomContainer();
+            for (final EntityActionConfig actionConfig: el.getActions()) {
+                final FunctionalActionElement funcAction = new FunctionalActionElement(actionConfig, alternativeViewActionOrder.getAndIncrement(), FunctionalActionKind.TOP_LEVEL);
+                importPaths.add(funcAction.importPath());
+                domContainer.add(funcAction.render());
+                functionalActionsObjects.append(",\n" + createActionObject(funcAction));
+            }
+            return of(domContainer);
+        }
+        return empty();
     }
 
     /**
