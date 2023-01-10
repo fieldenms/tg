@@ -93,6 +93,7 @@ public class ElementFinder {
      * @param typeElement
      * @param type
      */
+    // TODO rename to isSameType
     public boolean equals(final TypeElement typeElement, final Class<?> type) {
         if (typeElement == null || type == null) {
             throw new EntityMetaModelException("Neither typeElement nor type arguments can be null.");
@@ -101,24 +102,19 @@ public class ElementFinder {
     }
 
     /**
-     * Returns the immediate parent class of {@code typeElement} or null in the following cases:
+     * Returns the immediate parent class of {@code element} or null in the following cases:
      * <ul>
      *  <li>{@code typeElement} is the {@link Object} type
      *  <li>{@code typeElement} is an interface type
-     *  <li>The superclass of {@code typeElement} is an interface type
      * </ul>
-     * 
-     * @param typeElement
-     * @return
      */
-    public TypeElement findSuperclass(final TypeElement typeElement) {
-        final TypeMirror superclass = typeElement.getSuperclass();
+    public TypeElement findSuperclass(final TypeElement element) {
+        final TypeMirror superclass = element.getSuperclass();
         if (superclass.getKind() == TypeKind.NONE) {
             return null;
         }
         final TypeElement superclassTypeElement = toTypeElement(superclass);
-        // ignore interfaces
-        return superclassTypeElement == null || superclassTypeElement.getKind() == ElementKind.INTERFACE ? null : superclassTypeElement;
+        return superclassTypeElement == null ? null : superclassTypeElement;
     }
 
     /**
