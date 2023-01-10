@@ -17,6 +17,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -113,6 +115,21 @@ public final class CollectionUtil {
             buffer.append(value + (iter.hasNext() ? separator : ""));
         }
         return buffer.toString();
+    }
+
+    /**
+     * Tests whether two collections have the same contents irrespective of order.
+     * <p>
+     * Returns {@code true} iff both collections contain the same elements with the same cardinalities
+     * according to {@link Object#equals(Object)}.
+     */
+    public static boolean isEqualContents(final Collection<?> c1, final Collection<?> c2) {
+        if (c1.size() != c2.size()) {
+            return false;
+        }
+        final Map<?, Long> cardinalMap1 = c1.stream().collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+        final Map<?, Long> cardinalMap2 = c2.stream().collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+        return cardinalMap1.equals(cardinalMap2);
     }
 
 }
