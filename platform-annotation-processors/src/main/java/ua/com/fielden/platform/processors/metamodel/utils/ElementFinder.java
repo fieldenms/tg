@@ -134,9 +134,10 @@ public class ElementFinder {
             return List.of();
         }
         return stopAfter(
-                iterate(findSuperclass(typeElement), te -> findSuperclass(te)),
+                iterate(typeElement, te -> findSuperclass(te)),
                 te -> te == null || equals(te, rootType))
                 .filter(te -> te != null)
+                .skip(1) // drop the typeElement itself
                 .toList();
     }
 

@@ -5,6 +5,9 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
+import java.util.stream.Stream;
+
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -61,6 +64,22 @@ public class ElementFinderTest {
     public void findSuperclass_returns_null_for_an_interface() {
         assertNull(finder.findSuperclass(finder.getTypeElement(ISub.class)));
         assertNull(finder.findSuperclass(finder.getTypeElement(ISuper.class)));
+    }
+
+    @Test
+    public void findSuperclasses_returns_an_ordered_hierarchy_of_superclasses() {
+        assertEquals(Stream.of(Super.class, Object.class).map(c -> finder.getTypeElement(c)).toList(), 
+                finder.findSuperclasses(finder.getTypeElement(Sub.class)));
+    }
+
+    @Test
+    public void findSuperclasses_with_root_type_returns_an_ordered_hierarchy_of_superclasses_up_to_root_type_included() {
+        assertEquals(Stream.of(Super.class, Object.class).map(c -> finder.getTypeElement(c)).toList(),
+                finder.findSuperclasses(finder.getTypeElement(Sub.class), Object.class));
+        assertEquals(List.of(finder.getTypeElement(Super.class)), finder.findSuperclasses(finder.getTypeElement(Sub.class), Super.class));
+        assertEquals(List.of(), finder.findSuperclasses(finder.getTypeElement(Sub.class), Sub.class));
+        // unrelated hierarchies result into an empty list
+        assertEquals(List.of(), finder.findSuperclasses(finder.getTypeElement(Sub.class), String.class));
     }
 
     private static interface ISuper {}
