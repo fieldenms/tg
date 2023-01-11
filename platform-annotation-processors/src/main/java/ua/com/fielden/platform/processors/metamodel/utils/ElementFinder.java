@@ -318,19 +318,16 @@ public class ElementFinder {
     }
 
     /**
-     * Returns a list of annotations associated with {@code vel}, if it represents a field.
-     * An empty list is returned otherwise. 
-     *
-     * @param vel
-     * @return
+     * Returns a list of annotations that are directly present on a variable element if it represents a field.
+     * Otherwise an empty list is returned.
      */
-    public List<? extends AnnotationMirror> getFieldAnnotations(final VariableElement vel) {
+    public List<? extends AnnotationMirror> getFieldAnnotations(final VariableElement element) {
         // return an empty list for non-field elements
-        if (vel.getKind() != ElementKind.FIELD) {
-            return new ArrayList<>();
+        if (!element.getKind().isField()) {
+            return List.of();
         }
 
-        return vel.getAnnotationMirrors();
+        return element.getAnnotationMirrors();
     }
 
     /**

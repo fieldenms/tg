@@ -9,12 +9,15 @@ import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_P
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
 import static ua.com.fielden.platform.utils.CollectionUtil.isEqualContents;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.util.Collection;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
+import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -24,6 +27,7 @@ import javax.tools.ToolProvider;
 
 import org.junit.Test;
 
+import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
@@ -44,6 +48,11 @@ public class ElementFinderTest {
 
     // TODO MetaModelLifecycleTest uses a similar value, so it should be generalized
     private static final TypeSpec PLACEHOLDER = TypeSpec.classBuilder(nextTypeName("Placeholder")).build();
+
+    @Retention(RetentionPolicy.RUNTIME)
+    public static @interface TestAnnot {
+        String value() default "default";
+    }
 
     @Test
     public void test_equals() {
@@ -249,6 +258,56 @@ public class ElementFinderTest {
             assertNull(finder.findField(subEl, "noSuchField"));
             // non-existent field
             assertNull(finder.findField(subEl, "s", f -> f.getModifiers().contains(Modifier.FINAL)));
+        });
+    }
+
+    @Test
+    public void findFieldsAnnotatedWith_returns_all_fields_having_the_annotation() {
+        final FieldSpec sProp = FieldSpec.builder(String.class, "s").addAnnotation(TestAnnot.class).build();
+        final TypeSpec sup = TypeSpec.classBuilder(nextTypeName("Sup"))
+                .addField(sProp)
+                .addField(Integer.class, "i")
+                .build();
+        final FieldSpec supProp = FieldSpec.builder(ClassName.get("", sup.name), "sup").addAnnotation(TestAnnot.class).build();
+        final TypeSpec sub = TypeSpec.classBuilder(nextTypeName("Sub"))
+                .superclass(ClassName.get("", sup.name))
+                .addField(Double.class, "d")
+                .addField(supProp)
+                .build();
+
+        processAndEvaluate(List.of(sup, sub), finder -> {
+            assertEqualContents(List.of(sProp, supProp),
+                    finder.findFieldsAnnotatedWith(finder.elements.getTypeElement(sub.name), TestAnnot.class).stream()
+                    .map(f -> toFieldSpec(f)).toList());
+        });
+    }
+
+    @Test
+    public void getFieldAnnotations_returns_a_list_of_directly_present_annotations() {
+        // a single-use annotation type that will be present on an inherited field
+        final TypeSpec oneTimeAnnotType = TypeSpec.annotationBuilder(nextTypeName("OneTimeAnnot")).build();
+
+        final AnnotationSpec oneTimeAnnot = AnnotationSpec.builder(ClassName.get("", oneTimeAnnotType.name)).build();
+        final TypeSpec sup = TypeSpec.classBuilder(nextTypeName("Sup"))
+                .addField(FieldSpec.builder(String.class, "s").addAnnotation(oneTimeAnnot).build())
+                .build();
+
+        // @TestAnnot(value = "hello")
+        final AnnotationSpec subFieldAnnot = AnnotationSpec.builder(TestAnnot.class).addMember("value", "$S", "hello").build();
+        final TypeSpec sub = TypeSpec.classBuilder(nextTypeName("Sub"))
+                .superclass(ClassName.get("", sup.name))
+                .addField(FieldSpec.builder(String.class, "s").addAnnotation(subFieldAnnot).build())
+                .build();
+
+        processAndEvaluate(List.of(oneTimeAnnotType, sup, sub), finder -> {
+            // Sub.s
+            final VariableElement field = finder.findDeclaredField(finder.elements.getTypeElement(sub.name), "s");
+            final List<? extends AnnotationMirror> mirrors = finder.getFieldAnnotations(field);
+            assertEquals(1, mirrors.size());
+            final AnnotationMirror mirror = mirrors.get(0);
+            finder.getAnnotationValue(mirror, "value").ifPresentOrElse(
+                    v -> assertEquals("hello", v.getValue()),
+                    () -> fail("Missing annotation value"));
         });
     }
 
