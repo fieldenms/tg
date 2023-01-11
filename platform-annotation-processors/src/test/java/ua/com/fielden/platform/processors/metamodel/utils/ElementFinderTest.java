@@ -187,10 +187,10 @@ public class ElementFinderTest {
     // ==================== HELPER METHODS ====================
     /**
      * A convenient method to convert a {@link VariableElement} to a {@link FieldSpec} for further comparison.
-     * Ignores annotations.
      */
     private FieldSpec toFieldSpec(final VariableElement el) {
         return FieldSpec.builder(TypeName.get(el.asType()), el.getSimpleName().toString(), el.getModifiers().toArray(Modifier[]::new))
+                .addAnnotations(el.getAnnotationMirrors().stream().map(AnnotationSpec::get).toList())
                 .build();
     }
 
@@ -209,14 +209,18 @@ public class ElementFinderTest {
                 .map(ts -> JavaFile.builder(/*packageName*/ "", ts).build().toJavaFileObject())
                 .toList();
 
+        final Compilation comp = new Compilation(compilationTargets)
+                .setCompiler(compiler)
+                .setFileManager(fileManager)
+                .setOptions(OPTION_PROC_ONLY);
         try {
-            new Compilation(compilationTargets)
-                    .setCompiler(compiler)
-                    .setFileManager(fileManager)
-                    .setOptions(OPTION_PROC_ONLY)
-                    .compileAndEvaluate(procEnv -> consumer.accept(new ElementFinder(procEnv.getElementUtils(), procEnv.getTypeUtils())));
+            final boolean success = comp.compileAndEvaluate(procEnv -> 
+                consumer.accept(new ElementFinder(procEnv.getElementUtils(), procEnv.getTypeUtils())));
+            assertTrue(success);
         } catch (final Throwable t) {
             throw new RuntimeException(t);
+        } finally {
+            comp.printDiagnostics();
         }
     }
 
