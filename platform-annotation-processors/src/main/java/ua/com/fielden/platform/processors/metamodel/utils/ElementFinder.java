@@ -256,7 +256,7 @@ public class ElementFinder {
                .filter(varEl -> varEl.getSimpleName().toString().equals(fieldName) && predicate.test(varEl))
                .findFirst()
                .orElseGet(() -> findInheritedFields(typeElement).stream()
-                                .filter(varEl -> varEl.getSimpleName().toString().equals(fieldName))
+                                .filter(varEl -> varEl.getSimpleName().toString().equals(fieldName) && predicate.test(varEl))
                                 .findFirst().orElse(null));
     }
 

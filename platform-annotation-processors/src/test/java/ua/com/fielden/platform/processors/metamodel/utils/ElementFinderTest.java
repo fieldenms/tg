@@ -222,6 +222,36 @@ public class ElementFinderTest {
         });
     }
 
+    @Test
+    public void findField_returns_the_first_matching_field() {
+        final TypeSpec sup = TypeSpec.classBuilder(nextTypeName("Sup"))
+                .addField(int.class, "i")
+                .addField(boolean.class, "b")
+                .addField(String.class, "s", Modifier.STATIC)
+                .build();
+        final TypeSpec sub = TypeSpec.classBuilder(nextTypeName("Sub"))
+                .superclass(ClassName.get("", sup.name))
+                .addField(int.class, "i")
+                .addField(String.class, "s")
+                .build();
+
+        processAndEvaluate(List.of(sup, sub), finder -> {
+            final TypeElement subEl = finder.elements.getTypeElement(sub.name);
+            final TypeElement supEl = finder.elements.getTypeElement(sup.name);
+
+            // Sub.i
+            assertEquals(subEl, finder.findField(subEl, "i").getEnclosingElement());
+            // Sup.s
+            assertEquals(supEl, finder.findField(subEl, "s", f -> finder.isStatic(f)).getEnclosingElement());
+            // Sup.b
+            assertEquals(supEl, finder.findField(subEl, "b").getEnclosingElement());
+            // non-existent field
+            assertNull(finder.findField(subEl, "noSuchField"));
+            // non-existent field
+            assertNull(finder.findField(subEl, "s", f -> f.getModifiers().contains(Modifier.FINAL)));
+        });
+    }
+
     // ==================== HELPER METHODS ====================
     /**
      * A convenient method to convert a {@link VariableElement} to a {@link FieldSpec} for further comparison.
