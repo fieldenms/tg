@@ -154,6 +154,8 @@ public class ElementFinderTest {
     @Test
     public void findInheritedFields_returns_all_inherited_fields() {
         final TypeSpec sup2 = TypeSpec.classBuilder(nextTypeName("Sup2"))
+                // static Object staticObj
+                .addField(Object.class, "staticObj", Modifier.STATIC)
                 // protected String s
                 .addField(String.class, "s", Modifier.PROTECTED)
                 // private Integer i
@@ -181,6 +183,42 @@ public class ElementFinderTest {
             assertEqualContents(
                     Stream.of(sup1, sup2).flatMap(ts -> ts.fieldSpecs.stream()).toList(),
                     finder.findInheritedFields(finder.elements.getTypeElement(sub.name)).stream().map(f -> toFieldSpec(f)).toList());
+        });
+    }
+
+    // TODO test findInheritedFields with root type after refactoring ElementFinder to accept a TypeElement as root type
+
+    @Test
+    public void findFields_returns_both_declared_and_inherited_fields() {
+        final TypeSpec sup2 = TypeSpec.classBuilder(nextTypeName("Sup2"))
+                // static Object staticObj
+                .addField(Object.class, "staticObj", Modifier.STATIC)
+                // protected String s
+                .addField(String.class, "s", Modifier.PROTECTED)
+                // private Integer i
+                .addField(Integer.class, "i", Modifier.PRIVATE)
+                // double d
+                .addField(double.class, "d")
+                .build();
+        final TypeSpec sup1 = TypeSpec.classBuilder(nextTypeName("Sup1"))
+                .superclass(ClassName.get("", sup2.name))
+                // public String s
+                .addField(String.class, "s", Modifier.PUBLIC)
+                // private Integer i
+                .addField(Integer.class, "i", Modifier.PRIVATE)
+                // boolean b
+                .addField(boolean.class, "b")
+                .build();
+        final TypeSpec sub = TypeSpec.classBuilder(nextTypeName("Sub"))
+                .superclass(ClassName.get("", sup1.name))
+                .addField(String.class, "s")
+                .addField(String.class, "name")
+                .build();
+
+        processAndEvaluate(List.of(sub, sup1, sup2), finder -> {
+            assertEqualContents(
+                    Stream.of(sup2, sup1, sub).flatMap(ts -> ts.fieldSpecs.stream()).toList(),
+                    finder.findFields(finder.elements.getTypeElement(sub.name)).stream().map(f -> toFieldSpec(f)).toList());
         });
     }
 
