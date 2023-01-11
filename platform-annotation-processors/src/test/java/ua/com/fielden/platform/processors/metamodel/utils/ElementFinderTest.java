@@ -15,21 +15,15 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.util.Elements;
-import javax.lang.model.util.Types;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.ToolProvider;
 
-import org.junit.Before;
-import org.junit.Rule;
 import org.junit.Test;
 
-import com.google.testing.compile.CompilationRule;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
@@ -38,7 +32,6 @@ import com.squareup.javapoet.TypeSpec;
 
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileManager;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.utils.CollectionUtil;
 
 /**
@@ -49,71 +42,113 @@ import ua.com.fielden.platform.utils.CollectionUtil;
  */
 public class ElementFinderTest {
 
-    public @Rule CompilationRule rule = new CompilationRule();
-    private Elements elements;
-    private Types types;
-    private ElementFinder finder;
-
-    @Before
-    public void setup() {
-      elements = rule.getElements();
-      types = rule.getTypes();
-      finder = new ElementFinder(elements, types);
-    }
+    // TODO MetaModelLifecycleTest uses a similar value, so it should be generalized
+    private static final TypeSpec PLACEHOLDER = TypeSpec.classBuilder(nextTypeName("Placeholder")).build();
 
     @Test
     public void test_equals() {
-        assertTrue(finder.equals(finder.getTypeElement(String.class), String.class));
-        assertTrue(finder.equals(finder.getTypeElement(java.util.Date.class), java.util.Date.class));
-        // java.sql.Date != java.util.Date
-        assertFalse(finder.equals(finder.getTypeElement(java.sql.Date.class), java.util.Date.class));
-        // java.util.Date != java.sql.Date
-        assertFalse(finder.equals(finder.getTypeElement(java.util.Date.class), java.sql.Date.class));
+        processAndEvaluate(finder -> {
+            assertTrue(finder.equals(finder.getTypeElement(String.class), String.class));
+            assertTrue(finder.equals(finder.getTypeElement(java.util.Date.class), java.util.Date.class));
+            // java.sql.Date != java.util.Date
+            assertFalse(finder.equals(finder.getTypeElement(java.sql.Date.class), java.util.Date.class));
+            // java.util.Date != java.sql.Date
+            assertFalse(finder.equals(finder.getTypeElement(java.util.Date.class), java.sql.Date.class));
+        });
     }
 
     @Test
     public void findSuperclass_returns_the_immediate_superclass_type_element() {
-        final TypeElement superclassOfSub = finder.findSuperclass(finder.getTypeElement(Sub.class));
-        assertEquals(finder.getTypeElement(Super.class), superclassOfSub);
-        assertEquals(finder.getTypeElement(Object.class), finder.findSuperclass(superclassOfSub));
+        final TypeSpec iface = TypeSpec.interfaceBuilder(nextTypeName("IFace")).build();
+        final TypeSpec sup = TypeSpec.classBuilder(nextTypeName("Sup")).build();
+        // class Sub extends Sup implements Iface
+        final TypeSpec sub = TypeSpec.classBuilder(nextTypeName("Sub"))
+                .superclass(ClassName.get("", sup.name))
+                .addSuperinterface(ClassName.get("", iface.name))
+                .build();
+        
+        processAndEvaluate(List.of(iface, sup, sub), finder -> {
+            final TypeElement superclassOfSub = finder.findSuperclass(finder.elements.getTypeElement(sub.name));
+            assertEquals(finder.elements.getTypeElement(sup.name), superclassOfSub);
+            assertEquals(finder.getTypeElement(Object.class), finder.findSuperclass(superclassOfSub));
+        });
     }
 
     @Test 
     public void findSuperclass_returns_null_for_Object() {
-        assertNull(finder.findSuperclass(finder.getTypeElement(Object.class)));
+        processAndEvaluate(finder -> assertNull(finder.findSuperclass(finder.getTypeElement(Object.class))));
     }
 
     @Test 
     public void findSuperclass_returns_null_for_an_interface() {
-        assertNull(finder.findSuperclass(finder.getTypeElement(ISub.class)));
-        assertNull(finder.findSuperclass(finder.getTypeElement(ISuper.class)));
+        final TypeSpec isup = TypeSpec.interfaceBuilder(nextTypeName("ISup")).build();
+        final TypeSpec isub = TypeSpec.interfaceBuilder(nextTypeName("ISub"))
+                .addSuperinterface(ClassName.get("", isup.name))
+                .build();
+
+        processAndEvaluate(List.of(isup, isub), finder -> {
+            assertNull(finder.findSuperclass(finder.elements.getTypeElement(isup.name)));
+            assertNull(finder.findSuperclass(finder.elements.getTypeElement(isub.name)));
+        });
     }
 
     @Test
     public void findSuperclasses_returns_an_ordered_hierarchy_of_superclasses() {
-        assertEquals(Stream.of(Super.class, Object.class).map(c -> finder.getTypeElement(c)).toList(), 
-                finder.findSuperclasses(finder.getTypeElement(Sub.class)));
+        final TypeSpec iface = TypeSpec.interfaceBuilder(nextTypeName("IFace")).build();
+        // class Sup implements IFace
+        final TypeSpec sup = TypeSpec.classBuilder(nextTypeName("Sup")).build();
+        // class Sub extends Sup implements IFace
+        final TypeSpec sub = TypeSpec.classBuilder(nextTypeName("Sub"))
+                .superclass(ClassName.get("", sup.name))
+                .addSuperinterface(ClassName.get("", iface.name))
+                .build();
+
+        processAndEvaluate(List.of(iface, sup, sub), finder -> {
+            // superclasses of Sub = [Sup, Object]
+            assertEquals(Stream.of(sup.name, Object.class.getCanonicalName()).map(s -> finder.elements.getTypeElement(s)).toList(), 
+                    finder.findSuperclasses(finder.elements.getTypeElement(sub.name)));
+        });
     }
 
+    // this test requires us to use member classes, because ElementFinder.findSuperclasses expects a Class parameter 
     @Test
     public void findSuperclasses_with_root_type_returns_an_ordered_hierarchy_of_superclasses_up_to_root_type_included() {
-        assertEquals(Stream.of(Super.class, Object.class).map(c -> finder.getTypeElement(c)).toList(),
-                finder.findSuperclasses(finder.getTypeElement(Sub.class), Object.class));
-        assertEquals(List.of(finder.getTypeElement(Super.class)), finder.findSuperclasses(finder.getTypeElement(Sub.class), Super.class));
-        assertEquals(List.of(), finder.findSuperclasses(finder.getTypeElement(Sub.class), Sub.class));
-        // unrelated hierarchies result into an empty list
-        assertEquals(List.of(), finder.findSuperclasses(finder.getTypeElement(Sub.class), String.class));
+        processAndEvaluate(finder -> {
+            // superclasses of Sub (root = Object) = [Sup, Object]
+            assertEquals(Stream.of(FindSuperclasses_Sup.class, Object.class).map(c -> finder.getTypeElement(c)).toList(),
+                    finder.findSuperclasses(finder.getTypeElement(FindSuperclasses_Sub.class), Object.class));
+            // superclasses of Sub (root = Sup) = [Sup]
+            assertEquals(List.of(finder.getTypeElement(FindSuperclasses_Sup.class)), 
+                    finder.findSuperclasses(finder.getTypeElement(FindSuperclasses_Sub.class), FindSuperclasses_Sup.class));
+            // superclasses of Sub (root = Sub) = []
+            assertEquals(List.of(), finder.findSuperclasses(finder.getTypeElement(FindSuperclasses_Sub.class), FindSuperclasses_Sub.class));
+            // unrelated hierarchies result into an empty list
+            assertEquals(List.of(), finder.findSuperclasses(finder.getTypeElement(FindSuperclasses_Sub.class), String.class));
+        });
     }
+    // where
+    private static interface FindSuperclasses_IFace {}
+    private static class FindSuperclasses_Sup implements FindSuperclasses_IFace {}
+    private static class FindSuperclasses_Sub extends FindSuperclasses_Sup {}
 
     @Test
     public void findDeclaredFields_returns_declared_fields_of_a_type_that_satisfy_predicate() {
-        // without any predicate all declared fields are returned
-        assertEqualContents(List.of("STRING", "str", "i"),
-                streamSimpleNames(finder.findDeclaredFields(finder.getTypeElement(Sub.class))).toList());
-        // with predicate
-        final Predicate<VariableElement> isFinal = (f -> f.getModifiers().contains(Modifier.FINAL));
-        assertEqualContents(List.of("STRING", "i"),
-                streamSimpleNames(finder.findDeclaredFields(finder.getTypeElement(Sub.class), isFinal)).toList());
+        final FieldSpec static_final_String_STRING = FieldSpec.builder(String.class, "STRING", Modifier.FINAL, Modifier.STATIC).build();
+        final FieldSpec String_str = FieldSpec.builder(String.class, "str").build();
+        final FieldSpec final_int_i = FieldSpec.builder(int.class, "i", Modifier.FINAL).build();
+        final TypeSpec example = TypeSpec.classBuilder(nextTypeName("Example"))
+                .addFields(List.of(static_final_String_STRING, String_str, final_int_i))
+                .build();
+
+        processAndEvaluate(List.of(example), finder -> {
+            // without any predicate all declared fields are returned
+            assertEqualContents(example.fieldSpecs,
+                    finder.findDeclaredFields(finder.elements.getTypeElement(example.name)).stream().map(f -> toFieldSpec(f)).toList());
+            // with a predicate
+            final Predicate<VariableElement> isFinal = (f -> f.getModifiers().contains(Modifier.FINAL));
+            assertEqualContents(List.of(static_final_String_STRING, final_int_i),
+                    finder.findDeclaredFields(finder.elements.getTypeElement(example.name), isFinal).stream().map(f -> toFieldSpec(f)).toList());
+        });
     }
 
     @Test
@@ -144,11 +179,12 @@ public class ElementFinderTest {
 
         processAndEvaluate(List.of(sub, sup1, sup2), finder -> {
             assertEqualContents(
-                    Stream.concat(sup1.fieldSpecs.stream(), sup2.fieldSpecs.stream()).toList(),
+                    Stream.of(sup1, sup2).flatMap(ts -> ts.fieldSpecs.stream()).toList(),
                     finder.findInheritedFields(finder.elements.getTypeElement(sub.name)).stream().map(f -> toFieldSpec(f)).toList());
         });
     }
 
+    // ==================== HELPER METHODS ====================
     /**
      * A convenient method to convert a {@link VariableElement} to a {@link FieldSpec} for further comparison.
      * Ignores annotations.
@@ -184,22 +220,11 @@ public class ElementFinderTest {
         }
     }
 
-    private static interface ISuper {}
-    private static interface ISub extends ISuper {}
-
-    private static class Super implements ISuper {
-        int n;
-        private double d;
-    }
-
-    private static class Sub extends Super implements ISub {
-        final static String STRING = "hello";
-        String str;
-        final int i = 10;
-    }
-
-    private static <T extends Element> Stream<String> streamSimpleNames(final Collection<T> c) {
-        return c.stream().map(e -> e.getSimpleName().toString());
+    /**
+     * Similar to {@link #processAndEvaluate(Collection, Consumer)}, but requires no input sources.
+     */
+    private void processAndEvaluate(final Consumer<ElementFinder> consumer) {
+        processAndEvaluate(List.of(PLACEHOLDER), consumer);
     }
 
     private static void assertEqualContents(final Collection<?> c1, final Collection<?> c2) {
