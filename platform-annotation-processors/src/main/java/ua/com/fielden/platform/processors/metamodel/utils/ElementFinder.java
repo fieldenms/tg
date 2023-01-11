@@ -232,11 +232,11 @@ public class ElementFinder {
         return fields;
     }
 
-    public Set<VariableElement> findStaticFields(final TypeElement typeElement) {
+    public Set<VariableElement> findStaticDeclaredFields(final TypeElement typeElement) {
         return findDeclaredFields(typeElement, f -> isStatic(f));
     }
 
-    public Set<VariableElement> findNonStaticFields(final TypeElement typeElement) {
+    public Set<VariableElement> findNonStaticDeclaredFields(final TypeElement typeElement) {
         return findDeclaredFields(typeElement, f -> !isStatic(f));
     }
 

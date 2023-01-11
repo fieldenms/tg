@@ -56,13 +56,13 @@ public class MetaModelFinder extends ElementFinder {
     }
 
     public Set<VariableElement> findPropertyMetaModelFields(final MetaModelElement mme) {
-        return findNonStaticFields(mme).stream()
+        return findNonStaticDeclaredFields(mme).stream()
                 .filter(field -> isFieldOfType(field, PropertyMetaModel.class))
                 .collect(toSet());
     }
 
     public Set<VariableElement> findEntityMetaModelFields(final MetaModelElement mme) {
-        return findNonStaticFields(mme).stream()
+        return findNonStaticDeclaredFields(mme).stream()
                 .filter(field -> {
                     final TypeMirror fieldType = field.asType();
                     final TypeKind fieldTypeKind = fieldType.getKind();
