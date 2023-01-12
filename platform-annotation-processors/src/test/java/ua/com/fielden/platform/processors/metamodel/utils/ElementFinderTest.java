@@ -8,17 +8,17 @@ import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
 import static ua.com.fielden.platform.utils.CollectionUtil.isEqualContents;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
@@ -27,6 +27,7 @@ import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.ToolProvider;
 
+import org.junit.Assert;
 import org.junit.Test;
 
 import com.squareup.javapoet.AnnotationSpec;
@@ -55,10 +56,11 @@ public class ElementFinderTest {
     // TODO MetaModelLifecycleTest uses a similar value, so it should be generalized
     private static final TypeSpec PLACEHOLDER = TypeSpec.classBuilder("Placeholder").build();
 
-    @Retention(RetentionPolicy.RUNTIME)
     public static @interface TestAnnot {
-        String value() default "default";
+        static final String DEFAULT_VALUE = "default";
+        String value() default DEFAULT_VALUE;
     }
+    public static @interface EmptyAnnot {}
 
     @Test
     public void test_equals() {
@@ -416,6 +418,55 @@ public class ElementFinderTest {
         });
     }
 
+    @Test
+    public void findAnnotationMirror_finds_a_directly_present_annotation_of_the_specified_type() {
+        // one-time annotation type for diversity
+        final TypeSpec oneTimeAnnotType = TypeSpec.annotationBuilder("OneTimeAnnot").build();
+        // target annotation
+        final AnnotationSpec testAnnot = AnnotationSpec.builder(TestAnnot.class).addMember("value", "$S", "hello").build();
+        final TypeSpec example = TypeSpec.classBuilder("Example")
+                .addAnnotation(AnnotationSpec.builder(ClassName.get("", oneTimeAnnotType.name)).build())
+                .addAnnotation(testAnnot)
+                .build();
+
+        processAndEvaluate(List.of(oneTimeAnnotType, example), finder -> {
+            final TypeElement el = finder.elements.getTypeElement(example.name);
+            assertOptEquals(testAnnot,
+                    finder.findAnnotationMirror(el, TestAnnot.class).map(AnnotationSpec::get));
+            // try finding a non-existent annotation
+            assertTrue(finder.findAnnotationMirror(el, EmptyAnnot.class).isEmpty());
+        });
+    }
+
+    @Test
+    public void getAnnotationValue_returns_the_value_of_the_annotation_element_by_name_if_it_exists() {
+        final TypeSpec withValue = TypeSpec.classBuilder("WithValue")
+                // @TestAnnot(value = "hello")
+                .addAnnotation(AnnotationSpec.builder(TestAnnot.class).addMember("value", "$S", "hello").build())
+                .build();
+        final TypeSpec withDefaults = TypeSpec.classBuilder("WithDefaults")
+                // @TestAnnot
+                .addAnnotation(AnnotationSpec.builder(TestAnnot.class).build())
+                .build();
+
+        processAndEvaluate(List.of(withValue, withDefaults), finder -> {
+            final TypeElement withValueElement = finder.elements.getTypeElement(withValue.name);
+            assertOptEquals("hello",
+                    finder.findAnnotationMirror(withValueElement, TestAnnot.class).flatMap(a -> 
+                        finder.getAnnotationValue(a, "value").map(AnnotationValue::getValue)));
+
+            // default annotation element's value should be returned if none was defined
+            final TypeElement withDefaultsElement = finder.elements.getTypeElement(withDefaults.name);
+            assertOptEquals(TestAnnot.DEFAULT_VALUE,
+                    finder.findAnnotationMirror(withDefaultsElement, TestAnnot.class).flatMap(a -> 
+                        finder.getAnnotationValue(a, "value").map(AnnotationValue::getValue)));
+
+            // try obtaining a non-existent element's value
+            assertTrue(finder.findAnnotationMirror(withDefaultsElement, TestAnnot.class)
+                    .flatMap(a -> finder.getAnnotationValue(a, "whatever")).isEmpty());
+        });
+    }
+
     // ==================== HELPER METHODS ====================
     /**
      * A convenient method to convert a {@link VariableElement} to a {@link FieldSpec} for further comparison.
@@ -496,6 +547,10 @@ public class ElementFinderTest {
             list.addAll(c);
         }
         return Collections.unmodifiableList(list);
+    }
+
+    private <T> void assertOptEquals(final T expected, final Optional<T> maybeActual) {
+        maybeActual.ifPresentOrElse(actual -> Assert.assertEquals(expected, actual), () -> fail("Optional is empty."));
     }
 
 }
