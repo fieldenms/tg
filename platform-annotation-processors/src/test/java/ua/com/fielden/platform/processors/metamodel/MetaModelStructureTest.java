@@ -285,7 +285,7 @@ public class MetaModelStructureTest {
             .forEach(mme -> {
                 assertNotNull(elementFinder.findDeclaredField(mme, "alias", 
                         varEl -> varEl.getModifiers().containsAll(List.of(Modifier.PUBLIC, Modifier.FINAL)) &&
-                        elementFinder.isFieldOfType(varEl, String.class)));
+                        elementFinder.isSameType(varEl.asType(), String.class)));
             });
     }
 

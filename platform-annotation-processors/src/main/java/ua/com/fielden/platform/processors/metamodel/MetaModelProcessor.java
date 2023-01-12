@@ -760,7 +760,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         final List<String> annotationsStrings = elementFinder.getFieldAnnotations(prop).stream()
                 .map(annotMirror -> {
                     final StringBuilder builder = new StringBuilder();
-                    builder.append(format("{@literal @}{@link %s}", elementFinder.getAnnotationMirrorSimpleName(annotMirror)));
+                    builder.append(format("{@literal @}{@link %s}", annotMirror.getAnnotationType().asElement().getSimpleName().toString()));
                     final Map<? extends ExecutableElement, ? extends AnnotationValue> valuesMap = annotMirror.getElementValues();
                     if (!valuesMap.isEmpty()) {
                         builder.append("(");

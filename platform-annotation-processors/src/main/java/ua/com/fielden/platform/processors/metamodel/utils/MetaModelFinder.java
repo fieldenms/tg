@@ -57,7 +57,7 @@ public class MetaModelFinder extends ElementFinder {
 
     public Set<VariableElement> findPropertyMetaModelFields(final MetaModelElement mme) {
         return findNonStaticDeclaredFields(mme).stream()
-                .filter(field -> isFieldOfType(field, PropertyMetaModel.class))
+                .filter(field -> isSameType(field.asType(), PropertyMetaModel.class))
                 .collect(toSet());
     }
 
@@ -135,7 +135,7 @@ public class MetaModelFinder extends ElementFinder {
      */
     public boolean isPropertyMetaModelMethod(final ExecutableElement method) {
         return !method.getModifiers().contains(Modifier.STATIC) &&
-                isMethodReturnType(method, PropertyMetaModel.class);
+                isSameType(method.getReturnType(), PropertyMetaModel.class);
     }
 
     /**

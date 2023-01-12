@@ -7,7 +7,6 @@ import static java.util.stream.Stream.iterate;
 import static ua.com.fielden.platform.utils.StreamUtils.stopAfter;
 
 import java.lang.annotation.Annotation;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -25,7 +24,6 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
-import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -439,78 +437,10 @@ public class ElementFinder {
         return getAnnotationValue(annotation, "value");
     }
 
-    public String getFieldTypeSimpleName(final VariableElement field) {
-        return ((DeclaredType) field.asType()).asElement().getSimpleName().toString();
+    public boolean isStatic(final Element element) {
+        return element.getModifiers().contains(Modifier.STATIC);
     }
 
-    public boolean isFieldOfType(final VariableElement field, final Class<?> type) {
-        final TypeMirror fieldType = field.asType();
-        if (fieldType.getKind().equals(TypeKind.DECLARED)) {
-            return equals(((TypeElement) ((DeclaredType) fieldType).asElement()), type);
-        } else {
-            // TODO implement proper type checking for primitives and arrays
-            return false;
-        }
-    }
-
-    public boolean isFieldOfType(final VariableElement field, final TypeMirror typeMirror) {
-        final TypeMirror fieldType = field.asType();
-        final TypeKind fieldTypeKind = fieldType.getKind();
-
-        if (fieldTypeKind.equals(TypeKind.DECLARED)) {
-            return types.isSameType(fieldType, typeMirror);
-        } else {
-            // TODO implement proper type checking for primitives and arrays
-            return false;
-        }
-    }
-
-    /**
-     * Tests whether a field is of one of types {@code typeElements}.
-     *
-     * @param field
-     * @param typeElements
-     * @return
-     */
-    public boolean isFieldOfType(final VariableElement field, final Collection<TypeMirror> typeMirrors) {
-        final TypeMirror fieldType = field.asType();
-        final TypeKind fieldTypeKind = fieldType.getKind();
-
-        if (fieldTypeKind.equals(TypeKind.DECLARED)) {
-            return typeMirrors.stream().anyMatch(tm -> types.isSameType(fieldType, tm));
-        } else {
-            // TODO implement proper type checking for primitives and arrays
-            return false;
-        }
-    }
-
-    public boolean isMethodReturnType(final ExecutableElement method, final Class<?> type) {
-        final TypeMirror returnType = method.getReturnType();
-        final TypeKind returnTypeKind = returnType.getKind();
-
-        if (returnTypeKind.equals(TypeKind.DECLARED)) {
-            return equals(((TypeElement) ((DeclaredType) returnType).asElement()), type);
-        } else {
-            // TODO implement proper type checking for primitives and arrays
-            return false;
-        }
-    }
-
-    public Name getAnnotationMirrorSimpleName(final AnnotationMirror annotMirror) {
-        return annotMirror.getAnnotationType().asElement().getSimpleName();
-    }
-
-    public long countDeclaredFields(final TypeElement typeElement) {
-        return typeElement.getEnclosedElements().stream()
-                .filter(el -> el.getKind() == ElementKind.FIELD)
-                .map(el -> (VariableElement) el)
-                .count();
-    }
-
-    public boolean isStatic(final VariableElement varElement) {
-        return varElement.getModifiers().contains(Modifier.STATIC);
-    }
-    
     /**
      * Tests whether the type modeled by {@code typeMirror} is the same type as runtime class {@code type}.
      * If {@code typeMirror} represents a type variable or a wildcard, then {@code false} is returned.
