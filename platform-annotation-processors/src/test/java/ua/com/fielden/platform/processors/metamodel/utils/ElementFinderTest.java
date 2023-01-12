@@ -23,6 +23,8 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeKind;
+import javax.lang.model.type.TypeMirror;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.ToolProvider;
@@ -464,6 +466,40 @@ public class ElementFinderTest {
             // try obtaining a non-existent element's value
             assertTrue(finder.findAnnotationMirror(withDefaultsElement, TestAnnot.class)
                     .flatMap(a -> finder.getAnnotationValue(a, "whatever")).isEmpty());
+        });
+    }
+
+    @Test
+    public void isSameType_returns_true_if_type_mirror_and_class_represent_the_same_type() {
+        final TypeSpec example = TypeSpec.classBuilder("Example")
+                // <T extends List>
+                .addTypeVariable(TypeVariableName.get("T", List.class))
+                .build();
+
+        processAndEvaluate(List.of(example), finder -> {
+            // primitive type
+            assertTrue(finder.isSameType(finder.types.getPrimitiveType(TypeKind.INT), int.class));
+            // void
+            assertTrue(finder.isSameType(finder.types.getNoType(TypeKind.VOID), void.class));
+
+            // declared type
+            final TypeMirror stringType = finder.getTypeElement(String.class).asType();
+            assertTrue(finder.isSameType(stringType, String.class));
+
+            // generic type
+            final TypeElement listElement = finder.getTypeElement(List.class);
+            // List<String> == List ?
+
+            assertTrue(finder.isSameType(finder.types.getDeclaredType(listElement, stringType), List.class));
+            // array type
+            assertTrue(finder.isSameType(finder.types.getArrayType(stringType), String[].class));
+
+            // wildcard type: ? extends List
+            assertFalse(finder.isSameType(finder.types.getWildcardType(finder.getTypeElement(List.class).asType(), null), ArrayList.class));
+
+            // type variable <T extends List>
+            final TypeMirror typeVar = finder.elements.getTypeElement(example.name).getTypeParameters().get(0).asType();
+            assertFalse(finder.isSameType(typeVar, ArrayList.class));
         });
     }
 

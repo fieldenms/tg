@@ -437,37 +437,37 @@ public class ElementFinder {
         return getAnnotationValue(annotation, "value");
     }
 
+    /**
+     * Tests whether the element contains the {@code static} modifier.
+     */
     public boolean isStatic(final Element element) {
         return element.getModifiers().contains(Modifier.STATIC);
     }
 
     /**
-     * Tests whether the type modeled by {@code typeMirror} is the same type as runtime class {@code type}.
-     * If {@code typeMirror} represents a type variable or a wildcard, then {@code false} is returned.
-     * @param typeMirror
-     * @param type
-     * @return
+     * Tests whether the type mirror and class represent the same type.
+     * If the type mirror represents a type variable or a wildcard, then {@code false} is returned.
      */
-    public boolean isSameType(final TypeMirror typeMirror, final Class<?> type) {
-        final TypeKind typeMirrorKind = typeMirror.getKind();
-        if (typeMirrorKind.isPrimitive() && type.isPrimitive()) {
-            return (typeMirrorKind == TypeKind.BYTE && type.equals(byte.class)) ||
-                    (typeMirrorKind == TypeKind.SHORT && type.equals(short.class)) ||
-                    (typeMirrorKind == TypeKind.INT && type.equals(int.class)) ||
-                    (typeMirrorKind == TypeKind.LONG && type.equals(long.class)) ||
-                    (typeMirrorKind == TypeKind.FLOAT && type.equals(float.class)) ||
-                    (typeMirrorKind == TypeKind.DOUBLE && type.equals(double.class)) ||
-                    (typeMirrorKind == TypeKind.BOOLEAN && type.equals(boolean.class)) ||
-                    (typeMirrorKind == TypeKind.CHAR && type.equals(char.class));
+    public boolean isSameType(final TypeMirror mirror, final Class<?> clazz) {
+        final TypeKind kind = mirror.getKind();
+        if (kind.isPrimitive() && clazz.isPrimitive()) {
+            return (kind == TypeKind.BYTE && clazz.equals(byte.class))
+                    || (kind == TypeKind.SHORT && clazz.equals(short.class))
+                    || (kind == TypeKind.INT && clazz.equals(int.class))
+                    || (kind == TypeKind.LONG && clazz.equals(long.class))
+                    || (kind == TypeKind.FLOAT && clazz.equals(float.class))
+                    || (kind == TypeKind.DOUBLE && clazz.equals(double.class))
+                    || (kind == TypeKind.BOOLEAN && clazz.equals(boolean.class))
+                    || (kind == TypeKind.CHAR && clazz.equals(char.class));
         }
-        else if (typeMirrorKind == TypeKind.ARRAY && type.isArray()) {
-            return isSameType(((ArrayType) typeMirror).getComponentType(), type.componentType());
+        else if (kind == TypeKind.ARRAY && clazz.isArray()) {
+            return isSameType(((ArrayType) mirror).getComponentType(), clazz.componentType());
         }
-        else if (typeMirrorKind == TypeKind.VOID && type.equals(void.class)) {
+        else if (kind == TypeKind.VOID && clazz.equals(void.class)) {
             return true;
         }
-        else if (typeMirrorKind == TypeKind.DECLARED) {
-            return equals(toTypeElement(typeMirror), type);
+        else if (kind == TypeKind.DECLARED) {
+            return equals(toTypeElement(mirror), clazz);
         }
         else {
             return false;
