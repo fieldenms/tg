@@ -409,16 +409,15 @@ public class ElementFinder {
                 .collect(toList());
     }
 
-    public AnnotationMirror getElementAnnotationMirror(final AnnotatedConstruct element, final Class<? extends Annotation> annotationClass) {
-        for (final AnnotationMirror annotMirror: element.getAnnotationMirrors()) {
-            final TypeElement annotTypeElement = (TypeElement) annotMirror.getAnnotationType().asElement();
-            if (equals(annotTypeElement, annotationClass)) {
-                return annotMirror;
-            }
-        }
-        return null;
+    /**
+     * Finds an annotation of the specified type that is directly present on the element.
+     */
+    public Optional<? extends AnnotationMirror> findAnnotationMirror(final AnnotatedConstruct element, final Class<? extends Annotation> annotType) {
+        return element.getAnnotationMirrors().stream()
+                .filter(mirror -> equals((TypeElement) mirror.getAnnotationType().asElement(), annotType))
+                .findAny();
     }
-    
+
     /**
      * Returns an optional containing the value of the annotation's element.
      * @param annotation

@@ -143,24 +143,15 @@ public class EntityFinder extends ElementFinder {
 
     public Pair<String, String> getPropTitleAndDesc(final PropertyElement propElement) {
         // TODO need to replicate the logic from TitlesDescsGetter in application to the Mirror types.
-        final AnnotationMirror titleAnnotationMirror = getElementAnnotationMirror(propElement, Title.class);
-
-        if (titleAnnotationMirror == null) {
-            return null;
-        }
-
-        return getTitleAndDesc(titleAnnotationMirror);
+        return findAnnotationMirror(propElement, Title.class).map(EntityFinder::getTitleAndDesc).orElse(null);
     }
 
     public Pair<String, String> getEntityTitleAndDesc(final EntityElement entityElement) {
-        final AnnotationMirror entityTitleAnnotMirror = getElementAnnotationMirror(entityElement, EntityTitle.class);
-
-        if (entityTitleAnnotMirror == null) {
-            final var title = TitlesDescsGetter.breakClassName(entityElement.getSimpleName().toString());
-            return pair(title, title + " entity");
-        }
-
-        return getTitleAndDesc(entityTitleAnnotMirror);
+        return findAnnotationMirror(entityElement, EntityTitle.class).map(EntityFinder::getTitleAndDesc)
+                .orElseGet(() -> {
+                    final String title = TitlesDescsGetter.breakClassName(entityElement.getSimpleName().toString());
+                    return pair(title, title + " entity");
+                });
     }
 
     /**

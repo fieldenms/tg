@@ -228,23 +228,24 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
     }
 
     private void printMessageWithAnnotationHint(final Kind kind, final String msg, final Element element, final Class<? extends Annotation> annotationType, final String annotationElementName) {
-        final AnnotationMirror annotMirror = elementFinder.getElementAnnotationMirror(element, annotationType);
-        if (annotMirror == null) {
+        final Optional<? extends AnnotationMirror> maybeMirror = elementFinder.findAnnotationMirror(element, annotationType);
+        if (maybeMirror.isEmpty()) {
             // simplest form of message that is present directly on the element
             messager.printMessage(kind, msg, element);
         }
         else {
-            final Optional<AnnotationValue> annotElementValue = elementFinder.getAnnotationValue(annotMirror, annotationElementName);
+            final AnnotationMirror mirror = maybeMirror.get();
+            final Optional<AnnotationValue> annotElementValue = elementFinder.getAnnotationValue(mirror, annotationElementName);
             if (annotElementValue.isPresent()) {
                 // fullest form of error message present on the element's annotation element value
-                messager.printMessage(kind, msg, element, annotMirror, annotElementValue.get());
+                messager.printMessage(kind, msg, element, mirror, annotElementValue.get());
             }
             else {
                 // useful message for debugging
                 messager.printMessage(Kind.OTHER, "ANOMALY: AnnotationValue [%s.%s()] was absent. Element: %s. Annotation: %s."
-                        .formatted(annotMirror.getAnnotationType().asElement().getSimpleName(), annotationElementName, element.getSimpleName(), annotMirror.toString()));
+                        .formatted(mirror.getAnnotationType().asElement().getSimpleName(), annotationElementName, element.getSimpleName(), mirror.toString()));
                 // error message present on the element's annotation
-                messager.printMessage(kind, msg, element, annotMirror);
+                messager.printMessage(kind, msg, element, mirror);
             }
         }
     }
