@@ -6,7 +6,6 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
-import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
 import static ua.com.fielden.platform.utils.CollectionUtil.isEqualContents;
 
 import java.lang.annotation.Retention;
@@ -47,7 +46,7 @@ import ua.com.fielden.platform.utils.CollectionUtil;
 public class ElementFinderTest {
 
     // TODO MetaModelLifecycleTest uses a similar value, so it should be generalized
-    private static final TypeSpec PLACEHOLDER = TypeSpec.classBuilder(nextTypeName("Placeholder")).build();
+    private static final TypeSpec PLACEHOLDER = TypeSpec.classBuilder("Placeholder").build();
 
     @Retention(RetentionPolicy.RUNTIME)
     public static @interface TestAnnot {
@@ -68,10 +67,10 @@ public class ElementFinderTest {
 
     @Test
     public void findSuperclass_returns_the_immediate_superclass_type_element() {
-        final TypeSpec iface = TypeSpec.interfaceBuilder(nextTypeName("IFace")).build();
-        final TypeSpec sup = TypeSpec.classBuilder(nextTypeName("Sup")).build();
+        final TypeSpec iface = TypeSpec.interfaceBuilder("IFace").build();
+        final TypeSpec sup = TypeSpec.classBuilder("Sup").build();
         // class Sub extends Sup implements Iface
-        final TypeSpec sub = TypeSpec.classBuilder(nextTypeName("Sub"))
+        final TypeSpec sub = TypeSpec.classBuilder("Sub")
                 .superclass(ClassName.get("", sup.name))
                 .addSuperinterface(ClassName.get("", iface.name))
                 .build();
@@ -90,8 +89,8 @@ public class ElementFinderTest {
 
     @Test 
     public void findSuperclass_returns_null_for_an_interface() {
-        final TypeSpec isup = TypeSpec.interfaceBuilder(nextTypeName("ISup")).build();
-        final TypeSpec isub = TypeSpec.interfaceBuilder(nextTypeName("ISub"))
+        final TypeSpec isup = TypeSpec.interfaceBuilder("ISup").build();
+        final TypeSpec isub = TypeSpec.interfaceBuilder("ISub")
                 .addSuperinterface(ClassName.get("", isup.name))
                 .build();
 
@@ -103,11 +102,11 @@ public class ElementFinderTest {
 
     @Test
     public void findSuperclasses_returns_an_ordered_hierarchy_of_superclasses() {
-        final TypeSpec iface = TypeSpec.interfaceBuilder(nextTypeName("IFace")).build();
+        final TypeSpec iface = TypeSpec.interfaceBuilder("IFace").build();
         // class Sup implements IFace
-        final TypeSpec sup = TypeSpec.classBuilder(nextTypeName("Sup")).build();
+        final TypeSpec sup = TypeSpec.classBuilder("Sup").build();
         // class Sub extends Sup implements IFace
-        final TypeSpec sub = TypeSpec.classBuilder(nextTypeName("Sub"))
+        final TypeSpec sub = TypeSpec.classBuilder("Sub")
                 .superclass(ClassName.get("", sup.name))
                 .addSuperinterface(ClassName.get("", iface.name))
                 .build();
@@ -145,7 +144,7 @@ public class ElementFinderTest {
         final FieldSpec static_final_String_STRING = FieldSpec.builder(String.class, "STRING", Modifier.FINAL, Modifier.STATIC).build();
         final FieldSpec String_str = FieldSpec.builder(String.class, "str").build();
         final FieldSpec final_int_i = FieldSpec.builder(int.class, "i", Modifier.FINAL).build();
-        final TypeSpec example = TypeSpec.classBuilder(nextTypeName("Example"))
+        final TypeSpec example = TypeSpec.classBuilder("Example")
                 .addFields(List.of(static_final_String_STRING, String_str, final_int_i))
                 .build();
 
@@ -162,7 +161,7 @@ public class ElementFinderTest {
 
     @Test
     public void findInheritedFields_returns_all_inherited_fields() {
-        final TypeSpec sup2 = TypeSpec.classBuilder(nextTypeName("Sup2"))
+        final TypeSpec sup2 = TypeSpec.classBuilder("Sup2")
                 // static Object staticObj
                 .addField(Object.class, "staticObj", Modifier.STATIC)
                 // protected String s
@@ -172,7 +171,7 @@ public class ElementFinderTest {
                 // double d
                 .addField(double.class, "d")
                 .build();
-        final TypeSpec sup1 = TypeSpec.classBuilder(nextTypeName("Sup1"))
+        final TypeSpec sup1 = TypeSpec.classBuilder("Sup1")
                 .superclass(ClassName.get("", sup2.name))
                 // public String s
                 .addField(String.class, "s", Modifier.PUBLIC)
@@ -181,7 +180,7 @@ public class ElementFinderTest {
                 // boolean b
                 .addField(boolean.class, "b")
                 .build();
-        final TypeSpec sub = TypeSpec.classBuilder(nextTypeName("Sub"))
+        final TypeSpec sub = TypeSpec.classBuilder("Sub")
                 .superclass(ClassName.get("", sup1.name))
                 // these should not be included
                 .addField(String.class, "s")
@@ -199,7 +198,7 @@ public class ElementFinderTest {
 
     @Test
     public void findFields_returns_both_declared_and_inherited_fields() {
-        final TypeSpec sup2 = TypeSpec.classBuilder(nextTypeName("Sup2"))
+        final TypeSpec sup2 = TypeSpec.classBuilder("Sup2")
                 // static Object staticObj
                 .addField(Object.class, "staticObj", Modifier.STATIC)
                 // protected String s
@@ -209,7 +208,7 @@ public class ElementFinderTest {
                 // double d
                 .addField(double.class, "d")
                 .build();
-        final TypeSpec sup1 = TypeSpec.classBuilder(nextTypeName("Sup1"))
+        final TypeSpec sup1 = TypeSpec.classBuilder("Sup1")
                 .superclass(ClassName.get("", sup2.name))
                 // public String s
                 .addField(String.class, "s", Modifier.PUBLIC)
@@ -218,7 +217,7 @@ public class ElementFinderTest {
                 // boolean b
                 .addField(boolean.class, "b")
                 .build();
-        final TypeSpec sub = TypeSpec.classBuilder(nextTypeName("Sub"))
+        final TypeSpec sub = TypeSpec.classBuilder("Sub")
                 .superclass(ClassName.get("", sup1.name))
                 .addField(String.class, "s")
                 .addField(String.class, "name")
@@ -233,12 +232,12 @@ public class ElementFinderTest {
 
     @Test
     public void findField_returns_the_first_matching_field() {
-        final TypeSpec sup = TypeSpec.classBuilder(nextTypeName("Sup"))
+        final TypeSpec sup = TypeSpec.classBuilder("Sup")
                 .addField(int.class, "i")
                 .addField(boolean.class, "b")
                 .addField(String.class, "s", Modifier.STATIC)
                 .build();
-        final TypeSpec sub = TypeSpec.classBuilder(nextTypeName("Sub"))
+        final TypeSpec sub = TypeSpec.classBuilder("Sub")
                 .superclass(ClassName.get("", sup.name))
                 .addField(int.class, "i")
                 .addField(String.class, "s")
@@ -264,12 +263,12 @@ public class ElementFinderTest {
     @Test
     public void findFieldsAnnotatedWith_returns_all_fields_having_the_annotation() {
         final FieldSpec sProp = FieldSpec.builder(String.class, "s").addAnnotation(TestAnnot.class).build();
-        final TypeSpec sup = TypeSpec.classBuilder(nextTypeName("Sup"))
+        final TypeSpec sup = TypeSpec.classBuilder("Sup")
                 .addField(sProp)
                 .addField(Integer.class, "i")
                 .build();
         final FieldSpec supProp = FieldSpec.builder(ClassName.get("", sup.name), "sup").addAnnotation(TestAnnot.class).build();
-        final TypeSpec sub = TypeSpec.classBuilder(nextTypeName("Sub"))
+        final TypeSpec sub = TypeSpec.classBuilder("Sub")
                 .superclass(ClassName.get("", sup.name))
                 .addField(Double.class, "d")
                 .addField(supProp)
@@ -285,16 +284,16 @@ public class ElementFinderTest {
     @Test
     public void getFieldAnnotations_returns_a_list_of_directly_present_annotations() {
         // a single-use annotation type that will be present on an inherited field
-        final TypeSpec oneTimeAnnotType = TypeSpec.annotationBuilder(nextTypeName("OneTimeAnnot")).build();
+        final TypeSpec oneTimeAnnotType = TypeSpec.annotationBuilder("OneTimeAnnot").build();
 
         final AnnotationSpec oneTimeAnnot = AnnotationSpec.builder(ClassName.get("", oneTimeAnnotType.name)).build();
-        final TypeSpec sup = TypeSpec.classBuilder(nextTypeName("Sup"))
+        final TypeSpec sup = TypeSpec.classBuilder("Sup")
                 .addField(FieldSpec.builder(String.class, "s").addAnnotation(oneTimeAnnot).build())
                 .build();
 
         // @TestAnnot(value = "hello")
         final AnnotationSpec subFieldAnnot = AnnotationSpec.builder(TestAnnot.class).addMember("value", "$S", "hello").build();
-        final TypeSpec sub = TypeSpec.classBuilder(nextTypeName("Sub"))
+        final TypeSpec sub = TypeSpec.classBuilder("Sub")
                 .superclass(ClassName.get("", sup.name))
                 .addField(FieldSpec.builder(String.class, "s").addAnnotation(subFieldAnnot).build())
                 .build();
