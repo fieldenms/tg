@@ -7,8 +7,8 @@ import static java.util.stream.Stream.iterate;
 import static ua.com.fielden.platform.utils.StreamUtils.stopAfter;
 
 import java.lang.annotation.Annotation;
-import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
@@ -16,6 +16,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.lang.model.AnnotatedConstruct;
 import javax.lang.model.element.AnnotationMirror;
@@ -331,47 +332,59 @@ public class ElementFinder {
     }
 
     /**
-     * Returns a set of executable elements, representing methods, declared in {@code typeElement} and matching {@code predicate}.
-     *
-     * @param typeElement
-     * @param predicate
-     * @return
+     * Streams declared methods of a type element that satisfy the predicate.
+     * @see ElementKind#METHOD
      */
-    public Set<ExecutableElement> findDeclaredMethods(final TypeElement typeElement, final Predicate<ExecutableElement> predicate) {
+    public Stream<ExecutableElement> streamDeclaredMethods(final TypeElement typeElement, final Predicate<ExecutableElement> predicate) {
         return typeElement.getEnclosedElements().stream()
                 .filter(el -> el.getKind() == ElementKind.METHOD)
                 .map(el -> (ExecutableElement) el)
-                .filter(predicate)
-                .collect(toCollection(LinkedHashSet::new));
+                .filter(predicate);
     }
 
     /**
-     * Find methods that are explicitly declared by this {@link TypeElement}.
+     * Streams declared methods of a type element.
+     * @see ElementKind#METHOD
+     */
+    public Stream<ExecutableElement> streamDeclaredMethods(final TypeElement typeElement) {
+        return streamDeclaredMethods(typeElement, el -> true);
+    }
+
+    /**
+     * Finds declared methods of a type element that satisfy the predicate.
+     * @see ElementKind#METHOD
+     */
+    public Set<ExecutableElement> findDeclaredMethods(final TypeElement typeElement, final Predicate<ExecutableElement> predicate) {
+        return streamDeclaredMethods(typeElement, predicate).collect(toCollection(LinkedHashSet::new));
+    }
+
+    /**
+     * Finds declared methods of a type element.
+     * @see ElementKind#METHOD
      */
     public Set<ExecutableElement> findDeclaredMethods(TypeElement typeElement) {
         return findDeclaredMethods(typeElement, el -> true);
     }
 
     /**
-     * Looks for executable elements, representing inherited methods.
-     *
-     * @param typeElement
-     * @return
+     * Finds inherited methods of a type element. Ignores superinterfaces.
+     * @see ElementKind#METHOD
      */
     public Set<ExecutableElement> findInheritedMethods(final TypeElement typeElement) {
         return iterate(findSuperclass(typeElement), superType -> findSuperclass(superType))
                 .takeWhile(el -> el != null)
                 .flatMap(type -> findDeclaredMethods(type).stream()).collect(toCollection(LinkedHashSet::new));
-
     }
 
     /**
-     * Looks for executable elements, representing all declared and inherited methods. The order is preserved, giving first priority to declared (important for overriden) methods.
+     * Finds all methods of a type element (both declared and inherited). Ignores superinterfaces.
+     * The results are ordered such that declared methods appear first.
+     * @see ElementKind#METHOD
      */
-    public Set<ExecutableElement> findMethods(TypeElement typeElement) {
-        final Set<ExecutableElement> fields = findDeclaredMethods(typeElement);
-        fields.addAll(findInheritedMethods(typeElement));
-        return fields;
+    public LinkedHashSet<ExecutableElement> findMethods(TypeElement typeElement) {
+        final LinkedHashSet<ExecutableElement> methods = streamDeclaredMethods(typeElement).collect(toCollection(LinkedHashSet::new));
+        methods.addAll(findInheritedMethods(typeElement));
+        return methods;
     }
 
     /**
