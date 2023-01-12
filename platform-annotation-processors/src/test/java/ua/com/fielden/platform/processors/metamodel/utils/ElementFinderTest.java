@@ -10,13 +10,16 @@ import static ua.com.fielden.platform.utils.CollectionUtil.isEqualContents;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -30,8 +33,11 @@ import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.JavaFile;
+import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
+import com.squareup.javapoet.TypeVariableName;
 
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileManager;
@@ -39,9 +45,10 @@ import ua.com.fielden.platform.utils.CollectionUtil;
 
 /**
  * A test case for utility functions in {@link ElementFinder}.
+ * <p>
+ * Most tests use the javapoet API to dynamically create java sources that will be subject to processing.
  *
  * @author TG Team
- *
  */
 public class ElementFinderTest {
 
@@ -310,12 +317,124 @@ public class ElementFinderTest {
         });
     }
 
+    @Test
+    public void findDeclaredMethods_returns_declared_methods_that_satisfy_predicate() {
+        final TypeSpec sup = TypeSpec.classBuilder("Sup")
+                // this method should be ignored
+                .addMethod(MethodSpec.methodBuilder("supMethod").build())
+                .build();
+
+        final MethodSpec m1 = MethodSpec.methodBuilder("m1").addParameter(String.class, "arg").build();
+        final MethodSpec m2 = MethodSpec.methodBuilder("m2").build();
+        final TypeSpec sub = TypeSpec.classBuilder("Sub")
+                .superclass(ClassName.get("", sup.name))
+                // constructors should be ignored
+                .addMethod(MethodSpec.constructorBuilder().build())
+                .addMethods(List.of(m1, m2))
+                .addField(int.class, "i")
+                .build();
+
+        processAndEvaluate(List.of(sup, sub), finder -> {
+            final TypeElement subEl = finder.elements.getTypeElement(sub.name);
+            // without any predicate all declared methods are returned
+            assertEqualContents(List.of(m1, m2),
+                    finder.findDeclaredMethods(subEl).stream().map(m -> toMethodSpec(m)).toList());
+            // with a predicate
+            final Predicate<ExecutableElement> acceptsArgs = (m -> !m.getParameters().isEmpty());
+            assertEqualContents(List.of(m1),
+                    finder.findDeclaredMethods(subEl, acceptsArgs).stream().map(m -> toMethodSpec(m)).toList());
+        }); 
+    }
+
+    @Test
+    public void findInheritedMethods_returns_all_methods_inherited_from_superclasses() {
+        final MethodSpec ifaceMethod = MethodSpec.methodBuilder("ifaceMethod").addModifiers(Modifier.PUBLIC, Modifier.DEFAULT).build();
+        final TypeSpec iface = TypeSpec.interfaceBuilder("IFace")
+                // interface declarations should be ignored
+                .addMethod(ifaceMethod)
+                .build();
+
+        final MethodSpec supIfaceMethod = MethodSpec.methodBuilder("ifaceMethod").build();
+        final MethodSpec supMethod = MethodSpec.methodBuilder("supMethod").build();
+        final TypeSpec sup = TypeSpec.classBuilder("Sup")
+                .addSuperinterface(ClassName.get("", iface.name))
+                // constructors should be ignored
+                .addMethod(MethodSpec.constructorBuilder().build())
+                .addMethods(List.of(supIfaceMethod, supMethod))
+                .addField(double.class, "d")
+                .build();
+
+        final TypeSpec sub = TypeSpec.classBuilder("Sub")
+                .superclass(ClassName.get("", sup.name))
+                // declared methods should be ignored
+                .addMethod(MethodSpec.methodBuilder("m1").build())
+                .addField(int.class, "i")
+                .build();
+
+        processAndEvaluate(List.of(iface, sup, sub), finder -> {
+            // declared methods of Object should also be found
+            final List<MethodSpec> objectMethods = finder.findDeclaredMethods(finder.getTypeElement(Object.class)).stream()
+                    .map(m -> toMethodSpec(m)).toList();
+            final TypeElement subEl = finder.elements.getTypeElement(sub.name);
+            assertEqualContents(concat(objectMethods, List.of(supIfaceMethod, supMethod)),
+                    finder.findInheritedMethods(subEl).stream().map(m -> toMethodSpec(m)).toList());
+        }); 
+    }
+
+    @Test
+    public void findMethods_returns_all_methods_with_declared_ones_ordered_first() {
+        final MethodSpec ifaceMethod = MethodSpec.methodBuilder("ifaceMethod").addModifiers(Modifier.PUBLIC, Modifier.DEFAULT).build();
+        final TypeSpec iface = TypeSpec.interfaceBuilder("IFace")
+                // interface declarations should be ignored
+                .addMethod(ifaceMethod)
+                .build();
+
+        final MethodSpec supIfaceMethod = MethodSpec.methodBuilder("ifaceMethod").build();
+        final MethodSpec supMethod = MethodSpec.methodBuilder("supMethod").build();
+        final TypeSpec sup = TypeSpec.classBuilder("Sup")
+                .addSuperinterface(ClassName.get("", iface.name))
+                .addMethods(List.of(supIfaceMethod, supMethod))
+                .addField(double.class, "d")
+                .build();
+
+        final List<MethodSpec> subMethods = List.of(MethodSpec.methodBuilder("m1").build(), MethodSpec.methodBuilder("m2").build());
+        final TypeSpec sub = TypeSpec.classBuilder("Sub")
+                .superclass(ClassName.get("", sup.name))
+                // these methods should appear first
+                .addMethods(subMethods)
+                .addField(int.class, "i")
+                .build();
+
+        processAndEvaluate(List.of(iface, sup, sub), finder -> {
+            // declared methods of Object should also be found
+            final List<MethodSpec> objectMethods = finder.findDeclaredMethods(finder.getTypeElement(Object.class)).stream()
+                    .map(m -> toMethodSpec(m)).toList();
+            final TypeElement subEl = finder.elements.getTypeElement(sub.name);
+            final List<MethodSpec> foundMethods = finder.findMethods(subEl).stream().map(m -> toMethodSpec(m)).toList();
+            assertTrue(startsWithList(foundMethods, subMethods));
+            assertEqualContents(concat(subMethods, List.of(supMethod, supIfaceMethod), objectMethods), foundMethods);
+        });
+    }
+
     // ==================== HELPER METHODS ====================
     /**
      * A convenient method to convert a {@link VariableElement} to a {@link FieldSpec} for further comparison.
      */
     private FieldSpec toFieldSpec(final VariableElement el) {
         return FieldSpec.builder(TypeName.get(el.asType()), el.getSimpleName().toString(), el.getModifiers().toArray(Modifier[]::new))
+                .addAnnotations(el.getAnnotationMirrors().stream().map(AnnotationSpec::get).toList())
+                .build();
+    }
+
+    /**
+     * A convenient method to convert a {@link ExecutableElement} to a {@link MethodSpec} for further comparison.
+     */
+    private MethodSpec toMethodSpec(final ExecutableElement el) {
+        return MethodSpec.methodBuilder(el.getSimpleName().toString())
+                .returns(TypeName.get(el.getReturnType()))
+                .addParameters(el.getParameters().stream().map(ParameterSpec::get).toList())
+                .addExceptions(el.getThrownTypes().stream().map(TypeName::get).toList())
+                .addTypeVariables(el.getTypeParameters().stream().map(TypeVariableName::get).toList())
                 .addAnnotations(el.getAnnotationMirrors().stream().map(AnnotationSpec::get).toList())
                 .build();
     }
@@ -342,7 +461,7 @@ public class ElementFinderTest {
         try {
             final boolean success = comp.compileAndEvaluate(procEnv -> 
                 consumer.accept(new ElementFinder(procEnv.getElementUtils(), procEnv.getTypeUtils())));
-            assertTrue(success);
+            assertTrue("Processing of sources failed.", success);
         } catch (final Throwable t) {
             throw new RuntimeException(t);
         } finally {
@@ -362,6 +481,21 @@ public class ElementFinderTest {
         else {
             fail("expected:<%s> but was:<%s>".formatted(CollectionUtil.toString(c1, ", "), CollectionUtil.toString(c2, ", ")));
         }
+    }
+
+    private <T> boolean startsWithList(final List<T> c1, final List<T> c2) {
+        if (c1.size() < c2.size()) {
+            return false;
+        }
+        return c2.equals(c1.subList(0, c2.size()));
+    }
+
+    private <T> List<T> concat(final Collection<T>... collections) {
+        final ArrayList<T> list = new ArrayList<>(Stream.of(collections).map(Collection::size).reduce(0, (a, b) -> a + b));
+        for (Collection<T> c: collections) {
+            list.addAll(c);
+        }
+        return Collections.unmodifiableList(list);
     }
 
 }
