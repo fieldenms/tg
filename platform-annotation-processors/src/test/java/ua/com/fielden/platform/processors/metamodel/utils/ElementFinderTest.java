@@ -23,8 +23,11 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ArrayType;
+import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Types;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.ToolProvider;
@@ -470,6 +473,34 @@ public class ElementFinderTest {
     }
 
     @Test
+    public void asType_returns_a_type_mirror_representing_a_class() {
+        processAndEvaluate(finder -> {
+            final Types types = finder.types;
+            // primitive type
+            final PrimitiveType intType = types.getPrimitiveType(TypeKind.INT);
+            assertTrue(types.isSameType(intType, finder.asType(int.class)));
+            assertFalse(types.isSameType(intType, finder.asType(Integer.class)));
+
+            // void
+            assertTrue(types.isSameType(types.getNoType(TypeKind.VOID), finder.asType(void.class)));
+
+            // array types
+            // primitive type array
+            assertTrue(types.isSameType(types.getArrayType(intType), finder.asType(int[].class)));
+            // declared type array
+            final ArrayType stringArrayType = types.getArrayType(finder.asType(String.class));
+            assertTrue(types.isSameType(stringArrayType, finder.asType(String[].class)));
+            // nested array
+            assertTrue(types.isSameType(types.getArrayType(stringArrayType), finder.asType(String[][].class)));
+
+            // declared type
+            assertTrue(types.isSameType(finder.getTypeElement(Object.class).asType(), finder.asType(Object.class)));
+            // generic type
+            assertTrue(types.isSameType(types.getDeclaredType(finder.getTypeElement(List.class)), finder.asType(List.class)));
+        });
+    }
+
+    @Test
     public void isSameType_returns_true_if_type_mirror_and_class_represent_the_same_type() {
         final TypeSpec example = TypeSpec.classBuilder("Example")
                 // <T extends List>
@@ -482,6 +513,7 @@ public class ElementFinderTest {
 
             // primitive type int
             assertTrue(finder.isSameType(finder.types.getPrimitiveType(TypeKind.INT), int.class));
+            assertFalse(finder.isSameType(finder.types.getPrimitiveType(TypeKind.INT), Integer.class));
             // void
             assertTrue(finder.isSameType(finder.types.getNoType(TypeKind.VOID), void.class));
             // Void != void
@@ -494,18 +526,18 @@ public class ElementFinderTest {
 
             // generic type
             final TypeElement listElement = finder.getTypeElement(List.class);
-            final TypeMirror listOfStrings = finder.types.getDeclaredType(listElement, stringType);
-            final TypeMirror rawList = finder.types.getDeclaredType(listElement);
+            final TypeMirror stringListType = finder.types.getDeclaredType(listElement, stringType);
+            final TypeMirror rawListType = finder.types.getDeclaredType(listElement);
             // List<String> != List
-            assertFalse(finder.isSameType(listOfStrings, List.class));
+            assertFalse(finder.isSameType(stringListType, List.class));
             // (erased List<String> = List) == List
-            assertTrue(finder.isSameType(rawList, List.class));
+            assertTrue(finder.isSameType(rawListType, List.class));
 
             // array type
-            final ArrayType arrayOfStrings = finder.types.getArrayType(stringType);
-            assertTrue(finder.isSameType(arrayOfStrings, String[].class));
+            final ArrayType stringArrayType = finder.types.getArrayType(stringType);
+            assertTrue(finder.isSameType(stringArrayType, String[].class));
             // nested array type
-            assertTrue(finder.isSameType(finder.types.getArrayType(arrayOfStrings), String[][].class));
+            assertTrue(finder.isSameType(finder.types.getArrayType(stringArrayType), String[][].class));
 
             // wildcard type: ? extends List
             assertFalse(finder.isSameType(finder.types.getWildcardType(finder.getTypeElement(List.class).asType(), null), ArrayList.class));
