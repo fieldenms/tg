@@ -437,12 +437,16 @@ public class ElementFinder {
     }
 
     /**
-     * Tests whether the type mirror and class represent the same type.
-     * If the type mirror represents a type variable or a wildcard, then {@code false} is returned.
+     * Tests whether the type mirror and class represent the same type. Such a comparison makes sense only if the type mirror represents one of:
+     * primitive type, void type, array type, declared type (class/interface). Otherwise {@code false} is returned.
+     * <p>
+     * Comparison of generic types requires special care.
+     * Since {@link Class} instances can represent only raw types, if a type mirror for a generic type does not represent its raw type, 
+     * then {@code false} will be returned. One can obtain a raw type from a type mirror using {@link Types#erasure(TypeMirror)}.
      */
     public boolean isSameType(final TypeMirror mirror, final Class<?> clazz) {
         final TypeKind kind = mirror.getKind();
-        if (kind.isPrimitive() && clazz.isPrimitive()) {
+        if (clazz.isPrimitive() && kind.isPrimitive()) {
             return (kind == TypeKind.BYTE && clazz.equals(byte.class))
                     || (kind == TypeKind.SHORT && clazz.equals(short.class))
                     || (kind == TypeKind.INT && clazz.equals(int.class))
@@ -452,18 +456,30 @@ public class ElementFinder {
                     || (kind == TypeKind.BOOLEAN && clazz.equals(boolean.class))
                     || (kind == TypeKind.CHAR && clazz.equals(char.class));
         }
-        else if (kind == TypeKind.ARRAY && clazz.isArray()) {
-            return isSameType(((ArrayType) mirror).getComponentType(), clazz.componentType());
-        }
         else if (kind == TypeKind.VOID && clazz.equals(void.class)) {
             return true;
         }
+        else if (kind == TypeKind.ARRAY && clazz.isArray()) {
+            return isSameType(((ArrayType) mirror).getComponentType(), clazz.componentType());
+        }
         else if (kind == TypeKind.DECLARED) {
-            return equals(toTypeElement(mirror), clazz);
+            return types.isSameType(mirror, getRawType(clazz));
         }
-        else {
-            return false;
-        }
+        return false;
+    }
+
+    /**
+     * Returns a raw type representation.
+     * <p>
+     * This method is useful for erasing generic types, whereas {@code getTypeElement(clazz).asType()} would return a generic type.
+     * <p>
+     * For example, if {@code clazz = List.class}, then a type mirror representng {@code List<E>} is generic, which is different from 
+     * the raw type {@code List}.
+     * @param clazz
+     * @return
+     */
+    public DeclaredType getRawType(final Class<?> clazz) {
+        return types.getDeclaredType(getTypeElement(clazz));
     }
 
     /**
