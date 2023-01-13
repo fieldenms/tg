@@ -64,15 +64,19 @@ public class ElementFinder {
 
     /**
      * A shortcut for {@link Elements#getTypeElement(CharSequence)}.
+     * <p>
+     * If no corespodning type element was found, then a runtime exception is thrown.
+     * Generally, this should never occur, since the {@link Class} argument guarantees the existence of that type. 
+     * <p>
+     * In case of multi-module application where there are multiple classes with the same canonical name, the first match is returned.
+     * 
      * @param clazz
-     * @return type element representing {@code clazz} or {@code null} 
+     * @return type element representing {@code clazz}
+     * @throws ElementFinderException
      */
     public TypeElement getTypeElement(final Class<?> clazz) {
-        return elements.getTypeElement(clazz.getCanonicalName());
-    }
-
-    public Optional<TypeElement> getTypeElementOpt(final Class<?> clazz) {
-        return Optional.ofNullable(getTypeElement(clazz));
+        return elements.getAllTypeElements(clazz.getCanonicalName()).stream().findFirst()
+                .orElseThrow(() -> new ElementFinderException("No type element was found for class %s".formatted(clazz.getCanonicalName())));
     }
 
     /**
