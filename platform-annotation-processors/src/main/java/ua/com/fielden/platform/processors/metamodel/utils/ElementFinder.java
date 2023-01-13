@@ -27,7 +27,6 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -72,7 +71,7 @@ public class ElementFinder {
      * 
      * @param clazz
      * @return type element representing {@code clazz}
-     * @throws ElementFinderException
+     * @throws ElementFinderException if no coresponding type element was found
      */
     public TypeElement getTypeElement(final Class<?> clazz) {
         return elements.getAllTypeElements(clazz.getCanonicalName()).stream().findFirst()
@@ -441,68 +440,67 @@ public class ElementFinder {
     }
 
     /**
+     * Returns a type mirror coresponding to the type represented by {@code clazz}.
+     * <p>
+     * For generic types a raw type representation is returned.
+     *
+     * @param clazz
+     * @return
+     * @throws ElementFinderException if no coresponding type element was found
+     */
+    public TypeMirror asType(final Class<?> clazz) {
+        if (clazz.isPrimitive()) {
+            if (clazz.equals(void.class)) {
+                return types.getNoType(TypeKind.VOID);
+            } else if (clazz.equals(int.class)) {
+                return types.getPrimitiveType(TypeKind.INT);
+            } else if (clazz.equals(boolean.class)) {
+                return types.getPrimitiveType(TypeKind.BOOLEAN);
+            } else if (clazz.equals(double.class)) {
+                return types.getPrimitiveType(TypeKind.DOUBLE);
+            } else if (clazz.equals(long.class)) {
+                return types.getPrimitiveType(TypeKind.LONG);
+            } else if (clazz.equals(short.class)) {
+                return types.getPrimitiveType(TypeKind.SHORT);
+            } else if (clazz.equals(byte.class)) {
+                return types.getPrimitiveType(TypeKind.BYTE);
+            } else if (clazz.equals(float.class)) {
+                return types.getPrimitiveType(TypeKind.FLOAT);
+            } else if (clazz.equals(char.class)) {
+                return types.getPrimitiveType(TypeKind.CHAR);
+            }
+        }
+        else if (clazz.isArray()) {
+            return types.getArrayType(asType(clazz.getComponentType()));
+        }
+        // clazz is class or interface, so return a raw type mirror
+        return types.getDeclaredType(getTypeElement(clazz));
+    }
+
+    /**
      * Tests whether the type mirror and class represent the same type. Such a comparison makes sense only if the type mirror represents one of:
      * primitive type, void type, array type, declared type (class/interface). Otherwise {@code false} is returned.
      * <p>
      * Comparison of generic types requires special care.
      * Since {@link Class} instances can represent only raw types, if a type mirror for a generic type does not represent its raw type, 
      * then {@code false} will be returned. One can obtain a raw type from a type mirror using {@link Types#erasure(TypeMirror)}.
+     * 
+     * @throws ElementFinderException if no coresponding type element was found
      */
     public boolean isSameType(final TypeMirror mirror, final Class<?> clazz) {
-        final TypeKind kind = mirror.getKind();
-        if (clazz.isPrimitive() && kind.isPrimitive()) {
-            return (kind == TypeKind.BYTE && clazz.equals(byte.class))
-                    || (kind == TypeKind.SHORT && clazz.equals(short.class))
-                    || (kind == TypeKind.INT && clazz.equals(int.class))
-                    || (kind == TypeKind.LONG && clazz.equals(long.class))
-                    || (kind == TypeKind.FLOAT && clazz.equals(float.class))
-                    || (kind == TypeKind.DOUBLE && clazz.equals(double.class))
-                    || (kind == TypeKind.BOOLEAN && clazz.equals(boolean.class))
-                    || (kind == TypeKind.CHAR && clazz.equals(char.class));
-        }
-        else if (kind == TypeKind.VOID && clazz.equals(void.class)) {
-            return true;
-        }
-        else if (kind == TypeKind.ARRAY && clazz.isArray()) {
-            return isSameType(((ArrayType) mirror).getComponentType(), clazz.componentType());
-        }
-        else if (kind == TypeKind.DECLARED) {
-            return types.isSameType(mirror, getRawType(clazz));
-        }
-        return false;
+        return types.isSameType(mirror, asType(clazz));
     }
 
     /**
-     * Returns a raw type representation.
-     * <p>
-     * This method is useful for erasing generic types, whereas {@code getTypeElement(clazz).asType()} would return a generic type.
-     * <p>
-     * For example, if {@code clazz = List.class}, then a type mirror representng {@code List<E>} is generic, which is different from 
-     * the raw type {@code List}.
-     * @param clazz
-     * @return
-     */
-    public DeclaredType getRawType(final Class<?> clazz) {
-        return types.getDeclaredType(getTypeElement(clazz));
-    }
-
-    /**
-     * Tests whether an instance of {@link TypeMirror} ({@code typeMirror}) is a subtype of a {@link Class} instance ({@code type}).
-     * Any type is considered to be a subtype of itself.
+     * Similar to {@link Types#isSubtype(TypeMirror, TypeMirror)}, but accepts {@link Class} as the second type.
      *
-     * @param typeMirror  the child type
-     * @param type  the parent type
-     * @return {@code true} if and only if the first type is a subtype
-     *          of the second
+     * @param typeMirror the first type
+     * @param clazz the second type
+     * @return {@code true} iff the first type is a subtype of the second
+     * @throws ElementFinderException if no coresponding type element was found
      */
-    public boolean isSubtype(final TypeMirror typeMirror, final Class<?> type) {
-        if (typeMirror.getKind() != TypeKind.DECLARED) {
-            return false;
-        }
-        if (equals(toTypeElement(typeMirror), type)) {
-            return true;
-        }
-        return types.directSupertypes(typeMirror).stream().anyMatch(tm -> isSubtype(tm, type));
+    public boolean isSubtype(final TypeMirror mirror, final Class<?> clazz) {
+        return types.isSubtype(mirror, asType(clazz));
     }
 
     public boolean isTopLevelClass(final Element element) {
