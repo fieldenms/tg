@@ -47,8 +47,8 @@ import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelEx
 public class ElementFinder {
     public static final Class<?> DEFAULT_ROOT_CLASS = Object.class;
 
-    protected final Elements elements;
-    protected final Types types;
+    public final Elements elements;
+    public final Types types;
 
     public ElementFinder(final Elements elements, final Types types) {
         if (elements == null) {
@@ -60,14 +60,6 @@ public class ElementFinder {
 
         this.elements = elements;
         this.types = types;
-    }
-
-    public Elements getElements() {
-        return this.elements;
-    }
-
-    public Types getTypes() {
-        return this.types;
     }
 
     /**

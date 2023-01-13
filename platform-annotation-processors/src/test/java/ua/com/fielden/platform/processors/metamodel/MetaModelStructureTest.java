@@ -77,10 +77,10 @@ public class MetaModelStructureTest {
     }
     
     private static void validateSetup() {
-        if (elementFinder.getElements().getPackageElement(TEST_ENTITIES_PKG_NAME) == null) {
+        if (elementFinder.elements.getPackageElement(TEST_ENTITIES_PKG_NAME) == null) {
             throw new TestCaseConfigException("Package with test entities wasn't found");
         }
-        if (elementFinder.getElements().getPackageElement(TEST_META_MODELS_PKG_NAME) == null) {
+        if (elementFinder.elements.getPackageElement(TEST_META_MODELS_PKG_NAME) == null) {
             throw new TestCaseConfigException("Package with test meta-models wasn't found");
         }
     }
@@ -188,10 +188,11 @@ public class MetaModelStructureTest {
         final MetaModelElement superEntityMetaModel = findMetaModel(superEntity);
 
         // SubEntity's meta-model extends SuperEntity's meta-model ?
-        assertTrue(elementFinder.getTypes().isSameType(subEntityMetaModel.getSuperclass(), superEntityMetaModel.asType()));
+        assertTrue(elementFinder.types.isSameType(subEntityMetaModel.getSuperclass(), superEntityMetaModel.asType()));
         
         final Set<PropertyElement> subEntityDeclaredProps = entityFinder.findDeclaredProperties(subEntity);
         final Set<ExecutableElement> subEntityDeclaredMetamodeledProps = metaModelFinder.findDeclaredPropertyMethods(subEntityMetaModel);
+        // TODO "desc" and "id" may also be generated
         assertEquals(subEntityDeclaredProps.size(), subEntityDeclaredMetamodeledProps.size());
 
         for (final PropertyElement prop: subEntityDeclaredProps) {
@@ -241,7 +242,7 @@ public class MetaModelStructureTest {
      */
     @Test
     public void aliased_meta_model_extends_a_regular_one() {
-        final Elements elements = elementFinder.getElements();
+        final Elements elements = elementFinder.elements;
         final List<MetaModelElement> aliasedMetaModels = elements.getPackageElement(TEST_META_MODELS_PKG_NAME).getEnclosedElements().stream()
                 .filter(el -> el.getKind() == ElementKind.CLASS)
                 .map(el -> (TypeElement) el)
@@ -271,7 +272,7 @@ public class MetaModelStructureTest {
      */
     @Test
     public void aliased_meta_model_provides_public_read_only_alias_String() {
-        final Elements elements = elementFinder.getElements();
+        final Elements elements = elementFinder.elements;
         final List<MetaModelElement> aliasedMetaModels = elements.getPackageElement(TEST_META_MODELS_PKG_NAME).getEnclosedElements().stream()
                 .filter(el -> el.getKind() == ElementKind.CLASS)
                 .map(el -> (TypeElement) el)
