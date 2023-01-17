@@ -625,7 +625,6 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
             if (NONE != fetchCategory) {
                 throw new FetchProviderException("Root provider has fetch category other than NONE.");
             }
-
             if (!isUnionEntityType(entityType)) {
                 // only composite parts for composite entity and only 'key' otherwise
                 final List<String> keyMemberNames = getKeyMembers(entityType).stream().map(Field::getName).collect(toList());
@@ -633,20 +632,22 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
                     enhanceWith(keyMemberName, NONE);
                     addKeysTo(keyMemberName, false); // there is no need to fetch descriptions of key members -- 'desc' is only relevant to the top-level property
                 }
-
                 extendWithIdAndVersion(this);
-
                 if (withDesc && hasDescProperty(entityType)) { // fetch description only if the API call requires that (withDesc == true) and entity type has description property in it
                     enhanceWith(DESC);
                 }
-                // no need to enhance fetch provider with common property -- "" is never common
             } else {
+                // in case of union type, need to add union sub-props with lean NONE fetch category and perform addKeysTo(...) for each of them;
                 final List<String> unionPropNames = unionProperties((Class<AbstractUnionEntity>) entityType).stream().map(Field::getName).collect(toList());
                 for (final String unionPropName: unionPropNames) {
                     enhanceWith(unionPropName, NONE);
                     addKeysTo(unionPropName, withDesc);
                 }
+                // ID and VERSION is not applicable for union types, - extendWithIdAndVersion invocation is not needed;
+                // also, @DescTitle should not be used on union type -- description is either common property from union types or can be present individually there;
+                // so, we delegate 'withDesc' for each union sub-props in addKeysTo(...) invocation above, but skip adding it to union type itself
             }
+            // no need to enhance fetch provider with common property -- "" is never common
             return this;
         }
     }
