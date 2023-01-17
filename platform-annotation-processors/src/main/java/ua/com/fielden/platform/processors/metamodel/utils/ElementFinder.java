@@ -7,7 +7,6 @@ import static java.util.stream.Stream.iterate;
 import static ua.com.fielden.platform.utils.StreamUtils.stopAfter;
 
 import java.lang.annotation.Annotation;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
@@ -37,13 +36,12 @@ import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderExce
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelException;
 
 /**
- * A collection of utility functions to finding various type elements. 
+ * A collection of utility methods for operating on elements and types, an extension of {@link Elements} and {@link Types}. 
  *
  * @author TG Team
- *
  */
 public class ElementFinder {
-    public static final Class<?> DEFAULT_ROOT_CLASS = Object.class;
+    public static final Class<?> ROOT_CLASS = Object.class;
 
     public final Elements elements;
     public final Types types;
@@ -134,7 +132,7 @@ public class ElementFinder {
      * Like {@link #streamSuperclasses(TypeElement, Class)} with {@code rootType} equal to {@code Object}. 
      */
     public Stream<TypeElement> streamSuperclasses(final TypeElement typeElement) {
-        return streamSuperclasses(typeElement, DEFAULT_ROOT_CLASS);
+        return streamSuperclasses(typeElement, ROOT_CLASS);
     }
 
     /**
@@ -148,18 +146,7 @@ public class ElementFinder {
      * Collects the elements of {@link #streamSuperclasses(TypeElement)} into a list. 
      */
     public List<TypeElement> findSuperclasses(final TypeElement typeElement) {
-        return streamSuperclasses(typeElement, DEFAULT_ROOT_CLASS).toList();
-    }
-
-    /**
-     * Finds all super-types of a {@link TypeMirror}. No particular order is preserved.
-     *
-     * @param typeMirror
-     * @return
-     */
-    public List<TypeMirror> findSupertypes(final TypeMirror typeMirror) {
-        final List<TypeMirror> supertypes = (List<TypeMirror>) types.directSupertypes(typeMirror);
-        return supertypes.stream().flatMap(tm -> findSupertypes(tm).stream()).toList();
+        return streamSuperclasses(typeElement, ROOT_CLASS).toList();
     }
 
     /**
@@ -215,7 +202,7 @@ public class ElementFinder {
      * Returns a stream of variable elements, representing all inherited fields of the type element.
      */
     public Stream<VariableElement> streamInheritedFields(final TypeElement element) {
-        return streamInheritedFields(element, DEFAULT_ROOT_CLASS);
+        return streamInheritedFields(element, ROOT_CLASS);
     }
 
     /**
