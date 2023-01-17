@@ -296,54 +296,54 @@ public class FetchProviderTest {
     }
     
     @Test
-    public void fetchNone_provider_generates_fetchNone_EQL_model_with_default_NONE_subprovider() {
+    public void fetchNone_provider_generates_fetchNone_EQL_model_with_default_KEY_AND_DESC_subprovider() {
         final IFetchProvider<TgPersistentEntityWithProperties> fp = EntityUtils.fetchNone(TgPersistentEntityWithProperties.class).with("entityProp");
         
         assertEquals(linkedSetOf("entityProp"), fp.allProperties());
-        assertEquals(fetchNone(TgPersistentEntityWithProperties.class).with("entityProp", fetchNone(TgPersistentEntityWithProperties.class)), fp.fetchModel());
+        assertEquals(fetchNone(TgPersistentEntityWithProperties.class).with("entityProp", fetchKeyAndDescOnly(TgPersistentEntityWithProperties.class)), fp.fetchModel());
     }
     
     @Test
-    public void fetchNone_provider_generates_fetchNone_EQL_model_with_default_NONE_subproviders_for_dotNotated_property_and_concrete_subprovider() {
+    public void fetchNone_provider_generates_fetchNone_EQL_model_with_default_KEY_AND_DESC_subproviders_for_dotNotated_property_and_concrete_subprovider() {
         final IFetchProvider<TgPersistentEntityWithProperties> fp = EntityUtils.fetchNone(TgPersistentEntityWithProperties.class).with("entityProp.entityProp.entityProp", EntityUtils.fetch(TgPersistentEntityWithProperties.class));
         
         assertEquals(linkedSetOf("entityProp", "entityProp.entityProp", "entityProp.entityProp.entityProp"), fp.allProperties());
         assertEquals(
             fetchNone(TgPersistentEntityWithProperties.class)
-                .with("entityProp", fetchNone(TgPersistentEntityWithProperties.class)
-                        .with("entityProp", fetchNone(TgPersistentEntityWithProperties.class)
+                .with("entityProp", fetchKeyAndDescOnly(TgPersistentEntityWithProperties.class)
+                        .with("entityProp", fetchKeyAndDescOnly(TgPersistentEntityWithProperties.class)
                                 .with("entityProp", fetchOnly(TgPersistentEntityWithProperties.class)))),
             fp.fetchModel()
         );
     }
     
     @Test
-    public void fetchNone_provider_generates_fetchNone_EQL_model_with_default_NONE_subproviders_for_dotNotated_property() {
+    public void fetchNone_provider_generates_fetchNone_EQL_model_with_default_KEY_AND_DESC_subproviders_for_dotNotated_property() {
         final IFetchProvider<TgPersistentEntityWithProperties> fp = EntityUtils.fetchNone(TgPersistentEntityWithProperties.class).with("entityProp.entityProp.entityProp");
         
         assertEquals(linkedSetOf("entityProp", "entityProp.entityProp", "entityProp.entityProp.entityProp"), fp.allProperties());
         assertEquals(
             fetchNone(TgPersistentEntityWithProperties.class)
-                .with("entityProp", fetchNone(TgPersistentEntityWithProperties.class)
-                        .with("entityProp", fetchNone(TgPersistentEntityWithProperties.class)
-                                .with("entityProp", fetchNone(TgPersistentEntityWithProperties.class)))),
+                .with("entityProp", fetchKeyAndDescOnly(TgPersistentEntityWithProperties.class)
+                        .with("entityProp", fetchKeyAndDescOnly(TgPersistentEntityWithProperties.class)
+                                .with("entityProp", fetchKeyAndDescOnly(TgPersistentEntityWithProperties.class)))),
             fp.fetchModel()
         );
     }
     
-    /////////////////////////////////////////////////////////// addKeysTo method: ///////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////// addPropWithKeys method: ///////////////////////////////////////////////////////////
     
     // Adding keys to root of the tree:
     @Test(expected = FetchProviderException.class)
     public void keys_cannot_be_added_into_provider_with_category_other_than_NONE() {
         final IFetchProvider<TgPersistentEntityWithProperties> fp = EntityUtils.fetch(TgPersistentEntityWithProperties.class);
-        fp.addKeysTo("", false);
+        fp.addPropWithKeys("", false);
     }
     
     @Test
     public void single_regular_key_is_added_into_provider_for_entity_with_such_key() {
         final IFetchProvider<TgPersistentEntityWithProperties> fp = EntityUtils.fetchNone(TgPersistentEntityWithProperties.class);
-        fp.addKeysTo("", false);
+        fp.addPropWithKeys("", false);
         
         assertEquals(linkedSetOf(KEY, ID, VERSION), fp.allProperties()); // persistent entity type also requires ID and VERSION
     }
@@ -351,7 +351,7 @@ public class FetchProviderTest {
     @Test
     public void single_regular_key_and_description_are_both_added_into_provider_for_entity_with_such_key_and_desc() {
         final IFetchProvider<TgPersistentEntityWithProperties> fp = EntityUtils.fetchNone(TgPersistentEntityWithProperties.class);
-        fp.addKeysTo("", true);
+        fp.addPropWithKeys("", true);
         
         assertEquals(linkedSetOf(KEY, ID, VERSION, DESC), fp.allProperties()); // persistent entity type also requires ID and VERSION
     }
@@ -359,7 +359,7 @@ public class FetchProviderTest {
     @Test
     public void single_regular_key_is_added_into_provider_for_synthetic_based_on_persistent_entity_with_such_key() {
         final IFetchProvider<TgReVehicleModel> fp = EntityUtils.fetchNone(TgReVehicleModel.class);
-        fp.addKeysTo("", false);
+        fp.addPropWithKeys("", false);
         
         assertEquals(linkedSetOf(KEY, ID), fp.allProperties()); // synthetic entity type based on persistent type requires ID
     }
@@ -367,7 +367,7 @@ public class FetchProviderTest {
     @Test
     public void entity_typed_key_with_own_keys_are_added_into_provider_for_synthetic_entity_with_such_key() {
         final IFetchProvider<TgAverageFuelUsage> fp = EntityUtils.fetchNone(TgAverageFuelUsage.class);
-        fp.addKeysTo("", false);
+        fp.addPropWithKeys("", false);
         
         assertEquals(linkedSetOf(KEY, // synthetic entity type does not require neither ID nor VERSION
             KEY + "." + KEY, KEY + "." + ID, KEY + "." + VERSION // subkey and ID / VERSION for key of persistent TgVehicle type 
@@ -377,7 +377,7 @@ public class FetchProviderTest {
     @Test
     public void composite_keys_with_own_keys_are_added_into_provider_for_composite_entity_with_such_keys() {
         final IFetchProvider<TgAuthor> fp = EntityUtils.fetchNone(TgAuthor.class);
-        fp.addKeysTo("", false);
+        fp.addPropWithKeys("", false);
         
         assertEquals(linkedSetOf("name", "name." + KEY, "name." + ID, "name." + VERSION, // subkey and ID / VERSION for 'name' of persistent TgPersonName type
                 "surname", "patronymic",
@@ -387,21 +387,15 @@ public class FetchProviderTest {
     
     // Adding keys to first-level property:
     @Test(expected = FetchProviderException.class)
-    public void key_cannot_be_added_into_property_subprovider_if_does_not_exist() {
-        final IFetchProvider<TgAuthor> fp = EntityUtils.fetchNone(TgAuthor.class);
-        fp.addKeysTo("name", false);
-    }
-    
-    @Test(expected = FetchProviderException.class)
     public void key_cannot_be_added_into_property_subprovider_if_it_has_category_other_than_NONE() {
         final IFetchProvider<TgAuthor> fp = EntityUtils.fetchNone(TgAuthor.class).with("name", EntityUtils.fetch(TgPersonName.class));
-        fp.addKeysTo("name", false);
+        fp.addPropWithKeys("name", false);
     }
     
     @Test
     public void key_is_added_into_property_subprovider() {
-        final IFetchProvider<TgAuthor> fp = EntityUtils.fetchNone(TgAuthor.class).with("name");
-        fp.addKeysTo("name", false);
+        final IFetchProvider<TgAuthor> fp = EntityUtils.fetchNone(TgAuthor.class);
+        fp.addPropWithKeys("name", false);
         
         assertEquals(linkedSetOf("name", "name." + KEY, "name." + ID, "name." + VERSION // subkey and ID / VERSION for 'name' property of persistent TgPersonName type
         ), fp.allProperties());
@@ -409,8 +403,8 @@ public class FetchProviderTest {
     
     @Test
     public void both_key_and_desc_are_added_into_property_subprovider() {
-        final IFetchProvider<TgAuthor> fp = EntityUtils.fetchNone(TgAuthor.class).with("name");
-        fp.addKeysTo("name", true);
+        final IFetchProvider<TgAuthor> fp = EntityUtils.fetchNone(TgAuthor.class);
+        fp.addPropWithKeys("name", true);
         
         assertEquals(linkedSetOf("name", "name." + KEY, "name." + ID, "name." + VERSION, "name." + DESC // subkey and ID / VERSION for 'name' property of persistent TgPersonName type
         ), fp.allProperties());
@@ -418,29 +412,23 @@ public class FetchProviderTest {
     
     @Test
     public void adding_key_and_desc_to_regular_property_does_not_affect_provider() {
-        final IFetchProvider<TgAuthor> fp = EntityUtils.fetchNone(TgAuthor.class).with("surname");
-        fp.addKeysTo("surname", true);
+        final IFetchProvider<TgAuthor> fp = EntityUtils.fetchNone(TgAuthor.class);
+        fp.addPropWithKeys("surname", true);
         
         assertEquals(linkedSetOf("surname"), fp.allProperties());
     }
     
     // Adding keys to deep-level property:
     @Test(expected = FetchProviderException.class)
-    public void key_cannot_be_added_into_deep_property_subprovider_if_does_not_exist() {
-        final IFetchProvider<TgAuthorRoyalty> fp = EntityUtils.fetchNone(TgAuthorRoyalty.class);
-        fp.addKeysTo("name", false);
-    }
-    
-    @Test(expected = FetchProviderException.class)
     public void key_cannot_be_added_into_deep_property_subprovider_if_it_has_category_other_than_NONE() {
         final IFetchProvider<TgAuthorRoyalty> fp = EntityUtils.fetchNone(TgAuthorRoyalty.class).with("authorship.author.name", EntityUtils.fetch(TgPersonName.class));
-        fp.addKeysTo("authorship.author.name", false);
+        fp.addPropWithKeys("authorship.author.name", false);
     }
     
     @Test
     public void key_is_added_into_deep_property_subprovider() {
-        final IFetchProvider<TgAuthorRoyalty> fp = EntityUtils.fetchNone(TgAuthorRoyalty.class).with("authorship.author.name");
-        fp.addKeysTo("authorship.author.name", false);
+        final IFetchProvider<TgAuthorRoyalty> fp = EntityUtils.fetchNone(TgAuthorRoyalty.class);
+        fp.addPropWithKeys("authorship.author.name", false);
         
         assertEquals(linkedSetOf("authorship", "authorship." + ID, "authorship." + VERSION,
                 "authorship.author", "authorship.author." + ID, "authorship.author." + VERSION,
@@ -450,8 +438,8 @@ public class FetchProviderTest {
     
     @Test
     public void key_and_desc_are_both_added_into_deep_property_subprovider() {
-        final IFetchProvider<TgAuthorRoyalty> fp = EntityUtils.fetchNone(TgAuthorRoyalty.class).with("authorship.author.name");
-        fp.addKeysTo("authorship.author.name", true);
+        final IFetchProvider<TgAuthorRoyalty> fp = EntityUtils.fetchNone(TgAuthorRoyalty.class);
+        fp.addPropWithKeys("authorship.author.name", true);
         
         assertEquals(linkedSetOf("authorship", "authorship." + ID, "authorship." + VERSION,
                 "authorship.author", "authorship.author." + ID, "authorship.author." + VERSION,
@@ -461,9 +449,9 @@ public class FetchProviderTest {
     
     @Test
     public void neighbour_branches_do_not_interfere_when_adding_keys() {
-        final IFetchProvider<TgAuthorRoyalty> fp = EntityUtils.fetchNone(TgAuthorRoyalty.class).with("authorship.author.name");
-        fp.addKeysTo("authorship.author", true);
-        fp.addKeysTo("authorship.author.name", false);
+        final IFetchProvider<TgAuthorRoyalty> fp = EntityUtils.fetchNone(TgAuthorRoyalty.class);
+        fp.addPropWithKeys("authorship.author", true);
+        fp.addPropWithKeys("authorship.author.name", false);
         
         assertEquals(linkedSetOf("authorship", "authorship." + ID, "authorship." + VERSION,
                 "authorship.author", /*name is a key of author */ "authorship.author.surname", "authorship.author.patronymic",  "authorship.author." + ID, "authorship.author." + VERSION,
@@ -569,7 +557,7 @@ public class FetchProviderTest {
         final IFetchProvider<TgUnionHolder> fp = fetchWithKeyAndDesc(TgUnionHolder.class).with("union.common");
         
         assertEquals(
-            fetchKeyAndDescOnly(TgUnion.class)
+            fetchNone(TgUnion.class)
             .with("union1", fetchKeyAndDescOnly(TgUnionType1.class)
                 .with("common", fetchKeyAndDescOnly(TgUnionCommonType.class)))
             .with("union2", fetchKeyAndDescOnly(TgUnionType2.class)
@@ -621,7 +609,7 @@ public class FetchProviderTest {
         final IFetchProvider<TgUnionHolder> fp = fetchWithKeyAndDesc(TgUnionHolder.class).with("union.common.createdBy");
         
         assertEquals(
-            fetchKeyAndDescOnly(TgUnion.class)
+            fetchNone(TgUnion.class)
             .with("union1", fetchKeyAndDescOnly(TgUnionType1.class)
                 .with("common", fetchKeyAndDescOnly(TgUnionCommonType.class).with("createdBy", fetchKeyAndDescOnly(User.class))))
             .with("union2", fetchKeyAndDescOnly(TgUnionType2.class)
@@ -633,9 +621,8 @@ public class FetchProviderTest {
     
     @Test
     public void key_is_added_into_common_property_fetch_provider_and_into_that_property_fetch_provider_in_every_type_of_the_union() {
-        final IFetchProvider<TgUnionHolder> fp = EntityUtils.fetchNone(TgUnionHolder.class)
-            .with("union.common");
-        fp.addKeysTo("union.common", false);
+        final IFetchProvider<TgUnionHolder> fp = EntityUtils.fetchNone(TgUnionHolder.class);
+        fp.addPropWithKeys("union.common", false);
         
         assertEquals(setOf(
             "union", "union.common", "union.common." + KEY, "union.common." + ID, "union.common." + VERSION,
