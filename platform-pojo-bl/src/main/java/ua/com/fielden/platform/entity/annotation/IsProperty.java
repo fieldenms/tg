@@ -140,7 +140,12 @@ public @interface IsProperty {
      * <p>
      * Value {@code 0} indicates "undetermined" length, which may have context-dependent interpretation.
      * For example, a database schema generator may use its own default length in such cases.
-     *
+     * <p>
+     * If length of value {@code Integer.MAX_VALUE} is specified for properties of type {@code String}, the DDL generation tool would pick the most appropriate data type to represent long text.
+     * For example, for PostgreSQL type {@code text} and for SQL Server type {@code varchar(max)} would be used.
+     * <p>
+     * Also, length can be combined with pre-condition {@code MaxLengthValidator} to enforce the length integrity constraint on properties of type {@code String}.
+     * 
      * @return
      */
     int length() default DEFAULT_LENGTH;
