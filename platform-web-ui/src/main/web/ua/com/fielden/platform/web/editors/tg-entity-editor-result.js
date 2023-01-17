@@ -409,7 +409,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                             '<span class="prop-name"><span>' + this._propTitleByName(v, propName) + '</span>:</span>',
                             this._propValueByName(v, propName),
                             () => this._propValueByName(v, propName + '.desc'),
-                            this.reflector.isEntity(v.get(propName)) && typeof v.get(propName)['desc'] !== 'undefined'
+                            this.reflector.isEntity(v.get(propName)) && (typeof v.get(propName)['desc'] !== 'undefined' || v.get(propName).type().isUnionEntity())
                         );
                     }
                 }
