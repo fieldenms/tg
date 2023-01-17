@@ -410,7 +410,13 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
      */
     private static FetchProvider<AbstractEntity<?>> createDefaultFetchProviderForEntityTypedProperty(final Class<AbstractEntity<?>> propertyType, final FetchCategory defaultFetchCategory) {
         // default fetch provider for entity-typed property should be without instrumentation
-        return new FetchProvider<>(propertyType, isUnionEntityType(propertyType) ? NONE : defaultFetchCategory, false);
+        final var fp = new FetchProvider<>(propertyType, isUnionEntityType(propertyType) ? NONE : defaultFetchCategory, false);
+        if (isUnionEntityType(propertyType)) {
+            final Class<?> k0 = propertyType;
+            unionProperties((Class<AbstractUnionEntity>) k0).stream()
+                .forEach(unionPropField -> fp.enhanceWith0(unionPropField.getName(), null, defaultFetchCategory));
+        }
+        return fp;
     }
 
     /**
