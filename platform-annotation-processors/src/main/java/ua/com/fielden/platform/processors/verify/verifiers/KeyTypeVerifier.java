@@ -110,7 +110,7 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
             boolean allPassed = true;
             final List<EntityElement> entitiesWithKeyType = roundEnv.getElementsAnnotatedWith(AT_KEY_TYPE_CLASS).stream()
                     .map(el -> entityFinder.newEntityElement((TypeElement) el))
-                    .filter(el -> isOneOfAbstracts(entityFinder.getParent(el)))
+                    .filter(el -> entityFinder.getParent(el).map(this::isOneOfAbstracts).orElse(false))
                     .toList();
 
             for (final EntityElement el : entitiesWithKeyType) {
@@ -153,12 +153,13 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
                     .toList();
 
             for (final EntityElement entity : entitiesWithDeclaredKeyType) {
-                final EntityElement parent = entityFinder.getParent(entity); 
+                final Optional<EntityElement> maybeParent = entityFinder.getParent(entity); 
 
                 // skip non-child entities and those with an abstract parent
                 // TODO handle hierarchy [non-abstract -> abstract -> non-abstract -> ...] ?
-                if (parent == null || elementFinder.isAbstract(parent)) continue;
+                if (maybeParent.map(elt -> elementFinder.isAbstract(elt)).orElse(true)) continue;
 
+                final EntityElement parent = maybeParent.get();
                 final Optional<KeyType> parentAtKeyType = entityFinder.findAnnotation(parent, AT_KEY_TYPE_CLASS);
                 // parent might be missing @KeyType, which should have been detected by KeyTypePresence verifier-part, so we ignore this case
                 if (parentAtKeyType.isEmpty()) continue;

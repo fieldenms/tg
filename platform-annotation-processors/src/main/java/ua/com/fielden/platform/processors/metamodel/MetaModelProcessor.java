@@ -349,7 +349,8 @@ public class MetaModelProcessor extends AbstractProcessor {
         final String thisMetaModelPkgName = mmc.getPackageName();
 
         final EntityElement entityElement = mmc.getEntityElement();
-        final EntityElement entityParent = entityFinder.getParent(entityElement);
+        // can safely unpack optional, since entityElement is guaranteed to extend something
+        final EntityElement entityParent = entityFinder.getParent(entityElement).orElseThrow();
         final boolean isEntitySuperclassMetamodeled = entityFinder.isEntityThatNeedsMetaModel(entityParent);
 
         final Collection<PropertyElement> properties;

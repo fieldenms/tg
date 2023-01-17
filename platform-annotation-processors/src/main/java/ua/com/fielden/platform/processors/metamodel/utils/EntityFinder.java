@@ -213,14 +213,13 @@ public class EntityFinder extends ElementFinder {
     }
     
     /**
-     * An entity is any class that inherits from {@link AbstractEntity}, which itself is also considered to be an entity.
+     * An entity is any class that extends {@link AbstractEntity}, which itself is also considered to be an entity.
      *
      * @param element
      * @return
      */
     public boolean isEntityType(final TypeElement element) {
-        return Stream.iterate(element, el -> el != null && !equals(el, Object.class) , el -> findSuperclass(el))
-               .anyMatch(el -> el != null && equals(el, ROOT_ENTITY_CLASS));
+        return isSubtype(element.asType(), ROOT_ENTITY_CLASS);
     }
 
     /**
@@ -241,10 +240,7 @@ public class EntityFinder extends ElementFinder {
      * @return
      */
     public boolean doesExtendPersistentEntity(final EntityElement element) {
-        final TypeElement superclass = element;
-        return Stream.iterate(findSuperclass(superclass), el -> !equals(el, Object.class) , el -> findSuperclass(el))
-               .filter(el -> isPersistentEntityType(EntityElement.wrapperFor(el)))
-               .findFirst().isPresent();
+        return streamSuperclasses(element).anyMatch(elt -> isPersistentEntityType(EntityElement.wrapperFor(elt)));
     }
 
     /**
@@ -301,10 +297,25 @@ public class EntityFinder extends ElementFinder {
                 .anyMatch(annotClass -> element.getAnnotation(annotClass) != null);
     }
 
-    public EntityElement getParent(final EntityElement element) {
-        // superclass should not be null, because every entity extends AbstractEntity
-        final TypeElement superclass = findSuperclass(element);
-        return isEntityType(superclass) ? newEntityElement(superclass) : null;
+    /**
+     * Returns a stream of entity elements, which are superclasses of the given entity element, up to and including {@link AbstractEntity}.
+     * 
+     * @param element
+     * @return
+     */
+    public Stream<EntityElement> streamParents(final EntityElement element) {
+        return streamSuperclasses(element, ROOT_ENTITY_CLASS).map(this::newEntityElement);
+    }
+
+    /**
+     * Returns the immediate parent entity type of the entity element. 
+     * Empty optional is returned if {@code element} represents {@link AbstractEntity}.
+     * 
+     * @param element
+     * @return
+     */
+    public Optional<EntityElement> getParent(final EntityElement element) {
+        return streamParents(element).findFirst();
     }
     
     /**
