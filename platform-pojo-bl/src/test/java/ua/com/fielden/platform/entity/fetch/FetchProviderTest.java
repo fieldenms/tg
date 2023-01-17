@@ -488,6 +488,13 @@ public class FetchProviderTest {
     }
     
     @Test
+    public void fetch_provider_with_simple_common_property_indicates_that_simple_common_property_should_be_fetched() {
+        final IFetchProvider<TgUnionHolder> fp = fetchWithKeyAndDesc(TgUnionHolder.class).with("union.desc");
+        
+        assertTrue(fp.shouldFetch("union.desc"));
+    }
+    
+    @Test
     public void fetch_provider_with_common_property_includes_that_property_in_every_type_of_the_union() {
         final IFetchProvider<TgUnionHolder> fp = fetchWithKeyAndDesc(TgUnionHolder.class).with("union.common");
         
@@ -505,6 +512,23 @@ public class FetchProviderTest {
             "union", "union.common",
             "union.union1", "union.union1.common",
             "union.union2", "union.union2.common"
+        ), fp.allProperties());
+    }
+    
+    @Test
+    public void fetch_provider_with_simple_common_property_includes_that_property_in_every_type_of_the_union() {
+        final IFetchProvider<TgUnionHolder> fp = fetchWithKeyAndDesc(TgUnionHolder.class).with("union.desc");
+        
+        assertTrue(fp.shouldFetch("union.union1"));
+        assertTrue(fp.shouldFetch("union.union1.desc"));
+        
+        assertTrue(fp.shouldFetch("union.union2"));
+        assertTrue(fp.shouldFetch("union.union2.desc"));
+        
+        assertEquals(setOf(
+            "union", "union.desc",
+            "union.union1", "union.union1.desc",
+            "union.union2", "union.union2.desc"
         ), fp.allProperties());
     }
     
@@ -628,6 +652,18 @@ public class FetchProviderTest {
             "union", "union.common", "union.common." + KEY, "union.common." + ID, "union.common." + VERSION,
             "union.union1", "union.union1." + ID, "union.union1." + VERSION, "union.union1.common", "union.union1.common." + KEY, "union.union1.common." + ID, "union.union1.common." + VERSION,
             "union.union2", "union.union2." + ID, "union.union2." + VERSION, "union.union2.common", "union.union2.common." + KEY, "union.union2.common." + ID, "union.union2.common." + VERSION
+        ), fp.allProperties());
+    }
+    
+    @Test
+    public void simple_common_property_is_added_to_union_provider_and_into_fetch_providers_in_every_type_of_the_union() {
+        final IFetchProvider<TgUnionHolder> fp = EntityUtils.fetchNone(TgUnionHolder.class);
+        fp.addPropWithKeys("union.desc", false);
+        
+        assertEquals(setOf(
+            "union", "union.desc",
+            "union.union1", "union.union1." + ID, "union.union1." + VERSION, "union.union1.desc",
+            "union.union2", "union.union2." + ID, "union.union2." + VERSION, "union.union2.desc"
         ), fp.allProperties());
     }
     

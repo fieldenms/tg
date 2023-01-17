@@ -606,19 +606,18 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
                         throw new FetchProviderException(format("Property provider for %s is somehow empty.", firstName));
                     }
                     // otherwise, nothing to add here (regular property)
-                    return this;
                 } else if (NONE != provider.fetchCategory) {
                     throw new FetchProviderException(format("Property provider for %s has fetch category other than NONE.", firstName));
                 } else {
                     extendWithIdAndVersion(provider);
                     provider.addKeysTo(restDotNotation, withDesc); // delegate 'withDesc' parameter further down to dot-notated child
-                    // enhance fetch provider with common property for each union type
-                    if (isUnionEntityType(entityType) && commonProperties((Class<AbstractUnionEntity>) entityType).contains(firstName)) {
-                        unionProperties((Class<AbstractUnionEntity>) entityType).stream()
-                            .forEach(unionPropField -> addKeysTo(unionPropField.getName() + "." + dotNotationProperty, withDesc));
-                    }
-                    return this;
                 }
+                // enhance fetch provider with common property for each union type
+                if (isUnionEntityType(entityType) && commonProperties((Class<AbstractUnionEntity>) entityType).contains(firstName)) {
+                    unionProperties((Class<AbstractUnionEntity>) entityType).stream()
+                    .forEach(unionPropField -> addKeysTo(unionPropField.getName() + "." + dotNotationProperty, withDesc));
+                }
+                return this;
             } else {
                 throw new FetchProviderException(format("Property %s was not included into this provider.", firstName));
             }
