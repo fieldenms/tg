@@ -656,6 +656,18 @@ public class FetchProviderTest {
     }
     
     @Test
+    public void key_is_added_into_common_property_fetch_provider_and_into_that_property_fetch_provider_in_every_type_of_the_union_in_the_case_of_union_root() {
+        final IFetchProvider<TgUnion> fp = EntityUtils.fetchNone(TgUnion.class);
+        fp.addPropWithKeys("common", false);
+        
+        assertEquals(setOf(
+            "common", "common." + KEY, "common." + ID, "common." + VERSION,
+            "union1", "union1." + ID, "union1." + VERSION, "union1.common", "union1.common." + KEY, "union1.common." + ID, "union1.common." + VERSION,
+            "union2", "union2." + ID, "union2." + VERSION, "union2.common", "union2.common." + KEY, "union2.common." + ID, "union2.common." + VERSION
+        ), fp.allProperties());
+    }
+    
+    @Test
     public void simple_common_property_is_added_to_union_provider_and_into_fetch_providers_in_every_type_of_the_union() {
         final IFetchProvider<TgUnionHolder> fp = EntityUtils.fetchNone(TgUnionHolder.class);
         fp.addPropWithKeys("union.desc", false);
@@ -664,6 +676,41 @@ public class FetchProviderTest {
             "union", "union.desc",
             "union.union1", "union.union1." + ID, "union.union1." + VERSION, "union.union1.desc",
             "union.union2", "union.union2." + ID, "union.union2." + VERSION, "union.union2.desc"
+        ), fp.allProperties());
+    }
+    
+    @Test
+    public void simple_common_property_is_added_to_union_provider_and_into_fetch_providers_in_every_type_of_the_union_in_the_case_of_union_root() {
+        final IFetchProvider<TgUnion> fp = EntityUtils.fetchNone(TgUnion.class);
+        fp.addPropWithKeys("desc", false);
+        
+        assertEquals(setOf(
+            "desc",
+            "union1", "union1." + ID, "union1." + VERSION, "union1.desc",
+            "union2", "union2." + ID, "union2." + VERSION, "union2.desc"
+        ), fp.allProperties());
+    }
+    
+    @Test
+    public void key_is_added_to_union_provider_and_into_fetch_providers_in_every_type_of_the_union() {
+        final IFetchProvider<TgUnionHolder> fp = EntityUtils.fetchNone(TgUnionHolder.class);
+        fp.addPropWithKeys("union", false);
+        
+        assertEquals(setOf(
+            "union",
+            "union.union1", "union.union1." + ID, "union.union1." + VERSION, "union.union1." + KEY,
+            "union.union2", "union.union2." + ID, "union.union2." + VERSION, "union.union2." + KEY
+        ), fp.allProperties());
+    }
+    
+    @Test
+    public void key_is_added_to_union_provider_and_into_fetch_providers_in_every_type_of_the_union_in_the_case_of_union_root() {
+        final IFetchProvider<TgUnion> fp = EntityUtils.fetchNone(TgUnion.class);
+        fp.addPropWithKeys("", false);
+        
+        assertEquals(setOf(
+            "union1", "union1." + ID, "union1." + VERSION, "union1." + KEY,
+            "union2", "union2." + ID, "union2." + VERSION, "union2." + KEY
         ), fp.allProperties());
     }
     

@@ -640,6 +640,12 @@ class FetchProvider<T extends AbstractEntity<?>> implements IFetchProvider<T> {
                     enhanceWith(DESC);
                 }
                 // no need to enhance fetch provider with common property -- "" is never common
+            } else {
+                final List<String> unionPropNames = unionProperties((Class<AbstractUnionEntity>) entityType).stream().map(Field::getName).collect(toList());
+                for (final String unionPropName: unionPropNames) {
+                    enhanceWith(unionPropName, NONE);
+                    addKeysTo(unionPropName, withDesc);
+                }
             }
             return this;
         }
