@@ -55,7 +55,7 @@ public class EntityFinder extends ElementFinder {
      * @param entityClass
      * @return {@link EntityElement} wrapped in an {@link Optional} if found, else an empty optional
      */
-    public Optional<EntityElement> findEntity(final Class<? extends AbstractEntity<?>> entityClass) {
+    public Optional<EntityElement> findEntity(final Class<? extends AbstractEntity> entityClass) {
         return Optional.ofNullable(elements.getTypeElement(entityClass.getCanonicalName()))
                 .map(te -> newEntityElement(te));
     }
