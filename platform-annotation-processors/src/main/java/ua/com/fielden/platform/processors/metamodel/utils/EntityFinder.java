@@ -332,7 +332,7 @@ public class EntityFinder extends ElementFinder {
      */
     public EntityElement findEntityForMetaModel(final MetaModelElement mme) {
         final TypeMirror entityType = mme.getEntityType();
-        return entityType == null || entityType.getKind() == TypeKind.ERROR ? null : newEntityElement(toTypeElement(entityType));
+        return entityType == null || entityType.getKind() == TypeKind.ERROR ? null : newEntityElement(asTypeElementOfTypeMirror(entityType));
     }
 
     public boolean hasPropertyOfType(final EntityElement entityElement, final TypeMirror type, final Types typeUtils) {

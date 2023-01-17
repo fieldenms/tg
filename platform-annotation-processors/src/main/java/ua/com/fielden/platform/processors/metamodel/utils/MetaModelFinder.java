@@ -197,12 +197,12 @@ public class MetaModelFinder extends ElementFinder {
         // find regular meta-models that are declared as fields
         findDeclaredFields(typeElement).stream()
                 .filter(field -> isSubtype(field.asType(), EntityMetaModel.class))
-                .map(field -> newMetaModelElement(toTypeElement(field.asType())))
+                .map(field -> newMetaModelElement(asTypeElementOfTypeMirror(field.asType())))
                 .forEach(mme -> metaModels.add(mme));
         // find aliased meta-models that are declared as methods
         findDeclaredMethods(typeElement).stream()
                 .filter(method -> isSubtype(method.getReturnType(), EntityMetaModel.class))
-                .map(method -> newMetaModelElement(toTypeElement(method.getReturnType())))
+                .map(method -> newMetaModelElement(asTypeElementOfTypeMirror(method.getReturnType())))
                 .forEach(mme -> metaModels.add(mme));
         
         return unmodifiableSet(metaModels);

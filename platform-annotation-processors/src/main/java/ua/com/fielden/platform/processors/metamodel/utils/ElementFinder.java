@@ -478,6 +478,20 @@ public class ElementFinder {
     }
 
     /**
+     * Converts a type mirror to a declared type iff the type mirror represents a declared type, otherwise an exception is thrown.
+     * 
+     * @param mirror
+     * @return
+     * @throws ElementFinderException
+     */
+    public DeclaredType asDeclaredType(final TypeMirror mirror) {
+        if (mirror.getKind() != TypeKind.DECLARED) {
+            throw new ElementFinderException("Illegal type kind [%s] of [%s]".formatted(mirror.getKind(), mirror.toString()));
+        }
+        return (DeclaredType) mirror;
+    }
+
+    /**
      * Tests whether the type mirror and class represent the same type. Such a comparison makes sense only if the type mirror represents one of:
      * primitive type, void type, array type, declared type (class/interface). Otherwise {@code false} is returned.
      * <p>
@@ -547,13 +561,21 @@ public class ElementFinder {
     }
 
     /**
-     * Converts {@link TypeMirror} to {@link TypeElement}, but only if argument {@code typeMirror} represents a declared type kind.
-     *
-     * @param typeMirror
-     * @return a {@link TypeElement} if conversion was successful, otherwise {@code null}.
+     * Returns the type element coresponding to the given declared type.
      */
-    public TypeElement toTypeElement(final TypeMirror typeMirror) {
-        return typeMirror.getKind() == TypeKind.DECLARED ? (TypeElement) ((DeclaredType) typeMirror).asElement() : null;
+    public TypeElement asTypeElement(final DeclaredType type) {
+        return (TypeElement) type.asElement();
+    }
+
+    /**
+     * Returns the type element coresponding to the given type mirror iff it represents a declared type, otherwise an exception is thrown.
+     * 
+     * @param mirror
+     * @return
+     * @throws ElementFinderException
+     */
+    public TypeElement asTypeElementOfTypeMirror(final TypeMirror mirror) {
+        return asTypeElement(asDeclaredType(mirror));
     }
 
 }
