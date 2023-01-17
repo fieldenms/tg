@@ -209,7 +209,7 @@ public class MetaModelFinder extends ElementFinder {
     }
 
     public MetaModelElement newMetaModelElement(final TypeElement typeElement) {
-        return new MetaModelElement(typeElement, getPackageName(typeElement));
+        return new MetaModelElement(typeElement, getPackageOfTypeElement(typeElement).getQualifiedName().toString());
     }
 
     public boolean isActive(final MetaModelElement mme) {

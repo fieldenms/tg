@@ -523,17 +523,27 @@ public class ElementFinder {
      * @param element
      * @return
      */
-    public PackageElement getPackageOf(final Element element) {
+    public Optional<PackageElement> getPackageOf(final Element element) {
         if (AbstractForwardingElement.class.isAssignableFrom(element.getClass())) {
-            return elements.getPackageOf(((AbstractForwardingElement<Element>) element).element());
+            return Optional.ofNullable(elements.getPackageOf(((AbstractForwardingElement<Element>) element).element()));
         }
-        return elements.getPackageOf(element);
+        return Optional.ofNullable(elements.getPackageOf(element));
     }
     
-    public String getPackageName(final Element element) {
-        return Optional.ofNullable(getPackageOf(element))
-                .map(pkgEl -> pkgEl.getQualifiedName().toString())
-                .orElse(null);
+    public Optional<String> getPackageName(final Element element) {
+        return getPackageOf(element).map(pkgEl -> pkgEl.getQualifiedName().toString());
+    }
+
+    /**
+     * Like {@link #getPackageOf(Element)}, but accepting a type element, which should always have a package, hence the absence of {@link Optional}.
+     * 
+     * @param element
+     * @return
+     * @throws ElementFinderException if the type element's package could not be found
+     */
+    public PackageElement getPackageOfTypeElement(final TypeElement element) {
+        return getPackageOf(element)
+                .orElseThrow(() -> new ElementFinderException("No package was found for %s".formatted(element.getQualifiedName())));
     }
 
     /**

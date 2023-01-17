@@ -341,7 +341,7 @@ public class EntityFinder extends ElementFinder {
     }
 
     public EntityElement newEntityElement(final TypeElement typeElement) {
-        return new EntityElement(typeElement, getPackageName(typeElement));
+        return new EntityElement(typeElement, getPackageOfTypeElement(typeElement).getQualifiedName().toString());
     }
 
 }

@@ -21,6 +21,7 @@ import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
@@ -473,7 +474,7 @@ public class ElementFinderTest {
     }
 
     @Test
-    public void asType_returns_a_type_mirror_representing_a_class() {
+    public void asType_returns_type_mirror_representation_of_the_given_class() {
         processAndEvaluate(finder -> {
             final Types types = finder.types;
             // primitive type
@@ -545,6 +546,25 @@ public class ElementFinderTest {
             assertFalse(finder.isSameType(exampleEl.getTypeParameters().get(0).asType(), ArrayList.class));
         });
     }
+
+    @Test
+    public void getPackageOf_returns_the_package_of_the_element() {
+        final TypeSpec example = TypeSpec.classBuilder("Example").build();
+
+        processAndEvaluate(List.of(example), finder -> {
+            final TypeElement exampleElt = finder.elements.getTypeElement(example.name);
+            final PackageElement examplePkgElt = finder.getPackageOf(exampleElt).orElseThrow();
+            assertTrue(examplePkgElt.isUnnamed());
+            assertEquals("", examplePkgElt.getQualifiedName().toString());
+
+            assertEquals("java.lang", 
+                    finder.getPackageOf(finder.getTypeElement(Object.class)).map(elt -> elt.getQualifiedName().toString()).orElseThrow());
+            assertEquals(this.getClass().getPackageName(),
+                    finder.getPackageOf(finder.getTypeElement(Nested.class)).map(elt -> elt.getQualifiedName().toString()).orElseThrow());
+        });
+    }
+    // where
+    private static class Nested {}
 
     // ==================== HELPER METHODS ====================
     /**
