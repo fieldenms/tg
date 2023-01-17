@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -124,7 +125,7 @@ public class EntityFinderTest {
     public void findInheritedProperties_finds_only_inherited_properties_in_User() {
       final TypeElement typeElement = elements.getTypeElement(User.class.getCanonicalName());
       final EntityElement entityElement = EntityElement.wrapperFor(typeElement);
-      final Set<PropertyElement> props = entityFinder.findInheritedProperties(entityElement);
+      final List<PropertyElement> props = entityFinder.findInheritedProperties(entityElement);
       assertEquals(10, props.size());
       // it is expected that some of the re-declared properties in User would appear as both declared and inherited
       // more specifically, properties "active" and "key" appear as both declared and inherited

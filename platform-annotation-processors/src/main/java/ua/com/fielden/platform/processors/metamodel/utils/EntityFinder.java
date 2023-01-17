@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.annotation.Annotation;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
@@ -103,22 +104,24 @@ public class EntityFinder extends ElementFinder {
      * @param entityElement
      * @return
      */
-    public Set<PropertyElement> findInheritedProperties(final EntityElement entityElement) {
-        final Set<PropertyElement> props = findInheritedFields(entityElement, ROOT_ENTITY_CLASS).stream()
+    public List<PropertyElement> findInheritedProperties(final EntityElement entityElement) {
+        final Set<PropertyElement> props = streamInheritedFields(entityElement, ROOT_ENTITY_CLASS)
                 .filter(this::isProperty)
                 .map(PropertyElement::new)
                 .collect(toCollection(LinkedHashSet::new));
+
         // let's see if we need to include "id" as a property -- only persistent entities are of interest
         if (isPersistentEntityType(entityElement) || doesExtendPersistentEntity(entityElement)) {
-            final var idProp = findField(entityElement, AbstractEntity.ID);
+            // a persistent entity must have property "id"
+            final VariableElement idProp = findField(entityElement, AbstractEntity.ID).orElseThrow();
             props.add(new PropertyElement(idProp));
         }
         // and now similar for property "desc", which may need to be removed
         if (findAnnotation(entityElement, DescTitle.class).isEmpty()) {
-            final var descProp = findField(entityElement, AbstractEntity.DESC);
-            props.remove(new PropertyElement(descProp));
+            findField(entityElement, AbstractEntity.DESC).ifPresent(elt -> props.remove(new PropertyElement(elt)));
         }
-        return props;
+
+        return props.stream().toList();
     }
 
     /**
