@@ -51,14 +51,13 @@ public class EntityFinder extends ElementFinder {
     }
 
     /**
-     * Finds an entity described by {@code entityClass}.
-     *
-     * @param entityClass
-     * @return {@link EntityElement} wrapped in an {@link Optional} if found, else an empty optional
+     * Returns an element representing the given entity type.
+     * 
+     * @see ElementFinder#getTypeElement(Class)
+     * @throws ElementFinderException if no coresponding type element was found
      */
-    public Optional<EntityElement> findEntity(final Class<? extends AbstractEntity<?>> entityClass) {
-        return Optional.ofNullable(elements.getTypeElement(entityClass.getCanonicalName()))
-                .map(te -> newEntityElement(te));
+    public EntityElement findEntity(final Class<? extends AbstractEntity<?>> clazz) {
+        return newEntityElement(getTypeElement(clazz));
     }
 
    /**
