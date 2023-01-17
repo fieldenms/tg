@@ -6,6 +6,7 @@ import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.AN
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.annotation.Annotation;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
@@ -61,38 +62,56 @@ public class EntityFinder extends ElementFinder {
     }
 
    /**
-    * Finds properties, which are explicitly declared in an entity, represented by {@code entityElement}.
-    * <p>
-    * Two properties represent an edge-case:
-    * <ul>
-    * <li> id – only included if declared as a property explicitly.
-    * <li> desc – only included if re-declared as a property explicitly. 
-    * </ul>
+    * Returns a stream of declared properties.
     *
     * @param entityElement
     */
-    public Set<PropertyElement> findDeclaredProperties(final EntityElement entityElement) {
-        return findDeclaredFields(entityElement).stream()
+    public Stream<PropertyElement> streamDeclaredProperties(final EntityElement entityElement) {
+        return streamDeclaredFields(entityElement)
                 .filter(this::isProperty)
-                .map(PropertyElement::new)
-                .collect(toCollection(LinkedHashSet::new));
+                .map(PropertyElement::new);
+    }
+
+   /**
+    * Collects the elements of {@link #streamDeclaredFields(TypeElement)} into a list.
+    *
+    * @param entityElement
+    */
+    public List<PropertyElement> findDeclaredProperties(final EntityElement entityElement) {
+        return streamDeclaredProperties(entityElement).toList();
     }
     
     /**
-     * Returns a property element, representing a property named {@code propName} if it is declared by {@code entity}, otherwise returns {@code null}.
+     * Returns an optional describing a property element that represents a property of {@code entityElement} named {@code propName}.
      *
      * @param entity
      * @param propName
      * @return
      */
-    public PropertyElement findDeclaredProperty(final EntityElement entity, final String propName) {
-        return findDeclaredProperties(entity).stream()
-                .filter(el -> el.getSimpleName().toString().equals(propName))
-                .findAny().orElse(null);
+    public Optional<PropertyElement> findDeclaredProperty(final EntityElement entityElement, final String propName) {
+        return streamDeclaredProperties(entityElement)
+                .filter(elt -> elt.getSimpleName().toString().equals(propName))
+                .findFirst();
     }
 
     /**
-     * Finds properties, which are inherited by entity, represented by {@code entityElement}.
+     * Returns a stream of all inherited properties with no guarantees on element uniqueness.
+     * 
+     * @see PropertyElement#equals(Object)
+     * @param entityElement
+     * @return
+     */
+    public Stream<PropertyElement> streamInheritedProperties(final EntityElement entityElement) {
+        return streamInheritedFields(entityElement, ROOT_ENTITY_CLASS)
+                .filter(this::isProperty)
+                .map(PropertyElement::new);
+    }
+
+    /**
+     * Returns an unmodifiable set of properties, which are inherited by entity, represented by {@code entityElement}.
+     * <p>
+     * Property uniqueness is described by {@link PropertyElement#equals(Object)}.
+     * Entity hierarchy is traversed in natural order.
      * <p>
      * Two properties represent an edge-case:
      * <ul>
@@ -103,11 +122,8 @@ public class EntityFinder extends ElementFinder {
      * @param entityElement
      * @return
      */
-    public List<PropertyElement> findInheritedProperties(final EntityElement entityElement) {
-        final Set<PropertyElement> props = streamInheritedFields(entityElement, ROOT_ENTITY_CLASS)
-                .filter(this::isProperty)
-                .map(PropertyElement::new)
-                .collect(toCollection(LinkedHashSet::new));
+    public Set<PropertyElement> findInheritedProperties(final EntityElement entityElement) {
+        final Set<PropertyElement> props = streamInheritedProperties(entityElement).collect(toCollection(LinkedHashSet::new));
 
         // let's see if we need to include "id" as a property -- only persistent entities are of interest
         if (isPersistentEntityType(entityElement) || doesExtendPersistentEntity(entityElement)) {
@@ -120,27 +136,51 @@ public class EntityFinder extends ElementFinder {
             findField(entityElement, AbstractEntity.DESC).ifPresent(elt -> props.remove(new PropertyElement(elt)));
         }
 
-        return props.stream().toList();
+        return Collections.unmodifiableSet(props);
     }
 
     /**
-     * Finds all properties for entity represented by {@code entityElement}.
-     * The result is the union of result, returned by {@link #findDeclaredProperties(EntityElement)} and {@link #findInheritedProperties(EntityElement)}.
+     * Returns a stream of all properties (both declared and inherited) with no guarantees on element uniqueness.
+     * 
+     * @see PropertyElement#equals(Object)
+     * @param entityElement
+     * @return
+     */
+    public Stream<PropertyElement> streamProperties(final EntityElement entityElement) {
+        return Stream.concat(streamDeclaredProperties(entityElement), streamInheritedProperties(entityElement));
+    }
+
+    /**
+     * Returns an unmodifiable set of all unique properties of the entity element: both declared an inherited.
+     * <p>
+     * Property uniqueness is described by {@link PropertyElement#equals(Object)}.
+     * Entity hierarchy is traversed in natural order.
+     * <p>
+     * Two properties represent an edge-case:
+     * <ul>
+     * <li>id – only included if this or any of the entities represented by supertypes, is persistent.
+     * <li>desc – only included if this or any of the entities represented by supertypes, is annotated with {@code @DescTitle}.
+     * </ul>
      */
     public Set<PropertyElement> findProperties(final EntityElement entityElement) {
-        final Set<PropertyElement> properties = findDeclaredProperties(entityElement);
+        final Set<PropertyElement> properties = new LinkedHashSet<>(findDeclaredProperties(entityElement));
         properties.addAll(findInheritedProperties(entityElement));
-        return properties;
+        return Collections.unmodifiableSet(properties);
     }
     
     /**
-     * Finds a property named {@code name} for entity represented by {@code entityElement}. The whole entity type hierarchy is traversed.
+     * Returns an optional describing a property of {@code entityElement} named {@code name}. 
+     * <p>
+     * Entity type hiearchy is traversed in natural order and the first matching property is returned.
+     * 
      * @param entityElement
      * @param name
-     * @return the property element that was found if any, otherwise {@code null}
+     * @return
      */
-    public PropertyElement findProperty(final EntityElement entityElement, final String name) {
-        return findProperties(entityElement).stream().filter(propEl -> propEl.getSimpleName().toString().equals(name)).findFirst().orElse(null);
+    public Optional<PropertyElement> findProperty(final EntityElement entityElement, final String name) {
+        return streamProperties(entityElement)
+                .filter(elt -> elt.getSimpleName().toString().equals(name))
+                .findFirst();
     }
 
     public Pair<String, String> getPropTitleAndDesc(final PropertyElement propElement) {

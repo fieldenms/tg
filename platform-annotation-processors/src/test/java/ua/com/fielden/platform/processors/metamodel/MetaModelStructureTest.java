@@ -190,7 +190,7 @@ public class MetaModelStructureTest {
         // SubEntity's meta-model extends SuperEntity's meta-model ?
         assertTrue(elementFinder.types.isSameType(subEntityMetaModel.getSuperclass(), superEntityMetaModel.asType()));
         
-        final Set<PropertyElement> subEntityDeclaredProps = entityFinder.findDeclaredProperties(subEntity);
+        final List<PropertyElement> subEntityDeclaredProps = entityFinder.findDeclaredProperties(subEntity);
         final Set<ExecutableElement> subEntityDeclaredMetamodeledProps = metaModelFinder.findDeclaredPropertyMethods(subEntityMetaModel);
         // TODO "desc" and "id" may also be generated
         assertEquals(subEntityDeclaredProps.size(), subEntityDeclaredMetamodeledProps.size());

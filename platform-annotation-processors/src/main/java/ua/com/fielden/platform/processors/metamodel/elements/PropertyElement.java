@@ -83,6 +83,11 @@ public class PropertyElement extends AbstractForwardingVariableElement {
         return 31 + Objects.hash(getSimpleName());
     }
 
+    /**
+     * Equality of property elements is based on the equality of their simple names.
+     * <p>
+     * For example, {@code @IsProperty A prop} is equal to {@code @IsProperty B prop}.
+     */
     @Override
     public boolean equals(final Object obj) {
         if (obj == this) {

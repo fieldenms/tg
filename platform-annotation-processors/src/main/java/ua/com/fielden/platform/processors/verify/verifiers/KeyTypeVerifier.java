@@ -201,9 +201,10 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
                     .toList();
             
             for (final EntityElement entity : entities) {
-                final PropertyElement keyProp = entityFinder.findDeclaredProperty(entity, AbstractEntity.KEY);
-                if (keyProp == null) continue;
+                final Optional<PropertyElement> maybeKeyProp = entityFinder.findDeclaredProperty(entity, AbstractEntity.KEY);
+                if (maybeKeyProp.isEmpty()) continue;
 
+                final PropertyElement keyProp = maybeKeyProp.get();
                 final Optional<TypeMirror> maybeKeyType = entityFinder.determineKeyType(entity);
                 // missing @KeyType could mean an abstract entity or an invalid definition, either way this verifier has other responsibilities
                 if (maybeKeyType.isEmpty()) continue;
