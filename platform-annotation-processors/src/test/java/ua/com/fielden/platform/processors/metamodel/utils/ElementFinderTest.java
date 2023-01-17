@@ -71,12 +71,12 @@ public class ElementFinderTest {
     @Test
     public void test_equals() {
         processAndEvaluate(finder -> {
-            assertTrue(finder.equals(finder.getTypeElement(String.class), String.class));
-            assertTrue(finder.equals(finder.getTypeElement(java.util.Date.class), java.util.Date.class));
+            assertTrue(finder.isSameType(finder.getTypeElement(String.class), String.class));
+            assertTrue(finder.isSameType(finder.getTypeElement(java.util.Date.class), java.util.Date.class));
             // java.sql.Date != java.util.Date
-            assertFalse(finder.equals(finder.getTypeElement(java.sql.Date.class), java.util.Date.class));
+            assertFalse(finder.isSameType(finder.getTypeElement(java.sql.Date.class), java.util.Date.class));
             // java.util.Date != java.sql.Date
-            assertFalse(finder.equals(finder.getTypeElement(java.util.Date.class), java.sql.Date.class));
+            assertFalse(finder.isSameType(finder.getTypeElement(java.util.Date.class), java.sql.Date.class));
         });
     }
 

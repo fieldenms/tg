@@ -78,20 +78,22 @@ public class ElementFinder {
     }
 
     /**
-     * A {@link TypeElement} instance is equal to a {@link Class} instance if both objects have the same qualified (canonical) name.
+     * Tests whether the type element and class represent the same type.
      * <p>
+     * The comparison is based on the canonical name of the underlying type.
      * A local class, local interface, or anonymous class does not have a canonical name.
+     * <p>
+     * <b>NOTE</b>: For sake of simplicity, this method is incapable of differentiating between application modules.
+     * 
      * @see <a href="https://docs.oracle.com/javase/specs/jls/se16/html/jls-6.html#jls-6.7">Java SE16 Language Specification - Fully Qualified Names and Canonical Names</a>
-     *
-     * @param typeElement
-     * @param type
+     * @param element
+     * @param clazz
      */
-    // TODO rename to isSameType
-    public boolean equals(final TypeElement typeElement, final Class<?> type) {
-        if (typeElement == null || type == null) {
+    public boolean isSameType(final TypeElement element, final Class<?> clazz) {
+        if (element == null || clazz == null) {
             throw new EntityMetaModelException("Neither typeElement nor type arguments can be null.");
         }
-        return typeElement.getQualifiedName().toString().equals(type.getCanonicalName());
+        return element.getQualifiedName().toString().equals(clazz.getCanonicalName());
     }
 
     /**
@@ -124,7 +126,7 @@ public class ElementFinder {
         }
         return stopAfter(
                 iterate(Optional.of(typeElement), Optional::isPresent, elt -> elt.flatMap(this::findSuperclass)).map(Optional::get),
-                elt -> equals(elt, rootType))
+                elt -> isSameType(elt, rootType))
                 .skip(1); // drop the typeElement itself
     }
 
@@ -410,7 +412,7 @@ public class ElementFinder {
      */
     public Optional<? extends AnnotationMirror> findAnnotationMirror(final AnnotatedConstruct element, final Class<? extends Annotation> annotType) {
         return element.getAnnotationMirrors().stream()
-                .filter(mirror -> equals((TypeElement) mirror.getAnnotationType().asElement(), annotType))
+                .filter(mirror -> isSameType((TypeElement) mirror.getAnnotationType().asElement(), annotType))
                 .findAny();
     }
 

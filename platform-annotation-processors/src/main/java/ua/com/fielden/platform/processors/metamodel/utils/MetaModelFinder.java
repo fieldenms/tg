@@ -71,7 +71,7 @@ public class MetaModelFinder extends ElementFinder {
                         final TypeElement fieldTypeElement = (TypeElement) ((DeclaredType) field.asType()).asElement();
 
                         // EntityMetaModel fields have type Supplier<[METAMODEL]>
-                        if (equals(fieldTypeElement, Supplier.class)) {
+                        if (isSameType(fieldTypeElement, Supplier.class)) {
                             final TypeMirror fieldTypeArgument = ((DeclaredType) fieldType).getTypeArguments().get(0);
                             return isSubtype(fieldTypeArgument, META_MODEL_SUPERCLASS);
                         }

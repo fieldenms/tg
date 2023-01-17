@@ -103,7 +103,7 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
                 AbstractFunEntityForDataExport.class);
 
         private boolean isOneOfAbstracts(final TypeElement element) {
-            return ABSTRACTS.stream().anyMatch(clazz -> elementFinder.equals(element, clazz));
+            return ABSTRACTS.stream().anyMatch(clazz -> elementFinder.isSameType(element, clazz));
         }
 
         public boolean verify(final RoundEnvironment roundEnv) {
