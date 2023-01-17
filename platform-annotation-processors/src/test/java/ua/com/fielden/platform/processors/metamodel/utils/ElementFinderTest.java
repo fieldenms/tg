@@ -91,27 +91,27 @@ public class ElementFinderTest {
                 .build();
         
         processAndEvaluate(List.of(iface, sup, sub), finder -> {
-            final TypeElement superclassOfSub = finder.findSuperclass(finder.elements.getTypeElement(sub.name));
+            final TypeElement superclassOfSub = finder.findSuperclass(finder.elements.getTypeElement(sub.name)).orElseThrow();
             assertEquals(finder.elements.getTypeElement(sup.name), superclassOfSub);
-            assertEquals(finder.getTypeElement(Object.class), finder.findSuperclass(superclassOfSub));
+            assertOptEquals(finder.getTypeElement(Object.class), finder.findSuperclass(superclassOfSub));
         });
     }
 
     @Test 
-    public void findSuperclass_returns_null_for_Object() {
-        processAndEvaluate(finder -> assertNull(finder.findSuperclass(finder.getTypeElement(Object.class))));
+    public void findSuperclass_returns_empty_optional_for_Object() {
+        processAndEvaluate(finder -> assertTrue(finder.findSuperclass(finder.getTypeElement(Object.class)).isEmpty()));
     }
 
     @Test 
-    public void findSuperclass_returns_null_for_an_interface() {
+    public void findSuperclass_returns_empty_optional_for_an_interface() {
         final TypeSpec isup = TypeSpec.interfaceBuilder("ISup").build();
         final TypeSpec isub = TypeSpec.interfaceBuilder("ISub")
                 .addSuperinterface(ClassName.get("", isup.name))
                 .build();
 
         processAndEvaluate(List.of(isup, isub), finder -> {
-            assertNull(finder.findSuperclass(finder.elements.getTypeElement(isup.name)));
-            assertNull(finder.findSuperclass(finder.elements.getTypeElement(isub.name)));
+            assertTrue(finder.findSuperclass(finder.elements.getTypeElement(isup.name)).isEmpty());
+            assertTrue(finder.findSuperclass(finder.elements.getTypeElement(isub.name)).isEmpty());
         });
     }
 

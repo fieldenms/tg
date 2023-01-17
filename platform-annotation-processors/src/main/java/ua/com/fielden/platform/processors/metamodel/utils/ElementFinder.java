@@ -96,54 +96,58 @@ public class ElementFinder {
     }
 
     /**
-     * Returns the immediate parent class of {@code element} or null in the following cases:
-     * <ul>
-     *  <li>{@code typeElement} is the {@link Object} type
-     *  <li>{@code typeElement} is an interface type
-     * </ul>
+     * Returns the immediate superclass of a type element if there is one.
+     * An empty optional is returned if the type element represents an interface type or the {@link Object} class.
      */
-    public TypeElement findSuperclass(final TypeElement element) {
+    public Optional<TypeElement> findSuperclass(final TypeElement element) {
         final TypeMirror superclass = element.getSuperclass();
         if (superclass.getKind() == TypeKind.NONE) {
-            return null;
+            return Optional.empty();
         }
-        final TypeElement superclassTypeElement = toTypeElement(superclass);
-        return superclassTypeElement == null ? null : superclassTypeElement;
+        return Optional.of(asTypeElementOfTypeMirror(superclass));
     }
 
     /**
-     * Returns an ordered list of all super-classes with respect to {@code typeElement}.
+     * Returns an ordered stream of all superclasses of the type element.
      * The type hierarchy is traversed until either {@code rootType} or an interface type is reached.
      * <p>
-     * If {@code rootType} is not in the class hierarchy, then an empty list is returned.
+     * If the type element is not a subtype of {@code rootType}, then an empty stream is returned.
      * <p>
-     * {@code rootType} is included in the resulting list if it's a class type.
+     * The type element representing {@code rootType} is included in the stream only if it's a class type.
      *
      * @param typeElement
      * @param rootType
      * @return
      */
-    public List<TypeElement> findSuperclasses(final TypeElement typeElement, final Class<?> rootType) {
+    public Stream<TypeElement> streamSuperclasses(final TypeElement typeElement, final Class<?> rootType) {
         if (!isSubtype(typeElement.asType(), rootType)) {
-            return List.of();
+            return Stream.empty();
         }
         return stopAfter(
-                iterate(typeElement, te -> findSuperclass(te)),
-                te -> te == null || equals(te, rootType))
-                .filter(te -> te != null)
-                .skip(1) // drop the typeElement itself
-                .toList();
+                iterate(Optional.of(typeElement), Optional::isPresent, elt -> elt.flatMap(this::findSuperclass)).map(Optional::get),
+                elt -> equals(elt, rootType))
+                .skip(1); // drop the typeElement itself
     }
 
     /**
-     * The same as {@link #findSuperclasses(TypeElement, Class)}, but with the {@code rootType} set as {@code Object}. 
-     *
-     * @param typeElement
-     * @param includeRootClass
-     * @return
+     * Like {@link #streamSuperclasses(TypeElement, Class)} with {@code rootType} equal to {@code Object}. 
+     */
+    public Stream<TypeElement> streamSuperclasses(final TypeElement typeElement) {
+        return streamSuperclasses(typeElement, DEFAULT_ROOT_CLASS);
+    }
+
+    /**
+     * Collects the elements of {@link #streamSuperclasses(TypeElement, Class)} into a list. 
+     */
+    public List<TypeElement> findSuperclasses(final TypeElement typeElement, final Class<?> rootType) {
+        return streamSuperclasses(typeElement, rootType).toList();
+    }
+
+    /**
+     * Collects the elements of {@link #streamSuperclasses(TypeElement)} into a list. 
      */
     public List<TypeElement> findSuperclasses(final TypeElement typeElement) {
-        return findSuperclasses(typeElement, DEFAULT_ROOT_CLASS);
+        return streamSuperclasses(typeElement, DEFAULT_ROOT_CLASS).toList();
     }
 
     /**
@@ -209,7 +213,7 @@ public class ElementFinder {
     public Set<VariableElement> findInheritedFields(final TypeElement typeElement, final Class<?> rootClass) {
         // use LinkedHashSet to store fields so that they appear in their hierarchical order,
         // that is, fields inherited from the root of the type hierarchy will be placed at the end of the set
-        return findSuperclasses(typeElement, rootClass).stream()
+        return streamSuperclasses(typeElement, rootClass)
                 .flatMap(te -> findDeclaredFields(te).stream())
                 .collect(Collectors.toCollection(LinkedHashSet::new));
     }
@@ -364,8 +368,7 @@ public class ElementFinder {
      * @see ElementKind#METHOD
      */
     public Set<ExecutableElement> findInheritedMethods(final TypeElement typeElement) {
-        return iterate(findSuperclass(typeElement), superType -> findSuperclass(superType))
-                .takeWhile(el -> el != null)
+        return streamSuperclasses(typeElement)
                 .flatMap(type -> findDeclaredMethods(type).stream()).collect(toCollection(LinkedHashSet::new));
     }
 
