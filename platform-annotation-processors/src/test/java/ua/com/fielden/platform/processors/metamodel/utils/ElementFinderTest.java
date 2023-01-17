@@ -263,15 +263,15 @@ public class ElementFinderTest {
             final TypeElement supEl = finder.elements.getTypeElement(sup.name);
 
             // Sub.i
-            assertEquals(subEl, finder.findField(subEl, "i").getEnclosingElement());
+            assertEquals(subEl, finder.findField(subEl, "i").orElseThrow().getEnclosingElement());
             // Sup.s
-            assertEquals(supEl, finder.findField(subEl, "s", f -> finder.isStatic(f)).getEnclosingElement());
+            assertEquals(supEl, finder.findField(subEl, "s", f -> finder.isStatic(f)).orElseThrow().getEnclosingElement());
             // Sup.b
-            assertEquals(supEl, finder.findField(subEl, "b").getEnclosingElement());
+            assertEquals(supEl, finder.findField(subEl, "b").orElseThrow().getEnclosingElement());
             // non-existent field
-            assertNull(finder.findField(subEl, "noSuchField"));
+            assertTrue(finder.findField(subEl, "noSuchField").isEmpty());
             // non-existent field
-            assertNull(finder.findField(subEl, "s", f -> f.getModifiers().contains(Modifier.FINAL)));
+            assertTrue(finder.findField(subEl, "s", f -> f.getModifiers().contains(Modifier.FINAL)).isEmpty());
         });
     }
 
@@ -315,7 +315,7 @@ public class ElementFinderTest {
 
         processAndEvaluate(List.of(oneTimeAnnotType, sup, sub), finder -> {
             // Sub.s
-            final VariableElement field = finder.findDeclaredField(finder.elements.getTypeElement(sub.name), "s");
+            final VariableElement field = finder.findDeclaredField(finder.elements.getTypeElement(sub.name), "s").orElseThrow();
             final List<? extends AnnotationMirror> mirrors = finder.getFieldAnnotations(field);
             assertEquals(1, mirrors.size());
             final AnnotationMirror mirror = mirrors.get(0);
@@ -519,7 +519,7 @@ public class ElementFinderTest {
             assertTrue(finder.isSameType(finder.types.getNoType(TypeKind.VOID), void.class));
             // Void != void
             assertFalse(finder.isSameType(finder.types.getNoType(TypeKind.VOID), Void.class));
-            assertTrue(finder.isSameType(finder.findDeclaredField(exampleEl, "v").asType(), Void.class));
+            assertTrue(finder.isSameType(finder.findDeclaredField(exampleEl, "v").map(elt -> elt.asType()).orElseThrow(), Void.class));
 
             // declared types
             final TypeMirror stringType = finder.getTypeElement(String.class).asType();

@@ -14,7 +14,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.lang.model.AnnotatedConstruct;
@@ -162,157 +161,158 @@ public class ElementFinder {
     }
 
     /**
-     * Looks for variable elements, representing declared fields that match {@code predicate}.
+     * Returns a stream of variable elements, representing declared fields of the type element matching {@code predicate}.
      *
-     * @param typeElement
+     * @param element
      * @param predicate
      * @return
      */
-    public Set<VariableElement> findDeclaredFields(final TypeElement typeElement, final Predicate<VariableElement> predicate) {
-        return typeElement.getEnclosedElements().stream()
-                .filter(el -> el.getKind() == ElementKind.FIELD)
-                .map(el -> (VariableElement) el)
-                .filter(predicate)
-                .collect(toCollection(LinkedHashSet::new));
+    public Stream<VariableElement> streamDeclaredFields(final TypeElement element, final Predicate<VariableElement> predicate) {
+        return element.getEnclosedElements().stream()
+                .filter(elt -> elt.getKind().isField())
+                .map(elt -> (VariableElement) elt)
+                .filter(predicate);
     }
 
     /**
-     * Looks for variable elements, representing all explicitly declared fields.
-     */
-    public Set<VariableElement> findDeclaredFields(final TypeElement typeElement) {
-        return findDeclaredFields(typeElement, el -> true);
-    }
-
-    /**
-     * Looks for variable elements, representing inherited fields.
+     * Returns a stream of variable elements, representing all declared fields of a type element.
      *
-     * @param typeElement
+     * @param element
      * @return
      */
-    public Set<VariableElement> findInheritedFields(final TypeElement typeElement) {
-        return findInheritedFields(typeElement, DEFAULT_ROOT_CLASS);
+    public Stream<VariableElement> streamDeclaredFields(final TypeElement element) {
+        return streamDeclaredFields(element, elt -> true);
     }
 
     /**
-     * Looks for variable elements, representing all declared and inherited fields.
+     * Collects the elements of {@link #streamDeclaredFields(TypeElement, Predicate)} into a list.
      */
-    public Set<VariableElement> findFields(TypeElement typeElement) {
-        final Set<VariableElement> fields = findDeclaredFields(typeElement);
-        fields.addAll(findInheritedFields(typeElement));
-        return fields;
+    public List<VariableElement> findDeclaredFields(final TypeElement element, final Predicate<VariableElement> predicate) {
+        return streamDeclaredFields(element, predicate).toList();
     }
 
     /**
-     * The same as {@link #findInheritedFields(TypeElement)}, but with upper type constrained to <code>rootClass</code>.
-     * <p>
-     * If <code>rootClass</code> is absent in the class hierarchy, then an empty set is returned.
-     * 
-     * @param typeElement - target element which fields are to be found
-     * @param rootClass - upper limit (included) of a superclass of typeElement
+     * Collects the elements of {@link #streamDeclaredFields(TypeElement)} into a list.
      */
-    public Set<VariableElement> findInheritedFields(final TypeElement typeElement, final Class<?> rootClass) {
-        // use LinkedHashSet to store fields so that they appear in their hierarchical order,
-        // that is, fields inherited from the root of the type hierarchy will be placed at the end of the set
-        return streamSuperclasses(typeElement, rootClass)
-                .flatMap(te -> findDeclaredFields(te).stream())
-                .collect(Collectors.toCollection(LinkedHashSet::new));
+    public List<VariableElement> findDeclaredFields(final TypeElement element) {
+        return streamDeclaredFields(element).toList();
     }
 
     /**
-     * The same as {@link #findFields(TypeElement)}, but with upper type constrained to {@code rootClass}.
-     * 
-     * @param typeElement - target element which fields are to be found
-     * @param rootClass - upper limit (included) of a superclass of typeElement
+     * Returns a stream of variable elements, representing fields inherited by the type element with upper limit on superclasses equal to {@code rootType}.
+     *
+     * @param element
+     * @param predicate
+     * @return
      */
-    public Set<VariableElement> findFields(final TypeElement typeElement, final Class<?> rootClass) {
-        final Set<VariableElement> fields = findDeclaredFields(typeElement);
-        fields.addAll(findInheritedFields(typeElement, rootClass));
-        return fields;
+    public Stream<VariableElement> streamInheritedFields(final TypeElement element, final Class<?> rootType) {
+        return streamSuperclasses(element, rootType).flatMap(elt -> streamDeclaredFields(elt));
     }
 
-    public Set<VariableElement> findStaticDeclaredFields(final TypeElement typeElement) {
+    /**
+     * Returns a stream of variable elements, representing all inherited fields of the type element.
+     */
+    public Stream<VariableElement> streamInheritedFields(final TypeElement element) {
+        return streamInheritedFields(element, DEFAULT_ROOT_CLASS);
+    }
+
+    /**
+     * Collects the elements of {@link #streamInheritedFields(TypeElement)} into a list.
+     */
+    public List<VariableElement> findInheritedFields(final TypeElement element) {
+        return streamInheritedFields(element).toList();
+    }
+
+    /**
+     * Returns a stream of variable elements, representing all fields of the type element: both declared and inherited.
+     */
+    public Stream<VariableElement> streamFields(final TypeElement element) {
+        return Stream.concat(streamDeclaredFields(element), streamInheritedFields(element));
+    }
+
+    /**
+     * Collects the elements of {@link #streamFields(TypeElement)} into a list.
+     */
+    public List<VariableElement> findFields(TypeElement element) {
+        return streamFields(element).toList();
+    }
+
+    public List<VariableElement> findStaticDeclaredFields(final TypeElement typeElement) {
         return findDeclaredFields(typeElement, f -> isStatic(f));
     }
 
-    public Set<VariableElement> findNonStaticDeclaredFields(final TypeElement typeElement) {
+    public List<VariableElement> findNonStaticDeclaredFields(final TypeElement typeElement) {
         return findDeclaredFields(typeElement, f -> !isStatic(f));
     }
 
     /**
-     * Returns a variable element, representing a field with name {@code fieldName} and matching the given {@code predicate}, or else {@code null}.
-     * <p>
-     * The whole type hierarchy is processed, until a matching field is found.
+     * Returns an optional describing a variable element that represents a field named {@code fieldName} and matching {@code predicate},
+     * traversing the whole type hierarchy.
      *
      * @param typeElement
      * @param fieldName
      * @param predicate
      * @return
      */
-    public VariableElement findField(final TypeElement typeElement, final String fieldName, final Predicate<VariableElement> predicate) {
-        // first search in declared and then inherited fields
-        return findDeclaredFields(typeElement).stream()
+    public Optional<VariableElement> findField(final TypeElement typeElement, final String fieldName, final Predicate<VariableElement> predicate) {
+        // first search declared, then inherited fields
+        return streamFields(typeElement)
                .filter(varEl -> varEl.getSimpleName().toString().equals(fieldName) && predicate.test(varEl))
-               .findFirst()
-               .orElseGet(() -> findInheritedFields(typeElement).stream()
-                                .filter(varEl -> varEl.getSimpleName().toString().equals(fieldName) && predicate.test(varEl))
-                                .findFirst().orElse(null));
+               .findFirst();
     }
 
     /**
-     * Returns a variable element, representing a field with name {@code fieldName}, or else {@code null}.
-     * <p>
-     * The whole type hierarchy is processed, until a matching field is found.
+     * Returns an optional describing a variable element that represents a field named {@code fieldName}, traversing the whole type hierarchy.
      *
      * @param typeElement
      * @param fieldName
      * @return
      */
-    public VariableElement findField(final TypeElement typeElement, final String fieldName) {
+    public Optional<VariableElement> findField(final TypeElement typeElement, final String fieldName) {
         return findField(typeElement, fieldName, (varEl) -> true);
     }
 
     /**
-     * Returns a variable element, representing a declared field with name {@code fieldName} and matching the given {@code predicate}, or else {@code null}.
+     * Returns an optional describing a variable element that represents a declared field named {@code fieldName} and matching {@code predicate}.
      *
      * @param typeElement
      * @param fieldName
      * @param predicate
      * @return
      */
-    public VariableElement findDeclaredField(final TypeElement typeElement, final String fieldName, final Predicate<VariableElement> predicate) {
-        return findDeclaredFields(typeElement).stream()
+    public Optional<VariableElement> findDeclaredField(final TypeElement typeElement, final String fieldName, final Predicate<VariableElement> predicate) {
+        return streamDeclaredFields(typeElement)
                .filter(varEl -> varEl.getSimpleName().toString().equals(fieldName) && predicate.test(varEl))
-               .findFirst()
-               .orElse(null);
+               .findFirst();
     }
 
     /**
-     * Returns a variable element, representing a declared field with name {@code fieldName}, or else {@code null}.
+     * Returns an optional describing a variable element that represents a declared field named {@code fieldName}.
      *
      * @param typeElement
      * @param fieldName
      * @return
      */
-    public VariableElement findDeclaredField(final TypeElement typeElement, final String fieldName) {
+    public Optional<VariableElement> findDeclaredField(final TypeElement typeElement, final String fieldName) {
         return findDeclaredField(typeElement, fieldName, (varEl) -> true);
     }
     
-    public Set<VariableElement> findDeclaredFieldsAnnotatedWith(final TypeElement typeElement, final Class<? extends Annotation> annotationClass) {
-        return findDeclaredFields(typeElement).stream()
+    public List<VariableElement> findDeclaredFieldsAnnotatedWith(final TypeElement typeElement, final Class<? extends Annotation> annotationClass) {
+        return streamDeclaredFields(typeElement)
                 .filter(el -> el.getAnnotation(annotationClass) != null)
-                .collect(toSet());
+                .toList();
     }
 
-    public Set<VariableElement> findInheritedFieldsAnnotatedWith(final TypeElement typeElement, final Class<? extends Annotation> annotationClass) {
-        return findInheritedFields(typeElement).stream()
+    public List<VariableElement> findInheritedFieldsAnnotatedWith(final TypeElement typeElement, final Class<? extends Annotation> annotationClass) {
+        return streamInheritedFields(typeElement)
                 .filter(el -> el.getAnnotation(annotationClass) != null)
-                .collect(toSet());
+                .toList();
     }
 
-    public Set<VariableElement> findFieldsAnnotatedWith(final TypeElement typeElement, final Class<? extends Annotation> annotationClass) {
-        return findFields(typeElement).stream()
+    public List<VariableElement> findFieldsAnnotatedWith(final TypeElement typeElement, final Class<? extends Annotation> annotationClass) {
+        return streamFields(typeElement)
                 .filter(el -> el.getAnnotation(annotationClass) != null)
-                .collect(toSet());
+                .toList();
     }
 
     /**
