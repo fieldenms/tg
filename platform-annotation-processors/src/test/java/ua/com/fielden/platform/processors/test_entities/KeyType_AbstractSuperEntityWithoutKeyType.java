@@ -28,7 +28,7 @@ public abstract class KeyType_AbstractSuperEntityWithoutKeyType<T extends Compar
         return this;
     }
 
-    public String getName() {
+    public String getProp1() {
         return prop1;
     }
 
