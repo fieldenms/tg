@@ -6,6 +6,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_ALIASED_NAME_SUFFIX;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_NAME_SUFFIX;
 
@@ -19,6 +20,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
+import javax.lang.model.util.Types;
 
 import org.apache.commons.lang3.StringUtils;
 import org.junit.BeforeClass;
@@ -35,15 +37,23 @@ import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
 import ua.com.fielden.platform.processors.test_entities.EntityWithDescTitle;
 import ua.com.fielden.platform.processors.test_entities.EntityWithEntityTypedAndOrdinaryProps;
+import ua.com.fielden.platform.processors.test_entities.EntityWithKeyTypeNoKey;
+import ua.com.fielden.platform.processors.test_entities.EntityWithKeyTypeOfEntityType;
 import ua.com.fielden.platform.processors.test_entities.EntityWithOrdinaryProps;
 import ua.com.fielden.platform.processors.test_entities.EntityWithoutDescTitle;
+import ua.com.fielden.platform.processors.test_entities.KeyTypeAsComposite_SubEntityExtendingAbstractSuperEntityWithoutKeyType;
+import ua.com.fielden.platform.processors.test_entities.KeyTypeAsEntity_SubEntityExtendingAbstractSuperEntityWithoutKeyType;
+import ua.com.fielden.platform.processors.test_entities.KeyTypeAsString_SubEntityExtendingAbstractSuperEntityWithoutKeyType;
+import ua.com.fielden.platform.processors.test_entities.KeyType_AbstractSuperEntityWithoutKeyType;
 import ua.com.fielden.platform.processors.test_entities.NonPersistentButDomainEntity;
 import ua.com.fielden.platform.processors.test_entities.NonPersistentButWithMetaModelEntity;
 import ua.com.fielden.platform.processors.test_entities.PersistentEntity;
 import ua.com.fielden.platform.processors.test_entities.SubEntity;
 import ua.com.fielden.platform.processors.test_entities.SuperEntity;
-import ua.com.fielden.platform.processors.test_utils.CompilationRule;
+import ua.com.fielden.platform.processors.test_entities.meta.SubEntityMetaModel;
+import ua.com.fielden.platform.processors.test_utils.ProcessingRule;
 import ua.com.fielden.platform.processors.test_utils.exceptions.TestCaseConfigException;
+import ua.com.fielden.platform.reflection.AnnotationReflector;
 
 
 /**
@@ -56,14 +66,16 @@ public class MetaModelStructureTest {
     public static final String TEST_META_MODELS_PKG_NAME = TEST_ENTITIES_PKG_NAME + MetaModelConstants.META_MODEL_PKG_NAME_SUFFIX;
 
     @ClassRule
-    public static CompilationRule rule = new CompilationRule(List.of(), new MetaModelProcessor());
+    public static ProcessingRule rule = new ProcessingRule(List.of(), new MetaModelProcessor());
     private static ElementFinder elementFinder;
     private static EntityFinder entityFinder;
     private static MetaModelFinder metaModelFinder;
+    private static Types typeUtils;
     
     @BeforeClass
     public static void setupOnce() {
         // these values are guaranteed to have been initialized since the class rule will evaluate this method during the last round of processing
+        typeUtils = rule.getTypes();
         elementFinder = new ElementFinder(rule.getElements(), rule.getTypes());
         entityFinder = new EntityFinder(rule.getElements(), rule.getTypes());
         metaModelFinder = new MetaModelFinder(rule.getElements(), rule.getTypes());
@@ -95,6 +107,32 @@ public class MetaModelStructureTest {
         // Meta-model for EntityWithoutDescTitle does NOT have method desc()
         assertTrue(metaModelFinder.findPropertyMethods(metaModelWithoutDesc).stream()
                 .noneMatch(el -> StringUtils.equals(el.getSimpleName(), "desc")));
+    }
+    
+    @Test
+    public void entity_with_entity_type_as_key_type_has_property_key_metamodeled_with_entity_meta_model_type() {
+        final EntityElement entity = findEntity(EntityWithKeyTypeOfEntityType.class);
+        final MetaModelElement metaModel = findMetaModel(entity);
+        
+        final ExecutableElement keyMethod = metaModelFinder.findDeclaredPropertyMethod(metaModel, AbstractEntity.KEY);
+        assertTrue("\"key\" property must be metamodeled.", keyMethod != null);
+        assertTrue("\"key\" property must be metamodeled with entity meta-model type.", metaModelFinder.isEntityMetaModelMethod(keyMethod));
+        
+        final Class<?> declaredKeyType = AnnotationReflector.getKeyType(EntityWithKeyTypeOfEntityType.class);
+
+        // return type of keyMethod must be a meta-model for declaredKeyType
+        final MetaModelElement expected = findMetaModel(findEntity((Class<? extends AbstractEntity<?>>) declaredKeyType));
+        assertTrue("%s.key must be metamodeled with %s.".formatted(EntityWithKeyTypeOfEntityType.class.getSimpleName(), expected.getSimpleName()),
+                typeUtils.isSameType(keyMethod.getReturnType(), expected.asType()));
+    }
+    
+    @Test
+    public void entity_with_NoType_as_key_type_does_not_have_property_key_metamodeled() {
+        final EntityElement entity = findEntity(EntityWithKeyTypeNoKey.class);
+        final MetaModelElement metaModel = findMetaModel(entity);
+        
+        final ExecutableElement keyMethod = metaModelFinder.findDeclaredPropertyMethod(metaModel, AbstractEntity.KEY);
+        assertTrue("\"key\" property must not be metamodeled.", keyMethod == null);
     }
     
     @Test
@@ -143,7 +181,7 @@ public class MetaModelStructureTest {
      * <p>
      * <ul>
      * <li>SubEntity's meta-model directly extends SuperEntity's meta-model</li>
-     * <li>Only declared properties of SubEntity are explicitly metamodeled.</li>
+     * <li>Only declared properties of SubEntity + property {@code key} are explicitly meta-modelled.</li>
      * </ul>
      */
     @Test
@@ -160,7 +198,7 @@ public class MetaModelStructureTest {
         
         final Set<PropertyElement> subEntityDeclaredProps = entityFinder.findDeclaredProperties(subEntity);
         final Set<ExecutableElement> subEntityDeclaredMetamodeledProps = metaModelFinder.findDeclaredPropertyMethods(subEntityMetaModel);
-        assertEquals(subEntityDeclaredProps.size(), subEntityDeclaredMetamodeledProps.size());
+        assertEquals(subEntityDeclaredProps.size() + 1, subEntityDeclaredMetamodeledProps.size()); // + 1 for property "key"
 
         for (final PropertyElement prop: subEntityDeclaredProps) {
             // find the metamodeled prop by name
@@ -257,11 +295,93 @@ public class MetaModelStructureTest {
             });
     }
 
+    @Test
+    public void meta_model_of_abstract_entity_with_no_key_type_information_has_no_model_for_property_key() {
+        // find abstract super entity with no @KeyType annotation present
+        final EntityElement abstractSuperEntityWithoutKeyType = findEntity(KeyType_AbstractSuperEntityWithoutKeyType.class);
+        final MetaModelElement mmAbstractSuperEntityWithoutKeyType = findMetaModel(abstractSuperEntityWithoutKeyType);
+
+        final Set<PropertyElement> abstractSuperEntityWithoutKeyTypeDeclaredProps = entityFinder.findDeclaredProperties(abstractSuperEntityWithoutKeyType);
+        final Set<ExecutableElement> abstractSuperEntityWithoutKeyTypeDeclaredMetamodeledProps = metaModelFinder.findDeclaredPropertyMethods(mmAbstractSuperEntityWithoutKeyType);
+        assertEquals(abstractSuperEntityWithoutKeyTypeDeclaredProps.size(), abstractSuperEntityWithoutKeyTypeDeclaredMetamodeledProps.size());
+
+        assertFalse("Property %s should not have been modelled.".formatted(KEY), abstractSuperEntityWithoutKeyTypeDeclaredMetamodeledProps.stream().anyMatch(pe -> KEY.equals(pe.getSimpleName().toString())));
+    }
+
+    @Test
+    public void meta_model_of_entity_with_KeyType_as_String_extending_abstract_entity_contains_model_for_property_key() {
+        // find SubEntity
+        final EntityElement abstractSuperEntityWithoutKeyType = findEntity(KeyType_AbstractSuperEntityWithoutKeyType.class);
+        final MetaModelElement mmAbstractSuperEntityWithouKeyType = findMetaModel(abstractSuperEntityWithoutKeyType);
+        // find SuperEntity
+        final EntityElement subEntityWithKeyType = findEntity(KeyTypeAsString_SubEntityExtendingAbstractSuperEntityWithoutKeyType.class);
+        final MetaModelElement mmSubEntityWithKeyType = findMetaModel(subEntityWithKeyType);
+
+        // SubEntity's meta-model extends SuperEntity's meta-model ?
+        assertTrue(elementFinder.getTypes().isSameType(mmSubEntityWithKeyType.getSuperclass(), mmAbstractSuperEntityWithouKeyType.asType()));
+
+        final Set<PropertyElement> subEntityWithKeyTypeDeclaredProps = entityFinder.findDeclaredProperties(subEntityWithKeyType);
+        final Set<ExecutableElement> subEntityWithKeyTypeDeclaredMetamodeledProps = metaModelFinder.findDeclaredPropertyMethods(mmSubEntityWithKeyType);
+
+        assertEquals(1, subEntityWithKeyTypeDeclaredProps.size());
+        assertEquals(1 + 1, subEntityWithKeyTypeDeclaredMetamodeledProps.size()); // +1 for property "key"
+
+        final Optional<ExecutableElement> maybeKey = subEntityWithKeyTypeDeclaredMetamodeledProps.stream().filter(pe -> KEY.equals(pe.getSimpleName().toString())).findFirst();
+        assertTrue("Property %s should have been modelled.".formatted(KEY), maybeKey.isPresent());
+        assertTrue("Unexpected type for meta-modelled property %s.".formatted(KEY), elementFinder.isMethodReturnType(maybeKey.get(), PropertyMetaModel.class));
+    }
+
+    @Test
+    public void meta_model_of_entity_with_KeyType_as_Entity_extending_abstract_entity_contains_model_for_property_key() {
+        // find SubEntity
+        final EntityElement abstractSuperEntityWithoutKeyType = findEntity(KeyType_AbstractSuperEntityWithoutKeyType.class);
+        final MetaModelElement mmAbstractSuperEntityWithouKeyType = findMetaModel(abstractSuperEntityWithoutKeyType);
+        // find SuperEntity
+        final EntityElement subEntityWithKeyType = findEntity(KeyTypeAsEntity_SubEntityExtendingAbstractSuperEntityWithoutKeyType.class);
+        final MetaModelElement mmSubEntityWithKeyType = findMetaModel(subEntityWithKeyType);
+
+        // SubEntity's meta-model extends SuperEntity's meta-model ?
+        assertTrue(elementFinder.getTypes().isSameType(mmSubEntityWithKeyType.getSuperclass(), mmAbstractSuperEntityWithouKeyType.asType()));
+        
+        final Set<PropertyElement> subEntityWithKeyTypeDeclaredProps = entityFinder.findDeclaredProperties(subEntityWithKeyType);
+        final Set<ExecutableElement> subEntityWithKeyTypeDeclaredMetamodeledProps = metaModelFinder.findDeclaredPropertyMethods(mmSubEntityWithKeyType);
+
+        assertEquals(1, subEntityWithKeyTypeDeclaredProps.size());
+        assertEquals(1 + 1, subEntityWithKeyTypeDeclaredMetamodeledProps.size()); // +1 for property "key"
+
+        final Optional<ExecutableElement> maybeKey = subEntityWithKeyTypeDeclaredMetamodeledProps.stream().filter(pe -> KEY.equals(pe.getSimpleName().toString())).findFirst();
+        assertTrue("Property %s should have been modelled.".formatted(KEY), maybeKey.isPresent());
+        assertTrue("Unexpected type for meta-modelled property %s.".formatted(KEY), elementFinder.isMethodReturnType(maybeKey.get(), SubEntityMetaModel.class));
+    }
+
+    @Test
+    public void meta_model_of_entity_with_KeyType_as_Composite_extending_abstract_entity_contains_model_for_property_key() {
+        // find SubEntity
+        final EntityElement abstractSuperEntityWithoutKeyType = findEntity(KeyType_AbstractSuperEntityWithoutKeyType.class);
+        final MetaModelElement mmAbstractSuperEntityWithouKeyType = findMetaModel(abstractSuperEntityWithoutKeyType);
+        // find SuperEntity
+        final EntityElement subEntityWithKeyType = findEntity(KeyTypeAsComposite_SubEntityExtendingAbstractSuperEntityWithoutKeyType.class);
+        final MetaModelElement mmSubEntityWithKeyType = findMetaModel(subEntityWithKeyType);
+
+        // SubEntity's meta-model extends SuperEntity's meta-model ?
+        assertTrue(elementFinder.getTypes().isSameType(mmSubEntityWithKeyType.getSuperclass(), mmAbstractSuperEntityWithouKeyType.asType()));
+        
+        final Set<PropertyElement> subEntityWithKeyTypeDeclaredProps = entityFinder.findDeclaredProperties(subEntityWithKeyType);
+        final Set<ExecutableElement> subEntityWithKeyTypeDeclaredMetamodeledProps = metaModelFinder.findDeclaredPropertyMethods(mmSubEntityWithKeyType);
+
+        assertEquals(1, subEntityWithKeyTypeDeclaredProps.size());
+        assertEquals(1 + 1, subEntityWithKeyTypeDeclaredMetamodeledProps.size()); // +1 for property "key"
+
+        final Optional<ExecutableElement> maybeKey = subEntityWithKeyTypeDeclaredMetamodeledProps.stream().filter(pe -> KEY.equals(pe.getSimpleName().toString())).findFirst();
+        assertTrue("Property %s should have been modelled.".formatted(KEY), maybeKey.isPresent());
+        assertTrue("Unexpected type for meta-modelled property %s.".formatted(KEY), elementFinder.isMethodReturnType(maybeKey.get(), PropertyMetaModel.class));
+    }
+
     // ============================ HELPER METHODS ============================
     /**
      * Wraps a call to {@link EntityFinder#findEntity} that returns an optional in order to assert the presence of the returned value. 
      */
-    private static EntityElement findEntity(final Class<? extends AbstractEntity<?>> entityType) {
+    private static EntityElement findEntity(final Class<? extends AbstractEntity> entityType) {
         final Optional<EntityElement> maybeEntity = entityFinder.findEntity(entityType);
         assertTrue(maybeEntity.isPresent());
         return maybeEntity.get();
@@ -275,5 +395,5 @@ public class MetaModelStructureTest {
         assertTrue(maybeMetaModel.isPresent());
         return maybeMetaModel.get();
     }
-    
+
 }

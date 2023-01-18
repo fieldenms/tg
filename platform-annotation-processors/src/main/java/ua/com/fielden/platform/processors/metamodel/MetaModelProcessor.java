@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -36,7 +37,6 @@ import javax.annotation.processing.Filer;
 import javax.annotation.processing.Generated;
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.SourceVersion;
@@ -46,13 +46,14 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.tools.Diagnostic.Kind;
 
 import org.apache.commons.lang3.StringUtils;
 import org.joda.time.DateTime;
 
-import com.google.auto.service.AutoService;
 import com.google.common.base.Stopwatch;
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
@@ -66,17 +67,21 @@ import com.squareup.javapoet.WildcardTypeName;
 
 import ua.com.fielden.platform.annotations.metamodel.MetaModelForType;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.NoKey;
+import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelsElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelAliasedException;
+import ua.com.fielden.platform.processors.metamodel.exceptions.EntitySourceDefinitionException;
 import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
+import ua.com.fielden.platform.processors.verify.VerifyingProcessor;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -85,11 +90,11 @@ import ua.com.fielden.platform.utils.Pair;
  * @author TG Team
  *
  */
-@AutoService(Processor.class)
 @SupportedAnnotationTypes("*")
 public class MetaModelProcessor extends AbstractProcessor {
 
     private static final String INDENT = "    ";
+    private static final String CLASS_SIMPLE_NAME = MetaModelProcessor.class.getSimpleName();
 
     private Filer filer;
     private Elements elementUtils;
@@ -115,14 +120,17 @@ public class MetaModelProcessor extends AbstractProcessor {
         this.elementUtils = processingEnv.getElementUtils();
         this.messager = processingEnv.getMessager();
         this.options = processingEnv.getOptions();
-        messager.printMessage(Kind.NOTE, format("Options: %s", options.keySet().stream().map(k -> format("%s=%s", k, options.get(k))).sorted().collect(joining(", "))));
         this.roundNumber = 0;
 
         this.elementFinder = new ElementFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
         this.entityFinder = new EntityFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
         this.metaModelFinder = new MetaModelFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
 
-        messager.printMessage(Kind.NOTE, format("%s initialized.", this.getClass().getSimpleName()));
+        messager.printMessage(Kind.NOTE, format("%s initialized.", CLASS_SIMPLE_NAME));
+        if (!this.options.isEmpty()) {
+            messager.printMessage(Kind.NOTE, format("Options: [%s]",
+                    options.keySet().stream().map(k -> format("%s=%s", k, options.get(k))).sorted().collect(joining(", "))));
+        }
     }
 
     @Override
@@ -130,7 +138,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         this.roundNumber = this.roundNumber + 1;
         final Stopwatch stopwatchProcess = Stopwatch.createStarted();
         
-        messager.printMessage(Kind.NOTE, format(">>> PROCESSING ROUND %d START >>>", roundNumber));
+        messager.printMessage(Kind.NOTE, format(">>> %s: PROCESSING ROUND %d START >>>", CLASS_SIMPLE_NAME, roundNumber));
         messager.printMessage(Kind.NOTE, format("annotations: [%s]", annotations.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
         final Set<? extends Element> rootElements = roundEnv.getRootElements();
         messager.printMessage(Kind.NOTE, format("rootElements: [%s]", rootElements.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
@@ -172,7 +180,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         }
 
         stopwatchProcess.stop();
-        messager.printMessage(Kind.NOTE, format("<<< PROCESSING ROUND %d END [%s millis] <<<", roundNumber, stopwatchProcess.elapsed(TimeUnit.MILLISECONDS)));
+        messager.printMessage(Kind.NOTE, format("<<< %s: PROCESSING ROUND %d END [%s millis] <<<", CLASS_SIMPLE_NAME, roundNumber, stopwatchProcess.elapsed(TimeUnit.MILLISECONDS)));
         // must return false to avoid claiming all annotations (as defined by @SupportedAnnotationTypes("*")) to allow other processors to run
         return false;
     }
@@ -192,11 +200,13 @@ public class MetaModelProcessor extends AbstractProcessor {
                 // TODO support visible nested classes, in case if we start supporting "components" in a form of nested classes
                 .filter(element -> elementFinder.isTopLevelClass(element))
                 .map(el -> (TypeElement) el).collect(toSet());
-        messager.printMessage(Kind.NOTE, format("annotatedElements: [%s]", annotatedElements.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
+
         if (annotatedElements.isEmpty()) {
-            messager.printMessage(Kind.NOTE, "There is nothing to process.");
+            messager.printMessage(Kind.NOTE, "There are no subjects for meta-modeling.");
             return Stream.empty();
         }
+        messager.printMessage(Kind.NOTE, format("annotatedElements: [%s]",
+                annotatedElements.stream().map(Element::getSimpleName).map(Name::toString).sorted().collect(joining(", "))));
 
         // let's process each type element representing a domain entity
         // all relevant types will have a meta-model concept created for them and their properties explored for the purpose of meta-modelling 
@@ -340,16 +350,15 @@ public class MetaModelProcessor extends AbstractProcessor {
         final String thisMetaModelPkgName = mmc.getPackageName();
 
         final EntityElement entityElement = mmc.getEntityElement();
-        final EntityElement entityParent = entityFinder.getParent(entityElement);
-        final boolean isEntitySuperclassMetamodeled = entityFinder.isEntityThatNeedsMetaModel(entityParent);
-        // collect properties to process
-        final Set<PropertyElement> properties = new LinkedHashSet<>();
-        if (isEntitySuperclassMetamodeled) {
-            // find only declared properties
-            properties.addAll(entityFinder.findDeclaredProperties(entityElement));
-        } else {
-            // find all properties (declared + inherited from <? extends AbstractEntity))
-            properties.addAll(entityFinder.findProperties(entityElement));
+        final EntityElement entitySupertype = entityFinder.getParent(entityElement);
+        final Optional<EntityElement> maybeMetaModelledSupertype = Optional.ofNullable(entityFinder.isEntityThatNeedsMetaModel(entitySupertype) ? entitySupertype : null);
+
+        final Collection<PropertyElement> properties;
+        try {
+            properties = collectProperties(entityElement, maybeMetaModelledSupertype);
+        } catch (final EntitySourceDefinitionException e) {
+            messager.printMessage(Kind.NOTE, format("Failed to generate meta-model for %s. %s", entityElement.getSimpleName(), e.getLocalizedMessage()));
+            return false;
         }
 
         // ######################## FIELDS ###########################
@@ -526,7 +535,7 @@ public class MetaModelProcessor extends AbstractProcessor {
         // Let's now create a meta-model class by putting all the parts together
         final TypeSpec.Builder metaModelBuilder = TypeSpec.classBuilder(thisMetaModelName)
                 .addModifiers(Modifier.PUBLIC)
-                .superclass(determineMetaModelSuperClassName(entityParent, isEntitySuperclassMetamodeled))
+                .superclass(determineMetaModelSuperClassName(entitySupertype, maybeMetaModelledSupertype.isPresent()))
                 .addFields(fieldSpecs)
                 .addMethods(constructors)
                 .addMethods(methodSpecs)
@@ -628,6 +637,69 @@ public class MetaModelProcessor extends AbstractProcessor {
 
         messager.printMessage(Kind.NOTE, format("Generated %s for entity %s.", metaModelSpec.name, entityElement.getSimpleName()));
         return true;
+    }
+    
+    /**
+     * Collects entity properties for meta-modeling.
+     * @param entity
+     * @param maybeMetaModelledSupertype
+     * @return
+     * @throws EntitySourceDefinitionException
+     */
+    private LinkedHashSet<PropertyElement> collectProperties(final EntityElement entity, final Optional<EntityElement> maybeMetaModelledSupertype) throws EntitySourceDefinitionException {
+        // map of the following form: String propertyName -> PropertyElement property
+        final LinkedHashMap<String, PropertyElement> properties = new LinkedHashMap<>();
+
+        if (maybeMetaModelledSupertype.isPresent()) {
+            // declared properties + property key
+            entityFinder.findDeclaredProperties(entity).forEach(propEl -> properties.put(propEl.getSimpleName().toString(), propEl));
+            final VariableElement veKey = elementFinder.findField(maybeMetaModelledSupertype.get().element(), AbstractEntity.KEY);
+            properties.put(AbstractEntity.KEY, new PropertyElement(veKey));
+         
+        }
+        else {
+            entityFinder.findProperties(entity).forEach(propEl -> properties.put(propEl.getSimpleName().toString(), propEl));
+        }
+        // Need additional processing of property "key" to correctly identify its type or to remove it.
+        // An exception is thrown in case of erroneous entity definition.
+        processPropertyKey(properties, entity);
+
+        return new LinkedHashSet<>(properties.values());
+    }
+    
+    /**
+     * Processes entity key type information, possibly modifying argument {@code properties} to update or remove the entry for property {@code key}.
+     *
+     * @see {@link AbstractEntity}, {@link KeyType}
+     * 
+     * @param properties
+     * @param entity
+     */
+    private void processPropertyKey(final LinkedHashMap<String, PropertyElement> properties, final EntityElement entity) {
+        // Child entity simply inherits "key" property meta-model from its parent, but only if that super meta-model contains a model for "key"...
+        // This is why, in order to simplify processing the situations where super meta-model does not have "key", we shall simply regenerate a meta-model for "key" for sub entities.
+        //
+        // Abstract entity types may have annotation @KeyType absent.
+        // However, it may still be necessary to generate a meta-model for abstract entities.
+        // Therefore, in such cases, property "key" should simply be removed from consideration.
+        final Optional<KeyType> maybeKeyType = entityFinder.findAnnotation(entity, KeyType.class);
+        if (entity.isAbstract() && maybeKeyType.isEmpty()) {
+            properties.remove(AbstractEntity.KEY);
+        }
+        // In all other cases, if annotation @KeyType is present, we shall make sure that its type is updated to match the type from @KeyType 
+        else if (maybeKeyType.isPresent()) {
+            final KeyType atKeyType = maybeKeyType.get();
+
+            // obtain KeyType::value()
+            final TypeMirror keyType = entityFinder.getKeyType(atKeyType);
+            // Property "key" of type NoKey does not need to be meta-modelled
+            if (elementFinder.isSameType(keyType, NoKey.class)) {
+                properties.remove(AbstractEntity.KEY);
+            } else {
+                // mapping for "key" should always exist
+                properties.compute(AbstractEntity.KEY, (name, propEl) -> propEl.changeType(keyType));
+            }
+        }
     }
 
     /**

@@ -21,8 +21,12 @@ import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelEx
  */
 public class PropertyElement extends AbstractForwardingVariableElement {
     
+    /** Holds the type of this property that is subject to change. */
+    private TypeMirror type;
+    
     public PropertyElement(final VariableElement varElement) {
         super(varElement);
+        this.type = varElement.asType();
     }
     
     /**
@@ -33,7 +37,7 @@ public class PropertyElement extends AbstractForwardingVariableElement {
      * @return
      */
     public boolean hasClassOrInterfaceType() {
-        return element.asType().getKind() == TypeKind.DECLARED;
+        return getType().getKind() == TypeKind.DECLARED;
     }
 
     /**
@@ -41,7 +45,17 @@ public class PropertyElement extends AbstractForwardingVariableElement {
      * @return
      */
     public TypeMirror getType() {
-        return element.asType();
+        return type;
+    }
+    
+    /**
+     * Changes the type of property being modeled.
+     * @param newType
+     * @return
+     */
+    public PropertyElement changeType(final TypeMirror newType) {
+        this.type = newType;
+        return this;
     }
 
     /**
@@ -61,7 +75,7 @@ public class PropertyElement extends AbstractForwardingVariableElement {
      * @return
      */
     public TypeElement getTypeAsTypeElementOrThrow() {
-        return (TypeElement) ((DeclaredType) asType()).asElement();
+        return (TypeElement) ((DeclaredType) getType()).asElement();
     }
 
     @Override
