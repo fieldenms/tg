@@ -90,7 +90,9 @@ public class EntityProxyContainer {
             .method(ElementMatchers.named("proxiedPropertyNames"))
             .intercept(FixedValue.value(Collections.unmodifiableSet(properties)))
             .make()
-            .load(ClassLoader.getSystemClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
+            // use class loader of the entity being proxied instead of a general system class loader,
+            // since it might have been loaded by a different class loader (e.g. a child class loader)
+            .load(entityType.getClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
             .getLoaded();
 
         typeCache.put(key, ownerType);

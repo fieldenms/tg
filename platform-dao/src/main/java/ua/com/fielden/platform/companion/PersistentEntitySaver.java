@@ -50,6 +50,7 @@ import ua.com.fielden.platform.entity.AbstractPersistentEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DeactivatableDependencies;
+import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.fetch.FetchModelReconstructor;
@@ -442,6 +443,9 @@ public final class PersistentEntitySaver<T extends AbstractEntity<?>> implements
      * @return
      */
     private boolean canResolveConflict(final T entity, final T persistedEntity) {
+        if (!AnnotationReflector.getAnnotation(entity.getClass(), MapEntityTo.class).autoConflictResolution()) {
+            return false;
+        }
         // comparison of property values is most likely to trigger lazy loading
         for (final MetaProperty<?> prop : entity.getDirtyProperties()) {
             final String name = prop.getName();

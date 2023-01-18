@@ -32,7 +32,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
-import ua.com.fielden.platform.processors.metamodel.exceptions.AnomalousStateException;
+import ua.com.fielden.platform.processors.metamodel.exceptions.UnexpectedStateException;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -54,7 +54,7 @@ public class EntityFinder extends ElementFinder {
      * @param entityClass
      * @return {@link EntityElement} wrapped in an {@link Optional} if found, else an empty optional
      */
-    public Optional<EntityElement> findEntity(final Class<? extends AbstractEntity<?>> entityClass) {
+    public Optional<EntityElement> findEntity(final Class<? extends AbstractEntity> entityClass) {
         return Optional.ofNullable(elements.getTypeElement(entityClass.getCanonicalName()))
                 .map(te -> newEntityElement(te));
     }
@@ -207,7 +207,7 @@ public class EntityFinder extends ElementFinder {
             if (keyTypeElement == null) {
                 // keyType Class object was available at compile time but could not be found in the processing environment,
                 // thus TypeMirror can't be constructed
-                throw new AnomalousStateException(
+                throw new UnexpectedStateException(
                         "Key type from %s was loaded at compile time, but was not found in the processing environment."
                         .formatted(atKeyType.toString()));
             }
@@ -235,8 +235,7 @@ public class EntityFinder extends ElementFinder {
      */
     public boolean isEntityType(final TypeElement element) {
         return Stream.iterate(element, el -> el != null && !equals(el, Object.class) , el -> findSuperclass(el))
-               .filter(el -> el != null && equals(el, ROOT_ENTITY_CLASS))
-               .findFirst().isPresent();
+               .anyMatch(el -> el != null && equals(el, ROOT_ENTITY_CLASS));
     }
 
     /**

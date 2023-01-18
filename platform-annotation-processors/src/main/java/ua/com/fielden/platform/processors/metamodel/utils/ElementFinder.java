@@ -105,7 +105,7 @@ public class ElementFinder {
         }
         final TypeElement superclassTypeElement = toTypeElement(superclass);
         // ignore interfaces
-        return superclassTypeElement.getKind() == ElementKind.INTERFACE ? null : superclassTypeElement;
+        return superclassTypeElement == null || superclassTypeElement.getKind() == ElementKind.INTERFACE ? null : superclassTypeElement;
     }
 
     /**
@@ -565,6 +565,10 @@ public class ElementFinder {
     public boolean isAbstract(final Element element) {
         return element.getModifiers().contains(Modifier.ABSTRACT);
     }
+
+    public boolean isGeneric(final TypeElement element) {
+        return element != null && !element.getTypeParameters().isEmpty();
+    }
     
     /**
      * Wraps {@link Elements#getPackageOf} in order to avoid ClassCastException, since Sun's internal implementation of {@link Elements} expects a {@link com.sun.tools.javac.code.Symbol} instance.
@@ -588,9 +592,10 @@ public class ElementFinder {
     }
 
     /**
-     * Converts {@link TypeMirror} to {@link TypeElement}.
+     * Converts {@link TypeMirror} to {@link TypeElement}, but only if argument {@code typeMirror} represents a declared type kind.
+     *
      * @param typeMirror
-     * @return a {@link TypeElement} if conversion was successful, otherwise null
+     * @return a {@link TypeElement} if conversion was successful, otherwise {@code null}.
      */
     public TypeElement toTypeElement(final TypeMirror typeMirror) {
         return typeMirror.getKind() == TypeKind.DECLARED ? (TypeElement) ((DeclaredType) typeMirror).asElement() : null;

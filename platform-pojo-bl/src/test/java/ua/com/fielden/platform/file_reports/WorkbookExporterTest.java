@@ -55,12 +55,14 @@ public class WorkbookExporterTest {
     @Test
     public void money_property_can_be_exported() {
         final MasterEntity entityToExport = new MasterEntity();
-        entityToExport.setMoneyProp(new Money("1.00"));
+        final Money money = new Money("1.00");
+        entityToExport.setMoneyProp(money);
         final String[] propertyNames = { "moneyProp" };
         final String[] propertyTitles = { "Money property" };
         final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
-        assertEquals("Money property of the exported row is incorrect", "$1.00", exportedRow.getCell(0).getStringCellValue());
+        assertEquals("Money property of the exported row is incorrect", 
+                money.toString(), exportedRow.getCell(0).getStringCellValue());
     }
 
     @Test
@@ -215,12 +217,14 @@ public class WorkbookExporterTest {
     @Test
     public void entity_aggregats_with_money_property_can_be_exported() {
         final EntityAggregates entityToExport = new EntityAggregates();
-        entityToExport.set("moneyProp", new Money("1.00"));
+        final Money money = new Money("1.00");
+        entityToExport.set("moneyProp", money);
         final String[] propertyNames = { "moneyProp" };
         final String[] propertyTitles = { "Money property" };
         final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
-        assertEquals("Money property of the exported entity aggregates is incorrect", "$1.00", exportedRow.getCell(0).getStringCellValue());
+        assertEquals("Money property of the exported entity aggregates is incorrect",
+                money.toString(), exportedRow.getCell(0).getStringCellValue());
     }
 
     @Test

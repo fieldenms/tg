@@ -37,7 +37,7 @@ import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
 @SupportedAnnotationTypes("*")
 public class VerifyingProcessor extends AbstractProcessor {
     
-    private final String classSimpleName = this.getClass().getSimpleName();
+    private static final String CLASS_SIMPLE_NAME = VerifyingProcessor.class.getSimpleName();
     private final Set<Function<ProcessingEnvironment, Verifier>> registeredVerifiersProviders;
     private final Set<Verifier> registeredVerifiers = new HashSet<>();
 
@@ -72,7 +72,7 @@ public class VerifyingProcessor extends AbstractProcessor {
         // instantiate registered verifiers
         registeredVerifiers.addAll(registeredVerifiersProviders.stream().map(p -> p.apply(processingEnv)).toList());
 
-        messager.printMessage(Kind.NOTE, format("%s initialized.", classSimpleName));
+        messager.printMessage(Kind.NOTE, format("%s initialized.", CLASS_SIMPLE_NAME));
         if (!options.isEmpty()) {
             messager.printMessage(Kind.NOTE, format("Options: [%s]",
                     options.keySet().stream().map(k -> format("%s=%s", k, options.get(k))).sorted().collect(joining(", "))));
@@ -98,7 +98,7 @@ public class VerifyingProcessor extends AbstractProcessor {
         roundNumber = roundNumber + 1;
         final Stopwatch stopwatchProcess = Stopwatch.createStarted();
 
-        messager.printMessage(Kind.NOTE, format(">>> %s: PROCESSING ROUND %d START >>>", classSimpleName, roundNumber));
+        messager.printMessage(Kind.NOTE, format(">>> %s: PROCESSING ROUND %d START >>>", CLASS_SIMPLE_NAME, roundNumber));
         
         final Set<? extends Element> rootElements = roundEnv.getRootElements();
         if (rootElements.isEmpty()) {
@@ -112,17 +112,17 @@ public class VerifyingProcessor extends AbstractProcessor {
 
             final boolean roundPassed = verify(roundEnv);
             if (roundPassed) {
-                messager.printMessage(Kind.NOTE, "All verifiers were passed.");
+                messager.printMessage(Kind.NOTE, "All verifiers have passed.");
             }
             passed = passed && roundPassed;
         }
 
         if (!passed) {
-            messager.printMessage(Kind.NOTE, "Claiming this round's annotations to disable other processors.");
+            messager.printMessage(Kind.WARNING, "Claiming this round's annotations to disable other processors.");
         }
 
         stopwatchProcess.stop();
-        messager.printMessage(Kind.NOTE, format("<<< %s: PROCESSING ROUND %d END [%s millis] <<<", classSimpleName, roundNumber,
+        messager.printMessage(Kind.NOTE, format("<<< %s: PROCESSING ROUND %d END [%s millis] <<<", CLASS_SIMPLE_NAME, roundNumber,
                 stopwatchProcess.elapsed(TimeUnit.MILLISECONDS)));
 
         return !passed;
@@ -141,7 +141,7 @@ public class VerifyingProcessor extends AbstractProcessor {
             if (!verifierPassed) {
                 final Set<Element> violatingElements = verifier.getViolatingElements();
                 if (!violatingElements.isEmpty()) {
-                    messager.printMessage(Kind.NOTE, format("%s was not passed by: [%s]", verifier.getClass().getSimpleName(),
+                    messager.printMessage(Kind.ERROR, format("%s was not passed by: [%s]", verifier.getClass().getSimpleName(),
                             violatingElements.stream().map(el -> el.getSimpleName().toString()).sorted().collect(joining(", "))));
                 }
             }
