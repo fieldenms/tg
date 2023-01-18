@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -67,7 +68,6 @@ import com.squareup.javapoet.WildcardTypeName;
 
 import ua.com.fielden.platform.annotations.metamodel.MetaModelForType;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.NoKey;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
@@ -82,7 +82,6 @@ import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
-import ua.com.fielden.platform.processors.verify.VerifyingProcessor;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -648,27 +647,26 @@ public class MetaModelProcessor extends AbstractProcessor {
      * @throws EntitySourceDefinitionException
      */
     private LinkedHashSet<PropertyElement> collectProperties(final EntityElement entity, final Optional<EntityElement> maybeMetaModelledSupertype) throws EntitySourceDefinitionException {
-        // map of the following form: String propertyName -> PropertyElement property
-        final LinkedHashMap<String, PropertyElement> properties = new LinkedHashMap<>();
 
+        final Set<PropertyElement> properties = new LinkedHashSet<>();
         if (maybeMetaModelledSupertype.isPresent()) {
             // declared properties + property key
-            entityFinder.findDeclaredProperties(entity).forEach(propEl -> properties.put(propEl.getSimpleName().toString(), propEl));
+            properties.addAll(entityFinder.processProperties(entityFinder.findDeclaredProperties(entity), entity));
             final VariableElement veKey = elementFinder.findField(maybeMetaModelledSupertype.get().element(), AbstractEntity.KEY);
-            properties.put(AbstractEntity.KEY, new PropertyElement(veKey));
-         
+            properties.add(new PropertyElement(veKey));
+        } else {
+            properties.addAll(entityFinder.processProperties(entityFinder.findProperties(entity), entity));
         }
-        else {
-            entityFinder.findProperties(entity).forEach(propEl -> properties.put(propEl.getSimpleName().toString(), propEl));
-        }
+
+        // map of the following form: String propertyName -> PropertyElement property
+        final LinkedHashMap<String, PropertyElement> propertiesMap = new LinkedHashMap<>(
+                properties.stream().collect(Collectors.toMap(elt -> elt.getSimpleName().toString(), Function.identity())));
 
         // Need additional processing of property "key" to correctly identify its type or to remove it.
         // An exception is thrown in case of erroneous entity definition.
-        processPropertyKey(properties, entity);
-        processPropertyId(properties, entity);
-        processPropertyDesc(properties, entity);
+        processPropertyKey(propertiesMap, entity);
 
-        return new LinkedHashSet<>(properties.values());
+        return new LinkedHashSet<>(propertiesMap.values());
     }
     
     /**
@@ -704,40 +702,6 @@ public class MetaModelProcessor extends AbstractProcessor {
                 properties.compute(AbstractEntity.KEY, (name, propEl) -> propEl.changeType(keyType));
             }
         }
-    }
-
-    /**
-     * Processes property {@link AbstractEntity#ID} to decide whether it should be metamodeled, possibly adding it to {@code properties}.
-     * 
-     * @param properties
-     * @param entity
-     */
-    private void processPropertyId(final LinkedHashMap<String, PropertyElement> properties, final EntityElement entity) {
-        // include property "id" only for persistent entities
-        if (entityFinder.isPersistentEntityType(entity) || entityFinder.doesExtendPersistentEntity(entity)) {
-            properties.put(AbstractEntity.ID, new PropertyElement(entityFinder.findField(entity, AbstractEntity.ID)));
-        }
-    }
-
-    /**
-     * Processes property {@link AbstractEntity#DESC} to decide whether it should be metamodeled, possibly modifying {@code properties}.
-     * 
-     * @param properties
-     * @param entity
-     */
-    private void processPropertyDesc(final LinkedHashMap<String, PropertyElement> properties, final EntityElement entity) {
-        // include property "desc" in the following cases:
-        // 1. property "desc" is declared by entity or one of its supertypes below AbstractEntity
-        // 2. entity or any of its supertypes is annotated with @DescTitle
-        final PropertyElement descProp = entityFinder.findPropertyBelow(entity, AbstractEntity.DESC, AbstractEntity.class);
-        if (descProp != null) {
-            properties.put(AbstractEntity.DESC, descProp);
-        }
-        else if (entityFinder.findAnnotation(entity, DescTitle.class).isPresent()) {
-            properties.put(AbstractEntity.DESC, new PropertyElement(entityFinder.findField(entity, AbstractEntity.DESC)));
-        }
-        // in other cases we need to exclude it
-        else properties.remove(AbstractEntity.DESC);
     }
 
     /**
