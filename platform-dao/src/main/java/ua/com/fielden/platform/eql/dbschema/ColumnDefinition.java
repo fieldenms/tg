@@ -67,7 +67,7 @@ public class ColumnDefinition {
         sb.append(" ");
         if (length == Integer.MAX_VALUE && String.class.equals(javaType) && dialect.getClass().getSimpleName().startsWith("Postgre")) {
             sb.append("text");
-        } if (length == Integer.MAX_VALUE && String.class.equals(javaType) && dialect.getClass().getSimpleName().startsWith("SQLServer")) { 
+        } else if (length == Integer.MAX_VALUE && String.class.equals(javaType) && dialect.getClass().getSimpleName().startsWith("SQLServer")) { 
             sb.append("varchar(max)");
         } else {
             sb.append(dialect.getTypeName(sqlType, length, precision, scale));
