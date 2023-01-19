@@ -15,7 +15,6 @@ import ua.com.fielden.platform.processors.test_utils.exceptions.PackageNotFoundE
  * Set of utilities to work with Java files.
  *
  * @author TG Team
- *
  */
 public final class JavaFileObjectFinder {
 

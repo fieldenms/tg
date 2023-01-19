@@ -11,6 +11,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -18,6 +19,7 @@ import java.util.stream.Collectors;
 
 import javax.lang.model.AnnotatedConstruct;
 import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -26,6 +28,7 @@ import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
@@ -102,7 +105,7 @@ public class ElementFinder {
         }
         final TypeElement superclassTypeElement = toTypeElement(superclass);
         // ignore interfaces
-        return superclassTypeElement.getKind() == ElementKind.INTERFACE ? null : superclassTypeElement;
+        return superclassTypeElement == null || superclassTypeElement.getKind() == ElementKind.INTERFACE ? null : superclassTypeElement;
     }
 
     /**
@@ -126,6 +129,20 @@ public class ElementFinder {
                 te -> te == null || equals(te, rootType))
                 .filter(te -> te != null)
                 .toList();
+    }
+
+    /**
+     * Like {@link #findSuperclasses(TypeElement, Class)}, but doesn't include {@code rootType} in the resulting list.
+     * @param typeElement
+     * @param rootType
+     * @return
+     */
+    public List<TypeElement> findSuperclassesBelow(final TypeElement typeElement, final Class<?> rootType) {
+        final List<TypeElement> superclasses = new ArrayList<>(findSuperclasses(typeElement, rootType));
+        if (!superclasses.isEmpty()) {
+            superclasses.remove(superclasses.size() - 1);
+        }
+        return superclasses;
     }
 
     /**
@@ -395,6 +412,27 @@ public class ElementFinder {
         }
         return null;
     }
+    
+    /**
+     * Returns an optional containing the value of the annotation's element.
+     * @param annotation
+     * @param elementName
+     * @return
+     */
+    public Optional<AnnotationValue> getAnnotationValue(final AnnotationMirror annotation, final String elementName) {
+        return elements.getElementValuesWithDefaults(annotation).entrySet().stream()
+                .filter(entry -> entry.getKey().getSimpleName().toString().equals(elementName))
+                .findAny().map(Entry::getValue);
+    }
+
+    /**
+     * Returns an optional containing the value of the annotation's default element (i.e. the {@code value()} element).
+     * @param annotation
+     * @return
+     */
+    public Optional<AnnotationValue> getAnnotationValue(final AnnotationMirror annotation) {
+        return getAnnotationValue(annotation, "value");
+    }
 
     public String getFieldTypeSimpleName(final VariableElement field) {
         return ((DeclaredType) field.asType()).asElement().getSimpleName().toString();
@@ -467,6 +505,39 @@ public class ElementFinder {
     public boolean isStatic(final VariableElement varElement) {
         return varElement.getModifiers().contains(Modifier.STATIC);
     }
+    
+    /**
+     * Tests whether the type modeled by {@code typeMirror} is the same type as runtime class {@code type}.
+     * If {@code typeMirror} represents a type variable or a wildcard, then {@code false} is returned.
+     * @param typeMirror
+     * @param type
+     * @return
+     */
+    public boolean isSameType(final TypeMirror typeMirror, final Class<?> type) {
+        final TypeKind typeMirrorKind = typeMirror.getKind();
+        if (typeMirrorKind.isPrimitive() && type.isPrimitive()) {
+            return (typeMirrorKind == TypeKind.BYTE && type.equals(byte.class)) ||
+                    (typeMirrorKind == TypeKind.SHORT && type.equals(short.class)) ||
+                    (typeMirrorKind == TypeKind.INT && type.equals(int.class)) ||
+                    (typeMirrorKind == TypeKind.LONG && type.equals(long.class)) ||
+                    (typeMirrorKind == TypeKind.FLOAT && type.equals(float.class)) ||
+                    (typeMirrorKind == TypeKind.DOUBLE && type.equals(double.class)) ||
+                    (typeMirrorKind == TypeKind.BOOLEAN && type.equals(boolean.class)) ||
+                    (typeMirrorKind == TypeKind.CHAR && type.equals(char.class));
+        }
+        else if (typeMirrorKind == TypeKind.ARRAY && type.isArray()) {
+            return isSameType(((ArrayType) typeMirror).getComponentType(), type.componentType());
+        }
+        else if (typeMirrorKind == TypeKind.VOID && type.equals(void.class)) {
+            return true;
+        }
+        else if (typeMirrorKind == TypeKind.DECLARED) {
+            return equals(toTypeElement(typeMirror), type);
+        }
+        else {
+            return false;
+        }
+    }
 
     /**
      * Tests whether an instance of {@link TypeMirror} ({@code typeMirror}) is a subtype of a {@link Class} instance ({@code type}).
@@ -488,7 +559,15 @@ public class ElementFinder {
     }
 
     public boolean isTopLevelClass(final Element element) {
-        return element.getEnclosingElement().getKind() == ElementKind.PACKAGE;
+        return element.getKind() == ElementKind.CLASS && element.getEnclosingElement().getKind() == ElementKind.PACKAGE;
+    }
+    
+    public boolean isAbstract(final Element element) {
+        return element.getModifiers().contains(Modifier.ABSTRACT);
+    }
+
+    public boolean isGeneric(final TypeElement element) {
+        return element != null && !element.getTypeParameters().isEmpty();
     }
     
     /**
@@ -513,9 +592,10 @@ public class ElementFinder {
     }
 
     /**
-     * Converts {@link TypeMirror} to {@link TypeElement}.
+     * Converts {@link TypeMirror} to {@link TypeElement}, but only if argument {@code typeMirror} represents a declared type kind.
+     *
      * @param typeMirror
-     * @return a {@link TypeElement} if conversion was successful, otherwise null
+     * @return a {@link TypeElement} if conversion was successful, otherwise {@code null}.
      */
     public TypeElement toTypeElement(final TypeMirror typeMirror) {
         return typeMirror.getKind() == TypeKind.DECLARED ? (TypeElement) ((DeclaredType) typeMirror).asElement() : null;
