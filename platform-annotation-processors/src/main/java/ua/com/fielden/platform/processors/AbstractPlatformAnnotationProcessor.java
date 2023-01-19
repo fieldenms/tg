@@ -18,6 +18,7 @@ import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
+import javax.tools.Diagnostic;
 
 import org.joda.time.DateTime;
 
@@ -139,7 +140,35 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
         messager.printMessage(NOTE, msg.formatted(args));
     }
 
+    /**
+     * Prints a single diagnostic message using {@link Messager} instance of message kind {@link WARNING}.
+     * @param msg string to be printed
+     * @param args optional string format arguments
+     */
+    protected void printWarning(final String msg, final Object... args) {
+        messager.printMessage(Diagnostic.Kind.WARNING, msg.formatted(args));
+    }
+
+    /**
+     * Prints a single diagnostic message using {@link Messager} instance of message kind {@link ERROR}.
+     * @param msg string to be printed
+     * @param args optional string format arguments
+     */
+    protected void printError(final String msg, final Object... args) {
+        messager.printMessage(Diagnostic.Kind.ERROR, msg.formatted(args));
+    }
+
+    /**
+     * Prints a single diagnostic message using {@link Messager} instance of message kind {@link MANDATORY_WARNING}.
+     * @param msg string to be printed
+     * @param args optional string format arguments
+     */
+    protected void printMandatoryWarning(final String msg, final Object... args) {
+        messager.printMessage(Diagnostic.Kind.MANDATORY_WARNING, msg.formatted(args));
+    }
+
     protected int getRoundNumber() {
         return roundNumber;
     }
+
 }

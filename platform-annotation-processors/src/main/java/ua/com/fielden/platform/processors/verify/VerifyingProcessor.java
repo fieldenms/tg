@@ -81,7 +81,7 @@ public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
         }
 
         if (!passed) {
-            printNote("Claiming this round's annotations to disable other processors.");
+            printMandatoryWarning("Claiming this round's annotations to disable other processors.");
         }
 
         return !passed;
@@ -100,7 +100,7 @@ public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
             if (!verifierPassed) {
                 final Set<Element> violatingElements = verifier.getViolatingElements();
                 if (!violatingElements.isEmpty()) {
-                    printNote("%s was not passed by: [%s]", verifier.getClass().getSimpleName(),
+                    printError("%s was not passed by: [%s]", verifier.getClass().getSimpleName(),
                             violatingElements.stream().map(el -> el.getSimpleName().toString()).sorted().collect(joining(", ")));
                 }
             }
