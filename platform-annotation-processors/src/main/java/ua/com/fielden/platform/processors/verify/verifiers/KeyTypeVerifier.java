@@ -73,7 +73,7 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
             final List<EntityElement> entitiesMissingKeyType = roundEnv.getRootElements().stream()
                     .filter(el -> elementFinder.isTopLevelClass(el))
                     .map(el -> (TypeElement) el)
-                    .filter(el -> entityFinder.isEntityType(el))
+                    .filter(el -> entityFinder.isEntityType(el.asType()))
                     .map(el -> entityFinder.newEntityElement(el))
                     // include only entity types missing @KeyType (whole type hierarchy is traversed)
                     .filter(el -> entityFinder.findAnnotation(el, AT_KEY_TYPE_CLASS).isEmpty())
@@ -196,7 +196,7 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
             final List<EntityElement> entities = roundEnv.getRootElements().stream()
                     .filter(el -> elementFinder.isTopLevelClass(el))
                     .map(el -> (TypeElement) el)
-                    .filter(el -> entityFinder.isEntityType(el))
+                    .filter(el -> entityFinder.isEntityType(el.asType()))
                     .map(el -> entityFinder.newEntityElement(el))
                     .toList();
             

@@ -16,7 +16,6 @@ import java.util.stream.Stream;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
@@ -34,7 +33,6 @@ import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderException;
-import ua.com.fielden.platform.processors.metamodel.exceptions.UnexpectedStateException;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -233,13 +231,13 @@ public class EntityFinder extends ElementFinder {
     }
     
     /**
-     * An entity is any class that extends {@link AbstractEntity}, which itself is also considered to be an entity.
+     * Tests whether the type mirror represents an entity type, which is defined as any class that extends {@link AbstractEntity} (itself included).
      *
      * @param element
      * @return
      */
-    public boolean isEntityType(final TypeElement element) {
-        return isSubtype(element.asType(), ROOT_ENTITY_CLASS);
+    public boolean isEntityType(final TypeMirror type) {
+        return isSubtype(type, ROOT_ENTITY_CLASS);
     }
 
     /**
@@ -249,9 +247,9 @@ public class EntityFinder extends ElementFinder {
      * @return
      */
     public boolean isPersistentEntityType(final EntityElement element) {
-        return isEntityType(element) && element.getAnnotation(MapEntityTo.class) != null;
+        return isEntityType(element.asType()) && element.getAnnotation(MapEntityTo.class) != null;
     }
-    
+
     /**
      * Determines whether any of the supertypes for entity represented by {@code element} is a persistent entity.
      * If {@code element} is persistent, but none of its supertypes are persistent, then {@code false} is returned.
@@ -280,12 +278,7 @@ public class EntityFinder extends ElementFinder {
      * @return
      */
     public boolean isPropertyOfEntityType(final PropertyElement propElement) {
-        try {
-            return isEntityType(propElement.getTypeAsTypeElement());
-        } catch (final Exception ex) {
-            // an exception may be thrown is property type is not a DECLARED type (i.e., not a class or an interface)
-            return false;
-        }
+        return isEntityType(propElement.getType());
     }
 
     /**
@@ -295,12 +288,11 @@ public class EntityFinder extends ElementFinder {
      * @return
      */
     public boolean isPropertyOfDomainEntityType(final PropertyElement propElement) {
-        try {
-            return isEntityThatNeedsMetaModel(propElement.getTypeAsTypeElement());
-        } catch (final Exception ex) {
-            // an exception may be thrown is property type is not a DECLARED type (i.e., not a class or an interface)
+        final TypeMirror type = propElement.getType();
+        if (type.getKind() != TypeKind.DECLARED) {
             return false;
         }
+        return isEntityThatNeedsMetaModel(asTypeElementOfTypeMirror(type));
     }
 
     /**
@@ -310,7 +302,7 @@ public class EntityFinder extends ElementFinder {
      * @return
      */
     public boolean isEntityThatNeedsMetaModel(final TypeElement element) {
-        if (!isEntityType(element)) {
+        if (!isEntityType(element.asType())) {
             return false;
         }
         return ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION.stream()

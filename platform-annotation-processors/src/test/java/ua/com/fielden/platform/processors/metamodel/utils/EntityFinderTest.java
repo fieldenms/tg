@@ -61,19 +61,19 @@ public class EntityFinderTest {
     @Test
     public void isEntityType_type_element_for_AbstractEntity_is_recognised_as_an_element_for_an_entity_type() {
       final TypeElement typeElement = elements.getTypeElement(AbstractEntity.class.getCanonicalName());
-      assertTrue(entityFinder.isEntityType(typeElement));
+      assertTrue(entityFinder.isEntityType(typeElement.asType()));
     }
 
     @Test
     public void isEntityType_type_element_for_User_is_recognised_as_an_element_for_an_entity_type() {
       final TypeElement typeElement = elements.getTypeElement(User.class.getCanonicalName());
-      assertTrue(entityFinder.isEntityType(typeElement));
+      assertTrue(entityFinder.isEntityType(typeElement.asType()));
     }
 
     @Test
     public void isEntityType_type_element_for_String_is_not_recognised_as_an_element_for_an_entity_type() {
       final TypeElement typeElement = elements.getTypeElement(String.class.getCanonicalName());
-      assertFalse(entityFinder.isEntityType(typeElement));
+      assertFalse(entityFinder.isEntityType(typeElement.asType()));
     }
 
     @Test
