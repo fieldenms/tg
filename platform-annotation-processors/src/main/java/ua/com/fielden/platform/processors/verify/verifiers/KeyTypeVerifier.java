@@ -89,6 +89,8 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
         }
     }
 
+    // TODO Consider indirect parameterisation of AbstractEntity types
+    // e.g. Sub extends Super<KeyType>, where Super<K> extends AbstractEntity<K>
     /**
      * The type of key as defined by {@link KeyType} must match the one specified as the type argument to the direct supertype, 
      * if it is a member of the {@link AbstractEntity} type family (i.e. is parameterized with a key type).

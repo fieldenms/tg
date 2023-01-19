@@ -132,6 +132,20 @@ public class ElementFinder {
     }
 
     /**
+     * Like {@link #findSuperclasses(TypeElement, Class)}, but doesn't include {@code rootType} in the resulting list.
+     * @param typeElement
+     * @param rootType
+     * @return
+     */
+    public List<TypeElement> findSuperclassesBelow(final TypeElement typeElement, final Class<?> rootType) {
+        final List<TypeElement> superclasses = new ArrayList<>(findSuperclasses(typeElement, rootType));
+        if (!superclasses.isEmpty()) {
+            superclasses.remove(superclasses.size() - 1);
+        }
+        return superclasses;
+    }
+
+    /**
      * The same as {@link #findSuperclasses(TypeElement, Class)}, but with the {@code rootType} set as {@code Object}. 
      *
      * @param typeElement

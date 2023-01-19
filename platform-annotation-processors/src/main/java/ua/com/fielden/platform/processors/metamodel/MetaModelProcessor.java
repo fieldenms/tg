@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -81,7 +82,6 @@ import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
-import ua.com.fielden.platform.processors.verify.VerifyingProcessor;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -647,24 +647,26 @@ public class MetaModelProcessor extends AbstractProcessor {
      * @throws EntitySourceDefinitionException
      */
     private LinkedHashSet<PropertyElement> collectProperties(final EntityElement entity, final Optional<EntityElement> maybeMetaModelledSupertype) throws EntitySourceDefinitionException {
-        // map of the following form: String propertyName -> PropertyElement property
-        final LinkedHashMap<String, PropertyElement> properties = new LinkedHashMap<>();
 
+        final Set<PropertyElement> properties = new LinkedHashSet<>();
         if (maybeMetaModelledSupertype.isPresent()) {
             // declared properties + property key
-            entityFinder.findDeclaredProperties(entity).forEach(propEl -> properties.put(propEl.getSimpleName().toString(), propEl));
+            properties.addAll(entityFinder.processProperties(entityFinder.findDeclaredProperties(entity), entity));
             final VariableElement veKey = elementFinder.findField(maybeMetaModelledSupertype.get().element(), AbstractEntity.KEY);
-            properties.put(AbstractEntity.KEY, new PropertyElement(veKey));
-         
+            properties.add(new PropertyElement(veKey));
+        } else {
+            properties.addAll(entityFinder.processProperties(entityFinder.findProperties(entity), entity));
         }
-        else {
-            entityFinder.findProperties(entity).forEach(propEl -> properties.put(propEl.getSimpleName().toString(), propEl));
-        }
+
+        // map of the following form: String propertyName -> PropertyElement property
+        final LinkedHashMap<String, PropertyElement> propertiesMap = new LinkedHashMap<>(
+                properties.stream().collect(Collectors.toMap(elt -> elt.getSimpleName().toString(), Function.identity())));
+
         // Need additional processing of property "key" to correctly identify its type or to remove it.
         // An exception is thrown in case of erroneous entity definition.
-        processPropertyKey(properties, entity);
+        processPropertyKey(propertiesMap, entity);
 
-        return new LinkedHashSet<>(properties.values());
+        return new LinkedHashSet<>(propertiesMap.values());
     }
     
     /**
