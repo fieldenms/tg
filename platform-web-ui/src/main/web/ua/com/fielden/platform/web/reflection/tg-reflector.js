@@ -914,6 +914,8 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
                 } else if (this.isUnionEntity()) { // the key type for union entities at the Java level is "String", but for JS its actual type is determined at runtime base on the active property
                     return { type: function () { return 'String'; } }
                 }
+            } else if (!prop && name === 'desc' && this.isUnionEntity()) { // the 'desc' type for union entities always return "String", even if there is no @DescTitle annotation on union type
+                return { type: function () { return 'String'; } }
             }
             return prop ? prop : null;
         }
