@@ -404,24 +404,39 @@ public class ElementFinder {
     }
 
     /**
-     * Returns an optional containing the value of the annotation's element.
+     * Returns an optional desribing an {@link AnnotationValue} of the annotation's element with the specified name.
+     * If the element is not explicitly present in the annotation, then its default value is returned.
+     * <p>
+     * Use {@link #getAnnotationElementValue(AnnotationMirror, String)} to obtain the value directly (i.e. unpack {@link AnnotationValue}).
+     * 
      * @param annotation
-     * @param elementName
+     * @param name
      * @return
      */
-    public Optional<AnnotationValue> getAnnotationValue(final AnnotationMirror annotation, final String elementName) {
+    public Optional<AnnotationValue> findAnnotationValue(final AnnotationMirror annotation, final String name) {
         return elements.getElementValuesWithDefaults(annotation).entrySet().stream()
-                .filter(entry -> entry.getKey().getSimpleName().toString().equals(elementName))
-                .findAny().map(Entry::getValue);
+                .filter(entry -> entry.getKey().getSimpleName().toString().equals(name))
+                .findFirst().map(Entry::getValue);
     }
 
     /**
-     * Returns an optional containing the value of the annotation's default element (i.e. the {@code value()} element).
+     * Returns the value of the annotation's element with the specified name type casted to the type argument.
+     * If the element is not explicitly present in the annotation, then its default value is returned.
+     * 
+     * @param <T> the type to which to cast the value
      * @param annotation
+     * @param name
      * @return
+     * @throws ElementFinderException if no annotation element named {@code name} exists or type cast failed
      */
-    public Optional<AnnotationValue> getAnnotationValue(final AnnotationMirror annotation) {
-        return getAnnotationValue(annotation, "value");
+    public <T> T getAnnotationElementValue(final AnnotationMirror annotation, final String name) {
+        final Object value = findAnnotationValue(annotation, name).map(AnnotationValue::getValue)
+                .orElseThrow(() -> new ElementFinderException("No element named [%s] was found in annotation [%s]".formatted(name, annotation)));
+        try {
+            return (T) value;
+        } catch (final Exception e) {
+            throw new ElementFinderException("Failed to cast the annotation element's value.", e);
+        }
     }
 
     /**

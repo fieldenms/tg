@@ -237,7 +237,7 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
         }
         else {
             final AnnotationMirror mirror = maybeMirror.get();
-            final Optional<AnnotationValue> annotElementValue = elementFinder.getAnnotationValue(mirror, annotationElementName);
+            final Optional<AnnotationValue> annotElementValue = elementFinder.findAnnotationValue(mirror, annotationElementName);
             if (annotElementValue.isPresent()) {
                 // fullest form of error message present on the element's annotation element value
                 messager.printMessage(kind, msg, element, mirror, annotElementValue.get());

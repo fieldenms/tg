@@ -319,7 +319,7 @@ public class ElementFinderTest {
             final List<? extends AnnotationMirror> mirrors = finder.getFieldAnnotations(field);
             assertEquals(1, mirrors.size());
             final AnnotationMirror mirror = mirrors.get(0);
-            finder.getAnnotationValue(mirror, "value").ifPresentOrElse(
+            finder.findAnnotationValue(mirror, "value").ifPresentOrElse(
                     v -> assertEquals("hello", v.getValue()),
                     () -> fail("Missing annotation value"));
         });
@@ -459,17 +459,17 @@ public class ElementFinderTest {
             final TypeElement withValueElement = finder.elements.getTypeElement(withValue.name);
             assertOptEquals("hello",
                     finder.findAnnotationMirror(withValueElement, TestAnnot.class).flatMap(a -> 
-                        finder.getAnnotationValue(a, "value").map(AnnotationValue::getValue)));
+                        finder.findAnnotationValue(a, "value").map(AnnotationValue::getValue)));
 
             // default annotation element's value should be returned if none was defined
             final TypeElement withDefaultsElement = finder.elements.getTypeElement(withDefaults.name);
             assertOptEquals(TestAnnot.DEFAULT_VALUE,
                     finder.findAnnotationMirror(withDefaultsElement, TestAnnot.class).flatMap(a -> 
-                        finder.getAnnotationValue(a, "value").map(AnnotationValue::getValue)));
+                        finder.findAnnotationValue(a, "value").map(AnnotationValue::getValue)));
 
             // try obtaining a non-existent element's value
             assertTrue(finder.findAnnotationMirror(withDefaultsElement, TestAnnot.class)
-                    .flatMap(a -> finder.getAnnotationValue(a, "whatever")).isEmpty());
+                    .flatMap(a -> finder.findAnnotationValue(a, "whatever")).isEmpty());
         });
     }
 
