@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -26,6 +27,7 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.DeclaredType;
+import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
@@ -436,6 +438,28 @@ public class ElementFinder {
             return (T) value;
         } catch (final Exception e) {
             throw new ElementFinderException("Failed to cast the annotation element's value.", e);
+        }
+    }
+
+    /**
+     * Returns the type mirror representing the {@link Class}-typed value of the annotation's element.
+     * <p>
+     * Special care is required for {@link Class} values, since information to locate and load a class is unavailable during annotation processing.
+     * For a more detailed explanation refer to {@link Element#getAnnotation(Class)}.
+     * 
+     * @param annot annotation instance being examined
+     * @param provider function applied to {@code annot} that provides the {@link Class} value
+     * @return
+     */
+    public <A extends Annotation> TypeMirror getAnnotationElementValueOfClassType(final A annot, Function<A, Class<?>> provider) {
+        try {
+            // should ALWAYS throw, since the information to locate and load a class is unavailable during annotation processing
+            final Class<?> clazz = provider.apply(annot);
+            // if it somehow was available, then construct a TypeMirror from it
+            return asType(clazz);
+        } catch (final MirroredTypeException ex) {
+            // the exception provides the desired type mirror
+            return ex.getTypeMirror();
         }
     }
 

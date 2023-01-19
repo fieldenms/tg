@@ -214,30 +214,13 @@ public class EntityFinder extends ElementFinder {
     }
 
     /**
-     * Retrieves the type of entity key from {@link KeyType} annotation at compile time.
-     * @see {@link javax.lang.model.element.Element#getAnnotation(Class)}
+     * Returns the actual key type specified by the {@link KeyType} annotation's value.
+     * 
      * @param atKeyType
      * @return
      */
     public TypeMirror getKeyType(final KeyType atKeyType) {
-        try {
-            // should ALWAYS throw, since value() is of type Class, which is unavailable at compile time
-            final Class<?> keyType = atKeyType.value();
-
-            // if it somehow was available, then construct a TypeMirror from it
-            final TypeElement keyTypeElement = elements.getTypeElement(keyType.getCanonicalName());
-            if (keyTypeElement == null) {
-                // keyType Class object was available at compile time but could not be found in the processing environment,
-                // thus TypeMirror can't be constructed
-                throw new UnexpectedStateException(
-                        "Key type from %s was loaded at compile time, but was not found in the processing environment."
-                        .formatted(atKeyType.toString()));
-            }
-            return keyTypeElement.asType();
-        } catch (final MirroredTypeException e) {
-//            messager.printMessage(Kind.NOTE, "key type: %s. %s was thrown.".formatted(atKeyType.toString(), e.toString()));
-            return e.getTypeMirror();
-        }
+        return getAnnotationElementValueOfClassType(atKeyType, a -> a.value());
     }
     
     /**
