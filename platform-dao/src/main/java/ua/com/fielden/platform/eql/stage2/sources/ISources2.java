@@ -40,12 +40,12 @@ public interface ISources2<S3 extends ISources3> extends ITransformableToS3<S3> 
     
     static TransformationResult2<ISources3> transform(final ISource2<?> explicitSource, final TransformationContext2 context) {
         final TransformationResult2<? extends ISource3> explicitSourceTr = explicitSource.transform(context);
-        return attachChildren(explicitSourceTr.item, context.getSourceLeaves(explicitSource.id()), context.getSourceBranches(explicitSource.id()), explicitSourceTr.updatedContext);
+        return attachChildren(explicitSourceTr.item, context.getSourceBranches(explicitSource.id()), explicitSourceTr.updatedContext);
     }
     
-    private static TransformationResult2<ISources3> attachChildren(final ISource3 source, final List<LeafNode> leaves, final List<BranchNode> branches, final TransformationContext2 context) {
+    private static TransformationResult2<ISources3> attachChildren(final ISource3 source, final List<BranchNode> branches, final TransformationContext2 context) {
+        TransformationContext2 currentContext = context.cloneWithSource(source);
         ISources3 currMainSources = new SingleNodeSources3(source);
-        TransformationContext2 currentContext = leaves.isEmpty() ? context : context.cloneWithResolutions(source, leaves);
 
         for (final BranchNode fc : branches) {
             final TransformationResult2<ISources3> res = attachChild(currMainSources, source, fc, currentContext);
@@ -71,10 +71,10 @@ public interface ISources2<S3 extends ISources3> extends ITransformableToS3<S3> 
             currentContext = expTr.updatedContext;
         }
         
-        final Prop3 ro = new Prop3(ID, addedSource, /*child.source.sourceType()*/Long.class, LongType.INSTANCE);
+        final Prop3 ro = new Prop3(ID, addedSource, Long.class, LongType.INSTANCE);
         final ComparisonTest3 ct = new ComparisonTest3(lo, EQ, ro);
         final Conditions3 jc = new Conditions3(false, asList(asList(ct)));
-        final TransformationResult2<ISources3> res = attachChildren(addedSource, child.leaves(), child.branches(), currentContext);
+        final TransformationResult2<ISources3> res = attachChildren(addedSource, child.branches(), currentContext);
         return new TransformationResult2<>(new MultipleNodesSources3(mainSources, res.item, (child.required ? IJ : LJ), jc), res.updatedContext);
     }
 }

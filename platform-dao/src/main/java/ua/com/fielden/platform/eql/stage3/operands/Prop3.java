@@ -5,7 +5,7 @@ import java.util.Objects;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
-public class Prop3 extends  AbstractSingleOperand3 {
+public class Prop3 extends AbstractSingleOperand3 {
     public final String name;
     public final ISource3 source; // can be null for prop headers
 
@@ -17,7 +17,7 @@ public class Prop3 extends  AbstractSingleOperand3 {
 
     @Override
     public String sql(final DbVersion dbVersion) {
-        return source.sqlAlias() + "." + source.column(name);
+        return source.column(name);
     }
     
     @Override

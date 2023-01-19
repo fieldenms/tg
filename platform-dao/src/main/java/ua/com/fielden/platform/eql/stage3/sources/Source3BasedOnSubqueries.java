@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.stage3.sources;
 import static java.util.stream.Collectors.joining;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,36 +13,27 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.etc.Yield3;
 import ua.com.fielden.platform.eql.stage3.operands.SourceQuery3;
 
-public class Source3BasedOnSubqueries implements ISource3 {
+public class Source3BasedOnSubqueries extends AbstractSource3 {
     private final List<SourceQuery3> models = new ArrayList<>();
-    public final Integer id;
-    public final int sqlId;
-    private final Map<String, String> columns = new HashMap<>(); //keys can contain strings with dots
     
     public Source3BasedOnSubqueries(final List<SourceQuery3> models, final Integer id, final int sqlId) {
+        super("Q_" + sqlId, id, obtainColumnsFromYields(models.get(0).yields.getYields()));
         this.models.addAll(models);
-        this.id = id;
-        this.sqlId = sqlId;
-        for (final Yield3 entry : models.get(0).yields.getYields()) {
+    }
+    
+    private static Map<String, String> obtainColumnsFromYields(final Collection<Yield3> yields) {
+        final Map<String, String> result = new HashMap<>();
+        for (final Yield3 entry : yields) {
             if (!entry.isHeader) {
-                columns.put(entry.alias, entry.column);    
+                result.put(entry.alias, entry.column);    
             }
         }
-    }
-
-    @Override
-    public String column(final String colName) {
-         return columns.get(colName);
-    }
-
-    @Override
-    public String sqlAlias() {
-        return "Q_" + sqlId;
+        return result;
     }
 
     @Override
     public String sql(final DbVersion dbVersion) {
-        return "(" + models.stream().map(m -> m.sql(dbVersion)).collect(joining("\n UNION ALL \n")) + ") AS " + sqlAlias();
+        return "(" + models.stream().map(m -> m.sql(dbVersion)).collect(joining("\n UNION ALL \n")) + ") AS " + sqlAlias;
     }
 
     @Override
@@ -52,8 +44,7 @@ public class Source3BasedOnSubqueries implements ISource3 {
     @Override
     public int hashCode() {
         final int prime = 31;
-        int result = 1;
-        result = prime * result + id.hashCode();
+        int result = super.hashCode();
         result = prime * result + models.hashCode();
         return result;
     }
@@ -64,12 +55,16 @@ public class Source3BasedOnSubqueries implements ISource3 {
             return true;
         }
         
+        if (!super.equals(obj)) {
+            return false;
+        }
+        
         if (!(obj instanceof Source3BasedOnSubqueries)) {
             return false;
         }
         
         final Source3BasedOnSubqueries other = (Source3BasedOnSubqueries) obj;
         
-        return Objects.equals(models, other.models) && Objects.equals(id, other.id);
+        return Objects.equals(models, other.models);
     }
 }

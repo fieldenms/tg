@@ -4,9 +4,9 @@ import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
+import static java.util.Collections.unmodifiableMap;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -33,7 +33,6 @@ import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.BranchNode;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
-import ua.com.fielden.platform.eql.stage2.sources.LeafNode;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
@@ -49,39 +48,31 @@ public class PathsToTreeTransformer {
     }
     
     public final TreeResult transform(final Set<Prop2> props) {
-        final Map<Integer, List<LeafNode>> leaves = new HashMap<>();
         final Map<Integer, List<BranchNode>> branches = new HashMap<>();
         final List<ExpressionLinks> expressionsLinks = new ArrayList<>();
-        final Map<Integer, Map<String, Expression2>> expressionsData = new HashMap<>();
+        final List<Prop3Links> propLinks = new ArrayList<>();
 
         for (final SourceTails sourceTails : groupBySource(props)) {
-            final T2<SourceResult, TreeResult> genRes = generateSourceNodes(sourceTails.source, sourceTails.tails, true);
+            final T2<List<BranchNode>, TreeResult> genRes = generateSourceNodes(sourceTails.source, sourceTails.tails, true);
             
-            leaves.put(sourceTails.source.id(), genRes._1.leaves);
-            branches.put(sourceTails.source.id(), genRes._1.branches);
-            expressionsLinks.addAll(genRes._1.exprLinks);
-            
-            leaves.putAll(genRes._2.leavesMap());
+            branches.put(sourceTails.source.id(), genRes._1);
             branches.putAll(genRes._2.branchesMap());
-            expressionsData.putAll(genRes._2.expressionsData());
+            expressionsLinks.addAll(genRes._2.expressionsData());
+            propLinks.addAll(genRes._2.propsData());
         }
         
-        expressionsData.putAll(processExpressionsData(expressionsLinks));
-
-        return new TreeResult(leaves, branches, expressionsData);
+        return new TreeResult(branches, propLinks, expressionsLinks);
     }
     
-    private T2<SourceResult, TreeResult> generateSourceNodes(
+    private T2<List<BranchNode>, TreeResult> generateSourceNodes(
             final ISource2<?> sourceForCalcPropResolution, 
             final List<PendingTail> pendingTails,
             final boolean explicitSource // true if sourceForCalcPropResolution is explicit source
     ) {
-        final List<LeafNode> leaves = new ArrayList<>();
         final Map<String, BranchNode> mapOfBranches = new HashMap<>();
-        final List<ExpressionLinks> expressionsResolutions = new ArrayList<>();
-        final Map<Integer, List<LeafNode>> otherSourcesLeaves = new HashMap<>();
         final Map<Integer, List<BranchNode>> otherSourcesBranches = new HashMap<>();
-        final Map<Integer, Map<String, Expression2>> otherSourcesExpressionsData = new HashMap<>();
+        final List<ExpressionLinks> expressionLinks = new ArrayList<>();
+        final List<Prop3Links> propLinks = new ArrayList<>();
         
         final Set<String> propsToSkip = explicitSource ? new HashSet<String>(pendingTails.stream().map(p -> p.link.name()).toList()) : emptySet(); 
         final T2<Map<String, CalcPropData>, List<PendingTail>> procRes = 
@@ -94,32 +85,27 @@ public class PathsToTreeTransformer {
         	final CalcPropData cpd = calcPropData.get(propEntry.firstChunk.name);
         	
         	if (cpd != null) {
-        	    otherSourcesLeaves.putAll(cpd.internalsResult.leavesMap());
         	    otherSourcesBranches.putAll(cpd.internalsResult.branchesMap());
-        	    otherSourcesExpressionsData.putAll(cpd.internalsResult.expressionsData());
+        	    expressionLinks.addAll(cpd.internalsResult.expressionsData());
+        	    propLinks.addAll(cpd.internalsResult.propsData());
         	}
         	
-            final T2<NodeResult, TreeResult> genRes = generateNode(propEntry, cpd != null ? cpd.expr : null);
-
-            if (genRes._1.leaf != null) {
-                leaves.add(genRes._1.leaf);
+        	final T2<BranchNode, TreeResult> genRes = generateNode(propEntry, cpd != null ? cpd.expr : null, sourceForCalcPropResolution.id());
+        	
+            if (genRes._1 != null) {
+                mapOfBranches.put(genRes._1.name, genRes._1);
             }
-            if (genRes._1.branch != null) {
-                mapOfBranches.put(genRes._1.branch.name, genRes._1.branch);
-            }
-            expressionsResolutions.addAll(genRes._1.exprLinks);
 
             if (genRes._2 != null) {
-                otherSourcesLeaves.putAll(genRes._2.leavesMap());
                 otherSourcesBranches.putAll(genRes._2.branchesMap());
-                otherSourcesExpressionsData.putAll(genRes._2.expressionsData());
+                expressionLinks.addAll(genRes._2.expressionsData());
+                propLinks.addAll(genRes._2.propsData());
             }
         }
 
         final List<BranchNode> orderedBranches = orderBranches(mapOfBranches, calcPropData);
 
-        return t2(new SourceResult(leaves, orderedBranches, expressionsResolutions), 
-                new TreeResult(otherSourcesLeaves, otherSourcesBranches, otherSourcesExpressionsData));
+        return t2(orderedBranches, new TreeResult(otherSourcesBranches, propLinks, expressionLinks));
     }
 
 	private T2<Map<String, CalcPropData>, List<PendingTail>> enhanceWithCalcPropsData(
@@ -173,7 +159,7 @@ public class PathsToTreeTransformer {
 		
 		// let's recursively enhance newly added tails (as they can have unprocessed calc props among them)
 		final T2<Map<String, CalcPropData>, List<PendingTail>> recursivelyEnhanced = addedTails.isEmpty() ? 
-				t2(processedCalcDataLocal, emptyList()) : 
+				t2(unmodifiableMap(processedCalcDataLocal), emptyList()) : 
 					enhanceWithCalcPropsData(sourceForCalcPropResolution, processedCalcDataLocal, processedPropsLocal, addedTails);
 
 		final List<PendingTail> allTails = new ArrayList<>();
@@ -183,35 +169,42 @@ public class PathsToTreeTransformer {
 		return t2(recursivelyEnhanced._1, allTails);
 	}
 	
-    private T2<NodeResult, TreeResult> generateNode(final FirstChunkGroup firstChunkGroup, final Expression2 expression) {
-        final T2<List<Prop2Link>, List<PendingTail>> next = getLeafPathsAndNextPendingTails(firstChunkGroup.tails);
+    private T2<BranchNode, TreeResult> generateNode(final FirstChunkGroup firstChunkGroup, final Expression2 expression, final Integer currResolutionSourceId) {
+        final T2<List<Prop2Lite>, List<PendingTail>> next = getLeafPathsAndNextPendingTails(firstChunkGroup.tails);
         final String propName = firstChunkGroup.firstChunk.name;
         
         if (next._2.isEmpty()) {
             if (expression == null) {
-                return t2(new NodeResult(new LeafNode(propName, next._1), null, emptyList()), null);    
+                return t2(null, new TreeResult(emptyMap(), List.of(new Prop3Links(currResolutionSourceId, propName, next._1)), emptyList()));
             } else {
-                return t2(new NodeResult(null, null, listOf(new ExpressionLinks(expression, next._1))), null);
+                return t2(null, new TreeResult(emptyMap(), emptyList(), List.of(new ExpressionLinks(expression, next._1))));
             }
         } else {
             final EntityTypePropInfo<?> propInfo = (EntityTypePropInfo<?>) firstChunkGroup.firstChunk.data;
             final Source2BasedOnPersistentType implicitSource = new Source2BasedOnPersistentType(propInfo.javaType(), propInfo.propEntityInfo, gen.nextSourceId()); 
             
-            final T2<SourceResult, TreeResult> genRes = generateSourceNodes(implicitSource, next._2, false);
-            final List<ExpressionLinks> exprLinks = new ArrayList<>();
-            exprLinks.addAll(genRes._1.exprLinks);
-            if (expression != null && !next._1.isEmpty()) {
-                exprLinks.add(new ExpressionLinks(expression, next._1));
+            final T2<List<BranchNode>, TreeResult> genRes = generateSourceNodes(implicitSource, next._2, false);
+            final List<ExpressionLinks> expressionLinks = new ArrayList<>();
+            final List<Prop3Links> propLinks = new ArrayList<>();
+            expressionLinks.addAll(genRes._2.expressionsData());
+            propLinks.addAll(genRes._2.propsData());
+            
+            if (!next._1.isEmpty()) {
+                if (expression != null) {
+                    expressionLinks.add(new ExpressionLinks(expression, next._1));
+                } else {
+                    propLinks.add(new Prop3Links(currResolutionSourceId, propName, next._1));
+                }
             }
-            final NodeResult node = next._1.isEmpty() ? 
-                    new NodeResult(null, new BranchNode(propName, genRes._1.leaves, genRes._1.branches, propInfo.required, implicitSource, expression), exprLinks) : 
-                new NodeResult(expression != null ? null : new LeafNode(propName, next._1), new BranchNode(propName, genRes._1.leaves, genRes._1.branches, propInfo.required, implicitSource, expression), exprLinks);
-            return t2(node, genRes._2);
+            
+            final BranchNode branch = new BranchNode(propName, genRes._1, propInfo.required, implicitSource, expression);
+            
+            return t2(branch, new TreeResult(genRes._2.branchesMap(), propLinks, expressionLinks));
         }
     }
 	
 	private static PendingTail tailFromProp(final Prop2 prop) {
-	    return new PendingTail(new Prop2Link(prop.name, prop.source.id()), convertPathToChunks(prop.getPath()));
+	    return new PendingTail(new Prop2Lite(prop.name, prop.source.id()), convertPathToChunks(prop.getPath()));
 	}
 	
     private static final Collection<SourceTails> groupBySource(final Set<Prop2> props) {
@@ -353,7 +346,7 @@ public class PathsToTreeTransformer {
             // if the node is calc-prop and has children (should participate in "JOIN ON") -- then needs ordering within this kind of nodes
             // Need to include calc-nodes without children into ordering to reveal transitive dependencies, but this is achieved 
             // by getting transitive dependencies from map of CalcPropData
-            if (allCalcData.containsKey(node.name) && (!node.branches().isEmpty() || !node.leaves().isEmpty())) { 
+            if (allCalcData.containsKey(node.name)) {// && (!node.branches().isEmpty() || !node.leaves().isEmpty())) { 
                 calcs.add(node);
             } else {
                 orderedItems.add(node); // no special order required
@@ -368,9 +361,9 @@ public class PathsToTreeTransformer {
         return orderedItems;
     }
 
-    private static T2<List<Prop2Link>, List<PendingTail>> getLeafPathsAndNextPendingTails(final List<PendingTail> subprops) {
+    private static T2<List<Prop2Lite>, List<PendingTail>> getLeafPathsAndNextPendingTails(final List<PendingTail> subprops) {
         final List<PendingTail> nextTails = new ArrayList<>();
-        final List<Prop2Link> paths = new ArrayList<>();
+        final List<Prop2Lite> paths = new ArrayList<>();
 
         for (final PendingTail subpropEntry : subprops) {
             if (subpropEntry.tail.size() > 1) {
@@ -416,22 +409,6 @@ public class PathsToTreeTransformer {
         throw new EqlStage2ProcessingException(currentPropName, null);
     }
 
-    private static Map<Integer, Map<String, Expression2>> processExpressionsData(final List<ExpressionLinks> expressionsResolutions) {
-        final Map<Integer, Map<String, Expression2>> expressionsData = new HashMap<>();
-        for (final ExpressionLinks item : expressionsResolutions) {
-            for (final Prop2Link link : item.links) {
-                Map<String, Expression2> existingSourceMap = expressionsData.get(link.sourceId());
-                if (existingSourceMap == null) {
-                    existingSourceMap = new HashMap<String, Expression2>();
-                    expressionsData.put(link.sourceId(), existingSourceMap);
-                }
-                existingSourceMap.put(link.name(), item.expr);
-            }
-        }
-        
-        return expressionsData;
-    }
-	
     private static class FirstChunkGroup {
         private final PropChunk firstChunk;
         private final List<PendingTail> tails = new ArrayList<>(); // pending tails that all start from 'firstChunk'
@@ -445,7 +422,7 @@ public class PathsToTreeTransformer {
 	}
 
 	// there are 2 types: 1) tail corresponds to link, 2) tail is shorter (as left side being converted into nodes)
-	private static record PendingTail(Prop2Link link, List<PropChunk> tail) {
+	private static record PendingTail(Prop2Lite link, List<PropChunk> tail) {
     	private PendingTail {
     		tail = List.copyOf(tail);
 		}
@@ -455,26 +432,6 @@ public class PathsToTreeTransformer {
         private SourceTails(final ISource2<?> source, final List<PendingTail> tails) {
             this.source = source;
             this.tails = tails;// unmodifiableList(tails);
-        }
-    }
-
-    private static record NodeResult(LeafNode leaf, BranchNode branch, List<ExpressionLinks> exprLinks) {
-        private NodeResult {
-            exprLinks = List.copyOf(exprLinks);
-        }
-    }
-    
-    private static record SourceResult(List<LeafNode> leaves, List<BranchNode> branches, List<ExpressionLinks> exprLinks) {
-        private SourceResult {
-            leaves = List.copyOf(leaves);
-            branches = List.copyOf(branches);
-            exprLinks = List.copyOf(exprLinks);
-        }
-    }
-     
-    private static record ExpressionLinks(Expression2 expr, List<Prop2Link> links) {
-        private ExpressionLinks {
-            links = List.copyOf(links);
         }
     }
     
