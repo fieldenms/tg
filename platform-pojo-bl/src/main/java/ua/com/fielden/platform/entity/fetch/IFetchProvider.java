@@ -202,6 +202,11 @@ public interface IFetchProvider<T extends AbstractEntity<?>> {
     boolean instrumented();
 
     /**
+     * Returns entity type behind this {@link IFetchProvider}.
+     */
+    Class<T> entityType();
+
+    /**
      * Adds property (mutably) to the fetch provider and its key sub-properties in case it is entity-typed.
      * <p>
      * This method uses lean {@link FetchCategory#NONE} on dot-notation pathways.
