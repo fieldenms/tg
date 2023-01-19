@@ -24,7 +24,7 @@ import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
  * 
  * @author TG Team
  */
-public abstract class VerifierAbstractTest {
+public abstract class AbstractVerifierTest {
     
     /**
      * Returns a provider of a {@link Verifier} implementation that will be initialized by the {@link VerifyingProcessor} during tests.

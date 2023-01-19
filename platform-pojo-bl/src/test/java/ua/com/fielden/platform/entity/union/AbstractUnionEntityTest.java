@@ -8,6 +8,7 @@ import static org.junit.Assert.fail;
 
 import java.lang.reflect.Field;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.Test;
 
@@ -61,7 +62,7 @@ public class AbstractUnionEntityTest {
 
     @Test
     public void test_retrieval_of_common_properties() {
-        final List<String> list = AbstractUnionEntity.commonProperties(UnionEntity.class);
+        final Set<String> list = AbstractUnionEntity.commonProperties(UnionEntity.class);
         assertEquals("Incorrect number of common properties.", 2, list.size());
     }
 

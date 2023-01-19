@@ -16,10 +16,16 @@ import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic.Kind;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.NoKey;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
+import ua.com.fielden.platform.ref_hierarchy.AbstractTreeEntry;
+import ua.com.fielden.platform.web.action.AbstractFunEntityForDataExport;
 
 /**
  * Performs verification of a domain model with respect to the {@link KeyType} annotation.
@@ -83,44 +89,48 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
         }
     }
 
+    // TODO Consider indirect parameterisation of AbstractEntity types
+    // e.g. Sub extends Super<KeyType>, where Super<K> extends AbstractEntity<K>
     /**
-     * The type of key as defined by {@link KeyType} must match the one specified as the type argument to {@link AbstractEntity}.
+     * The type of key as defined by {@link KeyType} must match the one specified as the type argument to the direct supertype, 
+     * if it is a member of the {@link AbstractEntity} type family (i.e. is parameterized with a key type).
      */
     class KeyTypeValueMatchesAbstractEntityTypeArgument extends AbstractComposableVerifierPart {
-        static final String ABSTRACT_ENTITY_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE = 
-                "%s must be parameterized with entity key type.".formatted(AbstractEntity.class.getSimpleName());
-        static final String KEY_TYPE_MUST_MATCH_THE_TYPE_ARGUMENT_TO_ABSTRACT_ENTITY =
-                "Key type must match the type argument to %s.".formatted(AbstractEntity.class.getSimpleName());
+        static final String SUPERTYPE_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE = "Supertype must be parameterized with entity key type.";
+        static final String KEY_TYPE_MUST_MATCH_THE_TYPE_ARGUMENT_TO_ABSTRACT_ENTITY = "Key type must match the supertype's type argument.";
+
+        static final List<Class<? extends AbstractEntity>> ABSTRACTS = List.of(
+                AbstractEntity.class, AbstractPersistentEntity.class, ActivatableAbstractEntity.class,
+                AbstractFunctionalEntityWithCentreContext.class, AbstractEntityWithInputStream.class, AbstractTreeEntry.class,
+                AbstractFunEntityForDataExport.class);
+
+        private boolean isOneOfAbstracts(final TypeElement element) {
+            return ABSTRACTS.stream().anyMatch(clazz -> elementFinder.equals(element, clazz));
+        }
 
         public boolean verify(final RoundEnvironment roundEnv) {
             boolean allPassed = true;
-            final List<TypeElement> keyTypeAnnotatedElements = roundEnv.getElementsAnnotatedWith(AT_KEY_TYPE_CLASS).stream()
-                    .filter(elementFinder::isTopLevelClass)
-                    .map(el -> (TypeElement) el)
+            final List<EntityElement> entitiesWithKeyType = roundEnv.getElementsAnnotatedWith(AT_KEY_TYPE_CLASS).stream()
+                    .map(el -> entityFinder.newEntityElement((TypeElement) el))
+                    .filter(el -> isOneOfAbstracts(entityFinder.getParent(el)))
                     .toList();
 
-            for (final TypeElement el : keyTypeAnnotatedElements) {
+            for (final EntityElement el : entitiesWithKeyType) {
                 final TypeMirror keyType = entityFinder.getKeyType(el.getAnnotation(AT_KEY_TYPE_CLASS));
+                final DeclaredType supertype = (DeclaredType) el.getSuperclass();
 
-                final DeclaredType parentEntity = (DeclaredType) el.getSuperclass();
-
-                // only if this entity type directly extends AbstractEntity
-                if (elementFinder.equals((TypeElement) parentEntity.asElement(), AbstractEntity.class)) {
-                    final List<? extends TypeMirror> typeArgs = parentEntity.getTypeArguments();
-                    if (typeArgs.isEmpty()) {
-                        violatingElements.add(el);
-                        allPassed = false;
-
-                        messager.printMessage(Kind.ERROR, ABSTRACT_ENTITY_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE, el);
-                    }
-                    else if (!typeUtils.isSameType(typeArgs.get(0), keyType)) {
-                        violatingElements.add(el);
-                        allPassed = false;
-
-                        // report error
-                        printMessageWithAnnotationHint(Kind.ERROR, KEY_TYPE_MUST_MATCH_THE_TYPE_ARGUMENT_TO_ABSTRACT_ENTITY,
-                                el, AT_KEY_TYPE_CLASS, "value");
-                    }
+                final List<? extends TypeMirror> typeArgs = supertype.getTypeArguments();
+                if (typeArgs.isEmpty()) {
+                    violatingElements.add(el);
+                    allPassed = false;
+                    messager.printMessage(Kind.ERROR, SUPERTYPE_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE, el.element());
+                }
+                // abstract entities accept a single type argument
+                else if (!typeUtils.isSameType(typeArgs.get(0), keyType)) {
+                    violatingElements.add(el);
+                    allPassed = false;
+                    printMessageWithAnnotationHint(Kind.ERROR, KEY_TYPE_MUST_MATCH_THE_TYPE_ARGUMENT_TO_ABSTRACT_ENTITY,
+                            el.element(), AT_KEY_TYPE_CLASS, "value");
                 }
             }
 

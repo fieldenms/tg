@@ -26,6 +26,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -41,6 +42,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic.Kind;
 
@@ -85,7 +87,7 @@ import ua.com.fielden.platform.utils.Pair;
 public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
 
     private static final String INDENT = "    ";
-
+    private static final String CLASS_SIMPLE_NAME = MetaModelProcessor.class.getSimpleName();
     private ElementFinder elementFinder;
     private EntityFinder entityFinder;
     private MetaModelFinder metaModelFinder;
@@ -311,12 +313,12 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         final String thisMetaModelPkgName = mmc.getPackageName();
 
         final EntityElement entityElement = mmc.getEntityElement();
-        final EntityElement entityParent = entityFinder.getParent(entityElement);
-        final boolean isEntitySuperclassMetamodeled = entityFinder.isEntityThatNeedsMetaModel(entityParent);
+        final EntityElement entitySupertype = entityFinder.getParent(entityElement);
+        final Optional<EntityElement> maybeMetaModelledSupertype = Optional.ofNullable(entityFinder.isEntityThatNeedsMetaModel(entitySupertype) ? entitySupertype : null);
 
         final Collection<PropertyElement> properties;
         try {
-            properties = collectProperties(entityElement, isEntitySuperclassMetamodeled);
+            properties = collectProperties(entityElement, maybeMetaModelledSupertype);
         } catch (final EntitySourceDefinitionException e) {
             printNote("Failed to generate meta-model for %s. %s", entityElement.getSimpleName(), e.getLocalizedMessage());
             return false;
@@ -496,7 +498,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         // Let's now create a meta-model class by putting all the parts together
         final TypeSpec.Builder metaModelBuilder = TypeSpec.classBuilder(thisMetaModelName)
                 .addModifiers(Modifier.PUBLIC)
-                .superclass(determineMetaModelSuperClassName(entityParent, isEntitySuperclassMetamodeled))
+                .superclass(determineMetaModelSuperClassName(entitySupertype, maybeMetaModelledSupertype.isPresent()))
                 .addFields(fieldSpecs)
                 .addMethods(constructors)
                 .addMethods(methodSpecs)
@@ -603,94 +605,66 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
     /**
      * Collects entity properties for meta-modeling.
      * @param entity
-     * @param isParentMetamodeled
+     * @param maybeMetaModelledSupertype
      * @return
      * @throws EntitySourceDefinitionException
      */
-    private LinkedHashSet<PropertyElement> collectProperties(final EntityElement entity, final boolean isParentMetamodeled) throws EntitySourceDefinitionException {
+    private LinkedHashSet<PropertyElement> collectProperties(final EntityElement entity, final Optional<EntityElement> maybeMetaModelledSupertype) throws EntitySourceDefinitionException {
+
+        final Set<PropertyElement> properties = new LinkedHashSet<>();
+        if (maybeMetaModelledSupertype.isPresent()) {
+            // declared properties + property key
+            properties.addAll(entityFinder.processProperties(entityFinder.findDeclaredProperties(entity), entity));
+            final VariableElement veKey = elementFinder.findField(maybeMetaModelledSupertype.get().element(), AbstractEntity.KEY);
+            properties.add(new PropertyElement(veKey));
+        } else {
+            properties.addAll(entityFinder.processProperties(entityFinder.findProperties(entity), entity));
+        }
+
         // map of the following form: String propertyName -> PropertyElement property
-        final LinkedHashMap<String, PropertyElement> properties = new LinkedHashMap<>();
+        final LinkedHashMap<String, PropertyElement> propertiesMap = new LinkedHashMap<>(
+                properties.stream().collect(Collectors.toMap(elt -> elt.getSimpleName().toString(), Function.identity())));
 
-        if (isParentMetamodeled) {
-            entityFinder.findDeclaredProperties(entity).forEach(propEl -> properties.put(propEl.getSimpleName().toString(), propEl));
-        }
-        else {
-            entityFinder.findProperties(entity).forEach(propEl -> properties.put(propEl.getSimpleName().toString(), propEl));
-        }
-        
-        handleKey(properties, entity, isParentMetamodeled);
-        handleId(properties, entity);
-        handleDesc(properties, entity);
+        // Need additional processing of property "key" to correctly identify its type or to remove it.
+        // An exception is thrown in case of erroneous entity definition.
+        processPropertyKey(propertiesMap, entity);
 
-        return new LinkedHashSet<>(properties.values());
+        return new LinkedHashSet<>(propertiesMap.values());
     }
     
     /**
-     * Processes entity key type information, possibly modifying {@code properties}.
+     * Processes entity key type information, possibly modifying argument {@code properties} to update or remove the entry for property {@code key}.
+     *
      * @see {@link AbstractEntity}, {@link KeyType}
+     * 
      * @param properties
      * @param entity
-     * @param isParentMetamodeled
-     * @throws EntitySourceDefinitionException if entity key type definition is incorrect or inconsistent
      */
-    private void handleKey(final LinkedHashMap<String, PropertyElement> properties, final EntityElement entity, final boolean isParentMetamodeled) 
-            throws EntitySourceDefinitionException 
-    {
-        final KeyType atKeyType = entityFinder.findAnnotation(entity, KeyType.class)
-                // Entity definition is missing `@KeyType` i.e., neither the entity type nor its super types have this annotation declared.
-                .orElseThrow(() -> new EntitySourceDefinitionException("Entity %s is missing @KeyType.".formatted(entity.getQualifiedName())));
+    private void processPropertyKey(final LinkedHashMap<String, PropertyElement> properties, final EntityElement entity) {
+        // Child entity simply inherits "key" property meta-model from its parent, but only if that super meta-model contains a model for "key"...
+        // This is why, in order to simplify processing the situations where super meta-model does not have "key", we shall simply regenerate a meta-model for "key" for sub entities.
+        //
+        // Abstract entity types may have annotation @KeyType absent.
+        // However, it may still be necessary to generate a meta-model for abstract entities.
+        // Therefore, in such cases, property "key" should simply be removed from consideration.
+        final Optional<KeyType> maybeKeyType = entityFinder.findAnnotation(entity, KeyType.class);
+        if (entity.isAbstract() && maybeKeyType.isEmpty()) {
+            properties.remove(AbstractEntity.KEY);
+        }
+        // In all other cases, if annotation @KeyType is present, we shall make sure that its type is updated to match the type from @KeyType 
+        else if (maybeKeyType.isPresent()) {
+            final KeyType atKeyType = maybeKeyType.get();
 
-        // child entity simply inherits "key" property meta-model from its parent
-        if (isParentMetamodeled) {}
-        // for ordinary entities:
-        // if @KeyType(NoKey.class) -> remove from collected properties 
-        // otherwise change "key" PropertyElement type to that of KeyType::value()
-        else {
             // obtain KeyType::value()
             final TypeMirror keyType = entityFinder.getKeyType(atKeyType);
-
+            // Property "key" of type NoKey does not need to be meta-modelled
             if (elementFinder.isSameType(keyType, NoKey.class)) {
                 properties.remove(AbstractEntity.KEY);
-            }
-            else {
-                // mapping for "key" should always exist, since every entity extends AbstractEntity and properties represent the whole hierarchy 
+            } else {
+                // mapping for "key" should always exist
                 properties.compute(AbstractEntity.KEY, (name, propEl) -> propEl.changeType(keyType));
             }
         }
-    }
-
-    /**
-     * Handles property {@link AbstractEntity#ID} to decide whether it should be metamodeled, possibly modifying {@code properties}.
-     * 
-     * @param properties
-     * @param entity
-     */
-    private void handleId(final LinkedHashMap<String, PropertyElement> properties, final EntityElement entity) {
-        // include property "id" only for persistent entities
-        if (entityFinder.isPersistentEntityType(entity) || entityFinder.doesExtendPersistentEntity(entity)) {
-            properties.put(AbstractEntity.ID, new PropertyElement(entityFinder.findField(entity, AbstractEntity.ID)));
-        }
-    }
-
-    /**
-     * Handles property {@link AbstractEntity#DESC} to decide whether it should be metamodeled, possibly modifying {@code properties}.
-     * 
-     * @param properties
-     * @param entity
-     */
-    private void handleDesc(final LinkedHashMap<String, PropertyElement> properties, final EntityElement entity) {
-        // include property "desc" in the following cases:
-        // 1. property "desc" is declared by entity or one of its supertypes below AbstractEntity
-        // 2. entity or any of its supertypes is annotated with @DescTitle
-        final PropertyElement descProp = entityFinder.findPropertyBelow(entity, AbstractEntity.DESC, AbstractEntity.class);
-        if (descProp != null) {
-            properties.put(AbstractEntity.DESC, descProp);
-        }
-        else if (entityFinder.findAnnotation(entity, DescTitle.class).isPresent()) {
-            properties.put(AbstractEntity.DESC, new PropertyElement(entityFinder.findField(entity, AbstractEntity.DESC)));
-        }
-        // in other cases we need to exclude it
-        else properties.remove(AbstractEntity.DESC);
     }
 
     /**

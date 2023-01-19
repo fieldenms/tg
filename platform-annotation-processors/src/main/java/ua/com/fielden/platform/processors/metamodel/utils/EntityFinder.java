@@ -6,9 +6,12 @@ import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.AN
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -24,6 +27,7 @@ import javax.lang.model.util.Types;
 
 import ua.com.fielden.platform.annotations.metamodel.MetaModelForType;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -32,7 +36,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
-import ua.com.fielden.platform.processors.metamodel.exceptions.AnomalousStateException;
+import ua.com.fielden.platform.processors.metamodel.exceptions.UnexpectedStateException;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -54,19 +58,13 @@ public class EntityFinder extends ElementFinder {
      * @param entityClass
      * @return {@link EntityElement} wrapped in an {@link Optional} if found, else an empty optional
      */
-    public Optional<EntityElement> findEntity(final Class<? extends AbstractEntity<?>> entityClass) {
+    public Optional<EntityElement> findEntity(final Class<? extends AbstractEntity> entityClass) {
         return Optional.ofNullable(elements.getTypeElement(entityClass.getCanonicalName()))
                 .map(te -> newEntityElement(te));
     }
 
    /**
     * Finds properties, which are explicitly declared in an entity, represented by {@code entityElement}.
-    * <p>
-    * Two properties represent an edge-case:
-    * <ul>
-    * <li> id – only included if declared as a property explicitly.
-    * <li> desc – only included if re-declared as a property explicitly. 
-    * </ul>
     *
     * @param entityElement
     */
@@ -76,7 +74,7 @@ public class EntityFinder extends ElementFinder {
                 .map(PropertyElement::new)
                 .collect(toCollection(LinkedHashSet::new));
     }
-    
+
     /**
      * Returns a property element, representing a property named {@code propName} if it is declared by {@code entity}, otherwise returns {@code null}.
      *
@@ -93,20 +91,58 @@ public class EntityFinder extends ElementFinder {
     /**
      * Finds properties, which are inherited by entity, represented by {@code entityElement}.
      * <p>
-     * Two properties represent an edge-case:
-     * <ul>
-     * <li>id – only included if this or any of the entities represented by supertypes, is persistent.
-     * <li>desc – only included if this or any of the entities represented by supertypes, is annotated with {@code @DescTitle}.
-     * </ul>
+     * A property is defined simply as a field annotated with {@link IsProperty}. For more detailed processing use {@link #processProperties(Set, EntityElement)}.
      *
-     * @param entityElement
+     * @param entity
      * @return
      */
-    public Set<PropertyElement> findInheritedProperties(final EntityElement entityElement) {
-        return findInheritedFields(entityElement, ROOT_ENTITY_CLASS).stream()
+    public Set<PropertyElement> findInheritedProperties(final EntityElement entity) {
+        return findInheritedFields(entity, ROOT_ENTITY_CLASS).stream()
                 .filter(this::isProperty)
                 .map(PropertyElement::new)
                 .collect(toCollection(LinkedHashSet::new));
+    }
+
+    /**
+     * Processes properties of the entity element, collecting them into an unmodifiable set with preserved order.
+     * <p>
+     * The following properties are processed:
+     * <ul>
+     *  <li>{@code id} – included if this or any of the entities represented by supertypes, is persistent.
+     *  <li>{@code desc} – included if this or any of the entities represented by supertypes, declares {@code desc} or is annotated 
+     *  with {@code @DescTitle}, excluded otherwise.
+     * </ul>
+     * 
+     * @param properties
+     * @param entity
+     */
+    public Set<PropertyElement> processProperties(final Collection<PropertyElement> properties, final EntityElement entity) {
+        final Set<PropertyElement> processed = new LinkedHashSet<>(properties);
+        processPropertyId(processed, entity);
+        processPropertyDesc(processed, entity);
+        return Collections.unmodifiableSet(processed);
+    }
+    // where
+    private void processPropertyId(final Set<PropertyElement> properties, final EntityElement entity) {
+        // include property "id" only for persistent entities
+        if (isPersistentEntityType(entity) || doesExtendPersistentEntity(entity)) {
+            properties.add(new PropertyElement(findField(entity, AbstractEntity.ID)));
+        }
+    }
+    // and
+    private void processPropertyDesc(final Set<PropertyElement> properties, final EntityElement entity) {
+        // include property "desc" in the following cases:
+        // 1. property "desc" is declared by entity or one of its supertypes below AbstractEntity
+        // 2. entity or any of its supertypes is annotated with @DescTitle
+        final PropertyElement descProp = findPropertyBelow(entity, AbstractEntity.DESC, AbstractEntity.class);
+        if (descProp != null) {
+            properties.add(descProp);
+        }
+        else if (findAnnotation(entity, DescTitle.class).isPresent()) {
+            properties.add(new PropertyElement(findField(entity, AbstractEntity.DESC)));
+        }
+        // in other cases we need to exclude it
+        else properties.removeIf(elt -> elt.getSimpleName().toString().equals(AbstractEntity.DESC));
     }
 
     /**
@@ -207,7 +243,7 @@ public class EntityFinder extends ElementFinder {
             if (keyTypeElement == null) {
                 // keyType Class object was available at compile time but could not be found in the processing environment,
                 // thus TypeMirror can't be constructed
-                throw new AnomalousStateException(
+                throw new UnexpectedStateException(
                         "Key type from %s was loaded at compile time, but was not found in the processing environment."
                         .formatted(atKeyType.toString()));
             }
@@ -235,8 +271,7 @@ public class EntityFinder extends ElementFinder {
      */
     public boolean isEntityType(final TypeElement element) {
         return Stream.iterate(element, el -> el != null && !equals(el, Object.class) , el -> findSuperclass(el))
-               .filter(el -> el != null && equals(el, ROOT_ENTITY_CLASS))
-               .findFirst().isPresent();
+               .anyMatch(el -> el != null && equals(el, ROOT_ENTITY_CLASS));
     }
 
     /**
