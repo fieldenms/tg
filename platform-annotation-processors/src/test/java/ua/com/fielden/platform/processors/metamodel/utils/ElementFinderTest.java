@@ -2,7 +2,7 @@ package ua.com.fielden.platform.processors.metamodel.utils;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
@@ -18,7 +18,6 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
@@ -46,6 +45,7 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 
+import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderException;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileManager;
 import ua.com.fielden.platform.utils.CollectionUtil;
@@ -445,7 +445,7 @@ public class ElementFinderTest {
     }
 
     @Test
-    public void getAnnotationValue_returns_the_value_of_the_annotation_element_by_name_if_it_exists() {
+    public void getAnnotationElementValue_returns_the_value_of_the_annotation_element_by_name_if_it_exists() {
         final TypeSpec withValue = TypeSpec.classBuilder("WithValue")
                 // @TestAnnot(value = "hello")
                 .addAnnotation(AnnotationSpec.builder(TestAnnot.class).addMember("value", "$S", "hello").build())
@@ -457,19 +457,15 @@ public class ElementFinderTest {
 
         processAndEvaluate(List.of(withValue, withDefaults), finder -> {
             final TypeElement withValueElement = finder.elements.getTypeElement(withValue.name);
-            assertOptEquals("hello",
-                    finder.findAnnotationMirror(withValueElement, TestAnnot.class).flatMap(a -> 
-                        finder.findAnnotationValue(a, "value").map(AnnotationValue::getValue)));
+            final AnnotationMirror annotMirrorWithValue = finder.findAnnotationMirror(withValueElement, TestAnnot.class).get();
+            assertEquals("hello", finder.<String> getAnnotationElementValue(annotMirrorWithValue, "value"));
 
-            // default annotation element's value should be returned if none was defined
+            // default value should be returned if none was explicitly specified
             final TypeElement withDefaultsElement = finder.elements.getTypeElement(withDefaults.name);
-            assertOptEquals(TestAnnot.DEFAULT_VALUE,
-                    finder.findAnnotationMirror(withDefaultsElement, TestAnnot.class).flatMap(a -> 
-                        finder.findAnnotationValue(a, "value").map(AnnotationValue::getValue)));
-
-            // try obtaining a non-existent element's value
-            assertTrue(finder.findAnnotationMirror(withDefaultsElement, TestAnnot.class)
-                    .flatMap(a -> finder.findAnnotationValue(a, "whatever")).isEmpty());
+            final AnnotationMirror annotMirrorWithDefaults = finder.findAnnotationMirror(withDefaultsElement, TestAnnot.class).get();
+            assertEquals(TestAnnot.DEFAULT_VALUE, finder.<String> getAnnotationElementValue(annotMirrorWithDefaults, "value"));
+            // obtaining a non-existent element's value throws
+            assertThrows(ElementFinderException.class, () -> finder.getAnnotationElementValue(annotMirrorWithDefaults, "whatever"));
         });
     }
 
