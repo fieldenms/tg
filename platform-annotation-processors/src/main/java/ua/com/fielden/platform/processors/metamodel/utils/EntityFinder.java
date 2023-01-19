@@ -13,9 +13,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.MirroredTypeException;
@@ -35,6 +33,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
+import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderException;
 import ua.com.fielden.platform.processors.metamodel.exceptions.UnexpectedStateException;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
@@ -183,41 +182,37 @@ public class EntityFinder extends ElementFinder {
                 .findFirst();
     }
 
+    /**
+     * Returns a pair of property title and description as specified by the annotation {@link Title}.
+     * 
+     * @param propElement
+     * @return
+     * @throws ElementFinderException if {@link Title} does not have element {@code desc} 
+     *                                or values of elements {@code value} and {@code desc} cannot be type casted to String
+     */
     public Pair<String, String> getPropTitleAndDesc(final PropertyElement propElement) {
-        // TODO need to replicate the logic from TitlesDescsGetter in application to the Mirror types.
-        return findAnnotationMirror(propElement, Title.class).map(EntityFinder::getTitleAndDesc).orElse(null);
+        return findAnnotationMirror(propElement, Title.class)
+                .map(annot -> pair(this.<String> getAnnotationElementValue(annot, "value"), this.<String> getAnnotationElementValue(annot, "desc")))
+                .orElse(TitlesDescsGetter.EMPTY_TITLE_AND_DESC);
     }
 
+    /**
+     * Returns a pair of entity title and description as specified by the annotation {@link EntityTitle}.
+     * 
+     * @param propElement
+     * @return
+     * @throws ElementFinderException if {@link EntityTitle} does not have element {@code desc} 
+     *                                or values of elements {@code value} and {@code desc} cannot be type casted to String
+     */
     public Pair<String, String> getEntityTitleAndDesc(final EntityElement entityElement) {
-        return findAnnotationMirror(entityElement, EntityTitle.class).map(EntityFinder::getTitleAndDesc)
+        return findAnnotationMirror(entityElement, EntityTitle.class)
+                .map(annot -> pair(this.<String> getAnnotationElementValue(annot, "value"), this.<String> getAnnotationElementValue(annot, "desc")))
                 .orElseGet(() -> {
                     final String title = TitlesDescsGetter.breakClassName(entityElement.getSimpleName().toString());
                     return pair(title, title + " entity");
                 });
     }
 
-    /**
-     * Reads values for attributes {@code value} and {@code desc} using Mirror API and returns them as a pair.
-     * Assumes an empty strings as the default.
-     *
-     * @param annotationMirror
-     * @return
-     */
-    private static Pair<String, String> getTitleAndDesc(final AnnotationMirror annotationMirror) {
-        final var entityTitleAnnotationElements = annotationMirror.getElementValues();
-        final ExecutableElement valueKey = entityTitleAnnotationElements.keySet().stream()
-                .filter(k -> "value".equals(k.getSimpleName().toString()))
-                .findFirst().orElse(null);
-        final String title = (valueKey == null) ? "" : (String) entityTitleAnnotationElements.get(valueKey).getValue();
-
-        final ExecutableElement descKey = entityTitleAnnotationElements.keySet().stream()
-                .filter(k -> "desc".equals(k.getSimpleName().toString()))
-                .findFirst().orElse(null);
-        final String desc = (descKey == null) ? "" : (String) entityTitleAnnotationElements.get(descKey).getValue();
-
-        return pair(title, desc);
-    }
-    
     /**
      * Retrieves the type of entity key from {@link KeyType} annotation at compile time.
      * @see {@link javax.lang.model.element.Element#getAnnotation(Class)}
