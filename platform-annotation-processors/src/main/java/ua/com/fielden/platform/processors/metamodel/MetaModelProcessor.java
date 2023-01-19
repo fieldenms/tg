@@ -75,6 +75,7 @@ import ua.com.fielden.platform.processors.metamodel.elements.MetaModelsElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelAliasedException;
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntitySourceDefinitionException;
+import ua.com.fielden.platform.processors.metamodel.exceptions.MetaModelProcessorException;
 import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
@@ -300,17 +301,22 @@ public class MetaModelProcessor extends AbstractProcessor {
     private Set<MetaModelElement> findInactiveMetaModels(final MetaModelsElement metaModelsElement) {
         messager.printMessage(Kind.NOTE, format("Verifying %s.", metaModelsElement.getSimpleName()));
         final Set<MetaModelElement> inactive = new LinkedHashSet<>();
+
         for (final MetaModelElement mme: metaModelsElement.getMetaModels()) {
-            final EntityElement entity = entityFinder.findEntityForMetaModel(mme);
-            if (entity == null || !entityFinder.isEntityThatNeedsMetaModel(entity)) {
-                if (entity != null) {
-                    messager.printMessage(Kind.NOTE, format("Entity %s is no longer a domain entity.", entity.getSimpleName()));
-                } else {
-                    messager.printMessage(Kind.NOTE, format("Entity for %s does not exist anymore.", mme.getSimpleName()));
-                }
+            final Optional<EntityElement> maybeEntity = entityFinder.findEntityForMetaModel(mme);
+
+            if (maybeEntity.isEmpty()) {
+                messager.printMessage(Kind.NOTE, format("Entity for %s does not exist anymore.", mme.getSimpleName()));
                 inactive.add(mme);
+            } else {
+                final EntityElement entity = maybeEntity.get();
+                if (!entityFinder.isEntityThatNeedsMetaModel(maybeEntity.get())) {
+                    messager.printMessage(Kind.NOTE, format("Entity %s is no longer a domain entity.", entity.getSimpleName()));
+                    inactive.add(mme);
+                }
             }
         }
+
         return inactive;
     }
 
@@ -834,7 +840,9 @@ public class MetaModelProcessor extends AbstractProcessor {
                     .sorted().collect(joining(", "))));
             
             for (final MetaModelElement mme: activeUnchangedMetaModels) {
-                final EntityElement entity = entityFinder.findEntityForMetaModel(mme);
+                // active meta-model must have a coresponding entity
+                final EntityElement entity = entityFinder.findEntityForMetaModel(mme)
+                        .orElseThrow(() -> new MetaModelProcessorException("Missing entity for active meta-model [%s]".formatted(mme.getSimpleName())));
                 final String fieldName = nameFieldForMetaModel(entity.getSimpleName().toString());
                 // add a method for an aliased meta-model
                 if (metaModelFinder.isMetaModelAliased(mme)) {

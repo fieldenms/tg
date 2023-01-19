@@ -356,14 +356,23 @@ public class EntityFinder extends ElementFinder {
     }
 
     /**
-     * Finds the entity on which a given meta-model is based by looking at its {@link MetaModelForType} annotation.
+     * Returns an optional describing the entity element on which a given meta-model is based by looking at its {@link MetaModelForType} annotation.
+     * <p>
+     * Entity type might be missing due to renaming/removal. In such cases an empty optional is returned.
      *
      * @param mme
      * @return
+     * @throws ElementFinderException if the meta-model element is missing {@link MetaModelForType}
      */
-    public EntityElement findEntityForMetaModel(final MetaModelElement mme) {
-        final TypeMirror entityType = mme.getEntityType();
-        return entityType == null || entityType.getKind() == TypeKind.ERROR ? null : newEntityElement(asTypeElementOfTypeMirror(entityType));
+    public Optional<EntityElement> findEntityForMetaModel(final MetaModelElement mme) {
+        final MetaModelForType annot = mme.getAnnotation(MetaModelForType.class);
+        if (annot == null) {
+            throw new ElementFinderException("Meta-model [%s] is missing [%s] annotation.".formatted(
+                    mme.getSimpleName(), MetaModelForType.class.getSimpleName()));
+        }
+        final TypeMirror entityType = getAnnotationElementValueOfClassType(annot, a -> a.value());
+        // missing types have TypeKind.ERROR
+        return entityType.getKind() == TypeKind.ERROR ? Optional.empty() : Optional.of(newEntityElement(asTypeElementOfTypeMirror(entityType)));
     }
 
     public boolean hasPropertyOfType(final EntityElement entityElement, final TypeMirror type, final Types typeUtils) {
