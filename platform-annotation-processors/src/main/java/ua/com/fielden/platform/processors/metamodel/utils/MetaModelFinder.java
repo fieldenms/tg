@@ -102,11 +102,18 @@ public class MetaModelFinder extends ElementFinder {
                 .filter(el -> isPropertyMetaModelMethod(el) || isEntityMetaModelMethod(el))
                 .collect(toCollection(LinkedHashSet::new));
     }
-    
-    public ExecutableElement findDeclaredPropertyMethod(final MetaModelElement mme, final String name) {
+
+    /**
+     * Returns an optional describing a method of the meta-model element that meta-models a property with the specified name.
+     * 
+     * @param mme
+     * @param name
+     * @return
+     */
+    public Optional<ExecutableElement> findDeclaredPropertyMethod(final MetaModelElement mme, final String name) {
         return findDeclaredPropertyMethods(mme).stream()
                 .filter(el -> el.getSimpleName().toString().equals(name))
-                .findFirst().orElse(null);
+                .findFirst();
     }
 
     /**

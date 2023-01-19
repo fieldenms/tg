@@ -108,9 +108,9 @@ public class MetaModelStructureTest {
         final EntityElement entity = entityFinder.findEntity(EntityWithKeyTypeOfEntityType.class);
         final MetaModelElement metaModel = findMetaModel(entity);
         
-        final ExecutableElement keyMethod = metaModelFinder.findDeclaredPropertyMethod(metaModel, AbstractEntity.KEY);
-        assertTrue("\"key\" property must be metamodeled.", keyMethod != null);
-        assertTrue("\"key\" property must be metamodeled with entity meta-model type.", metaModelFinder.isEntityMetaModelMethod(keyMethod));
+        final ExecutableElement keyMethod = metaModelFinder.findDeclaredPropertyMethod(metaModel, AbstractEntity.KEY)
+                .orElseThrow(() -> new AssertionError("Property [key] must be metamodeled."));
+        assertTrue("Property [key] must be metamodeled with entity meta-model type.", metaModelFinder.isEntityMetaModelMethod(keyMethod));
         
         final Class<?> declaredKeyType = AnnotationReflector.getKeyType(EntityWithKeyTypeOfEntityType.class);
 
@@ -125,8 +125,7 @@ public class MetaModelStructureTest {
         final EntityElement entity = entityFinder.findEntity(EntityWithKeyTypeNoKey.class);
         final MetaModelElement metaModel = findMetaModel(entity);
         
-        final ExecutableElement keyMethod = metaModelFinder.findDeclaredPropertyMethod(metaModel, AbstractEntity.KEY);
-        assertTrue("\"key\" property must not be metamodeled.", keyMethod == null);
+        assertTrue("Property [key] must not be metamodeled.", metaModelFinder.findDeclaredPropertyMethod(metaModel, AbstractEntity.KEY).isEmpty());
     }
     
     @Test
