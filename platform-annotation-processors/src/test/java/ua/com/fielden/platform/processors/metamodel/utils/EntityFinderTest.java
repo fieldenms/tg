@@ -5,6 +5,8 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
@@ -125,45 +127,58 @@ public class EntityFinderTest {
       final TypeElement typeElement = elements.getTypeElement(User.class.getCanonicalName());
       final EntityElement entityElement = EntityElement.wrapperFor(typeElement);
       final Set<PropertyElement> props = entityFinder.findInheritedProperties(entityElement);
-      assertEquals(10, props.size());
       // it is expected that some of the re-declared properties in User would appear as both declared and inherited
       // more specifically, properties "active" and "key" appear as both declared and inherited
-      // property "desc" is missing as it was @DescTitle was not declared for either User or its supertypes
-      final String expectedProps = "active, refCount, createdBy, createdDate, createdTransactionGuid, lastUpdatedBy, lastUpdatedDate, lastUpdatedTransactionGuid, key, id";
-      assertEquals(expectedProps, props.stream().map(p -> p.getSimpleName().toString()).collect(joining(", "))); 
+      final List<String> expectedProps = List.of("active", "refCount", "createdBy", "createdDate", "createdTransactionGuid", "lastUpdatedBy",
+              "lastUpdatedDate", "lastUpdatedTransactionGuid", "key", "desc");
+      assertEquals(expectedProps, props.stream().map(p -> p.getSimpleName().toString()).toList()); 
     }
 
     @Test
     public void findProperties_finds_all_properties_in_User() {
       final TypeElement typeElement = elements.getTypeElement(User.class.getCanonicalName());
       final EntityElement entityElement = EntityElement.wrapperFor(typeElement);
-      final Set<PropertyElement> props = entityFinder.findProperties(entityElement);
-      assertEquals(15, props.size());
-      // property "desc" is missing as it was @DescTitle was not declared for either User or its supertypes
-      final String expectedProps = "key, roles, base, basedOnUser, email, active, ssoOnly, refCount, createdBy, createdDate, createdTransactionGuid, lastUpdatedBy, lastUpdatedDate, lastUpdatedTransactionGuid, id";
-      assertEquals(expectedProps, props.stream().map(p -> p.getSimpleName().toString()).collect(joining(", "))); 
+
+      final List<String> expectedProps = List.of("key", "roles", "base", "basedOnUser", "email", "active", "ssoOnly", "refCount", "createdBy",
+              "createdDate", "createdTransactionGuid", "lastUpdatedBy", "lastUpdatedDate", "lastUpdatedTransactionGuid", "desc");
+      assertEquals(expectedProps, entityFinder.findProperties(entityElement).stream().map(p -> p.getSimpleName().toString()).toList()); 
     }
 
     @Test
-    public void findProperties_finds_all_properties_in_SuperUser() {
+    public void processProperties_excludes_desc_and_includes_id_for_User() {
+      final TypeElement typeElement = elements.getTypeElement(User.class.getCanonicalName());
+      final EntityElement entityElement = EntityElement.wrapperFor(typeElement);
+      final Set<PropertyElement> props = entityFinder.findProperties(entityElement);
+
+      final List<String> expectedProps = List.of("key", "roles", "base", "basedOnUser", "email", "active", "ssoOnly", "refCount", "createdBy",
+              "createdDate", "createdTransactionGuid", "lastUpdatedBy", "lastUpdatedDate", "lastUpdatedTransactionGuid", "id");
+      assertEquals(expectedProps, 
+              entityFinder.processProperties(props, entityElement).stream().map(p -> p.getSimpleName().toString()).toList()); 
+    }
+
+    @Test
+    public void processProperties_includes_desc_and_id_for_SuperUser() {
       final TypeElement typeElement = elements.getTypeElement(SuperUser.class.getCanonicalName());
       final EntityElement entityElement = EntityElement.wrapperFor(typeElement);
       final Set<PropertyElement> props = entityFinder.findProperties(entityElement);
-      assertEquals(16, props.size());
-      // unlike User, SuperUser has property "desc" due to @DescTitle
-      final String expectedProps = "key, roles, base, basedOnUser, email, active, ssoOnly, refCount, createdBy, createdDate, createdTransactionGuid, lastUpdatedBy, lastUpdatedDate, lastUpdatedTransactionGuid, desc, id";
-      assertEquals(expectedProps, props.stream().map(p -> p.getSimpleName().toString()).collect(joining(", "))); 
+
+      // unlike User, SuperUser also has property "desc" due to @DescTitle
+      final List<String> expectedProps = List.of("key", "roles", "base", "basedOnUser", "email", "active", "ssoOnly", "refCount", "createdBy",
+              "createdDate", "createdTransactionGuid", "lastUpdatedBy", "lastUpdatedDate", "lastUpdatedTransactionGuid", "desc", "id");
+      assertEquals(expectedProps, 
+              entityFinder.processProperties(props, entityElement).stream().map(p -> p.getSimpleName().toString()).toList());
     }
 
     @Test
-    public void findProperties_finds_all_properties_in_SuperUserWithDeclaredDesc() {
+    public void processProperties_includes_desc_and_id_for_SuperUserWithDeclaredDesc() {
       final TypeElement typeElement = elements.getTypeElement(SuperUserWithDeclaredDesc.class.getCanonicalName());
       final EntityElement entityElement = EntityElement.wrapperFor(typeElement);
       final Set<PropertyElement> props = entityFinder.findProperties(entityElement);
-      assertEquals(16, props.size());
+
       // unlike User, SuperUserWithDeclaredDesc has property "desc" declared explicitly
       final String expectedProps = "desc, key, roles, base, basedOnUser, email, active, ssoOnly, refCount, createdBy, createdDate, createdTransactionGuid, lastUpdatedBy, lastUpdatedDate, lastUpdatedTransactionGuid, id";
-      assertEquals(expectedProps, props.stream().map(p -> p.getSimpleName().toString()).collect(joining(", "))); 
+      assertEquals(expectedProps,
+              entityFinder.processProperties(props, entityElement).stream().map(p -> p.getSimpleName().toString()).collect(joining(", "))); 
     }
 
     @Test
