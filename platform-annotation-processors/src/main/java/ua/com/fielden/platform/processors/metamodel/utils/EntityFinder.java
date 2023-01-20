@@ -158,9 +158,9 @@ public class EntityFinder extends ElementFinder {
         // include property "desc" in the following cases:
         // 1. property "desc" is declared by entity or one of its supertypes below AbstractEntity
         // 2. entity or any of its supertypes is annotated with @DescTitle
-        final PropertyElement descProp = findPropertyBelow(entity, AbstractEntity.DESC, AbstractEntity.class);
-        if (descProp != null) {
-            properties.add(descProp);
+        final Optional<PropertyElement> maybeDesc = findPropertyBelow(entity, AbstractEntity.DESC, AbstractEntity.class);
+        if (maybeDesc.isPresent()) {
+            properties.add(maybeDesc.get());
         }
         else if (findAnnotation(entity, DescTitle.class).isPresent()) {
             // "desc" must exist
@@ -218,12 +218,13 @@ public class EntityFinder extends ElementFinder {
 
     /**
      * Finds a property of an entity by traversing it and its hierarchy below {@code rootType}, which is not searched.
+     * 
      * @param entity
      * @param name
      * @param rootType the type at which traversal stops
      * @return
      */
-    public PropertyElement findPropertyBelow(final EntityElement entity, final String name, final Class<?> rootType) {
+    public Optional<PropertyElement> findPropertyBelow(final EntityElement entity, final String name, final Class<?> rootType) {
         return Optional.ofNullable(findDeclaredProperty(entity, name))
                 .orElseGet(() -> findSuperclassesBelow(entity, rootType).stream()
                                     .map(this::newEntityElement)
@@ -272,7 +273,7 @@ public class EntityFinder extends ElementFinder {
     public TypeMirror getKeyType(final KeyType atKeyType) {
         return getAnnotationElementValueOfClassType(atKeyType, a -> a.value());
     }
-    
+
     /**
      * Determines the type of key for an entity element by looking for a {@link KeyType} declaration in its type hierarchy.
      * @param entity
@@ -281,7 +282,7 @@ public class EntityFinder extends ElementFinder {
     public Optional<TypeMirror> determineKeyType(final EntityElement entity) {
         return findAnnotation(entity, KeyType.class).map(this::getKeyType);
     }
-    
+
     /**
      * Tests whether the type mirror represents an entity type, which is defined as any class that extends {@link AbstractEntity} (itself included).
      *
