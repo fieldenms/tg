@@ -217,12 +217,16 @@ public class EntityFinder extends ElementFinder {
      * @return
      */
     public Optional<PropertyElement> findPropertyBelow(final EntityElement entity, final String name, final Class<?> rootType) {
-        return Optional.ofNullable(findDeclaredProperty(entity, name))
-                .orElseGet(() -> findSuperclassesBelow(entity, rootType).stream()
-                                    .map(this::newEntityElement)
-                                    .map(el -> findDeclaredProperty(el, name))
-                                    .filter(p -> p != null)
-                                    .findFirst().orElse(null));
+        if (!isSubtype(entity.asType(), rootType)) {
+            return Optional.empty();
+        }
+
+        final Stream<EntityElement> parents = findSuperclassesBelow(entity.element(), rootType).stream().map(this::newEntityElement);
+        return Stream.concat(Stream.of(entity), parents)
+            .map(elt -> findDeclaredProperty(elt, name))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .findFirst();
     }
 
     /**
