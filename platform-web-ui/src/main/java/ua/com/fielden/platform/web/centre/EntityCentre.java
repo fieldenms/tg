@@ -1171,6 +1171,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final DomContainer rightInsertionPointsDom = new DomContainer();
         final DomContainer bottomInsertionPointsDom = new DomContainer();
         final List<String> alternativeViewsDom = new ArrayList<>();
+        //Alternative view actions should be generated into EGI's top action config list, that's why the order of alternative view actions should starts from the last index of EGI's top action + 1.
         final AtomicInteger alternativeViewActionOrder = new AtomicInteger(this.dslDefaultConfig.getTopLevelActions().map(actions -> actions.size()).orElse(0));
         for (final InsertionPointBuilder el : insertionPointActionsElements) {
             final DomElement insertionPoint = el.render();
@@ -1304,6 +1305,15 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return representation;
     }
 
+    /**
+     * Generates DOM for alternative view actions. Also updates action's order, import path and action object.
+     *
+     * @param el
+     * @param importPaths
+     * @param functionalActionsObjects
+     * @param alternativeViewActionOrder
+     * @return
+     */
     private Optional<DomElement> alternativeViewActions(final InsertionPointBuilder el, final LinkedHashSet<String> importPaths, final StringBuilder functionalActionsObjects, final AtomicInteger alternativeViewActionOrder) {
         if (!el.getActions().isEmpty()) {
             final DomElement domContainer = new DomContainer();

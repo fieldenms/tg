@@ -5,7 +5,7 @@ import ua.com.fielden.platform.web.centre.api.IEcbCompletion;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 
 /**
- * The contract for defining entity centre alternative view, which as is driven by functional entities.
+ * The contract for defining entity centre alternative view, which is driven by functional entities.
  *
  * @author TG Team
  *

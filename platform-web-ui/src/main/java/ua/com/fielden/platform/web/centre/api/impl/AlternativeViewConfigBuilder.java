@@ -19,6 +19,13 @@ import ua.com.fielden.platform.web.centre.api.alternative_view.IAlternativeViewW
 import ua.com.fielden.platform.web.centre.api.alternative_view.IAlternativeViewWithActionsExtended;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 
+/**
+ * Implements alternative view API.
+ *
+ * @author TG Team
+ *
+ * @param <T>
+ */
 public class AlternativeViewConfigBuilder<T extends AbstractEntity<?>> implements IAlternativeView<T>, IAlternativeViewPreferred<T>, IAlternativeViewAlso<T>{
 
     private final ResultSetBuilder<T> resultSetBuilder;

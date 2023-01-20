@@ -112,7 +112,10 @@ public class InsertionPointConfigBuilder<T extends AbstractEntity<?>> implements
 
     @Override
     public IAlternativeViewPreferred<T> addAlternativeView(final EntityActionConfig actionConfig) {
-        // TODO Auto-generated method stub
-        return null;
+        resultSetBuilder.addInsertionPoint(configInsertionPoint(mkInsertionPoint(this.insertionPointAction, this.whereToInsertView))
+                .setPreferred(preferred)
+                .setNoResizing(noResizing)
+                .setToolbar(toolbarConfig));
+        return new AlternativeViewConfigBuilder<>(resultSetBuilder, actionConfig);
     }
 }

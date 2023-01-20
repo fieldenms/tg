@@ -13,7 +13,7 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 public interface IAlternativeViewWithActions<T extends AbstractEntity<?>> {
 
     /**
-     * Adds new top functional action for alternative view.
+     * Adds new top functional action the the alternative view.
      *
      * @param actionConfig
      * @return

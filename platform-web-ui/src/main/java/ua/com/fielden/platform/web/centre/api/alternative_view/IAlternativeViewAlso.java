@@ -12,7 +12,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 public interface IAlternativeViewAlso<T extends AbstractEntity<?>> extends IAlternativeViewWithToolbar<T> {
 
     /**
-     * Expresses the willingness to add another top functional action for alternative view.
+     * Expresses the willingness to add another top functional action to the alternative view.
      *
      * @return
      */

@@ -855,6 +855,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      */
     public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
         if (TOP_LEVEL == actionKind) {
+            //Top actions for entity centre consists of EGI's top action + alternative views actions.
+            //1. get the lists of those two types of actions
             final Optional<List<Pair<EntityActionConfig, Optional<String>>>> optionalActions = getTopLevelActions();
             final List<EntityActionConfig> altViewActions = getInsertionPointConfigs().stream()
                     .filter(insPointConfig -> insPointConfig.getInsertionPointAction().whereToInsertView.isPresent()
@@ -862,14 +864,15 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
                             && !insPointConfig.getActions().isEmpty())
                     .flatMap(insPointConfig -> insPointConfig.getActions().stream())
                     .collect(Collectors.toList());
+            //2. Make sure that there are some actions at all.
             if (!optionalActions.isPresent() && altViewActions.isEmpty()) {
                 throw new IllegalArgumentException("No top-level action exists.");
             }
+            //3. If action number is among indices of EGI's top action that return that action otherwise adjust action number for alternative view action and return it.
             if (optionalActions.isPresent() && actionNumber < optionalActions.get().size()) {
                 return optionalActions.get().get(actionNumber).getKey();
             } else {
-                final int altActionIndex = actionNumber - optionalActions.map(actions -> actions.size()).orElse(0);
-                return altViewActions.get(altActionIndex);
+                return altViewActions.get(actionNumber - optionalActions.map(actions -> actions.size()).orElse(0));
             }
         } else if (PRIMARY_RESULT_SET == actionKind) {
             if (!getResultSetPrimaryEntityAction().isPresent()) {
