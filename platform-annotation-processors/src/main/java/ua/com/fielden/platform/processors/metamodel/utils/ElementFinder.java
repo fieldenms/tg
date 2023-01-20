@@ -7,7 +7,6 @@ import static java.util.stream.Stream.iterate;
 import static ua.com.fielden.platform.utils.StreamUtils.stopAfter;
 
 import java.lang.annotation.Annotation;
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
@@ -146,25 +145,6 @@ public class ElementFinder {
     }
 
     /**
-     * Like {@link #findSuperclasses(TypeElement, Class)}, but doesn't include {@code rootType} in the resulting list.
-     * 
-     * @param typeElement
-     * @param rootType
-     * @return
-     */
-    public List<TypeElement> findSuperclassesBelow(final TypeElement typeElement, final Class<?> rootType) {
-        if (!isSubtype(typeElement.asType(), rootType)) {
-            return List.of();
-        }
-        return iterate(Optional.of(typeElement), Optional::isPresent, elt -> elt.flatMap(this::findSuperclass))
-                .map(Optional::get)
-                .takeWhile(elt -> !isSameType(elt, rootType))
-                // drop the typeElement itself
-                .skip(1)
-                .toList();
-    }
-
-    /**
      * The same as {@link #findSuperclasses(TypeElement, Class)}, but with the {@code rootType} set as {@code Object}. 
      *
      * @param typeElement
@@ -173,6 +153,31 @@ public class ElementFinder {
      */
     public List<TypeElement> findSuperclasses(final TypeElement typeElement) {
         return streamSuperclasses(typeElement, ROOT_CLASS).toList();
+    }
+
+    /**
+     * Like {@link #streamSuperclasses(TypeElement, Class)}, but excludes {@code rootType}.
+     * 
+     * @param typeElement
+     * @param rootType
+     * @return
+     */
+    public Stream<TypeElement> streamSuperclassesBelow(final TypeElement typeElement, final Class<?> rootType) {
+        if (!isSubtype(typeElement.asType(), rootType)) {
+            return Stream.empty();
+        }
+        return iterate(Optional.of(typeElement), Optional::isPresent, elt -> elt.flatMap(this::findSuperclass))
+                .map(Optional::get)
+                .takeWhile(elt -> !isSameType(elt, rootType))
+                // drop the typeElement itself
+                .skip(1);
+    }
+
+    /**
+     * Collects the elements of {@link #streamSuperclassesBelow(TypeElement, Class)} into a list. 
+     */
+    public List<TypeElement> findSuperclassesBelow(final TypeElement typeElement, final Class<?> rootType) {
+        return streamSuperclassesBelow(typeElement, rootType).toList();
     }
 
     /**

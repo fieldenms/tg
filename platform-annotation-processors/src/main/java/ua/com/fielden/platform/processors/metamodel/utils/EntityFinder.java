@@ -221,7 +221,7 @@ public class EntityFinder extends ElementFinder {
             return Optional.empty();
         }
 
-        final Stream<EntityElement> parents = findSuperclassesBelow(entity.element(), rootType).stream().map(this::newEntityElement);
+        final Stream<EntityElement> parents = streamSuperclassesBelow(entity.element(), rootType).map(this::newEntityElement);
         return Stream.concat(Stream.of(entity), parents)
             .map(elt -> findDeclaredProperty(elt, name))
             .filter(Optional::isPresent)

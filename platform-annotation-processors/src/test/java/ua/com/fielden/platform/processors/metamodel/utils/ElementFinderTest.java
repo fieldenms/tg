@@ -149,6 +149,23 @@ public class ElementFinderTest {
             assertEquals(List.of(), finder.findSuperclasses(finder.getTypeElement(FindSuperclasses_Sub.class), String.class));
         });
     }
+
+    @Test
+    public void findSuperclassesBelow_returns_an_ordered_hierarchy_of_superclasses_below_the_root_type() {
+        processAndEvaluate(finder -> {
+            // superclassesBelow of Sub (root = Object) = [Sup]
+            assertEquals(Stream.of(FindSuperclasses_Sup.class).map(c -> finder.getTypeElement(c)).toList(),
+                    finder.findSuperclassesBelow(finder.getTypeElement(FindSuperclasses_Sub.class), Object.class));
+            // superclassesBelow of Sub (root = Sup) = []
+            assertEquals(List.of(), 
+                    finder.findSuperclassesBelow(finder.getTypeElement(FindSuperclasses_Sub.class), FindSuperclasses_Sup.class));
+            // superclassesBelow of Sub (root = Sub) = []
+            assertEquals(List.of(), 
+                    finder.findSuperclassesBelow(finder.getTypeElement(FindSuperclasses_Sub.class), FindSuperclasses_Sub.class));
+            // unrelated hierarchies result into an empty list
+            assertEquals(List.of(), finder.findSuperclassesBelow(finder.getTypeElement(FindSuperclasses_Sub.class), String.class));
+        });
+    }
     // where
     private static interface FindSuperclasses_IFace {}
     private static class FindSuperclasses_Sup implements FindSuperclasses_IFace {}
