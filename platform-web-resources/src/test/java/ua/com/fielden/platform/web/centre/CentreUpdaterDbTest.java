@@ -17,6 +17,8 @@ import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersistentChild;
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationNonPersistentCompositeChild;
 import ua.com.fielden.platform.sample.domain.TgCentreDiffSerialisationPersistentChild;
+import ua.com.fielden.platform.sample.domain.TgUnion;
+import ua.com.fielden.platform.sample.domain.TgUnionType1;
 import ua.com.fielden.platform.test.AbstractDomainDrivenTestCase;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
 
@@ -54,6 +56,18 @@ public class CentreUpdaterDbTest extends AbstractDaoTestCase {
     public void critOnlySingle_entity_value_notFound() {
         final TgCentreDiffSerialisationPersistentChild propertyVal = (TgCentreDiffSerialisationPersistentChild) createMockNotFoundEntity(TgCentreDiffSerialisationPersistentChild.class, "UNKNOWN");
         testDiffCreationAndApplication(CentreUpdaterTestMixin::create, centre -> centre.getFirstTick().setValue(ROOT, "entityPropCritSingle", propertyVal), expectedDiffWithValue("entityPropCritSingle", VALUE.name(), createNotFoundMockString("UNKNOWN")), companionFinder());
+    }
+    
+    @Test
+    public void critOnlySingle_union_entity_value() {
+        final TgUnion propertyVal = new_(TgUnion.class).setUnion1(save(new_(TgUnionType1.class, "Union1")));
+        testDiffCreationAndApplication(CentreUpdaterTestMixin::create, centre -> centre.getFirstTick().setValue(ROOT, "unionEntityPropCritSingle", propertyVal), expectedDiffWithValue("unionEntityPropCritSingle", VALUE.name(), ID_PREFIX + Long.toString(propertyVal.getId())), companionFinder());
+    }
+    
+    @Test
+    public void critOnlySingle_union_entity_value_notFound() {
+        final TgUnion propertyVal = (TgUnion) createMockNotFoundEntity(TgUnion.class, "UNKNOWN");
+        testDiffCreationAndApplication(CentreUpdaterTestMixin::create, centre -> centre.getFirstTick().setValue(ROOT, "unionEntityPropCritSingle", propertyVal), expectedDiffWithValue("unionEntityPropCritSingle", VALUE.name(), createNotFoundMockString("UNKNOWN")), companionFinder());
     }
     
     @Test

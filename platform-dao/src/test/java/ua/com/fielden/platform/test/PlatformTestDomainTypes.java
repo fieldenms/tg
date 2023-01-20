@@ -66,6 +66,10 @@ import ua.com.fielden.platform.sample.domain.TgReVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgSubSystem;
 import ua.com.fielden.platform.sample.domain.TgSystem;
 import ua.com.fielden.platform.sample.domain.TgTimesheet;
+import ua.com.fielden.platform.sample.domain.TgUnion;
+import ua.com.fielden.platform.sample.domain.TgUnionCommonType;
+import ua.com.fielden.platform.sample.domain.TgUnionType1;
+import ua.com.fielden.platform.sample.domain.TgUnionType2;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 import ua.com.fielden.platform.sample.domain.TgVehicleFuelUsage;
@@ -189,6 +193,10 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(EntityOne.class);
         add(EntityTwo.class);
         add(UnionEntity.class);
+        add(TgUnion.class);
+        add(TgUnionType1.class);
+        add(TgUnionType2.class);
+        add(TgUnionCommonType.class);
     }
 
     @Override

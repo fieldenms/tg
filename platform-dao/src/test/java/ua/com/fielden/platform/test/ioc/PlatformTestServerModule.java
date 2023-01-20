@@ -179,6 +179,11 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(ITgCentreDiffSerialisationNonPersistentCompositeChild.class).to(TgCentreDiffSerialisationNonPersistentCompositeChildDao.class);
         bind(EntityWithDynamicRequirednessCo.class).to(EntityWithDynamicRequirednessDao.class);
 
+        bind(TgUnionCo.class).to(TgUnionDao.class);
+        bind(TgUnionType1Co.class).to(TgUnionType1Dao.class);
+        bind(TgUnionType2Co.class).to(TgUnionType2Dao.class);
+        bind(TgUnionCommonTypeCo.class).to(TgUnionCommonTypeDao.class);
+
         // FIXME the following approach should have been the correct one for binding companion objects,
         //       however, not all test domain entities actually have companions, hence manual binding...
         //       this should really be corrected at some stage
