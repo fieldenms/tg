@@ -180,6 +180,38 @@ public class EntityFinderTest {
               entityFinder.processProperties(props, entityElement).stream().map(p -> p.getSimpleName().toString()).collect(joining(", "))); 
     }
 
+    /**
+     * Property {@code desc} is included for an entity with no {@link DescTitle} and no declared {@code desc} 
+     * if it extends an entity annotated with {@link DescTitle}.
+     */
+    @Test
+    public void processProperties_includes_desc_for_NoDescTitleAndNoDeclaredDesc_extends_SuperUser() {
+        final EntityElement entity = entityFinder.findEntity(NoDescTitleAndNoDeclaredDesc.class);
+        final Set<PropertyElement> props = entityFinder.findProperties(entity);
+
+        final String expectedProps = "key, roles, base, basedOnUser, email, active, ssoOnly, refCount, createdBy, createdDate, createdTransactionGuid, lastUpdatedBy, lastUpdatedDate, lastUpdatedTransactionGuid, desc, id";
+        assertEquals(expectedProps,
+                entityFinder.processProperties(props, entity).stream().map(p -> p.getSimpleName().toString()).collect(joining(", "))); 
+    }
+    // where
+    public static class NoDescTitleAndNoDeclaredDesc extends SuperUser { }
+
+    /**
+     * Property {@code desc} is included for an entity with no {@link DescTitle} and no declared {@code desc} 
+     * if it extends an entity that declares {@code desc}.
+     */
+    @Test
+    public void processProperties_includes_desc_for_NoDescTitleAndNoDeclaredDesc2_extends_SuperUserWithDeclaredDesc() {
+        final EntityElement entity = entityFinder.findEntity(NoDescTitleAndNoDeclaredDesc2.class);
+        final Set<PropertyElement> props = entityFinder.findProperties(entity);
+
+        final String expectedProps = "desc, key, roles, base, basedOnUser, email, active, ssoOnly, refCount, createdBy, createdDate, createdTransactionGuid, lastUpdatedBy, lastUpdatedDate, lastUpdatedTransactionGuid, id";
+        assertEquals(expectedProps,
+                entityFinder.processProperties(props, entity).stream().map(p -> p.getSimpleName().toString()).collect(joining(", "))); 
+    }
+    // where
+    public static class NoDescTitleAndNoDeclaredDesc2 extends SuperUserWithDeclaredDesc { }
+
     @Test
     public void isPropertyOfEntityType_correctly_distiguishes_between_properties_of_an_entity_type_and_other_types() {
         final TypeElement typeElement = entityFinder.getTypeElement(User.class);
