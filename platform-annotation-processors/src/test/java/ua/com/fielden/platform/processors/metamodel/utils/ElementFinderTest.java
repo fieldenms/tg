@@ -2,6 +2,7 @@ package ua.com.fielden.platform.processors.metamodel.utils;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -484,6 +485,26 @@ public class ElementFinderTest {
             // obtaining a non-existent element's value throws
             assertThrows(ElementFinderException.class, () -> finder.getAnnotationElementValue(annotMirrorWithDefaults, "whatever"));
         });
+    }
+
+    @Test
+    public void getAnnotationElementValueOfClassType_returns_the_type_mirror_representing_the_class_used_as_annotation_element_value() {
+        // @AnnotWithClassValue(List.class) class Example {}
+        final TypeSpec example = TypeSpec.classBuilder("Example")
+                .addAnnotation(AnnotationSpec.builder(AnnotWithClassValue.class).addMember("value", "$T.class", List.class).build())
+                .build();
+
+        processAndEvaluate(List.of(example), finder -> {
+            final TypeElement exampleElt = finder.elements.getTypeElement(example.name);
+            final AnnotWithClassValue annot = exampleElt.getAnnotation(AnnotWithClassValue.class);
+            assertNotNull(annot);
+            final TypeMirror typeMirror = finder.getAnnotationElementValueOfClassType(annot, a -> a.value());
+            assertTrue(finder.isSameType(typeMirror, List.class));
+        });
+    }
+    // where
+    public static @interface AnnotWithClassValue {
+        Class<?> value();
     }
 
     @Test
