@@ -159,6 +159,7 @@ public class ElementFinder {
         return iterate(Optional.of(typeElement), Optional::isPresent, elt -> elt.flatMap(this::findSuperclass))
                 .map(Optional::get)
                 .takeWhile(elt -> !isSameType(elt, rootType))
+                // drop the typeElement itself
                 .skip(1)
                 .toList();
     }

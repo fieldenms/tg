@@ -12,7 +12,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.lang.model.element.ElementKind;
@@ -173,11 +172,10 @@ public class EntityFinder extends ElementFinder {
     }
 
     /**
-     * Reads values for attributes {@code value} and {@code desc} using Mirror API and returns them as a pair.
-     * Assumes an empty strings as the default.
+     * Returns a stream of all properties (both declared and inherited) with no guarantees on element uniqueness.
      *
-     * @param annotationMirror
-     * @return
+     * @see PropertyElement#equals(Object)
+     * @param entityElement
      */
     public Stream<PropertyElement> streamProperties(final EntityElement entityElement) {
         return Stream.concat(streamDeclaredProperties(entityElement), streamInheritedProperties(entityElement));
@@ -188,19 +186,13 @@ public class EntityFinder extends ElementFinder {
      * <p>
      * Property uniqueness is described by {@link PropertyElement#equals(Object)}.
      * Entity hierarchy is traversed in natural order.
-     * <p>
-     * Two properties represent an edge-case:
-     * <ul>
-     * <li>id – only included if this or any of the entities represented by supertypes, is persistent.
-     * <li>desc – only included if this or any of the entities represented by supertypes, is annotated with {@code @DescTitle}.
-     * </ul>
      */
     public Set<PropertyElement> findProperties(final EntityElement entityElement) {
         final Set<PropertyElement> properties = new LinkedHashSet<>(findDeclaredProperties(entityElement));
         properties.addAll(findInheritedProperties(entityElement));
         return Collections.unmodifiableSet(properties);
     }
-    
+
     /**
      * Returns an optional describing a property of {@code entityElement} named {@code name}. 
      * <p>
