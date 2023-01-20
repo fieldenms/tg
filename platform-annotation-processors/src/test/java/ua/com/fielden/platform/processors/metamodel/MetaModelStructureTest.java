@@ -356,9 +356,9 @@ public class MetaModelStructureTest {
         final MetaModelElement mmSubEntityWithKeyType = findMetaModel(subEntityWithKeyType);
 
         // SubEntity's meta-model should extend SuperEntity's meta-model
-        assertTrue(elementFinder.getTypes().isSameType(mmSubEntityWithKeyType.getSuperclass(), mmAbstractSuperEntityWithouKeyType.asType()));
+        assertTrue(elementFinder.types.isSameType(mmSubEntityWithKeyType.getSuperclass(), mmAbstractSuperEntityWithouKeyType.asType()));
 
-        final Set<PropertyElement> subEntityWithKeyTypeDeclaredProps = entityFinder.findDeclaredProperties(subEntityWithKeyType);
+        final List<PropertyElement> subEntityWithKeyTypeDeclaredProps = entityFinder.findDeclaredProperties(subEntityWithKeyType);
         final Set<ExecutableElement> subEntityWithKeyTypeDeclaredMetamodeledProps = metaModelFinder.findDeclaredPropertyMethods(mmSubEntityWithKeyType);
 
         assertEquals(1, subEntityWithKeyTypeDeclaredProps.size());
@@ -367,7 +367,8 @@ public class MetaModelStructureTest {
 
         final Optional<ExecutableElement> maybeKey = subEntityWithKeyTypeDeclaredMetamodeledProps.stream().filter(pe -> KEY.equals(pe.getSimpleName().toString())).findFirst();
         assertTrue("Property %s should have been modelled.".formatted(KEY), maybeKey.isPresent());
-        assertTrue("Unexpected type for meta-modelled property %s.".formatted(KEY), elementFinder.isMethodReturnType(maybeKey.get(), PropertyMetaModel.class));
+        assertTrue("Unexpected type for meta-modelled property %s.".formatted(KEY), 
+                elementFinder.isSameType(maybeKey.get().getReturnType(), PropertyMetaModel.class));
     }
 
     @Test
@@ -380,9 +381,9 @@ public class MetaModelStructureTest {
         final MetaModelElement mmSubEntityWithKeyType = findMetaModel(subEntityWithKeyType);
 
         // SubEntity's meta-model should extend SuperEntity's meta-model
-        assertTrue(elementFinder.getTypes().isSameType(mmSubEntityWithKeyType.getSuperclass(), mmAbstractSuperEntityWithouKeyType.asType()));
+        assertTrue(elementFinder.types.isSameType(mmSubEntityWithKeyType.getSuperclass(), mmAbstractSuperEntityWithouKeyType.asType()));
         
-        final Set<PropertyElement> subEntityWithKeyTypeDeclaredProps = entityFinder.findDeclaredProperties(subEntityWithKeyType);
+        final List<PropertyElement> subEntityWithKeyTypeDeclaredProps = entityFinder.findDeclaredProperties(subEntityWithKeyType);
         final Set<ExecutableElement> subEntityWithKeyTypeDeclaredMetamodeledProps = metaModelFinder.findDeclaredPropertyMethods(mmSubEntityWithKeyType);
 
         assertEquals(1, subEntityWithKeyTypeDeclaredProps.size());
@@ -391,7 +392,8 @@ public class MetaModelStructureTest {
 
         final Optional<ExecutableElement> maybeKey = subEntityWithKeyTypeDeclaredMetamodeledProps.stream().filter(pe -> KEY.equals(pe.getSimpleName().toString())).findFirst();
         assertTrue("Property %s should have been modelled.".formatted(KEY), maybeKey.isPresent());
-        assertTrue("Unexpected type for meta-modelled property %s.".formatted(KEY), elementFinder.isMethodReturnType(maybeKey.get(), SubEntityMetaModel.class));
+        assertTrue("Unexpected type for meta-modelled property %s.".formatted(KEY),
+                elementFinder.isSameType(maybeKey.get().getReturnType(), SubEntityMetaModel.class));
     }
 
     @Test
@@ -404,9 +406,9 @@ public class MetaModelStructureTest {
         final MetaModelElement mmSubEntityWithKeyType = findMetaModel(subEntityWithKeyType);
 
         // SubEntity's meta-model extends SuperEntity's meta-model ?
-        assertTrue(elementFinder.getTypes().isSameType(mmSubEntityWithKeyType.getSuperclass(), mmAbstractSuperEntityWithouKeyType.asType()));
+        assertTrue(elementFinder.types.isSameType(mmSubEntityWithKeyType.getSuperclass(), mmAbstractSuperEntityWithouKeyType.asType()));
         
-        final Set<PropertyElement> subEntityWithKeyTypeDeclaredProps = entityFinder.findDeclaredProperties(subEntityWithKeyType);
+        final List<PropertyElement> subEntityWithKeyTypeDeclaredProps = entityFinder.findDeclaredProperties(subEntityWithKeyType);
         final Set<ExecutableElement> subEntityWithKeyTypeDeclaredMetamodeledProps = metaModelFinder.findDeclaredPropertyMethods(mmSubEntityWithKeyType);
 
         assertEquals(1, subEntityWithKeyTypeDeclaredProps.size());
@@ -415,7 +417,8 @@ public class MetaModelStructureTest {
 
         final Optional<ExecutableElement> maybeKey = subEntityWithKeyTypeDeclaredMetamodeledProps.stream().filter(pe -> KEY.equals(pe.getSimpleName().toString())).findFirst();
         assertTrue("Property %s should have been modelled.".formatted(KEY), maybeKey.isPresent());
-        assertTrue("Unexpected type for meta-modelled property %s.".formatted(KEY), elementFinder.isMethodReturnType(maybeKey.get(), PropertyMetaModel.class));
+        assertTrue("Unexpected type for meta-modelled property %s.".formatted(KEY),
+                elementFinder.isSameType(maybeKey.get().getReturnType(), PropertyMetaModel.class));
     }
 
     // ============================ HELPER METHODS ============================
