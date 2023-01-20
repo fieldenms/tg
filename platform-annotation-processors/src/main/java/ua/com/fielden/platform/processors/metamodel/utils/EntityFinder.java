@@ -56,7 +56,7 @@ public class EntityFinder extends ElementFinder {
      * @see ElementFinder#getTypeElement(Class)
      * @throws ElementFinderException if no coresponding type element was found
      */
-    public EntityElement findEntity(final Class<? extends AbstractEntity<?>> clazz) {
+    public EntityElement findEntity(final Class<? extends AbstractEntity> clazz) {
         return newEntityElement(getTypeElement(clazz));
     }
 
