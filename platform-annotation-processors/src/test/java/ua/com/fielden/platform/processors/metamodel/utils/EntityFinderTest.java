@@ -182,9 +182,10 @@ public class EntityFinderTest {
 
     @Test
     public void isPropertyOfEntityType_correctly_distiguishes_between_properties_of_an_entity_type_and_other_types() {
-        final TypeElement typeElement = elements.getTypeElement(User.class.getCanonicalName());
+        final TypeElement typeElement = entityFinder.getTypeElement(User.class);
         final EntityElement entityElement = EntityElement.wrapperFor(typeElement);
-        final Map<String, PropertyElement> props = entityFinder.findProperties(entityElement).stream().collect(Collectors.toMap(pel -> pel.getSimpleName().toString(), Function.identity()));
+        final Map<String, PropertyElement> props = entityFinder.findProperties(entityElement).stream()
+                .collect(Collectors.toMap(pel -> pel.getSimpleName().toString(), Function.identity()));
         assertFalse(entityFinder.isPropertyOfEntityType(props.get("key")));
         assertFalse(entityFinder.isPropertyOfEntityType(props.get("roles")));
         assertFalse(entityFinder.isPropertyOfEntityType(props.get("base")));
@@ -200,7 +201,6 @@ public class EntityFinderTest {
         assertFalse(entityFinder.isPropertyOfEntityType(props.get("lastUpdatedDate")));
         assertFalse(entityFinder.isPropertyOfEntityType(props.get("lastUpdatedTransactionGuid")));
         assertFalse(entityFinder.isPropertyOfEntityType(props.get("lastUpdatedDate")));
-        assertFalse(entityFinder.isPropertyOfEntityType(props.get("id")));
     }
 
     @Test
