@@ -27,7 +27,7 @@ public class VerifierTestUtils {
      * @return
      * @throws Throwable
      */
-    public static boolean compileAndPrintDiagnostics(final Compilation compilation) throws Throwable {
+    public static boolean compileAndPrintDiagnostics(final Compilation compilation) {
         final boolean success = compilation.compile();
         compilation.printDiagnostics();
         return success;

@@ -7,6 +7,7 @@ import static java.util.stream.Stream.iterate;
 import static ua.com.fielden.platform.utils.StreamUtils.stopAfter;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
@@ -145,7 +146,29 @@ public class ElementFinder {
     }
 
     /**
-     * Collects the elements of {@link #streamSuperclasses(TypeElement)} into a list. 
+     * Like {@link #findSuperclasses(TypeElement, Class)}, but doesn't include {@code rootType} in the resulting list.
+     * 
+     * @param typeElement
+     * @param rootType
+     * @return
+     */
+    public List<TypeElement> findSuperclassesBelow(final TypeElement typeElement, final Class<?> rootType) {
+        if (!isSubtype(typeElement.asType(), rootType)) {
+            return List.of();
+        }
+        return iterate(Optional.of(typeElement), Optional::isPresent, elt -> elt.flatMap(this::findSuperclass))
+                .map(Optional::get)
+                .takeWhile(elt -> !isSameType(elt, rootType))
+                .skip(1)
+                .toList();
+    }
+
+    /**
+     * The same as {@link #findSuperclasses(TypeElement, Class)}, but with the {@code rootType} set as {@code Object}. 
+     *
+     * @param typeElement
+     * @param includeRootClass
+     * @return
      */
     public List<TypeElement> findSuperclasses(final TypeElement typeElement) {
         return streamSuperclasses(typeElement, ROOT_CLASS).toList();

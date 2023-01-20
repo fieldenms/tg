@@ -6,11 +6,13 @@ import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.AN
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.annotation.Annotation;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.lang.model.element.ElementKind;
@@ -77,7 +79,7 @@ public class EntityFinder extends ElementFinder {
     public List<PropertyElement> findDeclaredProperties(final EntityElement entityElement) {
         return streamDeclaredProperties(entityElement).toList();
     }
-    
+
     /**
      * Returns an optional describing a property element that represents a property of {@code entityElement} named {@code propName}.
      *
@@ -110,37 +112,71 @@ public class EntityFinder extends ElementFinder {
      * Property uniqueness is described by {@link PropertyElement#equals(Object)}.
      * Entity hierarchy is traversed in natural order.
      * <p>
-     * Two properties represent an edge-case:
-     * <ul>
-     * <li>id – only included if this or any of the entities represented by supertypes, is persistent.
-     * <li>desc – only included if this or any of the entities represented by supertypes, is annotated with {@code @DescTitle}.
-     * </ul>
+     * A property is defined simply as a field annotated with {@link IsProperty}. For more detailed processing use {@link #processProperties(Set, EntityElement)}.
      *
-     * @param entityElement
+     * @param entity
      * @return
      */
-    public Set<PropertyElement> findInheritedProperties(final EntityElement entityElement) {
-        final Set<PropertyElement> props = streamInheritedProperties(entityElement).collect(toCollection(LinkedHashSet::new));
-
-        // let's see if we need to include "id" as a property -- only persistent entities are of interest
-        if (isPersistentEntityType(entityElement) || doesExtendPersistentEntity(entityElement)) {
-            // a persistent entity must have property "id"
-            final VariableElement idProp = findField(entityElement, AbstractEntity.ID).orElseThrow();
-            props.add(new PropertyElement(idProp));
-        }
-        // and now similar for property "desc", which may need to be removed
-        if (findAnnotation(entityElement, DescTitle.class).isEmpty()) {
-            findField(entityElement, AbstractEntity.DESC).ifPresent(elt -> props.remove(new PropertyElement(elt)));
-        }
-
-        return Collections.unmodifiableSet(props);
+    public Set<PropertyElement> findInheritedProperties(final EntityElement entity) {
+        return streamInheritedFields(entity, ROOT_ENTITY_CLASS)
+                .filter(this::isProperty)
+                .map(PropertyElement::new)
+                .collect(toCollection(LinkedHashSet::new));
     }
 
     /**
-     * Returns a stream of all properties (both declared and inherited) with no guarantees on element uniqueness.
+     * Processes properties of the entity element, collecting them into an unmodifiable set with preserved order.
+     * <p>
+     * The following properties are processed:
+     * <ul>
+     *  <li>{@code id} – included if this or any of the entities represented by supertypes, is persistent.
+     *  <li>{@code desc} – included if this or any of the entities represented by supertypes, declares {@code desc} or is annotated 
+     *  with {@code @DescTitle}, excluded otherwise.
+     * </ul>
      * 
-     * @see PropertyElement#equals(Object)
-     * @param entityElement
+     * @param properties
+     * @param entity
+     */
+    public Set<PropertyElement> processProperties(final Collection<PropertyElement> properties, final EntityElement entity) {
+        final Set<PropertyElement> processed = new LinkedHashSet<>(properties);
+        processPropertyId(processed, entity);
+        processPropertyDesc(processed, entity);
+        return Collections.unmodifiableSet(processed);
+    }
+    // where
+    private void processPropertyId(final Set<PropertyElement> properties, final EntityElement entity) {
+        // include property "id" only for persistent entities
+        if (isPersistentEntityType(entity) || doesExtendPersistentEntity(entity)) {
+            // "id" must exist
+            final VariableElement idElt = findField(entity, AbstractEntity.ID)
+                    .orElseThrow(() -> new ElementFinderException("Field [%s] was not found in [%s].".formatted(AbstractEntity.ID, entity)));
+            properties.add(new PropertyElement(idElt));
+        }
+    }
+    // and
+    private void processPropertyDesc(final Set<PropertyElement> properties, final EntityElement entity) {
+        // include property "desc" in the following cases:
+        // 1. property "desc" is declared by entity or one of its supertypes below AbstractEntity
+        // 2. entity or any of its supertypes is annotated with @DescTitle
+        final PropertyElement descProp = findPropertyBelow(entity, AbstractEntity.DESC, AbstractEntity.class);
+        if (descProp != null) {
+            properties.add(descProp);
+        }
+        else if (findAnnotation(entity, DescTitle.class).isPresent()) {
+            // "desc" must exist
+            final VariableElement descElt = findField(entity, AbstractEntity.DESC)
+                    .orElseThrow(() -> new ElementFinderException("Field [%s] was not found in [%s].".formatted(AbstractEntity.DESC, entity)));
+            properties.add(new PropertyElement(descElt));
+        }
+        // in other cases we need to exclude it
+        else properties.removeIf(elt -> elt.getSimpleName().toString().equals(AbstractEntity.DESC));
+    }
+
+    /**
+     * Reads values for attributes {@code value} and {@code desc} using Mirror API and returns them as a pair.
+     * Assumes an empty strings as the default.
+     *
+     * @param annotationMirror
      * @return
      */
     public Stream<PropertyElement> streamProperties(final EntityElement entityElement) {
@@ -178,6 +214,22 @@ public class EntityFinder extends ElementFinder {
         return streamProperties(entityElement)
                 .filter(elt -> elt.getSimpleName().toString().equals(name))
                 .findFirst();
+    }
+
+    /**
+     * Finds a property of an entity by traversing it and its hierarchy below {@code rootType}, which is not searched.
+     * @param entity
+     * @param name
+     * @param rootType the type at which traversal stops
+     * @return
+     */
+    public PropertyElement findPropertyBelow(final EntityElement entity, final String name, final Class<?> rootType) {
+        return Optional.ofNullable(findDeclaredProperty(entity, name))
+                .orElseGet(() -> findSuperclassesBelow(entity, rootType).stream()
+                                    .map(this::newEntityElement)
+                                    .map(el -> findDeclaredProperty(el, name))
+                                    .filter(p -> p != null)
+                                    .findFirst().orElse(null));
     }
 
     /**

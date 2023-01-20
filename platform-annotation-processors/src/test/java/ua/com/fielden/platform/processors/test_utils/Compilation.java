@@ -25,6 +25,7 @@ import javax.tools.ToolProvider;
 
 import org.junit.runners.model.Statement;
 
+import ua.com.fielden.platform.processors.test_utils.exceptions.CompilationException;
 import ua.com.fielden.platform.types.try_wrapper.ThrowableConsumer;
 
 /**
@@ -110,7 +111,7 @@ public final class Compilation {
      * @return
      * @throws Throwable
      */
-    public boolean compileAndEvaluatef(final ThrowableConsumer<ProcessingEnvironment> evaluator) throws Throwable {
+    public boolean compileAndEvaluatef(final ThrowableConsumer<ProcessingEnvironment> evaluator) {
         final EvaluatingProcessor evaluatingProcessor = new EvaluatingProcessor(evaluator);
         final boolean success = doCompile(evaluatingProcessor);
         evaluatingProcessor.throwIfStatementThrew();
@@ -124,11 +125,11 @@ public final class Compilation {
      * @return
      * @throws Throwable
      */
-    public boolean compileAndEvaluate(final Consumer<ProcessingEnvironment> evaluator) throws Throwable {
+    public boolean compileAndEvaluate(final Consumer<ProcessingEnvironment> evaluator) {
         return compileAndEvaluatef((procEnv) -> evaluator.accept(procEnv));
     }
     
-    public boolean compile() throws Throwable {
+    public boolean compile() {
         return compileAndEvaluate((procEnv) -> {});
     }
 
@@ -171,7 +172,7 @@ public final class Compilation {
     private final class EvaluatingProcessor extends AbstractProcessor {
 
         private final ThrowableConsumer<ProcessingEnvironment> evaluator;
-        private Throwable thrown;
+        private CompilationException thrown;
 
         public EvaluatingProcessor(final ThrowableConsumer<ProcessingEnvironment> evaluator) {
             this.evaluator = evaluator;
@@ -204,7 +205,7 @@ public final class Compilation {
                 try {
                     evaluator.accept(processingEnv);
                 } catch (final Throwable ex) {
-                    thrown = ex;
+                    thrown = new CompilationException(ex);
                 }
             }
             return false;
@@ -213,7 +214,7 @@ public final class Compilation {
         /** 
          * Throws what {@code base} {@link Statement} threw, if anything. 
          */
-        void throwIfStatementThrew() throws Throwable {
+        void throwIfStatementThrew() {
             if (thrown != null) {
                 throw thrown;
             }
