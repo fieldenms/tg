@@ -21,7 +21,12 @@ import ua.com.fielden.platform.processors.metamodel.exceptions.ForwardingElement
  *
  * @param <E> the implementation of {@link Element} to forward calls to
  */
+// TODO Do not extend Element, because this polymorphism makes certain errors possible,
+// such as passing an instance of a class implementing this abstract class to some API that expects its own internal implementation instead.
+// For example, Elements.getPackageOf(Element) will throw an exception, if its argument is not of an internal type that implements Element.
+// Therefore, composition should be facilitated instead, e.g. myAbstractForwardingElement.element
 public abstract class AbstractForwardingElement<E extends Element> implements Element {
+    // TODO make public and remove getter, this field is final anyway
     protected final E element;
     
     protected AbstractForwardingElement(final E element) {
