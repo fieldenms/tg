@@ -5,7 +5,9 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.VAL
 import static ua.com.fielden.platform.web.centre.CentreUpdaterTestMixin.ROOT;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterTestMixin.expectedDiffWithValue;
 import static ua.com.fielden.platform.web.centre.CentreUpdaterTestMixin.testDiffCreationAndApplication;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createMockMoreThanOneEntity;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createMockNotFoundEntity;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createMoreThanOneMockString;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createNotFoundMockString;
 
 import java.lang.reflect.Field;
@@ -68,6 +70,12 @@ public class CentreUpdaterDbTest extends AbstractDaoTestCase {
     public void critOnlySingle_union_entity_value_notFound() {
         final TgUnion propertyVal = (TgUnion) createMockNotFoundEntity(TgUnion.class, "UNKNOWN");
         testDiffCreationAndApplication(CentreUpdaterTestMixin::create, centre -> centre.getFirstTick().setValue(ROOT, "unionEntityPropCritSingle", propertyVal), expectedDiffWithValue("unionEntityPropCritSingle", VALUE.name(), createNotFoundMockString("UNKNOWN")), companionFinder());
+    }
+    
+    @Test
+    public void critOnlySingle_union_entity_value_moreThanOne() {
+        final TgUnion propertyVal = (TgUnion) createMockMoreThanOneEntity(TgUnion.class, "MORETHANONE");
+        testDiffCreationAndApplication(CentreUpdaterTestMixin::create, centre -> centre.getFirstTick().setValue(ROOT, "unionEntityPropCritSingle", propertyVal), expectedDiffWithValue("unionEntityPropCritSingle", VALUE.name(), createMoreThanOneMockString("MORETHANONE")), companionFinder());
     }
     
     @Test

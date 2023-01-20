@@ -13,6 +13,7 @@ import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractUnionEntity.unionProperties;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
+import static ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker.getErrorMessage;
 import static ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker.mock;
 import static ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker.setErrorMessage;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
@@ -98,6 +99,10 @@ public class EntityResourceUtils {
      * Used to indicate the start of 'not found mock' serialisation sequence.
      */
     private static final String NOT_FOUND_MOCK_PREFIX = "__________NOT_FOUND__________";
+    /**
+     * Used to indicate the start of 'more than one mock' serialisation sequence.
+     */
+    private static final String MORE_THAN_ONE_MOCK_PREFIX = "__________MORE_THAN_ONE__________";
     private static final Logger logger = getLogger(EntityResourceUtils.class);
     /**
      * Standard {@link PropertyDescriptor}'s convertor to string. Includes handling for 'not found mock' instances.
@@ -369,6 +374,16 @@ public class EntityResourceUtils {
     }
 
     /**
+     * Creates a string that can be used for 'more than one mock' entity serialisation.
+     *
+     * @param stringQuery
+     * @return
+     */
+    public static String createMoreThanOneMockString(final String stringQuery) {
+        return MORE_THAN_ONE_MOCK_PREFIX + stringQuery;
+    }
+
+    /**
      * Returns indication whether <code>obj</code> represents 'mock not found entity'.
      *
      * @param obj
@@ -387,7 +402,7 @@ public class EntityResourceUtils {
      */
     public static <T extends AbstractEntity<?>> String entityWithMocksToString(final Function<T, String> specificConverter, final T entity) {
         if (isMockNotFoundEntity(entity)) {
-            return createNotFoundMockString(entity.get(DESC));
+            return getErrorMessage(entity).isPresent() ? createMoreThanOneMockString(entity.get(DESC)) : createNotFoundMockString(entity.get(DESC));
         } else {
             return specificConverter.apply(entity);
         }
@@ -404,6 +419,8 @@ public class EntityResourceUtils {
     public static <T extends AbstractEntity<?>> T entityWithMocksFromString(final Function<String, T> specificConverter, final String str, final Class<? extends AbstractEntity> type) {
         if (str.startsWith(NOT_FOUND_MOCK_PREFIX)) {
             return (T) createMockNotFoundEntity(type, str.replaceFirst(quote(NOT_FOUND_MOCK_PREFIX), ""));
+        } else if (str.startsWith(MORE_THAN_ONE_MOCK_PREFIX)) {
+            return (T) createMockMoreThanOneEntity(type, str.replaceFirst(quote(MORE_THAN_ONE_MOCK_PREFIX), ""));
         }
         return specificConverter.apply(str);
     }
