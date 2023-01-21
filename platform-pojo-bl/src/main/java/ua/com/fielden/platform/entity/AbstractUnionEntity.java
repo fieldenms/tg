@@ -3,7 +3,7 @@ package ua.com.fielden.platform.entity;
 import static java.lang.String.format;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.reflection.Finder.findRealProperties;
-import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
+import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -244,16 +244,12 @@ public abstract class AbstractUnionEntity extends AbstractEntity<String> {
         if (this == obj) {
             return true;
         }
-        if (!(obj instanceof AbstractUnionEntity)) {
+        // use standard equality from AbstractEntity and, if equals, compare active entities
+        if (!super.equals(obj)) { // there are special handling for id-only-proxies and may be more specialisation in future
             return false;
         }
-        // let's ensure that types match
-        final AbstractUnionEntity that = (AbstractUnionEntity) obj;
-        if (this.getType() != that.getType()) {
-            return false;
-        }
-
-        return areEqual(this.activeEntity(), that.activeEntity());
+        // this.getType() and obj.getType() are equal as per super.equals call; so we can safely convert 'obj' to AbstractUnionEntity
+        return equalsEx(this.activeEntity(), ((AbstractUnionEntity) obj).activeEntity());
     }
 
     @Override

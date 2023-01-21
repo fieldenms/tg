@@ -183,18 +183,26 @@ public class AbstractUnionEntityTest {
 
     @Test
     public void union_entities_with_same_key_representations_but_different_active_properties_arent_equal() {
-        final UnionEntity unionEntity1 = factory.newEntity(UnionEntity.class);
-
-        final EntityOne one = factory.newEntity(EntityOne.class, 1L, "1");
-        one.setDesc("DESC1");
-        unionEntity1.setPropertyOne(one);
-
-        final UnionEntity unionEntity2 = factory.newEntity(UnionEntity.class);
-
-        final EntityTwo two = factory.newEntity(EntityTwo.class, 2L, 1);
-        two.setDesc("DESC2");
-        unionEntity2.setPropertyTwo(two);
-
+        final UnionEntity unionEntity1 = factory.newEntity(UnionEntity.class).setPropertyOne(factory.newEntity(EntityOne.class, 1L, "1"));
+        final UnionEntity unionEntity2 = factory.newEntity(UnionEntity.class).setPropertyTwo(factory.newEntity(EntityTwo.class, 2L, 1));
         assertNotEquals(unionEntity1, unionEntity2);
     }
+
+    @Test
+    public void union_entities_with_same_key_representations_and_same_ids_but_different_active_properties_arent_equal() {
+        final UnionEntity unionEntity1 = factory.newEntity(UnionEntity.class).setPropertyOne(factory.newEntity(EntityOne.class, 1L, "1"));
+        final UnionEntity unionEntity2 = factory.newEntity(UnionEntity.class).setPropertyTwo(factory.newEntity(EntityTwo.class, 1L, 1));
+        assertNotEquals(unionEntity1, unionEntity2);
+    }
+
+    @Test
+    public void union_entities_with_different_key_representations_and_same_ids_and_same_active_property_arent_equal() {
+        final var entity1 = factory.newEntity(EntityOne.class, 1L, "1");
+        final var entity2 = factory.newEntity(EntityOne.class, 1L, "2");
+        assertNotEquals(entity1, entity2);
+        final UnionEntity unionEntity1 = factory.newEntity(UnionEntity.class).setPropertyOne(entity1);
+        final UnionEntity unionEntity2 = factory.newEntity(UnionEntity.class).setPropertyOne(entity2);
+        assertNotEquals(unionEntity1, unionEntity2);
+    }
+
 }
