@@ -35,7 +35,7 @@ public class MockNotFoundEntityMaker {
     public static final String MOCK_TYPE_ENDING = "_MOCK_VALUE_NOT_FOUND";
     public static final String COULD_NOT_SET_ERROR_MSG_ERR = "\"%s\" error message can not be set into [%s] field of [%s] mock entity.";
     public static final String COULD_NOT_ACCESS_ERROR_MSG_ERR = "Could not be access [%s] field of [%s] mock entity.";
-    private static final String errorMsgPropName = "errorMessage_";
+    private static final String ERROR_MSG_PROP_NAME = "errorMessage_";
 
     private MockNotFoundEntityMaker() { }
 
@@ -70,12 +70,14 @@ public class MockNotFoundEntityMaker {
         try {
             return (Class<? extends T>) TYPES.get(entityType.getName(), () -> {
                 final Builder<T> buddy = new ByteBuddy().subclass(entityType);
-                return buddy.defineField(errorMsgPropName, String.class, Visibility.PRIVATE).name(entityType.getName() + MOCK_TYPE_ENDING).make()
+                return buddy
+                        .defineField(ERROR_MSG_PROP_NAME, String.class, Visibility.PRIVATE)
+                        .name(entityType.getName() + MOCK_TYPE_ENDING).make()
                         .load(ClassLoader.getSystemClassLoader(), ClassLoadingStrategy.Default.WRAPPER)
                         .getLoaded();
             });
         } catch (final ExecutionException ex) {
-            throw new EntityException(String.format("Could not create a mock-not-found type for entity [%s].", entityType.getName()), ex);
+            throw new EntityException(format("Could not create a mock-not-found type for entity [%s].", entityType.getName()), ex);
         }
     }
 
@@ -89,13 +91,13 @@ public class MockNotFoundEntityMaker {
     public static <T extends AbstractEntity<?>> T setErrorMessage(final T mock, final String errMessage) {
         if (isMockNotFoundValue(mock)) {
             try {
-                final Field msgField = findFieldByName(mock.getClass(), errorMsgPropName);
+                final Field msgField = findFieldByName(mock.getClass(), ERROR_MSG_PROP_NAME);
                 final boolean isAccessible = msgField.canAccess(mock);
                 msgField.setAccessible(true);
                 msgField.set(mock, errMessage);
                 msgField.setAccessible(isAccessible);
-            } catch (IllegalArgumentException | IllegalAccessException e) {
-                throw new MockException(String.format(COULD_NOT_SET_ERROR_MSG_ERR, errMessage, errorMsgPropName, mock.getClass()));
+            } catch (IllegalArgumentException | IllegalAccessException ex) {
+                throw new MockException(format(COULD_NOT_SET_ERROR_MSG_ERR, errMessage, ERROR_MSG_PROP_NAME, mock.getClass()), ex);
             }
         }
         return mock;
@@ -111,14 +113,14 @@ public class MockNotFoundEntityMaker {
     public static <T extends AbstractEntity<?>> Optional<String> getErrorMessage(final T mock) {
         if (isMockNotFoundValue(mock)) {
             try {
-                final Field msgField = findFieldByName(mock.getClass(), errorMsgPropName);
+                final Field msgField = findFieldByName(mock.getClass(), ERROR_MSG_PROP_NAME);
                 final boolean isAccessible = msgField.canAccess(mock);
                 msgField.setAccessible(true);
                 final Optional<?> msgVal = ofNullable(msgField.get(mock));
                 msgField.setAccessible(isAccessible);
                 return msgVal.map(Object::toString);
-            } catch (final IllegalAccessException e) {
-                throw new MockException(format(COULD_NOT_ACCESS_ERROR_MSG_ERR, errorMsgPropName, mock.getClass()));
+            } catch (final IllegalAccessException ex) {
+                throw new MockException(format(COULD_NOT_ACCESS_ERROR_MSG_ERR, ERROR_MSG_PROP_NAME, mock.getClass()), ex);
             }
         }
         return empty();
