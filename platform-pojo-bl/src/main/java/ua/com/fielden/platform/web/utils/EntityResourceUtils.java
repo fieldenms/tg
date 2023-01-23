@@ -756,22 +756,28 @@ public class EntityResourceUtils {
                 return null;
             }
         } else if (isUnionEntityType(entityType)) {
-            return optActiveProp.map(activeProp -> {
-                final EntityResultQueryModel<AbstractEntity<?>> model = select(entityType).where().prop(activeProp + "." + KEY).iLike().val(searchString).model().setFilterable(true);
-                final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(fetch).model();
-                return companion.getEntity(qem);
-            }).orElseGet(() -> {
-                final EntityResultQueryModel<AbstractEntity<?>> model = select(entityType).where().prop(KEY).iLike().val(searchString).model().setFilterable(true);
-                final QueryExecutionModel<AbstractEntity<?>, EntityResultQueryModel<AbstractEntity<?>>> qem = from(model).with(fetch).model();
-                final List<AbstractEntity<?>> entities = companion.getAllEntities(qem);
-                if (entities.isEmpty()) {
-                    return null;
-                } else if (entities.size() == 1) {
-                    return (AbstractEntity)entities.get(0);
-                } else {
-                    return createMockMoreThanOneEntity(entityType, searchString);
-                }
-            });
+            final var entities = companion.getFirstEntities(
+                from(
+                    select(entityType)
+                    .where().prop(
+                        optActiveProp.map(activeProp -> activeProp + "." + KEY).orElse(KEY)
+                    ).iLike().val(searchString)
+                    .model()
+                    .setFilterable(true)
+                )
+                .with(fetch)
+                .model(),
+                2
+            );
+            if (entities.isEmpty()) {
+                return null;
+            } else if (entities.size() == 1) {
+                return entities.get(0);
+            } else {
+                // there can be many associated entities for unions without concrete active prop (same keys trough different subtypes);
+                // otherwise, return empty entity similarly as we do for composite ones (see UnexpectedNumberOfReturnedEntities exception)
+                return optActiveProp.isPresent() ? null : createMockMoreThanOneEntity(entityType, searchString);
+            }
         } else {
             //logger.debug(format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
             final String[] keys = MiscUtilities.prepare(Arrays.asList(searchString));
