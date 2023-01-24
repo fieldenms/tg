@@ -9,6 +9,7 @@ import static org.junit.Assert.fail;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -180,6 +181,37 @@ public class EntityFinderTest {
         assertTrue(entityFinder.findPropertyBelow(entity, "desc", AbstractEntity.class).isEmpty());
         // unrelated hierarchies
         assertTrue(entityFinder.findPropertyBelow(entity, "stub", List.class).isEmpty());
+    }
+
+    @Test
+    public void getPropTitleAndDesc_returns_a_pair_of_property_title_and_description() {
+        final EntityElement entity = entityFinder.findEntity(GetPropTitleAndDesc_Example.class);
+
+        final BiConsumer<Pair<String, String>, String> assertor = (pair, propName) -> {
+            assertEquals(pair, entityFinder.getPropTitleAndDesc(entityFinder.findProperty(entity, propName).orElseThrow()));
+        };
+
+        assertor.accept(Pair.pair("Title", "Description"), "titleAndDesc");
+        assertor.accept(Pair.pair("Title", ""),            "titleOnly");
+        assertor.accept(Pair.pair("", "Description"),      "descOnly");
+        assertor.accept(Pair.pair("", ""),                 "nothing");
+    }
+    // where
+    private static class GetPropTitleAndDesc_Example extends AbstractEntity<String> {
+        @IsProperty
+        @Title(value = "Title", desc = "Description")
+        private String titleAndDesc;
+
+        @IsProperty
+        @Title(value = "Title")
+        private String titleOnly;
+
+        @IsProperty
+        @Title(desc = "Description")
+        private String descOnly;
+
+        @IsProperty
+        private String nothing;
     }
 
     @Test
