@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.processors.metamodel.utils;
 
-import static java.util.Optional.of;
 import static java.util.stream.Collectors.toCollection;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION;
 import static ua.com.fielden.platform.utils.Pair.pair;
@@ -387,12 +386,9 @@ public class EntityFinder extends ElementFinder {
      * @return
      */
     public <A extends Annotation> Optional<A> findAnnotation(final EntityElement element, final Class<A> annotationClass) {
-        if (element.getAnnotation(annotationClass) != null) {
-            return of(element.getAnnotation(annotationClass));
-        }
-        return findSuperclasses(element, ROOT_ENTITY_CLASS).stream()
-                .filter(superEl -> superEl.getAnnotation(annotationClass) != null)
-                .map(superEl -> superEl.getAnnotation(annotationClass))
+        return Stream.concat(Stream.of(element), streamParents(element))
+                .map(elt -> elt.getAnnotation(annotationClass))
+                .filter(annot -> annot != null)
                 .findFirst();
     }
 
