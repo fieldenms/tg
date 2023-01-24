@@ -8,11 +8,8 @@ import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.function.BiConsumer;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
@@ -39,7 +36,6 @@ import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.security.user.UserSecret;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -64,62 +60,56 @@ public class EntityFinderTest {
 
     @Test
     public void isEntityType_type_element_for_AbstractEntity_is_recognised_as_an_element_for_an_entity_type() {
-      final TypeElement typeElement = elements.getTypeElement(AbstractEntity.class.getCanonicalName());
-      assertTrue(entityFinder.isEntityType(typeElement.asType()));
+      final TypeElement typeElt = entityFinder.getTypeElement(AbstractEntity.class);
+      assertTrue(entityFinder.isEntityType(typeElt.asType()));
     }
 
     @Test
     public void isEntityType_type_element_for_User_is_recognised_as_an_element_for_an_entity_type() {
-      final TypeElement typeElement = elements.getTypeElement(User.class.getCanonicalName());
-      assertTrue(entityFinder.isEntityType(typeElement.asType()));
+      final TypeElement typeElt = entityFinder.getTypeElement(User.class);
+      assertTrue(entityFinder.isEntityType(typeElt.asType()));
     }
 
     @Test
     public void isEntityType_type_element_for_String_is_not_recognised_as_an_element_for_an_entity_type() {
-      final TypeElement typeElement = elements.getTypeElement(String.class.getCanonicalName());
-      assertFalse(entityFinder.isEntityType(typeElement.asType()));
+      final TypeElement typeElt = entityFinder.getTypeElement(String.class);
+      assertFalse(entityFinder.isEntityType(typeElt.asType()));
     }
 
     @Test
     public void isPersistentEntityType_type_element_for_User_is_recognised_as_an_element_for_a_persistent_entity_type() {
-      final TypeElement typeElement = elements.getTypeElement(User.class.getCanonicalName());
-      final EntityElement entityElement = EntityElement.wrapperFor(typeElement);
-      assertTrue(entityFinder.isPersistentEntityType(entityElement));
+      final EntityElement entity = entityFinder.findEntity(User.class);
+      assertTrue(entityFinder.isPersistentEntityType(entity));
     }
 
     @Test
     public void isPersistentEntityType_type_element_for_AbstractEntity_is_not_recognised_as_an_element_for_a_persistent_entity_type() {
-      final TypeElement typeElement = elements.getTypeElement(AbstractEntity.class.getCanonicalName());
-      final EntityElement entityElement = EntityElement.wrapperFor(typeElement);
-      assertFalse(entityFinder.isPersistentEntityType(entityElement));
+      final EntityElement entity = entityFinder.findEntity(AbstractEntity.class);
+      assertFalse(entityFinder.isPersistentEntityType(entity));
     }
 
     @Test
     public void doesExtendPersistentEntity_type_element_for_AbstractEntity_is_not_recognised_as_an_element_that_extends_a_persistent_entity_type() {
-      final TypeElement typeElement = elements.getTypeElement(AbstractEntity.class.getCanonicalName());
-      final EntityElement entityElement = EntityElement.wrapperFor(typeElement);
-      assertFalse(entityFinder.doesExtendPersistentEntity(entityElement));
+      final EntityElement entity = entityFinder.findEntity(AbstractEntity.class);
+      assertFalse(entityFinder.doesExtendPersistentEntity(entity));
     }
 
     @Test
     public void doesExtendPersistentEntity_type_element_for_User_is_not_recognised_as_an_element_that_extends_a_persistent_entity_type() {
-      final TypeElement typeElement = elements.getTypeElement(User.class.getCanonicalName());
-      final EntityElement entityElement = EntityElement.wrapperFor(typeElement);
-      assertFalse(entityFinder.doesExtendPersistentEntity(entityElement));
+      final EntityElement entity = entityFinder.findEntity(User.class);
+      assertFalse(entityFinder.doesExtendPersistentEntity(entity));
     }
 
     @Test
     public void doesExtendPersistentEntity_type_element_for_SuperUser_is_recognised_as_an_element_that_extends_a_persistent_entity_type() {
-      final TypeElement typeElement = elements.getTypeElement(SuperUser.class.getCanonicalName());
-      final EntityElement entityElement = EntityElement.wrapperFor(typeElement);
-      assertTrue(entityFinder.doesExtendPersistentEntity(entityElement));
+      final EntityElement entity = entityFinder.findEntity(SuperUser.class);
+      assertTrue(entityFinder.doesExtendPersistentEntity(entity));
     }
 
     @Test
     public void findDeclaredProperties_finds_only_declared_properties_in_User() {
-      final TypeElement typeElement = elements.getTypeElement(User.class.getCanonicalName());
-      final EntityElement entityElement = EntityElement.wrapperFor(typeElement);
-      final List<PropertyElement> props = entityFinder.findDeclaredProperties(entityElement);
+      final EntityElement entity = entityFinder.findEntity(User.class);
+      final List<PropertyElement> props = entityFinder.findDeclaredProperties(entity);
       assertEquals(7, props.size());
       final String expectedProps = "key, roles, base, basedOnUser, email, active, ssoOnly";
       assertEquals(expectedProps, props.stream().map(p -> p.getSimpleName().toString()).collect(joining(", "))); 
@@ -127,9 +117,8 @@ public class EntityFinderTest {
 
     @Test
     public void findInheritedProperties_finds_only_inherited_properties_in_User() {
-      final TypeElement typeElement = elements.getTypeElement(User.class.getCanonicalName());
-      final EntityElement entityElement = EntityElement.wrapperFor(typeElement);
-      final Set<PropertyElement> props = entityFinder.findInheritedProperties(entityElement);
+      final EntityElement entity = entityFinder.findEntity(User.class);
+      final Set<PropertyElement> props = entityFinder.findInheritedProperties(entity);
       // it is expected that some of the re-declared properties in User would appear as both declared and inherited
       // more specifically, properties "active" and "key" appear as both declared and inherited
       final List<String> expectedProps = List.of("active", "refCount", "createdBy", "createdDate", "createdTransactionGuid", "lastUpdatedBy",
@@ -139,12 +128,11 @@ public class EntityFinderTest {
 
     @Test
     public void findProperties_finds_all_properties_in_User() {
-      final TypeElement typeElement = elements.getTypeElement(User.class.getCanonicalName());
-      final EntityElement entityElement = EntityElement.wrapperFor(typeElement);
+      final EntityElement entity = entityFinder.findEntity(User.class);
 
       final List<String> expectedProps = List.of("key", "roles", "base", "basedOnUser", "email", "active", "ssoOnly", "refCount", "createdBy",
               "createdDate", "createdTransactionGuid", "lastUpdatedBy", "lastUpdatedDate", "lastUpdatedTransactionGuid", "desc");
-      assertEquals(expectedProps, entityFinder.findProperties(entityElement).stream().map(p -> p.getSimpleName().toString()).toList()); 
+      assertEquals(expectedProps, entityFinder.findProperties(entity).stream().map(p -> p.getSimpleName().toString()).toList()); 
     }
 
     @Test
@@ -218,39 +206,36 @@ public class EntityFinderTest {
 
     @Test
     public void processProperties_excludes_desc_and_includes_id_for_User() {
-      final TypeElement typeElement = elements.getTypeElement(User.class.getCanonicalName());
-      final EntityElement entityElement = EntityElement.wrapperFor(typeElement);
-      final Set<PropertyElement> props = entityFinder.findProperties(entityElement);
+      final EntityElement entity = entityFinder.findEntity(User.class);
+      final Set<PropertyElement> props = entityFinder.findProperties(entity);
 
       final List<String> expectedProps = List.of("key", "roles", "base", "basedOnUser", "email", "active", "ssoOnly", "refCount", "createdBy",
               "createdDate", "createdTransactionGuid", "lastUpdatedBy", "lastUpdatedDate", "lastUpdatedTransactionGuid", "id");
       assertEquals(expectedProps, 
-              entityFinder.processProperties(props, entityElement).stream().map(p -> p.getSimpleName().toString()).toList()); 
+              entityFinder.processProperties(props, entity).stream().map(p -> p.getSimpleName().toString()).toList()); 
     }
 
     @Test
     public void processProperties_includes_desc_and_id_for_SuperUser() {
-      final TypeElement typeElement = elements.getTypeElement(SuperUser.class.getCanonicalName());
-      final EntityElement entityElement = EntityElement.wrapperFor(typeElement);
-      final Set<PropertyElement> props = entityFinder.findProperties(entityElement);
+      final EntityElement entity = entityFinder.findEntity(SuperUser.class);
+      final Set<PropertyElement> props = entityFinder.findProperties(entity);
 
       // unlike User, SuperUser also has property "desc" due to @DescTitle
       final List<String> expectedProps = List.of("key", "roles", "base", "basedOnUser", "email", "active", "ssoOnly", "refCount", "createdBy",
               "createdDate", "createdTransactionGuid", "lastUpdatedBy", "lastUpdatedDate", "lastUpdatedTransactionGuid", "desc", "id");
       assertEquals(expectedProps, 
-              entityFinder.processProperties(props, entityElement).stream().map(p -> p.getSimpleName().toString()).toList());
+              entityFinder.processProperties(props, entity).stream().map(p -> p.getSimpleName().toString()).toList());
     }
 
     @Test
     public void processProperties_includes_desc_and_id_for_SuperUserWithDeclaredDesc() {
-      final TypeElement typeElement = elements.getTypeElement(SuperUserWithDeclaredDesc.class.getCanonicalName());
-      final EntityElement entityElement = EntityElement.wrapperFor(typeElement);
-      final Set<PropertyElement> props = entityFinder.findProperties(entityElement);
+      final EntityElement entity = entityFinder.findEntity(SuperUserWithDeclaredDesc.class);
+      final Set<PropertyElement> props = entityFinder.findProperties(entity);
 
       // unlike User, SuperUserWithDeclaredDesc has property "desc" declared explicitly
       final String expectedProps = "desc, key, roles, base, basedOnUser, email, active, ssoOnly, refCount, createdBy, createdDate, createdTransactionGuid, lastUpdatedBy, lastUpdatedDate, lastUpdatedTransactionGuid, id";
       assertEquals(expectedProps,
-              entityFinder.processProperties(props, entityElement).stream().map(p -> p.getSimpleName().toString()).collect(joining(", "))); 
+              entityFinder.processProperties(props, entity).stream().map(p -> p.getSimpleName().toString()).collect(joining(", "))); 
     }
 
     /**
@@ -287,8 +272,8 @@ public class EntityFinderTest {
 
     @Test
     public void findAnnotation_looks_for_annotations_through_type_hierarchy() {
-        final EntityElement userElement = EntityElement.wrapperFor(elements.getTypeElement(User.class.getCanonicalName()));
-        final EntityElement superUserElement = EntityElement.wrapperFor(elements.getTypeElement(SuperUser.class.getCanonicalName()));
+        final EntityElement userElement = entityFinder.findEntity(User.class);
+        final EntityElement superUserElement = entityFinder.findEntity(SuperUser.class);
         assertTrue(entityFinder.findAnnotation(userElement, DescTitle.class).isEmpty());
         assertFalse(entityFinder.findAnnotation(userElement, MapEntityTo.class).isEmpty());
         assertFalse(entityFinder.findAnnotation(superUserElement, DescTitle.class).isEmpty());
@@ -297,21 +282,22 @@ public class EntityFinderTest {
 
     @Test
     public void isEntityThatNeedsMetaModel_is_true_only_entities_that_are_explicityly_annotated_with_MapEntityTo_or_DomainEntity_or_WithMetaModel() {
-        assertTrue(entityFinder.isEntityThatNeedsMetaModel(elements.getTypeElement(User.class.getCanonicalName())));
-        assertTrue(entityFinder.isEntityThatNeedsMetaModel(elements.getTypeElement(NonDomainEntityWithMetaModel.class.getCanonicalName())));
-        assertFalse(entityFinder.isEntityThatNeedsMetaModel(elements.getTypeElement(SuperUser.class.getCanonicalName())));
-        assertTrue(entityFinder.isEntityThatNeedsMetaModel(elements.getTypeElement(SuperUserWithDeclaredDesc.class.getCanonicalName())));
-        assertFalse("Non-entity should not be recognised as a domain entity.", entityFinder.isEntityThatNeedsMetaModel(elements.getTypeElement(NonEntity.class.getCanonicalName())));
+        assertTrue(entityFinder.isEntityThatNeedsMetaModel(entityFinder.findEntity(User.class)));
+        assertTrue(entityFinder.isEntityThatNeedsMetaModel(entityFinder.findEntity(NonDomainEntityWithMetaModel.class)));
+        assertFalse(entityFinder.isEntityThatNeedsMetaModel(entityFinder.findEntity(SuperUser.class)));
+        assertTrue(entityFinder.isEntityThatNeedsMetaModel(entityFinder.findEntity(SuperUserWithDeclaredDesc.class)));
+        assertFalse("Non-entity should not be recognised as a domain entity.",
+                entityFinder.isEntityThatNeedsMetaModel(entityFinder.getTypeElement(NonEntity.class)));
     }
 
     @Test
     public void getEntityTitleAndDesc_is_equivalent_to_TitlesDescsGetter() {
         final var userTitleAndDesc = Pair.pair("User", "User entity");
         assertEquals(userTitleAndDesc, TitlesDescsGetter.getEntityTitleAndDesc(User.class));
-        assertEquals(userTitleAndDesc, entityFinder.getEntityTitleAndDesc(EntityElement.wrapperFor(elements.getTypeElement(User.class.getCanonicalName()))));
+        assertEquals(userTitleAndDesc, entityFinder.getEntityTitleAndDesc(entityFinder.findEntity(User.class)));
         final var superUserTitleAndDesc = Pair.pair("Super User", "A test entity extedning User.");
         assertEquals(superUserTitleAndDesc, TitlesDescsGetter.getEntityTitleAndDesc(SuperUser.class));
-        assertEquals(superUserTitleAndDesc, entityFinder.getEntityTitleAndDesc(EntityElement.wrapperFor(elements.getTypeElement(SuperUser.class.getCanonicalName()))));
+        assertEquals(superUserTitleAndDesc, entityFinder.getEntityTitleAndDesc(entityFinder.findEntity(SuperUser.class)));
     }
 
     @Test
