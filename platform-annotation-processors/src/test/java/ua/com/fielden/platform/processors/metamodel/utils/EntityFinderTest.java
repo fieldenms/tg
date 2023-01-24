@@ -3,6 +3,7 @@ package ua.com.fielden.platform.processors.metamodel.utils;
 import static java.util.stream.Collectors.joining;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -29,6 +30,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
@@ -341,6 +343,17 @@ public class EntityFinderTest {
         assertEquals(superUserTitleAndDesc, TitlesDescsGetter.getEntityTitleAndDesc(SuperUser.class));
         assertEquals(superUserTitleAndDesc, entityFinder.getEntityTitleAndDesc(EntityElement.wrapperFor(elements.getTypeElement(SuperUser.class.getCanonicalName()))));
     }
+
+    @Test
+    public void getKeyType_returns_a_type_mirror_representing_the_value_of_KeyType() {
+        final EntityElement entity = entityFinder.findEntity(WithDeclaredKeyType.class);
+        final KeyType atKeyType = entity.getAnnotation(KeyType.class);
+        assertNotNull(atKeyType);
+        assertTrue(entityFinder.isSameType(entityFinder.getKeyType(atKeyType), String.class));
+    }
+    // where
+    @KeyType(value = String.class, keyMemberSeparator = " ")
+    private static class WithDeclaredKeyType extends AbstractEntity<String> {}
 
     /**
      * A type for testing purposes. Represents an entity that extends a persistent one.
