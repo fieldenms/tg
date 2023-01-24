@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.joining;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.util.List;
 import java.util.Map;
@@ -143,6 +144,29 @@ public class EntityFinderTest {
       assertEquals(expectedProps, entityFinder.findProperties(entityElement).stream().map(p -> p.getSimpleName().toString()).toList()); 
     }
 
+    @Test
+    public void findProperty_finds_a_property_by_name_in_the_whole_type_hierarchy() {
+        final EntityElement entity = entityFinder.findEntity(FindProperty_Example.class); 
+        entityFinder.findProperty(entity, "key").ifPresentOrElse(prop -> {
+            assertEquals("key", prop.getSimpleName().toString());
+            assertTrue(entityFinder.isSameType(prop.getType(), String.class));
+            assertTrue(entityFinder.isSameType(prop.getEnclosingElement().asType(), FindProperty_Example.class));
+        }, () -> fail("Property was not found"));;
+
+        entityFinder.findProperty(entity, "desc").ifPresentOrElse(prop -> {
+            assertEquals("desc", prop.getSimpleName().toString());
+            assertTrue(entityFinder.isSameType(prop.getType(), String.class));
+            assertTrue(entityFinder.isSameType(prop.getEnclosingElement().asType(), AbstractEntity.class));
+        }, () -> fail("Property was not found"));;
+
+        assertTrue(entityFinder.findProperty(entity, "stub").isEmpty());
+        assertTrue(entityFinder.findProperty(entity, "id").isEmpty());
+    }
+    // where
+    private static class FindProperty_Example extends AbstractEntity<String> {
+        @IsProperty
+        private String key;
+    }
     @Test
     public void processProperties_excludes_desc_and_includes_id_for_User() {
       final TypeElement typeElement = elements.getTypeElement(User.class.getCanonicalName());
