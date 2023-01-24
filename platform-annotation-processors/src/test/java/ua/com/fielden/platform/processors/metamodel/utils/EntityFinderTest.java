@@ -355,6 +355,27 @@ public class EntityFinderTest {
     @KeyType(value = String.class, keyMemberSeparator = " ")
     private static class WithDeclaredKeyType extends AbstractEntity<String> {}
 
+    @Test
+    public void determineKeyType_finds_the_first_value_of_KeyType_for_an_entity_traversing_its_hierarchy() {
+        final EntityElement withoutDeclaredKeyType = entityFinder.findEntity(WithoutDeclaredKeyType.class);
+        assertTrue(entityFinder.determineKeyType(withoutDeclaredKeyType).isEmpty());
+
+        final EntityElement withoutExtendsWith = entityFinder.findEntity(WithoutDeclaredKeyType_extends_WithDeclaredKeyType.class);
+        entityFinder.determineKeyType(withoutExtendsWith).ifPresentOrElse(
+                typeMirror -> assertTrue(entityFinder.isSameType(typeMirror, String.class)),
+                () -> fail("Key type was not found."));
+
+        final EntityElement withExtendsWith = entityFinder.findEntity(WithDeclaredKeyType_extends_WithDeclaredKeyType.class);
+        entityFinder.determineKeyType(withExtendsWith).ifPresentOrElse(
+                typeMirror -> assertTrue(entityFinder.isSameType(typeMirror, String.class)),
+                () -> fail("Key type was not found."));
+    }
+    // where
+    private static class WithoutDeclaredKeyType extends AbstractEntity<String> {}
+    private static class WithoutDeclaredKeyType_extends_WithDeclaredKeyType extends WithDeclaredKeyType {}
+    @KeyType(String.class)
+    private static class WithDeclaredKeyType_extends_WithDeclaredKeyType extends WithDeclaredKeyType {}
+
     /**
      * A type for testing purposes. Represents an entity that extends a persistent one.
      */
