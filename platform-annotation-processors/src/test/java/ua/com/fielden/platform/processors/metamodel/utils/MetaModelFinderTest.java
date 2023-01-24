@@ -55,4 +55,14 @@ public class MetaModelFinderTest {
         assertTrue(metaModelFinder.isMetaModel(finder.getTypeElement(MetamodeledEntityMetaModelAliased.class)));
     }
 
+    @Test
+    public void findMetaModelForEntity_finds_a_meta_model_for_a_metamodeled_entity() {
+        final EntityElement entityElt = entityFinder.findEntity(MetamodeledEntity.class);
+        metaModelFinder.findMetaModelForEntity(entityElt).ifPresentOrElse(metaModelElt -> {
+            final Optional<EntityElement> maybeEntityForMetaModel = entityFinder.findEntityForMetaModel(metaModelElt);
+            assertTrue(maybeEntityForMetaModel.isPresent());
+            assertTrue(finder.types.isSameType(entityElt.asType(), maybeEntityForMetaModel.get().asType()));
+        }, () -> fail("Meta-model was not found"));
+    }
+
 }
