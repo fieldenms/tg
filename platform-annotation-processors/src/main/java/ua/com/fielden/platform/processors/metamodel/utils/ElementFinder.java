@@ -61,20 +61,31 @@ public class ElementFinder {
     }
 
     /**
-     * A shortcut for {@link Elements#getTypeElement(CharSequence)}.
+     * Similar to {@link #getTypeElement(String)}. Uses {@link Class#getCanonicalName()} to obtain the name.
      * <p>
-     * If no corespodning type element was found, then a runtime exception is thrown.
-     * Generally, this should never occur, since the {@link Class} argument guarantees the existence of that type. 
-     * <p>
-     * In case of multi-module application where there are multiple classes with the same canonical name, the first match is returned.
+     * Presumably, this method should never throw, since the passed in {@link Class} instance guarantees the existence of that type. 
      * 
      * @param clazz
      * @return type element representing {@code clazz}
      * @throws ElementFinderException if no coresponding type element was found
      */
     public TypeElement getTypeElement(final Class<?> clazz) {
-        return elements.getAllTypeElements(clazz.getCanonicalName()).stream().findFirst()
-                .orElseThrow(() -> new ElementFinderException("No type element was found for class %s".formatted(clazz.getCanonicalName())));
+        return getTypeElement(clazz.getCanonicalName());
+    }
+
+    /**
+     * A shortcut for {@link Elements#getTypeElement(CharSequence)}.
+     * <p>
+     * If no corespodning type element was found, then a runtime exception is thrown.
+     * In case of a multi-module application where there are multiple classes with the same canonical name, the first match is returned.
+     * 
+     * @param name canonical name of the element to be found
+     * @return
+     * @throws ElementFinderException if no coresponding type element was found
+     */
+    public TypeElement getTypeElement(final String name) {
+        return elements.getAllTypeElements(name).stream().findFirst()
+                .orElseThrow(() -> new ElementFinderException("No type element was found for type [%s]".formatted(name)));
     }
 
     /**
