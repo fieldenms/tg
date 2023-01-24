@@ -167,6 +167,21 @@ public class EntityFinderTest {
         @IsProperty
         private String key;
     }
+
+    @Test
+    public void findPropertyBelow_finds_a_property_by_name_in_the_whole_type_hierarchy_below_the_specified_type() {
+        final EntityElement entity = entityFinder.findEntity(FindProperty_Example.class);
+        entityFinder.findPropertyBelow(entity, "key", AbstractEntity.class).ifPresentOrElse(prop -> {
+            assertEquals("key", prop.getSimpleName().toString());
+            assertTrue(entityFinder.isSameType(prop.getType(), String.class));
+            assertTrue(entityFinder.isSameType(prop.getEnclosingElement().asType(), FindProperty_Example.class));
+        }, () -> fail("Property was not found"));;
+
+        assertTrue(entityFinder.findPropertyBelow(entity, "desc", AbstractEntity.class).isEmpty());
+        // unrelated hierarchies
+        assertTrue(entityFinder.findPropertyBelow(entity, "stub", List.class).isEmpty());
+    }
+
     @Test
     public void processProperties_excludes_desc_and_includes_id_for_User() {
       final TypeElement typeElement = elements.getTypeElement(User.class.getCanonicalName());
