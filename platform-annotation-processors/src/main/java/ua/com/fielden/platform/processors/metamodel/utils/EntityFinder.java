@@ -37,7 +37,7 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
- * A collection of utility functions to finding various type elements in application to an entity abstraction of type {@link EntityElement}.
+ * A collection of utility functions to finding various elements in application to an entity abstraction of type {@link EntityElement}.
  *
  * @author TG Team
  */
@@ -412,6 +412,12 @@ public class EntityFinder extends ElementFinder {
         return entityType.getKind() == TypeKind.ERROR ? Optional.empty() : Optional.of(newEntityElement(asTypeElementOfTypeMirror(entityType)));
     }
 
+    /**
+     * Returns a new instance of {@link EntityElement} that is composed of the specified type element.
+     * 
+     * @param typeElement
+     * @return
+     */
     public EntityElement newEntityElement(final TypeElement typeElement) {
         return new EntityElement(typeElement, getPackageOfTypeElement(typeElement).getQualifiedName().toString());
     }
