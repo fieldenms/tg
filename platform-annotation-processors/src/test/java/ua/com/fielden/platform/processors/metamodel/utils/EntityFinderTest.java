@@ -376,6 +376,15 @@ public class EntityFinderTest {
     @KeyType(String.class)
     private static class WithDeclaredKeyType_extends_WithDeclaredKeyType extends WithDeclaredKeyType {}
 
+    @Test
+    public void getParent_returns_the_immediate_superclass_of_an_entity_or_empty_if_given_AbstractEntity() {
+        entityFinder.getParent(entityFinder.findEntity(SuperUser.class)).ifPresentOrElse(
+                parent -> assertTrue(entityFinder.isSameType(parent.asType(), User.class)),
+                () -> fail("Entity parent was not found."));
+
+        assertTrue(entityFinder.getParent(entityFinder.findEntity(AbstractEntity.class)).isEmpty());
+    }
+
     /**
      * A type for testing purposes. Represents an entity that extends a persistent one.
      */
