@@ -320,16 +320,6 @@ public class EntityFinder extends ElementFinder {
     }
 
     /**
-     * Identifies whether {@code propElement} represents an entity-typed property, which may not necessarily be a domain entity. 
-     *
-     * @param propElement
-     * @return
-     */
-    public boolean isPropertyOfEntityType(final PropertyElement propElement) {
-        return isEntityType(propElement.getType());
-    }
-
-    /**
      * A predicate to determine if {@code propElement} represents an entity-typed property, which is a domain entity.
      *
      * @param propElement
@@ -410,11 +400,6 @@ public class EntityFinder extends ElementFinder {
         final TypeMirror entityType = getAnnotationElementValueOfClassType(annot, a -> a.value());
         // missing types have TypeKind.ERROR
         return entityType.getKind() == TypeKind.ERROR ? Optional.empty() : Optional.of(newEntityElement(asTypeElementOfTypeMirror(entityType)));
-    }
-
-    public boolean hasPropertyOfType(final EntityElement entityElement, final TypeMirror type, final Types typeUtils) {
-        return findProperties(entityElement).stream()
-               .anyMatch(prop -> typeUtils.isSameType(prop.getType(), type));
     }
 
     public EntityElement newEntityElement(final TypeElement typeElement) {

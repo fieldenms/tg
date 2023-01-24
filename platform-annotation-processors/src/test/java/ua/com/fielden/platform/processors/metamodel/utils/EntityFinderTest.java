@@ -286,36 +286,6 @@ public class EntityFinderTest {
     public static class NoDescTitleAndNoDeclaredDesc2 extends SuperUserWithDeclaredDesc { }
 
     @Test
-    public void isPropertyOfEntityType_correctly_distiguishes_between_properties_of_an_entity_type_and_other_types() {
-        final TypeElement typeElement = entityFinder.getTypeElement(User.class);
-        final EntityElement entityElement = EntityElement.wrapperFor(typeElement);
-        final Map<String, PropertyElement> props = entityFinder.findProperties(entityElement).stream()
-                .collect(Collectors.toMap(pel -> pel.getSimpleName().toString(), Function.identity()));
-        assertFalse(entityFinder.isPropertyOfEntityType(props.get("key")));
-        assertFalse(entityFinder.isPropertyOfEntityType(props.get("roles")));
-        assertFalse(entityFinder.isPropertyOfEntityType(props.get("base")));
-        assertTrue(entityFinder.isPropertyOfEntityType(props.get("basedOnUser")));
-        assertFalse(entityFinder.isPropertyOfEntityType(props.get("email")));
-        assertFalse(entityFinder.isPropertyOfEntityType(props.get("active")));
-        assertFalse(entityFinder.isPropertyOfEntityType(props.get("ssoOnly")));
-        assertFalse(entityFinder.isPropertyOfEntityType(props.get("refCount")));
-        assertTrue(entityFinder.isPropertyOfEntityType(props.get("createdBy")));
-        assertFalse(entityFinder.isPropertyOfEntityType(props.get("createdDate")));
-        assertFalse(entityFinder.isPropertyOfEntityType(props.get("createdTransactionGuid")));
-        assertTrue(entityFinder.isPropertyOfEntityType(props.get("lastUpdatedBy")));
-        assertFalse(entityFinder.isPropertyOfEntityType(props.get("lastUpdatedDate")));
-        assertFalse(entityFinder.isPropertyOfEntityType(props.get("lastUpdatedTransactionGuid")));
-        assertFalse(entityFinder.isPropertyOfEntityType(props.get("lastUpdatedDate")));
-    }
-
-    @Test
-    public void isPropertyOfEntityType_correctly_identifies_entity_typed_key_as_an_entity_typed_property() {
-        final TypeElement typeElement = elements.getTypeElement(UserSecret.class.getCanonicalName());
-        final EntityElement entityElement = EntityElement.wrapperFor(typeElement);
-        assertTrue(entityFinder.isPropertyOfEntityType(entityFinder.findProperties(entityElement).stream().filter(p -> "key".equals(p.getSimpleName().toString())).findFirst().get()));
-    }
-
-    @Test
     public void findAnnotation_looks_for_annotations_through_type_hierarchy() {
         final EntityElement userElement = EntityElement.wrapperFor(elements.getTypeElement(User.class.getCanonicalName()));
         final EntityElement superUserElement = EntityElement.wrapperFor(elements.getTypeElement(SuperUser.class.getCanonicalName()));
