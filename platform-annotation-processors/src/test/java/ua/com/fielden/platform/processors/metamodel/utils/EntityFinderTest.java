@@ -243,7 +243,7 @@ public class EntityFinderTest {
      * if it extends an entity annotated with {@link DescTitle}.
      */
     @Test
-    public void processProperties_includes_desc_for_NoDescTitleAndNoDeclaredDesc_extends_SuperUser() {
+    public void processProperties_includes_desc_for_NoDescTitleAndNoDeclaredDesc() {
         final EntityElement entity = entityFinder.findEntity(NoDescTitleAndNoDeclaredDesc.class);
         final Set<PropertyElement> props = entityFinder.findProperties(entity);
 
@@ -259,7 +259,7 @@ public class EntityFinderTest {
      * if it extends an entity that declares {@code desc}.
      */
     @Test
-    public void processProperties_includes_desc_for_NoDescTitleAndNoDeclaredDesc2_extends_SuperUserWithDeclaredDesc() {
+    public void processProperties_includes_desc_for_NoDescTitleAndNoDeclaredDesc2() {
         final EntityElement entity = entityFinder.findEntity(NoDescTitleAndNoDeclaredDesc2.class);
         final Set<PropertyElement> props = entityFinder.findProperties(entity);
 

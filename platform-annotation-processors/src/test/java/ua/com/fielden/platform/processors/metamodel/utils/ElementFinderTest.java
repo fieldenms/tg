@@ -71,7 +71,7 @@ public class ElementFinderTest {
     public static @interface EmptyAnnot {}
 
     @Test
-    public void test_equals() {
+    public void isSameType_tests_whether_type_element_and_class_represent_the_same_type() {
         processAndEvaluate(finder -> {
             assertTrue(finder.isSameType(finder.getTypeElement(String.class), String.class));
             assertTrue(finder.isSameType(finder.getTypeElement(java.util.Date.class), java.util.Date.class));
