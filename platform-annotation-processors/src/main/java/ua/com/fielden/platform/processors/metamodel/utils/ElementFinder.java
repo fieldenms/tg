@@ -556,14 +556,19 @@ public class ElementFinder {
      * primitive type, void type, array type, declared type (class/interface). Otherwise {@code false} is returned.
      * <p>
      * Comparison of generic types requires special care.
-     * Since {@link Class} instances can represent only raw types, if a type mirror for a generic type does not represent its raw type, 
-     * then {@code false} will be returned. One can obtain a raw type from a type mirror using {@link Types#erasure(TypeMirror)}.
+     * Since {@link Class} instances can represent only raw types, the generic part of the type mirror is always stripped before comparing.
      * 
      * @throws ElementFinderException if no coresponding type element was found
      */
     public boolean isSameType(final TypeMirror mirror, final Class<?> clazz) {
-        return types.isSameType(mirror, asType(clazz));
+        final TypeKind kind = mirror.getKind();
+        if (! (kind.isPrimitive() || IS_SAME_TYPE_ALLOWED_NON_PRIMITIVE_TYPE_KINDS.contains(kind))) {
+            return false;
+        }
+        return types.isSameType(types.erasure(mirror), asType(clazz));
     }
+    // where
+    private static final Set<TypeKind> IS_SAME_TYPE_ALLOWED_NON_PRIMITIVE_TYPE_KINDS = Set.of(TypeKind.VOID, TypeKind.ARRAY, TypeKind.DECLARED);
 
     /**
      * Similar to {@link Types#isSubtype(TypeMirror, TypeMirror)}, but accepts {@link Class} as the second type.

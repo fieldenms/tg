@@ -28,6 +28,7 @@ import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.Types;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
@@ -536,9 +537,9 @@ public class ElementFinderTest {
     }
 
     @Test
-    public void isSameType_returns_true_if_type_mirror_and_class_represent_the_same_type() {
+    public void isSameType_returns_true_if_type_mirror_and_class_represent_the_same_raw_type() {
+        // class Example<T extends List>
         final TypeSpec example = TypeSpec.classBuilder("Example")
-                // <T extends List>
                 .addTypeVariable(TypeVariableName.get("T", List.class))
                 .addField(Void.class, "v")
                 .build();
@@ -563,9 +564,9 @@ public class ElementFinderTest {
             final TypeElement listElement = finder.getTypeElement(List.class);
             final TypeMirror stringListType = finder.types.getDeclaredType(listElement, stringType);
             final TypeMirror rawListType = finder.types.getDeclaredType(listElement);
-            // List<String> != List
-            assertFalse(finder.isSameType(stringListType, List.class));
-            // (erased List<String> = List) == List
+            // List<String> == List
+            assertTrue(finder.isSameType(stringListType, List.class));
+            // (raw List<String> = List) == List
             assertTrue(finder.isSameType(rawListType, List.class));
 
             // array type
@@ -575,9 +576,14 @@ public class ElementFinderTest {
             assertTrue(finder.isSameType(finder.types.getArrayType(stringArrayType), String[][].class));
 
             // wildcard type: ? extends List
-            assertFalse(finder.isSameType(finder.types.getWildcardType(finder.getTypeElement(List.class).asType(), null), ArrayList.class));
-            // type variable <T extends List>
-            assertFalse(finder.isSameType(exampleEl.getTypeParameters().get(0).asType(), ArrayList.class));
+            final WildcardType wildcardExtendsList = finder.types.getWildcardType(finder.getTypeElement(List.class).asType(), null);
+            assertFalse(finder.isSameType(wildcardExtendsList, List.class));
+            assertFalse(finder.isSameType(wildcardExtendsList, ArrayList.class));
+
+            // type variable: <T extends List>
+            final TypeMirror typeParamExtendsList = exampleEl.getTypeParameters().get(0).asType();
+            assertFalse(finder.isSameType(typeParamExtendsList, List.class));
+            assertFalse(finder.isSameType(typeParamExtendsList, ArrayList.class));
         });
     }
 
