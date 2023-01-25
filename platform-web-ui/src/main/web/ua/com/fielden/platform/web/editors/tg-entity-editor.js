@@ -1349,7 +1349,7 @@ export class TgEntityEditor extends TgEditor {
     }
 
     _calculateTypeTitle (entity) {
-        if (!this.multi && this.reflector().isEntity(entity) && typeof entity[this.propertyName] !== 'undefined') {
+        if (!this.multi && this.reflector().isEntity(entity)) {
             const entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
             if (entityValue != null) {
                 const entityType = entityValue.type();
