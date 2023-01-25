@@ -576,16 +576,30 @@ public class ElementFinderTest {
             assertTrue(finder.isSameType(stringArrayType, String[].class));
             // nested array type
             assertTrue(finder.isSameType(finder.types.getArrayType(stringArrayType), String[][].class));
+        });
+    }
 
-            // wildcard type: ? extends List
-            final WildcardType wildcardExtendsList = finder.types.getWildcardType(finder.getTypeElement(List.class).asType(), null);
-            assertFalse(finder.isSameType(wildcardExtendsList, List.class));
-            assertFalse(finder.isSameType(wildcardExtendsList, ArrayList.class));
+    @Test
+    public void isSameType_returns_false_for_wildcard_types() {
+        processAndEvaluate(finder -> {
+            // ? extends Number
+            final WildcardType extendsNumber = finder.types.getWildcardType(finder.getTypeElement(Number.class).asType(), null);
+            assertFalse(finder.isSameType(extendsNumber, Number.class));
+        });
+    }
 
-            // type variable: <T extends List>
-            final TypeMirror typeParamExtendsList = exampleEl.getTypeParameters().get(0).asType();
-            assertFalse(finder.isSameType(typeParamExtendsList, List.class));
-            assertFalse(finder.isSameType(typeParamExtendsList, ArrayList.class));
+    @Test
+    public void isSameType_returns_false_for_type_variables() {
+        // class Example<T extends Number>
+        final TypeSpec example = TypeSpec.classBuilder("Example")
+                .addTypeVariable(TypeVariableName.get("T", Number.class))
+                .build();
+
+        processAndEvaluate(List.of(example), finder -> {
+            final TypeElement exampleElt = finder.getTypeElement(example.name);
+            // T extends Number
+            final TypeVariable typeVar = (TypeVariable) exampleElt.getTypeParameters().get(0).asType();
+            assertFalse(finder.isSameType(typeVar, Number.class));
         });
     }
 

@@ -567,7 +567,9 @@ public class ElementFinder {
     }
 
     /**
-     * Tests whether the type mirror and class represent the same type. Such a comparison makes sense only if the type mirror represents one of:
+     * Tests whether the type mirror represents the same type as the given class.
+     * <p>
+     * This comparison makes sense only if the type mirror represents one of:
      * primitive type, void type, array type, declared type (class/interface). Otherwise {@code false} is returned.
      * <p>
      * Comparison of generic types requires special care.
@@ -576,14 +578,43 @@ public class ElementFinder {
      * @throws ElementFinderException if no coresponding type element was found
      */
     public boolean isSameType(final TypeMirror mirror, final Class<?> clazz) {
-        final TypeKind kind = mirror.getKind();
-        if (! (kind.isPrimitive() || IS_SAME_TYPE_ALLOWED_NON_PRIMITIVE_TYPE_KINDS.contains(kind))) {
-            return false;
-        }
-        return types.isSameType(types.erasure(mirror), asType(clazz));
+        return mirror.accept(new IsSameTypeVisitor(clazz), null);
     }
     // where
-    private static final Set<TypeKind> IS_SAME_TYPE_ALLOWED_NON_PRIMITIVE_TYPE_KINDS = Set.of(TypeKind.VOID, TypeKind.ARRAY, TypeKind.DECLARED);
+    private final class IsSameTypeVisitor extends SimpleTypeVisitor14<Boolean, Void> {
+        private final Class<?> clazz;
+
+        protected IsSameTypeVisitor(final Class<?> clazz) {
+            this.clazz = clazz;
+        }
+
+        @Override
+        protected Boolean defaultAction(TypeMirror e, Void p) {
+            return false;
+        }
+
+        @Override
+        public Boolean visitPrimitive(PrimitiveType t, Void p) {
+            return types.isSameType(t, asType(clazz));
+        }
+
+        // handle void type
+        @Override
+        public Boolean visitNoType(NoType t, Void p) {
+            return t.getKind().equals(TypeKind.VOID) && clazz.equals(void.class);
+        }
+
+        @Override
+        public Boolean visitArray(ArrayType t, Void p) {
+            return clazz.isArray() && isSameType(t.getComponentType(), clazz.componentType());
+        }
+
+        @Override
+        public Boolean visitDeclared(DeclaredType t, Void p) {
+            final TypeMirror rawType = types.erasure(t);
+            return types.isSameType(rawType, asType(clazz));
+        }
+    }
 
     /**
      * Tests whether the type represented by the type mirror is a subtype of the given class. Any type is considered to be a subtype of itself.
