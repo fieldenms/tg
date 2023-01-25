@@ -16,6 +16,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.processors.metamodel.MetaModelProcessor;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
+import ua.com.fielden.platform.processors.test_entities.EntityWithDescTitleWithoutMetaModel;
 import ua.com.fielden.platform.processors.test_entities.MetamodeledEntity;
 import ua.com.fielden.platform.processors.test_entities.meta.MetamodeledEntityMetaModel;
 import ua.com.fielden.platform.processors.test_entities.meta.MetamodeledEntityMetaModelAliased;
@@ -37,7 +38,7 @@ public class MetaModelFinderTest {
     private static ElementFinder finder;
     private static EntityFinder entityFinder;
     private static MetaModelFinder metaModelFinder;
-    
+
     @BeforeClass
     public static void setupOnce() {
         final Elements elements = rule.getElements();
@@ -57,12 +58,18 @@ public class MetaModelFinderTest {
 
     @Test
     public void findMetaModelForEntity_finds_a_meta_model_for_a_metamodeled_entity() {
-        final EntityElement entityElt = entityFinder.findEntity(MetamodeledEntity.class);
-        metaModelFinder.findMetaModelForEntity(entityElt).ifPresentOrElse(metaModelElt -> {
+        final EntityElement metamodeledEntityElt = entityFinder.findEntity(MetamodeledEntity.class);
+        metaModelFinder.findMetaModelForEntity(metamodeledEntityElt).ifPresentOrElse(metaModelElt -> {
             final Optional<EntityElement> maybeEntityForMetaModel = entityFinder.findEntityForMetaModel(metaModelElt);
             assertTrue(maybeEntityForMetaModel.isPresent());
-            assertTrue(finder.types.isSameType(entityElt.asType(), maybeEntityForMetaModel.get().asType()));
+            assertTrue(finder.types.isSameType(metamodeledEntityElt.asType(), maybeEntityForMetaModel.get().asType()));
         }, () -> fail("Meta-model was not found"));
+    }
+
+    @Test
+    public void findMetaModelForEntity_does_not_find_a_meta_model_for_a_non_metamodeled_entity() {
+        final EntityElement nonMetamodeledEntityElt = entityFinder.findEntity(EntityWithDescTitleWithoutMetaModel.class);
+        assertTrue(metaModelFinder.findMetaModelForEntity(nonMetamodeledEntityElt).isEmpty());
     }
 
 }
