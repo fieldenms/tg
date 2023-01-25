@@ -54,7 +54,17 @@ public class MetaModelFinder extends ElementFinder {
      * @return
      */
     public boolean isMetaModel(final TypeElement typeElement) {
-        return isSubtype(typeElement.asType(), META_MODEL_SUPERCLASS);
+        return isMetaModel(typeElement.asType());
+    }
+
+    /**
+     * Returns true iff the type mirror represents a meta-model type.
+     * 
+     * @param typeElement
+     * @return
+     */
+    public boolean isMetaModel(final TypeMirror type) {
+        return isSubtype(type, META_MODEL_SUPERCLASS);
     }
 
     /**
