@@ -17,6 +17,7 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.processors.metamodel.MetaModelProcessor;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
+import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.test_entities.EntityWithDescTitleWithoutMetaModel;
 import ua.com.fielden.platform.processors.test_entities.MetamodeledEntity;
 import ua.com.fielden.platform.processors.test_entities.meta.MetamodeledEntityMetaModel;
@@ -59,10 +60,17 @@ public class MetaModelFinderTest {
 
     @Test
     public void isMetaModelAliased_returns_true_if_the_element_represents_an_alised_meta_model() {
-        final TypeElement mmTypeElt = finder.getTypeElement(MetamodeledEntityMetaModel.class);
-        assertFalse(metaModelFinder.isMetaModelAliased(metaModelFinder.newMetaModelElement(mmTypeElt)));
-        final TypeElement mmAliasedTypeElt = finder.getTypeElement(MetamodeledEntityMetaModelAliased.class);
-        assertTrue(metaModelFinder.isMetaModelAliased(metaModelFinder.newMetaModelElement(mmAliasedTypeElt)));
+        final MetaModelElement mmElt = metaModelFinder.findMetaModel(MetamodeledEntityMetaModel.class);
+        assertFalse(metaModelFinder.isMetaModelAliased(mmElt));
+        final MetaModelElement mmAliasedElt = metaModelFinder.findMetaModel(MetamodeledEntityMetaModelAliased.class);
+        assertTrue(metaModelFinder.isMetaModelAliased(mmAliasedElt));
+    }
+
+    @Test
+    public void findMetaModel_finds_the_meta_model_element_by_class() {
+        final MetaModelElement elt = metaModelFinder.findMetaModel(MetamodeledEntityMetaModel.class);
+        assertTrue(finder.isSameType(elt.asType(), MetamodeledEntityMetaModel.class));
+        assertFalse(finder.isSameType(elt.asType(), MetamodeledEntityMetaModelAliased.class));
     }
 
     @Test

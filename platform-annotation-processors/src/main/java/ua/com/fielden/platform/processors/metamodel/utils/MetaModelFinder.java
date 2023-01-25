@@ -32,6 +32,7 @@ import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelsElement;
+import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderException;
 import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
 
@@ -77,10 +78,14 @@ public class MetaModelFinder extends ElementFinder {
         return mme.getSimpleName().toString().endsWith(META_MODEL_ALIASED_NAME_SUFFIX);
     }
 
-    public Set<VariableElement> findPropertyMetaModelFields(final MetaModelElement mme) {
-        return findNonStaticDeclaredFields(mme).stream()
-                .filter(field -> isSameType(field.asType(), PropertyMetaModel.class))
-                .collect(toSet());
+    /**
+     * Returns the element representing the given meta-model type.
+     * 
+     * @see ElementFinder#getTypeElement(Class)
+     * @throws ElementFinderException if no coresponding type element was found
+     */
+    public MetaModelElement findMetaModel(final Class<? extends EntityMetaModel> clazz) {
+        return newMetaModelElement(getTypeElement(clazz));
     }
 
     public Set<VariableElement> findEntityMetaModelFields(final MetaModelElement mme) {
