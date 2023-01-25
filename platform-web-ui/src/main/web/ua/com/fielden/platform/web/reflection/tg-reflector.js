@@ -434,7 +434,7 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
     /**
      * Returns 'active entity' in this union entity.
      * 
-     * This method closely resembles methods 'AbstractUnionEntity.activeEntity'.
+     * This method closely resembles method 'AbstractUnionEntity.activeEntity'.
      */
     Entity.prototype._activeEntity = function () {
         const activeProperty = this._activeProperty();
@@ -443,13 +443,13 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
 
      /**
       * Returns 'active property' in this union entity. Active property is a property among union properties that is not null.
-      * If there are no such property then null is ruturned. 
-      * 
+      * If there are no such property then null is returned.
+      *
       * This method closely resembles methods 'AbstractUnionEntity.getNameOfAssignedUnionProperty'.
       */
     Entity.prototype._activeProperty = function () {
         const type = this.constructor.prototype.type.call(this);
-        return type.unionProps().find(prop => this[prop] !== null) || null;
+        return type.unionProps().find(prop => this.get(prop) !== null) || null;
     }
 
     /**
@@ -2129,6 +2129,10 @@ export const TgReflector = Polymer({
      */
     get LINK_CONFIG_TITLE() {
         return _LINK_CONFIG_TITLE;
+    },
+
+    get KEY_NOT_ASSIGNED() {
+        return KEY_NOT_ASSIGNED;
     }
 
 });
