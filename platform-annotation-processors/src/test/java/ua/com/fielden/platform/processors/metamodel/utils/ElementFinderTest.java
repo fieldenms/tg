@@ -25,9 +25,11 @@ import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
+import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.type.TypeVariable;
 import javax.lang.model.type.WildcardType;
 import javax.lang.model.util.Types;
 import javax.tools.JavaCompiler;
@@ -584,6 +586,77 @@ public class ElementFinderTest {
             final TypeMirror typeParamExtendsList = exampleEl.getTypeParameters().get(0).asType();
             assertFalse(finder.isSameType(typeParamExtendsList, List.class));
             assertFalse(finder.isSameType(typeParamExtendsList, ArrayList.class));
+        });
+    }
+
+    @Test
+    public void isSubtype_any_type_is_considered_to_be_a_subtype_of_itself() {
+        processAndEvaluate(finder -> {
+            final PrimitiveType intType = finder.types.getPrimitiveType(TypeKind.INT); 
+            // primitive type
+            assertTrue(finder.isSubtype(intType, int.class));
+            // primitive array type
+            assertTrue(finder.isSubtype(finder.types.getArrayType(intType), int[].class));
+            // array type
+            assertTrue(finder.isSubtype(finder.types.getArrayType(finder.asType(String.class)), String[].class));
+            // void
+            assertTrue(finder.isSubtype(finder.types.getNoType(TypeKind.VOID), void.class));
+            // declared type
+            assertTrue(finder.isSubtype(finder.getTypeElement(String.class).asType(), String.class));
+            // List<String> and List
+            final DeclaredType stringList = finder.types.getDeclaredType(
+                    finder.getTypeElement(List.class), finder.getTypeElement(String.class).asType());
+            assertTrue(finder.isSubtype(stringList, List.class));
+        });
+    }
+
+    @Test
+    public void isSubtype_handles_array_types() {
+        processAndEvaluate(finder -> {
+            final ArrayType integerArray = finder.types.getArrayType(finder.getTypeElement(Integer.class).asType());
+            assertTrue(finder.isSubtype(integerArray, Number[].class));
+            final ArrayType integerArray2D = finder.types.getArrayType(integerArray);
+            assertFalse(finder.isSubtype(integerArray2D, Number[].class));
+            assertTrue(finder.isSubtype(integerArray2D, Number[][].class));
+            assertFalse(finder.isSubtype(integerArray2D, Number[][][].class));
+        });
+    }
+
+    @Test
+    public void isSubtype_handles_declared_types() {
+        processAndEvaluate(finder -> {
+            assertTrue(finder.isSubtype(finder.getTypeElement(Integer.class).asType(), Number.class));
+
+            // parameterised type
+            final DeclaredType stringArrayList = finder.types.getDeclaredType(
+                    finder.getTypeElement(ArrayList.class), finder.getTypeElement(String.class).asType());
+            assertTrue(finder.isSubtype(stringArrayList, List.class));
+
+            assertFalse(finder.isSubtype(finder.getTypeElement(Integer.class).asType(), List.class));
+        });
+    }
+
+    @Test
+    public void isSubtype_returns_false_for_wildcard_types() {
+        processAndEvaluate(finder -> {
+            // ? extends Number
+            final WildcardType extendsNumber = finder.types.getWildcardType(finder.getTypeElement(Number.class).asType(), null);
+            assertFalse(finder.isSubtype(extendsNumber, Number.class));
+        });
+    }
+
+    @Test
+    public void isSubtype_returns_false_for_type_variables() {
+        // class Example<T extends Number>
+        final TypeSpec example = TypeSpec.classBuilder("Example")
+                .addTypeVariable(TypeVariableName.get("T", Number.class))
+                .build();
+
+        processAndEvaluate(List.of(example), finder -> {
+            final TypeElement exampleElt = finder.getTypeElement(example.name);
+            // T extends Number
+            final TypeVariable typeVar = (TypeVariable) exampleElt.getTypeParameters().get(0).asType();
+            assertFalse(finder.isSubtype(typeVar, Number.class));
         });
     }
 

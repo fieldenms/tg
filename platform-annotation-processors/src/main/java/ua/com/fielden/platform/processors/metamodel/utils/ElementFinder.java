@@ -26,11 +26,15 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.MirroredTypeException;
+import javax.lang.model.type.NoType;
+import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
+import javax.lang.model.util.SimpleTypeVisitor14;
 import javax.lang.model.util.Types;
 
 import ua.com.fielden.platform.processors.metamodel.elements.AbstractForwardingElement;
@@ -582,15 +586,53 @@ public class ElementFinder {
     private static final Set<TypeKind> IS_SAME_TYPE_ALLOWED_NON_PRIMITIVE_TYPE_KINDS = Set.of(TypeKind.VOID, TypeKind.ARRAY, TypeKind.DECLARED);
 
     /**
-     * Similar to {@link Types#isSubtype(TypeMirror, TypeMirror)}, but accepts {@link Class} as the second type.
-     *
-     * @param typeMirror the first type
-     * @param clazz the second type
-     * @return {@code true} iff the first type is a subtype of the second
+     * Tests whether the type represented by the type mirror is a subtype of the given class. Any type is considered to be a subtype of itself.
+     * <p>
+     * This comparison makes sense only if the type mirror represents one of:
+     * primitive type, void type, array type, declared type (class/interface). Otherwise {@code false} is returned.
+     * <p>
+     * Comparison of generic types requires special care.
+     * Since {@link Class} instances can represent only raw types, the generic part of the type mirror is always stripped before comparing.
+     * 
      * @throws ElementFinderException if no coresponding type element was found
      */
     public boolean isSubtype(final TypeMirror mirror, final Class<?> clazz) {
-        return types.isSubtype(mirror, asType(clazz));
+        return mirror.accept(new IsSubtypeVisitor(clazz), null);
+    }
+    // where
+    private final class IsSubtypeVisitor extends SimpleTypeVisitor14<Boolean, Void> {
+        private final Class<?> clazz;
+
+        protected IsSubtypeVisitor(final Class<?> clazz) {
+            this.clazz = clazz;
+        }
+
+        @Override
+        protected Boolean defaultAction(TypeMirror e, Void p) {
+            return false;
+        }
+
+        @Override
+        public Boolean visitPrimitive(PrimitiveType t, Void p) {
+            return types.isSubtype(t, asType(clazz));
+        }
+
+        // handle void type
+        @Override
+        public Boolean visitNoType(NoType t, Void p) {
+            return t.getKind().equals(TypeKind.VOID) && clazz.equals(void.class);
+        }
+
+        @Override
+        public Boolean visitArray(ArrayType t, Void p) {
+            return clazz.isArray() && isSubtype(t.getComponentType(), clazz.componentType());
+        }
+
+        @Override
+        public Boolean visitDeclared(DeclaredType t, Void p) {
+            final TypeMirror rawType = types.erasure(t);
+            return types.isSubtype(rawType, asType(clazz));
+        }
     }
 
     public boolean isTopLevelClass(final Element element) {
