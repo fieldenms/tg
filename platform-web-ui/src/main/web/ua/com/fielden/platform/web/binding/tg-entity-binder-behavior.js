@@ -930,6 +930,9 @@ export const TgEntityBinderBehavior = {
                     modPropHolder[propertyName] = {
                         'origVal': originalValue
                     };
+                    if (typeof origActiveProp !== 'undefined') {
+                        modPropHolder[propertyName]['activeProperty'] = origActiveProp;
+                    }
                 }
                 if (typeof origValId !== 'undefined') {
                     modPropHolder[propertyName]['origValId'] = origValId;
