@@ -90,6 +90,13 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 --paper-input-container-focus-color: #03A9F4;
             }
 
+            /* style requiredness */
+            #decorator.informative {
+                --paper-input-container-color: #8E24AA;
+                --paper-input-container-focus-color: #8E24AA;
+                --paper-input-container-invalid-color: #8E24AA;
+            }
+
             /* style warning */
             #decorator[is-invalid].warning {
                 --paper-input-container-color: #FFA000;
@@ -117,7 +124,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 ${propertyAction}
             </div>
             <!-- 'autoValidate' attribute for paper-input-container is 'false' -- all validation is performed manually and is bound to paper-input-error, which could be hidden in case of empty '_error' property -->
-            <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]" tooltip-text$="[[_error]]" slot="add-on">[[_error]]</paper-input-error>
+            <paper-input-error hidden$="[[!_error]]" invalid$="[[_error]]" disabled$="[[_disabled]]" tooltip-text$="[[_error]]" slot="add-on">[[_error]]</paper-input-error>
             <!-- paper-input-char-counter addon is updated whenever 'bindValue' property of child '#input' element is changed -->
             <paper-input-char-counter id="inputCounter" class="footer" hidden$="[[!_isMultilineText(_editorKind)]]" disabled$="[[_disabled]]" slot="add-on"></paper-input-char-counter>
         </paper-input-container>
@@ -507,6 +514,10 @@ export class TgEditor extends PolymerElement {
 
     isInWarning () {
         return this.$.decorator.classList.contains("warning");
+    }
+
+    isWithInformation() {
+        return this.$.decorator.classList.contains("informative");
     }
 
     reflector () {
@@ -901,6 +912,8 @@ export class TgEditor extends PolymerElement {
                 this._bindError(entity["@" + propertyName + "_error"].message);
             } else if (typeof entity["@" + propertyName + "_warning"] !== 'undefined') {
                 this._bindWarning(entity["@" + propertyName + "_warning"].message);
+            } else if (typeof entity["@" + propertyName + "_informative"] !== 'undefined') {
+                this._bindInformative(entity["@" + propertyName + "_informative"].message);
             } else if (typeof entity["@" + propertyName + "_required"] !== 'undefined') {
                 this._bindRequired(entity["@" + propertyName + "_required"]);
             } else {
@@ -946,15 +959,15 @@ export class TgEditor extends PolymerElement {
         this._invalid = false;
         this._error = null;
         this.decorator().classList.remove("warning");
+        this.decorator().classList.remove("informative");
         this.updateStyles();
     }
 
     _bindError (msg) {
         this._resetMessages();
         this.decorator().classList.remove("required");
-        this.decorator().classList.remove("warning");
         this._invalid = true;
-        this._error = msg;
+        this._error = "" + msg;
         this.updateStyles();
     }
     
@@ -963,6 +976,14 @@ export class TgEditor extends PolymerElement {
         this.decorator().classList.remove("required");
         this.decorator().classList.add("warning");
         this._invalid = true;
+        this._error = "" + msg;
+        this.updateStyles();
+    }
+
+    _bindInformative (msg) {
+        this._resetMessages();
+        this.decorator().classList.remove("required");
+        this.decorator().classList.add("informative");
         this._error = "" + msg;
         this.updateStyles();
     }
