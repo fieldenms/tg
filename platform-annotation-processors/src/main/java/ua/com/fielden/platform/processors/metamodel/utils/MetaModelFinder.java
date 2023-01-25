@@ -47,10 +47,22 @@ public class MetaModelFinder extends ElementFinder {
         super(elements, types);
     }
 
+    /**
+     * Returns true iff the type element represents a meta-model.
+     * 
+     * @param typeElement
+     * @return
+     */
     public boolean isMetaModel(final TypeElement typeElement) {
         return isSubtype(typeElement.asType(), META_MODEL_SUPERCLASS);
     }
 
+    /**
+     * Returns true iff the meta-model element represents an aliased meta-model.
+     * 
+     * @param mme
+     * @return
+     */
     public boolean isMetaModelAliased(final MetaModelElement mme) {
         return mme.getSimpleName().toString().endsWith(META_MODEL_ALIASED_NAME_SUFFIX);
     }

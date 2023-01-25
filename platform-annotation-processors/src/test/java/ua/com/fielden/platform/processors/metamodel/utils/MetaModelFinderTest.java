@@ -7,6 +7,7 @@ import static org.junit.Assert.fail;
 import java.util.List;
 import java.util.Optional;
 
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
@@ -54,6 +55,14 @@ public class MetaModelFinderTest {
         assertFalse(metaModelFinder.isMetaModel(finder.getTypeElement(MetamodeledEntity.class)));
         assertTrue(metaModelFinder.isMetaModel(finder.getTypeElement(MetamodeledEntityMetaModel.class)));
         assertTrue(metaModelFinder.isMetaModel(finder.getTypeElement(MetamodeledEntityMetaModelAliased.class)));
+    }
+
+    @Test
+    public void isMetaModelAliased_returns_true_if_the_element_represents_an_alised_meta_model() {
+        final TypeElement mmTypeElt = finder.getTypeElement(MetamodeledEntityMetaModel.class);
+        assertFalse(metaModelFinder.isMetaModelAliased(metaModelFinder.newMetaModelElement(mmTypeElt)));
+        final TypeElement mmAliasedTypeElt = finder.getTypeElement(MetamodeledEntityMetaModelAliased.class);
+        assertTrue(metaModelFinder.isMetaModelAliased(metaModelFinder.newMetaModelElement(mmAliasedTypeElt)));
     }
 
     @Test
