@@ -279,12 +279,30 @@ public class Result extends RuntimeException {
     }
 
     /**
+     * Returns true if this {@link Result} is not {@link Informative} instance and is successful.
+     *
+     * @return
+     */
+    public boolean isSuccessfulWithoutInformation() {
+        return isSuccessful() && !(this instanceof Informative);
+    }
+
+    /**
      * Returns true only if this {@link Result} is successful and is instance of {@link Warning} class.
      *
      * @return
      */
     public boolean isWarning() {
         return isSuccessful() && this instanceof Warning;
+    }
+
+    /**
+     * Returns true only if this {@link Result} is successful and is instance of {@link Informative} class.
+     *
+     * @return
+     */
+    public boolean isInformation() {
+        return isSuccessful() && this instanceof Informative;
     }
 
     @Override
