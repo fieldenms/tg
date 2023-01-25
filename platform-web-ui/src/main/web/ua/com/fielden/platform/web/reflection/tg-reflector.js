@@ -447,7 +447,7 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
       * 
       * This method closely resembles methods 'AbstractUnionEntity.getNameOfAssignedUnionProperty'.
       */
-      Entity.prototype._activeProperty = function () {
+    Entity.prototype._activeProperty = function () {
         const type = this.constructor.prototype.type.call(this);
         return type.unionProps().find(prop => this[prop] !== null) || null;
     }

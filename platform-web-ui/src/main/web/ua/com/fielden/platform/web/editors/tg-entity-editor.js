@@ -723,7 +723,7 @@ export class TgEntityEditor extends TgEditor {
         let indexOfFirstNewValue = -1;
         for (let index = 0; index < entities.length; index++) {
             // Entity is converted to a string representation of itself that is the same as string representation of its key or [key is not assigned] string if there is no key.
-            // This includes correct conversion of simple and composite entities. Top-level union entities are not supported -- only as part of other entities as a property values.
+            // This includes correct conversion of simple and composite entities. Top-level union entities are now also supported -- adds suffix to indicate active property.
             const key = entities[index].toString() + (entities[index].type().isUnionEntity() ? " " + entities[index]._activeProperty() : "");
             entities[index]['@key'] = key;
             const isNew = this.result.pushValue(entities[index]);
@@ -894,8 +894,14 @@ export class TgEntityEditor extends TgEditor {
     }
 
     _editingValueChanged (newValue, oldValue) {
-        if (this._refreshCycleStarted !== true && this.entity && typeof this.entity[`@${this.propertyName}_activePropertyWasSelected`] === 'undefined') {
-            this.entity[`@${this.propertyName}_activePropertyWasSelected`] = false;
+        if (
+            this.entity
+            && this.entity.type().prop(this.propertyName).type()
+            && this.entity.type().prop(this.propertyName).type().isUnionEntity()
+            && !this.unionValueChosenFromAutocompleter
+            && this._refreshCycleStarted !== true
+        ) {
+            this.entity[`@${this.propertyName}_activeProperty`] = null;
         }
         super._editingValueChanged(newValue, oldValue);
     }
@@ -924,18 +930,27 @@ export class TgEntityEditor extends TgEditor {
                 const selectedEntity = Object.values(this.result.selectedValues)[0];
                 if (selectedEntity.type().isUnionEntity()) {
                     const activeProp = selectedEntity._activeProperty();
-                    //If selected entity is union entity then add additional meta property to binding entity in order to correctly initialise modifPropertyHolder for this property.
                     const prevActiveProp = this.entity[`@${this.propertyName}_activeProperty`];
+                    // If selected entity is union entity then add additional meta property to binding entity in order to correctly initialise modifPropertyHolder for this property.
                     this.entity[`@${this.propertyName}_activeProperty`] = activeProp;
-                    this.entity[`@${this.propertyName}_activePropertyWasSelected`] = true;
-                    if (this._commValue === selectedValuesAsStr && activeProp !== prevActiveProp) {
-                        //If editing value doesn't changes then check whether active property of original entity changes. If it so then kick in value change process to validate it properly.
-                        const pseudoNewValue = this.convertFromString(selectedValuesAsStr)
-                        this._acceptedValueChanged(pseudoNewValue, pseudoNewValue);
+                    if (this._editingValue === selectedValuesAsStr) {
+                        if (activeProp !== prevActiveProp) {
+                            // If editing value doesn't changes then check whether active property of original entity changes. If it so then kick in value change process to validate it properly.
+                            const pseudoNewValue = this.convertFromString(selectedValuesAsStr)
+                            this._acceptedValueChanged(pseudoNewValue, pseudoNewValue);
+                        }
+                    } else {
+                        this.unionValueChosenFromAutocompleter = true;
+                        try {
+                            this._editingValue = selectedValuesAsStr;
+                        } finally {
+                            this.unionValueChosenFromAutocompleter = false;
+                        }
                     }
+                } else {
+                    // if this is a single selection config then need to simply assign the value
+                    this._editingValue = selectedValuesAsStr;
                 }
-                // if this is a single selection config then need to simply assign the value
-                this._editingValue = selectedValuesAsStr;
             } else {
                 // in case of multi selection config things get a little more interesting
                 // as we need to insert the value into the right position of an existing text in the input field

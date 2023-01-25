@@ -904,7 +904,6 @@ export const TgEntityBinderBehavior = {
                 const origValId = _originalBindingEntity['@' + propertyName + '_id'];
                 const activeProp = bindingEntity['@' + propertyName + '_activeProperty'];
                 const origActiveProp = _originalBindingEntity['@' + propertyName + '_activeProperty'];
-                const wasActivePropertySelected = bindingEntity['@' + propertyName + '_activePropertyWasSelected'];
 
                 // VERY IMPORTANT: the property is considered to be 'modified'
                 //                 in the case when its value does not equal to original value
@@ -913,13 +912,13 @@ export const TgEntityBinderBehavior = {
                 //                 The 'modified' property is marked by existence of 'val' sub-property.
                 //
                 //                 All modified properties will be applied on the server upon the validation prototype.
-                if (!self._reflector().equalsEx(value, originalValue) || !self._reflector().equalsEx(typeof wasActivePropertySelected === 'undefined' || wasActivePropertySelected ? activeProp : null, origActiveProp)) {
+                if (!self._reflector().equalsEx(value, originalValue) || !self._reflector().equalsEx(activeProp, origActiveProp)) {
                     // the property is 'modified'
                     modPropHolder[propertyName] = {
                         'val': value,
                         'origVal': originalValue
                     };
-                    if (typeof activeProp !== 'undefined' && (typeof wasActivePropertySelected === 'undefined' || wasActivePropertySelected)) {
+                    if (typeof activeProp !== 'undefined') {
                         modPropHolder[propertyName]['activeProperty'] = activeProp;
                     }
                     modPropHolder['@modified'] = true;
