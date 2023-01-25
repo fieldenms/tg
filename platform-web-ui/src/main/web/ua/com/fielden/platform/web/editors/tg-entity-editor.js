@@ -1350,12 +1350,12 @@ export class TgEntityEditor extends TgEditor {
 
     _calculateTypeTitle (entity) {
         if (!this.multi && this.reflector().isEntity(entity)) {
-            const entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
-            if (entityValue != null) {
-                const entityType = entityValue.type();
-                if (entityType.isUnionEntity() && typeof entity["@" + this.propertyName + "_error"] === 'undefined') {
-                    return entityType.prop(entityValue._activeProperty()).title();
-                }
+            const fullEntity = this.reflector().tg_getFullEntity(entity);
+            const value = this.reflector().isError(fullEntity.prop(this.propertyName).validationResult())
+                ? fullEntity.prop(this.propertyName).lastInvalidValue()
+                : fullEntity.get(this.propertyName);
+            if (value != null && value.type() && value.type().isUnionEntity() && !this.reflector().isMockNotFoundEntity(value)) {
+                return value.type().prop(value._activeProperty()).title();
             }
         }
         return null;
