@@ -167,9 +167,9 @@ export class TgEntityEditor extends TgEditor {
 
     static get properties () {
         return {
-            /* 
-             * Indicates whether a search is in progress. This property controls visibility of the progress indecator.
-             * It is bound to iron-ajax property loading, which basicaly controlls spinner visibility. 
+            /**
+             * Indicates whether a search is in progress. This property controls visibility of the progress indicator.
+             * It is bound to iron-ajax property loading, which basically controls spinner visibility.
              */
             searching: {
                 type: Boolean,
@@ -626,6 +626,10 @@ export class TgEntityEditor extends TgEditor {
         return searching === true || opened == false;
     }
 
+    /**
+     * Computes label value for entity editor.
+     * Shows 'Property Title' in most cases and 'Property Title (Active Property)' for union-typed entity editors with proper union value (that has active entity inside).
+     */
     _computeEditorPropTitle (propTitle, _typeTitle) {
         return `${propTitle}${_typeTitle ? ` (${_typeTitle})`: ""}`;
     }
@@ -893,6 +897,12 @@ export class TgEntityEditor extends TgEditor {
         }
     }
 
+    /**
+     * Overridden to clear activeProperty of union-typed value.
+     * This is to make active property undefined for the cases where user types the value using keyboard.
+     * 'unionValueChosenFromAutocompleter' parameter differentiates the case of accepting value from drop-down from typing using keyboard.
+     * See '_done' method with '... .isUnionEntity()' condition for more details.
+     */
     _editingValueChanged (newValue, oldValue) {
         if (
             this.entity
@@ -940,7 +950,7 @@ export class TgEntityEditor extends TgEditor {
                             this._acceptedValueChanged(pseudoNewValue, pseudoNewValue);
                         }
                     } else {
-                        this.unionValueChosenFromAutocompleter = true;
+                        this.unionValueChosenFromAutocompleter = true; // avoid clearing activeProperty in '_editingValueChanged' method (synchronous)
                         try {
                             this._editingValue = selectedValuesAsStr;
                         } finally {
@@ -1343,11 +1353,18 @@ export class TgEntityEditor extends TgEditor {
         return dialog;
     }
 
+    /**
+     * Overridden to calculate union value type title on each arrival of binding entity.
+     */
     _entityChanged (newValue, oldValue) {
         super._entityChanged(newValue, oldValue);
         this._typeTitle = this._calculateTypeTitle(newValue);
     }
 
+    /**
+     * Calculates union value type title. It shows active property for non-empty union, even if union is only attempted (invalid) value in the editor.
+     * For empty values and for mocks (both not-found and more-than-one) there would be no type title.
+     */
     _calculateTypeTitle (entity) {
         if (!this.multi && this.reflector().isEntity(entity)) {
             const fullEntity = this.reflector().tg_getFullEntity(entity);
