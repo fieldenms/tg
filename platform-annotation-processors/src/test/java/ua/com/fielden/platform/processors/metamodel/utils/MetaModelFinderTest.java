@@ -22,11 +22,13 @@ import org.junit.ClassRule;
 import org.junit.Test;
 
 import ua.com.fielden.platform.processors.metamodel.MetaModelProcessor;
+import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 import ua.com.fielden.platform.processors.test_entities.EntityWithDescTitleWithoutMetaModel;
 import ua.com.fielden.platform.processors.test_entities.MetamodeledEntity;
+import ua.com.fielden.platform.processors.test_entities.SubEntity;
 import ua.com.fielden.platform.processors.test_entities.meta.EntityWithEntityTypedAndOrdinaryPropsMetaModel;
 import ua.com.fielden.platform.processors.test_entities.meta.EntityWithEntityTypedAndOrdinaryPropsMetaModelAliased;
 import ua.com.fielden.platform.processors.test_entities.meta.MetamodeledEntityMetaModel;
@@ -34,6 +36,7 @@ import ua.com.fielden.platform.processors.test_entities.meta.MetamodeledEntityMe
 import ua.com.fielden.platform.processors.test_entities.meta.SubEntityMetaModel;
 import ua.com.fielden.platform.processors.test_entities.meta.SubEntityMetaModelAliased;
 import ua.com.fielden.platform.processors.test_entities.meta.SuperEntityMetaModel;
+import ua.com.fielden.platform.processors.test_entities.meta.SuperEntityMetaModelAliased;
 import ua.com.fielden.platform.processors.test_utils.ProcessingRule;
 import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.Pair;
@@ -200,6 +203,25 @@ public class MetaModelFinderTest {
         assertor.accept(false, pair(Object.class, "toString"));
     }
 
+    @Test
+    public void isSameMetaModel_returns_true_if_concept_and_element_represent_the_same_meta_model() {
+        final BiConsumer<Boolean, Pair<Class<? extends AbstractEntity>, Class<? extends EntityMetaModel>>> assertor =
+                // accepts a pair of (entity type for meta-model concept, meta-model type for element)
+                (expected, pair) -> {
+                    final Class<? extends AbstractEntity> entityClass = pair.getKey();
+                    final Class<? extends EntityMetaModel> metaModelClass = pair.getValue();
+                    final MetaModelConcept mmc = new MetaModelConcept(entityFinder.findEntity(entityClass));
+                    final MetaModelElement mme = metaModelFinder.findMetaModel(metaModelClass);
+                    assertEquals(expected, metaModelFinder.isSameMetaModel(mmc, mme));
+                };
+
+        assertor.accept(true, pair(SubEntity.class, SubEntityMetaModel.class));
+        assertor.accept(true, pair(SubEntity.class, SubEntityMetaModelAliased.class));
+        assertor.accept(false, pair(SubEntity.class, SuperEntityMetaModel.class));
+        assertor.accept(false, pair(SubEntity.class, SuperEntityMetaModelAliased.class));
+        assertor.accept(false, pair(SubEntity.class, MetamodeledEntityMetaModel.class));
+        assertor.accept(false, pair(SubEntity.class, MetamodeledEntityMetaModelAliased.class));
+    }
     @Test
     public void findMetaModelForEntity_finds_a_meta_model_for_a_metamodeled_entity() {
         final EntityElement metamodeledEntityElt = entityFinder.findEntity(MetamodeledEntity.class);
