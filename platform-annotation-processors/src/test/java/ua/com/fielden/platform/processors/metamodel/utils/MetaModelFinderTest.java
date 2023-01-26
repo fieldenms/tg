@@ -179,6 +179,28 @@ public class MetaModelFinderTest {
     }
 
     @Test
+    public void isEntityMetaModelMethod_returns_true_for_methods_that_model_properties_of_metamodeled_entity_types() {
+        final BiConsumer<Boolean, Pair<Class<?>, String>> assertor =
+                (expected, clazzAndMethodName) -> {
+                    final var clazz = clazzAndMethodName.getKey();
+                    final String name = clazzAndMethodName.getValue();
+                    final TypeElement typeElt = finder.getTypeElement(clazz);
+                    final ExecutableElement ee = finder.findMethods(typeElt).stream()
+                            .filter(elt -> elt.getSimpleName().toString().equals(name))
+                            .findFirst().orElseThrow();
+                    assertEquals(expected, metaModelFinder.isEntityMetaModelMethod(ee));
+                };
+
+        // ordinary property
+        assertor.accept(false, pair(SubEntityMetaModel.class, "prop1"));
+        // metamodeled entity type property
+        assertor.accept(true, pair(SubEntityMetaModel.class, "parent"));
+        // something completely different
+        assertor.accept(false, pair(SubEntityMetaModelAliased.class, "toPath"));
+        assertor.accept(false, pair(Object.class, "toString"));
+    }
+
+    @Test
     public void findMetaModelForEntity_finds_a_meta_model_for_a_metamodeled_entity() {
         final EntityElement metamodeledEntityElt = entityFinder.findEntity(MetamodeledEntity.class);
         metaModelFinder.findMetaModelForEntity(metamodeledEntityElt).ifPresentOrElse(metaModelElt -> {
