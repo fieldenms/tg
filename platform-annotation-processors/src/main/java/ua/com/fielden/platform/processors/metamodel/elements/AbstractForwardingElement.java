@@ -39,7 +39,12 @@ public abstract class AbstractForwardingElement<E extends Element> implements El
     public E element() {
         return element;
     }
-    
+
+    @Override
+    public String toString() {
+        return element.toString();
+    }
+
     @Override
     public TypeMirror asType() {
         return element.asType();
