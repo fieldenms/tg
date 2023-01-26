@@ -140,6 +140,19 @@ public class MetaModelFinderTest {
     }
 
     @Test
+    public void findDeclaredPropertyMethod_finds_the_declared_property_method_by_name() {
+        final MetaModelElement mme = metaModelFinder.findMetaModel(SubEntityMetaModel.class);
+        // declared property
+        assertTrue(metaModelFinder.findDeclaredPropertyMethod(mme, "parent").isPresent());
+        // inherited property
+        assertTrue(metaModelFinder.findDeclaredPropertyMethod(mme, "prop2").isEmpty());
+        // non-existent property
+        assertTrue(metaModelFinder.findDeclaredPropertyMethod(mme, "stub").isEmpty());
+        // non-property method
+        assertTrue(metaModelFinder.findDeclaredPropertyMethod(mme, "getEntityClass").isEmpty());
+    }
+
+    @Test
     public void findMetaModelForEntity_finds_a_meta_model_for_a_metamodeled_entity() {
         final EntityElement metamodeledEntityElt = entityFinder.findEntity(MetamodeledEntity.class);
         metaModelFinder.findMetaModelForEntity(metamodeledEntityElt).ifPresentOrElse(metaModelElt -> {
