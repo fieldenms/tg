@@ -225,10 +225,7 @@ public class MetaModelFinder extends ElementFinder {
     }
 
     /**
-     * Attempts to find a meta-model for a given entity.
-     * @param entityElement
-     * @param elements
-     * @return {@link MetaModelElement} instance wrapped into {@link Optional} if found, else empty optional
+     * Returns an optional describing a meta-model element for the specified entity element.
      */
     public Optional<MetaModelElement> findMetaModelForEntity(final EntityElement entityElement) {
         final MetaModelConcept mmc = new MetaModelConcept(entityElement);
