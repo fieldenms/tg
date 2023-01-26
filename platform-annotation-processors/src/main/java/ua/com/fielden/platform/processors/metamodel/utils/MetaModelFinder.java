@@ -204,13 +204,12 @@ public class MetaModelFinder extends ElementFinder {
     }
 
     /**
-     * Tests whether a given meta-model method metamodels a property of a metamodeled type.
+     * Tests whether a method of a meta-model models a property of a metamodeled entity type.
      * @param method
      * @return true if the method's return type is a subtype of {@link EntityMetaModel}, false otherwise
      */
     public boolean isEntityMetaModelMethod(final ExecutableElement method) {
-        return !method.getModifiers().contains(Modifier.STATIC) &&
-                isSubtype(method.getReturnType(), EntityMetaModel.class);
+        return !method.getModifiers().contains(Modifier.STATIC) && isMetaModel(method.getReturnType());
     }
 
     /**
