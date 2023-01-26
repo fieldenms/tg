@@ -194,7 +194,7 @@ public class MetaModelStructureTest {
         final EntityElement entity = entityFinder.findEntity(EntityWithEntityTypedAndOrdinaryProps.class);
         final MetaModelElement metaModel = findMetaModel(entity);
 
-        final Set<ExecutableElement> metamodeledProps = metaModelFinder.findPropertyMethods(metaModel);
+        final List<ExecutableElement> metamodeledProps = metaModelFinder.findPropertyMethods(metaModel);
         for (final PropertyElement prop: entityFinder.findProperties(entity)) {
             // find the metamodeled prop
             // TODO the logic handling transformations between entity properties and meta-model properties should be abstracted

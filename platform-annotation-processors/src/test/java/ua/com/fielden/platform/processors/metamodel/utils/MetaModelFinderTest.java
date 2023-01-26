@@ -114,6 +114,32 @@ public class MetaModelFinderTest {
     }
 
     @Test
+    public void findPropertyMethods_finds_all_methods_that_model_entity_properties() {
+        final BiConsumer<Collection<String>, Class<? extends EntityMetaModel>> assertor = 
+                (expectedProperties, metaModel) -> {
+                    final MetaModelElement mme = metaModelFinder.findMetaModel(metaModel);
+                    assertEqualContents(expectedProperties,
+                            metaModelFinder.findPropertyMethods(mme).stream().map(elt -> elt.getSimpleName().toString()).toList());
+                };
+
+        assertor.accept(List.of("desc", "entity1", "entity2", "id", "key", "prop1"), EntityWithEntityTypedAndOrdinaryPropsMetaModel.class);
+        assertor.accept(List.of("desc", "entity1", "entity2", "id", "key", "prop1"), EntityWithEntityTypedAndOrdinaryPropsMetaModelAliased.class);
+    }
+
+    @Test
+    public void findPropertyMethods_includes_both_overriden_methods_and_their_overriders() {
+        final BiConsumer<Collection<String>, Class<? extends EntityMetaModel>> assertor = 
+                (expectedProperties, metaModel) -> {
+                    final MetaModelElement mme = metaModelFinder.findMetaModel(metaModel);
+                    assertEqualContents(expectedProperties,
+                            metaModelFinder.findPropertyMethods(mme).stream().map(elt -> elt.getSimpleName().toString()).toList());
+                };
+
+        assertor.accept(List.of("desc", "id", "key", "parent", "prop1", "desc", "id", "key", "prop1", "prop2"), SubEntityMetaModel.class);
+        assertor.accept(List.of("desc", "id", "key", "parent", "prop1", "desc", "id", "key", "prop1", "prop2"), SubEntityMetaModelAliased.class);
+    }
+
+    @Test
     public void findMetaModelForEntity_finds_a_meta_model_for_a_metamodeled_entity() {
         final EntityElement metamodeledEntityElt = entityFinder.findEntity(MetamodeledEntity.class);
         metaModelFinder.findMetaModelForEntity(metamodeledEntityElt).ifPresentOrElse(metaModelElt -> {

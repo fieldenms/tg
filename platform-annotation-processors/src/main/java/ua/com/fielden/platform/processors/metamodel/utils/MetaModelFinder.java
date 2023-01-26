@@ -128,14 +128,24 @@ public class MetaModelFinder extends ElementFinder {
     }
 
     /**
-     * Finds all methods of a meta-model that model properties of the underlying entity. Processes the whole meta-model hierarchy (i.e. meta-models that extend other meta-models).
-     * @param mme the target meta-model
-     * @return a set of methods that model properties of the underlying entity
+     * Returns a stream of elements representing methods of a meta-model (both declared and inherited) that model properties of the 
+     * underlying entity.
+     * 
+     * @param mme the target meta-model element
+     * @return a stream of method elements that model properties of the underlying entity
      */
-    public Set<ExecutableElement> findPropertyMethods(final MetaModelElement mme) {
-        return findMethods(mme).stream()
-                .filter(el -> isPropertyMetaModelMethod(el) || isEntityMetaModelMethod(el))
-                .collect(toCollection(LinkedHashSet::new));
+    public Stream<ExecutableElement> streamPropertyMethods(final MetaModelElement mme) {
+        return streamMetaModelHierarchy(mme).flatMap(this::streamDeclaredPropertyMethods);
+    }
+
+    /**
+     * Collects the elements of {@link #streamPropertyMethods(MetaModelElement)} into an unmodifiable list.
+     * <p>
+     * <b>NOTE</b>: The returned list may include methods with equivalent signatures declared by different types (e.g. when a method is overriden).
+     * For a finer control of what is included use {@link #streamPropertyMethods(MetaModelElement)}.
+     */
+    public List<ExecutableElement> findPropertyMethods(final MetaModelElement mme) {
+        return streamPropertyMethods(mme).toList();
     }
 
     /**
