@@ -10,9 +10,11 @@ import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.ME
 
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -86,6 +88,23 @@ public class MetaModelFinder extends ElementFinder {
      */
     public MetaModelElement findMetaModel(final Class<? extends EntityMetaModel> clazz) {
         return newMetaModelElement(getTypeElement(clazz));
+    }
+
+    /**
+     * Returns a stream of meta-model elements forming a type hierarchy from the given meta-model element up to (excluding) {@link EntityMetaModel}. 
+     * 
+     * @param mme
+     * @return
+     */
+    public Stream<MetaModelElement> streamMetaModelHierarchy(final MetaModelElement mme) {
+        return Stream.concat(Stream.of(mme), streamSuperclassesBelow(mme.element(), META_MODEL_SUPERCLASS).map(this::newMetaModelElement));
+    }
+    
+    /**
+     * Collects the elements of {@link #streamMetaModelHierarchy(MetaModelElement)} into an unmodifiable list.
+     */
+    public List<MetaModelElement> listMetaModelHierarchy(final MetaModelElement mme) {
+        return streamMetaModelHierarchy(mme).toList();
     }
 
     public Set<VariableElement> findEntityMetaModelFields(final MetaModelElement mme) {

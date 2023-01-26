@@ -6,8 +6,9 @@ import static org.junit.Assert.fail;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BiConsumer;
+import java.util.stream.Stream;
 
-import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
@@ -18,10 +19,17 @@ import org.junit.Test;
 import ua.com.fielden.platform.processors.metamodel.MetaModelProcessor;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
+import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 import ua.com.fielden.platform.processors.test_entities.EntityWithDescTitleWithoutMetaModel;
+import ua.com.fielden.platform.processors.test_entities.EntityWithOrdinaryProps;
 import ua.com.fielden.platform.processors.test_entities.MetamodeledEntity;
+import ua.com.fielden.platform.processors.test_entities.meta.EntityWithEntityTypedAndOrdinaryPropsMetaModel;
+import ua.com.fielden.platform.processors.test_entities.meta.EntityWithOrdinaryPropsMetaModel;
 import ua.com.fielden.platform.processors.test_entities.meta.MetamodeledEntityMetaModel;
 import ua.com.fielden.platform.processors.test_entities.meta.MetamodeledEntityMetaModelAliased;
+import ua.com.fielden.platform.processors.test_entities.meta.SubEntityMetaModel;
+import ua.com.fielden.platform.processors.test_entities.meta.SubEntityMetaModelAliased;
+import ua.com.fielden.platform.processors.test_entities.meta.SuperEntityMetaModel;
 import ua.com.fielden.platform.processors.test_utils.ProcessingRule;
 
 /**
@@ -71,6 +79,22 @@ public class MetaModelFinderTest {
         final MetaModelElement elt = metaModelFinder.findMetaModel(MetamodeledEntityMetaModel.class);
         assertTrue(finder.isSameType(elt.asType(), MetamodeledEntityMetaModel.class));
         assertFalse(finder.isSameType(elt.asType(), MetamodeledEntityMetaModelAliased.class));
+    }
+
+    @Test
+    public void listMetaModelHierarchy_returns_a_hierarchy_of_meta_model_elements() {
+        final BiConsumer<Stream<Class<? extends EntityMetaModel>>, Class<? extends EntityMetaModel>> assertor = 
+                (expectedHirerachy, metaModel) -> assertEquals(
+                        expectedHirerachy.map(c -> metaModelFinder.findMetaModel(c)).toList(),
+                        metaModelFinder.listMetaModelHierarchy(metaModelFinder.findMetaModel(metaModel)));
+
+        // simplest hierarchy of 1 meta-model
+        assertor.accept(Stream.of(MetamodeledEntityMetaModel.class), MetamodeledEntityMetaModel.class);
+        // hierarchy of 2 meta-models
+        assertor.accept(Stream.of(SubEntityMetaModel.class, SuperEntityMetaModel.class), SubEntityMetaModel.class);
+        // hierarchy for an aliased meta-model
+        assertor.accept(Stream.of(SubEntityMetaModelAliased.class, SubEntityMetaModel.class, SuperEntityMetaModel.class),
+                SubEntityMetaModelAliased.class);
     }
 
     @Test
