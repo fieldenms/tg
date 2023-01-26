@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.util.Collection;
 import java.util.List;
@@ -11,6 +12,8 @@ import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
@@ -33,6 +36,7 @@ import ua.com.fielden.platform.processors.test_entities.meta.SubEntityMetaModelA
 import ua.com.fielden.platform.processors.test_entities.meta.SuperEntityMetaModel;
 import ua.com.fielden.platform.processors.test_utils.ProcessingRule;
 import ua.com.fielden.platform.utils.CollectionUtil;
+import ua.com.fielden.platform.utils.Pair;
 
 /**
  * A test case for utilities provided by {@link MetaModelFinder}.
@@ -150,6 +154,28 @@ public class MetaModelFinderTest {
         assertTrue(metaModelFinder.findDeclaredPropertyMethod(mme, "stub").isEmpty());
         // non-property method
         assertTrue(metaModelFinder.findDeclaredPropertyMethod(mme, "getEntityClass").isEmpty());
+    }
+
+    @Test
+    public void isPropertyMetaModelMethod_returns_true_for_methods_that_model_ordinary_properties() {
+        final BiConsumer<Boolean, Pair<Class<?>, String>> assertor =
+                (expected, clazzAndMethodName) -> {
+                    final var clazz = clazzAndMethodName.getKey();
+                    final String name = clazzAndMethodName.getValue();
+                    final TypeElement typeElt = finder.getTypeElement(clazz);
+                    final ExecutableElement ee = finder.findMethods(typeElt).stream()
+                            .filter(elt -> elt.getSimpleName().toString().equals(name))
+                            .findFirst().orElseThrow();
+                    assertEquals(expected, metaModelFinder.isPropertyMetaModelMethod(ee));
+                };
+
+        // ordinary property
+        assertor.accept(true, pair(SubEntityMetaModel.class, "prop1"));
+        // metamodeled entity type property
+        assertor.accept(false, pair(SubEntityMetaModel.class, "parent"));
+        // something completely different
+        assertor.accept(false, pair(SubEntityMetaModelAliased.class, "toPath"));
+        assertor.accept(false, pair(Object.class, "toString"));
     }
 
     @Test

@@ -194,7 +194,7 @@ public class MetaModelFinder extends ElementFinder {
     }
 
     /**
-     * Tests whether a given meta-model method metamodels a property of a non-metamodeled type.
+     * Tests whether a method of a meta-model models an ordinary property (one that has a non-metamodeled type).
      * @param method
      * @return true if the method's return type is {@link PropertyMetaModel}, false otherwise
      */
