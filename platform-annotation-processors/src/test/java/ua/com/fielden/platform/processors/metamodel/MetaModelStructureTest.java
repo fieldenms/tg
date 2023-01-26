@@ -235,7 +235,7 @@ public class MetaModelStructureTest {
         assertTrue(elementFinder.types.isSameType(subEntityMetaModel.getSuperclass(), superEntityMetaModel.asType()));
         
         final List<PropertyElement> subEntityDeclaredProps = entityFinder.findDeclaredProperties(subEntity);
-        final Set<ExecutableElement> subEntityDeclaredMetamodeledProps = metaModelFinder.findDeclaredPropertyMethods(subEntityMetaModel);
+        final List<ExecutableElement> subEntityDeclaredMetamodeledProps = metaModelFinder.findDeclaredPropertyMethods(subEntityMetaModel);
         // +3 for properties "key", "id" and "desc"
         assertEquals(subEntityDeclaredProps.size() + 3, subEntityDeclaredMetamodeledProps.size());
 
@@ -340,7 +340,7 @@ public class MetaModelStructureTest {
         final MetaModelElement mmAbstractSuperEntityWithoutKeyType = findMetaModel(abstractSuperEntityWithoutKeyType);
 
         final List<PropertyElement> abstractSuperEntityWithoutKeyTypeDeclaredProps = entityFinder.findDeclaredProperties(abstractSuperEntityWithoutKeyType);
-        final Set<ExecutableElement> abstractSuperEntityWithoutKeyTypeDeclaredMetamodeledProps = metaModelFinder.findDeclaredPropertyMethods(mmAbstractSuperEntityWithoutKeyType);
+        final List<ExecutableElement> abstractSuperEntityWithoutKeyTypeDeclaredMetamodeledProps = metaModelFinder.findDeclaredPropertyMethods(mmAbstractSuperEntityWithoutKeyType);
         assertEquals(abstractSuperEntityWithoutKeyTypeDeclaredProps.size(), abstractSuperEntityWithoutKeyTypeDeclaredMetamodeledProps.size());
 
         assertFalse("Property %s should not have been modelled.".formatted(KEY), abstractSuperEntityWithoutKeyTypeDeclaredMetamodeledProps.stream().anyMatch(pe -> KEY.equals(pe.getSimpleName().toString())));
@@ -359,7 +359,7 @@ public class MetaModelStructureTest {
         assertTrue(elementFinder.types.isSameType(mmSubEntityWithKeyType.getSuperclass(), mmAbstractSuperEntityWithouKeyType.asType()));
 
         final List<PropertyElement> subEntityWithKeyTypeDeclaredProps = entityFinder.findDeclaredProperties(subEntityWithKeyType);
-        final Set<ExecutableElement> subEntityWithKeyTypeDeclaredMetamodeledProps = metaModelFinder.findDeclaredPropertyMethods(mmSubEntityWithKeyType);
+        final List<ExecutableElement> subEntityWithKeyTypeDeclaredMetamodeledProps = metaModelFinder.findDeclaredPropertyMethods(mmSubEntityWithKeyType);
 
         assertEquals(1, subEntityWithKeyTypeDeclaredProps.size());
         // +3 for properties "key", "id" and "desc"
@@ -384,7 +384,7 @@ public class MetaModelStructureTest {
         assertTrue(elementFinder.types.isSameType(mmSubEntityWithKeyType.getSuperclass(), mmAbstractSuperEntityWithouKeyType.asType()));
         
         final List<PropertyElement> subEntityWithKeyTypeDeclaredProps = entityFinder.findDeclaredProperties(subEntityWithKeyType);
-        final Set<ExecutableElement> subEntityWithKeyTypeDeclaredMetamodeledProps = metaModelFinder.findDeclaredPropertyMethods(mmSubEntityWithKeyType);
+        final List<ExecutableElement> subEntityWithKeyTypeDeclaredMetamodeledProps = metaModelFinder.findDeclaredPropertyMethods(mmSubEntityWithKeyType);
 
         assertEquals(1, subEntityWithKeyTypeDeclaredProps.size());
         // +3 for properties "key", "id" and "desc"
@@ -409,7 +409,7 @@ public class MetaModelStructureTest {
         assertTrue(elementFinder.types.isSameType(mmSubEntityWithKeyType.getSuperclass(), mmAbstractSuperEntityWithouKeyType.asType()));
         
         final List<PropertyElement> subEntityWithKeyTypeDeclaredProps = entityFinder.findDeclaredProperties(subEntityWithKeyType);
-        final Set<ExecutableElement> subEntityWithKeyTypeDeclaredMetamodeledProps = metaModelFinder.findDeclaredPropertyMethods(mmSubEntityWithKeyType);
+        final List<ExecutableElement> subEntityWithKeyTypeDeclaredMetamodeledProps = metaModelFinder.findDeclaredPropertyMethods(mmSubEntityWithKeyType);
 
         assertEquals(1, subEntityWithKeyTypeDeclaredProps.size());
         // +3 for properties "key", "id" and "desc"

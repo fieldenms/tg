@@ -139,14 +139,20 @@ public class MetaModelFinder extends ElementFinder {
     }
 
     /**
-     * Finds all declared methods of a meta-model that model properties of the underlying entity.
-     * @param mme the target meta-model
-     * @return a set of methods that model properties of the underlying entity
+     * Returns a stream of elements representing declared methods of a meta-model that model properties of the underlying entity.
+     * 
+     * @param mme the target meta-model element
+     * @return a stream of method elements that model properties of the underlying entity
      */
-    public Set<ExecutableElement> findDeclaredPropertyMethods(final MetaModelElement mme) {
-        return findDeclaredMethods(mme).stream()
-                .filter(el -> isPropertyMetaModelMethod(el) || isEntityMetaModelMethod(el))
-                .collect(toCollection(LinkedHashSet::new));
+    public Stream<ExecutableElement> streamDeclaredPropertyMethods(final MetaModelElement mme) {
+        return streamDeclaredMethods(mme.element()).filter(el -> isPropertyMetaModelMethod(el) || isEntityMetaModelMethod(el));
+    }
+
+    /**
+     * Collects the elements of {@link #streamDeclaredPropertyMethods(MetaModelElement)} into an unmodifiable list.
+     */
+    public List<ExecutableElement> findDeclaredPropertyMethods(final MetaModelElement mme) {
+        return streamDeclaredPropertyMethods(mme).toList();
     }
 
     /**
