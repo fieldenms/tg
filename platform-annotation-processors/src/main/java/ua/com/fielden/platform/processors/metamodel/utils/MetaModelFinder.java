@@ -278,7 +278,10 @@ public class MetaModelFinder extends ElementFinder {
     public boolean isActive(final MetaModelElement mme) {
         return mme.getKind() == ElementKind.CLASS;
     }
-    
+
+    /**
+     * Returns an optional describing the element representing the {@code MetaModels} class.
+     */
     public Optional<MetaModelsElement> findMetaModelsElement() {
         return Optional.ofNullable(elements.getTypeElement(METAMODELS_CLASS_QUAL_NAME))
                 .map(te -> new MetaModelsElement(te, findMetaModels(te)));

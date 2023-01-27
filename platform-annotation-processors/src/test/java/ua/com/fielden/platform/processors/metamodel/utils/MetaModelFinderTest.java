@@ -27,6 +27,7 @@ import ua.com.fielden.platform.processors.metamodel.MetaModelProcessor;
 import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
+import ua.com.fielden.platform.processors.metamodel.elements.MetaModelsElement;
 import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 import ua.com.fielden.platform.processors.test_entities.EntityWithDescTitleWithoutMetaModel;
 import ua.com.fielden.platform.processors.test_entities.PersistentEntity;
@@ -123,6 +124,16 @@ public class MetaModelFinderTest {
         assertFalse(finder.isSameType(elt.asType(), PersistentEntityMetaModelAliased.class));
     }
 
+//    @Test
+//    public void findEntityMetaModelFields_returns_a_list_of_declared_instance_fields_that_refer_to_meta_models() {
+//        final MetaModelElement mmWithAdjacentMetaModels = metaModelFinder.findMetaModel(EntityWithEntityTypedAndOrdinaryPropsMetaModel.class);
+//        assertEquals(List.of("entity1", "entity2"),
+//                metaModelFinder.findEntityMetaModelFields(mmWithAdjacentMetaModels).stream().map(varElt -> varElt.getSimpleName().toString()).toList());
+//
+//        final MetaModelElement mmSink = metaModelFinder.findMetaModel(EntityWithOrdinaryPropsMetaModel.class);
+//        assertEquals(List.of(), metaModelFinder.findEntityMetaModelFields(mmSink));
+//    }
+//    
     @Test
     public void listMetaModelHierarchy_returns_a_hierarchy_of_meta_model_elements() {
         final BiConsumer<Stream<Class<? extends EntityMetaModel>>, Class<? extends EntityMetaModel>> assertor = 
@@ -357,6 +368,13 @@ public class MetaModelFinderTest {
                 .toList();
 
         assertEquals(CollectionUtil.toString(expected, ","), CollectionUtil.toString(actual, ","));
+    }
+
+    @Test
+    public void findMetaModelsElement_finds_the_element_representing_MetaModels() {
+        final Optional<MetaModelsElement> elt = metaModelFinder.findMetaModelsElement();
+        assertTrue("MetaModels element was not found.", elt.isPresent());
+        assertTrue(metaModelFinder.isSameType(elt.get().asType(), MetaModels.class));
     }
 
     // ==================== HELPER METHODS ====================
