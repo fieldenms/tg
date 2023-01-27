@@ -61,13 +61,33 @@ public class Result extends RuntimeException {
     }
 
     /**
-     * A factory method for creating informative result related to specified instances.
+     * A factory method for creating informative result with short and extended messages.
+     *
+     * @param info
+     * @return
+     */
+    public static Informative informative(final String shortInfo, final String extendedInfo) {
+        return new Informative(shortInfo + "<extended/>" + extendedInfo);
+    }
+
+    /**
+     * A factory method for creating informative result related to specified instance.
      *
      * @param info
      * @return
      */
     public static Informative informative(final Object instance, final String info) {
         return new Informative(instance, info);
+    }
+
+    /**
+     * A factory method for creating informative result with short and extended messages and related to specified instance.
+     *
+     * @param info
+     * @return
+     */
+    public static Informative informative(final Object instance, final String shortInfo, final String extendedInfo) {
+        return new Informative(instance, shortInfo + "<extended/>" + extendedInfo);
     }
 
     /**
@@ -80,12 +100,30 @@ public class Result extends RuntimeException {
         return new Informative(format(info, data));
     }
 
+    /**
+     * Convenient factory method for creating informative result with short and extended messages and formatting capabilities.
+     *
+     * @param info
+     * @return
+     */
+    public static Informative informativef(final String shortInfo, final String extendedInfo, final Object... data) {
+        return new Informative(format(shortInfo + "<extended/>" + extendedInfo, data));
+    }
+
     public static Warning warning(final String msg) {
         return new Warning(msg);
     }
 
+    public static Warning warning(final String msg, final String extendedMsg) {
+        return new Warning(msg + "<extended/>" + extendedMsg);
+    }
+
     public static Warning warning(final Object instance, final String msg) {
         return new Warning(instance, msg);
+    }
+
+    public static Warning warning(final Object instance, final String extendedMsg, final String msg) {
+        return new Warning(instance, msg + "<extended/>" + extendedMsg);
     }
 
     /**
@@ -115,6 +153,21 @@ public class Result extends RuntimeException {
     }
 
     /**
+     * Convenient factory method for creating a failure result with short and extended messages. Should be used when no particular exception is at fault.
+     *
+     * @param instance
+     *            -- instance that is in error
+     * @param reason
+     *            -- short reason for failure.
+     * @param extendedReason
+     *            -- extended reason for failure.
+     * @return
+     */
+    public static Result failure(final Object instance, final String reason, final String extendedReason) {
+        return new Result(instance, new Exception(reason + "<extended/>" + extendedReason));
+    }
+
+    /**
      * Convenient factory method for creating a failure result. In some cases there is no need to pass in an instance that is in error -- just an error itself.
      *
      * @param ex
@@ -137,6 +190,20 @@ public class Result extends RuntimeException {
     }
 
     /**
+     * Convenient factory method for creating a failure result with short and extended reasons. Should be used when neither an object in error nor the actual exception type are important.
+     *
+     * @param reason
+     *            -- should describe the failure.
+     * @param extendedReason
+     *            -- extended description of failure.
+     *
+     * @return
+     */
+    public static Result failure(final String reason, final String extendedReason) {
+        return new Result(null, new Exception(reason + "<extended/>" + extendedReason));
+    }
+
+    /**
      * The same as {@link #failure(String)} with with the semantics of {@link String#format(String, Object...)} for interpolating of the {@code reason} string.
      *
      * @param reason
@@ -145,6 +212,18 @@ public class Result extends RuntimeException {
      */
     public static Result failuref(final String reason, final Object...args) {
         return new Result(null, new Exception(format(reason, args)));
+    }
+
+    /**
+     * The same as {@link #failure(String, String)} with the semantics of {@link String#format(String, Object...)} for interpolating of the {@code reason} and {@code extendedReason} string.
+     *
+     * @param reason
+     * @param extendedReason
+     * @param args
+     * @return
+     */
+    public static Result failuref(final String reason, final String extendedReason, final Object...args) {
+        return new Result(null, new Exception(format(reason + "<extended/>" + extendedReason, args)));
     }
 
     ///////////////////////////////////////////////
