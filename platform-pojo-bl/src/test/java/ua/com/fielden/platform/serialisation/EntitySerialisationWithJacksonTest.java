@@ -572,7 +572,7 @@ public class EntitySerialisationWithJacksonTest {
 
     @Test
     public void meta_property_informative_restores() {
-        final AbstractEntity<?> entity = factory.createEntityMetaPropWithInformation();
+        final AbstractEntity<?> entity = factory.createEntityMetaPropWithInformative();
         final String value = "Ok Ok Info";
         final String originalValue = "Ok";
         final String prevValue = "Ok Ok";
@@ -596,7 +596,7 @@ public class EntitySerialisationWithJacksonTest {
 
     @Test
     public void meta_property_with_info_that_became_required_restores() {
-        final AbstractEntity<?> entity = factory.createEntityMetaPropWithInformationAndBecameRequired();
+        final AbstractEntity<?> entity = factory.createEntityMetaPropWithInformativeAndBecameRequired();
         final String value = "Ok Ok Info";
         final String originalValue = "Ok";
         final String prevValue = "Ok Ok";
@@ -1275,8 +1275,8 @@ public class EntitySerialisationWithJacksonTest {
         final Result restoredInformative = jacksonDeserialiser.deserialise(jacksonSerialiser.serialise(informative), Result.class);
 
         assertNotNull("Restored informative could not be null", restoredInformative);
-        assertTrue("Restored information should be of Informative type", restoredInformative.isInformation());
-        assertFalse("Restored information could not be null", restoredInformative.isSuccessfulWithoutInformation());
+        assertTrue("Restored information should be of Informative type", restoredInformative.isInformative());
+        assertFalse("Restored information could not be null", restoredInformative.isSuccessfulWithoutInformative());
         assertNotNull("Restored information should have message", restoredInformative.getMessage());
         assertNotNull("Restored information should have instance", restoredInformative.getInstance());
 

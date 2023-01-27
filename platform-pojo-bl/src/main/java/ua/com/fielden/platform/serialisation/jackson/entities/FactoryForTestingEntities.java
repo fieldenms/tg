@@ -211,7 +211,7 @@ public class FactoryForTestingEntities {
         return createEntityMetaPropWithoutFailure().setProp("Ok Ok Warn");
     }
 
-    public EntityWithMetaProperty createEntityMetaPropWithInformation() {
+    public EntityWithMetaProperty createEntityMetaPropWithInformative() {
         return createEntityMetaPropWithoutFailure().setProp("Ok Ok Info");
     }
 
@@ -221,8 +221,8 @@ public class FactoryForTestingEntities {
         return entity;
     }
 
-    public EntityWithMetaProperty createEntityMetaPropWithInformationAndBecameRequired() {
-        final EntityWithMetaProperty entity = createEntityMetaPropWithInformation();
+    public EntityWithMetaProperty createEntityMetaPropWithInformativeAndBecameRequired() {
+        final EntityWithMetaProperty entity = createEntityMetaPropWithInformative();
         entity.getProperty("prop").setRequired(true);
         return entity;
     }

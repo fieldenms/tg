@@ -23,7 +23,7 @@ public class RequiredValidatedPropValidator implements IBeforeChangeEventHandler
         } else if (newValue > 100) {
             return Result.warning(newValue, "Over 100.");
         } else if (newValue > 50) {
-            return Result.information(newValue, "Over 50.");
+            return Result.informative(newValue, "Over 50.");
         } else {
             return Result.successful(newValue);
         }

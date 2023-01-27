@@ -516,7 +516,7 @@ export class TgEditor extends PolymerElement {
         return this.$.decorator.classList.contains("warning");
     }
 
-    isWithInformation() {
+    isWithInformative() {
         return this.$.decorator.classList.contains("informative");
     }
 

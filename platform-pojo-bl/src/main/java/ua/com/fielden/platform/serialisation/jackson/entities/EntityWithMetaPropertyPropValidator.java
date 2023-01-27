@@ -28,7 +28,7 @@ public class EntityWithMetaPropertyPropValidator implements IBeforeChangeEventHa
             return warning(newValue, "Custom warning.");
         }
         if ("Ok Ok Info".equals(newValue)) {
-            return Result.information(newValue, "Custom information.");
+            return Result.informative(newValue, "Custom information.");
         }
         return successful(newValue);
     }

@@ -56,7 +56,7 @@ public class Result extends RuntimeException {
      * @param info
      * @return
      */
-    public static Informative information(final String info) {
+    public static Informative informative(final String info) {
         return new Informative(info);
     }
 
@@ -66,7 +66,7 @@ public class Result extends RuntimeException {
      * @param info
      * @return
      */
-    public static Informative information(final Object instance, final String info) {
+    public static Informative informative(final Object instance, final String info) {
         return new Informative(instance, info);
     }
 
@@ -76,7 +76,7 @@ public class Result extends RuntimeException {
      * @param info
      * @return
      */
-    public static Informative informationf(final String info, final Object... data) {
+    public static Informative informativef(final String info, final Object... data) {
         return new Informative(format(info, data));
     }
 
@@ -283,7 +283,7 @@ public class Result extends RuntimeException {
      *
      * @return
      */
-    public boolean isSuccessfulWithoutInformation() {
+    public boolean isSuccessfulWithoutInformative() {
         return isSuccessful() && !(this instanceof Informative);
     }
 
@@ -301,7 +301,7 @@ public class Result extends RuntimeException {
      *
      * @return
      */
-    public boolean isInformation() {
+    public boolean isInformative() {
         return isSuccessful() && this instanceof Informative;
     }
 

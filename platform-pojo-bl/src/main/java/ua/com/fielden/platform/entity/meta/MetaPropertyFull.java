@@ -541,7 +541,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         for (final Entry<ValidationAnnotation, Map<IBeforeChangeEventHandler<T>, Result>> vs : validators.entrySet()) {
             final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = vs.getValue();
             for (final Result result : annotationHandlers.values()) {
-                if (result != null && result.isInformation()) {
+                if (result != null && result.isInformative()) {
                     return (Informative) result;
                 }
             }
@@ -569,7 +569,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
                 .reduce(successful(this), (p, result) -> {
                     if (!result.isSuccessful()
                             || result.isWarning() && p.isSuccessful()
-                            || result.isInformation() && p.isInformation()) {
+                            || result.isInformative() && p.isInformative()) {
                         return result;
                     }
                     return p;
