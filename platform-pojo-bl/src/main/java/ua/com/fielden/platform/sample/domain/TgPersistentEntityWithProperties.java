@@ -860,4 +860,5 @@ public class TgPersistentEntityWithProperties extends AbstractFunctionalEntityWi
             return failure(this, "Completed instance is not editable.");
         }
     }
+
 }
