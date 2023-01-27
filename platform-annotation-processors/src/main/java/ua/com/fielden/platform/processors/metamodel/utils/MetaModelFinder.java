@@ -1,15 +1,16 @@
 package ua.com.fielden.platform.processors.metamodel.utils;
 
 import static java.util.Collections.unmodifiableSet;
-import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.METAMODELS_CLASS_QUAL_NAME;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_ALIASED_NAME_SUFFIX;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_NAME_SUFFIX;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_SUPERCLASS;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
-import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -251,26 +252,23 @@ public class MetaModelFinder extends ElementFinder {
     }
 
     /**
-     * Identifies and collects all declared fields in the MetaModels element, which represent meta-models (i.e., extend {@link EntityMetaModel}).  
-     *
-     * @param typeElement
-     * @param elementUtils
-     * @return
+     * Finds all meta-model elements declared by the element representing the {@code MetaModels} class.
+     * The returned list is unmodifiable.
      */
-    public Set<MetaModelElement> findMetaModels(final TypeElement typeElement) {
-        final Set<MetaModelElement> metaModels = new HashSet<>();
+    public List<MetaModelElement> findMetaModels(final TypeElement typeElement) {
+        final List<MetaModelElement> metaModels = new LinkedList<>();
         // find regular meta-models that are declared as fields
-        findDeclaredFields(typeElement).stream()
-                .filter(field -> isSubtype(field.asType(), EntityMetaModel.class))
-                .map(field -> newMetaModelElement(asTypeElementOfTypeMirror(field.asType())))
-                .forEach(mme -> metaModels.add(mme));
+        streamDeclaredFields(typeElement)
+            .filter(field -> isMetaModel(field.asType()))
+            .map(field -> newMetaModelElement(asTypeElementOfTypeMirror(field.asType())))
+            .forEach(mme -> metaModels.add(mme));
         // find aliased meta-models that are declared as methods
-        findDeclaredMethods(typeElement).stream()
-                .filter(method -> isSubtype(method.getReturnType(), EntityMetaModel.class))
-                .map(method -> newMetaModelElement(asTypeElementOfTypeMirror(method.getReturnType())))
-                .forEach(mme -> metaModels.add(mme));
-        
-        return unmodifiableSet(metaModels);
+        streamDeclaredMethods(typeElement)
+            .filter(method -> isMetaModel(method.getReturnType()))
+            .map(method -> newMetaModelElement(asTypeElementOfTypeMirror(method.getReturnType())))
+            .forEach(mme -> metaModels.add(mme));
+
+        return Collections.unmodifiableList(metaModels);
     }
 
     public MetaModelElement newMetaModelElement(final TypeElement typeElement) {
