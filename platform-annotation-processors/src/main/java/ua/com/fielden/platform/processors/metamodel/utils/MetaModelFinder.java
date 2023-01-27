@@ -17,7 +17,6 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
@@ -279,10 +278,6 @@ public class MetaModelFinder extends ElementFinder {
      */
     public MetaModelElement newMetaModelElement(final TypeElement typeElement) {
         return new MetaModelElement(typeElement, getPackageOfTypeElement(typeElement).getQualifiedName().toString());
-    }
-
-    public boolean isActive(final MetaModelElement mme) {
-        return mme.getKind() == ElementKind.CLASS;
     }
 
     /**
