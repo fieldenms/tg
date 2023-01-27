@@ -7,6 +7,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiConsumer;
@@ -24,6 +25,8 @@ import com.google.testing.compile.CompilationRule;
 import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
 import ua.com.fielden.platform.annotations.metamodel.WithMetaModel;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractPersistentEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -331,6 +334,23 @@ public class EntityFinderTest {
     private static class WithoutDeclaredKeyType_extends_WithDeclaredKeyType extends WithDeclaredKeyType {}
     @KeyType(String.class)
     private static class WithDeclaredKeyType_extends_WithDeclaredKeyType extends WithDeclaredKeyType {}
+
+    @Test
+    public void streamParents_returns_a_stream_of_superclasses_of_an_entity_up_to_and_including_AbstractEntity() {
+        final BiConsumer<Collection<Class<?>>, Class<? extends AbstractEntity>> assertor =
+                (expectedParents, entityClass) -> {
+                    final EntityElement entity = entityFinder.findEntity(entityClass);
+                    assertEquals(expectedParents.stream().map(c -> entityFinder.newEntityElement(entityFinder.getTypeElement(c))).toList(),
+                            entityFinder.streamParents(entity).toList());
+                };
+
+        assertor.accept(List.of(ActivatableAbstractEntity.class, AbstractPersistentEntity.class, AbstractEntity.class), 
+                User.class);
+        assertor.accept(List.of(User.class, ActivatableAbstractEntity.class, AbstractPersistentEntity.class, AbstractEntity.class), 
+                SuperUser.class);
+        assertor.accept(List.of(), AbstractEntity.class);
+        assertor.accept(List.of(AbstractEntity.class), AbstractPersistentEntity.class);
+    }
 
     @Test
     public void getParent_returns_the_immediate_superclass_of_an_entity_or_empty_if_given_AbstractEntity() {
