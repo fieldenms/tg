@@ -21,6 +21,7 @@ import org.junit.BeforeClass;
 import org.junit.ClassRule;
 import org.junit.Test;
 
+import metamodels.MetaModels;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.processors.metamodel.MetaModelProcessor;
 import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
@@ -31,8 +32,38 @@ import ua.com.fielden.platform.processors.test_entities.EntityWithDescTitleWitho
 import ua.com.fielden.platform.processors.test_entities.PersistentEntity;
 import ua.com.fielden.platform.processors.test_entities.SubEntity;
 import ua.com.fielden.platform.processors.test_entities.SuperEntity;
+import ua.com.fielden.platform.processors.test_entities.meta.EntityWithDescTitleMetaModel;
+import ua.com.fielden.platform.processors.test_entities.meta.EntityWithDescTitleMetaModelAliased;
 import ua.com.fielden.platform.processors.test_entities.meta.EntityWithEntityTypedAndOrdinaryPropsMetaModel;
 import ua.com.fielden.platform.processors.test_entities.meta.EntityWithEntityTypedAndOrdinaryPropsMetaModelAliased;
+import ua.com.fielden.platform.processors.test_entities.meta.EntityWithKeyTypeNoKeyMetaModel;
+import ua.com.fielden.platform.processors.test_entities.meta.EntityWithKeyTypeNoKeyMetaModelAliased;
+import ua.com.fielden.platform.processors.test_entities.meta.EntityWithKeyTypeOfEntityTypeMetaModel;
+import ua.com.fielden.platform.processors.test_entities.meta.EntityWithKeyTypeOfEntityTypeMetaModelAliased;
+import ua.com.fielden.platform.processors.test_entities.meta.EntityWithOrdinaryPropsMetaModel;
+import ua.com.fielden.platform.processors.test_entities.meta.EntityWithOrdinaryPropsMetaModelAliased;
+import ua.com.fielden.platform.processors.test_entities.meta.EntityWithPropertyDescMetaModel;
+import ua.com.fielden.platform.processors.test_entities.meta.EntityWithPropertyDescMetaModelAliased;
+import ua.com.fielden.platform.processors.test_entities.meta.EntityWithoutDescTitleAndPropertyDescMetaModel;
+import ua.com.fielden.platform.processors.test_entities.meta.EntityWithoutDescTitleAndPropertyDescMetaModelAliased;
+import ua.com.fielden.platform.processors.test_entities.meta.EntityWithoutDescTitleAndPropertyDesc_extends_EntityWithPropertyDescWithoutMetaModelMetaModel;
+import ua.com.fielden.platform.processors.test_entities.meta.EntityWithoutDescTitleAndPropertyDesc_extends_EntityWithPropertyDescWithoutMetaModelMetaModelAliased;
+import ua.com.fielden.platform.processors.test_entities.meta.EntityWithoutDescTitle_extends_EntityWithDescTitleWithoutMetaModelMetaModel;
+import ua.com.fielden.platform.processors.test_entities.meta.EntityWithoutDescTitle_extends_EntityWithDescTitleWithoutMetaModelMetaModelAliased;
+import ua.com.fielden.platform.processors.test_entities.meta.ExampleEntityMetaModel;
+import ua.com.fielden.platform.processors.test_entities.meta.ExampleEntityMetaModelAliased;
+import ua.com.fielden.platform.processors.test_entities.meta.KeyTypeAsComposite_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModel;
+import ua.com.fielden.platform.processors.test_entities.meta.KeyTypeAsComposite_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModelAliased;
+import ua.com.fielden.platform.processors.test_entities.meta.KeyTypeAsEntity_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModel;
+import ua.com.fielden.platform.processors.test_entities.meta.KeyTypeAsEntity_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModelAliased;
+import ua.com.fielden.platform.processors.test_entities.meta.KeyTypeAsString_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModel;
+import ua.com.fielden.platform.processors.test_entities.meta.KeyTypeAsString_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModelAliased;
+import ua.com.fielden.platform.processors.test_entities.meta.KeyType_AbstractSuperEntityWithoutKeyTypeMetaModel;
+import ua.com.fielden.platform.processors.test_entities.meta.KeyType_AbstractSuperEntityWithoutKeyTypeMetaModelAliased;
+import ua.com.fielden.platform.processors.test_entities.meta.NonPersistentButDomainEntityMetaModel;
+import ua.com.fielden.platform.processors.test_entities.meta.NonPersistentButDomainEntityMetaModelAliased;
+import ua.com.fielden.platform.processors.test_entities.meta.NonPersistentButWithMetaModelEntityMetaModel;
+import ua.com.fielden.platform.processors.test_entities.meta.NonPersistentButWithMetaModelEntityMetaModelAliased;
 import ua.com.fielden.platform.processors.test_entities.meta.PersistentEntityMetaModel;
 import ua.com.fielden.platform.processors.test_entities.meta.PersistentEntityMetaModelAliased;
 import ua.com.fielden.platform.processors.test_entities.meta.SubEntityMetaModel;
@@ -268,6 +299,64 @@ public class MetaModelFinderTest {
         assertor.accept(SubEntityMetaModelAliased.class, SubEntityMetaModelAliased.class);
         // nothing should be found 
         assertor.accept(null, EntityMetaModel.class);
+    }
+
+    @Test
+    public void findMetaModels_finds_all_meta_models_declared_by_MetaModels() {
+        final List<Class<?>> expectedClasses = List.of(
+                EntityWithDescTitleMetaModel.class,
+                EntityWithEntityTypedAndOrdinaryPropsMetaModel.class,
+                EntityWithKeyTypeNoKeyMetaModel.class,
+                EntityWithKeyTypeOfEntityTypeMetaModel.class,
+                EntityWithOrdinaryPropsMetaModel.class,
+                EntityWithPropertyDescMetaModel.class,
+                EntityWithoutDescTitleAndPropertyDescMetaModel.class,
+                EntityWithoutDescTitleAndPropertyDesc_extends_EntityWithPropertyDescWithoutMetaModelMetaModel.class,
+                EntityWithoutDescTitle_extends_EntityWithDescTitleWithoutMetaModelMetaModel.class,
+                ExampleEntityMetaModel.class,
+                KeyTypeAsComposite_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModel.class,
+                KeyTypeAsEntity_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModel.class,
+                KeyTypeAsString_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModel.class,
+                KeyType_AbstractSuperEntityWithoutKeyTypeMetaModel.class,
+                NonPersistentButDomainEntityMetaModel.class,
+                NonPersistentButWithMetaModelEntityMetaModel.class,
+                PersistentEntityMetaModel.class,
+                SubEntityMetaModel.class,
+                SuperEntityMetaModel.class,
+                EntityWithDescTitleMetaModelAliased.class,
+                EntityWithEntityTypedAndOrdinaryPropsMetaModelAliased.class,
+                EntityWithKeyTypeNoKeyMetaModelAliased.class,
+                EntityWithKeyTypeOfEntityTypeMetaModelAliased.class,
+                EntityWithOrdinaryPropsMetaModelAliased.class,
+                EntityWithPropertyDescMetaModelAliased.class,
+                EntityWithoutDescTitleAndPropertyDescMetaModelAliased.class,
+                EntityWithoutDescTitleAndPropertyDesc_extends_EntityWithPropertyDescWithoutMetaModelMetaModelAliased.class,
+                EntityWithoutDescTitle_extends_EntityWithDescTitleWithoutMetaModelMetaModelAliased.class,
+                ExampleEntityMetaModelAliased.class,
+                KeyTypeAsComposite_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModelAliased.class,
+                KeyTypeAsEntity_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModelAliased.class,
+                KeyTypeAsString_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModelAliased.class,
+                KeyType_AbstractSuperEntityWithoutKeyTypeMetaModelAliased.class,
+                NonPersistentButDomainEntityMetaModelAliased.class,
+                NonPersistentButWithMetaModelEntityMetaModelAliased.class,
+                PersistentEntityMetaModelAliased.class,
+                SubEntityMetaModelAliased.class,
+                SuperEntityMetaModelAliased.class);
+
+        final TypeElement metaModelsElt = finder.getTypeElement(MetaModels.class);
+        final List<MetaModelElement> metaModelElts = metaModelFinder.findMetaModels(metaModelsElt);
+
+        // sorting beforehand is important 
+        final List<TypeElement> expected = expectedClasses.stream()
+                .map(clazz -> finder.getTypeElement(clazz))
+                .sorted((e1, e2) -> e1.getQualifiedName().toString().compareTo(e2.getQualifiedName().toString()))
+                .toList();
+        final List<TypeElement> actual = metaModelElts.stream()
+                .map(elt -> elt.element())
+                .sorted((e1, e2) -> e1.getQualifiedName().toString().compareTo(e2.getQualifiedName().toString()))
+                .toList();
+
+        assertEquals(CollectionUtil.toString(expected, ","), CollectionUtil.toString(actual, ","));
     }
 
     // ==================== HELPER METHODS ====================
