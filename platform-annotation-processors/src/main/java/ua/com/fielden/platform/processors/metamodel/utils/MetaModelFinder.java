@@ -1,28 +1,19 @@
 package ua.com.fielden.platform.processors.metamodel.utils;
 
-import static java.util.Collections.unmodifiableSet;
-import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.METAMODELS_CLASS_QUAL_NAME;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_ALIASED_NAME_SUFFIX;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_NAME_SUFFIX;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_SUPERCLASS;
 
-import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -107,26 +98,6 @@ public class MetaModelFinder extends ElementFinder {
         return streamMetaModelHierarchy(mme).toList();
     }
 
-    public Set<VariableElement> findEntityMetaModelFields(final MetaModelElement mme) {
-        return findNonStaticDeclaredFields(mme).stream()
-                .filter(field -> {
-                    final TypeMirror fieldType = field.asType();
-                    final TypeKind fieldTypeKind = fieldType.getKind();
-
-                    if (TypeKind.DECLARED == fieldTypeKind) {
-                        final TypeElement fieldTypeElement = (TypeElement) ((DeclaredType) field.asType()).asElement();
-
-                        // EntityMetaModel fields have type Supplier<[METAMODEL]>
-                        if (isSameType(fieldTypeElement, Supplier.class)) {
-                            final TypeMirror fieldTypeArgument = ((DeclaredType) fieldType).getTypeArguments().get(0);
-                            return isSubtype(fieldTypeArgument, META_MODEL_SUPERCLASS);
-                        }
-                    }
-                    return false;
-                })
-                .collect(toSet());
-    }
-
     /**
      * Returns a stream of elements representing methods of a meta-model (both declared and inherited) that model properties of the 
      * underlying entity.
@@ -172,25 +143,6 @@ public class MetaModelFinder extends ElementFinder {
         return streamDeclaredPropertyMethods(mme)
                 .filter(el -> el.getSimpleName().toString().equals(name))
                 .findFirst();
-    }
-
-    /**
-     * Returns a set of meta-model elements for each field that is of type {@code Supplier<? extends EntityMetaModel>}.
-     * @param mme
-     * @return
-     */
-    public Set<MetaModelElement> findReferencedMetaModels(final MetaModelElement mme) {
-        return findEntityMetaModelFields(mme).stream()
-                .map(field -> {
-                    // casting here is safe, since field is of type Supplier<[METAMODEL]>, thus DeclaredType
-                    // fieldType will be the Supplier type
-                    final DeclaredType fieldType = (DeclaredType) field.asType();
-                    // fieldTypeArgument will be the [METAMODEL] type
-                    final DeclaredType fieldTypeArgument = (DeclaredType) fieldType.getTypeArguments().get(0);
-                    final TypeElement fieldTypeArgumentTypeElement = (TypeElement) fieldTypeArgument.asElement();
-                    return newMetaModelElement(fieldTypeArgumentTypeElement);
-                })
-                .collect(toSet());
     }
 
     /**
