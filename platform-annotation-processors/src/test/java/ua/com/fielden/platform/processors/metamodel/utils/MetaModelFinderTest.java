@@ -28,13 +28,13 @@ import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 import ua.com.fielden.platform.processors.test_entities.EntityWithDescTitleWithoutMetaModel;
-import ua.com.fielden.platform.processors.test_entities.MetamodeledEntity;
+import ua.com.fielden.platform.processors.test_entities.PersistentEntity;
 import ua.com.fielden.platform.processors.test_entities.SubEntity;
 import ua.com.fielden.platform.processors.test_entities.SuperEntity;
 import ua.com.fielden.platform.processors.test_entities.meta.EntityWithEntityTypedAndOrdinaryPropsMetaModel;
 import ua.com.fielden.platform.processors.test_entities.meta.EntityWithEntityTypedAndOrdinaryPropsMetaModelAliased;
-import ua.com.fielden.platform.processors.test_entities.meta.MetamodeledEntityMetaModel;
-import ua.com.fielden.platform.processors.test_entities.meta.MetamodeledEntityMetaModelAliased;
+import ua.com.fielden.platform.processors.test_entities.meta.PersistentEntityMetaModel;
+import ua.com.fielden.platform.processors.test_entities.meta.PersistentEntityMetaModelAliased;
 import ua.com.fielden.platform.processors.test_entities.meta.SubEntityMetaModel;
 import ua.com.fielden.platform.processors.test_entities.meta.SubEntityMetaModelAliased;
 import ua.com.fielden.platform.processors.test_entities.meta.SuperEntityMetaModel;
@@ -72,24 +72,24 @@ public class MetaModelFinderTest {
     @Test
     public void isMetaModel_returns_true_if_the_type_element_represents_a_meta_model() {
         assertFalse(metaModelFinder.isMetaModel(finder.getTypeElement(String.class)));
-        assertFalse(metaModelFinder.isMetaModel(finder.getTypeElement(MetamodeledEntity.class)));
-        assertTrue(metaModelFinder.isMetaModel(finder.getTypeElement(MetamodeledEntityMetaModel.class)));
-        assertTrue(metaModelFinder.isMetaModel(finder.getTypeElement(MetamodeledEntityMetaModelAliased.class)));
+        assertFalse(metaModelFinder.isMetaModel(finder.getTypeElement(PersistentEntity.class)));
+        assertTrue(metaModelFinder.isMetaModel(finder.getTypeElement(PersistentEntityMetaModel.class)));
+        assertTrue(metaModelFinder.isMetaModel(finder.getTypeElement(PersistentEntityMetaModelAliased.class)));
     }
 
     @Test
     public void isMetaModelAliased_returns_true_if_the_element_represents_an_alised_meta_model() {
-        final MetaModelElement mmElt = metaModelFinder.findMetaModel(MetamodeledEntityMetaModel.class);
+        final MetaModelElement mmElt = metaModelFinder.findMetaModel(PersistentEntityMetaModel.class);
         assertFalse(metaModelFinder.isMetaModelAliased(mmElt));
-        final MetaModelElement mmAliasedElt = metaModelFinder.findMetaModel(MetamodeledEntityMetaModelAliased.class);
+        final MetaModelElement mmAliasedElt = metaModelFinder.findMetaModel(PersistentEntityMetaModelAliased.class);
         assertTrue(metaModelFinder.isMetaModelAliased(mmAliasedElt));
     }
 
     @Test
     public void findMetaModel_finds_the_meta_model_element_by_class() {
-        final MetaModelElement elt = metaModelFinder.findMetaModel(MetamodeledEntityMetaModel.class);
-        assertTrue(finder.isSameType(elt.asType(), MetamodeledEntityMetaModel.class));
-        assertFalse(finder.isSameType(elt.asType(), MetamodeledEntityMetaModelAliased.class));
+        final MetaModelElement elt = metaModelFinder.findMetaModel(PersistentEntityMetaModel.class);
+        assertTrue(finder.isSameType(elt.asType(), PersistentEntityMetaModel.class));
+        assertFalse(finder.isSameType(elt.asType(), PersistentEntityMetaModelAliased.class));
     }
 
     @Test
@@ -100,7 +100,7 @@ public class MetaModelFinderTest {
                         metaModelFinder.listMetaModelHierarchy(metaModelFinder.findMetaModel(metaModel)));
 
         // simplest hierarchy of 1 meta-model
-        assertor.accept(Stream.of(MetamodeledEntityMetaModel.class), MetamodeledEntityMetaModel.class);
+        assertor.accept(Stream.of(PersistentEntityMetaModel.class), PersistentEntityMetaModel.class);
         // hierarchy of 2 meta-models
         assertor.accept(Stream.of(SubEntityMetaModel.class, SuperEntityMetaModel.class), SubEntityMetaModel.class);
         // hierarchy for an aliased meta-model
@@ -221,8 +221,8 @@ public class MetaModelFinderTest {
         assertor.accept(true, pair(SubEntity.class, SubEntityMetaModelAliased.class));
         assertor.accept(false, pair(SubEntity.class, SuperEntityMetaModel.class));
         assertor.accept(false, pair(SubEntity.class, SuperEntityMetaModelAliased.class));
-        assertor.accept(false, pair(SubEntity.class, MetamodeledEntityMetaModel.class));
-        assertor.accept(false, pair(SubEntity.class, MetamodeledEntityMetaModelAliased.class));
+        assertor.accept(false, pair(SubEntity.class, PersistentEntityMetaModel.class));
+        assertor.accept(false, pair(SubEntity.class, PersistentEntityMetaModelAliased.class));
     }
 
     @Test
@@ -239,7 +239,7 @@ public class MetaModelFinderTest {
                     }
                 };
 
-        assertor.accept(MetamodeledEntity.class, MetamodeledEntityMetaModel.class);
+        assertor.accept(PersistentEntity.class, PersistentEntityMetaModel.class);
         assertor.accept(SubEntity.class, SubEntityMetaModel.class);
         assertor.accept(SuperEntity.class, SuperEntityMetaModel.class);
         assertor.accept(EntityWithDescTitleWithoutMetaModel.class, null);
