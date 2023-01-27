@@ -288,15 +288,24 @@ public class MetaModelFinder extends ElementFinder {
                 .map(te -> new MetaModelsElement(te, findMetaModels(te)));
     }
 
-    public String resolveMetaModelPkgName(final String entityPkgName) {
+    /**
+     * Resolves the package name of a meta-model from the package name of its underlying entity.
+     */
+    public static String resolveMetaModelPkgName(final String entityPkgName) {
         return entityPkgName + MetaModelConstants.META_MODEL_PKG_NAME_SUFFIX;
     }
     
-    public String resolveMetaModelSimpleName(final String entitySimpleName) {
+    /**
+     * Resolves the simple name of a meta-model from the simple name of its underlying entity.
+     */
+    public static String resolveMetaModelSimpleName(final String entitySimpleName) {
         return entitySimpleName + MetaModelConstants.META_MODEL_NAME_SUFFIX;
     }
 
-    public String resolveAliasedMetaModelSimpleName(final String entitySimpleName) {
+    /**
+     * Resolves the simple name of an aliased meta-model from the simple name of its underlying entity.
+     */
+    public static String resolveAliasedMetaModelSimpleName(final String entitySimpleName) {
         return entitySimpleName + MetaModelConstants.META_MODEL_ALIASED_NAME_SUFFIX;
     }
 
@@ -308,7 +317,7 @@ public class MetaModelFinder extends ElementFinder {
      * @param entitySimpleName
      * @return FQN of this entity's meta-model
      */
-    public String resolveMetaModelName(final String entityPkgName, final String entitySimpleName) {
+    public static String resolveMetaModelName(final String entityPkgName, final String entitySimpleName) {
         return "%s.%s".formatted(resolveMetaModelPkgName(entityPkgName), resolveMetaModelSimpleName(entitySimpleName));
     }
 
@@ -320,7 +329,7 @@ public class MetaModelFinder extends ElementFinder {
      * @param entitySimpleName
      * @return FQN of this entity's aliased meta-model
      */
-    public String resolveAliasedMetaModelName(final String entityPkgName, final String entitySimpleName) {
+    public static String resolveAliasedMetaModelName(final String entityPkgName, final String entitySimpleName) {
         return "%s.%s".formatted(resolveMetaModelPkgName(entityPkgName), resolveAliasedMetaModelSimpleName(entitySimpleName));
     }
 

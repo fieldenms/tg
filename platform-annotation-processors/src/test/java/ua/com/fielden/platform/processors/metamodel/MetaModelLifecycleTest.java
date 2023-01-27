@@ -183,14 +183,14 @@ public class MetaModelLifecycleTest {
                     final MetaModelFinder mmFinder = new MetaModelFinder(procEnv.getElementUtils(), procEnv.getTypeUtils());
 
                     // find meta-model by its name, since its entity may not exist
-                    final String metaModelQualName = mmFinder.resolveMetaModelName(entityPkgName, entitySimpleName);
+                    final String metaModelQualName = MetaModelFinder.resolveMetaModelName(entityPkgName, entitySimpleName);
                     final TypeElement mmeTe = procEnv.getElementUtils().getTypeElement(metaModelQualName);
                     assertNotNull(mmeTe);
                     final MetaModelElement mme = mmFinder.newMetaModelElement(mmeTe);
                     assertFalse(isActiveMetaModel(mme));
 
                     // same for the aliased meta-model
-                    final String aliasedMetaModelQualName = mmFinder.resolveAliasedMetaModelName(entityPkgName, entitySimpleName);
+                    final String aliasedMetaModelQualName = MetaModelFinder.resolveAliasedMetaModelName(entityPkgName, entitySimpleName);
                     final TypeElement alMmeTe = procEnv.getElementUtils().getTypeElement(aliasedMetaModelQualName);
                     assertNotNull(alMmeTe);
                     final MetaModelElement alMme = mmFinder.newMetaModelElement(alMmeTe);
