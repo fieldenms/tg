@@ -9,6 +9,8 @@ import static ua.com.fielden.platform.error.Result.successful;
 import java.math.BigDecimal;
 import java.util.Date;
 
+import org.joda.time.DateTimeZone;
+
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.annotation.Calculated;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -861,4 +863,8 @@ public class TgPersistentEntityWithProperties extends AbstractFunctionalEntityWi
         }
     }
 
+
+    public static void main(final String[] args) {
+        System.out.println(DateTimeZone.getDefault());
+    }
 }
