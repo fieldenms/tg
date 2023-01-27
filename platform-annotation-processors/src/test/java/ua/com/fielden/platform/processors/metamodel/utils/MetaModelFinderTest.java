@@ -30,6 +30,7 @@ import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelsElement;
 import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 import ua.com.fielden.platform.processors.test_entities.EntityWithDescTitleWithoutMetaModel;
+import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
 import ua.com.fielden.platform.processors.test_entities.PersistentEntity;
 import ua.com.fielden.platform.processors.test_entities.SubEntity;
 import ua.com.fielden.platform.processors.test_entities.SuperEntity;
@@ -382,6 +383,18 @@ public class MetaModelFinderTest {
         final TypeElement elt = finder.getTypeElement(ExampleEntityMetaModel.class);
         final MetaModelElement mme = metaModelFinder.newMetaModelElement(elt);
         assertEquals(ExampleEntityMetaModel.class.getPackageName(), mme.getPackageName());
+    }
+
+    @Test
+    public void resolveMetaModelName_returns_the_qualified_name_of_ExampleEntityMetaModel_for_ExampleEntity() {
+        final String metaModelName = MetaModelFinder.resolveMetaModelName(ExampleEntity.class.getPackageName(), ExampleEntity.class.getSimpleName());
+        assertEquals(ExampleEntityMetaModel.class.getCanonicalName(), metaModelName);
+    }
+
+    @Test
+    public void resolveAliasedMetaModelName_returns_the_qualified_name_of_ExampleEntityMetaModelAliased_for_ExampleEntity() {
+        final String metaModelName = MetaModelFinder.resolveAliasedMetaModelName(ExampleEntity.class.getPackageName(), ExampleEntity.class.getSimpleName());
+        assertEquals(ExampleEntityMetaModelAliased.class.getCanonicalName(), metaModelName);
     }
 
     // ==================== HELPER METHODS ====================
