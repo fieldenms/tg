@@ -16,8 +16,8 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
 
-import org.junit.Before;
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.google.testing.compile.CompilationRule;
@@ -49,16 +49,17 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public class EntityFinderTest {
 
-    public @Rule CompilationRule rule = new CompilationRule();
-    private Elements elements;
-    private Types types;
-    private EntityFinder entityFinder;
+    @ClassRule
+    public static CompilationRule rule = new CompilationRule();
+    private static Elements elements;
+    private static Types types;
+    private static EntityFinder entityFinder;
     
-    @Before
-    public void setup() {
-      elements = rule.getElements();
-      types = rule.getTypes();
-      entityFinder = new EntityFinder(elements, types);
+    @BeforeClass
+    public static void setup() {
+        elements = rule.getElements();
+        types = rule.getTypes();
+        entityFinder = new EntityFinder(elements, types);
     }
 
     @Test
