@@ -234,12 +234,16 @@ public class MetaModelFinder extends ElementFinder {
     }
 
     /**
-     * An aliased meta-model class resides in the same package as the regular meta-model, but with a slightly different name.
-     * @param mme
-     * @param elements
-     * @return
+     * Returns an optional describing an element representing the aliased version of the given meta-model, unless it already represents 
+     * an aliased meta-model, in which case it is simply returned.
+     *
+     * @param mme meta-model element being examined
+     * @return element representing the aliased meta-model or {@code mme} if it already represents an aliased one
      */
     public Optional<MetaModelElement> findMetaModelAliased(final MetaModelElement mme) {
+        if (isMetaModelAliased(mme)) {
+            return Optional.of(mme);
+        }
         // aliasedMetaModelName = metaModelName - META_MODEL_NAME_SUFFIX + META_MODEL_ALIASED_NAME_SUFFIX
         final String entitySimpleName = StringUtils.substringBeforeLast(mme.getSimpleName().toString(), META_MODEL_NAME_SUFFIX);
         final String qualName = "%s.%s%s".formatted(mme.getPackageName(), entitySimpleName, META_MODEL_ALIASED_NAME_SUFFIX);

@@ -246,6 +246,31 @@ public class MetaModelFinderTest {
         assertor.accept(AbstractEntity.class, null);
     }
 
+    @Test
+    public void findMetaModelAliased_finds_the_aliased_version_of_a_meta_model() {
+        final BiConsumer<Class<? extends EntityMetaModel>, Class<? extends EntityMetaModel>> assertor =
+                // expectedAliasedMetaModelClass may be null if no aliased meta-model is expected to be found
+                (expectedAliasedMetaModelClass, inputMetaModelClass) -> {
+                    final MetaModelElement mme = metaModelFinder.findMetaModel(inputMetaModelClass);
+                    final Optional<MetaModelElement> maybeAliasedMme = metaModelFinder.findMetaModelAliased(mme);
+                    if (expectedAliasedMetaModelClass == null) {
+                        maybeAliasedMme.ifPresent(aliasedMme -> 
+                            fail("Unexpectedly found an aliased meta-model [%s]".formatted(aliasedMme)));
+                    } else {
+                        assertTrue(finder.isSameType(maybeAliasedMme.get().asType(), expectedAliasedMetaModelClass));
+                    }
+                };
+
+        // ordinary meta-models as input
+        assertor.accept(SubEntityMetaModelAliased.class, SubEntityMetaModel.class);
+        assertor.accept(SuperEntityMetaModelAliased.class, SuperEntityMetaModel.class);
+        // aliased meta-model as input
+        assertor.accept(SubEntityMetaModelAliased.class, SubEntityMetaModelAliased.class);
+        // nothing should be found 
+        assertor.accept(null, EntityMetaModel.class);
+    }
+
+    // ==================== HELPER METHODS ====================
     private static void assertEqualContents(final Collection<?> c1, final Collection<?> c2) {
         if (CollectionUtil.isEqualContents(c1, c2)) {}
         else {
