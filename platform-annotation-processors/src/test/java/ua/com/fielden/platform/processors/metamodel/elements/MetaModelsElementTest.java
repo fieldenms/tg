@@ -15,7 +15,6 @@ import com.google.testing.compile.CompilationRule;
 
 import ua.com.fielden.platform.attachment.Attachment;
 import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
-import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.MetaModelFinder;
 import ua.com.fielden.platform.security.user.User;
 
@@ -34,9 +33,6 @@ public class MetaModelsElementTest {
 
     @BeforeClass
     public static void setupOnce() {
-        // clear type element cache that could have already been populated by other tests
-        ElementFinder.cleanUp();
-
         metaModelFinder = new MetaModelFinder(rule.getElements(), rule.getTypes());
         final TypeElement typeElement = rule.getElements().getTypeElement(MetaModels.class.getCanonicalName());
         metaModelsElement = new MetaModelsElement(typeElement, metaModelFinder.findMetaModels(typeElement));
