@@ -271,6 +271,12 @@ public class MetaModelFinder extends ElementFinder {
         return Collections.unmodifiableList(metaModels);
     }
 
+    /**
+     * Returns a new instance of {@link MetaModelElement} composed of the given type element, obtaining the information about its package.
+     * 
+     * @param typeElement
+     * @return
+     */
     public MetaModelElement newMetaModelElement(final TypeElement typeElement) {
         return new MetaModelElement(typeElement, getPackageOfTypeElement(typeElement).getQualifiedName().toString());
     }

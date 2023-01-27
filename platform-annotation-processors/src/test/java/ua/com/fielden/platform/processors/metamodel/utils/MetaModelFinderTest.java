@@ -377,6 +377,13 @@ public class MetaModelFinderTest {
         assertTrue(metaModelFinder.isSameType(elt.get().asType(), MetaModels.class));
     }
 
+    @Test
+    public void newMetaModelElement_returns_a_new_instance_with_package_information() {
+        final TypeElement elt = finder.getTypeElement(ExampleEntityMetaModel.class);
+        final MetaModelElement mme = metaModelFinder.newMetaModelElement(elt);
+        assertEquals(ExampleEntityMetaModel.class.getPackageName(), mme.getPackageName());
+    }
+
     // ==================== HELPER METHODS ====================
     private static void assertEqualContents(final Collection<?> c1, final Collection<?> c2) {
         if (CollectionUtil.isEqualContents(c1, c2)) {}
