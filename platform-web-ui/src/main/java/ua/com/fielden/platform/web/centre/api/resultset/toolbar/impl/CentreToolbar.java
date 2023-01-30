@@ -100,7 +100,7 @@ public class CentreToolbar implements IToolbarConfig {
                 .attr("slot", "standart-action")
                 .attr("view-index", viewIndex)
                 .attr("button-width", width)
-                .attr("main-button-tooltip-text", "Choose an alternative view.")
+                .attr("main-button-tooltip-text", "Choose alternative view")
                 .attr("views", "[[resultViews]]");
     }
 
@@ -178,18 +178,23 @@ public class CentreToolbar implements IToolbarConfig {
      *
      * @return
      */
-    public static IToolbarConfig withTopActionsViewSwitchAndRefreshAction() {
-        return withTopActionsViewSwitchAndRefreshAction(DEFAULT_WIDTH_FOR_VIEW_SWITCH);
+    public static IToolbarConfig withTopActionsViewSwitchAndRefresh() {
+        return withTopActionsViewSwitchAndRefresh(DEFAULT_WIDTH_FOR_VIEW_SWITCH);
     }
 
     /**
-     * The same as {link {@link #withTopActionsViewSwitchAndRefreshAction()}, but accepts a desired width for the alternative view switching button.
+     * The same as {link {@link #withTopActionsViewSwitchAndRefresh()}, but accepts a desired width for the alternative view switching button.
      *
      * @param switchViewButtonWidth
      * @return
      */
-    public static IToolbarConfig withTopActionsViewSwitchAndRefreshAction(final int switchViewButtonWidth) {
-        return new ToolbarWithTopActionsViewSwitchAndRefreshAction(switchViewButtonWidth);
+    public static IToolbarConfig withTopActionsViewSwitchAndRefresh(final int switchViewButtonWidth) {
+        return new CentreToolbar(switchViewButtonWidth) {
+            @Override
+            protected DomElement createToolbarElement() {
+                return new DomContainer().add(topLevelPlacement, switchViewPlacement, refreshButton());
+            }
+        };
     }
 
     /**
@@ -197,8 +202,8 @@ public class CentreToolbar implements IToolbarConfig {
      *
      * @return
      */
-    public static IToolbarConfig withTopActionsViewSwitchPeginationAndRefreshAction() {
-        return withTopActionsViewSwitchPeginationAndRefreshAction(DEFAULT_WIDTH_FOR_VIEW_SWITCH);
+    public static IToolbarConfig withTopActionsViewSwitchPeginationAndRefresh() {
+        return withTopActionsViewSwitchPeginationAndRefresh(DEFAULT_WIDTH_FOR_VIEW_SWITCH);
     }
 
     /**
@@ -207,40 +212,31 @@ public class CentreToolbar implements IToolbarConfig {
      * @param switchViewButtonWidth
      * @return
      */
-    public static IToolbarConfig withTopActionsViewSwitchPeginationAndRefreshAction(final int switchViewButtonWidth) {
-        return new ToolbarWithTopActionsViewSwitchPeginationAndRefreshAction(switchViewButtonWidth);
+    public static IToolbarConfig withTopActionsViewSwitchPeginationAndRefresh(final int switchViewButtonWidth) {
+        return new CentreToolbar(switchViewButtonWidth) {
+            @Override
+            protected DomElement createToolbarElement() {
+                return new DomContainer().add(topLevelPlacement, switchViewPlacement, pagination("standart-action"), refreshButton());
+            }
+        };
     }
 
     /**
-     * A toolbar configuration, which includes top actions, the view switcher and the refresh action.
+     * A convenient factory method to create a toolbar that would include top actions, a view switch button, a filter button, a pagination panel, and a refresh action.
      *
+     * @return
      */
-    private static class ToolbarWithTopActionsViewSwitchAndRefreshAction extends CentreToolbar {
-        
-        public ToolbarWithTopActionsViewSwitchAndRefreshAction(final int switchViewButtonWidth) {
-            super(switchViewButtonWidth);
-        }
-
-        @Override
-        protected DomElement createToolbarElement() {
-            return new DomContainer().add(topLevelPlacement, switchViewPlacement, refreshButton());
-        }
+    public static IToolbarConfig withTopActionsViewSwitchFilterPeginationAndRefresh() {
+        return withTopActionsViewSwitchFilterPeginationAndRefresh(DEFAULT_WIDTH_FOR_VIEW_SWITCH);
     }
 
-    /**
-     * A toolbar configuration, which includes top actions, the view switcher, pagination actions, and the refresh action.
-     *
-     */
-    private static class ToolbarWithTopActionsViewSwitchPeginationAndRefreshAction extends CentreToolbar {
-
-        public ToolbarWithTopActionsViewSwitchPeginationAndRefreshAction(final int switchViewButtonWidth) {
-            super(switchViewButtonWidth);
-        }
-
-        @Override
-        protected DomElement createToolbarElement() {
-            return new DomContainer().add(topLevelPlacement, switchViewPlacement, pagination("standart-action"), refreshButton());
-        }
+    public static IToolbarConfig withTopActionsViewSwitchFilterPeginationAndRefresh(final int switchViewButtonWidth) {
+        return new CentreToolbar(switchViewButtonWidth) {
+            @Override
+            protected DomElement createToolbarElement() {
+                return new DomContainer().add(topLevelPlacement, switchViewPlacement, configButton(), pagination("standart-action"), refreshButton());
+            }
+        };
     }
 
 }
