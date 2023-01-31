@@ -5,6 +5,7 @@ import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.ME
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_NAME_SUFFIX;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_SUPERCLASS;
 
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -120,6 +121,30 @@ public class MetaModelFinder extends ElementFinder {
     }
 
     /**
+     * Returns an optional describing a method of the meta-model element that meta-models a property with the specified name.
+     * Both declared and inherited methods are searched.
+     */
+    public Optional<ExecutableElement> findPropertyMethod(final MetaModelElement mme, final String name) {
+        return findPropertyMethod(streamPropertyMethods(mme), name);
+    }
+
+    /**
+     * Consumes the given stream of methods of a meta-model until a method modelling a property with the specified name is found.
+     * It is assumed that the stream will contain only methods of a meta-model to avoid excessive checks.
+     */
+    public Optional<ExecutableElement> findPropertyMethod(final Stream<ExecutableElement> methods, final String name) {
+        return methods.filter(elt -> elt.getSimpleName().toString().equals(name)).findFirst();
+    }
+
+    /**
+     * Searched the given collection of methods of a meta-model for a method modelling a property with the specified name.
+     * It is assumed that the collection will contain only methods of a meta-model to avoid excessive checks.
+     */
+    public Optional<ExecutableElement> findPropertyMethod(final Collection<ExecutableElement> methods, final String name) {
+        return findPropertyMethod(methods.stream(), name);
+    }
+
+    /**
      * Returns a stream of elements representing declared methods of a meta-model that model properties of the underlying entity.
      * 
      * @param mme the target meta-model element
@@ -137,12 +162,10 @@ public class MetaModelFinder extends ElementFinder {
     }
 
     /**
-     * Returns an optional describing a method of the meta-model element that meta-models a property with the specified name.
+     * Returns an optional describing a declared method of the meta-model element that meta-models a property with the specified name.
      */
     public Optional<ExecutableElement> findDeclaredPropertyMethod(final MetaModelElement mme, final String name) {
-        return streamDeclaredPropertyMethods(mme)
-                .filter(el -> el.getSimpleName().toString().equals(name))
-                .findFirst();
+        return findPropertyMethod(streamDeclaredPropertyMethods(mme), name);
     }
 
     /**

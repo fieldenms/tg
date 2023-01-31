@@ -12,7 +12,6 @@ import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.ME
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
@@ -194,14 +193,9 @@ public class MetaModelStructureTest {
         final EntityElement entity = entityFinder.findEntity(EntityWithEntityTypedAndOrdinaryProps.class);
         final MetaModelElement metaModel = findMetaModel(entity);
 
-        final List<ExecutableElement> metamodeledProps = metaModelFinder.findPropertyMethods(metaModel);
         for (final PropertyElement prop: entityFinder.findProperties(entity)) {
             // find the metamodeled prop
-            // TODO the logic handling transformations between entity properties and meta-model properties should be abstracted
-            // consider that transformation of names changes, then this code would have to be modified too
-            final Optional<ExecutableElement> maybeMetamodeledProp = metamodeledProps.stream()
-                    .filter(el -> el.getSimpleName().toString().equals(prop.getSimpleName().toString()))
-                    .findAny();
+            final Optional<ExecutableElement> maybeMetamodeledProp = metaModelFinder.findPropertyMethod(metaModel, prop.getSimpleName().toString());
             assertTrue("Property \"%s\" was not metamodeled.".formatted(prop.getSimpleName()), maybeMetamodeledProp.isPresent());
 
             final ExecutableElement metamodeledProp = maybeMetamodeledProp.get();
