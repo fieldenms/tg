@@ -229,8 +229,6 @@ public class ElementFinderTest {
         });
     }
 
-    // TODO test findInheritedFields with root type after refactoring ElementFinder to accept a TypeElement as root type
-
     @Test
     public void findFields_returns_both_declared_and_inherited_fields() {
         final TypeSpec sup2 = TypeSpec.classBuilder("Sup2")
