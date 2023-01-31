@@ -372,30 +372,37 @@ public class ElementFinderTest {
                 .addMethod(ifaceMethod)
                 .build();
 
-        final MethodSpec supIfaceMethod = MethodSpec.methodBuilder("ifaceMethod").build();
-        final MethodSpec supMethod = MethodSpec.methodBuilder("supMethod").build();
-        final TypeSpec sup = TypeSpec.classBuilder("Sup")
+        final TypeSpec sup1 = TypeSpec.classBuilder("Sup1")
                 .addSuperinterface(ClassName.get("", iface.name))
-                // constructors should be ignored
-                .addMethod(MethodSpec.constructorBuilder().build())
-                .addMethods(List.of(supIfaceMethod, supMethod))
+                .addMethod(MethodSpec.methodBuilder(ifaceMethod.name).build()) // implements the interface
+                .addMethod(MethodSpec.methodBuilder("superMethod").build())
                 .addField(double.class, "d")
                 .build();
 
+        final TypeSpec sup2 = TypeSpec.classBuilder("Sup2")
+                .superclass(ClassName.get("", sup1.name))
+                // constructors should be ignored
+                .addMethod(MethodSpec.constructorBuilder().build())
+                // overrides Sup1#superMethod()
+                .addMethod(MethodSpec.methodBuilder("superMethod").build())
+                .build();
+
         final TypeSpec sub = TypeSpec.classBuilder("Sub")
-                .superclass(ClassName.get("", sup.name))
+                .superclass(ClassName.get("", sup2.name))
                 // declared methods should be ignored
-                .addMethod(MethodSpec.methodBuilder("m1").build())
+                .addMethod(MethodSpec.methodBuilder("method").build())
                 .addField(int.class, "i")
                 .build();
 
-        processAndEvaluate(List.of(iface, sup, sub), finder -> {
+        processAndEvaluate(List.of(iface, sup1, sup2, sub), finder -> {
             // declared methods of Object should also be found
-            final List<MethodSpec> objectMethods = finder.findDeclaredMethods(finder.getTypeElement(Object.class)).stream()
-                    .map(m -> toMethodSpec(m)).toList();
-            final TypeElement subEl = finder.elements.getTypeElement(sub.name);
-            assertEqualContents(concat(objectMethods, List.of(supIfaceMethod, supMethod)),
-                    finder.findInheritedMethods(subEl).stream().map(m -> toMethodSpec(m)).toList());
+            final List<String> objectMethods = finder.findDeclaredMethods(finder.getTypeElement(Object.class)).stream()
+                    .map(m -> m.getSimpleName().toString()).toList();
+
+            final TypeElement subEl = finder.getTypeElement(sub.name);
+            // superMethod is declared by Sup1 and Sup2
+            assertEqualContents(concat(objectMethods, List.of("superMethod", "superMethod", ifaceMethod.name)),
+                    finder.findInheritedMethods(subEl).stream().map(m -> m.getSimpleName().toString()).toList());
         }); 
     }
 
@@ -407,30 +414,30 @@ public class ElementFinderTest {
                 .addMethod(ifaceMethod)
                 .build();
 
-        final MethodSpec supIfaceMethod = MethodSpec.methodBuilder("ifaceMethod").build();
-        final MethodSpec supMethod = MethodSpec.methodBuilder("supMethod").build();
         final TypeSpec sup = TypeSpec.classBuilder("Sup")
                 .addSuperinterface(ClassName.get("", iface.name))
-                .addMethods(List.of(supIfaceMethod, supMethod))
+                .addMethod(MethodSpec.methodBuilder(ifaceMethod.name).build()) // implements the interface
+                .addMethod(MethodSpec.methodBuilder("superMethod").build())
                 .addField(double.class, "d")
                 .build();
 
-        final List<MethodSpec> subMethods = List.of(MethodSpec.methodBuilder("m1").build(), MethodSpec.methodBuilder("m2").build());
         final TypeSpec sub = TypeSpec.classBuilder("Sub")
                 .superclass(ClassName.get("", sup.name))
-                // these methods should appear first
-                .addMethods(subMethods)
+                .addMethod(MethodSpec.methodBuilder("method").build())
+                .addMethod(MethodSpec.methodBuilder("superMethod").build()) // overrides Sup#superMethod()
                 .addField(int.class, "i")
                 .build();
 
         processAndEvaluate(List.of(iface, sup, sub), finder -> {
             // declared methods of Object should also be found
-            final List<MethodSpec> objectMethods = finder.findDeclaredMethods(finder.getTypeElement(Object.class)).stream()
-                    .map(m -> toMethodSpec(m)).toList();
-            final TypeElement subEl = finder.elements.getTypeElement(sub.name);
-            final List<MethodSpec> foundMethods = finder.findMethods(subEl).stream().map(m -> toMethodSpec(m)).toList();
-            assertTrue(startsWithList(foundMethods, subMethods));
-            assertEqualContents(concat(subMethods, List.of(supMethod, supIfaceMethod), objectMethods), foundMethods);
+            final List<String> objectMethods = finder.findDeclaredMethods(finder.getTypeElement(Object.class)).stream()
+                    .map(m -> m.getSimpleName().toString()).toList();
+
+            final TypeElement subEl = finder.getTypeElement(sub.name);
+            final List<String> foundMethods = finder.findMethods(subEl).stream().map(m -> m.getSimpleName().toString()).toList();
+            assertTrue(startsWithList(foundMethods, List.of("method", "superMethod")));
+            // superMethod is declared by Sub and Sup
+            assertEqualContents(concat(List.of("method", "superMethod", "superMethod", ifaceMethod.name), objectMethods), foundMethods);
         });
     }
 
