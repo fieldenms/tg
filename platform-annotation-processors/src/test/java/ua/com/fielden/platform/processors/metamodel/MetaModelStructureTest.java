@@ -242,7 +242,8 @@ public class MetaModelStructureTest {
             // TODO make sure that property types are consistent
             // for example, consider a case when a sub-entity redeclares a field with a different type
             // right now the information about the original property's type is stored in the javadoc
-            // for PropertyMetaModel methods it is impossible to test the consistency of types, since javax.lang.model API discards javadoc
+            // There is Elements#getDocComment(Element), which presumably returns the element's javadoc.
+            // However, it has only been returning null so far.
             if (prop.hasClassOrInterfaceType() && entityFinder.isEntityThatNeedsMetaModel(prop.getTypeAsTypeElementOrThrow())) {
                 assertTrue(metaModelFinder.isEntityMetaModelMethod(metamodeledProp));
             }
