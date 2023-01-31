@@ -363,23 +363,39 @@ public class ElementFinder {
     }
 
     /**
-     * Finds inherited methods of a type element. Ignores superinterfaces.
+     * Streams all inherited methods of a type element. Ignores superinterfaces. 
      * @see ElementKind#METHOD
      */
-    public Set<ExecutableElement> findInheritedMethods(final TypeElement typeElement) {
-        return streamSuperclasses(typeElement)
-                .flatMap(type -> findDeclaredMethods(type).stream()).collect(toCollection(LinkedHashSet::new));
+    public Stream<ExecutableElement> streamInheritedMethods(final TypeElement typeElement) {
+        return streamSuperclasses(typeElement).flatMap(type -> streamDeclaredMethods(type));
     }
 
     /**
-     * Finds all methods of a type element (both declared and inherited). Ignores superinterfaces.
-     * The results are ordered such that declared methods appear first.
-     * @see ElementKind#METHOD
+     * Collects the elements of {@link #streamInheritedMethods(TypeElement)} into an unmodifiable list.
+     * <p>
+     * <b>NOTE</b>: The returned list may include methods with equivalent signatures declared by different types (e.g. when a method is overriden).
+     * For a finer control of what is included use {@link #streamInheritedMethods(TypeElement)}.
      */
-    public LinkedHashSet<ExecutableElement> findMethods(TypeElement typeElement) {
-        final LinkedHashSet<ExecutableElement> methods = streamDeclaredMethods(typeElement).collect(toCollection(LinkedHashSet::new));
-        methods.addAll(findInheritedMethods(typeElement));
-        return methods;
+    public List<ExecutableElement> findInheritedMethods(final TypeElement typeElement) {
+        return streamInheritedMethods(typeElement).toList();
+    }
+
+    /**
+     * Streams all methods of a type element (both declared and inherited). Ignores superinterfaces.
+     * The results are ordered such that declared methods appear first.
+     */
+    public Stream<ExecutableElement> streamMethods(TypeElement typeElement) {
+        return Stream.concat(streamDeclaredMethods(typeElement), streamInheritedMethods(typeElement));
+    }
+
+    /**
+     * Collects the elements of {@link #streamMethods(TypeElement)} into an unmodifiable list.
+     * <p>
+     * <b>NOTE</b>: The returned list may include methods with equivalent signatures declared by different types (e.g. when a method is overriden).
+     * For a finer control of what is included use {@link #streamMethods(TypeElement)}.
+     */
+    public List<ExecutableElement> findMethods(TypeElement typeElement) {
+        return streamMethods(typeElement).toList();
     }
 
     /**
