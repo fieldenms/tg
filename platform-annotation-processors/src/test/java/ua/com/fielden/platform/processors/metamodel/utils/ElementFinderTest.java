@@ -63,7 +63,6 @@ import ua.com.fielden.platform.utils.CollectionUtil;
  */
 public class ElementFinderTest {
 
-    // TODO MetaModelLifecycleTest uses a similar value, so it should be generalized
     private static final TypeSpec PLACEHOLDER = TypeSpec.classBuilder("Placeholder").build();
 
     public static @interface TestAnnot {
