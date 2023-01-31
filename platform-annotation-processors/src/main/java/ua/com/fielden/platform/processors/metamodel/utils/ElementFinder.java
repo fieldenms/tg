@@ -253,14 +253,6 @@ public class ElementFinder {
         return streamFields(element).toList();
     }
 
-    public List<VariableElement> findStaticDeclaredFields(final TypeElement typeElement) {
-        return findDeclaredFields(typeElement, f -> isStatic(f));
-    }
-
-    public List<VariableElement> findNonStaticDeclaredFields(final TypeElement typeElement) {
-        return findDeclaredFields(typeElement, f -> !isStatic(f));
-    }
-
     /**
      * Returns an optional describing a variable element that represents a field named {@code fieldName} and matching {@code predicate},
      * traversing the whole type hierarchy.
