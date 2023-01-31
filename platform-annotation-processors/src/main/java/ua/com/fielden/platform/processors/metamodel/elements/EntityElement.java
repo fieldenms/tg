@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.processors.metamodel.elements;
 
+import javax.lang.model.element.Modifier;
+
 import java.util.Objects;
 
 import javax.lang.model.element.TypeElement;
@@ -29,13 +31,17 @@ public final class EntityElement extends AbstractForwardingTypeElement {
         super(typeElement);
         this.packageName = packageName;
     }
-    
+
     public String getPackageName() {
         return packageName;
     }
 
     public ClassName getEntityClassName() {
         return ClassName.get(packageName, getSimpleName().toString());
+    }
+
+    public boolean isAbstract() {
+       return element.getModifiers().contains(Modifier.ABSTRACT);
     }
 
     @Override

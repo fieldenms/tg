@@ -6,9 +6,12 @@ import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.AN
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.annotation.Annotation;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -16,6 +19,7 @@ import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.MirroredTypeException;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
@@ -26,11 +30,13 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
+import ua.com.fielden.platform.processors.metamodel.exceptions.UnexpectedStateException;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -52,19 +58,13 @@ public class EntityFinder extends ElementFinder {
      * @param entityClass
      * @return {@link EntityElement} wrapped in an {@link Optional} if found, else an empty optional
      */
-    public Optional<EntityElement> findEntity(final Class<? extends AbstractEntity<?>> entityClass) {
+    public Optional<EntityElement> findEntity(final Class<? extends AbstractEntity> entityClass) {
         return Optional.ofNullable(elements.getTypeElement(entityClass.getCanonicalName()))
                 .map(te -> newEntityElement(te));
     }
 
    /**
     * Finds properties, which are explicitly declared in an entity, represented by {@code entityElement}.
-    * <p>
-    * Two properties represent an edge-case:
-    * <ul>
-    * <li> id – only included if declared as a property explicitly.
-    * <li> desc – only included if re-declared as a property explicitly. 
-    * </ul>
     *
     * @param entityElement
     */
@@ -76,33 +76,73 @@ public class EntityFinder extends ElementFinder {
     }
 
     /**
-     * Finds properties, which are inherited by entity, represented by {@code entityElement}.
-     * <p>
-     * Two properties represent an edge-case:
-     * <ul>
-     * <li>id – only included if this or any of the entities represented by supertypes, is persistent.
-     * <li>desc – only included if this or any of the entities represented by supertypes, is annotated with {@code @DescTitle}.
-     * </ul>
+     * Returns a property element, representing a property named {@code propName} if it is declared by {@code entity}, otherwise returns {@code null}.
      *
-     * @param entityElement
+     * @param entity
+     * @param propName
      * @return
      */
-    public Set<PropertyElement> findInheritedProperties(final EntityElement entityElement) {
-        final Set<PropertyElement> props = findInheritedFields(entityElement, ROOT_ENTITY_CLASS).stream()
+    public PropertyElement findDeclaredProperty(final EntityElement entity, final String propName) {
+        return findDeclaredProperties(entity).stream()
+                .filter(el -> el.getSimpleName().toString().equals(propName))
+                .findAny().orElse(null);
+    }
+
+    /**
+     * Finds properties, which are inherited by entity, represented by {@code entityElement}.
+     * <p>
+     * A property is defined simply as a field annotated with {@link IsProperty}. For more detailed processing use {@link #processProperties(Set, EntityElement)}.
+     *
+     * @param entity
+     * @return
+     */
+    public Set<PropertyElement> findInheritedProperties(final EntityElement entity) {
+        return findInheritedFields(entity, ROOT_ENTITY_CLASS).stream()
                 .filter(this::isProperty)
                 .map(PropertyElement::new)
                 .collect(toCollection(LinkedHashSet::new));
-        // let's see if we need to include "id" as a property -- only persistent entities are of interest
-        if (isPersistentEntityType(entityElement) || doesExtendPersistentEntity(entityElement)) {
-            final var idProp = findField(entityElement, AbstractEntity.ID);
-            props.add(new PropertyElement(idProp));
+    }
+
+    /**
+     * Processes properties of the entity element, collecting them into an unmodifiable set with preserved order.
+     * <p>
+     * The following properties are processed:
+     * <ul>
+     *  <li>{@code id} – included if this or any of the entities represented by supertypes, is persistent.
+     *  <li>{@code desc} – included if this or any of the entities represented by supertypes, declares {@code desc} or is annotated 
+     *  with {@code @DescTitle}, excluded otherwise.
+     * </ul>
+     * 
+     * @param properties
+     * @param entity
+     */
+    public Set<PropertyElement> processProperties(final Collection<PropertyElement> properties, final EntityElement entity) {
+        final Set<PropertyElement> processed = new LinkedHashSet<>(properties);
+        processPropertyId(processed, entity);
+        processPropertyDesc(processed, entity);
+        return Collections.unmodifiableSet(processed);
+    }
+    // where
+    private void processPropertyId(final Set<PropertyElement> properties, final EntityElement entity) {
+        // include property "id" only for persistent entities
+        if (isPersistentEntityType(entity) || doesExtendPersistentEntity(entity)) {
+            properties.add(new PropertyElement(findField(entity, AbstractEntity.ID)));
         }
-        // and now similar for property "desc", which may need to be removed
-        if (findAnnotation(entityElement, DescTitle.class).isEmpty()) {
-            final var descProp = findField(entityElement, AbstractEntity.DESC);
-            props.remove(new PropertyElement(descProp));
+    }
+    // and
+    private void processPropertyDesc(final Set<PropertyElement> properties, final EntityElement entity) {
+        // include property "desc" in the following cases:
+        // 1. property "desc" is declared by entity or one of its supertypes below AbstractEntity
+        // 2. entity or any of its supertypes is annotated with @DescTitle
+        final PropertyElement descProp = findPropertyBelow(entity, AbstractEntity.DESC, AbstractEntity.class);
+        if (descProp != null) {
+            properties.add(descProp);
         }
-        return props;
+        else if (findAnnotation(entity, DescTitle.class).isPresent()) {
+            properties.add(new PropertyElement(findField(entity, AbstractEntity.DESC)));
+        }
+        // in other cases we need to exclude it
+        else properties.removeIf(elt -> elt.getSimpleName().toString().equals(AbstractEntity.DESC));
     }
 
     /**
@@ -113,6 +153,34 @@ public class EntityFinder extends ElementFinder {
         final Set<PropertyElement> properties = findDeclaredProperties(entityElement);
         properties.addAll(findInheritedProperties(entityElement));
         return properties;
+    }
+    
+    /**
+     * Finds a property of an entity by traversing it and its hierarchy below {@code rootType}, which is not searched.
+     * @param entity
+     * @param name
+     * @param rootType the type at which traversal stops
+     * @return
+     */
+    public PropertyElement findPropertyBelow(final EntityElement entity, final String name, final Class<?> rootType) {
+        return Optional.ofNullable(findDeclaredProperty(entity, name))
+                .orElseGet(() -> findSuperclassesBelow(entity, rootType).stream()
+                                    .map(this::newEntityElement)
+                                    .map(el -> findDeclaredProperty(el, name))
+                                    .filter(p -> p != null)
+                                    .findFirst().orElse(null));
+    }
+
+    /**
+     * Finds a property named {@code name} for entity represented by {@code entityElement}. The whole entity type hierarchy is traversed.
+     * @param entityElement
+     * @param name
+     * @return the property element that was found if any, otherwise {@code null}
+     */
+    public PropertyElement findProperty(final EntityElement entityElement, final String name) {
+        return findProperties(entityElement).stream()
+                .filter(propEl -> propEl.getSimpleName().toString().equals(name))
+                .findFirst().orElse(null);
     }
 
     public Pair<String, String> getPropTitleAndDesc(final PropertyElement propElement) {
@@ -160,15 +228,50 @@ public class EntityFinder extends ElementFinder {
     }
     
     /**
+     * Retrieves the type of entity key from {@link KeyType} annotation at compile time.
+     * @see {@link javax.lang.model.element.Element#getAnnotation(Class)}
+     * @param atKeyType
+     * @return
+     */
+    public TypeMirror getKeyType(final KeyType atKeyType) {
+        try {
+            // should ALWAYS throw, since value() is of type Class, which is unavailable at compile time
+            final Class<?> keyType = atKeyType.value();
+
+            // if it somehow was available, then construct a TypeMirror from it
+            final TypeElement keyTypeElement = elements.getTypeElement(keyType.getCanonicalName());
+            if (keyTypeElement == null) {
+                // keyType Class object was available at compile time but could not be found in the processing environment,
+                // thus TypeMirror can't be constructed
+                throw new UnexpectedStateException(
+                        "Key type from %s was loaded at compile time, but was not found in the processing environment."
+                        .formatted(atKeyType.toString()));
+            }
+            return keyTypeElement.asType();
+        } catch (final MirroredTypeException e) {
+//            messager.printMessage(Kind.NOTE, "key type: %s. %s was thrown.".formatted(atKeyType.toString(), e.toString()));
+            return e.getTypeMirror();
+        }
+    }
+    
+    /**
+     * Determines the type of key for an entity element by looking for a {@link KeyType} declaration in its type hierarchy.
+     * @param entity
+     * @return
+     */
+    public Optional<TypeMirror> determineKeyType(final EntityElement entity) {
+        return findAnnotation(entity, KeyType.class).map(this::getKeyType);
+    }
+    
+    /**
      * An entity is any class that inherits from {@link AbstractEntity}, which itself is also considered to be an entity.
      *
      * @param element
      * @return
      */
     public boolean isEntityType(final TypeElement element) {
-        return Stream.iterate(element, el -> !equals(el, Object.class) , el -> findSuperclass(el))
-               .filter(el -> equals(el, ROOT_ENTITY_CLASS))
-               .findFirst().isPresent();
+        return Stream.iterate(element, el -> el != null && !equals(el, Object.class) , el -> findSuperclass(el))
+               .anyMatch(el -> el != null && equals(el, ROOT_ENTITY_CLASS));
     }
 
     /**

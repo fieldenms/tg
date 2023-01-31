@@ -15,10 +15,12 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
+import javax.tools.Diagnostic;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
@@ -30,11 +32,14 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
+import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.JavaFile;
+import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeSpec;
 
 import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelsElement;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
@@ -202,14 +207,18 @@ public class MetaModelLifecycleTest {
     /**
      * Builds a basic entity class:
      * <pre>
-     * public class ${simpleName} extends AbsractEntity {}
+     * {@literal @}KeyType(String.class)
+     * public class ${simpleName} extends AbsractEntity{@literal <}String> {}
      * </pre>
      *
      * @param simpleName
      * @return {@link TypeSpec}
      */
     private TypeSpec buildEntity(final String simpleName) {
-        return TypeSpec.classBuilder(simpleName).addModifiers(Modifier.PUBLIC).superclass(AbstractEntity.class).build();
+        return TypeSpec.classBuilder(simpleName)
+                .addModifiers(Modifier.PUBLIC)
+                .addAnnotation(AnnotationSpec.builder(KeyType.class).addMember("value", "String.class").build())
+                .superclass(ParameterizedTypeName.get(AbstractEntity.class, String.class)).build();
     }
 
     /**
@@ -233,14 +242,18 @@ public class MetaModelLifecycleTest {
         } catch (final IOException ex) {
             throw new TestCaseConfigException("Could not set compilation locations from paths.", ex);
         }
-        // perform only annotation processing, without subsequent compilation
-        final List<String> options = List.of("-proc:only");
-        final Compilation compilation = new Compilation(compilationTargets, new MetaModelProcessor(), compiler, fileManager, options);
+        final Compilation compilation = new Compilation(compilationTargets)
+                .setProcessor(new MetaModelProcessor())
+                .setCompiler(compiler)
+                .setFileManager(fileManager)
+                .setOptions(Compilation.OPTION_PROC_ONLY);
         try {
             return compilation.compileAndEvaluate(consumer);
         } catch (final Throwable ex) {
             ex.printStackTrace();
             return false;
+        } finally {
+            System.out.println(compilation.getDiagnostics().stream().map(Diagnostic::toString).collect(Collectors.joining("\n")));
         }
     }
 
