@@ -196,34 +196,15 @@ public class ElementFinder {
     }
 
     /**
-     * Returns a stream of variable elements, representing declared fields of the type element matching {@code predicate}.
-     *
-     * @param element
-     * @param predicate
-     * @return
-     */
-    public Stream<VariableElement> streamDeclaredFields(final TypeElement element, final Predicate<VariableElement> predicate) {
-        return element.getEnclosedElements().stream()
-                .filter(elt -> elt.getKind().isField())
-                .map(elt -> (VariableElement) elt)
-                .filter(predicate);
-    }
-
-    /**
-     * Returns a stream of variable elements, representing all declared fields of a type element.
+     * Returns a stream of variable elements, representing declared fields of the type element.
      *
      * @param element
      * @return
      */
     public Stream<VariableElement> streamDeclaredFields(final TypeElement element) {
-        return streamDeclaredFields(element, elt -> true);
-    }
-
-    /**
-     * Collects the elements of {@link #streamDeclaredFields(TypeElement, Predicate)} into a list.
-     */
-    public List<VariableElement> findDeclaredFields(final TypeElement element, final Predicate<VariableElement> predicate) {
-        return streamDeclaredFields(element, predicate).toList();
+        return element.getEnclosedElements().stream()
+                .filter(elt -> elt.getKind().isField())
+                .map(elt -> (VariableElement) elt);
     }
 
     /**

@@ -175,22 +175,20 @@ public class ElementFinderTest {
     private static class FindSuperclasses_Sub extends FindSuperclasses_Sup {}
 
     @Test
-    public void findDeclaredFields_returns_declared_fields_of_a_type_that_satisfy_predicate() {
-        final FieldSpec static_final_String_STRING = FieldSpec.builder(String.class, "STRING", Modifier.FINAL, Modifier.STATIC).build();
-        final FieldSpec String_str = FieldSpec.builder(String.class, "str").build();
-        final FieldSpec final_int_i = FieldSpec.builder(int.class, "i", Modifier.FINAL).build();
-        final TypeSpec example = TypeSpec.classBuilder("Example")
-                .addFields(List.of(static_final_String_STRING, String_str, final_int_i))
+    public void findDeclaredFields_returns_only_declared_fields() {
+        final TypeSpec sup = TypeSpec.classBuilder("Sup")
+                .addField(String.class, "s", Modifier.PUBLIC)
+                .build();
+        final TypeSpec sub = TypeSpec.classBuilder("Sub")
+                .superclass(ClassName.get("", sup.name))
+                .addField(int.class, "i")
+                .addField(boolean.class, "b")
                 .build();
 
-        processAndEvaluate(List.of(example), finder -> {
-            // without any predicate all declared fields are returned
-            assertEqualContents(example.fieldSpecs,
-                    finder.findDeclaredFields(finder.elements.getTypeElement(example.name)).stream().map(f -> toFieldSpec(f)).toList());
-            // with a predicate
-            final Predicate<VariableElement> isFinal = (f -> f.getModifiers().contains(Modifier.FINAL));
-            assertEqualContents(List.of(static_final_String_STRING, final_int_i),
-                    finder.findDeclaredFields(finder.elements.getTypeElement(example.name), isFinal).stream().map(f -> toFieldSpec(f)).toList());
+        processAndEvaluate(List.of(sup, sub), finder -> {
+            final List<VariableElement> fields = finder.findDeclaredFields(finder.getTypeElement(sub.name));
+            assertEquals(2, fields.size());
+            assertEqualContents(sub.fieldSpecs, fields.stream().map(f -> toFieldSpec(f)).toList());
         });
     }
 
