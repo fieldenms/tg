@@ -192,6 +192,19 @@ public class MetaModelFinderTest {
     }
 
     @Test
+    public void findPropertyMethod_finds_the_property_method_by_name_traversing_the_whole_hierarchy() {
+        final MetaModelElement mme = metaModelFinder.findMetaModel(SubEntityMetaModel.class);
+        // declared property
+        assertTrue(metaModelFinder.findPropertyMethod(mme, "parent").isPresent());
+        // inherited property
+        assertTrue(metaModelFinder.findPropertyMethod(mme, "prop2").isPresent());
+        // non-existent property
+        assertTrue(metaModelFinder.findPropertyMethod(mme, "stub").isEmpty());
+        // non-property method
+        assertTrue(metaModelFinder.findPropertyMethod(mme, "getEntityClass").isEmpty());
+    }
+
+    @Test
     public void findDeclaredPropertyMethod_finds_the_declared_property_method_by_name() {
         final MetaModelElement mme = metaModelFinder.findMetaModel(SubEntityMetaModel.class);
         // declared property
