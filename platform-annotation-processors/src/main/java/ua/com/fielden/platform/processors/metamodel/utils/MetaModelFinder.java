@@ -102,6 +102,12 @@ public class MetaModelFinder extends ElementFinder {
                 .filter(el -> isPropertyMetaModelMethod(el) || isEntityMetaModelMethod(el))
                 .collect(toCollection(LinkedHashSet::new));
     }
+    
+    public ExecutableElement findDeclaredPropertyMethod(final MetaModelElement mme, final String name) {
+        return findDeclaredPropertyMethods(mme).stream()
+                .filter(el -> el.getSimpleName().toString().equals(name))
+                .findFirst().orElse(null);
+    }
 
     /**
      * Returns a set of meta-model elements for each field that is of type {@code Supplier<? extends EntityMetaModel>}.
