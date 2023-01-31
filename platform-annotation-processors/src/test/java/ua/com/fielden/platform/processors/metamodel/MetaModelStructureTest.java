@@ -235,7 +235,7 @@ public class MetaModelStructureTest {
 
         for (final PropertyElement prop: subEntityDeclaredProps) {
             // find the metamodeled prop by name
-            final Optional<ExecutableElement> maybeMetamodeledProp = subEntityDeclaredMetamodeledProps.stream().filter(el -> el.getSimpleName().equals(prop.getSimpleName())).findAny();
+            final Optional<ExecutableElement> maybeMetamodeledProp = metaModelFinder.findPropertyMethod(subEntityDeclaredMetamodeledProps, prop.getSimpleName().toString());
             assertTrue(maybeMetamodeledProp.isPresent());
             final ExecutableElement metamodeledProp = maybeMetamodeledProp.get();
 
