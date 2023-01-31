@@ -30,7 +30,7 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
 
     @Override
     public SubQuery2 transform(final TransformationContext1 context) {
-        final TransformationContext1 localContext = context.produceForCorrelatedSubquery();
+        final TransformationContext1 localContext = context;
         
         if (sources == null) {
             final QueryBlocks2 qb = transformSourceless(localContext);

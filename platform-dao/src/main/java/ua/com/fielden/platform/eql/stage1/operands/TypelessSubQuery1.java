@@ -23,7 +23,7 @@ public class TypelessSubQuery1 extends AbstractQuery1 implements ITransformableT
 
     @Override
     public TypelessSubQuery2 transform(final TransformationContext1 context) {
-        final TransformationContext1 localContext = context.produceForCorrelatedSubquery();
+        final TransformationContext1 localContext = context;
         
         if (sources == null) {
             return new TypelessSubQuery2(transformSourceless(localContext));

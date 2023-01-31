@@ -27,10 +27,10 @@ public class MultipleNodesSources1 implements ISources1<MultipleNodesSources2> {
     @Override
     public TransformationResult1<MultipleNodesSources2> transform(TransformationContext1 context) {
         final TransformationResult1<? extends ISources2<?>> lsTransformed = leftSource.transform(context);
-        final TransformationResult1<? extends ISources2<?>> rsTransformed = rightSource.transform(lsTransformed.updatedContext);
-        // TODO reconsider this approach -- join conditions props should be resolved against left and right sources trees (not just these sources alone)
-        final Conditions2 jcTransformed = joinConditions.transform(rsTransformed.updatedContext);
-        return new TransformationResult1<>(new MultipleNodesSources2(lsTransformed.item, rsTransformed.item, joinType, jcTransformed), rsTransformed.updatedContext);
+        final TransformationResult1<? extends ISources2<?>> rsTransformed = rightSource.transform(context);
+        final TransformationContext1 updatedContext = context.cloneWithAdded(lsTransformed.updatedContext.sources.get(0), rsTransformed.updatedContext.sources.get(0));
+        final Conditions2 jcTransformed = joinConditions.transform(updatedContext);
+        return new TransformationResult1<>(new MultipleNodesSources2(lsTransformed.item, rsTransformed.item, joinType, jcTransformed), updatedContext);
     }
 
     @Override

@@ -18,7 +18,6 @@ public class SingleNodeSources1 implements ISources1<SingleNodeSources2> {
     public TransformationResult1<SingleNodeSources2> transform(TransformationContext1 context) {
         final ISource2<?> mainTransformed = source.transform(context);
         return new TransformationResult1<>(new SingleNodeSources2(mainTransformed), context.cloneWithAdded(mainTransformed));
-        // TODO reconsider this approach in terms of explicit tree join support (context for props resolution will be more tree-like)
     }
     
     @Override

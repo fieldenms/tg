@@ -43,7 +43,7 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
 
     @Override
     public SourceQuery2 transform(final TransformationContext1 context) {
-        final TransformationContext1 localContext = isCorrelated ? context.produceForCorrelatedSourceQuery() : context.produceForUncorrelatedSourceQuery();
+        final TransformationContext1 localContext = isCorrelated ? context : new TransformationContext1(context.domainInfo);
 
         if (sources == null) {
             return new SourceQuery2(transformSourceless(localContext), resultType);
