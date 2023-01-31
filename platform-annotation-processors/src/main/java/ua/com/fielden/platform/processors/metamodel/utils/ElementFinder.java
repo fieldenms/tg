@@ -345,38 +345,21 @@ public class ElementFinder {
     }
 
     /**
-     * Streams declared methods of a type element that satisfy the predicate.
-     * @see ElementKind#METHOD
-     */
-    public Stream<ExecutableElement> streamDeclaredMethods(final TypeElement typeElement, final Predicate<ExecutableElement> predicate) {
-        return typeElement.getEnclosedElements().stream()
-                .filter(el -> el.getKind() == ElementKind.METHOD)
-                .map(el -> (ExecutableElement) el)
-                .filter(predicate);
-    }
-
-    /**
      * Streams declared methods of a type element.
      * @see ElementKind#METHOD
      */
     public Stream<ExecutableElement> streamDeclaredMethods(final TypeElement typeElement) {
-        return streamDeclaredMethods(typeElement, el -> true);
+        return typeElement.getEnclosedElements().stream()
+                .filter(elt -> elt.getKind().equals(ElementKind.METHOD))
+                .map(elt -> (ExecutableElement) elt);
     }
 
     /**
-     * Finds declared methods of a type element that satisfy the predicate.
+     * Collects the elements of {@link #streamDeclaredMethods(TypeElement)} into an unmodifiable list.
      * @see ElementKind#METHOD
      */
-    public Set<ExecutableElement> findDeclaredMethods(final TypeElement typeElement, final Predicate<ExecutableElement> predicate) {
-        return streamDeclaredMethods(typeElement, predicate).collect(toCollection(LinkedHashSet::new));
-    }
-
-    /**
-     * Finds declared methods of a type element.
-     * @see ElementKind#METHOD
-     */
-    public Set<ExecutableElement> findDeclaredMethods(TypeElement typeElement) {
-        return findDeclaredMethods(typeElement, el -> true);
+    public List<ExecutableElement> findDeclaredMethods(final TypeElement typeElement) {
+        return streamDeclaredMethods(typeElement).toList();
     }
 
     /**

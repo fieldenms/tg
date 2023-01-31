@@ -15,7 +15,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Consumer;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -342,7 +341,7 @@ public class ElementFinderTest {
     }
 
     @Test
-    public void findDeclaredMethods_returns_declared_methods_that_satisfy_predicate() {
+    public void findDeclaredMethods_finds_only_declared_methods() {
         final TypeSpec sup = TypeSpec.classBuilder("Sup")
                 // this method should be ignored
                 .addMethod(MethodSpec.methodBuilder("supMethod").build())
@@ -360,13 +359,8 @@ public class ElementFinderTest {
 
         processAndEvaluate(List.of(sup, sub), finder -> {
             final TypeElement subEl = finder.elements.getTypeElement(sub.name);
-            // without any predicate all declared methods are returned
             assertEqualContents(List.of(m1, m2),
                     finder.findDeclaredMethods(subEl).stream().map(m -> toMethodSpec(m)).toList());
-            // with a predicate
-            final Predicate<ExecutableElement> acceptsArgs = (m -> !m.getParameters().isEmpty());
-            assertEqualContents(List.of(m1),
-                    finder.findDeclaredMethods(subEl, acceptsArgs).stream().map(m -> toMethodSpec(m)).toList());
         }); 
     }
 
