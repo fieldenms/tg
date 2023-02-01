@@ -1,13 +1,11 @@
 package ua.com.fielden.platform.processors.metamodel.utils;
 
-import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 import static java.util.stream.Stream.iterate;
 import static ua.com.fielden.platform.utils.StreamUtils.stopAfter;
 
 import java.lang.annotation.Annotation;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -38,6 +36,7 @@ import javax.lang.model.util.SimpleTypeVisitor14;
 import javax.lang.model.util.Types;
 
 import ua.com.fielden.platform.processors.metamodel.elements.AbstractForwardingElement;
+import ua.com.fielden.platform.processors.metamodel.elements.utils.TypeElementCache;
 import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderException;
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelException;
 
@@ -78,18 +77,22 @@ public class ElementFinder {
     }
 
     /**
-     * A shortcut for {@link Elements#getTypeElement(CharSequence)}.
+     * Similar to {@link Elements#getTypeElement(CharSequence)} with caching of results.
      * <p>
      * If no corespodning type element was found, then a runtime exception is thrown.
      * In case of a multi-module application where there are multiple classes with the same canonical name, the first match is returned.
      * 
+     * @see TypeElementCache
      * @param name canonical name of the element to be found
      * @return
      * @throws ElementFinderException if no coresponding type element was found
      */
     public TypeElement getTypeElement(final String name) {
-        return elements.getAllTypeElements(name).stream().findFirst()
-                .orElseThrow(() -> new ElementFinderException("No type element was found for type [%s]".formatted(name)));
+        final TypeElement elt = TypeElementCache.getInstance().getTypeElement(elements, name);
+        if (elt == null) {
+            throw new ElementFinderException("No type element was found for type [%s]".formatted(name));
+        }
+        return elt;
     }
 
     /**
