@@ -154,6 +154,21 @@ export function deepestActiveElement () {
     return _deepestActiveElementOf(document.activeElement);
 };
 
+export function errorMessages (result, defaultMessage) {
+    if(result.message) {
+        const messages = exception.message.split("<extended/>");
+        const shortMessage = messages[0] ? messages[0] : defaultMessage;
+        return {
+            short: shortMessage,
+            extended: messages[1] ? messages[1] : shortMessage
+        }
+    }
+    return {
+        short: defaultMessage,
+        extended: defaultMessage
+    }
+}
+
 /**
  * The selector for focusable elements.
  */

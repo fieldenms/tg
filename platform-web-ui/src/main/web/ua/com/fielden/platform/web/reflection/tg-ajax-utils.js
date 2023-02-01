@@ -10,7 +10,7 @@ export function processResponseError (e, reflector, serialiser, customHandler, t
 
         if (reflector.isError(deserialisedResult)) {
             // throw the toast message about the server-side error
-            toaster && toaster.openToastForError(reflector.exceptionMessage(deserialisedResult.ex), toastMsgForError(reflector, deserialisedResult), true);
+            toaster && toaster.openToastForError(reflector.exceptionMessage(deserialisedResult.ex).short, toastMsgForError(reflector, deserialisedResult), true);
             // continue with custom error handling of the error result
             customHandler && customHandler(deserialisedResult);
         } else {

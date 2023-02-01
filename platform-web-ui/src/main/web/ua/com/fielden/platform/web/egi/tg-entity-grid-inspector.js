@@ -30,7 +30,7 @@ import { TgElementSelectorBehavior } from '/resources/components/tg-element-sele
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import { getKeyEventTarget, tearDownEvent, getRelativePos, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
+import { getKeyEventTarget, tearDownEvent, getRelativePos, isMobileApp, errorMessages} from '/resources/reflection/tg-polymer-utils.js';
 
 const EGI_BOTTOM_MARGIN = "15px";
 const EGI_BOTTOM_MARGIN_TEMPLATE = html`15px`;
@@ -2111,7 +2111,8 @@ Polymer({
     getValueTooltip: function (entity, column) {
         const validationResult = this.getRealEntity(entity, column).prop(this.getRealProperty(column)).validationResult();
         if (this._reflector.isWarning(validationResult) || this._reflector.isError(validationResult)) {
-            return validationResult.message && ("<b>" + validationResult.message + "</b>");
+            const errorMessages = errorMessages(validationResult);
+            return errorMessages.extended && ("<b>" + errorMessages.extended + "</b>");
         } else if (column.tooltipProperty) {
             const value = this.getValue(this.getRealEntity(entity, column), column.tooltipProperty, "String").toString();
             return value && ("<b>" + value + "</b>");

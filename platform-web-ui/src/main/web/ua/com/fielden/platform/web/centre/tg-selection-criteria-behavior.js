@@ -339,7 +339,7 @@ const TgSelectionCriteriaBehaviorImpl = {
                 this._centreDirty = result.centreDirty;
 
                 const msg = this._toastMsg("Running", criteriaEntity);
-                this._openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg, false);
+                this._openToast(criteriaEntity, msg.short, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg.extended, false);
 
                 const newBindingEntity = this._postEntityReceived(criteriaEntity, false);
                 this.postRun(criteriaEntity, newBindingEntity, result);
@@ -374,7 +374,7 @@ const TgSelectionCriteriaBehaviorImpl = {
 
             const msg = this._toastMsg("Operation", potentiallySavedEntity);
             if (!potentiallySavedEntity.isValid()) {
-                this._openToast(potentiallySavedEntity, msg, !potentiallySavedEntity.isValid() || potentiallySavedEntity.isValidWithWarning(), msg, false);
+                this._openToast(potentiallySavedEntity, msg.short, !potentiallySavedEntity.isValid() || potentiallySavedEntity.isValidWithWarning(), msg.extended, false);
             }
 
             const newBindingEntity = this._postEntityReceived(potentiallySavedEntity, true);

@@ -1,6 +1,7 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import {processResponseError, toastMsgForError} from '/resources/reflection/tg-ajax-utils.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
+import { errorMessages } from '/resources/reflection/tg-polymer-utils.js';
 
 export const TgEntityBinderBehavior = {
 
@@ -468,7 +469,7 @@ export const TgEntityBinderBehavior = {
                             reader.onload = function () {
                                 const resultAsObj = JSON.parse(reader.result);
                                 const result = self._serialiser().deserialise(resultAsObj);
-                                self._openToastForError(result.message, toastMsgForError(self._reflector(), result), true);
+                                self._openToastForError(errorMessages(result).short, toastMsgForError(self._reflector(), result), true);
                             }
                             reader.readAsText(xhr.response);
                         }
@@ -535,7 +536,7 @@ export const TgEntityBinderBehavior = {
                     // The current logic of tg-toast will discard all other messages after this message, until this message disappears.
                     if (this._reflector().isError(deserialisedResult)) {
                         console.log('deserialisedResult: ', deserialisedResult);
-                        this._openToastForError(deserialisedResult.message, toastMsgForError(this._reflector(), deserialisedResult), !this._reflector().isContinuationError(deserialisedResult) || this.showContinuationsAsErrors);
+                        this._openToastForError(errorMessages(deserialisedResult).short, toastMsgForError(this._reflector(), deserialisedResult), !this._reflector().isContinuationError(deserialisedResult) || this.showContinuationsAsErrors);
                     }
                     e.detail.successful = customHandlerFor(deserialisedInstance, this._reflector().isError(deserialisedResult) ? deserialisedResult : null);
                     if (this._reflector().isError(deserialisedResult)) {
@@ -655,7 +656,7 @@ export const TgEntityBinderBehavior = {
             var customObject = this._reflector().customObject(entityAndCustomObject);
 
             var msg = this._toastMsg("Refreshing", entity);
-            this._openToast(entity, msg, !entity.isValid() || entity.isValidWithWarning(), msg, false);
+            this._openToast(entity, msg.short, !entity.isValid() || entity.isValidWithWarning(), msg.extended, false);
 
             var newBindingEntity = this._postEntityReceived(entity, true);
 
@@ -704,7 +705,7 @@ export const TgEntityBinderBehavior = {
             console.log('validate received (', customObject['@validationCounter'], ')');
             if (!validatedEntity.isValid()) {
                 const msg = this._toastMsg("Validation", validatedEntity);
-                this._openToast(validatedEntity, msg, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), msg, false);
+                this._openToast(validatedEntity, msg.short, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), msg.extended, false);
             }
             // in case where _continuations property exists (only in tg-entity-master) there is a need to reset continuations (they become stale after any change in initiating entity)
             if (typeof this._continuations === 'object') {
@@ -824,11 +825,14 @@ export const TgEntityBinderBehavior = {
 
     _toastMsg: function (actionName, entity) {
         if (!entity.isValid()) {
-            return entity.firstFailure().message;
+            return errorMessages(entity.firstFailure());
         } else if (entity.isValidWithWarning()) {
-            return entity.firstWarning().message;
+            return errorMessages(entity.firstWarning());
         } else {
-            return actionName + " completed successfully.";
+            return {
+                short: actionName + " completed successfully.",
+                extended: actionName + " completed successfully."
+            };
         }
     },
     //////////////////////////////////////////////

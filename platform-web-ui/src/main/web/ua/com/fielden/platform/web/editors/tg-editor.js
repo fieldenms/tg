@@ -11,7 +11,7 @@ import {TgReflector} from '/app/tg-reflector.js';
 
 import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
-import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, allDefined, errorMessages } from '/resources/reflection/tg-polymer-utils.js';
 
 const defaultLabelTemplate = html`
     <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]" slot="label">[[propTitle]]</label>`;
@@ -124,7 +124,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 ${propertyAction}
             </div>
             <!-- 'autoValidate' attribute for paper-input-container is 'false' -- all validation is performed manually and is bound to paper-input-error, which could be hidden in case of empty '_error' property -->
-            <paper-input-error hidden$="[[!_error]]" invalid$="[[_error]]" disabled$="[[_disabled]]" tooltip-text$="[[_error]]" slot="add-on">[[_error]]</paper-input-error>
+            <paper-input-error hidden$="[[!_error]]" invalid$="[[_error]]" disabled$="[[_disabled]]" tooltip-text$="[[_extendedError]]" slot="add-on">[[_error]]</paper-input-error>
             <!-- paper-input-char-counter addon is updated whenever 'bindValue' property of child '#input' element is changed -->
             <paper-input-char-counter id="inputCounter" class="footer" hidden$="[[!_isMultilineText(_editorKind)]]" disabled$="[[_disabled]]" slot="add-on"></paper-input-char-counter>
         </paper-input-container>
@@ -315,6 +315,14 @@ export class TgEditor extends PolymerElement {
              * The validation error message.
              */
             _error: {
+                type: String,
+                value: null
+            },
+
+            /**
+             * The extended validation error message.
+             */
+            _extendedError: {
                 type: String,
                 value: null
             },
@@ -909,11 +917,11 @@ export class TgEditor extends PolymerElement {
             //     - for these props it does not make sense to propagate such meta-information from
             //     parent property -- the parent prop (if added in master) will show that errors concisely
             if (typeof entity["@" + propertyName + "_error"] !== 'undefined') {
-                this._bindError(entity["@" + propertyName + "_error"].message);
+                this._bindError(errorMessages(entity["@" + propertyName + "_error"]));
             } else if (typeof entity["@" + propertyName + "_warning"] !== 'undefined') {
-                this._bindWarning(entity["@" + propertyName + "_warning"].message);
+                this._bindWarning(errorMessages(entity["@" + propertyName + "_warning"]));
             } else if (typeof entity["@" + propertyName + "_informative"] !== 'undefined') {
-                this._bindInformative(entity["@" + propertyName + "_informative"].message);
+                this._bindInformative(errorMessages(entity["@" + propertyName + "_informative"]));
             } else if (typeof entity["@" + propertyName + "_required"] !== 'undefined') {
                 this._bindRequired(entity["@" + propertyName + "_required"]);
             } else {
@@ -958,6 +966,7 @@ export class TgEditor extends PolymerElement {
     _resetMessages () {
         this._invalid = false;
         this._error = null;
+        this._extendedError = null;
         this.decorator().classList.remove("warning");
         this.decorator().classList.remove("informative");
         this.updateStyles();
@@ -967,7 +976,8 @@ export class TgEditor extends PolymerElement {
         this._resetMessages();
         this.decorator().classList.remove("required");
         this._invalid = true;
-        this._error = "" + msg;
+        this._error = "" + msg.short;
+        this._extendedError = "" + msg.extended;
         this.updateStyles();
     }
     
@@ -976,7 +986,8 @@ export class TgEditor extends PolymerElement {
         this.decorator().classList.remove("required");
         this.decorator().classList.add("warning");
         this._invalid = true;
-        this._error = "" + msg;
+        this._error = "" + msg.short;
+        this._extendedError = "" + msg.extended;
         this.updateStyles();
     }
 
@@ -984,7 +995,8 @@ export class TgEditor extends PolymerElement {
         this._resetMessages();
         this.decorator().classList.remove("required");
         this.decorator().classList.add("informative");
-        this._error = "" + msg;
+        this._error = "" + msg.short;
+        this._extendedError = "" + msg.extended;
         this.updateStyles();
     }
 
