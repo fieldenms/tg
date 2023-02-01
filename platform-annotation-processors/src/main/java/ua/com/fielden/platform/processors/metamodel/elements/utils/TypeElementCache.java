@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.processors.metamodel.elements.utils;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Supplier;
 
 import javax.lang.model.element.TypeElement;
@@ -37,6 +39,14 @@ public final class TypeElementCache {
         return instance;
     }
 
+    /**
+     * Returns an optional describing an unmodifiable cache for the specified {@link Elements} instance. 
+     * @param elements
+     * @return
+     */
+    protected Optional<Map<String, TypeElement>> cacheViewFor(final Elements elements) {
+        return Optional.ofNullable(cache.get(elements)).map(Collections::unmodifiableMap);
+    }
 
     /**
      * Clears this cache by first clearing all sub-caches associated with {@link Elements} instances, and then clears the top-level cache.
