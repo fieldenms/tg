@@ -37,6 +37,15 @@ public final class TypeElementCache {
         return instance;
     }
 
+
+    /**
+     * Clears this cache by first clearing all sub-caches associated with {@link Elements} instances, and then clears the top-level cache.
+     */
+    public void clear() {
+        cache.forEach((elements, map) -> map.clear());
+        cache.clear();
+    }
+
     /**
      * Similar to {@link Elements#getTypeElement(CharSequence)} with the results being cached. No-match results (when {@code null} is returned)
      * are cached as well. Another distinction of this method is that in case of a multi-module application, where multiple type elements
