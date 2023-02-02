@@ -91,9 +91,8 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
             }
 
             /* style requiredness */
-            #decorator.informative {
+            #decorator[is-invalid].informative {
                 --paper-input-container-color: #8E24AA;
-                --paper-input-container-focus-color: #8E24AA;
                 --paper-input-container-invalid-color: #8E24AA;
             }
 
@@ -103,7 +102,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 --paper-input-container-invalid-color: #FFA000;
             }
 
-            #decorator[is-invalid]:not(.warning) {
+            #decorator[is-invalid]:not(.warning):not(.informative) {
                 --paper-input-container-color: var(--google-red-500);
             }
         </style>
@@ -124,7 +123,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 ${propertyAction}
             </div>
             <!-- 'autoValidate' attribute for paper-input-container is 'false' -- all validation is performed manually and is bound to paper-input-error, which could be hidden in case of empty '_error' property -->
-            <paper-input-error hidden$="[[!_error]]" invalid$="[[_error]]" disabled$="[[_disabled]]" tooltip-text$="[[_extendedError]]" slot="add-on">[[_error]]</paper-input-error>
+            <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]" tooltip-text$="[[_extendedError]]" slot="add-on">[[_error]]</paper-input-error>
             <!-- paper-input-char-counter addon is updated whenever 'bindValue' property of child '#input' element is changed -->
             <paper-input-char-counter id="inputCounter" class="footer" hidden$="[[!_isMultilineText(_editorKind)]]" disabled$="[[_disabled]]" slot="add-on"></paper-input-char-counter>
         </paper-input-container>
@@ -995,6 +994,7 @@ export class TgEditor extends PolymerElement {
         this._resetMessages();
         this.decorator().classList.remove("required");
         this.decorator().classList.add("informative");
+        this._invalid = true;
         this._error = "" + msg.short;
         this._extendedError = "" + msg.extended;
         this.updateStyles();

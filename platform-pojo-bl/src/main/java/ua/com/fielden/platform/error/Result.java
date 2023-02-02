@@ -362,8 +362,8 @@ public class Result extends RuntimeException {
      *
      * @return
      */
-    public boolean isSuccessfulWithoutInformative() {
-        return isSuccessful() && !(this instanceof Informative);
+    public boolean isSuccessfulWithoutWarningAndInformative() {
+        return isSuccessfulWithoutWarning() && !(this instanceof Informative);
     }
 
     /**
