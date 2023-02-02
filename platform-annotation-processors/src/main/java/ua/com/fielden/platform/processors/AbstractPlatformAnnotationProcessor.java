@@ -78,6 +78,14 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
         return SourceVersion.latestSupported();
     }
 
+    /**
+     * Performs parsing of options that were passed to this processor.
+     * Subclasses might wish to call the super implementation when overriding this method.
+     * @param options
+     */
+    protected void parseOptions(final Map<String, String> options) { 
+    }
+
     @Override
     public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
         this.roundNumber = this.roundNumber + 1;
@@ -110,9 +118,10 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
         stopwatchProcess.stop();
         printNote("<<< %s: PROCESSING ROUND %d END [%s millis] <<<", classSimpleName, roundNumber, stopwatchProcess.elapsed(MILLISECONDS));
 
-        if (roundEnv.processingOver()) {
+        if (processingOver) {
             this.pastLastRound = true;
             this.batchRoundNumber = 0; // reset affected sources batch round counter
+            postProcess();
         }
 
         return claimAnnotations;
@@ -130,6 +139,13 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
      * @return
      */
     protected abstract boolean processRound(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv);
+
+    /**
+     * Performs some post-processing work at the end of the last round.
+     * Subclasses might wish to call the super implementation when overriding this method.
+     */
+    protected void postProcess() {
+    }
 
     /**
      * Prints a single diagnostic message using {@link Messager} instance of message kind {@link NOTE}.
