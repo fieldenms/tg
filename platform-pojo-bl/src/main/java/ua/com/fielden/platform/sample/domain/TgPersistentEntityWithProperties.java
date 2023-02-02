@@ -36,6 +36,7 @@ import ua.com.fielden.platform.entity.validation.annotation.Max;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.sample.domain.definers.CosWithACEDefiner;
 import ua.com.fielden.platform.sample.domain.definers.RequirednessDefiner;
+import ua.com.fielden.platform.sample.domain.definers.TgPersistentEntityWithPropertiesEntityPropDefiner;
 import ua.com.fielden.platform.sample.domain.validators.CosConcreteValueProhibitedValidator;
 import ua.com.fielden.platform.sample.domain.validators.CosEmptyValueProhibitedValidator;
 import ua.com.fielden.platform.sample.domain.validators.CosWithValidatorValidator;
@@ -70,6 +71,7 @@ public class TgPersistentEntityWithProperties extends AbstractFunctionalEntityWi
     @MapTo
     @Title(value = "Entity prop", desc = "Entity prop desc")
     @BeforeChange(@Handler(EntityValidator.class))
+    @AfterChange(TgPersistentEntityWithPropertiesEntityPropDefiner.class)
     private TgPersistentEntityWithProperties entityProp;
 
     @IsProperty(precision = 18, scale = 5)

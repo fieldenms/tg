@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.sample.domain.validators;
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchAll;
+import static ua.com.fielden.platform.error.Result.informative;
 
 import java.lang.annotation.Annotation;
 import java.util.Set;
@@ -30,6 +31,14 @@ public class EntityValidator implements IBeforeChangeEventHandler<TgPersistentEn
             if (val.getRequiredValidatedProp() != null && val.getRequiredValidatedProp() < 5) {
                 return Result.failure(newValue, "Unacceptable entity due to requiredValidatedProp < 5.");
             }
+        }
+        // Short-lived informative messages should be defined as part of validator (very similar to warnings).
+        //   Such messages would live up until the entity gets successfully saved.
+        // Long-lived informative messages should be defined in validator and in definer with '.isInitialising()' condition. This is a canonical way.
+        //   Such messages would live even after saving up until integrity constraint would change.
+        //   Alternatively, informative messages can be defined in definer only and without '.isInitialising()' condition (i.e. for both initialising and mutation phase).
+        if (newValue != null && !newValue.getBooleanProp()) {
+            return informative("Validator: value with bool prop 'false'.");
         }
         return Result.successful(newValue);
     }
