@@ -1276,7 +1276,7 @@ public class EntitySerialisationWithJacksonTest {
 
         assertNotNull("Restored informative could not be null", restoredInformative);
         assertTrue("Restored information should be of Informative type", restoredInformative.isInformative());
-        assertFalse("Restored information could not be null", restoredInformative.isSuccessfulWithoutInformative());
+        assertFalse("Restored information could not be null", restoredInformative.isSuccessfulWithoutWarningAndInformative());
         assertNotNull("Restored information should have message", restoredInformative.getMessage());
         assertNotNull("Restored information should have instance", restoredInformative.getInstance());
 

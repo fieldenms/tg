@@ -564,7 +564,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
 
     @Override
     public Result validationResult() {
-        final Stream<Result> streamOfErrorsAndWarnings = validators.values().stream().flatMap(v -> v.values().stream()).filter(r -> r != null && (r.isWarning() || !r.isSuccessful()));
+        final Stream<Result> streamOfErrorsAndWarnings = validators.values().stream().flatMap(v -> v.values().stream()).filter(r -> r != null && (r.isWarning() || r.isInformative() || !r.isSuccessful()));
         final Result lastResult = streamOfErrorsAndWarnings
                 .reduce(successful(this), (p, result) -> {
                     if (!result.isSuccessful()
