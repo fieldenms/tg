@@ -7,6 +7,8 @@ import '/resources/polymer/@polymer/paper-input/paper-input-container.js';
 import '/resources/polymer/@polymer/paper-input/paper-input-error.js';
 import '/resources/polymer/@polymer/paper-input/paper-input-char-counter.js';
 
+import '/resources/components/tg-confirmation-dialog.js';
+
 import {TgReflector} from '/app/tg-reflector.js';
 
 import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
@@ -107,6 +109,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
             }
         </style>
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+        <tg-confirmation-dialog id="confirmationDialog"></tg-confirmation-dialog>
         ${additionalTemplate}
         <paper-input-container id="decorator" always-float-label no-label-float="[[noLabelFloat]]" has-layer$="[[_hasLayer]]" invalid="[[_invalid]]" is-invalid$="[[_invalid]]" disabled$="[[_disabled]]" focused$="[[focused]]">
             <!-- flex auto  for textarea! -->
@@ -123,7 +126,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 ${propertyAction}
             </div>
             <!-- 'autoValidate' attribute for paper-input-container is 'false' -- all validation is performed manually and is bound to paper-input-error, which could be hidden in case of empty '_error' property -->
-            <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]" tooltip-text$="[[_extendedError]]" slot="add-on">[[_error]]</paper-input-error>
+            <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]" tooltip-text$="[[_extendedError]]" slot="add-on" on-tap="_showExtendedErrorMessage">[[_error]]</paper-input-error>
             <!-- paper-input-char-counter addon is updated whenever 'bindValue' property of child '#input' element is changed -->
             <paper-input-char-counter id="inputCounter" class="footer" hidden$="[[!_isMultilineText(_editorKind)]]" disabled$="[[_disabled]]" slot="add-on"></paper-input-char-counter>
         </paper-input-container>
@@ -1037,5 +1040,11 @@ export class TgEditor extends PolymerElement {
         );
         this.reflector().setCustomProperty(contextHolder, "@@searchString", inputText);
         return contextHolder;
+    }
+
+    _showExtendedErrorMessage () {
+        if (this._extendedError) {
+            this.$.confirmationDialog.showConfirmationDialog(this._extendedError, [{name:'Close', confirm:true, autofocus:true}]);
+        }
     }
 }

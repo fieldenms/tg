@@ -122,7 +122,7 @@ public class Result extends RuntimeException {
         return new Warning(instance, msg);
     }
 
-    public static Warning warning(final Object instance, final String extendedMsg, final String msg) {
+    public static Warning warning(final Object instance, final String msg, final String extendedMsg) {
         return new Warning(instance, msg + "<extended/>" + extendedMsg);
     }
 

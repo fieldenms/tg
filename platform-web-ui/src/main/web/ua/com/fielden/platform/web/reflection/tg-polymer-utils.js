@@ -156,7 +156,7 @@ export function deepestActiveElement () {
 
 export function errorMessages (result, defaultMessage) {
     if(result.message) {
-        const messages = exception.message.split("<extended/>");
+        const messages = result.message.split("<extended/>");
         const shortMessage = messages[0] ? messages[0] : defaultMessage;
         return {
             short: shortMessage,
