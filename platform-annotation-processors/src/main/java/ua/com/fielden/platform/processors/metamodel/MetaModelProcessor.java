@@ -41,7 +41,6 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
-import javax.tools.Diagnostic.Kind;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -85,7 +84,6 @@ import ua.com.fielden.platform.utils.Pair;
 public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
 
     private static final String INDENT = "    ";
-    private static final String CLASS_SIMPLE_NAME = MetaModelProcessor.class.getSimpleName();
     private ElementFinder elementFinder;
     private EntityFinder entityFinder;
     private MetaModelFinder metaModelFinder;
@@ -244,11 +242,11 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         try {
             javaFile.writeTo(filer);
         } catch (final IOException ex) {
-            messager.printMessage(Kind.WARNING, ex.getMessage());
+            printWarning(ex.getMessage());
             return false;
         }
 
-        printNote("Generated empty meta-model %s.", mme.getSimpleName());
+        printNote("Generated empty meta-model [%s].", mme.getSimpleName());
         return true;
     }
 
@@ -259,19 +257,19 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
      * @return a set of inactive meta-models; could be empty
      */
     private Set<MetaModelElement> findInactiveMetaModels(final MetaModelsElement metaModelsElement) {
-        printNote("Verifying %s.", metaModelsElement.getSimpleName());
+        printNote("Verifying [%s].", metaModelsElement.getSimpleName());
         final Set<MetaModelElement> inactive = new LinkedHashSet<>();
 
         for (final MetaModelElement mme: metaModelsElement.getMetaModels()) {
             final Optional<EntityElement> maybeEntity = entityFinder.findEntityForMetaModel(mme);
 
             if (maybeEntity.isEmpty()) {
-                messager.printMessage(Kind.NOTE, format("Entity for %s does not exist anymore.", mme.getSimpleName()));
+                printNote(format("Entity for [%s] does not exist anymore.", mme.getSimpleName()));
                 inactive.add(mme);
             } else {
                 final EntityElement entity = maybeEntity.get();
                 if (!entityFinder.isEntityThatNeedsMetaModel(maybeEntity.get())) {
-                    messager.printMessage(Kind.NOTE, format("Entity %s is no longer a domain entity.", entity.getSimpleName()));
+                    printNote(format("Entity [%s] is no longer a domain entity.", entity.getSimpleName()));
                     inactive.add(mme);
                 }
             }
@@ -544,7 +542,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         try {
             metaModelJavaFile.writeTo(filer);
         } catch (final IOException ex) {
-            messager.printMessage(Kind.WARNING, ex.getMessage());
+            printWarning(ex.getMessage());
             return false;
         }
         
@@ -597,7 +595,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         try {
             metaModelAliasedJavaFile.writeTo(filer);
         } catch (final IOException ex) {
-            messager.printMessage(Kind.WARNING, ex.getMessage());
+            printWarning(ex.getMessage());
             return false;
         }
 
@@ -834,7 +832,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         try {
             javaFile.writeTo(filer);
         } catch (final IOException ex) {
-            messager.printMessage(Kind.WARNING, ex.getMessage());
+            printWarning(ex.getMessage());
             return;
         }
 
