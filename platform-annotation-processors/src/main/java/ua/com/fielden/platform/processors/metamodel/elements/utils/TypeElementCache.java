@@ -6,7 +6,9 @@ import java.util.IdentityHashMap;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.util.Elements;
@@ -24,7 +26,7 @@ public final class TypeElementCache {
     private static TypeElementCache instance;
 
     /** Top-level cache keyed on instances of {@link Elements} and based on reference-equality. */
-    private final IdentityHashMap<Elements, HashMap<String, TypeElement>> cache = new IdentityHashMap<>();
+    private final IdentityHashMap<Elements, Cache<String, TypeElement>> cache = new IdentityHashMap<>();
 
     private TypeElementCache() {}
 
@@ -45,14 +47,15 @@ public final class TypeElementCache {
      * @return
      */
     protected Optional<Map<String, TypeElement>> cacheViewFor(final Elements elements) {
-        return Optional.ofNullable(cache.get(elements)).map(Collections::unmodifiableMap);
+        return Optional.ofNullable(cache.get(elements)).map(eltCache -> eltCache.cacheView());
     }
 
     /**
      * Clears this cache by first clearing all sub-caches associated with {@link Elements} instances, and then clears the top-level cache.
+     * Cache statistics, if enabled, are cleared as well.
      */
     public void clear() {
-        cache.forEach((elements, map) -> map.clear());
+        cache.forEach((elements, eltCache) -> eltCache.clear());
         cache.clear();
     }
 
@@ -69,7 +72,7 @@ public final class TypeElementCache {
         Objects.requireNonNull(elements, "Argument elements cannot be null.");
         Objects.requireNonNull(name, "Argument name cannot be null.");
         final var elementCache = getCache(elements);
-        return computeIfTrulyAbsent(elementCache, name, () -> elements.getAllTypeElements(name).stream().findFirst().orElse(null));
+        return elementCache.get(name, () -> elements.getAllTypeElements(name).stream().findFirst().orElse(null));
     }
 
     /**
@@ -77,32 +80,73 @@ public final class TypeElementCache {
      * @param elements
      * @return
      */
-    private HashMap<String, TypeElement> getCache(final Elements elements) {
-        return cache.computeIfAbsent(elements, k -> new HashMap<>());
+    private Cache<String, TypeElement> getCache(final Elements elements) {
+        return cache.computeIfAbsent(elements, k -> new Cache<String, TypeElement>(statsEnabled));
     }
 
     /**
-     * Similar to {@link HashMap#computeIfAbsent(Object, java.util.function.Function)}, but treats {@code null} values equally. 
-     * <p>
-     * The value is computed and inserted into the map only if the mapping is absent, otherwise the existing value is returned. 
-     * That is, if {@code typeName} is mapped to {@code null}, then {@code null} is returned and no computation takes place.
-     * <p>
-     * If {@code mappingFunction} produces {@code null}, then it is inserted into the map and returned.
-     * 
-     * @param elementCache Elements associated cache to use
-     * @param name mapping key representing type element's name
-     * @param mappingFunction
-     * @return existing/computed value associated with the key
+     * A simple cache backed up by a {@link HashMap} with optional recording of statistics.
+     *
+     * @author TG Team
      */
-    private TypeElement computeIfTrulyAbsent(
-            final HashMap<String, TypeElement> elementCache, final String name, Supplier<TypeElement> mappingFunction) 
-    {
-        if (elementCache.containsKey(name)) {
-            return elementCache.get(name);
-        } else {
-            final TypeElement elt = mappingFunction.get();
-            elementCache.put(name, elt);
-            return elt;
+    private static final class Cache<K, V> {
+        private final HashMap<K, V> cache = new HashMap<>();
+        private final HashMap<K, Long> stats = new HashMap<>();
+        private final Function<K, V> cacheGetter;
+
+        Cache(final boolean statsEnabled) {
+            this.cacheGetter = statsEnabled ? k -> {
+                recordStats(k);
+                return cacheGet(k);
+            } : this::cacheGet;
+        }
+
+        private void recordStats(final K key) {
+            stats.compute(key, (k, v) -> v == null ? 0 : v + 1L);
+        }
+
+        private V cacheGet(final K key) {
+            return cache.get(key);
+        }
+
+        /**
+         * Similar to {@link HashMap#computeIfAbsent(Object, java.util.function.Function)}, but treats {@code null} values equally. 
+         * <p>
+         * The value is computed and inserted into the map only if the mapping is absent, otherwise the existing value is returned. 
+         * That is, if {@code key} is mapped to {@code null}, then {@code null} is returned and no computation takes place.
+         * <p>
+         * If {@code valueSupplier} produces {@code null}, then it is inserted into the map and returned.
+         */
+        public V get(final K key, Supplier<V> valueSupplier) {
+            if (cache.containsKey(key)) {
+                return cacheGetter.apply(key);
+            } else {
+                final V value = valueSupplier.get();
+                cache.put(key, value);
+                return value;
+            }
+        }
+
+        /**
+         * Clears the cache and its statistics.
+         */
+        public void clear() {
+            cache.clear();
+            stats.clear();
+        }
+
+        /**
+         * Returns an unmodifiable view of the cache.
+         */
+        public Map<K, V> cacheView() {
+            return Collections.unmodifiableMap(cache);
+        }
+
+        /**
+         * Returns an unmodifiable view of the cache statistics.
+         */
+        public Map<K, Long> getStats() {
+            return Collections.unmodifiableMap(stats);
         }
     }
 
