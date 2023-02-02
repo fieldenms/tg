@@ -145,10 +145,10 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     }
 
     protected IBeforeChangeEventHandler<?>[] createFinalValidator(final AbstractEntity<?> entity, final String propertyName, final Final annotation) {
-        if (annotation.persistentOnly() && !entity.isPersistent() && !isSyntheticBasedOnPersistentEntityType(entity.getType())) {
+        if (annotation.persistedOnly() && !entity.isPersistent() && !isSyntheticBasedOnPersistentEntityType(entity.getType())) {
             throw new EntityDefinitionException(format("Non-persistent entity [%s] has property [%s], which is incorrectly annotated with @Final(persistentOnly = true).", entity.getType().getSimpleName(), propertyName));
         }
-        return annotation.persistentOnly() ? persistedOnlyFinalValidator : notPersistedOnlyFinalValidator;
+        return annotation.persistedOnly() ? persistedOnlyFinalValidator : notPersistedOnlyFinalValidator;
     }
 
     /**

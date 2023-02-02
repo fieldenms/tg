@@ -88,7 +88,7 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     @Title(value = "SHA1", desc = "A unique SHA1-based checksum of the file referenced by this attachment.")
     @CompositeKeyMember(2)
     @Readonly
-    @Final(persistentOnly = false)
+    @Final(persistedOnly = false)
     private String sha1;
 
     @IsProperty(length = 2048)
@@ -96,7 +96,7 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     @Title(value = "File Name", desc = "The file name of the uploaded document or a link indication.")
     @Readonly
     @Required
-    @Final(persistentOnly = false)
+    @Final(persistedOnly = false)
     @BeforeChange(@Handler(MaxLengthValidator.class))
     @AfterChange(AssignAttachmentTitle.class)
     private String origFileName;
@@ -105,14 +105,14 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     @MapTo
     @Title(value = "Last Modified", desc = "The date/time of the last file modification.")
     @Readonly
-    @Final(persistentOnly = false)
+    @Final(persistedOnly = false)
     private Date lastModified;
 
     @IsProperty
     @MapTo
     @Title(value = "MIME", desc = "File MIME type.")
     @Readonly
-    @Final(persistentOnly = false)
+    @Final(persistedOnly = false)
     private String mime;
 
     @IsProperty
