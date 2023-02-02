@@ -89,6 +89,11 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
         return SourceVersion.latestSupported();
     }
 
+    @Override
+    public Set<String> getSupportedOptions() {
+        return Set.of("cacheStats");
+    }
+
     /**
      * Performs parsing of options that were passed to this processor.
      * Subclasses might wish to call the super implementation when overriding this method.
