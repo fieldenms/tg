@@ -15,6 +15,12 @@ public class TgPersistentEntityWithPropertiesEntityPropDefiner implements IAfter
         // Long-lived informative messages should be defined in validator and in definer with '.isInitialising()' condition. This is a canonical way.
         //   Such messages would live even after saving up until integrity constraint would change.
         //   Alternatively, informative messages can be defined in definer only and without '.isInitialising()' condition (i.e. for both initialising and mutation phase).
+        if (prop.getEntity().isInitialising() && newValue != null && "X".equals(newValue.getStringProp())) {
+            prop.setDomainValidationResult(informative("Definer: value with str prop 'X'."));
+        }
+        // Yet another common case is where warning needs to be shown during editing of value, and informative -- after successful save.
+        // We need to check whether the value has been changed (the same value setting may be enforced, especially in Web UI).
+        // If value is not changed -- show informative message.
         if (prop.getEntity().isInitialising() && newValue != null && !newValue.getBooleanProp()) {
             prop.setDomainValidationResult(informative("Definer: value with bool prop 'false'."));
         }
