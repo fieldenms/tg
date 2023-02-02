@@ -18,17 +18,28 @@ import javax.lang.model.util.Elements;
  * <p>
  * Since different instances of {@link Elements} produce incompatible type elements, there is a need to maintain a 2-level cache -
  * a map of type element caches keyed on instances of {@link Elements}.
+ * <p>
+ * Recording of statistics about type element caches can be enabled through {@link #recordStats()} and accessed with {@link #getStats()}.
  *
  * @author TG Team
  */
 public final class TypeElementCache {
 
+    private static boolean statsEnabled = false;
     private static TypeElementCache instance;
 
     /** Top-level cache keyed on instances of {@link Elements} and based on reference-equality. */
     private final IdentityHashMap<Elements, Cache<String, TypeElement>> cache = new IdentityHashMap<>();
 
     private TypeElementCache() {}
+
+    /**
+     * Enables recording of statistics about type element caches. 
+     * @see #getStats()
+     */
+    public static void recordStats() {
+        statsEnabled = true;
+    }
 
     /**
      * Returns the singleton instance.
@@ -73,6 +84,16 @@ public final class TypeElementCache {
         Objects.requireNonNull(name, "Argument name cannot be null.");
         final var elementCache = getCache(elements);
         return elementCache.get(name, () -> elements.getAllTypeElements(name).stream().findFirst().orElse(null));
+    }
+
+    /**
+     * Returns an unmodifiable view of the map containing statistics about type element caches.
+     * Each cache's statistics is represented by a map keyed on type element names that map to their respective hit counts.
+     * @return
+     */
+    public Map<Elements, Map<String, Long>> getStats() {
+        return cache.entrySet().stream()
+                .collect(Collectors.toUnmodifiableMap(entry -> entry.getKey(), entry -> entry.getValue().getStats()));
     }
 
     /**
