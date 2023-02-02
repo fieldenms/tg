@@ -24,12 +24,19 @@ import org.joda.time.DateTime;
 
 import com.google.common.base.Stopwatch;
 
+import ua.com.fielden.platform.processors.metamodel.elements.utils.TypeElementCache;
+
 /**
  * An abstract platform-level annotation processor to be extended by specific implementations. 
  * It provides common processor behaviour mostly concerned with initialization and per-round logging.
  * <p>
  * Subclasses are responsible for implementing {@link #processRound(Set, RoundEnvironment)}, which is called by a known method
  * {@link #process(Set, RoundEnvironment)} in order to provide per-round logging.
+ * <p>
+ * Supported options by this base type:
+ * <ul>
+ *   <li>cacheStats -- if set to {@code true} enables recording of type element cache statistics (see {@link TypeElementCache#getStats()}). </li>
+ * </ul>
  *
  * @author TG Team
  */
@@ -40,7 +47,6 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
     protected Filer filer;
     protected Elements elementUtils;
     protected Types typeUtils;
-    protected Map<String, String> options;
     protected DateTime initDateTime;
 
     // logging-related
@@ -54,6 +60,11 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
     /** Indicates whether the last round of processing initial inputs has already been passed. Makes sense during incremental compilation. */
     private boolean pastLastRound;
 
+    // options
+    protected Map<String, String> options;
+    private static final String CACHE_STATS_OPTION = "cacheStats";
+    private boolean reportCacheStats = false;
+
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
         super.init(processingEnv); 
@@ -66,11 +77,11 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
         this.roundNumber = this.batchRoundNumber = 0; 
         this.pastLastRound = false;
 
-        printNote("%s initialized.", classSimpleName);
         if (!this.options.isEmpty()) {
-            printNote("Options: [%s]", 
-                    options.entrySet().stream().map(entry -> "%s=%s".formatted(entry.getKey(), entry.getValue())).collect(joining(", ")));
+            printNote("Options: " + options);
+            parseOptions(options);
         }
+        printNote("%s initialized.", classSimpleName);
     }
 
     @Override
@@ -84,6 +95,10 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
      * @param options
      */
     protected void parseOptions(final Map<String, String> options) { 
+        if ("true".equals(options.get(CACHE_STATS_OPTION))) {
+            reportCacheStats = true;
+            TypeElementCache.recordStats();
+        }
     }
 
     @Override
@@ -145,6 +160,9 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
      * Subclasses might wish to call the super implementation when overriding this method.
      */
     protected void postProcess() {
+        if (reportCacheStats) {
+            printNote("Type element cache statistics: " + TypeElementCache.getInstance().getStats());
+        }
     }
 
     /**
