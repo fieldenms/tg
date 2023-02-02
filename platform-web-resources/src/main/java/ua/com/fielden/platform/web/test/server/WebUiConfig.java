@@ -1833,6 +1833,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
                     final IWithTooltip<TgPersistentEntityWithProperties> beforeSummaryConfForBigDecimalProp = (withCalculatedAndCustomProperties ? beforeSummaryConf.withSummary("sum_of_int", "SUM(integerProp)", "Sum of int. prop:Sum of integer property") : beforeSummaryConf)
                 .also()
+                .addEditableProp("requiredValidatedProp")
+                    .minWidth(42)
+                    .also()
                 .addEditableProp("bigDecimalProp")
                     .minWidth(68);
 
