@@ -47,7 +47,7 @@ public class EntityValidator implements IBeforeChangeEventHandler<TgPersistentEn
         // If value is not changed -- show informative message.
         if (newValue != null && !newValue.getBooleanProp()) {
             final String msg = "Validator: value with bool prop 'false'.";
-            return !equalsEx(newValue, property.getValue()) ? warning(msg) : informative(msg);
+            return !equalsEx(newValue, property.getValue()) || !property.getEntity().isPersisted() ? warning(msg) : informative(msg);
         }
         return Result.successful(newValue);
     }
