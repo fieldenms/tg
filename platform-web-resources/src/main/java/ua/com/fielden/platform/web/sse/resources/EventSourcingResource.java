@@ -24,6 +24,7 @@ import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.webui.AbstractWebResource;
 import ua.com.fielden.platform.web.sse.EventSourceEmitter;
 import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
+import ua.com.fielden.platform.web.sse.exceptions.SseAlreadyExists;
 import ua.com.fielden.platform.web.sse.exceptions.SseException;
 import ua.com.fielden.platform.web.utils.ServletUtils;
 
@@ -61,6 +62,7 @@ public class EventSourcingResource extends AbstractWebResource {
     public void subcribeClient() throws ResourceException {
         final String sseIdString = getRequest().getAttributes().get("sseUid").toString();
         final User user = userProvider.getUser();
+        boolean skipDeregister = false;
         // any errors that may occur during subscription or a normal lifecycle after, should result in deregistering and closing of the emitter, created during this request
         try {
             try {
@@ -74,13 +76,15 @@ public class EventSourcingResource extends AbstractWebResource {
                         // Infinite timeout because the continuation is never resumed,
                         // but only completed on close
                         async.setTimeout(0);
-                        
+
                         return new EventSourceEmitter(shouldKeepGoing, async, new RequestInfo(getRequest()));
                     } catch (final IOException ex) {
                          throw new SseException("Could not create a new SSE emitter.", ex);
                     }
                 }).ifFailure(Result::throwRuntime);
-                
+            } catch (final SseAlreadyExists ex) {
+                skipDeregister = true;
+                throw new ResourceException(ex);
             } catch (final Exception ex) {
                 logger.error(ex);
                 throw new ResourceException(ex);
@@ -95,8 +99,10 @@ public class EventSourcingResource extends AbstractWebResource {
                 }
             }
         } finally {
-            eseRegister.deregisterEmitter(user, sseIdString);
-            logger.debug(String.format("SSE subscription for client [%s, %s] completed.", user, sseIdString));
+            if (!skipDeregister) {
+                eseRegister.deregisterEmitter(user, sseIdString);
+                logger.debug(String.format("SSE subscription for client [%s, %s] completed.", user, sseIdString));
+            }
         }
 
     }

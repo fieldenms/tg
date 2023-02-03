@@ -19,6 +19,7 @@ import org.apache.log4j.Logger;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.tuples.T2;
+import ua.com.fielden.platform.web.sse.exceptions.SseAlreadyExists;
 
 /**
  * {@link IEventSourceEmitter} implementation that acts as a dispatching emitter, which dispatches events to registered emitters.
@@ -93,6 +94,9 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
     public Result registerEmitter(final User user, final String sseUid, final Supplier<IEventSourceEmitter> emitterFactory) {
         LOGGER.info(format("Registering event emitter for web client [%s, %s].", user, sseUid));
         if (isActive.get()) {
+            if (register.containsKey(key(user, sseUid))) {
+                throw new SseAlreadyExists("The emitter already exists");
+            }
             final IEventSourceEmitter emitter = register.computeIfAbsent(key(user, sseUid), argNotUsed -> emitterFactory.get());
             logRegisterSize();
             return successful(emitter);
@@ -126,7 +130,7 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
         final long totalConnections =  keySet.size();
         LOGGER.info(format("SSE connections: [%s] distinct, [%s] total.", distinctUserConnections, totalConnections));
     }
-    
+
     @Override
     public IEventSourceEmitter getEmitter(final User user, final String sseUid) {
         return register.get(key(user, sseUid));
@@ -196,7 +200,7 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
                     LOGGER.warn(format("Non critical error during closing of emitters."), ex);
                 }
             }
-            
+
             LOGGER.info("Closing all emitters...");
             for (final Iterator<IEventSourceEmitter> iter = register.values().iterator(); iter.hasNext();) {
                 final IEventSourceEmitter emitter = iter.next();
@@ -207,7 +211,7 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
                     LOGGER.warn(format("Non critical error during closing of emitters."), ex);
                 }
             }
-            
+
         }
     }
 
