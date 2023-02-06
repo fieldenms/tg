@@ -1409,6 +1409,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     longDesc("Start coninuous creatio of entities").
                     shortcut("alt+n").
                     build())
+                .addGroupAction(action(EntityNewAction.class).
+                        withContext(context().withSelectionCrit().withComputation((a1,a2) -> "WITH_KEY4").build()).
+                        icon("add-circle-outline").
+                        shortDesc("Add new").
+                        longDesc("Start coninuous creatio of entities WITH_KEY4").
+                        shortcut("alt+n").
+                        build())
                 .addGroupAction(SEQUENTIAL_EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class))
                 .addGroupAction(EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class))
                 .addGroupAction(action(EntityDeleteAction.class).

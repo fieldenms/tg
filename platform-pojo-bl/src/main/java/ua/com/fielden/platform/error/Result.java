@@ -358,7 +358,7 @@ public class Result extends RuntimeException {
     }
 
     /**
-     * Returns true if this {@link Result} is not {@link Informative} instance and is successful.
+     * Returns true if this {@link Result} is not {@link Warning} / {@link Informative} instance and is successful.
      *
      * @return
      */

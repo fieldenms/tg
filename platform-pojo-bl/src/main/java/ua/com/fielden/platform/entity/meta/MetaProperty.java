@@ -198,7 +198,7 @@ public class MetaProperty<T> implements Comparable<MetaProperty<T>> {
 
     /**
      * A convenient method to obtain the last validation result.
-     * May return either a failure, a warning or a successful result, and never <code>null</code>.
+     * May return either a failure, a warning or a informative / successful result, and never <code>null</code>.
      * <p>
      * A successful result is returned in case no validation took place.
      * @return
