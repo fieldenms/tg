@@ -21,6 +21,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.UnionTypePropInfo;
 import ua.com.fielden.platform.eql.stage1.PropResolution;
 import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
@@ -70,12 +71,12 @@ public abstract class AbstractQuery1 {
         return new QueryBlocks2(null, conditions.transform(context), yields.transform(context), groups.transform(context), orderings.transform(context));
     }
     
-    protected Conditions2 enhanceWithUserDataFilterConditions(final ISource2<? extends ISource3> mainSource, final TransformationContext1 context, final Conditions2 originalConditions) { 
+    protected Conditions2 enhanceWithUserDataFilterConditions(final ISource2<? extends ISource3> mainSource, final EqlDomainMetadata domainMetadata, final Conditions2 originalConditions) { 
         if (udfConditions.isEmpty()) {
             return originalConditions;
         }
         
-        final TransformationContext1 localContext = (new TransformationContext1(context.domainInfo)).cloneWithAdded(mainSource); 
+        final TransformationContext1 localContext = (new TransformationContext1(domainMetadata)).cloneWithAdded(mainSource); 
         final Conditions2 udfConditions2 = udfConditions.transform(localContext);
         
         if (originalConditions.ignore()) {
