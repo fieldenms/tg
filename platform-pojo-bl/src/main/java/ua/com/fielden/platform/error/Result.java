@@ -81,7 +81,7 @@ public class Result extends RuntimeException {
     }
 
     /**
-     * A factory method for creating informative result with short and extended messages and related to specified instance.
+     * A factory method for creating informative result with short and extended messages related to specified instance.
      *
      * @param info
      * @return

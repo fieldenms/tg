@@ -379,7 +379,7 @@ Polymer({
 
             if (e.currentTarget.response) {
                 this.error = getResult(e.currentTarget.response);
-                this._errorMsg = errorMessages(this.error).extended;
+                this._errorMsg = errorMessages(this.error).short;
             } else {
                 this._errorMsg = "Networking error occurred.";
                 this.error = { message: this._errorMsg };
