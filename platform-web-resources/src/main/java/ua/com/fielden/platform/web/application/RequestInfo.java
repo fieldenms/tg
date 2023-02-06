@@ -2,6 +2,8 @@ package ua.com.fielden.platform.web.application;
 
 import static java.lang.String.format;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.restlet.Request;
 
 /**
@@ -23,6 +25,14 @@ public class RequestInfo {
         address = request.getClientInfo().getAddress();
         agentName = request.getClientInfo().getAgentName();
         agentVersion = request.getClientInfo().getAgentVersion(); 
+    }
+
+    public RequestInfo(final HttpServletRequest request) {
+        resourceRef = request.getPathInfo().toString(); 
+        method = request.getMethod();
+        address = request.getRemoteAddr();
+        agentName = request.getHeader("user-agent");
+        agentVersion = "see agent info";
     }
 
     @Override

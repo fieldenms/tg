@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.StringReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ScheduledExecutorService;
@@ -45,7 +46,7 @@ public final class EventSourceEmitter implements IEventSourceEmitter {
 
     private final Logger logger = Logger.getLogger(getClass());
     private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
-    private final int heartBeatPeriod = 5;
+    private final int heartBeatPeriod = 10;
 
     private final AsyncContext async;
     private final ServletOutputStream output;
@@ -53,6 +54,8 @@ public final class EventSourceEmitter implements IEventSourceEmitter {
     private final AtomicBoolean closed = new AtomicBoolean(false);
     private final AtomicBoolean shouldResourceThreadBeBlocked;
     private final RequestInfo info;
+    
+    private final Optional<Runnable> maybeCloseCallback;
 
     /**
      * The use of {@code stopResourceThread} is a workaround at this stage to prevent Restlet from closing the connection with the client by means of blocking its thread by putting it to sleep.
@@ -63,11 +66,16 @@ public final class EventSourceEmitter implements IEventSourceEmitter {
      * @throws IOException
      */
     public EventSourceEmitter(final AtomicBoolean shouldResourceThreadBeBlocked, final AsyncContext async, final RequestInfo info) throws IOException {
+        this(shouldResourceThreadBeBlocked, async, info, null);
+    }
+
+    public EventSourceEmitter(final AtomicBoolean shouldResourceThreadBeBlocked, final AsyncContext async, final RequestInfo info, final Runnable closeCallback) throws IOException {
         this.shouldResourceThreadBeBlocked = shouldResourceThreadBeBlocked;
         this.async = async;
         this.output = async.getResponse().getOutputStream();
         this.info = info;
         this.heartBeatTask = scheduleHeartBeat();
+        this.maybeCloseCallback = Optional.ofNullable(closeCallback);
         logger.info(format("Started event source emitter: %s", info.toString()));
     }
 
@@ -134,6 +142,7 @@ public final class EventSourceEmitter implements IEventSourceEmitter {
                     }
                 }
                 async.complete();
+                maybeCloseCallback.ifPresent(cc -> cc.run());
             } finally {
                 logger.info(format("Closed event source emitter: %s", info.toString()));
                 shouldResourceThreadBeBlocked.set(false);
