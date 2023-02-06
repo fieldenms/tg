@@ -10,11 +10,11 @@ import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
-import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
+import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.eql.stage3.sources.JoinBranch3;
 
-public class JoinBranch2 implements IJoinNode2<IJoinNode3> {
+public class JoinBranch2 implements IJoinNode2<JoinBranch3> {
     public final IJoinNode2<? extends IJoinNode3> leftNode;
     public final IJoinNode2<? extends IJoinNode3> rightNode;
     public final JoinType joinType;
@@ -28,7 +28,7 @@ public class JoinBranch2 implements IJoinNode2<IJoinNode3> {
     }
 
     @Override
-    public TransformationResult2<IJoinNode3> transform(TransformationContext2 context) {
+    public TransformationResult2<JoinBranch3> transform(TransformationContext2 context) {
         final TransformationResult2<? extends IJoinNode3> lsTransformed = leftNode.transform(context);
         final TransformationResult2<? extends IJoinNode3> rsTransformed = rightNode.transform(lsTransformed.updatedContext);
         final TransformationResult2<Conditions3> jcTransformed = joinConditions.transform(rsTransformed.updatedContext);
