@@ -24,7 +24,7 @@ import ua.com.fielden.platform.eql.stage3.operands.ResultQuery3;
 import ua.com.fielden.platform.eql.stage3.operands.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.operands.SubQuery3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.MaxOf3;
-import ua.com.fielden.platform.eql.stage3.sources.ISources3;
+import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnTable;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
@@ -57,7 +57,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable veh = source(VEHICLE, 1);
         final Source3BasedOnTable model = source(MODEL, 2);
         
-        final ISources3 sources = 
+        final IJoinNode3 sources = 
                 ij(
                         veh,
                         model,
@@ -76,16 +76,16 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable ou5 = source(ORG5, 1);
 
         final Source3BasedOnTable veh1 = source(VEHICLE, 2);
-        final ISources3 subQrySources1 = sources(veh1); 
+        final IJoinNode3 subQrySources1 = sources(veh1); 
         final Conditions3 subQryConditions1 = cond(eq(entityProp("station", veh1, ORG5), idProp(ou5)));
         final SubQuery3 expSubQry1 = subqry(subQrySources1, subQryConditions1, yields(new Yield3(new MaxOf3(prop("price.amount", veh1, BigDecimal.class, H_BIG_DECIMAL), BigDecimal.class, H_BIG_DECIMAL), "", nextSqlId(), false, BigDecimal.class, H_BIG_DECIMAL)), BigDecimal.class, BigDecimalType.INSTANCE);
 
         final Source3BasedOnTable veh2 = source(VEHICLE, 3);
-        final ISources3 subQrySources2 = sources(veh2); 
+        final IJoinNode3 subQrySources2 = sources(veh2); 
         final Conditions3 subQryConditions2 = cond(eq(entityProp("station", veh2, ORG5), idProp(ou5)));
         final SubQuery3 expSubQry2 = subqry(subQrySources2, subQryConditions2, yields(new Yield3(new MaxOf3(prop("purchasePrice.amount", veh2, BigDecimal.class, H_BIG_DECIMAL), BigDecimal.class, H_BIG_DECIMAL), "", nextSqlId(), false, BigDecimal.class, H_BIG_DECIMAL)), BigDecimal.class, BigDecimalType.INSTANCE);
 
-        final ISources3 sources = sources(ou5);
+        final IJoinNode3 sources = sources(ou5);
         final Conditions3 conditions = or(and(or(isNotNull(expSubQry1), isNotNull(expSubQry2))));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
         assertEquals(expQry, actQry);
@@ -121,7 +121,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable modelSource = source(MODEL, 3);
         
         final Source3BasedOnTable vehSource = source(VEHICLE, 1);
-        final ISources3 vehSources = sources(vehSource);
+        final IJoinNode3 vehSources = sources(vehSource);
         final ISingleOperand3 vehModelProp = entityProp("model", vehSource, MODEL);
         final ISingleOperand3 modelIdProp = idProp(modelSource);
         final Conditions3 vehConditions = or(eq(vehModelProp, modelIdProp));
@@ -130,7 +130,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final SourceQuery3 vehSourceSubQry = srcqry(vehSources, vehConditions, vehYields);
         
         final Source3BasedOnSubqueries qtyQrySource = source(2, vehSourceSubQry);
-        final ISources3 qtyQrySources = sources(qtyQrySource);
+        final IJoinNode3 qtyQrySources = sources(qtyQrySource);
         final Yields3 qtyQryYields = yields(yieldProp("qty", qtyQrySource, "", INTEGER, H_INTEGER));
         
         final Yields3 modelQryYields = yields(yieldModel(subqry(qtyQrySources, qtyQryYields, INTEGER, H_INTEGER), "qty", INTEGER, H_INTEGER));
@@ -147,7 +147,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable veh = source(VEHICLE, 2);
         final Source3BasedOnTable model = source(MODEL, 3);
         final Source3BasedOnTable make = source(MAKE, 4);
-        final ISources3 sources = 
+        final IJoinNode3 sources = 
                 lj(
                         wo,
                         ij(
@@ -175,7 +175,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable veh = source(VEHICLE, 2);
         final Source3BasedOnTable model = source(MODEL, 3);
         final Source3BasedOnTable make = source(MAKE, 4);
-        final ISources3 sources = 
+        final IJoinNode3 sources = 
                 lj(
                         wo,
                         ij(
@@ -204,7 +204,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable veh = source(VEHICLE, 2);
         final Source3BasedOnTable model = source(MODEL, 3);
         
-        final ISources3 sources = 
+        final IJoinNode3 sources = 
                 lj(
                         wo,
                         ij(
@@ -256,7 +256,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable model = source(MODEL, 3);
         final Source3BasedOnTable make = source(MAKE, 4);
         
-        final ISources3 subQrySources = 
+        final IJoinNode3 subQrySources = 
                 ij(
                         veh,  
                         model, 
@@ -267,7 +267,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         
         final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleEntity("make", model, MAKE)), MAKE, H_LONG);
 
-        final ISources3 sources = 
+        final IJoinNode3 sources = 
                 lj(
                         wo,
                         make,
@@ -299,7 +299,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable veh = source(VEHICLE, 2);
         final Source3BasedOnTable model = source(MODEL, 3);
         
-        final ISources3 subQrySources = 
+        final IJoinNode3 subQrySources = 
                 ij(
                         veh,  
                         model, 
@@ -310,7 +310,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         
         final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleEntity("make", model, MAKE)), MAKE, H_LONG);
 
-        final ISources3 sources = sources(wo);
+        final IJoinNode3 sources = sources(wo);
         final Conditions3 conditions = or(isNotNull(expSubQry));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
         
@@ -337,7 +337,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable model = source(MODEL, 3);
         final Source3BasedOnTable make = source(MAKE, 4);
         
-        final ISources3 subQrySources = 
+        final IJoinNode3 subQrySources = 
                 ij(
                         veh,  
                         ij(
@@ -352,7 +352,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         
         final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleString(KEY, make)), String.class, H_STRING);
 
-        final ISources3 sources = sources(wo);
+        final IJoinNode3 sources = sources(wo);
         final Conditions3 conditions = or(isNotNull(expSubQry));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
         
@@ -367,7 +367,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable veh = source(VEHICLE, 2);
         final Source3BasedOnTable model = source(MODEL, 3);
         
-        final ISources3 sources = 
+        final IJoinNode3 sources = 
                 lj(
                         lj(
                                 wo, 
@@ -392,7 +392,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable model = source(MODEL, 3);
         final Source3BasedOnTable make = source(MAKE, 4);
         
-        final ISources3 sources = 
+        final IJoinNode3 sources = 
                 lj(
                         lj(
                                 wo,
@@ -421,7 +421,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable model = source(MODEL, 3);
         final Source3BasedOnTable make = source(MAKE, 4);
         
-        final ISources3 sources = 
+        final IJoinNode3 sources = 
                 lj(
                         wo,
                         ij(
@@ -450,7 +450,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable model = source(MODEL, 3);
         final Source3BasedOnTable make = source(MAKE, 4);
         
-        final ISources3 sources = 
+        final IJoinNode3 sources = 
                 lj(
                         wo,
                         ij(
@@ -479,7 +479,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable makeA = source(MAKE, 2);
         final Source3BasedOnTable make = source(MAKE, 4);
         
-        final ISources3 sources =
+        final IJoinNode3 sources =
                 lj(
                         ij(
                                 veh,
@@ -508,7 +508,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable makeA = source(MAKE, 2);
         final Source3BasedOnTable make = source(MAKE, 4);
         
-        final ISources3 sources =
+        final IJoinNode3 sources =
                 lj(
                         ij(
                                 veh,
@@ -537,7 +537,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable make = source(MAKE, 4);
         final Source3BasedOnTable makeA = source(MAKE, 2);
         
-        final ISources3 sources = 
+        final IJoinNode3 sources = 
                 lj(
                         ij(
                                 veh,
@@ -565,7 +565,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable model = source(MODEL, 2);
         final Source3BasedOnTable make = source(MAKE, 3);
         
-        final ISources3 sources =
+        final IJoinNode3 sources =
                 ij(
                         veh,
                         ij(
@@ -589,7 +589,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable model = source(MODEL, 2);
         final Source3BasedOnTable make = source(MAKE, 3);
         
-        final ISources3 sources = 
+        final IJoinNode3 sources = 
                 ij(
                         veh,
                         ij(
@@ -611,7 +611,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable veh = source(VEHICLE, 1);
         final Source3BasedOnTable model = source(MODEL, 2);
         
-        final ISources3 sources = 
+        final IJoinNode3 sources = 
                 ij(
                         veh,
                         model,
@@ -630,7 +630,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable model = source(MODEL, 2);
         final Source3BasedOnTable make = source(MAKE, 3);
         
-        final ISources3 sources = 
+        final IJoinNode3 sources = 
                 ij(
                         veh,
                         ij(
@@ -656,14 +656,14 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         
         final Source3BasedOnTable subQryMake = source(MAKE, 2);
         
-        final ISources3 subQrySources = sources(subQryMake);
+        final IJoinNode3 subQrySources = sources(subQryMake);
         
         final Conditions3 subQryConditions = cond(eq(idProp(subQryMake), entityProp("make", model, MAKE)));
         
         final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleString(KEY, subQryMake)), String.class, H_STRING);
 
         
-        final ISources3 sources = 
+        final IJoinNode3 sources = 
                 ij(
                         model,
                         make,
@@ -682,14 +682,14 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable make = source(MAKE, 3);
         final Source3BasedOnTable subQryMake = source(MAKE, 2);
         
-        final ISources3 subQrySources = sources(subQryMake);
+        final IJoinNode3 subQrySources = sources(subQryMake);
         
         final Conditions3 subQryConditions = cond(eq(idProp(subQryMake), entityProp("make", model, MAKE)));
         
         final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleString(KEY, subQryMake)), String.class, H_STRING);
 
         
-        final ISources3 sources = 
+        final IJoinNode3 sources = 
                 ij(
                         model,
                         make,
@@ -707,7 +707,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable model = source(MODEL, 1);
         final Source3BasedOnTable make = source(MAKE, 2);
         
-        final ISources3 sources = 
+        final IJoinNode3 sources = 
                 ij(
                         model,
                         make,
@@ -726,13 +726,13 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
 
         final Source3BasedOnTable subQryMake = source(MAKE, 2);
         
-        final ISources3 subQrySources = sources(subQryMake);
+        final IJoinNode3 subQrySources = sources(subQryMake);
         
         final Conditions3 subQryConditions = cond(eq(idProp(subQryMake), entityProp("make", model, MAKE)));
         
         final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleString(KEY, subQryMake)), String.class, H_STRING);
 
-        final ISources3 sources = sources(model);
+        final IJoinNode3 sources = sources(model);
         final Conditions3 conditions = or(isNotNull(expSubQry));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
         
@@ -745,7 +745,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable model = source(MODEL, 1);
         final Source3BasedOnTable make = source(MAKE, 2);
         
-        final ISources3 sources = 
+        final IJoinNode3 sources = 
                 ij(
                         model,
                         make,
@@ -763,7 +763,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable veh = source(VEHICLE, 1);
         final Source3BasedOnTable repVeh = source(VEHICLE, 2);
         
-        final ISources3 sources = 
+        final IJoinNode3 sources = 
                 lj(
                         veh,
                         repVeh,
@@ -783,7 +783,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable org5 = source(ORG5, 3);
         final Source3BasedOnTable org4 = source(ORG4, 4);
         
-        final ISources3 sources = 
+        final IJoinNode3 sources = 
                 lj(
                         lj(
                                 veh,
@@ -810,7 +810,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable repVeh = source(VEHICLE, 3);
         final Source3BasedOnTable ou5e = source(ORG5, 2);
 
-        final ISources3 sources = 
+        final IJoinNode3 sources = 
                 ij(
                         lj(
                                 veh,
@@ -838,7 +838,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable ou5 = source(ORG5, 4);
         final Source3BasedOnTable ou4 = source(ORG4, 5);
 
-        final ISources3 sources = 
+        final IJoinNode3 sources = 
                 ij(
                         lj(
                                 lj(
@@ -885,7 +885,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable ou2e = source(ORG2, 2);
         final Source3BasedOnTable ou2eou1 = source(ORG1, 7);
 
-        final ISources3 sources = 
+        final IJoinNode3 sources = 
                 ij(
                         lj(
                                 lj(

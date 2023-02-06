@@ -5,8 +5,8 @@ import java.util.Iterator;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.fluent.enums.TokenCategory;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
-import ua.com.fielden.platform.eql.stage1.sources.ISources1;
-import ua.com.fielden.platform.eql.stage2.sources.ISources2;
+import ua.com.fielden.platform.eql.stage1.sources.IJoinNode1;
+import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.utils.Pair;
 
 public class QrySourcesBuilder extends AbstractTokensBuilder {
@@ -29,12 +29,12 @@ public class QrySourcesBuilder extends AbstractTokensBuilder {
         }
     }
     
-    public ISources1<? extends ISources2<?>> obtainChild() {
+    public IJoinNode1<? extends IJoinNode2<?>> obtainChild() {
         if (getChild() != null) {
             final ITokensBuilder last = getChild();
             setChild(null);
             final Pair<TokenCategory, Object> result = last.getResult();
-            return (ISources1<? extends ISources2<?>>) result.getValue();
+            return (IJoinNode1<? extends IJoinNode2<?>>) result.getValue();
         }
         return null;
     }
@@ -44,12 +44,12 @@ public class QrySourcesBuilder extends AbstractTokensBuilder {
         return false;
     }
 
-    public ISources1<? extends ISources2<?>> getModel() {
+    public IJoinNode1<? extends IJoinNode2<?>> getModel() {
         if (getChild() != null) {
             finaliseChild();
         }
         final Iterator<Pair<TokenCategory, Object>> iterator = getTokens().iterator();
-        return (ISources1<? extends ISources2<?>>) iterator.next().getValue();
+        return (IJoinNode1<? extends IJoinNode2<?>>) iterator.next().getValue();
     }
 
     @Override

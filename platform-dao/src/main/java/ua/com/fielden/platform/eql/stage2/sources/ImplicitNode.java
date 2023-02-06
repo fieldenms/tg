@@ -7,24 +7,24 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 
-public class BranchNode {
+public class ImplicitNode {
     public final String name; // name within the holder source; either name or expression is null
     public final Expression2 expr; // expression is based on the holder source
 
     public final Source2BasedOnPersistentType source;
     public final boolean required;
-    private final List<BranchNode> branches; //can contain none
+    private final List<ImplicitNode> subnodes; //can contain none
     
-    public BranchNode(final String name, final List<BranchNode> branches, final boolean required, final Source2BasedOnPersistentType source, final Expression2 expr) {
+    public ImplicitNode(final String name, final List<ImplicitNode> subnodes, final boolean required, final Source2BasedOnPersistentType source, final Expression2 expr) {
         this.name = name;
-        this.branches = branches;
+        this.subnodes = subnodes;
         this.required = required;
         this.source = source;
         this.expr = expr;
     }
     
-    public List<BranchNode> branches() {
-        return unmodifiableList(branches);
+    public List<ImplicitNode> subnodes() {
+        return unmodifiableList(subnodes);
     }
     
     @Override
@@ -34,7 +34,7 @@ public class BranchNode {
         result = prime * result + name.hashCode();
         result = prime * result + ((source == null) ? 0 : source.hashCode());
         result = prime * result + (required ? 1231 : 1237);
-        result = prime * result + branches.hashCode();
+        result = prime * result + subnodes.hashCode();
         result = prime * result + ((expr == null) ? 0 : expr.hashCode());
         return result;
     }
@@ -45,16 +45,16 @@ public class BranchNode {
             return true;
         }
 
-        if (!(obj instanceof BranchNode)) {
+        if (!(obj instanceof ImplicitNode)) {
             return false;
         }
 
-        final BranchNode other = (BranchNode) obj;
+        final ImplicitNode other = (ImplicitNode) obj;
         
         return Objects.equals(name, other.name) && //
                 Objects.equals(source, other.source) && //
                 Objects.equals(required, other.required) && //
-                Objects.equals(branches, other.branches) && //
+                Objects.equals(subnodes, other.subnodes) && //
                 Objects.equals(expr, other.expr);
     }
 }

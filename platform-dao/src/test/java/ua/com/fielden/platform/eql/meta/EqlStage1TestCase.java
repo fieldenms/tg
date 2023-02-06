@@ -29,12 +29,12 @@ import ua.com.fielden.platform.eql.stage1.operands.Prop1;
 import ua.com.fielden.platform.eql.stage1.operands.ResultQuery1;
 import ua.com.fielden.platform.eql.stage1.operands.functions.CountAll1;
 import ua.com.fielden.platform.eql.stage1.sources.ISource1;
-import ua.com.fielden.platform.eql.stage1.sources.ISources1;
-import ua.com.fielden.platform.eql.stage1.sources.SingleNodeSources1;
+import ua.com.fielden.platform.eql.stage1.sources.IJoinNode1;
+import ua.com.fielden.platform.eql.stage1.sources.JoinLeaf1;
 import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
-import ua.com.fielden.platform.eql.stage2.sources.ISources2;
+import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 
 public class EqlStage1TestCase extends EqlTestCase {
 
@@ -61,11 +61,11 @@ public class EqlStage1TestCase extends EqlTestCase {
         return qb().generateAsResultQuery(qry, null, null);
     }
     
-    protected static QueryBlocks1 qb1(final ISources1<? extends ISources2<?>> sources, final Conditions1 conditions) {
+    protected static QueryBlocks1 qb1(final IJoinNode1<? extends IJoinNode2<?>> sources, final Conditions1 conditions) {
         return new QueryBlocks1(sources, conditions, emptyConditions, emptyYields, emptyGroupBys, emptyOrderBys, false);
     }
 
-    protected static QueryBlocks1 qb1(final ISources1<? extends ISources2<?>> sources, final Conditions1 conditions, final Yields1 yields) {
+    protected static QueryBlocks1 qb1(final IJoinNode1<? extends IJoinNode2<?>> sources, final Conditions1 conditions, final Yields1 yields) {
         return new QueryBlocks1(sources, conditions, emptyConditions, yields, emptyGroupBys, emptyOrderBys, false);
     }
 
@@ -89,8 +89,8 @@ public class EqlStage1TestCase extends EqlTestCase {
         return new Conditions1(false, firstCondition, emptyList());
     }
     
-    protected static ISources1<? extends ISources2<?>> sources(final ISource1<? extends ISource2<?>> main) {
-        return new SingleNodeSources1(main);
+    protected static IJoinNode1<? extends IJoinNode2<?>> sources(final ISource1<? extends ISource2<?>> main) {
+        return new JoinLeaf1(main);
     }
 
     protected static CompoundCondition1 and(final ICondition1<?> condition) {
@@ -133,11 +133,11 @@ public class EqlStage1TestCase extends EqlTestCase {
         return new Source1BasedOnPersistentType(sourceType, null, nextSourceId());
     }
 
-    protected static ISources1<? extends ISources2<?>> sources(final Class<? extends AbstractEntity<?>> sourceType, final String alias) {
+    protected static IJoinNode1<? extends IJoinNode2<?>> sources(final Class<? extends AbstractEntity<?>> sourceType, final String alias) {
         return sources(source(sourceType, alias));
     }
 
-    protected static ISources1<? extends ISources2<?>> sources(final Class<? extends AbstractEntity<?>> sourceType) {
+    protected static IJoinNode1<? extends IJoinNode2<?>> sources(final Class<? extends AbstractEntity<?>> sourceType) {
         return sources(source(sourceType));
     }
 }

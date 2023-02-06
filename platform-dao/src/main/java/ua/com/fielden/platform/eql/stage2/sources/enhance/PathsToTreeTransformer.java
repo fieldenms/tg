@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.eql.stage2.sources.enhance;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.emptySet;
@@ -31,8 +30,8 @@ import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.Expression1;
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
-import ua.com.fielden.platform.eql.stage2.sources.BranchNode;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
+import ua.com.fielden.platform.eql.stage2.sources.ImplicitNode;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.types.tuples.T3;
@@ -48,29 +47,29 @@ public class PathsToTreeTransformer {
     }
     
     public final TreeResult transform(final Set<Prop2> props) {
-        final Map<Integer, List<BranchNode>> branches = new HashMap<>();
+        final Map<Integer, List<ImplicitNode>> nodes = new HashMap<>();
         final List<ExpressionLinks> expressionsLinks = new ArrayList<>();
         final List<Prop3Links> propLinks = new ArrayList<>();
 
         for (final SourceTails sourceTails : groupBySource(props)) {
-            final T2<List<BranchNode>, TreeResult> genRes = generateSourceNodes(sourceTails.source, sourceTails.tails, true);
+            final T2<List<ImplicitNode>, TreeResult> genRes = generateSourceNodes(sourceTails.source, sourceTails.tails, true);
             
-            branches.put(sourceTails.source.id(), genRes._1);
-            branches.putAll(genRes._2.branchesMap());
+            nodes.put(sourceTails.source.id(), genRes._1);
+            nodes.putAll(genRes._2.implicitNodesMap());
             expressionsLinks.addAll(genRes._2.expressionsData());
             propLinks.addAll(genRes._2.propsData());
         }
         
-        return new TreeResult(branches, propLinks, expressionsLinks);
+        return new TreeResult(nodes, propLinks, expressionsLinks);
     }
     
-    private T2<List<BranchNode>, TreeResult> generateSourceNodes(
+    private T2<List<ImplicitNode>, TreeResult> generateSourceNodes(
             final ISource2<?> sourceForCalcPropResolution, 
             final List<PendingTail> pendingTails,
             final boolean explicitSource // true if sourceForCalcPropResolution is explicit source
     ) {
-        final Map<String, BranchNode> mapOfBranches = new HashMap<>();
-        final Map<Integer, List<BranchNode>> otherSourcesBranches = new HashMap<>();
+        final Map<String, ImplicitNode> mapOfNodes = new HashMap<>();
+        final Map<Integer, List<ImplicitNode>> otherSourcesNodes = new HashMap<>();
         final List<ExpressionLinks> expressionLinks = new ArrayList<>();
         final List<Prop3Links> propLinks = new ArrayList<>();
         
@@ -85,27 +84,27 @@ public class PathsToTreeTransformer {
         	final CalcPropData cpd = calcPropData.get(propEntry.firstChunk.name);
         	
         	if (cpd != null) {
-        	    otherSourcesBranches.putAll(cpd.internalsResult.branchesMap());
+        	    otherSourcesNodes.putAll(cpd.internalsResult.implicitNodesMap());
         	    expressionLinks.addAll(cpd.internalsResult.expressionsData());
         	    propLinks.addAll(cpd.internalsResult.propsData());
         	}
         	
-        	final T2<BranchNode, TreeResult> genRes = generateNode(propEntry, cpd != null ? cpd.expr : null, sourceForCalcPropResolution.id());
+        	final T2<ImplicitNode, TreeResult> genRes = generateNode(propEntry, cpd != null ? cpd.expr : null, sourceForCalcPropResolution.id());
         	
             if (genRes._1 != null) {
-                mapOfBranches.put(genRes._1.name, genRes._1);
+                mapOfNodes.put(genRes._1.name, genRes._1);
             }
 
             if (genRes._2 != null) {
-                otherSourcesBranches.putAll(genRes._2.branchesMap());
+                otherSourcesNodes.putAll(genRes._2.implicitNodesMap());
                 expressionLinks.addAll(genRes._2.expressionsData());
                 propLinks.addAll(genRes._2.propsData());
             }
         }
 
-        final List<BranchNode> orderedBranches = orderBranches(mapOfBranches, calcPropData);
+        final List<ImplicitNode> orderedNodes = orderImplicitNodes(mapOfNodes, calcPropData);
 
-        return t2(orderedBranches, new TreeResult(otherSourcesBranches, propLinks, expressionLinks));
+        return t2(orderedNodes, new TreeResult(otherSourcesNodes, propLinks, expressionLinks));
     }
 
 	private T2<Map<String, CalcPropData>, List<PendingTail>> enhanceWithCalcPropsData(
@@ -169,7 +168,7 @@ public class PathsToTreeTransformer {
 		return t2(recursivelyEnhanced._1, allTails);
 	}
 	
-    private T2<BranchNode, TreeResult> generateNode(final FirstChunkGroup firstChunkGroup, final Expression2 expression, final Integer currResolutionSourceId) {
+    private T2<ImplicitNode, TreeResult> generateNode(final FirstChunkGroup firstChunkGroup, final Expression2 expression, final Integer currResolutionSourceId) {
         final T2<List<Prop2Lite>, List<PendingTail>> next = getLeafPathsAndNextPendingTails(firstChunkGroup.tails);
         final String propName = firstChunkGroup.firstChunk.name;
         
@@ -183,7 +182,7 @@ public class PathsToTreeTransformer {
             final EntityTypePropInfo<?> propInfo = (EntityTypePropInfo<?>) firstChunkGroup.firstChunk.data;
             final Source2BasedOnPersistentType implicitSource = new Source2BasedOnPersistentType(propInfo.javaType(), propInfo.propEntityInfo, gen.nextSourceId()); 
             
-            final T2<List<BranchNode>, TreeResult> genRes = generateSourceNodes(implicitSource, next._2, false);
+            final T2<List<ImplicitNode>, TreeResult> genRes = generateSourceNodes(implicitSource, next._2, false);
             final List<ExpressionLinks> expressionLinks = new ArrayList<>();
             final List<Prop3Links> propLinks = new ArrayList<>();
             expressionLinks.addAll(genRes._2.expressionsData());
@@ -197,9 +196,9 @@ public class PathsToTreeTransformer {
                 }
             }
             
-            final BranchNode branch = new BranchNode(propName, genRes._1, propInfo.required, implicitSource, expression);
+            final ImplicitNode node = new ImplicitNode(propName, genRes._1, propInfo.required, implicitSource, expression);
             
-            return t2(branch, new TreeResult(genRes._2.branchesMap(), propLinks, expressionLinks));
+            return t2(node, new TreeResult(genRes._2.implicitNodesMap(), propLinks, expressionLinks));
         }
     }
 	
@@ -302,10 +301,10 @@ public class PathsToTreeTransformer {
     	return dependencies;
     }
 
-    private static List<String> orderBranchesWithinCalculated(final Collection<BranchNode> calcNodesWithSubnodes, final Map<String, CalcPropData> allCalcData) {
+    private static List<String> orderImplicitNodesWithinCalculated(final Collection<ImplicitNode> calcNodesWithSubnodes, final Map<String, CalcPropData> allCalcData) {
         final Map<String, Set<String>> mapOfDependencies = new HashMap<>();
 
-        for (final BranchNode node : calcNodesWithSubnodes) {
+        for (final ImplicitNode node : calcNodesWithSubnodes) {
             mapOfDependencies.put(node.name, unfoldDependencies(node.name, allCalcData));
         }
        
@@ -337,12 +336,12 @@ public class PathsToTreeTransformer {
         return sorted;
     }
     
-    private static List<BranchNode> orderBranches(final Map<String, BranchNode> all, final Map<String, CalcPropData> allCalcData) {
-        final List<BranchNode> calcs = new ArrayList<>();
-        final List<BranchNode> orderedItems = new ArrayList<>(); // includes all non-calc prop nodes and calc-prop nodes without 
+    private static List<ImplicitNode> orderImplicitNodes(final Map<String, ImplicitNode> all, final Map<String, CalcPropData> allCalcData) {
+        final List<ImplicitNode> calcs = new ArrayList<>();
+        final List<ImplicitNode> orderedItems = new ArrayList<>(); // includes all non-calc prop nodes and calc-prop nodes without 
         //children (they are not participating in "JOIN ON" directly, their expression is stored in associations for later look-up
 
-        for (final BranchNode node : all.values()) {
+        for (final ImplicitNode node : all.values()) {
             // if the node is calc-prop and has children (should participate in "JOIN ON") -- then needs ordering within this kind of nodes
             // Need to include calc-nodes without children into ordering to reveal transitive dependencies, but this is achieved 
             // by getting transitive dependencies from map of CalcPropData
@@ -354,7 +353,7 @@ public class PathsToTreeTransformer {
         }
         
         // adding ordered calc props nodes
-        for (final String name : orderBranchesWithinCalculated(calcs, allCalcData)) {
+        for (final String name : orderImplicitNodesWithinCalculated(calcs, allCalcData)) {
             orderedItems.add(all.get(name));
         }
 

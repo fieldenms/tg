@@ -12,8 +12,8 @@ import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.etc.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 import ua.com.fielden.platform.eql.stage2.operands.TypelessSubQuery2;
-import ua.com.fielden.platform.eql.stage2.sources.ISources2;
-import ua.com.fielden.platform.eql.stage3.sources.ISources3;
+import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
+import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 
 public class TypelessSubQuery1 extends AbstractQuery1 implements ITransformableToS2<TypelessSubQuery2> {
 
@@ -25,18 +25,18 @@ public class TypelessSubQuery1 extends AbstractQuery1 implements ITransformableT
     public TypelessSubQuery2 transform(final TransformationContext1 context) {
         final TransformationContext1 localContext = context;
         
-        if (sources == null) {
+        if (joinRoot == null) {
             return new TypelessSubQuery2(transformSourceless(localContext));
         }
         
-        final TransformationResult1<? extends ISources2<?>> sourcesTr = sources.transform(localContext);
-        final TransformationContext1 enhancedContext = sourcesTr.updatedContext;
-        final ISources2<? extends ISources3> sources2 = sourcesTr.item;
-        final Conditions2 conditions2 = enhanceWithUserDataFilterConditions(sources2.mainSource(), context, conditions.transform(enhancedContext));
+        final TransformationResult1<? extends IJoinNode2<?>> joinRootTr = joinRoot.transform(localContext);
+        final TransformationContext1 enhancedContext = joinRootTr.updatedContext;
+        final IJoinNode2<? extends IJoinNode3> joinRoot2 = joinRootTr.item;
+        final Conditions2 conditions2 = enhanceWithUserDataFilterConditions(joinRoot2.mainSource(), context, conditions.transform(enhancedContext));
         final Yields2 yields2 = yields.getYields().isEmpty() ? nullYields : yields.transform(enhancedContext);
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
-        final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, sources2.mainSource());
-        final QueryBlocks2 entQueryBlocks = new QueryBlocks2(sources2, conditions2, yields2, groups2, orderings2);
+        final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());
+        final QueryBlocks2 entQueryBlocks = new QueryBlocks2(joinRoot2, conditions2, yields2, groups2, orderings2);
         return new TypelessSubQuery2(entQueryBlocks);
     }
     

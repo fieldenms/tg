@@ -28,8 +28,8 @@ import ua.com.fielden.platform.eql.stage1.operands.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.operands.SubQuery1;
 import ua.com.fielden.platform.eql.stage1.operands.TypelessSubQuery1;
 import ua.com.fielden.platform.eql.stage1.sources.ISource1;
-import ua.com.fielden.platform.eql.stage1.sources.ISources1;
-import ua.com.fielden.platform.eql.stage2.sources.ISources2;
+import ua.com.fielden.platform.eql.stage1.sources.IJoinNode1;
+import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.utils.Pair;
 
 public class EntQueryGenerator {
@@ -112,7 +112,7 @@ public class EntQueryGenerator {
             }
         }
 
-        final ISources1<? extends ISources2<?>> fromModel = from.getModel();
+        final IJoinNode1<? extends IJoinNode2<?>> fromModel = from.getModel();
         final Conditions1 udfModel = fromModel == null ? emptyConditions : generateUserDataFilteringCondition(qryModel.isFilterable(), filter, username, fromModel.mainSource());
 
         return new QueryBlocks1(fromModel, where.getModel(), udfModel, select.getModel(), groupBy.getModel(), produceOrderBys(orderModel), qryModel.isYieldAll());

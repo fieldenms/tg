@@ -5,12 +5,12 @@ import static java.util.Map.copyOf;
 import java.util.List;
 import java.util.Map;
 
-import ua.com.fielden.platform.eql.stage2.sources.BranchNode;
+import ua.com.fielden.platform.eql.stage2.sources.ImplicitNode;
 
-public record TreeResult(Map<Integer, List<BranchNode>> branchesMap, List<Prop3Links> propsData, List<ExpressionLinks> expressionsData) {
+public record TreeResult(Map<Integer, List<ImplicitNode>> implicitNodesMap, List<Prop3Links> propsData, List<ExpressionLinks> expressionsData) {
 
     public TreeResult {
-        branchesMap = copyOf(branchesMap);
+        implicitNodesMap = copyOf(implicitNodesMap);
         propsData = List.copyOf(propsData);
         expressionsData = List.copyOf(expressionsData);
     }

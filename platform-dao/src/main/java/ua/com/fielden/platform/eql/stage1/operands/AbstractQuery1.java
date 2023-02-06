@@ -29,7 +29,7 @@ import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.etc.GroupBys1;
 import ua.com.fielden.platform.eql.stage1.etc.OrderBys1;
 import ua.com.fielden.platform.eql.stage1.etc.Yields1;
-import ua.com.fielden.platform.eql.stage1.sources.ISources1;
+import ua.com.fielden.platform.eql.stage1.sources.IJoinNode1;
 import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.etc.GroupBy2;
@@ -41,12 +41,12 @@ import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
-import ua.com.fielden.platform.eql.stage2.sources.ISources2;
+import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
 public abstract class AbstractQuery1 {
 
-    public final ISources1<? extends ISources2<?>> sources;
+    public final IJoinNode1<? extends IJoinNode2<?>> joinRoot;
     public final Conditions1 conditions;
     public final Conditions1 udfConditions;
     public final Yields1 yields;
@@ -56,7 +56,7 @@ public abstract class AbstractQuery1 {
     public final boolean yieldAll;
 
     public AbstractQuery1(final QueryBlocks1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType) {
-        this.sources = queryBlocks.sources;
+        this.joinRoot = queryBlocks.joinRoot;
         this.conditions = queryBlocks.conditions;
         this.udfConditions = queryBlocks.udfConditions;
         this.yields = queryBlocks.yields;
@@ -194,7 +194,7 @@ public abstract class AbstractQuery1 {
         result = prime * result + groups.hashCode();
         result = prime * result + orderings.hashCode();
         result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
-        result = prime * result + ((sources == null) ? 0 : sources.hashCode());
+        result = prime * result + ((joinRoot == null) ? 0 : joinRoot.hashCode());
         result = prime * result + yields.hashCode();
         result = prime * result + (yieldAll ? 1231 : 1237);
         return result;
@@ -213,7 +213,7 @@ public abstract class AbstractQuery1 {
         final AbstractQuery1 other = (AbstractQuery1) obj;
 
         return Objects.equals(resultType, other.resultType) &&
-                Objects.equals(sources, other.sources) &&
+                Objects.equals(joinRoot, other.joinRoot) &&
                 Objects.equals(yields, other.yields) &&
                 Objects.equals(conditions, other.conditions) &&
                 Objects.equals(udfConditions, other.udfConditions) &&

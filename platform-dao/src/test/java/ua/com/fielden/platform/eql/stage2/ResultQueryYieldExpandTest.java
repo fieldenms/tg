@@ -55,6 +55,6 @@ public class ResultQueryYieldExpandTest extends EqlStage2TestCase {
                 mkYield(prop(resultQrySource, pi(BOGIE, "location").cloneRenamed("l"), pi(BOGIE, "location", "workshop")), "loc.workshop")
                 );
         assertEquals(resultQryYields, actResultQry.yields);
-        assertEquals(sources(resultQrySource), actResultQry.sources);
+        assertEquals(sources(resultQrySource), actResultQry.joinRoot);
     }
 }

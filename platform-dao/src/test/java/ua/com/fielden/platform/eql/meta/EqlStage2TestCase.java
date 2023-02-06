@@ -47,15 +47,15 @@ import ua.com.fielden.platform.eql.stage2.operands.SubQuery2;
 import ua.com.fielden.platform.eql.stage2.operands.TypelessSubQuery2;
 import ua.com.fielden.platform.eql.stage2.operands.functions.CountAll2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
-import ua.com.fielden.platform.eql.stage2.sources.ISources2;
-import ua.com.fielden.platform.eql.stage2.sources.MultipleNodesSources2;
-import ua.com.fielden.platform.eql.stage2.sources.SingleNodeSources2;
+import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
+import ua.com.fielden.platform.eql.stage2.sources.JoinBranch2;
+import ua.com.fielden.platform.eql.stage2.sources.JoinLeaf2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
-import ua.com.fielden.platform.eql.stage3.sources.ISources3;
+import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.types.tuples.T2;
 
 public class EqlStage2TestCase extends EqlTestCase {
@@ -115,11 +115,11 @@ public class EqlStage2TestCase extends EqlTestCase {
         return qb().generateAsResultQuery(qry, null, null).transform(context);
     }
 
-    protected static QueryBlocks2 qb2(final ISources2<? extends ISources3> sources, final Conditions2 conditions, final Yields2 yields) {
+    protected static QueryBlocks2 qb2(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions, final Yields2 yields) {
         return new QueryBlocks2(sources, conditions, yields, emptyGroupBys, emptyOrderBys);
     }
 
-    protected static QueryBlocks2 qb2(final ISources2<? extends ISources3> sources, final Conditions2 conditions, final Yields2 yields, final OrderBys2 orderBys) {
+    protected static QueryBlocks2 qb2(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions, final Yields2 yields, final OrderBys2 orderBys) {
         return new QueryBlocks2(sources, conditions, yields, emptyGroupBys, orderBys);
     }
 
@@ -179,16 +179,16 @@ public class EqlStage2TestCase extends EqlTestCase {
     //        return new Conditions1(false, firstCondition, emptyList());
     //    }
 
-    protected static ISources2<? extends ISources3> sources(final ISource2<? extends ISource3> main) {
-        return new SingleNodeSources2(main);
+    protected static IJoinNode2<? extends IJoinNode3> sources(final ISource2<? extends ISource3> main) {
+        return new JoinLeaf2(main);
     }
 
-    protected static ISources2<? extends ISources3> ij(final ISources2<? extends ISources3> leftSource, final ISource2<? extends ISource3> rightSource, final Conditions2 conditions) {
-        return new MultipleNodesSources2(leftSource, new SingleNodeSources2(rightSource), IJ, conditions);
+    protected static IJoinNode2<? extends IJoinNode3> ij(final IJoinNode2<? extends IJoinNode3> leftSource, final ISource2<? extends ISource3> rightSource, final Conditions2 conditions) {
+        return new JoinBranch2(leftSource, new JoinLeaf2(rightSource), IJ, conditions);
     }
 
-    protected static ISources2<? extends ISources3> ij(final ISource2<? extends ISource3> leftSource, final ISource2<? extends ISource3> rightSource, final Conditions2 conditions) {
-        return new MultipleNodesSources2(new SingleNodeSources2(leftSource), new SingleNodeSources2(rightSource), IJ, conditions);
+    protected static IJoinNode2<? extends IJoinNode3> ij(final ISource2<? extends ISource3> leftSource, final ISource2<? extends ISource3> rightSource, final Conditions2 conditions) {
+        return new JoinBranch2(new JoinLeaf2(leftSource), new JoinLeaf2(rightSource), IJ, conditions);
     }
     
     //    protected static CompoundSource1 lj(final IQrySource1<? extends IQrySource2<?>> source, final ICondition1<?> firstCondition) {
@@ -224,11 +224,11 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new Conditions2(false, asList(conditions));
     }
 
-    protected static ExistenceTest2 exists(final ISources2<? extends ISources3> sources, final Conditions2 conditions) {
+    protected static ExistenceTest2 exists(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions) {
         return new ExistenceTest2(false, typelessSubqry(sources, conditions));
     }
 
-    protected static ExistenceTest2 notExists(final ISources2<? extends ISources3> sources, final Conditions2 conditions) {
+    protected static ExistenceTest2 notExists(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions) {
         return new ExistenceTest2(true, typelessSubqry(sources, conditions));
     }
 
@@ -264,47 +264,47 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new Source2BasedOnSubqueries(Arrays.asList(queries), null, id, entityInfo);
     }
 
-    protected static ResultQuery2 qryCountAll(final ISources2<? extends ISources3> sources, final Conditions2 conditions) {
+    protected static ResultQuery2 qryCountAll(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions) {
         return new ResultQuery2(qb2(sources, conditions, mkYields(yieldCountAll("KOUNT"))), EntityAggregates.class);
     }
 
-    protected static ResultQuery2 qry(final ISources2<? extends ISources3> sources, final Conditions2 conditions, final Yields2 yields) {
+    protected static ResultQuery2 qry(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions, final Yields2 yields) {
         return new ResultQuery2(qb2(sources, conditions, yields), EntityAggregates.class);
     }
 
-    protected static SourceQuery2 srcqry(final ISources2<? extends ISources3> sources, final Conditions2 conditions, final Yields2 yields) {
+    protected static SourceQuery2 srcqry(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions, final Yields2 yields) {
         return new SourceQuery2(qb2(sources, conditions, yields), EntityAggregates.class);
     }
 
-    protected static SourceQuery2 srcqry(final ISources2<? extends ISources3> sources, final Yields2 yields) {
+    protected static SourceQuery2 srcqry(final IJoinNode2<? extends IJoinNode3> sources, final Yields2 yields) {
         return new SourceQuery2(qb2(sources, emptyConditions, yields), EntityAggregates.class);
     }
 
-    protected static ResultQuery2 qry(final ISources2<? extends ISources3> sources, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType) {
+    protected static ResultQuery2 qry(final IJoinNode2<? extends IJoinNode3> sources, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType) {
         return new ResultQuery2(qb2(sources, emptyConditions, yields), resultType);
     }
 
-    protected static ResultQuery2 qry(final ISources2<? extends ISources3> sources, final Yields2 yields, final OrderBys2 orderBys, final Class<? extends AbstractEntity<?>> resultType) {
+    protected static ResultQuery2 qry(final IJoinNode2<? extends IJoinNode3> sources, final Yields2 yields, final OrderBys2 orderBys, final Class<? extends AbstractEntity<?>> resultType) {
         return new ResultQuery2(qb2(sources, emptyConditions, yields, orderBys), resultType);
     }
 
-    protected static ResultQuery2 qry(final ISources2<? extends ISources3> sources, final Yields2 yields) {
+    protected static ResultQuery2 qry(final IJoinNode2<? extends IJoinNode3> sources, final Yields2 yields) {
         return new ResultQuery2(qb2(sources, emptyConditions, yields), EntityAggregates.class);
     }
 
-    protected static ResultQuery2 qryCountAll(final ISources2<? extends ISources3> sources) {
+    protected static ResultQuery2 qryCountAll(final IJoinNode2<? extends IJoinNode3> sources) {
         return new ResultQuery2(qb2(sources, emptyConditions, mkYields(yieldCountAll("KOUNT"))), EntityAggregates.class);
     }
 
-    protected static SubQuery2 subqry(final ISources2<? extends ISources3> sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType, final Object hibType) {
+    protected static SubQuery2 subqry(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType, final Object hibType) {
         return new SubQuery2(qb2(sources, conditions, yields), resultType, hibType);
     }
 
-    protected static TypelessSubQuery2 typelessSubqry(final ISources2<? extends ISources3> sources, final Conditions2 conditions) {
+    protected static TypelessSubQuery2 typelessSubqry(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions) {
         return new TypelessSubQuery2(new QueryBlocks2(sources, conditions, nullYields, emptyGroupBys, emptyOrderBys));
     }
 
-    protected static SubQuery2 subqry(final ISources2<? extends ISources3> sources, final Yields2 yields, final Class<?> resultType, final Object hibType) {
+    protected static SubQuery2 subqry(final IJoinNode2<? extends IJoinNode3> sources, final Yields2 yields, final Class<?> resultType, final Object hibType) {
         return new SubQuery2(qb2(sources, emptyConditions, yields), resultType, hibType);
     }
 }

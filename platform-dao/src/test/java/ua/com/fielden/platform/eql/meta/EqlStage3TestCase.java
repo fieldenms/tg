@@ -52,9 +52,9 @@ import ua.com.fielden.platform.eql.stage3.operands.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.operands.SubQuery3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.CountAll3;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
-import ua.com.fielden.platform.eql.stage3.sources.ISources3;
-import ua.com.fielden.platform.eql.stage3.sources.MultipleNodesSources3;
-import ua.com.fielden.platform.eql.stage3.sources.SingleNodeSources3;
+import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
+import ua.com.fielden.platform.eql.stage3.sources.JoinBranch3;
+import ua.com.fielden.platform.eql.stage3.sources.JoinLeaf3;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnTable;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
@@ -182,104 +182,104 @@ public class EqlStage3TestCase extends EqlTestCase {
         return new Conditions3(false, asList(asList(condition)));
     }
 
-    protected static ISources3 sources(final ISources3 main, final JoinType jt, final ISources3 second, final Conditions3 conditions) {
-        return new MultipleNodesSources3(main, second, jt, conditions);
+    protected static IJoinNode3 sources(final IJoinNode3 main, final JoinType jt, final IJoinNode3 second, final Conditions3 conditions) {
+        return new JoinBranch3(main, second, jt, conditions);
     }
 
-    protected static ISources3 sources(final ISource3 main, final JoinType jt, final ISources3 second, final Conditions3 conditions) {
-        return new MultipleNodesSources3(sources(main), second, jt, conditions);
+    protected static IJoinNode3 sources(final ISource3 main, final JoinType jt, final IJoinNode3 second, final Conditions3 conditions) {
+        return new JoinBranch3(sources(main), second, jt, conditions);
     }
 
-    protected static ISources3 sources(final ISources3 main, final JoinType jt, final ISource3 second, final Conditions3 conditions) {
-        return new MultipleNodesSources3(main, sources(second), jt, conditions);
+    protected static IJoinNode3 sources(final IJoinNode3 main, final JoinType jt, final ISource3 second, final Conditions3 conditions) {
+        return new JoinBranch3(main, sources(second), jt, conditions);
     }
 
-    protected static ISources3 sources(final ISource3 main, final JoinType jt, final ISource3 second, final Conditions3 conditions) {
-        return new MultipleNodesSources3(sources(main), sources(second), jt, conditions);
+    protected static IJoinNode3 sources(final ISource3 main, final JoinType jt, final ISource3 second, final Conditions3 conditions) {
+        return new JoinBranch3(sources(main), sources(second), jt, conditions);
     }
 
-    protected static ISources3 sources(final ISources3 main, final JoinType jt, final ISources3 second, final ICondition3 condition) {
-        return new MultipleNodesSources3(main, second, jt, cond(condition));
+    protected static IJoinNode3 sources(final IJoinNode3 main, final JoinType jt, final IJoinNode3 second, final ICondition3 condition) {
+        return new JoinBranch3(main, second, jt, cond(condition));
     }
 
-    protected static ISources3 sources(final ISource3 main, final JoinType jt, final ISources3 second, final ICondition3 condition) {
-        return new MultipleNodesSources3(sources(main), second, jt, cond(condition));
+    protected static IJoinNode3 sources(final ISource3 main, final JoinType jt, final IJoinNode3 second, final ICondition3 condition) {
+        return new JoinBranch3(sources(main), second, jt, cond(condition));
     }
 
-    protected static ISources3 sources(final ISources3 main, final JoinType jt, final ISource3 second, final ICondition3 condition) {
-        return new MultipleNodesSources3(main, sources(second), jt, cond(condition));
+    protected static IJoinNode3 sources(final IJoinNode3 main, final JoinType jt, final ISource3 second, final ICondition3 condition) {
+        return new JoinBranch3(main, sources(second), jt, cond(condition));
     }
 
-    protected static ISources3 sources(final ISource3 main, final JoinType jt, final ISource3 second, final ICondition3 condition) {
-        return new MultipleNodesSources3(sources(main), sources(second), jt, cond(condition));
+    protected static IJoinNode3 sources(final ISource3 main, final JoinType jt, final ISource3 second, final ICondition3 condition) {
+        return new JoinBranch3(sources(main), sources(second), jt, cond(condition));
     }
 
-    protected static ISources3 lj(final ISources3 main, final ISources3 second, final Conditions3 conditions) {
+    protected static IJoinNode3 lj(final IJoinNode3 main, final IJoinNode3 second, final Conditions3 conditions) {
         return sources(main, LJ, second, conditions);
     }
 
-    protected static ISources3 lj(final ISource3 main, final ISources3 second, final Conditions3 conditions) {
+    protected static IJoinNode3 lj(final ISource3 main, final IJoinNode3 second, final Conditions3 conditions) {
         return sources(main, LJ, second, conditions);
     }
 
-    protected static ISources3 lj(final ISources3 main, final ISource3 second, final Conditions3 conditions) {
+    protected static IJoinNode3 lj(final IJoinNode3 main, final ISource3 second, final Conditions3 conditions) {
         return sources(main, LJ, second, conditions);
     }
 
-    protected static ISources3 lj(final ISource3 main, final ISource3 second, final Conditions3 conditions) {
+    protected static IJoinNode3 lj(final ISource3 main, final ISource3 second, final Conditions3 conditions) {
         return sources(main, LJ, second, conditions);
     }
 
-    protected static ISources3 lj(final ISources3 main, final ISources3 second, final ICondition3 condition) {
+    protected static IJoinNode3 lj(final IJoinNode3 main, final IJoinNode3 second, final ICondition3 condition) {
         return sources(main, LJ, second, condition);
     }
 
-    protected static ISources3 lj(final ISource3 main, final ISources3 second, final ICondition3 condition) {
+    protected static IJoinNode3 lj(final ISource3 main, final IJoinNode3 second, final ICondition3 condition) {
         return sources(main, LJ, second, condition);
     }
 
-    protected static ISources3 lj(final ISources3 main, final ISource3 second, final ICondition3 condition) {
+    protected static IJoinNode3 lj(final IJoinNode3 main, final ISource3 second, final ICondition3 condition) {
         return sources(main, LJ, second, condition);
     }
 
-    protected static ISources3 lj(final ISource3 main, final ISource3 second, final ICondition3 condition) {
+    protected static IJoinNode3 lj(final ISource3 main, final ISource3 second, final ICondition3 condition) {
         return sources(main, LJ, second, condition);
     }
 
-    protected static ISources3 ij(final ISources3 main, final ISources3 second, final Conditions3 conditions) {
+    protected static IJoinNode3 ij(final IJoinNode3 main, final IJoinNode3 second, final Conditions3 conditions) {
         return sources(main, IJ, second, conditions);
     }
 
-    protected static ISources3 ij(final ISource3 main, final ISources3 second, final Conditions3 conditions) {
+    protected static IJoinNode3 ij(final ISource3 main, final IJoinNode3 second, final Conditions3 conditions) {
         return sources(main, IJ, second, conditions);
     }
 
-    protected static ISources3 ij(final ISources3 main, final ISource3 second, final Conditions3 conditions) {
+    protected static IJoinNode3 ij(final IJoinNode3 main, final ISource3 second, final Conditions3 conditions) {
         return sources(main, IJ, second, conditions);
     }
 
-    protected static ISources3 ij(final ISource3 main, final ISource3 second, final Conditions3 conditions) {
+    protected static IJoinNode3 ij(final ISource3 main, final ISource3 second, final Conditions3 conditions) {
         return sources(main, IJ, second, conditions);
     }
 
-    protected static ISources3 ij(final ISources3 main, final ISources3 second, final ICondition3 condition) {
+    protected static IJoinNode3 ij(final IJoinNode3 main, final IJoinNode3 second, final ICondition3 condition) {
         return sources(main, IJ, second, condition);
     }
 
-    protected static ISources3 ij(final ISource3 main, final ISources3 second, final ICondition3 condition) {
+    protected static IJoinNode3 ij(final ISource3 main, final IJoinNode3 second, final ICondition3 condition) {
         return sources(main, IJ, second, condition);
     }
 
-    protected static ISources3 ij(final ISources3 main, final ISource3 second, final ICondition3 condition) {
+    protected static IJoinNode3 ij(final IJoinNode3 main, final ISource3 second, final ICondition3 condition) {
         return sources(main, IJ, second, condition);
     }
 
-    protected static ISources3 ij(final ISource3 main, final ISource3 second, final ICondition3 condition) {
+    protected static IJoinNode3 ij(final ISource3 main, final ISource3 second, final ICondition3 condition) {
         return sources(main, IJ, second, condition);
     }
 
-    protected static ISources3 sources(final ISource3 main) {
-        return new SingleNodeSources3(main);
+    protected static IJoinNode3 sources(final ISource3 main) {
+        return new JoinLeaf3(main);
     }
 
     //    private static EntQuery3 qry(final IQrySources3 sources, final QueryCategory queryCategory, final Class<?> resultType) {
@@ -294,19 +294,19 @@ public class EqlStage3TestCase extends EqlTestCase {
     //        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(false, emptyList()), yields, groups(), orders()), queryCategory, resultType);
     //    }
 
-    protected static SubQuery3 subqry(final ISources3 sources, final Yields3 yields, final Class<?> resultType, final Type hibType) {
+    protected static SubQuery3 subqry(final IJoinNode3 sources, final Yields3 yields, final Class<?> resultType, final Type hibType) {
         return new SubQuery3(new QueryBlocks3(sources, null, yields, null, null), resultType, hibType);
     }
 
-    protected static SubQuery3 subqry(final ISources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType, final Type hibType) {
+    protected static SubQuery3 subqry(final IJoinNode3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType, final Type hibType) {
         return new SubQuery3(new QueryBlocks3(sources, conditions, yields, null, null), resultType, hibType);
     }
 
-    private static ResultQuery3 resultQry(final ISources3 sources, final Yields3 yields, final Class<?> resultType) {
+    private static ResultQuery3 resultQry(final IJoinNode3 sources, final Yields3 yields, final Class<?> resultType) {
         return new ResultQuery3(new QueryBlocks3(sources, null, yields, null, null), resultType);
     }
 
-    private static ResultQuery3 resultQry(final ISources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
+    private static ResultQuery3 resultQry(final IJoinNode3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
         return new ResultQuery3(new QueryBlocks3(sources, conditions, yields, null, null), resultType);
     }
 
@@ -314,7 +314,7 @@ public class EqlStage3TestCase extends EqlTestCase {
     //        return new EntQuery3(new EntQueryBlocks3(sources, conditions, yields, groups(), orders()), queryCategory, resultType);
     //    }
 
-    private static SourceQuery3 sourceQry(final ISources3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
+    private static SourceQuery3 sourceQry(final IJoinNode3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
         return new SourceQuery3(new QueryBlocks3(sources, conditions, yields, null, null), resultType);
     }
 
@@ -326,19 +326,19 @@ public class EqlStage3TestCase extends EqlTestCase {
     //        return qry(sources, conditions, RESULT_QUERY, resultType);
     //    }
 
-    protected static ResultQuery3 qryCountAll(final ISources3 sources, final Conditions3 conditions) {
+    protected static ResultQuery3 qryCountAll(final IJoinNode3 sources, final Conditions3 conditions) {
         return resultQry(sources, conditions, yields(yieldCountAll("KOUNT")), EntityAggregates.class);
     }
 
-    protected static ResultQuery3 qryCountAll(final ISources3 sources) {
+    protected static ResultQuery3 qryCountAll(final IJoinNode3 sources) {
         return resultQry(sources, null, yields(yieldCountAll("KOUNT")), EntityAggregates.class);
     }
 
-    protected static ResultQuery3 qry(final ISources3 sources, final Yields3 yields, final Class<?> resultType) {
+    protected static ResultQuery3 qry(final IJoinNode3 sources, final Yields3 yields, final Class<?> resultType) {
         return resultQry(sources, yields, resultType);
     }
 
-    protected static ResultQuery3 qry(final ISources3 sources, final Yields3 yields) {
+    protected static ResultQuery3 qry(final IJoinNode3 sources, final Yields3 yields) {
         return qry(sources, yields, EntityAggregates.class);
     }
 
@@ -350,7 +350,7 @@ public class EqlStage3TestCase extends EqlTestCase {
     //        return qry(sources, conditions, yields, QueryCategory.SOURCE_QUERY, resultType);
     //    }
 
-    protected static SourceQuery3 srcqry(final ISources3 sources, final Conditions3 conditions, final Yields3 yields) {
+    protected static SourceQuery3 srcqry(final IJoinNode3 sources, final Conditions3 conditions, final Yields3 yields) {
         return sourceQry(sources, conditions, yields, EntityAggregates.class);
     }
 

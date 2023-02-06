@@ -8,18 +8,18 @@ import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
-import ua.com.fielden.platform.eql.stage3.sources.ISources3;
+import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 
-public class SingleNodeSources2 implements ISources2<ISources3> {
+public class JoinLeaf2 implements IJoinNode2<IJoinNode3> {
     public final ISource2<?> source;
 
-    public SingleNodeSources2(final ISource2<?> source) {
+    public JoinLeaf2(final ISource2<?> source) {
         this.source = source;
     }
 
     @Override
-    public TransformationResult2<ISources3> transform(TransformationContext2 context) {
-        final TransformationResult2<ISources3> sourceTransformed = ISources2.transform(source, context);
+    public TransformationResult2<IJoinNode3> transform(TransformationContext2 context) {
+        final TransformationResult2<IJoinNode3> sourceTransformed = IJoinNode2.transform(source, context);
         return new TransformationResult2<>(sourceTransformed.item, sourceTransformed.updatedContext);    
     }
 
@@ -46,11 +46,11 @@ public class SingleNodeSources2 implements ISources2<ISources3> {
             return true;
         }
 
-        if (!(obj instanceof SingleNodeSources2)) {
+        if (!(obj instanceof JoinLeaf2)) {
             return false;
         }
         
-        final SingleNodeSources2 other = (SingleNodeSources2) obj;
+        final JoinLeaf2 other = (JoinLeaf2) obj;
         
         return Objects.equals(source, other.source);
     }

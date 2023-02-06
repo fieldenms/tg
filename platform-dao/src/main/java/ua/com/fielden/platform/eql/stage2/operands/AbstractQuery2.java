@@ -11,12 +11,12 @@ import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.etc.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
-import ua.com.fielden.platform.eql.stage2.sources.ISources2;
-import ua.com.fielden.platform.eql.stage3.sources.ISources3;
+import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
+import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 
 public abstract class AbstractQuery2 {
 
-    public final ISources2<? extends ISources3> sources;
+    public final IJoinNode2<? extends IJoinNode3> joinRoot;
     public final Conditions2 conditions;
     public final Yields2 yields;
     public final GroupBys2 groups;
@@ -24,7 +24,7 @@ public abstract class AbstractQuery2 {
     public final Class<?> resultType;
 
     public AbstractQuery2(final QueryBlocks2 queryBlocks, final Class<?> resultType) {
-        this.sources = queryBlocks.sources;
+        this.joinRoot = queryBlocks.joinRoot;
         this.conditions = queryBlocks.conditions;
         this.yields = queryBlocks.yields;
         this.groups = queryBlocks.groups;
@@ -34,7 +34,7 @@ public abstract class AbstractQuery2 {
 
     public Set<Prop2> collectProps() {
         final Set<Prop2> result = new HashSet<>();
-        result.addAll(sources != null ? sources.collectProps() : emptySet());
+        result.addAll(joinRoot != null ? joinRoot.collectProps() : emptySet());
         result.addAll(conditions.collectProps());
         result.addAll(yields.collectProps());
         result.addAll(groups.collectProps());
@@ -50,7 +50,7 @@ public abstract class AbstractQuery2 {
         result = prime * result + conditions.hashCode();
         result = prime * result + groups.hashCode();
         result = prime * result + ((resultType == null) ? 0 : resultType.hashCode());
-        result = prime * result + ((sources == null) ? 0 : sources.hashCode());
+        result = prime * result + ((joinRoot == null) ? 0 : joinRoot.hashCode());
         result = prime * result + yields.hashCode();
         result = prime * result + orderings.hashCode();
         return result;
@@ -69,7 +69,7 @@ public abstract class AbstractQuery2 {
         final AbstractQuery2 other = (AbstractQuery2) obj;
 
         return Objects.equals(resultType, other.resultType) &&
-                Objects.equals(sources, other.sources) &&
+                Objects.equals(joinRoot, other.joinRoot) &&
                 Objects.equals(yields, other.yields) &&
                 Objects.equals(conditions, other.conditions) &&
                 Objects.equals(groups, other.groups) &&
