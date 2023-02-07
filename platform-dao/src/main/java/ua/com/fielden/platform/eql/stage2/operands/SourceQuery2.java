@@ -1,10 +1,8 @@
 package ua.com.fielden.platform.eql.stage2.operands;
 
-import static ua.com.fielden.platform.eql.stage2.sources.IJoinNode2.transformNone;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.ITransformableToS3;
+import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage3.QueryBlocks3;

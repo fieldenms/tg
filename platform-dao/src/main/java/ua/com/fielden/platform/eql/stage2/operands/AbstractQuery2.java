@@ -7,6 +7,8 @@ import java.util.Objects;
 import java.util.Set;
 
 import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
+import ua.com.fielden.platform.eql.stage2.TransformationContext2;
+import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.etc.OrderBys2;
@@ -41,6 +43,10 @@ public abstract class AbstractQuery2 {
         result.addAll(orderings.collectProps());
         
         return result;
+    }
+    
+    protected static TransformationResult2<IJoinNode3> transformNone(final TransformationContext2 context) {
+        return new TransformationResult2<IJoinNode3>(null, context);
     }
 
     @Override
