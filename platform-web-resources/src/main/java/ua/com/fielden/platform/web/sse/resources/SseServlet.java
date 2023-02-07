@@ -86,14 +86,16 @@ public final class SseServlet extends HttpServlet {
     protected void doGet(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         final String sseIdString = Optional.ofNullable(request.getPathInfo()).filter(pi -> pi.length() > 1).map(pi -> pi.substring(1, pi.length())).orElse(NO_SSE_UID);
         if (NO_SSE_UID.equals(sseIdString)) {
-            LOGGER.warn("SSE request: missing UID.");
+            LOGGER.debug("SSE request: missing UID.");
             super.doGet(request, response);
+            return;
         }
 
         final Optional<User> maybeUser = verifyAuthenticatorAndGetUser(request);
         if (!maybeUser.isPresent()) {
-            LOGGER.warn("SSE request: no user identified, rejecting request.");
+            LOGGER.debug("SSE request: no user identified, rejecting request.");
             super.doGet(request, response);
+            return;
         }
 
         final User user = maybeUser.get();
@@ -113,11 +115,11 @@ public final class SseServlet extends HttpServlet {
                     throw new SseException("Could not create a new SSE emitter.", ex);
                 }
             }).ifFailure(Result::throwRuntime);
-            LOGGER.info(String.format("SSE subscription for client [%s, %s] completed.", user, sseIdString));
+            LOGGER.info(format("SSE subscription for client [%s, %s] completed.", user, sseIdString));
         } catch (final Exception ex) {
             LOGGER.error(ex);
             eseRegister.deregisterEmitter(user, sseIdString);
-            LOGGER.warn(String.format("SSE subscription for client [%s, %s] did not complete.", user, sseIdString), ex);
+            LOGGER.warn(format("SSE subscription for client [%s, %s] did not complete.", user, sseIdString), ex);
             throw new ServletException(ex);
         }
     }
@@ -135,17 +137,17 @@ public final class SseServlet extends HttpServlet {
         // TODO check validity of the authenticator, no need to refresh a current session
         final Optional<Authenticator> oAuth = extractAuthenticator(request);
         if (!oAuth.isPresent()) {
-            LOGGER.warn("SSE request: unauthenticated.");
+            LOGGER.debug("SSE request: unauthenticated.");
             return empty();
         }
         final Authenticator auth = oAuth.get();
         try {
             if (!auth.hash.equals(crypto.calculateRFC2104HMAC(auth.token, hashingKey))) {
-                LOGGER.warn(format("SSE request: authenticator %s cannot be verified. A tempered authenticator is suspected.", auth));
+                LOGGER.debug(format("SSE request: authenticator %s cannot be verified. A tempered authenticator is suspected.", auth));
                 return empty();
             }
         } catch (final SignatureException ex) {
-            LOGGER.warn("SSE request: provided authenticator cannot be verified. SignatureException was thrown.");
+            LOGGER.debug("SSE request: provided authenticator cannot be verified. SignatureException was thrown.");
             return empty();
         }
         
@@ -166,6 +168,9 @@ public final class SseServlet extends HttpServlet {
     }
 
     protected static Optional<Authenticator> extractAuthenticator(final HttpServletRequest request) {
+        if (request.getCookies() == null) {
+            return empty();
+        }
         // convert non-empty authenticating cookies to authenticators and get the most recent one by expiry date...
         return Stream.of(request.getCookies())
                 .filter(c -> AUTHENTICATOR_COOKIE_NAME.equals(c.getName()) && !StringUtils.isEmpty(c.getValue()))
