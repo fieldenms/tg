@@ -1,14 +1,17 @@
 package ua.com.fielden.platform.web.sse.resources;
 
+import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.security.session.Authenticator.fromString;
 import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.AUTHENTICATOR_COOKIE_NAME;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.security.SignatureException;
 import java.util.Optional;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
 import javax.servlet.AsyncContext;
@@ -22,15 +25,15 @@ import org.apache.log4j.Logger;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
+import ua.com.fielden.platform.cypher.SessionIdentifierGenerator;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.security.annotations.SessionHashingKey;
 import ua.com.fielden.platform.security.session.Authenticator;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.application.RequestInfo;
-import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.sse.EventSourceEmitter;
 import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 import ua.com.fielden.platform.web.sse.exceptions.SseException;
@@ -46,17 +49,22 @@ public final class SseServlet extends HttpServlet {
 
     
     private final IUserProvider userProvider;
-    private final IDeviceProvider deviceProvider;
-    private final IDates dates;
     private final IEventSourceEmitterRegister eseRegister;
     private final ICompanionObjectFinder coFinder;
+    private final String hashingKey;
+    private final SessionIdentifierGenerator crypto;
 
-    public SseServlet(final IEventSourceEmitterRegister eseRegister, final IDeviceProvider deviceProvider, final IDates dates, final IUserProvider userProvider, final ICompanionObjectFinder coFinder) {
+    public SseServlet(
+            final IEventSourceEmitterRegister eseRegister,
+            final IUserProvider userProvider,
+            final ICompanionObjectFinder coFinder,
+            final @SessionHashingKey String hashingKey,
+            final SessionIdentifierGenerator crypto) {
         this.eseRegister = eseRegister;
-        this.deviceProvider = deviceProvider;
-        this.dates = dates;
         this.userProvider = userProvider;
         this.coFinder = coFinder;
+        this.hashingKey = hashingKey;
+        this.crypto = crypto;
     }
 
     @Override
@@ -74,25 +82,20 @@ public final class SseServlet extends HttpServlet {
                 .max((auth1, auth2) -> Long.compare(auth1.version, auth2.version));
     }
 
-    
-    protected void doGet(final HttpServletRequest request, final HttpServletResponse response)
-            throws ServletException, IOException {
-
-        //        final ServletOutputStream out = response.getOutputStream();
-
+    protected void doGet(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         final String sseIdString = Optional.ofNullable(request.getPathInfo()).filter(pi -> pi.length() > 1).map(pi -> pi.substring(1, pi.length())).orElse(NO_SSE_UID);
         if (NO_SSE_UID.equals(sseIdString)) {
-            throw new ServletException("No SSE UID was provided.");
+            LOGGER.warn("SSE request: missing UID.");
+            super.doGet(request, response);
         }
-        
-        final Optional<Authenticator> oAuth = extractAuthenticator(request);
-        if (!oAuth.isPresent()) {
-            throw new ServletException("Unauthenticated SSE request.");
+
+        final Optional<User> maybeUser = verifyAuthenticatorAndGetUser(request);
+        if (!maybeUser.isPresent()) {
+            LOGGER.warn("SSE request: no user identified, rejecting request.");
+            super.doGet(request, response);
         }
-        // TODO check validity of the authenticator, no need to refresh a current session
-        
-        final IUser coUser = coFinder.find(User.class, true);
-        final User user = userProvider.setUsername(oAuth.get().username, coUser).getUser();
+
+        final User user = maybeUser.get();
         // any errors that may occur during subscription or a normal lifecycle after, should result in deregistering and closing of the emitter, created during this request
         try {
             eseRegister.registerEmitter(user, sseIdString, () -> {
@@ -116,6 +119,38 @@ public final class SseServlet extends HttpServlet {
             LOGGER.warn(String.format("SSE subscription for client [%s, %s] did not complete.", user, sseIdString), ex);
             throw new ServletException(ex);
         }
+    }
+
+    /**
+     * Obtains and verifies authenticator from the request, and returns a corresponding user if successful.
+     *
+     * @param request
+     * @param response
+     * @return
+     * @throws ServletException
+     * @throws IOException
+     */
+    private Optional<User> verifyAuthenticatorAndGetUser(final HttpServletRequest request) {
+        // TODO check validity of the authenticator, no need to refresh a current session
+        final Optional<Authenticator> oAuth = extractAuthenticator(request);
+        if (!oAuth.isPresent()) {
+            LOGGER.warn("SSE request: unauthenticated.");
+            return empty();
+        }
+        final Authenticator auth = oAuth.get();
+        try {
+            if (!auth.hash.equals(crypto.calculateRFC2104HMAC(auth.token, hashingKey))) {
+                LOGGER.warn(format("SSE request: authenticator %s cannot be verified. A tempered authenticator is suspected.", auth));
+                return empty();
+            }
+        } catch (final SignatureException ex) {
+            LOGGER.warn("SSE request: provided authenticator cannot be verified. SignatureException was thrown.");
+            return empty();
+        }
+        
+        final IUser coUser = coFinder.find(User.class, true);
+        final User user = userProvider.setUsername(auth.username, coUser).getUser();
+        return user != null && user.isActive() ? of(user) : empty();
     }
 
     protected void makeHandshake(final HttpServletResponse response) throws IOException {
