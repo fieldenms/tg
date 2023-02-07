@@ -18,8 +18,6 @@ import javax.servlet.ServletOutputStream;
 
 import org.apache.log4j.Logger;
 
-import ua.com.fielden.platform.web.application.RequestInfo;
-
 /**
  * Event source emitter represents a connection to a web client for pushing SSE events to that client. It other words, this is just a pipe through which all SSE messages get sent
  * to a web client, and which has no knowledge as to what kind of messages are sent or what event sources have produced them.

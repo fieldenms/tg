@@ -33,9 +33,9 @@ import ua.com.fielden.platform.security.session.Authenticator;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
-import ua.com.fielden.platform.web.application.RequestInfo;
 import ua.com.fielden.platform.web.sse.EventSourceEmitter;
 import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
+import ua.com.fielden.platform.web.sse.RequestInfo;
 import ua.com.fielden.platform.web.sse.exceptions.SseException;
 
 /**
