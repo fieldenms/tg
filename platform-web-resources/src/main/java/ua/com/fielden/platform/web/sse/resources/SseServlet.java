@@ -6,6 +6,8 @@ import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.AUTH
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.Optional;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Stream;
 
@@ -17,6 +19,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.error.Result;
@@ -35,8 +39,12 @@ public final class SseServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
     private static final String NO_SSE_UID = "no SSE UID";
-    private static final Logger logger = Logger.getLogger(SseServlet.class);
+    private static final Logger LOGGER = Logger.getLogger(SseServlet.class);
 
+    private static final ScheduledExecutorService HEARTBEAT_SCHEDULER = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("SSE-heartbeat-%d").build());
+    private static final int HEARTBEAT_FREQUENCY_IN_SECONDS = 10;
+
+    
     private final IUserProvider userProvider;
     private final IDeviceProvider deviceProvider;
     private final IDates dates;
@@ -51,6 +59,13 @@ public final class SseServlet extends HttpServlet {
         this.coFinder = coFinder;
     }
 
+    @Override
+    public void destroy() {
+        LOGGER.info("Shutting down SSE service...");
+        HEARTBEAT_SCHEDULER.shutdown();
+        super.destroy();
+    }
+    
     public static Optional<Authenticator> extractAuthenticator(final HttpServletRequest request) {
         // convert non-empty authenticating cookies to authenticators and get the most recent one by expiry date...
         return Stream.of(request.getCookies())
@@ -80,7 +95,6 @@ public final class SseServlet extends HttpServlet {
         final User user = userProvider.setUsername(oAuth.get().username, coUser).getUser();
         // any errors that may occur during subscription or a normal lifecycle after, should result in deregistering and closing of the emitter, created during this request
         try {
-            final AtomicBoolean shouldKeepGoing = new AtomicBoolean(true); // TODO needs to be removed as not really needed with the non-blocking approach
             eseRegister.registerEmitter(user, sseIdString, () -> {
                 try {
                     makeHandshake(response);
@@ -90,16 +104,16 @@ public final class SseServlet extends HttpServlet {
                     // but only completed on close
                     async.setTimeout(0);
 
-                    return new EventSourceEmitter(shouldKeepGoing, async, new RequestInfo(request), () -> eseRegister.deregisterEmitter(user, sseIdString) /* event source close callback */);
+                    return new EventSourceEmitter(async, new RequestInfo(request), HEARTBEAT_SCHEDULER, HEARTBEAT_FREQUENCY_IN_SECONDS, () -> eseRegister.deregisterEmitter(user, sseIdString) /* event source close callback */);
                 } catch (final IOException ex) {
                     throw new SseException("Could not create a new SSE emitter.", ex);
                 }
             }).ifFailure(Result::throwRuntime);
-            logger.info(String.format("SSE subscription for client [%s, %s] completed.", user, sseIdString));
+            LOGGER.info(String.format("SSE subscription for client [%s, %s] completed.", user, sseIdString));
         } catch (final Exception ex) {
-            logger.error(ex);
+            LOGGER.error(ex);
             eseRegister.deregisterEmitter(user, sseIdString);
-            logger.warn(String.format("SSE subscription for client [%s, %s] did not complete.", user, sseIdString), ex);
+            LOGGER.warn(String.format("SSE subscription for client [%s, %s] did not complete.", user, sseIdString), ex);
             throw new ServletException(ex);
         }
     }
