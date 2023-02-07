@@ -22,6 +22,8 @@ import javax.servlet.http.HttpServletResponse;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.eclipse.jetty.servlet.ServletHandler;
+import org.eclipse.jetty.servlet.ServletHolder;
 
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 
@@ -40,7 +42,10 @@ import ua.com.fielden.platform.web.sse.exceptions.SseException;
 
 /**
  * A Servlet that implements support for non-blocking async Server-Sent Eventing.
- * 
+ * <p>
+ * TG-based applications should use factory method {@link #addSseServlet(ServletHandler, IEventSourceEmitterRegister, IUserProvider, ICompanionObjectFinder, String, SessionIdentifierGenerator)}
+ * to create and add an SSE servlet to {@link ServletHandler}.
+ *
  * @author TG Team
  *
  */
@@ -53,14 +58,39 @@ public final class SseServlet extends HttpServlet {
     private static final ScheduledExecutorService HEARTBEAT_SCHEDULER = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("SSE-heartbeat-%d").build());
     private static final int HEARTBEAT_FREQUENCY_IN_SECONDS = 10;
 
-    
     private final IUserProvider userProvider;
     private final IEventSourceEmitterRegister eseRegister;
     private final ICompanionObjectFinder coFinder;
     private final String hashingKey;
     private final SessionIdentifierGenerator crypto;
 
-    public SseServlet(
+    /**
+     * A factory method for instantiating and adding SSE servlet to {@code handler}.
+     *
+     * @param handler
+     * @param eseRegister
+     * @param userProvider
+     * @param coFinder
+     * @param hashingKey
+     * @param crypto
+     */
+    public static void addSseServlet(
+            final ServletHandler handler,
+            final IEventSourceEmitterRegister eseRegister,
+            final IUserProvider userProvider,
+            final ICompanionObjectFinder coFinder,
+            final @SessionHashingKey String hashingKey,
+            final SessionIdentifierGenerator crypto) {
+        // instantiate this servlet
+        final SseServlet sseServlet = new SseServlet(eseRegister, userProvider, coFinder, hashingKey, crypto);
+        // need to configure a servlet holder with async support
+        final ServletHolder servletHolder = new ServletHolder(sseServlet);
+        servletHolder.setAsyncSupported(true);
+        // let's now bind the servlet to the default SSE path
+        handler.addServletWithMapping(servletHolder, "/sse/*");
+    }
+    
+    private SseServlet(
             final IEventSourceEmitterRegister eseRegister,
             final IUserProvider userProvider,
             final ICompanionObjectFinder coFinder,
