@@ -38,6 +38,12 @@ import ua.com.fielden.platform.web.sse.EventSourceEmitter;
 import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 import ua.com.fielden.platform.web.sse.exceptions.SseException;
 
+/**
+ * A Servlet that implements support for non-blocking async Server-Sent Eventing.
+ * 
+ * @author TG Team
+ *
+ */
 public final class SseServlet extends HttpServlet {
     private static final long serialVersionUID = 1L;
 
@@ -73,15 +79,10 @@ public final class SseServlet extends HttpServlet {
         HEARTBEAT_SCHEDULER.shutdown();
         super.destroy();
     }
-    
-    public static Optional<Authenticator> extractAuthenticator(final HttpServletRequest request) {
-        // convert non-empty authenticating cookies to authenticators and get the most recent one by expiry date...
-        return Stream.of(request.getCookies())
-                .filter(c -> AUTHENTICATOR_COOKIE_NAME.equals(c.getName()) && !StringUtils.isEmpty(c.getValue()))
-                .map(c -> fromString(c.getValue()))
-                .max((auth1, auth2) -> Long.compare(auth1.version, auth2.version));
-    }
 
+    /**
+     * Responsible for processing requests for establishing SSE communication channels.
+     */
     protected void doGet(final HttpServletRequest request, final HttpServletResponse response) throws ServletException, IOException {
         final String sseIdString = Optional.ofNullable(request.getPathInfo()).filter(pi -> pi.length() > 1).map(pi -> pi.substring(1, pi.length())).orElse(NO_SSE_UID);
         if (NO_SSE_UID.equals(sseIdString)) {
@@ -162,6 +163,14 @@ public final class SseServlet extends HttpServlet {
         // to send data in the text/event-stream protocol
         response.addHeader("Connection", "close");
         response.flushBuffer();
+    }
+
+    protected static Optional<Authenticator> extractAuthenticator(final HttpServletRequest request) {
+        // convert non-empty authenticating cookies to authenticators and get the most recent one by expiry date...
+        return Stream.of(request.getCookies())
+                .filter(c -> AUTHENTICATOR_COOKIE_NAME.equals(c.getName()) && !StringUtils.isEmpty(c.getValue()))
+                .map(c -> fromString(c.getValue()))
+                .max((auth1, auth2) -> Long.compare(auth1.version, auth2.version));
     }
 
 }
