@@ -134,7 +134,6 @@ public final class SseServlet extends HttpServlet {
      * @throws IOException
      */
     private Optional<User> verifyAuthenticatorAndGetUser(final HttpServletRequest request) {
-        // TODO check validity of the authenticator, no need to refresh a current session
         final Optional<Authenticator> oAuth = extractAuthenticator(request);
         if (!oAuth.isPresent()) {
             LOGGER.debug("SSE request: unauthenticated.");
@@ -156,6 +155,13 @@ public final class SseServlet extends HttpServlet {
         return user != null && user.isActive() ? of(user) : empty();
     }
 
+    /**
+     * Adjusts {@code response} to be suitable for SSE communication.
+     * This effectively completes the server-end part of the handshake to establish an SSE connection.
+     *
+     * @param response
+     * @throws IOException
+     */
     protected void makeHandshake(final HttpServletResponse response) throws IOException {
         response.setStatus(HttpServletResponse.SC_OK);
         response.setCharacterEncoding(StandardCharsets.UTF_8.name());
@@ -168,6 +174,7 @@ public final class SseServlet extends HttpServlet {
     }
 
     protected static Optional<Authenticator> extractAuthenticator(final HttpServletRequest request) {
+        // If request has not cookies, getCookies() returns null instead of an empty array.
         if (request.getCookies() == null) {
             return empty();
         }
