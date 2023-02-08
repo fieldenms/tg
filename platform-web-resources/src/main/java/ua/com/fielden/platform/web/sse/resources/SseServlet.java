@@ -58,7 +58,6 @@ public final class SseServlet extends HttpServlet {
     private static final ScheduledExecutorService HEARTBEAT_SCHEDULER = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("SSE-heartbeat-%d").build());
     private static final int HEARTBEAT_FREQUENCY_IN_SECONDS = 10;
 
-    private final IUserProvider userProvider;
     private final IEventSourceEmitterRegister eseRegister;
     private final ICompanionObjectFinder coFinder;
     private final String hashingKey;
@@ -69,7 +68,6 @@ public final class SseServlet extends HttpServlet {
      *
      * @param handler
      * @param eseRegister
-     * @param userProvider
      * @param coFinder
      * @param hashingKey
      * @param crypto
@@ -77,12 +75,11 @@ public final class SseServlet extends HttpServlet {
     public static void addSseServlet(
             final ServletHandler handler,
             final IEventSourceEmitterRegister eseRegister,
-            final IUserProvider userProvider,
             final ICompanionObjectFinder coFinder,
             final @SessionHashingKey String hashingKey,
             final SessionIdentifierGenerator crypto) {
         // instantiate this servlet
-        final SseServlet sseServlet = new SseServlet(eseRegister, userProvider, coFinder, hashingKey, crypto);
+        final SseServlet sseServlet = new SseServlet(eseRegister, coFinder, hashingKey, crypto);
         // need to configure a servlet holder with async support
         final ServletHolder servletHolder = new ServletHolder(sseServlet);
         servletHolder.setAsyncSupported(true);
@@ -92,12 +89,10 @@ public final class SseServlet extends HttpServlet {
     
     private SseServlet(
             final IEventSourceEmitterRegister eseRegister,
-            final IUserProvider userProvider,
             final ICompanionObjectFinder coFinder,
             final @SessionHashingKey String hashingKey,
             final SessionIdentifierGenerator crypto) {
         this.eseRegister = eseRegister;
-        this.userProvider = userProvider;
         this.coFinder = coFinder;
         this.hashingKey = hashingKey;
         this.crypto = crypto;
@@ -181,7 +176,7 @@ public final class SseServlet extends HttpServlet {
         }
         
         final IUser coUser = coFinder.find(User.class, true);
-        final User user = userProvider.setUsername(auth.username, coUser).getUser();
+        final User user = coUser.findUser(auth.username);
         return user != null && user.isActive() ? of(user) : empty();
     }
 
