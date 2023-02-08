@@ -32,7 +32,7 @@ public class TgReVehicleModel extends TgVehicleModel {
     @IsProperty
     @Title("Extra prop")
     private Integer intProp;
-
+    
     @IsProperty
     @Title("Not yielded prop")
     private Integer noYieldIntProp;
