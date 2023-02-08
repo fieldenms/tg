@@ -1,10 +1,10 @@
 package ua.com.fielden.platform.eql.stage3.operands;
 
-import ua.com.fielden.platform.eql.stage3.QueryBlocks3;
+import ua.com.fielden.platform.eql.stage3.QueryComponents3;
 
 public class TypelessSubQuery3 extends AbstractQuery3 {
     
-    public TypelessSubQuery3(final QueryBlocks3 queryBlocks) {
+    public TypelessSubQuery3(final QueryComponents3 queryBlocks) {
         super(queryBlocks, null);
     }
 

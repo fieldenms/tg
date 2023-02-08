@@ -24,14 +24,14 @@ import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.UnionTypePropInfo;
 import ua.com.fielden.platform.eql.stage1.PropResolution;
-import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
+import ua.com.fielden.platform.eql.stage1.QueryComponents1;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.etc.GroupBys1;
 import ua.com.fielden.platform.eql.stage1.etc.OrderBys1;
 import ua.com.fielden.platform.eql.stage1.etc.Yields1;
 import ua.com.fielden.platform.eql.stage1.sources.IJoinNode1;
-import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
+import ua.com.fielden.platform.eql.stage2.QueryComponents2;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.etc.GroupBy2;
 import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
@@ -56,7 +56,7 @@ public abstract class AbstractQuery1 {
     public final Class<? extends AbstractEntity<?>> resultType;
     public final boolean yieldAll;
 
-    public AbstractQuery1(final QueryBlocks1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType) {
+    public AbstractQuery1(final QueryComponents1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType) {
         this.joinRoot = queryBlocks.joinRoot;
         this.conditions = queryBlocks.conditions;
         this.udfConditions = queryBlocks.udfConditions;
@@ -67,8 +67,8 @@ public abstract class AbstractQuery1 {
         this.yieldAll = queryBlocks.yieldAll;
     }
 
-    public QueryBlocks2 transformSourceless(final TransformationContext1 context) {
-        return new QueryBlocks2(null, conditions.transform(context), yields.transform(context), groups.transform(context), orderings.transform(context));
+    public QueryComponents2 transformSourceless(final TransformationContext1 context) {
+        return new QueryComponents2(null, conditions.transform(context), yields.transform(context), groups.transform(context), orderings.transform(context));
     }
     
     protected Conditions2 enhanceWithUserDataFilterConditions(final ISource2<? extends ISource3> mainSource, final EqlDomainMetadata domainMetadata, final Conditions2 originalConditions) { 

@@ -29,7 +29,7 @@ import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.Prop1;
-import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
+import ua.com.fielden.platform.eql.stage2.QueryComponents2;
 import ua.com.fielden.platform.eql.stage2.conditions.ComparisonTest2;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.conditions.ExistenceTest2;
@@ -58,7 +58,7 @@ import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 import ua.com.fielden.platform.types.tuples.T2;
 
-public class EqlStage2TestCase extends EqlTestCase {
+public abstract class EqlStage2TestCase extends EqlTestCase {
 
     protected static AbstractPropInfo<?> pi(final Class<?> type, final String propName) {
         return DOMAIN_METADATA.eqlDomainMetadata.getEntityInfo((Class<? extends AbstractEntity<?>>) type).getProps().get(propName);
@@ -115,12 +115,12 @@ public class EqlStage2TestCase extends EqlTestCase {
         return qb().generateAsResultQuery(qry, null, null).transform(context);
     }
 
-    protected static QueryBlocks2 qb2(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions, final Yields2 yields) {
-        return new QueryBlocks2(sources, conditions, yields, emptyGroupBys, emptyOrderBys);
+    protected static QueryComponents2 qc2(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions, final Yields2 yields) {
+        return new QueryComponents2(sources, conditions, yields, emptyGroupBys, emptyOrderBys);
     }
 
-    protected static QueryBlocks2 qb2(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions, final Yields2 yields, final OrderBys2 orderBys) {
-        return new QueryBlocks2(sources, conditions, yields, emptyGroupBys, orderBys);
+    protected static QueryComponents2 qc2(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions, final Yields2 yields, final OrderBys2 orderBys) {
+        return new QueryComponents2(sources, conditions, yields, emptyGroupBys, orderBys);
     }
 
     protected static Yields2 mkYields(final Yield2... yields) {
@@ -265,46 +265,46 @@ public class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static ResultQuery2 qryCountAll(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions) {
-        return new ResultQuery2(qb2(sources, conditions, mkYields(yieldCountAll("KOUNT"))), EntityAggregates.class);
+        return new ResultQuery2(qc2(sources, conditions, mkYields(yieldCountAll("KOUNT"))), EntityAggregates.class);
     }
 
     protected static ResultQuery2 qry(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions, final Yields2 yields) {
-        return new ResultQuery2(qb2(sources, conditions, yields), EntityAggregates.class);
+        return new ResultQuery2(qc2(sources, conditions, yields), EntityAggregates.class);
     }
 
     protected static SourceQuery2 srcqry(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions, final Yields2 yields) {
-        return new SourceQuery2(qb2(sources, conditions, yields), EntityAggregates.class);
+        return new SourceQuery2(qc2(sources, conditions, yields), EntityAggregates.class);
     }
 
     protected static SourceQuery2 srcqry(final IJoinNode2<? extends IJoinNode3> sources, final Yields2 yields) {
-        return new SourceQuery2(qb2(sources, emptyConditions, yields), EntityAggregates.class);
+        return new SourceQuery2(qc2(sources, emptyConditions, yields), EntityAggregates.class);
     }
 
     protected static ResultQuery2 qry(final IJoinNode2<? extends IJoinNode3> sources, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType) {
-        return new ResultQuery2(qb2(sources, emptyConditions, yields), resultType);
+        return new ResultQuery2(qc2(sources, emptyConditions, yields), resultType);
     }
 
     protected static ResultQuery2 qry(final IJoinNode2<? extends IJoinNode3> sources, final Yields2 yields, final OrderBys2 orderBys, final Class<? extends AbstractEntity<?>> resultType) {
-        return new ResultQuery2(qb2(sources, emptyConditions, yields, orderBys), resultType);
+        return new ResultQuery2(qc2(sources, emptyConditions, yields, orderBys), resultType);
     }
 
     protected static ResultQuery2 qry(final IJoinNode2<? extends IJoinNode3> sources, final Yields2 yields) {
-        return new ResultQuery2(qb2(sources, emptyConditions, yields), EntityAggregates.class);
+        return new ResultQuery2(qc2(sources, emptyConditions, yields), EntityAggregates.class);
     }
 
     protected static ResultQuery2 qryCountAll(final IJoinNode2<? extends IJoinNode3> sources) {
-        return new ResultQuery2(qb2(sources, emptyConditions, mkYields(yieldCountAll("KOUNT"))), EntityAggregates.class);
+        return new ResultQuery2(qc2(sources, emptyConditions, mkYields(yieldCountAll("KOUNT"))), EntityAggregates.class);
     }
 
     protected static SubQuery2 subqry(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType, final Object hibType) {
-        return new SubQuery2(qb2(sources, conditions, yields), resultType, hibType);
+        return new SubQuery2(qc2(sources, conditions, yields), resultType, hibType);
     }
 
     protected static TypelessSubQuery2 typelessSubqry(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions) {
-        return new TypelessSubQuery2(new QueryBlocks2(sources, conditions, nullYields, emptyGroupBys, emptyOrderBys));
+        return new TypelessSubQuery2(new QueryComponents2(sources, conditions, nullYields, emptyGroupBys, emptyOrderBys));
     }
 
     protected static SubQuery2 subqry(final IJoinNode2<? extends IJoinNode3> sources, final Yields2 yields, final Class<?> resultType, final Object hibType) {
-        return new SubQuery2(qb2(sources, emptyConditions, yields), resultType, hibType);
+        return new SubQuery2(qc2(sources, emptyConditions, yields), resultType, hibType);
     }
 }

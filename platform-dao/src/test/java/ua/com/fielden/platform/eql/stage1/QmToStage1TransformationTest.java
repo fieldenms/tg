@@ -21,7 +21,7 @@ public class QmToStage1TransformationTest extends EqlStage1TestCase {
         
         final IJoinNode1<? extends IJoinNode2<?>> sources1 = sources(MODEL);
         final Conditions1 conditions1 = conditions(isNotNull(prop("make.key")));
-        final QueryBlocks1 parts1 = qb1(sources1, conditions1);
+        final QueryComponents1 parts1 = qc1(sources1, conditions1);
         final ResultQuery1 expQry1 = new ResultQuery1(parts1, MODEL, null);
 
         assertEquals(expQry1, resultQry(qry));
@@ -33,7 +33,7 @@ public class QmToStage1TransformationTest extends EqlStage1TestCase {
         
         final IJoinNode1<? extends IJoinNode2<?>> sources1 = sources(MODEL);
         final Conditions1 conditions1 = conditions(isNotNull(prop("make")));
-        final QueryBlocks1 parts1 = qb1(sources1, conditions1);
+        final QueryComponents1 parts1 = qc1(sources1, conditions1);
         final ResultQuery1 expQry1 = new ResultQuery1(parts1, MODEL, null);
 
         assertEquals(expQry1, resultQry(qry));

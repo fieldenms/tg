@@ -20,7 +20,7 @@ import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.entity.query.model.QueryModel;
 import ua.com.fielden.platform.eql.retrieval.QueryNowValue;
-import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
+import ua.com.fielden.platform.eql.stage1.QueryComponents1;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.etc.OrderBys1;
 import ua.com.fielden.platform.eql.stage1.operands.ResultQuery1;
@@ -76,7 +76,7 @@ public class EntQueryGenerator {
         return new TypelessSubQuery1(parseTokensIntoComponents(qryModel, null));
     }
 
-    private QueryBlocks1 parseTokensIntoComponents(final QueryModel<?> qryModel, final OrderingModel orderModel) {
+    private QueryComponents1 parseTokensIntoComponents(final QueryModel<?> qryModel, final OrderingModel orderModel) {
         final QrySourcesBuilder from = new QrySourcesBuilder(this);
         final ConditionsBuilder where = new ConditionsBuilder(null, this);
         final QryYieldsBuilder select = new QryYieldsBuilder(this);
@@ -115,7 +115,7 @@ public class EntQueryGenerator {
         final IJoinNode1<? extends IJoinNode2<?>> fromModel = from.getModel();
         final Conditions1 udfModel = fromModel == null ? emptyConditions : generateUserDataFilteringCondition(qryModel.isFilterable(), filter, username, fromModel.mainSource());
 
-        return new QueryBlocks1(fromModel, where.getModel(), udfModel, select.getModel(), groupBy.getModel(), produceOrderBys(orderModel), qryModel.isYieldAll());
+        return new QueryComponents1(fromModel, where.getModel(), udfModel, select.getModel(), groupBy.getModel(), produceOrderBys(orderModel), qryModel.isYieldAll());
     }
     
     private Conditions1 generateUserDataFilteringCondition(final boolean filterable, final IFilter filter, final String username, final ISource1<?> mainSource) {

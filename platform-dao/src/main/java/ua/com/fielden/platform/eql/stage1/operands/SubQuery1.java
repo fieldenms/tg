@@ -6,10 +6,10 @@ import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import org.hibernate.type.LongType;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
+import ua.com.fielden.platform.eql.stage1.QueryComponents1;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.TransformationResult1;
-import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
+import ua.com.fielden.platform.eql.stage2.QueryComponents2;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.etc.OrderBys2;
@@ -24,7 +24,7 @@ import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 
 public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuery2> {
 
-    public SubQuery1(final QueryBlocks1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType) {
+    public SubQuery1(final QueryComponents1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType) {
         super(queryBlocks, resultType);
     }
 
@@ -33,7 +33,7 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
         final TransformationContext1 localContext = context;
         
         if (joinRoot == null) {
-            final QueryBlocks2 qb = transformSourceless(localContext);
+            final QueryComponents2 qb = transformSourceless(localContext);
             return new SubQuery2(qb, enhance(null, qb.yields),  qb.yields.getYields().iterator().next().operand.hibType());
         }
 
@@ -45,7 +45,7 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
         final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());
         final Yields2 enhancedYields2 = enhanceYields(yields2, joinRoot2);
-        final QueryBlocks2 entQueryBlocks = new QueryBlocks2(joinRoot2, conditions2, enhancedYields2, groups2, orderings2);
+        final QueryComponents2 entQueryBlocks = new QueryComponents2(joinRoot2, conditions2, enhancedYields2, groups2, orderings2);
         final Object hibType = resultType == null ? enhancedYields2.getYields().iterator().next().operand.hibType() : LongType.INSTANCE;
         return new SubQuery2(entQueryBlocks, enhance(resultType, enhancedYields2), hibType);
     }

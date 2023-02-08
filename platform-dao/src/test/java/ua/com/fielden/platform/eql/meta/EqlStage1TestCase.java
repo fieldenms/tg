@@ -16,7 +16,7 @@ import java.util.Map;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
+import ua.com.fielden.platform.eql.stage1.QueryComponents1;
 import ua.com.fielden.platform.eql.stage1.conditions.ComparisonTest1;
 import ua.com.fielden.platform.eql.stage1.conditions.CompoundCondition1;
 import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
@@ -36,7 +36,7 @@ import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 
-public class EqlStage1TestCase extends EqlTestCase {
+public abstract class EqlStage1TestCase extends EqlTestCase {
 
     static int sourceId = 0;
     
@@ -61,12 +61,12 @@ public class EqlStage1TestCase extends EqlTestCase {
         return qb().generateAsResultQuery(qry, null, null);
     }
     
-    protected static QueryBlocks1 qb1(final IJoinNode1<? extends IJoinNode2<?>> sources, final Conditions1 conditions) {
-        return new QueryBlocks1(sources, conditions, emptyConditions, emptyYields, emptyGroupBys, emptyOrderBys, false);
+    protected static QueryComponents1 qc1(final IJoinNode1<? extends IJoinNode2<?>> sources, final Conditions1 conditions) {
+        return new QueryComponents1(sources, conditions, emptyConditions, emptyYields, emptyGroupBys, emptyOrderBys, false);
     }
 
-    protected static QueryBlocks1 qb1(final IJoinNode1<? extends IJoinNode2<?>> sources, final Conditions1 conditions, final Yields1 yields) {
-        return new QueryBlocks1(sources, conditions, emptyConditions, yields, emptyGroupBys, emptyOrderBys, false);
+    protected static QueryComponents1 qc1(final IJoinNode1<? extends IJoinNode2<?>> sources, final Conditions1 conditions, final Yields1 yields) {
+        return new QueryComponents1(sources, conditions, emptyConditions, yields, emptyGroupBys, emptyOrderBys, false);
     }
 
     protected static Yields1 yields(final Yield1 ... yields) {

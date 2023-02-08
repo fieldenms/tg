@@ -5,7 +5,7 @@ import static ua.com.fielden.platform.entity.query.DbVersion.ORACLE;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.eql.stage3.QueryBlocks3;
+import ua.com.fielden.platform.eql.stage3.QueryComponents3;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.etc.GroupBys3;
 import ua.com.fielden.platform.eql.stage3.etc.OrderBys3;
@@ -21,7 +21,7 @@ public abstract class AbstractQuery3 {
     public final OrderBys3 orderings;
     public final Class<?> resultType;
 
-    public AbstractQuery3(final QueryBlocks3 queryBlocks, final Class<?> resultType) {
+    public AbstractQuery3(final QueryComponents3 queryBlocks, final Class<?> resultType) {
         this.joinRoot = queryBlocks.joinRoot;
         this.conditions = queryBlocks.conditions;
         this.yields = queryBlocks.yields;

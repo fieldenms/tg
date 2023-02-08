@@ -6,7 +6,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
+import ua.com.fielden.platform.eql.stage2.QueryComponents2;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
@@ -25,7 +25,7 @@ public abstract class AbstractQuery2 {
     public final OrderBys2 orderings;
     public final Class<?> resultType;
 
-    public AbstractQuery2(final QueryBlocks2 queryBlocks, final Class<?> resultType) {
+    public AbstractQuery2(final QueryComponents2 queryBlocks, final Class<?> resultType) {
         this.joinRoot = queryBlocks.joinRoot;
         this.conditions = queryBlocks.conditions;
         this.yields = queryBlocks.yields;

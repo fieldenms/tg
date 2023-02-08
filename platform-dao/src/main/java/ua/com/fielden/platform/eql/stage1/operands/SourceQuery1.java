@@ -13,10 +13,10 @@ import java.util.Map.Entry;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.stage1.ITransformableToS2;
-import ua.com.fielden.platform.eql.stage1.QueryBlocks1;
+import ua.com.fielden.platform.eql.stage1.QueryComponents1;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.TransformationResult1;
-import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
+import ua.com.fielden.platform.eql.stage2.QueryComponents2;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.etc.OrderBys2;
@@ -36,7 +36,7 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
      */
     public final boolean isCorrelated;
 
-    public SourceQuery1(final QueryBlocks1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType, final boolean isCorrelated) {
+    public SourceQuery1(final QueryComponents1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType, final boolean isCorrelated) {
         super(queryBlocks, requireNonNull(resultType));
         this.isCorrelated = isCorrelated;
     }
@@ -57,7 +57,7 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
         final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());
         final Yields2 enhancedYields2 = expand(enhanceYields(yields2, joinRoot2.mainSource(), context.shouldIncludeCalcProps));
-        final QueryBlocks2 entQueryBlocks = new QueryBlocks2(joinRoot2, conditions2, enhancedYields2, groups2, orderings2);
+        final QueryComponents2 entQueryBlocks = new QueryComponents2(joinRoot2, conditions2, enhancedYields2, groups2, orderings2);
         return new SourceQuery2(entQueryBlocks, resultType);
     }
 
