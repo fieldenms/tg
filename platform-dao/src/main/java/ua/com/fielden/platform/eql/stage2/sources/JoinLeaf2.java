@@ -6,7 +6,6 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperat
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -36,9 +35,7 @@ public class JoinLeaf2 implements IJoinNode2<IJoinNode3> {
 
     @Override
     public Set<Prop2> collectProps() {
-        final Set<Prop2> result = new HashSet<>(); 
-        result.addAll(source.collectProps());
-        return result;
+        return source.collectProps();
     }
     
     @Override

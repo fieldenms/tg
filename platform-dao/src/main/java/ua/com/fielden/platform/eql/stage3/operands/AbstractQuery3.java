@@ -22,7 +22,7 @@ public abstract class AbstractQuery3 {
     public final Class<?> resultType;
 
     public AbstractQuery3(final QueryBlocks3 queryBlocks, final Class<?> resultType) {
-        this.joinRoot = queryBlocks.sources;
+        this.joinRoot = queryBlocks.joinRoot;
         this.conditions = queryBlocks.conditions;
         this.yields = queryBlocks.yields;
         this.groups = queryBlocks.groups;
