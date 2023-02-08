@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.processors.verify.verifiers;
 
 import java.lang.annotation.Annotation;
-import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,18 +44,17 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
 
     static final Class<KeyType> AT_KEY_TYPE_CLASS = KeyType.class;
 
-    private final List<AbstractComposableVerifierPart> verifiers = List.of(
-            new KeyTypePresence(),
-            new KeyTypeValueMatchesAbstractEntityTypeArgument(),
-            new ChildKeyTypeMatchesParentKeyType(),
-            new DeclaredKeyPropertyTypeMatchesAtKeyTypeValue());
-
     public KeyTypeVerifier(final ProcessingEnvironment procEnv) {
         super(procEnv);
     }
 
-    public Collection<AbstractComposableVerifierPart> verifierParts() {
-        return this.verifiers;
+    @Override
+    protected List<AbstractVerifier> createComponents(final ProcessingEnvironment procEnv) {
+        return List.of(
+                new KeyTypePresence(procEnv),
+                new KeyTypeValueMatchesAbstractEntityTypeArgument(procEnv),
+                new ChildKeyTypeMatchesParentKeyType(procEnv),
+                new DeclaredKeyPropertyTypeMatchesAtKeyTypeValue(procEnv));
     }
 
     /**
@@ -65,9 +63,14 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
      * 
      * @author TG Team
      */
-    class KeyTypePresence extends AbstractComposableVerifierPart {
+    class KeyTypePresence extends AbstractVerifier {
+
         static final String ENTITY_DEFINITION_IS_MISSING_KEY_TYPE = "Entity definition is missing @%s.".formatted(
                 AT_KEY_TYPE_CLASS.getSimpleName());
+
+        protected KeyTypePresence(ProcessingEnvironment processingEnv) {
+            super(processingEnv);
+        }
 
         public boolean verify(final RoundEnvironment roundEnv) {
             final List<EntityElement> entitiesMissingKeyType = roundEnv.getRootElements().stream()
@@ -95,7 +98,7 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
      * The type of key as defined by {@link KeyType} must match the one specified as the type argument to the direct supertype, 
      * if it is a member of the {@link AbstractEntity} type family (i.e. is parameterized with a key type).
      */
-    class KeyTypeValueMatchesAbstractEntityTypeArgument extends AbstractComposableVerifierPart {
+    class KeyTypeValueMatchesAbstractEntityTypeArgument extends AbstractVerifier {
         static final String SUPERTYPE_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE = "Supertype must be parameterized with entity key type.";
         static final String KEY_TYPE_MUST_MATCH_THE_TYPE_ARGUMENT_TO_ABSTRACT_ENTITY = "Key type must match the supertype's type argument.";
 
@@ -103,6 +106,10 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
                 AbstractEntity.class, AbstractPersistentEntity.class, ActivatableAbstractEntity.class,
                 AbstractFunctionalEntityWithCentreContext.class, AbstractEntityWithInputStream.class, AbstractTreeEntry.class,
                 AbstractFunEntityForDataExport.class);
+
+        protected KeyTypeValueMatchesAbstractEntityTypeArgument(final ProcessingEnvironment processingEnv) {
+            super(processingEnv);
+        }
 
         private boolean isOneOfAbstracts(final TypeElement element) {
             return ABSTRACTS.stream().anyMatch(clazz -> elementFinder.isSameType(element, clazz));
@@ -143,9 +150,13 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
      * 
      * @author TG Team
      */
-    class ChildKeyTypeMatchesParentKeyType extends AbstractComposableVerifierPart {
+    class ChildKeyTypeMatchesParentKeyType extends AbstractVerifier {
         static String keyTypeMustMatchTheSupertypesKeyType(final String supertypeSimpleName) {
             return "Key type must match the supertype's (%s) key type.".formatted(supertypeSimpleName);
+        }
+
+        protected ChildKeyTypeMatchesParentKeyType(final ProcessingEnvironment processingEnv) {
+            super(processingEnv);
         }
 
         public boolean verify(final RoundEnvironment roundEnv) {
@@ -187,9 +198,13 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
      * If an entity declares property {@code key}, then its type must match the key type defined by {@link KeyType}.
      * Additionally, if {@link NoKey} is specified, then it's forbidden to declare property {@code key}.
      */
-    class DeclaredKeyPropertyTypeMatchesAtKeyTypeValue extends AbstractComposableVerifierPart {
+    class DeclaredKeyPropertyTypeMatchesAtKeyTypeValue extends AbstractVerifier {
         static final String ENTITY_WITH_NOKEY_AS_KEY_TYPE_CAN_NOT_DECLARE_PROPERTY_KEY = "Entity with NoKey as key type can not declare property \"key\".";
         static final String KEY_PROPERTY_TYPE_MUST_BE_CONSISTENT_WITH_KEYTYPE_DEFINITION = "\"key\" property type must be consistent with @KeyType definition.";
+
+        protected DeclaredKeyPropertyTypeMatchesAtKeyTypeValue(final ProcessingEnvironment processingEnv) {
+            super(processingEnv);
+        }
 
         @Override
         public boolean verify(final RoundEnvironment roundEnv) {
