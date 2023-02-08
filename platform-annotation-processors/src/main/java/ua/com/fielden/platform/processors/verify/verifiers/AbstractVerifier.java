@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.processors.verify.verifiers;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -17,13 +18,13 @@ import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
  * @author TG Team
  */
 public abstract class AbstractVerifier implements Verifier {
-    
-    protected ProcessingEnvironment processingEnv;
-    protected Messager messager;
-    protected Types typeUtils;
-    protected ElementFinder elementFinder;
-    protected EntityFinder entityFinder;
-    protected Set<Element> violatingElements = new HashSet<>();
+
+    protected final ProcessingEnvironment processingEnv;
+    protected final Messager messager;
+    protected final Types typeUtils;
+    protected final ElementFinder elementFinder;
+    protected final EntityFinder entityFinder;
+    protected final Set<Element> violatingElements;
     
     protected AbstractVerifier(final ProcessingEnvironment processingEnv) {
         this.processingEnv = processingEnv;
@@ -31,13 +32,14 @@ public abstract class AbstractVerifier implements Verifier {
         this.typeUtils = processingEnv.getTypeUtils();
         this.elementFinder = new ElementFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
         this.entityFinder = new EntityFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
+        this.violatingElements = new HashSet<>();
     }
-    
+
     /**
-     * Returns a set of elements that did not pass verification.
+     * Returns an unmodifiable set of elements that did not pass verification.
      */
     public Set<Element> getViolatingElements() {
-        return this.violatingElements;
+        return Collections.unmodifiableSet(this.violatingElements);
     }
     
 }
