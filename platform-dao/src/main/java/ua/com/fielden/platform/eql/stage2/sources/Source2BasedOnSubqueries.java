@@ -11,8 +11,8 @@ import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
-import ua.com.fielden.platform.eql.stage2.operands.SourceQuery2;
-import ua.com.fielden.platform.eql.stage3.operands.SourceQuery3;
+import ua.com.fielden.platform.eql.stage2.operands.queries.SourceQuery2;
+import ua.com.fielden.platform.eql.stage3.operands.queries.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnSubqueries;
 
 public class Source2BasedOnSubqueries extends AbstractSource2 implements ISource2<Source3BasedOnSubqueries> {

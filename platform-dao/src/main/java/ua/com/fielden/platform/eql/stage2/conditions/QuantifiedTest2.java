@@ -9,11 +9,11 @@ import ua.com.fielden.platform.eql.meta.Quantifier;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
+import ua.com.fielden.platform.eql.stage2.operands.queries.SubQuery2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
-import ua.com.fielden.platform.eql.stage2.operands.SubQuery2;
 import ua.com.fielden.platform.eql.stage3.conditions.QuantifiedTest3;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
-import ua.com.fielden.platform.eql.stage3.operands.SubQuery3;
+import ua.com.fielden.platform.eql.stage3.operands.queries.SubQuery3;
 
 public class QuantifiedTest2 extends AbstractCondition2<QuantifiedTest3> {
     public final ISingleOperand2<? extends ISingleOperand3> leftOperand;

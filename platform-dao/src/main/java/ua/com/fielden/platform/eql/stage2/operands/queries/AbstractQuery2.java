@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.stage2.operands;
+package ua.com.fielden.platform.eql.stage2.operands.queries;
 
 import static java.util.Collections.emptySet;
 
@@ -13,6 +13,7 @@ import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.etc.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 
@@ -25,12 +26,12 @@ public abstract class AbstractQuery2 {
     public final OrderBys2 orderings;
     public final Class<?> resultType;
 
-    public AbstractQuery2(final QueryComponents2 queryBlocks, final Class<?> resultType) {
-        this.joinRoot = queryBlocks.joinRoot;
-        this.conditions = queryBlocks.conditions;
-        this.yields = queryBlocks.yields;
-        this.groups = queryBlocks.groups;
-        this.orderings = queryBlocks.orderings;
+    public AbstractQuery2(final QueryComponents2 queryComponents, final Class<?> resultType) {
+        this.joinRoot = queryComponents.joinRoot;
+        this.conditions = queryComponents.conditions;
+        this.yields = queryComponents.yields;
+        this.groups = queryComponents.groups;
+        this.orderings = queryComponents.orderings;
         this.resultType = resultType;
     }
 

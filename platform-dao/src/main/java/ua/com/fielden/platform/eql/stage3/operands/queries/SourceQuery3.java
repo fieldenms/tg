@@ -1,11 +1,11 @@
-package ua.com.fielden.platform.eql.stage3.operands;
+package ua.com.fielden.platform.eql.stage3.operands.queries;
 
 import ua.com.fielden.platform.eql.stage3.QueryComponents3;
 
 public class SourceQuery3 extends AbstractQuery3 {
 
-    public SourceQuery3(final QueryComponents3 queryBlocks, final Class<?> resultType) {
-        super(queryBlocks, resultType);
+    public SourceQuery3(final QueryComponents3 queryComponents, final Class<?> resultType) {
+        super(queryComponents, resultType);
     }
 
     @Override

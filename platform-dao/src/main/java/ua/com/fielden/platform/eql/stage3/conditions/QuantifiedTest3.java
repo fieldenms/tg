@@ -6,7 +6,7 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.eql.meta.Quantifier;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
-import ua.com.fielden.platform.eql.stage3.operands.SubQuery3;
+import ua.com.fielden.platform.eql.stage3.operands.queries.SubQuery3;
 
 public class QuantifiedTest3 implements ICondition3 {
     public final ISingleOperand3 leftOperand;

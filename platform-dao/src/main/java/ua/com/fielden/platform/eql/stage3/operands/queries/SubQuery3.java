@@ -1,14 +1,15 @@
-package ua.com.fielden.platform.eql.stage3.operands;
+package ua.com.fielden.platform.eql.stage3.operands.queries;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.QueryComponents3;
+import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
 public class SubQuery3 extends AbstractQuery3 implements ISingleOperand3 {
     
     public final Object hibType;
 
-    public SubQuery3(final QueryComponents3 queryBlocks, final Class<?> resultType, final Object hibType) {
-        super(queryBlocks, resultType);
+    public SubQuery3(final QueryComponents3 queryComponents, final Class<?> resultType, final Object hibType) {
+        super(queryComponents, resultType);
         this.hibType = hibType;
     }
 

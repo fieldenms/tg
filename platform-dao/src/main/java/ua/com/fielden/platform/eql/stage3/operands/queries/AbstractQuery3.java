@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.stage3.operands;
+package ua.com.fielden.platform.eql.stage3.operands.queries;
 
 import static ua.com.fielden.platform.entity.query.DbVersion.ORACLE;
 
@@ -21,12 +21,12 @@ public abstract class AbstractQuery3 {
     public final OrderBys3 orderings;
     public final Class<?> resultType;
 
-    public AbstractQuery3(final QueryComponents3 queryBlocks, final Class<?> resultType) {
-        this.joinRoot = queryBlocks.joinRoot;
-        this.conditions = queryBlocks.conditions;
-        this.yields = queryBlocks.yields;
-        this.groups = queryBlocks.groups;
-        this.orderings = queryBlocks.orderings;
+    public AbstractQuery3(final QueryComponents3 queryComponents, final Class<?> resultType) {
+        this.joinRoot = queryComponents.joinRoot;
+        this.conditions = queryComponents.conditions;
+        this.yields = queryComponents.yields;
+        this.groups = queryComponents.groups;
+        this.orderings = queryComponents.orderings;
         this.resultType = resultType;
     }
     

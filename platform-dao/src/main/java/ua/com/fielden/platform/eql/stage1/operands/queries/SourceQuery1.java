@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.stage1.operands;
+package ua.com.fielden.platform.eql.stage1.operands.queries;
 
 import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang.StringUtils.isEmpty;
@@ -23,7 +23,7 @@ import ua.com.fielden.platform.eql.stage2.etc.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.etc.Yield2;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
-import ua.com.fielden.platform.eql.stage2.operands.SourceQuery2;
+import ua.com.fielden.platform.eql.stage2.operands.queries.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
@@ -36,8 +36,8 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
      */
     public final boolean isCorrelated;
 
-    public SourceQuery1(final QueryComponents1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType, final boolean isCorrelated) {
-        super(queryBlocks, requireNonNull(resultType));
+    public SourceQuery1(final QueryComponents1 queryComponents, final Class<? extends AbstractEntity<?>> resultType, final boolean isCorrelated) {
+        super(queryComponents, requireNonNull(resultType));
         this.isCorrelated = isCorrelated;
     }
 
@@ -57,8 +57,8 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
         final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());
         final Yields2 enhancedYields2 = expand(enhanceYields(yields2, joinRoot2.mainSource(), context.shouldIncludeCalcProps));
-        final QueryComponents2 entQueryBlocks = new QueryComponents2(joinRoot2, conditions2, enhancedYields2, groups2, orderings2);
-        return new SourceQuery2(entQueryBlocks, resultType);
+        final QueryComponents2 queryComponents2 = new QueryComponents2(joinRoot2, conditions2, enhancedYields2, groups2, orderings2);
+        return new SourceQuery2(queryComponents2, resultType);
     }
 
     private Yields2 enhanceYields(final Yields2 yields, final ISource2<? extends ISource3> mainSource, final boolean shouldIncludeCalcProps) {

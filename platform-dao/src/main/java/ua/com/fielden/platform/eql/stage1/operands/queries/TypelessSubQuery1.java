@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.stage1.operands;
+package ua.com.fielden.platform.eql.stage1.operands.queries;
 
 import static ua.com.fielden.platform.eql.stage2.etc.Yields2.nullYields;
 
@@ -11,14 +11,14 @@ import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.etc.GroupBys2;
 import ua.com.fielden.platform.eql.stage2.etc.OrderBys2;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
-import ua.com.fielden.platform.eql.stage2.operands.TypelessSubQuery2;
+import ua.com.fielden.platform.eql.stage2.operands.queries.TypelessSubQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 
 public class TypelessSubQuery1 extends AbstractQuery1 implements ITransformableToS2<TypelessSubQuery2> {
 
-    public TypelessSubQuery1(final QueryComponents1 queryBlocks) {
-        super(queryBlocks, null);
+    public TypelessSubQuery1(final QueryComponents1 queryComponents) {
+        super(queryComponents, null);
     }
 
     @Override
@@ -36,8 +36,8 @@ public class TypelessSubQuery1 extends AbstractQuery1 implements ITransformableT
         final Yields2 yields2 = yields.getYields().isEmpty() ? nullYields : yields.transform(enhancedContext);
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
         final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());
-        final QueryComponents2 entQueryBlocks = new QueryComponents2(joinRoot2, conditions2, yields2, groups2, orderings2);
-        return new TypelessSubQuery2(entQueryBlocks);
+        final QueryComponents2 queryComponents2 = new QueryComponents2(joinRoot2, conditions2, yields2, groups2, orderings2);
+        return new TypelessSubQuery2(queryComponents2);
     }
     
     @Override

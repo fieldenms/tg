@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.stage1.operands;
+package ua.com.fielden.platform.eql.stage1.operands.queries;
 
 import static java.util.Arrays.asList;
 import static java.util.stream.Collectors.toList;
@@ -30,6 +30,7 @@ import ua.com.fielden.platform.eql.stage1.conditions.Conditions1;
 import ua.com.fielden.platform.eql.stage1.etc.GroupBys1;
 import ua.com.fielden.platform.eql.stage1.etc.OrderBys1;
 import ua.com.fielden.platform.eql.stage1.etc.Yields1;
+import ua.com.fielden.platform.eql.stage1.operands.Prop1;
 import ua.com.fielden.platform.eql.stage1.sources.IJoinNode1;
 import ua.com.fielden.platform.eql.stage2.QueryComponents2;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
@@ -56,15 +57,15 @@ public abstract class AbstractQuery1 {
     public final Class<? extends AbstractEntity<?>> resultType;
     public final boolean yieldAll;
 
-    public AbstractQuery1(final QueryComponents1 queryBlocks, final Class<? extends AbstractEntity<?>> resultType) {
-        this.joinRoot = queryBlocks.joinRoot;
-        this.conditions = queryBlocks.conditions;
-        this.udfConditions = queryBlocks.udfConditions;
-        this.yields = queryBlocks.yields;
-        this.groups = queryBlocks.groups;
-        this.orderings = queryBlocks.orderings;
+    public AbstractQuery1(final QueryComponents1 queryComponents, final Class<? extends AbstractEntity<?>> resultType) {
+        this.joinRoot = queryComponents.joinRoot;
+        this.conditions = queryComponents.conditions;
+        this.udfConditions = queryComponents.udfConditions;
+        this.yields = queryComponents.yields;
+        this.groups = queryComponents.groups;
+        this.orderings = queryComponents.orderings;
         this.resultType = resultType;
-        this.yieldAll = queryBlocks.yieldAll;
+        this.yieldAll = queryComponents.yieldAll;
     }
 
     public QueryComponents2 transformSourceless(final TransformationContext1 context) {

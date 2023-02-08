@@ -11,7 +11,7 @@ import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.eql.stage3.etc.Yield3;
-import ua.com.fielden.platform.eql.stage3.operands.SourceQuery3;
+import ua.com.fielden.platform.eql.stage3.operands.queries.SourceQuery3;
 
 public class Source3BasedOnSubqueries extends AbstractSource3 {
     private final List<SourceQuery3> models = new ArrayList<>();

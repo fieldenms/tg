@@ -6,9 +6,9 @@ import java.util.Set;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
-import ua.com.fielden.platform.eql.stage2.operands.TypelessSubQuery2;
+import ua.com.fielden.platform.eql.stage2.operands.queries.TypelessSubQuery2;
 import ua.com.fielden.platform.eql.stage3.conditions.ExistenceTest3;
-import ua.com.fielden.platform.eql.stage3.operands.TypelessSubQuery3;
+import ua.com.fielden.platform.eql.stage3.operands.queries.TypelessSubQuery3;
 
 public class ExistenceTest2 extends AbstractCondition2<ExistenceTest3> {
     private final boolean negated;

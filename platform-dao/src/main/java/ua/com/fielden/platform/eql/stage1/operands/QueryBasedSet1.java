@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.stage1.operands;
 import java.util.Objects;
 
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.operands.queries.SubQuery1;
 import ua.com.fielden.platform.eql.stage2.operands.QueryBasedSet2;
 
 public class QueryBasedSet1 implements ISetOperand1<QueryBasedSet2> {

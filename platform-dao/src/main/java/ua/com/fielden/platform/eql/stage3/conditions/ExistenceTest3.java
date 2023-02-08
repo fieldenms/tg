@@ -3,7 +3,7 @@ package ua.com.fielden.platform.eql.stage3.conditions;
 import java.util.Objects;
 
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.eql.stage3.operands.TypelessSubQuery3;
+import ua.com.fielden.platform.eql.stage3.operands.queries.TypelessSubQuery3;
 
 public class ExistenceTest3 implements ICondition3 {
     private final boolean negated;

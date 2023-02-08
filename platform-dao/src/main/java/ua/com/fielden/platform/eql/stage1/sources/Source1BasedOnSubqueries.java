@@ -24,11 +24,11 @@ import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.PrimTypePropInfo;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
-import ua.com.fielden.platform.eql.stage1.operands.SourceQuery1;
+import ua.com.fielden.platform.eql.stage1.operands.queries.SourceQuery1;
 import ua.com.fielden.platform.eql.stage2.etc.Yield2;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
-import ua.com.fielden.platform.eql.stage2.operands.SourceQuery2;
+import ua.com.fielden.platform.eql.stage2.operands.queries.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnSubqueries;
 
 public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubqueries> {

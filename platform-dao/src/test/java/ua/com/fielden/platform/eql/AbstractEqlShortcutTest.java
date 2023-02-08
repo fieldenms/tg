@@ -12,7 +12,7 @@ import ua.com.fielden.platform.eql.meta.EqlTestCase;
 import ua.com.fielden.platform.eql.retrieval.QueryModelResult;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage3.EqlQueryTransformer;
-import ua.com.fielden.platform.eql.stage3.operands.ResultQuery3;
+import ua.com.fielden.platform.eql.stage3.operands.queries.ResultQuery3;
 
 public abstract class AbstractEqlShortcutTest extends EqlTestCase {
 

@@ -5,8 +5,9 @@ import java.util.Set;
 
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
+import ua.com.fielden.platform.eql.stage2.operands.queries.SubQuery2;
 import ua.com.fielden.platform.eql.stage3.operands.QueryBasedSet3;
-import ua.com.fielden.platform.eql.stage3.operands.SubQuery3;
+import ua.com.fielden.platform.eql.stage3.operands.queries.SubQuery3;
 
 public class QueryBasedSet2 implements ISetOperand2<QueryBasedSet3> {
     private final SubQuery2 model;
