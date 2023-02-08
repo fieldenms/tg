@@ -3,14 +3,11 @@ package ua.com.fielden.platform.eql.meta;
 import static java.util.Arrays.asList;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
-import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
-import static ua.com.fielden.platform.entity.query.DbVersion.H2;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.NE;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.IJ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.JoinType.LJ;
-import static ua.com.fielden.platform.eql.retrieval.EntityContainerFetcher.getResultPropsInfos;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,7 +17,6 @@ import java.util.List;
 import org.hibernate.type.LongType;
 import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
-import org.junit.Assert;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
@@ -30,10 +26,8 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.eql.retrieval.QueryModelResult;
-import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage3.EqlQueryTransformer;
-import ua.com.fielden.platform.eql.stage3.QueryBlocks3;
+import ua.com.fielden.platform.eql.stage3.QueryComponents3;
 import ua.com.fielden.platform.eql.stage3.conditions.ComparisonTest3;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
@@ -51,15 +45,15 @@ import ua.com.fielden.platform.eql.stage3.operands.ResultQuery3;
 import ua.com.fielden.platform.eql.stage3.operands.SourceQuery3;
 import ua.com.fielden.platform.eql.stage3.operands.SubQuery3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.CountAll3;
-import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
+import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 import ua.com.fielden.platform.eql.stage3.sources.JoinBranch3;
 import ua.com.fielden.platform.eql.stage3.sources.JoinLeaf3;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnTable;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 
-public class EqlStage3TestCase extends EqlTestCase {
+public abstract class EqlStage3TestCase extends EqlTestCase {
     public static int sqlId = 0;
 
     public static int nextSqlId() {
@@ -69,12 +63,6 @@ public class EqlStage3TestCase extends EqlTestCase {
 
     private static final <E extends AbstractEntity<?>> ResultQuery3 transform(final QueryProcessingModel<E, ?> qem) {
         return EqlQueryTransformer.transform(qem, filter, null, dates, metadata()).item;
-    }
-    private static final <E extends AbstractEntity<?>> QueryModelResult<E> transformToModelResult(final QueryProcessingModel<E, ?> qem) {
-        final TransformationResult2<ResultQuery3> tr = EqlQueryTransformer.transform(qem, filter, null, dates, metadata());
-        final ResultQuery3 entQuery3 = tr.item;
-        final String sql = entQuery3.sql(H2);
-        return new QueryModelResult<>((Class<E>) entQuery3.resultType, sql, getResultPropsInfos(entQuery3.yields), tr.updatedContext.getParamValues(), qem.fetchModel);
     }
 
     protected static <T extends AbstractEntity<?>> ResultQuery3 qryCountAll(final ICompoundCondition0<T> unfinishedQry) {
@@ -110,17 +98,6 @@ public class EqlStage3TestCase extends EqlTestCase {
         return transform(new QueryProcessingModel<T, EntityResultQueryModel<T>>(qry, null, null, emptyMap(), true));
     }
 
-    protected static <T extends AbstractEntity<?>> void assertModelResultsEquals(final EntityResultQueryModel<T> exp, final EntityResultQueryModel<T> act) {
-        final QueryModelResult<T> expQmr = transformToModelResult(new QueryProcessingModel<T, EntityResultQueryModel<T>>(exp, null, null, emptyMap(), true));
-        final QueryModelResult<T> actQmr = transformToModelResult(new QueryProcessingModel<T, EntityResultQueryModel<T>>(act, null, null, emptyMap(), true));
-        
-        assertEquals("Qry model results (SQL) are different!", expQmr.sql, actQmr.sql);
-        assertEquals("Qry model results (Result Type) are different!", expQmr.resultType, actQmr.resultType);
-        assertEquals("Qry model results (Fetch Model) are different!", expQmr.fetchModel, actQmr.fetchModel);
-        assertEquals("Qry model results (Param values) are different!", expQmr.getParamValues(), actQmr.getParamValues());
-        assertEquals("Qry model results (Yielded props infos) are different!", expQmr.getYieldedPropsInfo(), actQmr.getYieldedPropsInfo());
-    }
-    
     protected static <T extends AbstractEntity<?>> ResultQuery3 qryFiltered(final EntityResultQueryModel<T> qry) {
         qry.setFilterable(true);
         return qry(qry);
@@ -295,19 +272,19 @@ public class EqlStage3TestCase extends EqlTestCase {
     //    }
 
     protected static SubQuery3 subqry(final IJoinNode3 sources, final Yields3 yields, final Class<?> resultType, final Type hibType) {
-        return new SubQuery3(new QueryBlocks3(sources, null, yields, null, null), resultType, hibType);
+        return new SubQuery3(new QueryComponents3(sources, null, yields, null, null), resultType, hibType);
     }
 
     protected static SubQuery3 subqry(final IJoinNode3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType, final Type hibType) {
-        return new SubQuery3(new QueryBlocks3(sources, conditions, yields, null, null), resultType, hibType);
+        return new SubQuery3(new QueryComponents3(sources, conditions, yields, null, null), resultType, hibType);
     }
 
     private static ResultQuery3 resultQry(final IJoinNode3 sources, final Yields3 yields, final Class<?> resultType) {
-        return new ResultQuery3(new QueryBlocks3(sources, null, yields, null, null), resultType);
+        return new ResultQuery3(new QueryComponents3(sources, null, yields, null, null), resultType);
     }
 
     private static ResultQuery3 resultQry(final IJoinNode3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
-        return new ResultQuery3(new QueryBlocks3(sources, conditions, yields, null, null), resultType);
+        return new ResultQuery3(new QueryComponents3(sources, conditions, yields, null, null), resultType);
     }
 
     //    private static EntQuery3 qry(final IQrySources3 sources, final Conditions3 conditions, final Yields3 yields, final QueryCategory queryCategory, final Class<?> resultType) {
@@ -315,7 +292,7 @@ public class EqlStage3TestCase extends EqlTestCase {
     //    }
 
     private static SourceQuery3 sourceQry(final IJoinNode3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
-        return new SourceQuery3(new QueryBlocks3(sources, conditions, yields, null, null), resultType);
+        return new SourceQuery3(new QueryComponents3(sources, conditions, yields, null, null), resultType);
     }
 
     //    protected static EntQuery3 qry(final IQrySources3 sources, final Class<?> resultType) {

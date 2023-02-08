@@ -13,7 +13,6 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
-import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.PrimitiveResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EqlStage3TestCase;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
@@ -280,18 +279,6 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
     }
     
     @Test
-    public void calc_prop_is_correctly_transformed_08_sql() {
-        final EntityResultQueryModel<TeWorkOrder> act = select(WORK_ORDER).where().prop("make.key").isNotNull().model();
-        
-        final EntityResultQueryModel<TeWorkOrder> exp = select(WORK_ORDER).as("w").leftJoin(MAKE).as("mk").on().
-                model(
-                select(VEHICLE).as("v").join(MODEL).as("m").on().prop("v.model").eq().prop("m.id").where().prop("v.id").eq().prop("w.vehicle").yield().prop("m.make").modelAsEntity(MAKE)).eq().prop("mk.id").
-                where().prop("mk.key").isNotNull().model();
-        
-        assertModelResultsEquals(exp, act);
-    }
-    
-    @Test
     public void calc_prop_is_correctly_transformed_07() {
         final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("make").isNotNull());
 
@@ -317,17 +304,6 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         assertEquals(expQry, actQry);
     }
     
-    @Test
-    public void calc_prop_is_correctly_transformed_07_sql() {
-        final EntityResultQueryModel<TeWorkOrder> act = select(WORK_ORDER).where().prop("make").isNotNull().model();
-        
-        final EntityResultQueryModel<TeWorkOrder> exp = select(WORK_ORDER).where().model(
-                select(VEHICLE).as("v").join(MODEL).as("m").on().prop("v.model").eq().prop("m.id").where().prop("v.id").eq().extProp("vehicle").yield().prop("m.make").modelAsEntity(MAKE)
-                ).isNotNull().model();
-        
-        assertModelResultsEquals(exp, act);
-    }
-
     @Test
     public void calc_prop_is_correctly_transformed_06() {
         final ResultQuery3 actQry = qryCountAll(select(WORK_ORDER).where().prop("makeKey").isNotNull());

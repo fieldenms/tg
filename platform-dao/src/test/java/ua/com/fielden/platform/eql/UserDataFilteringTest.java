@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql.stage3;
+package ua.com.fielden.platform.eql;
 
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -6,14 +6,13 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-import ua.com.fielden.platform.eql.meta.EqlStage3TestCase;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TeVehicleMake;
 import ua.com.fielden.platform.sample.domain.TeVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgAuthor;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit5;
 
-public class UserDataFilteringTest extends EqlStage3TestCase {
+public class UserDataFilteringTest extends AbstractEqlShortcutTest {
     
     @Test
     public void udf_with_single_condition_applied_to_query_with_no_conditions_works() {
