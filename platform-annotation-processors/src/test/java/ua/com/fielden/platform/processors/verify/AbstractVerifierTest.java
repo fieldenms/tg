@@ -5,7 +5,6 @@ import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_P
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.JavaCompiler;
@@ -25,19 +24,23 @@ import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
  * @author TG Team
  */
 public abstract class AbstractVerifierTest {
-    
-    /**
-     * Returns a provider of a {@link Verifier} implementation that will be initialized by the {@link VerifyingProcessor} during tests.
-     * @return
-     */
-    abstract protected Function<ProcessingEnvironment, Verifier> verifierProvider();
 
     /**
-     * Returns a new instance of the verifying processor that will initialize and use the sole verifier provided by {@link #verifierProvider()}.
+     * Returns a verifier instance that will be used by the {@link VerifyingProcessor} during tests.
+     * <p>
+     * In case of a test class that targets a composable verifier and contains nested test classes for its respective components
+     * this method might be irrelevant.
      * @return
      */
-    protected final VerifyingProcessor createProcessor() {
-        return new VerifyingProcessor(List.of(verifierProvider()));
+    abstract protected Verifier createVerifier(final ProcessingEnvironment procEnv);
+
+    /**
+     * Returns a new instance of the verifying processor that will initialize and use the sole verifier provided by 
+     * {@link #createVerifier(ProcessingEnvironment)}.
+     * @return
+     */
+    private final VerifyingProcessor createProcessor() {
+        return new VerifyingProcessor(List.of(this::createVerifier));
     }
 
     /**
@@ -64,7 +67,7 @@ public abstract class AbstractVerifierTest {
                 .setFileManager(fileManager)
                 .setOptions(OPTION_PROC_ONLY);
     }
-    
+
     /** Refer to {@link #buildCompilation(Collection)}. */
     protected Compilation buildCompilation(final TypeSpec... typeSpecs) {
         return buildCompilation(Arrays.asList(typeSpecs));
