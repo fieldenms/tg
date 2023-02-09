@@ -12,6 +12,13 @@ import javax.lang.model.element.Element;
 
 /**
  * Abstract representation of a verifier that is composed of other more specific verifiers (also called <i>components</i>).
+ * <p>
+ * It is envisioned that this abstraction be used solely for grouping of verifiers and possibly defining common logic.
+ * The components themselves should be designed as autonomous verifiers. That is, no shared state is permitted between components.
+ * To enforce this constraint the components should be implemented as <b>nested static classes</b>.
+ * <p>
+ * Mutual independence of components provides a very useful property for testing composable verifiers: correctness of all
+ * components guarantees the correctness of the whole. So it's sufficient to test just the components.
  * 
  * @author TG Team
  */
@@ -23,6 +30,11 @@ public abstract class AbstractComposableVerifier extends AbstractVerifier {
         this.components = createComponents(procEnv);
     }
 
+    /**
+     * Returns a list of components that this verifier will be composed of.
+     * @param procEnv
+     * @return
+     */
     protected abstract List<AbstractVerifier> createComponents(final ProcessingEnvironment procEnv);
 
     /**
