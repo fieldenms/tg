@@ -694,7 +694,8 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      */
     public final Pair<List<T>, T> getAllEntitiesWithSummary() {
         final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> queries = generateQueryWithSummaries();
-        return pair(getAllEntities(queries.getKey()), getSummary(queries.getValue()));
+        final List<T> entities = getAllEntities(queries.getKey());
+        return pair(entities, entities.isEmpty() ? null : getSummary(queries.getValue()));
     }
 
     /**
