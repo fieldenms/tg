@@ -33,7 +33,7 @@ public class Result extends RuntimeException {
         message = null;
         instance = null;
     }
-    
+
     private Result(final Object instance, final String message, final Exception exception) {
         this.instance = instance;
         this.message = message;
@@ -48,6 +48,36 @@ public class Result extends RuntimeException {
      */
     public static Result successful(final Object instance) {
         return new Result(instance, "Successful");
+    }
+
+    /**
+     * A factory method for creating informative result.
+     *
+     * @param info
+     * @return
+     */
+    public static Informative informative(final String info) {
+        return new Informative(info);
+    }
+
+    /**
+     * A factory method for creating informative result related to specified instances.
+     *
+     * @param info
+     * @return
+     */
+    public static Informative informative(final Object instance, final String info) {
+        return new Informative(instance, info);
+    }
+
+    /**
+     * Convenient factory method for creating informative result with formatting capabilities.
+     *
+     * @param info
+     * @return
+     */
+    public static Informative informativef(final String info, final Object... data) {
+        return new Informative(format(info, data));
     }
 
     public static Warning warning(final String msg) {
@@ -181,7 +211,7 @@ public class Result extends RuntimeException {
         requireNonNull(f);
         return this.isSuccessful() ? f.apply(this) : this;
     }
-    
+
     /**
      * A convenient method to get an instance associated with a successful result or throw an exception otherwise.
      * This method is analogous to {@link Optional#orElseThrow(Supplier)}.
@@ -196,7 +226,7 @@ public class Result extends RuntimeException {
 
     /**
      * Copies this result with overridden instance.
-     * 
+     *
      * @param anotherInstance
      * @return
      */
@@ -207,11 +237,11 @@ public class Result extends RuntimeException {
     public boolean isSuccessful() {
         return ex == null;
     }
-    
+
     /**
      * A convenient construct to perform some action for a result that represents a failure.
      * For example, it could be used to throw an exception as it often happens in case of unsuccessful validations.
-     * 
+     *
      * @param consumer
      */
     public void ifFailure(final Consumer<? super Exception> consumer) {
@@ -222,23 +252,23 @@ public class Result extends RuntimeException {
 
     /**
      * A convenient method that returns the passed in <code>ex</code> if it is of type {@link Result}, or wraps it into a <code>failure</code> of type {@link Result}.
-     * 
+     *
      * @param ex
      * @return
      */
     public static RuntimeException asRuntime(final Exception ex) {
-        return ex instanceof RuntimeException ? (RuntimeException) ex : failure(ex); 
+        return ex instanceof RuntimeException ? (RuntimeException) ex : failure(ex);
     }
-    
+
     /**
      * A convenient method to throw a runtime exception that is obtained by passing <code>ex</code> into {@link asRuntime}.
-     * 
+     *
      * @param ex
      */
     public static void throwRuntime(final Exception ex) {
         throw asRuntime(ex);
     }
-    
+
     /**
      * Returns true if this {@link Result} is not {@link Warning} instance and is successful.
      *
@@ -249,12 +279,30 @@ public class Result extends RuntimeException {
     }
 
     /**
+     * Returns true if this {@link Result} is not {@link Warning} / {@link Informative} instance and is successful.
+     *
+     * @return
+     */
+    public boolean isSuccessfulWithoutWarningAndInformative() {
+        return isSuccessfulWithoutWarning() && !(this instanceof Informative);
+    }
+
+    /**
      * Returns true only if this {@link Result} is successful and is instance of {@link Warning} class.
      *
      * @return
      */
     public boolean isWarning() {
         return isSuccessful() && this instanceof Warning;
+    }
+
+    /**
+     * Returns true only if this {@link Result} is successful and is instance of {@link Informative} class.
+     *
+     * @return
+     */
+    public boolean isInformative() {
+        return isSuccessful() && this instanceof Informative;
     }
 
     @Override
@@ -268,7 +316,7 @@ public class Result extends RuntimeException {
             return 0;
         }
 
-        int result = 1;       
+        int result = 1;
         result = 31 * result + (ex == null ? 0 : (ex.getClass().hashCode() + (ex.getMessage() != null ? ex.getMessage().hashCode() : 0)));
         result = 31 * result + (message == null ? 0 : message.hashCode());
         result = 31 * result + (instance == null ? 0 : instance.hashCode());
@@ -286,13 +334,13 @@ public class Result extends RuntimeException {
         if (this == obj) {
             return true;
         }
-        
+
         if (!(obj instanceof Result)) {
             return false;
         }
 
         final Result that = (Result) obj;
-        return (this.ex == null && that.ex == null || 
+        return (this.ex == null && that.ex == null ||
                 (this.ex != null && that.ex != null && Objects.equals(this.ex.getClass(), that.ex.getClass()) && Objects.equals(this.ex.getMessage(), that.ex.getMessage()))) &&
                Objects.equals(this.message, that.message) &&
                Objects.equals(this.instance, that.instance);
