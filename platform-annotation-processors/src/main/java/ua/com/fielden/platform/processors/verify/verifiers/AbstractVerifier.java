@@ -8,6 +8,7 @@ import java.util.Set;
 
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
@@ -16,13 +17,16 @@ import javax.tools.Diagnostic.Kind;
 
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
+import ua.com.fielden.platform.processors.verify.AbstractRoundEnvironment;
 
 /**
- * Abstract base verifier providing common behaviour.
+ * Abstract base verifier type providing common behaviour.
+ * 
+ * @param <RE> the type of round environment wrapper used by this verifier
  * 
  * @author TG Team
  */
-public abstract class AbstractVerifier implements Verifier {
+public abstract class AbstractVerifier<RE extends AbstractRoundEnvironment> implements Verifier {
 
     protected final ProcessingEnvironment processingEnv;
     protected final Messager messager;
@@ -30,7 +34,7 @@ public abstract class AbstractVerifier implements Verifier {
     protected final ElementFinder elementFinder;
     protected final EntityFinder entityFinder;
     protected final Set<Element> violatingElements;
-    
+
     protected AbstractVerifier(final ProcessingEnvironment processingEnv) {
         this.processingEnv = processingEnv;
         this.messager = processingEnv.getMessager();
@@ -38,6 +42,35 @@ public abstract class AbstractVerifier implements Verifier {
         this.elementFinder = new ElementFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
         this.entityFinder = new EntityFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
         this.violatingElements = new HashSet<>();
+    }
+
+    /**
+     * Serves the same purpose as {@link #verify(RoundEnvironment)}, but is designed to be used with an implementation
+     * of {@link AbstractRoundEnvironment} (see its documentation for details).
+     * <p>
+     * This is the primary method to be implemented by subclasses. 
+     * @param roundEnv
+     * @return
+     */
+    protected abstract boolean verify(final RE roundEnv);
+
+    /**
+     * Creates an instance of a round environment wrapper from the given round environment. The purpose of this method is to
+     * forward {@link #verify(RoundEnvironment)} to {@link #verify(AbstractRoundEnvironment)} by performing the respective type wrapping.
+     * @param roundEnv
+     * @return
+     */
+    protected abstract RE wrapRoundEnvironment(final RoundEnvironment roundEnv);
+
+    /**
+     * {@inheritDoc}
+     * <p>
+     * Verifier implementations shall use {@link #verify(AbstractRoundEnvironment)} instead of this method, which is kept for interface
+     * conformability and also for testing purposes.
+     */
+    @Override
+    public final boolean verify(final RoundEnvironment roundEnv) {
+        return verify(wrapRoundEnvironment(roundEnv));
     }
 
     /**
