@@ -1,14 +1,10 @@
 package ua.com.fielden.platform.processors.verify.verifiers;
 
-import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.Optional;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.element.AnnotationMirror;
-import javax.lang.model.element.AnnotationValue;
-import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -63,7 +59,7 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
      * 
      * @author TG Team
      */
-    class KeyTypePresence extends AbstractVerifier {
+    static class KeyTypePresence extends AbstractVerifier {
 
         static final String ENTITY_DEFINITION_IS_MISSING_KEY_TYPE = "Entity definition is missing @%s.".formatted(
                 AT_KEY_TYPE_CLASS.getSimpleName());
@@ -98,7 +94,7 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
      * The type of key as defined by {@link KeyType} must match the one specified as the type argument to the direct supertype, 
      * if it is a member of the {@link AbstractEntity} type family (i.e. is parameterized with a key type).
      */
-    class KeyTypeValueMatchesAbstractEntityTypeArgument extends AbstractVerifier {
+    static class KeyTypeValueMatchesAbstractEntityTypeArgument extends AbstractVerifier {
         static final String SUPERTYPE_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE = "Supertype must be parameterized with entity key type.";
         static final String KEY_TYPE_MUST_MATCH_THE_TYPE_ARGUMENT_TO_ABSTRACT_ENTITY = "Key type must match the supertype's type argument.";
 
@@ -150,7 +146,7 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
      * 
      * @author TG Team
      */
-    class ChildKeyTypeMatchesParentKeyType extends AbstractVerifier {
+    static class ChildKeyTypeMatchesParentKeyType extends AbstractVerifier {
         static String keyTypeMustMatchTheSupertypesKeyType(final String supertypeSimpleName) {
             return "Key type must match the supertype's (%s) key type.".formatted(supertypeSimpleName);
         }
@@ -198,7 +194,7 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
      * If an entity declares property {@code key}, then its type must match the key type defined by {@link KeyType}.
      * Additionally, if {@link NoKey} is specified, then it's forbidden to declare property {@code key}.
      */
-    class DeclaredKeyPropertyTypeMatchesAtKeyTypeValue extends AbstractVerifier {
+    static class DeclaredKeyPropertyTypeMatchesAtKeyTypeValue extends AbstractVerifier {
         static final String ENTITY_WITH_NOKEY_AS_KEY_TYPE_CAN_NOT_DECLARE_PROPERTY_KEY = "Entity with NoKey as key type can not declare property \"key\".";
         static final String KEY_PROPERTY_TYPE_MUST_BE_CONSISTENT_WITH_KEYTYPE_DEFINITION = "\"key\" property type must be consistent with @KeyType definition.";
 
@@ -243,29 +239,6 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
             }
             
             return allPassed;
-        }
-    }
-
-    private void printMessageWithAnnotationHint(final Kind kind, final String msg, final Element element, final Class<? extends Annotation> annotationType, final String annotationElementName) {
-        final Optional<? extends AnnotationMirror> maybeMirror = elementFinder.findAnnotationMirror(element, annotationType);
-        if (maybeMirror.isEmpty()) {
-            // simplest form of message that is present directly on the element
-            messager.printMessage(kind, msg, element);
-        }
-        else {
-            final AnnotationMirror mirror = maybeMirror.get();
-            final Optional<AnnotationValue> annotElementValue = elementFinder.findAnnotationValue(mirror, annotationElementName);
-            if (annotElementValue.isPresent()) {
-                // fullest form of error message present on the element's annotation element value
-                messager.printMessage(kind, msg, element, mirror, annotElementValue.get());
-            }
-            else {
-                // useful message for debugging
-                messager.printMessage(Kind.OTHER, "ANOMALY: AnnotationValue [%s.%s()] was absent. Element: %s. Annotation: %s."
-                        .formatted(mirror.getAnnotationType().asElement().getSimpleName(), annotationElementName, element.getSimpleName(), mirror.toString()));
-                // error message present on the element's annotation
-                messager.printMessage(kind, msg, element, mirror);
-            }
         }
     }
 
