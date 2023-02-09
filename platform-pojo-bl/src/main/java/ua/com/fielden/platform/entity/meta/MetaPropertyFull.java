@@ -7,7 +7,6 @@ import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isRequ
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.processReqErrorMsg;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.utils.EntityUtils.isCriteriaEntityType;
 
@@ -36,9 +35,9 @@ import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.StubValidator;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
+import ua.com.fielden.platform.error.Informative;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
-import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
@@ -75,7 +74,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     private final Set<Annotation> validationAnnotations = new HashSet<>();
     private final IAfterChangeEventHandler<T> aceHandler;
     private final boolean collectional;
-    
+
     private final boolean shouldAssignBeforeSave;
 
     /**
@@ -125,7 +124,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     private final boolean calculated;
     private final boolean upperCase;
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
-    
+
     // if the value is present then a corresponding property has annotation {@link Final}
     // the boolean value captures the value of attribute persistentOnly
     private final Optional<Boolean> persistentOnlySettingForFinalAnnotation;
@@ -134,7 +133,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
 
     /** Enforced mutation happens as part of the error recovery to indicate processing of dependent properties. */
     private boolean enforceMutator = false;
-    
+
     /**
      * Property supports specification of the precise type. For example, property <code>key</code> in entity classes is recognised by reflection API as Comparable. Therefore, it
      * might be desirable to specify type more accurately.
@@ -168,7 +167,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
             final IAfterChangeEventHandler<T> aceHandler,
             final String[] dependentPropertyNames) {
         super(entity, field, type, isKey, isProxy, dependentPropertyNames);
-        
+
         this.validationAnnotations.addAll(validationAnnotations);
         this.validators = validators;
         this.aceHandler = aceHandler;
@@ -470,7 +469,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
 //            if (isRequired() && isProxy()) {
 //                throw new StrictProxyException(format("Required property [%s] in entity [%s] is proxied and thus cannot be checked.", getName(), getEntity().getType().getName()));
 //            }
-            
+
             if (isRequired() && !isProxy() && (value == null || isEmpty(value))) {
                 if (!getValidators().containsKey(ValidationAnnotation.REQUIRED)) {
                     throw new IllegalArgumentException("There are no REQUIRED validation annotation pair for required property!");
@@ -532,17 +531,53 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         return null;
     }
 
+    /**
+     * Returns the first informative associated with property validators.
+     *
+     * @return
+     */
+    @Override
+    public final Informative getFirstInformative() {
+        for (final Entry<ValidationAnnotation, Map<IBeforeChangeEventHandler<T>, Result>> vs : validators.entrySet()) {
+            final Map<IBeforeChangeEventHandler<T>, Result> annotationHandlers = vs.getValue();
+            for (final Result result : annotationHandlers.values()) {
+                if (result != null && result.isInformative()) {
+                    return (Informative) result;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns first Result that is valid it might be warning
+     */
+    @Override
+    public Result getFirstValidResult() {
+        final Warning warn = getFirstWarning();
+        if (warn != null) {
+            return warn;
+        } else {
+            return getFirstInformative();
+        }
+    }
+
     @Override
     public Result validationResult() {
-        final Stream<Result> streamOfErrorsAndWarnings = validators.values().stream().flatMap(v -> v.values().stream()).filter(r -> r != null && (r.isWarning() || !r.isSuccessful()));
-        final T2<Result, Result> filureAndWarning = streamOfErrorsAndWarnings
-                .reduce(t2(successful(this), successful(this)), 
-                        (p, result) -> t2(!result.isSuccessful() ? result : p._1, result.isWarning() ? result : p._2), 
-                        (o1, o2) -> {throw Result.failure("Parallel processing is not supported.");});
-        
-        return !filureAndWarning._1.isSuccessful() ? filureAndWarning._1 : filureAndWarning._2;
+        final Stream<Result> streamOfErrorsAndWarnings = validators.values().stream().flatMap(v -> v.values().stream()).filter(r -> r != null && (r.isWarning() || r.isInformative() || !r.isSuccessful()));
+        final Result lastResult = streamOfErrorsAndWarnings
+                .reduce(successful(this), (p, result) -> {
+                    if (!result.isSuccessful()
+                            || result.isWarning() && p.isSuccessful()
+                            || result.isInformative() && p.isInformative()) {
+                        return result;
+                    }
+                    return p;
+                },(o1, o2) -> {throw Result.failure("Parallel processing is not supported.");});
+
+        return lastResult;
     }
-    
+
     /**
      * Returns the first failure associated with <code>annotation</code> value.
      *
@@ -676,13 +711,13 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     public final boolean isChangedFromOriginal() {
         return isChangedFrom(getOriginalValue());
     }
-    
+
     /**
      * Checks if the current value is changed from the specified one by means of equality. <code>null</code> value is permitted.
      * <p>
-     * Please, note that property accessor (aka getter) is used to get current value. If exception occurs during current value getting -- 
+     * Please, note that property accessor (aka getter) is used to get current value. If exception occurs during current value getting --
      * this method returns <code>false</code> and silently ignores this exception (with some debugging logging).
-     * 
+     *
      * @param value
      * @return
      */
@@ -704,12 +739,12 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     public final boolean isChangedFromPrevious() {
         return isChangedFrom(getPrevValue());
     }
-    
+
     @Override
     public final boolean isEditable() {
         return editable && getEntity().isEditable().isSuccessful() && !isFinalised();
     }
-    
+
     private boolean isFinalised() {
         if (persistentOnlySettingForFinalAnnotation.isPresent()) {
             return FinalValidator.isPropertyFinalised(this, persistentOnlySettingForFinalAnnotation.get());
@@ -822,7 +857,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     @Override
     public final MetaPropertyFull<T> setRequired(final boolean required) {
         requirednessChangePreCondition(required);
-        
+
         final boolean oldRequired = this.required;
         this.required = required;
 
@@ -833,9 +868,9 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         // if requirement changed from true to false, then update REQUIRED validation result to be successful
         if (!required && oldRequired) {
             if (containsRequiredValidator()) {
-                // if both current and last attempted values are null then it can be safely assumed that the requiredness validation can be considered successful 
+                // if both current and last attempted values are null then it can be safely assumed that the requiredness validation can be considered successful
                 // the same holds if the assigned requiredness validation result already successful
-                if ((getValue() == null && getLastAttemptedValue() == null) || 
+                if ((getValue() == null && getLastAttemptedValue() == null) ||
                     ofNullable(getValidationResult(ValidationAnnotation.REQUIRED)).map(res -> res.isSuccessful()).orElse(true)) {
                     setValidationResultNoSynch(ValidationAnnotation.REQUIRED, StubValidator.singleton(), new Result(this.getEntity(), "'Required' became false. The validation result cleared."));
                 } else { // otherwise, it is necessary to enforce reassignment of the last attempted value to trigger revalidation
@@ -949,7 +984,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     public boolean isDirty() {
         return dirty || !entity.isPersisted();
     }
-    
+
     @Override
     public MetaPropertyFull<T> setDirty(final boolean dirty) {
         this.dirty = dirty;

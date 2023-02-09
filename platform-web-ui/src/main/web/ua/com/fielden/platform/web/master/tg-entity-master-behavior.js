@@ -38,7 +38,7 @@ const findFirstInputToFocus = (preferredOnly, editors) => {
                 if (!firstPreferredInput && currentEditor.propertyName && currentEditor.propertyName === currentEditor.entity['@@origin'].preferredProperty()) {
                     firstPreferredInput = selectedElement;
                 }
-                if (!firstInvalidInput && currentEditor._error && !currentEditor.isInWarning()) {
+                if (!firstInvalidInput && currentEditor._error && !currentEditor.isInWarning() && !currentEditor.isWithInformative()) {
                     firstInvalidInput = selectedElement;
                 }
             }
