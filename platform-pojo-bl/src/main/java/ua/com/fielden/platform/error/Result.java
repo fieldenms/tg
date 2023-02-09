@@ -20,7 +20,10 @@ import java.util.function.Supplier;
  *
  */
 public class Result extends RuntimeException {
+
     private static final long serialVersionUID = 1L;
+    private static final String EXT_SEPARATOR = "<extended/>";
+
     private final Exception ex;
     private final String message;
     private final Object instance;
@@ -61,6 +64,16 @@ public class Result extends RuntimeException {
     }
 
     /**
+     * A factory method for creating informative result with short and extended messages.
+     *
+     * @param info
+     * @return
+     */
+    public static Informative informativeEx(final String shortInfo, final String extendedInfo) {
+        return new Informative(shortInfo + EXT_SEPARATOR + extendedInfo);
+    }
+
+    /**
      * A factory method for creating informative result related to specified instance.
      *
      * @param info
@@ -76,9 +89,20 @@ public class Result extends RuntimeException {
      * @param info
      * @return
      */
-    public static Informative informative(final Object instance, final String shortInfo, final String extendedInfo) {
-        return new Informative(instance, shortInfo + "<extended/>" + extendedInfo);
+    public static Informative informativeEx(final Object instance, final String shortInfo, final String extendedInfo) {
+        return new Informative(instance, shortInfo + EXT_SEPARATOR + extendedInfo);
     }
+
+    /**
+     * Convenient factory method for creating informative result with short and extended messages and formatting capabilities.
+     *
+     * @param info
+     * @return
+     */
+    public static Informative informativefEx(final String shortInfo, final String extendedInfo, final Object... data) {
+        return new Informative(format(shortInfo + EXT_SEPARATOR + extendedInfo, data));
+    }
+
 
     /**
      * Convenient factory method for creating informative result with formatting capabilities.
@@ -98,8 +122,26 @@ public class Result extends RuntimeException {
         return new Warning(instance, msg);
     }
 
-    public static Warning warning(final Object instance, final String msg, final String extendedMsg) {
-        return new Warning(instance, msg + "<extended/>" + extendedMsg);
+    /**
+     * Warning result with short and extended messages
+     *
+     * @param msg
+     * @param extendedMsg
+     * @return
+     */
+    public static Warning warningEx(final String msg, final String extendedMsg) {
+        return new Warning(msg + EXT_SEPARATOR + extendedMsg);
+    }
+
+    /**
+     * Warning result related to specified instance with short and extended messages.
+     *
+     * @param msg
+     * @param extendedMsg
+     * @return
+     */
+    public static Warning warningEx(final Object instance, final String msg, final String extendedMsg) {
+        return new Warning(instance, msg + EXT_SEPARATOR + extendedMsg);
     }
 
     /**
@@ -139,8 +181,8 @@ public class Result extends RuntimeException {
      *            -- extended reason for failure.
      * @return
      */
-    public static Result failure(final Object instance, final String reason, final String extendedReason) {
-        return new Result(instance, new Exception(reason + "<extended/>" + extendedReason));
+    public static Result failureEx(final Object instance, final String reason, final String extendedReason) {
+        return new Result(instance, new Exception(reason + EXT_SEPARATOR + extendedReason));
     }
 
     /**
@@ -166,6 +208,20 @@ public class Result extends RuntimeException {
     }
 
     /**
+     * Convenient factory method for creating a failure result with short and extended reasons. Should be used when neither an object in error nor the actual exception type are important.
+     *
+     * @param reason
+     *            -- should describe the failure.
+     * @param extendedReason
+     *            -- extended description of failure.
+     *
+     * @return
+     */
+    public static Result failureEx(final String reason, final String extendedReason) {
+        return new Result(null, new Exception(reason + EXT_SEPARATOR + extendedReason));
+    }
+
+    /**
      * The same as {@link #failure(String)} with with the semantics of {@link String#format(String, Object...)} for interpolating of the {@code reason} string.
      *
      * @param reason
@@ -175,6 +231,19 @@ public class Result extends RuntimeException {
     public static Result failuref(final String reason, final Object...args) {
         return new Result(null, new Exception(format(reason, args)));
     }
+
+    /**
+     * The same as {@link #failure(String, String)} with the semantics of {@link String#format(String, Object...)} for interpolating of the {@code reason} and {@code extendedReason} string.
+     *
+     * @param reason
+     * @param extendedReason
+     * @param args
+     * @return
+     */
+    public static Result failurefEx(final String reason, final String extendedReason, final Object...args) {
+        return new Result(null, new Exception(format(reason + EXT_SEPARATOR + extendedReason, args)));
+    }
+
 
     ///////////////////////////////////////////////
     ////////////////// constructors ///////////////
