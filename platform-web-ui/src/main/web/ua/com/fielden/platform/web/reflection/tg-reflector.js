@@ -54,6 +54,13 @@ var _isWarning0 = function (result) {
 };
 
 /**
+ * Determines whether the result is informative.
+ */
+var _isInformative0 = function (result) {
+    return result !== null && result["@resultType"] === "ua.com.fielden.platform.error.Informative";
+};
+
+/**
  * 'EntityTypeProp' creator. Dependencies: none.
  */
 var _createEntityTypePropPrototype = function () {
@@ -1524,6 +1531,13 @@ export const TgReflector = Polymer({
      */
     isWarning: function (result) {
         return _isWarning0(result);
+    },
+
+    /**
+     * Determines whether result is informative.
+     */
+    isInformative: function (result) {
+        return _isInformative0(result);
     },
 
     //////////////////// SERVER EXCEPTIONS UTILS ////////////////////
