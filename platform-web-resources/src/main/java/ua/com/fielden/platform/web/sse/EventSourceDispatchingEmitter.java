@@ -19,7 +19,7 @@ import org.apache.log4j.Logger;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.tuples.T2;
-import ua.com.fielden.platform.web.sse.exceptions.SseAlreadyExists;
+import ua.com.fielden.platform.web.sse.exceptions.SseException;
 
 /**
  * {@link IEventSourceEmitter} implementation that acts as a dispatching emitter, which dispatches events to registered emitters.
@@ -58,6 +58,9 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
      * A helper function that creates a register key from {@code user} and {@code sseUid}.
      */
     private static T2<Long, String> key(final User user, final String sseUid) {
+        if (user == null) {
+            throw new SseException("A user is required to register an SSE emitter.");
+        }
         return t2(user.getId(), sseUid);
     }
 
@@ -94,9 +97,6 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
     public Result registerEmitter(final User user, final String sseUid, final Supplier<IEventSourceEmitter> emitterFactory) {
         LOGGER.info(format("Registering event emitter for web client [%s, %s].", user, sseUid));
         if (isActive.get()) {
-            if (register.containsKey(key(user, sseUid))) {
-                throw new SseAlreadyExists("The emitter already exists");
-            }
             final IEventSourceEmitter emitter = register.computeIfAbsent(key(user, sseUid), argNotUsed -> emitterFactory.get());
             logRegisterSize();
             return successful(emitter);
