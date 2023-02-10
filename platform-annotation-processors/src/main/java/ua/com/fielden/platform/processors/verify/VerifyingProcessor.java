@@ -15,8 +15,8 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 
 import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
-import ua.com.fielden.platform.processors.verify.verifiers.KeyTypeVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
+import ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier;
 
 /**
  * Annotation processor responsible for verifying source definitions in a domain model.
