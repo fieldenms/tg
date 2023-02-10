@@ -21,6 +21,11 @@ moment.locale('custom-locale', {
 let timerIdForReconnection = null;
 
 /**
+ * Keeps data base connection
+ */
+let db = null;
+
+/**
  * Holds registered event sources in application.
  */
 export let eventSource = {initialised: false, shouldReconnectWhenError: true, errorReconnectionDelay: 15000};
@@ -230,28 +235,91 @@ const messageKey = function (userName, uid) {
     return `${userName}_${uid}_sseMessage`;
 }
 
+const connectToDb = function () {
+    return new Promise(function(resolve, reject) {
+        const openRequest = indexedDB.open("tg", 1);
+
+        openRequest.onupgradeneeded = function(event) {
+            const db = event.target.result;
+
+            if (!db.objectStoreNames.contains('uids')) {
+                db.createObjectStore("uids", { keyPath: "userName" });
+            }
+
+            if (!db.objectStoreNames.contains('lock')) {
+                db.createObjectStore("lock", { keyPath: "userName" });
+            } 
+        };
+          
+        openRequest.onerror = function(evnet) {
+            console.error("Error", openRequest.error);
+            reject("Could not load db");
+        };
+          
+        openRequest.onsuccess = function(event) {
+            resolve(event.target.result);
+        };
+    });
+}
+
+const saveUuid = function (userName, uid) {
+    return new Promise (function (resolve, reject) {
+        const saveRequest = db.transaction("uids", "readwrite")
+                              .objectStore("uids")
+                              .add({userName: userName, uid: uid});
+        saveRequest.onsuccess = (event) => {
+            resolve(uid);
+        };
+        saveRequest.onerror = (event) => {
+            reject(`Failed to save uuid: ${uid} for user: ${userName}`);
+        }
+    });
+}
+
+const getUid = function (userName) {
+    return new Promise (function (resolve, reject) {
+        const saveRequest = db.transaction("uids", "readonly")
+                              .objectStore("uids")
+                              .get(userName);
+        saveRequest.onsuccess = (event) => {
+            resolve(event.target.result.uid);
+        };
+        saveRequest.onerror = (event) => {
+            reject(`Failed to get request for username: ${userName}`);
+        }
+    });
+}
+
+const initEventSource = function (uid) {
+    eventSource.sseUid = uid;
+    eventSource.uri = uir(uid);
+}
+
 /**
  * Registers sse or listens to the local storage event for sse events from other tabs or windows opened for the same user
  * 
  * @param {String} userName - the user name that loads this application. 
  */
-export function establishSSE (userName) {
+export async function establishSSE (userName) {
     //0. If event source was already initialised then return it otherwise initialise it localy
     if(eventSource.initialised) {
         return eventSource;
     }
-    //1. Find UUID in local storage for given user name
-    let uid = localStorage.getItem(uidKey(userName));
-    //2. If there is no stored uuid then create one and save it in local storage. 
-    if (!uid) {
-        uid = generateUUID();
-        localStorage.setItem(uidKey(userName), uid);
-    }
-    //3. Add more data to event source (uid and uri) needed for registering.
-    eventSource.sseUid = uid;
-    eventSource.uri = uir(uid);
-    //4. Try register event source locally first if it fails then it will try to register remote one. 
-    registerLocalEventSource(userName, uid);
+    //1. Connect to tg indexDb.
+    db = await connectToDb();
+    //2. Try to save generated id into tg index db if it is successful then register remote sse otherwise create local one.
+    await saveUuid(userName, generateUUID()).then(uid => {
+        initEventSource(uid);
+        registerRemoteEventSource(userName, uid);
+    }).catch (e => {
+        return getUid(userName);
+    }).then(uid => {
+        initEventSource(uid);
+        registerLocalEventSource(userName, uid);
+    }).catch (e => {
+        throw new Error(`Failed to get uid for user: ${userName}`);
+    });
+
     return eventSource;
 }
 
