@@ -1084,6 +1084,8 @@ export const TgEntityBinderBehavior = {
             } else {
                 if (self._reflector().isWarning(entity.prop(propertyName).validationResult())) {
                     bindingView['@' + propertyName + '_warning'] = entity.prop(propertyName).validationResult();
+                } else if (self._reflector().isInformative(entity.prop(propertyName).validationResult())) {
+                    bindingView['@' + propertyName + '_informative'] = entity.prop(propertyName).validationResult();
                 }
                 bindingView['@' + propertyName + '_required'] = entity.prop(propertyName).isRequired();
             }

@@ -13,12 +13,12 @@ import ua.com.fielden.platform.error.Result;
 
 /**
  * Validator for 'prop' property of {@link EntityWithMetaProperty} testing entity.
- * 
+ *
  * @author TG Team
  *
  */
 public class EntityWithMetaPropertyPropValidator implements IBeforeChangeEventHandler<String> {
-    
+
     @Override
     public Result handle(final MetaProperty<String> property, final String newValue, final Set<Annotation> mutatorAnnotations) {
         if ("Not Ok".equals(newValue)) {
@@ -27,7 +27,10 @@ public class EntityWithMetaPropertyPropValidator implements IBeforeChangeEventHa
         if ("Ok Ok Warn".equals(newValue)) {
             return warning(newValue, "Custom warning.");
         }
+        if ("Ok Ok Info".equals(newValue)) {
+            return Result.informative(newValue, "Custom information.");
+        }
         return successful(newValue);
     }
-    
+
 }
