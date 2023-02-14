@@ -3,7 +3,7 @@ package ua.com.fielden.platform.processors.verify;
 import static java.util.stream.Collectors.joining;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
@@ -17,6 +17,7 @@ import javax.lang.model.element.TypeElement;
 
 import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
 import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
+import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier;
 
 /**
@@ -30,15 +31,16 @@ import ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifie
 @SupportedAnnotationTypes("*")
 public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
     
-    private final Set<Function<ProcessingEnvironment, Verifier>> registeredVerifiersProviders;
-    private final Set<Verifier> registeredVerifiers = new HashSet<>();
+    private final List<Function<ProcessingEnvironment, Verifier>> registeredVerifiersProviders = new LinkedList<>();
+    private final List<Verifier> registeredVerifiers = new LinkedList<>();
 
     /** Round-cumulative indicator of whether all verifiers were passed. */
     private boolean passed;
 
     public VerifyingProcessor() {
         // specify default verifiers here
-        this.registeredVerifiersProviders = Set.of((procEnv) -> new KeyTypeVerifier(procEnv));
+        this.registeredVerifiersProviders.add(procEnv -> new KeyTypeVerifier(procEnv));
+        this.registeredVerifiersProviders.add(procEnv -> new EssentialPropertyVerifier(procEnv));
     }
 
     /**
@@ -47,9 +49,9 @@ public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
      * @param verifierProviders
      */
     VerifyingProcessor(final Collection<Function<ProcessingEnvironment, Verifier>> verifierProviders) {
-        this.registeredVerifiersProviders = verifierProviders.stream().collect(Collectors.toUnmodifiableSet());
+        this.registeredVerifiersProviders.addAll(verifierProviders);
     }
-    
+
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
