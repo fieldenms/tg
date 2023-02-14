@@ -16,6 +16,7 @@ import java.util.stream.Stream;
 import javax.lang.model.element.AnnotationMirror;
 import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
@@ -25,6 +26,7 @@ import javax.lang.model.util.Types;
 
 import ua.com.fielden.platform.annotations.metamodel.MetaModelForType;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.Accessor;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -81,6 +83,7 @@ public class EntityFinder extends ElementFinder {
                 .map(PropertyElement::new);
     }
 
+    // TODO possible optimisation: move this method to EntityElement and memoize its result
    /**
     * Collects the elements of {@link #streamDeclaredFields(TypeElement)} into a list.
     *
@@ -238,6 +241,25 @@ public class EntityFinder extends ElementFinder {
             .filter(Optional::isPresent)
             .map(Optional::get)
             .findFirst();
+    }
+
+    /**
+     * Attempts to find an accessor method for the given property by name. 
+     * <p>
+     * Only declared methods are searched as inherited accessors naturally cannot refer to declared fields. 
+     * 
+     * @param entity the entity element to be analysed 
+     * @param propertyName
+     * @return
+     */
+    public Optional<ExecutableElement> findPropertyAccessor(final EntityElement entity, final String propertyName) {
+        final String getName = Accessor.GET.getName(propertyName); 
+        final String isName = Accessor.IS.getName(propertyName); 
+
+        return streamDeclaredMethods(entity).filter(m -> {
+            final String methodName = m.getSimpleName().toString();
+            return methodName.equals(getName) || methodName.equals(isName);
+        }).findAny();
     }
 
     /**
