@@ -420,7 +420,7 @@ public class ElementFinder {
      */
     public Optional<? extends AnnotationMirror> findAnnotationMirror(final AnnotatedConstruct element, final Class<? extends Annotation> annotType) {
         return element.getAnnotationMirrors().stream()
-                .filter(mirror -> isSameType((TypeElement) mirror.getAnnotationType().asElement(), annotType))
+                .filter(mirror -> isSameType(mirror.getAnnotationType(), annotType))
                 .findAny();
     }
 
