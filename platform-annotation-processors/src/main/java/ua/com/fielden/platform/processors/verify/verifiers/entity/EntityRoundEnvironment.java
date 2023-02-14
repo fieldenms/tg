@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
+import static java.util.Collections.unmodifiableList;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -45,7 +48,7 @@ public class EntityRoundEnvironment extends AbstractRoundEnvironment {
 
     /**
      * Accepts an entity verifying visitor and applies it to each root entity element in this round.
-     * Returns a list containing elements that did not pass verification.
+     * Returns a list containing entity elements that did not pass verification.
      * 
      * @param visitor
      * @return
@@ -55,6 +58,29 @@ public class EntityRoundEnvironment extends AbstractRoundEnvironment {
 
         listEntities().stream()
             .map(entity -> visitor.visitEntity(entity))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .forEach(ve -> {
+                ve.printMessage(messager);
+                violators.add(ve);
+            });
+
+        return unmodifiableList(violators);
+    }
+
+    /**
+     * Accepts a verifying visitor for declared properties of an entity and applies it to each root entity element in this round.
+     * Returns a list containing property elements that did not pass verification.
+     * 
+     * @param visitor
+     * @return
+     */
+    public List<ViolatingElement> acceptDeclaredPropertiesVisitor(final AbstractPropertyVerifyingVisitor visitor) {
+        final List<ViolatingElement> violators = new LinkedList<>();
+
+        listEntities().stream()
+            .flatMap(entity -> entityFinder.streamDeclaredProperties(entity).map(prop -> t2(entity, prop)))
+            .map(entityAndProp -> visitor.visitProperty(entityAndProp._1, entityAndProp._2))
             .filter(Optional::isPresent)
             .map(Optional::get)
             .forEach(ve -> {
