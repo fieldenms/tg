@@ -21,6 +21,7 @@ import ua.com.fielden.platform.processors.verify.ViolatingElement;
 public class EntityRoundEnvironment extends AbstractRoundEnvironment {
     private EntityFinder entityFinder;
 
+    /** Holds a memoized list of root entity elements in the current round. */
     private List<EntityElement> entities;
 
     public EntityRoundEnvironment(final RoundEnvironment roundEnv, final Messager messager, final EntityFinder entityFinder) {
@@ -61,7 +62,7 @@ public class EntityRoundEnvironment extends AbstractRoundEnvironment {
                 violators.add(ve);
             });
 
-        return violators;
+        return unmodifiableList(violators);
     }
 
 }
