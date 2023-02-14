@@ -1,15 +1,13 @@
 package ua.com.fielden.platform.processors.verify.verifiers;
 
-import static java.util.stream.Collectors.toUnmodifiableSet;
-
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
-import java.util.Set;
 
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.lang.model.element.Element;
 
 import ua.com.fielden.platform.processors.verify.AbstractRoundEnvironment;
+import ua.com.fielden.platform.processors.verify.ViolatingElement;
 
 /**
  * Abstract representation of a verifier that is composed of other more specific verifiers (also called <i>components</i>).
@@ -18,7 +16,7 @@ import ua.com.fielden.platform.processors.verify.AbstractRoundEnvironment;
  * <p>
  * It is envisioned that this abstraction be used solely for grouping of verifiers and possibly defining common logic.
  * The components themselves should be designed as autonomous verifiers. That is, no shared state is permitted between components.
- * To enforce this constraint the components should be implemented as <b>nested static classes</b>.
+ * To enforce this constraint the components should be implemented either as standalone classes or <b>nested static classes</b>.
  * <p>
  * Mutual independence of components provides a very useful property for testing composable verifiers: correctness of all
  * components guarantees the correctness of the whole. So it's sufficient to test just the components.
@@ -56,16 +54,11 @@ public abstract class AbstractComposableVerifier<RE extends AbstractRoundEnviron
      * Invokes verification for each component, reporting possible errors, and returns the cumulative result.
      */
     @Override
-    public final boolean verify(final RE roundEnv) {
-        return components.stream().map(v -> v.verify(roundEnv)).reduce(true, (a, b) -> a && b);
+    public final List<ViolatingElement> verify(final RE roundEnv) {
+        final List<ViolatingElement> elements = new LinkedList<>();
+        components.stream().map(v -> v.verify(roundEnv)).forEach(lst -> elements.addAll(lst));
+        return Collections.unmodifiableList(elements);
     }
 
-    /**
-     * Returns a set containing violating elements of all components, of which this verifier is composed.
-     */
-    @Override
-    public final Set<Element> getViolatingElements() {
-        return components.stream().flatMap(v -> v.getViolatingElements().stream()).collect(toUnmodifiableSet());
-    }
 
 }

@@ -1,10 +1,8 @@
 package ua.com.fielden.platform.processors.verify.verifiers;
 
 import java.lang.annotation.Annotation;
-import java.util.Collections;
-import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -18,6 +16,7 @@ import javax.tools.Diagnostic.Kind;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.verify.AbstractRoundEnvironment;
+import ua.com.fielden.platform.processors.verify.ViolatingElement;
 
 /**
  * Abstract base verifier type providing common behaviour.
@@ -33,7 +32,6 @@ public abstract class AbstractVerifier<RE extends AbstractRoundEnvironment> impl
     protected final Types typeUtils;
     protected final ElementFinder elementFinder;
     protected final EntityFinder entityFinder;
-    protected final Set<Element> violatingElements;
 
     protected AbstractVerifier(final ProcessingEnvironment processingEnv) {
         this.processingEnv = processingEnv;
@@ -41,7 +39,6 @@ public abstract class AbstractVerifier<RE extends AbstractRoundEnvironment> impl
         this.typeUtils = processingEnv.getTypeUtils();
         this.elementFinder = new ElementFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
         this.entityFinder = new EntityFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
-        this.violatingElements = new HashSet<>();
     }
 
     /**
@@ -52,7 +49,7 @@ public abstract class AbstractVerifier<RE extends AbstractRoundEnvironment> impl
      * @param roundEnv
      * @return
      */
-    protected abstract boolean verify(final RE roundEnv);
+    protected abstract List<ViolatingElement> verify(final RE roundEnv);
 
     /**
      * Creates an instance of a round environment wrapper from the given round environment. The purpose of this method is to
@@ -69,16 +66,13 @@ public abstract class AbstractVerifier<RE extends AbstractRoundEnvironment> impl
      * conformability and also for testing purposes.
      */
     @Override
-    public final boolean verify(final RoundEnvironment roundEnv) {
+    public final List<ViolatingElement> verify(final RoundEnvironment roundEnv) {
         return verify(wrapRoundEnvironment(roundEnv));
     }
 
     /**
      * Returns an unmodifiable set of elements that did not pass verification.
      */
-    public Set<Element> getViolatingElements() {
-        return Collections.unmodifiableSet(this.violatingElements);
-    }
 
     protected final void printMessageWithAnnotationHint(
             final Kind kind, final String msg, final Element element, 

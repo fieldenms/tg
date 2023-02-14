@@ -4,6 +4,7 @@ import static java.util.stream.Collectors.joining;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -94,17 +95,16 @@ public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
      */
     private boolean verify(final RoundEnvironment roundEnv) {
         boolean roundPassed = true;
+
         for (final Verifier verifier : registeredVerifiers) {
-            final boolean verifierPassed = verifier.verify(roundEnv);
-            roundPassed = roundPassed && verifierPassed;
-            if (!verifierPassed) {
-                final Set<Element> violatingElements = verifier.getViolatingElements();
-                if (!violatingElements.isEmpty()) {
-                    printError("%s was not passed by: [%s]", verifier.getClass().getSimpleName(),
-                            violatingElements.stream().map(el -> el.getSimpleName().toString()).sorted().collect(joining(", ")));
-                }
+            final List<ViolatingElement> violators = verifier.verify(roundEnv);
+            if (!violators.isEmpty()) {
+                roundPassed = false;
+                printError("%s was not passed by: [%s]", verifier.getClass().getSimpleName(),
+                        violators.stream().map(ve -> ve.getElement().getSimpleName()).collect(Collectors.joining(", ")));
             }
         }
+
         return roundPassed;
     }
 
