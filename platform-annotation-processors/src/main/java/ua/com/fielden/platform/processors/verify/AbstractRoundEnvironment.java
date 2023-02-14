@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.processors.verify;
 
 import java.lang.annotation.Annotation;
+import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.processing.RoundEnvironment;
@@ -31,6 +33,21 @@ public abstract class AbstractRoundEnvironment {
      */
     public RoundEnvironment getRoundEnvironment() {
         return roundEnv;
+    }
+
+    /**
+     * Accepts a verifying visitor and applies it to each root element in this round.
+     * Returns a list containing elements that did not pass verification.
+     * 
+     * @param visitor
+     * @return
+     */
+    public List<ViolatingElement> accept(final VerifyingVisitor visitor) {
+        return roundEnv.getRootElements().stream()
+            .map(entity -> visitor.visitElement(entity))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .toList();
     }
 
     // ==================== FORWARDING METHODS ====================
