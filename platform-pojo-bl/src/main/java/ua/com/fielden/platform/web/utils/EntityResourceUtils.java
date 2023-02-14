@@ -18,7 +18,7 @@ import static ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker.mock;
 import static ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker.setErrorMessage;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.MORE_THEN_ONE_FOUND_ERR;
+import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_MORE_THEN_ONE_ENTITY_FOUND;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
@@ -794,7 +794,7 @@ public class EntityResourceUtils {
     }
 
     public static AbstractEntity createMockMoreThanOneEntity(final Class<? extends AbstractEntity> type, final String stringQuery) {
-        return setErrorMessage(createMockNotFoundEntity(type, stringQuery), MORE_THEN_ONE_FOUND_ERR);
+        return setErrorMessage(createMockNotFoundEntity(type, stringQuery), ERR_MORE_THEN_ONE_ENTITY_FOUND);
     }
 
     /**

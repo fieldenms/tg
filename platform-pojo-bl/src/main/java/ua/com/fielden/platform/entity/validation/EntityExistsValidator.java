@@ -43,10 +43,10 @@ import ua.com.fielden.platform.error.Result;
  */
 public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBeforeChangeEventHandler<T> {
 
-    public static final String WAS_NOT_FOUND_CONCRETE_ERR = "%s [%s] was not found.";
-    public static final String MORE_THEN_ONE_FOUND_ERR = "%s [%s] has many associated entities. Please choose one of them from drop down list.";
+    public static final String ERR_ENTITY_WAS_NOT_FOUND = "%s [%s] was not found.";
+    public static final String ERR_MORE_THEN_ONE_ENTITY_FOUND = "%s [%s] has many associated entities. Please choose one of them from drop down list.";
     public static final String ERR_WAS_NOT_FOUND = "%s was not found.";
-    public static final String EXISTS_BUT_NOT_ACTIVE_ERR = "%s [%s] exists, but is not active.";
+    public static final String ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE = "%s [%s] exists, but is not active.";
     public static final String ERR_DIRTY = "Dirty entity %s (%s) is not acceptable.";
     public static final String ERR_UNION_INVALID = "%s is invalid. Reason: %s";
 
@@ -97,7 +97,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                 //   However, union entity must be valid and it is only possible if @SkipEntityExistsValidation[(skipNew = true)] is also present on concrete property of union entity type.
                 // If union-typed property is marked with @SkipEntityExistsValidation(skipActiveOnly = true), full validation will be performed at this stage (see https://github.com/fieldenms/tg/issues/1450).
                 if (isMockNotFoundValue(newValue)) { // for whichever implementation (instrumented or not), mock is considered invalid and its specific message is taken or otherwise standard 'not found' message is used
-                    return failure(entity, format(getErrorMessage(newValue).orElse(WAS_NOT_FOUND_CONCRETE_ERR), entityTitle(newValue), newValue.getDesc())); // using newValue.getDesc() depends on the fact the it contains the value typed by the user
+                    return failure(entity, format(getErrorMessage(newValue).orElse(ERR_ENTITY_WAS_NOT_FOUND), entityTitle(newValue), newValue.getDesc())); // using newValue.getDesc() depends on the fact the it contains the value typed by the user
                 } else {
                     // need to create instrumented copy of uninstrumented 'newValue' union to check its integrity constraints (if 'newValue' is uninstrumented)
                     final var newValueToCheck = !newValue.isInstrumented() ? copy(newValue, co.new_(), ID, VERSION) : newValue; // KEY and DESC are not considered as "real" props for union -- no need to skip them during copying of unistrumented instance
@@ -105,7 +105,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                     if (!isValid.isSuccessful()) {
                         return failure(entity, new Exception(format(ERR_UNION_INVALID, entityTitle(newValueToCheck), isValid.getEx().getMessage()), isValid.getEx()));
                     } else if (!newValueToCheck.isPersisted() && !skipNewEntities(entity.getType(), property.getName()) || newValueToCheck.isPersisted() && !co.entityExists(newValueToCheck)) {
-                        return failure(format(WAS_NOT_FOUND_CONCRETE_ERR, entityTitle(newValueToCheck), newValueToCheck.toString())); // key is present if isValid is successful; that's why newValue.toString() is safe
+                        return failure(format(ERR_ENTITY_WAS_NOT_FOUND, entityTitle(newValueToCheck), newValueToCheck.toString())); // key is present if isValid is successful; that's why newValue.toString() is safe
                     } else {
                         return successful(entity);
                     }
@@ -150,11 +150,11 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                 if (!exists) {
                     if (isMockNotFoundValue) {
                         // using newValue.getDesc() depends on the fact the it contains the value typed by the user
-                        return failure(entity, format(WAS_NOT_FOUND_CONCRETE_ERR, entityTitle(newValue), newValue.getDesc()));
+                        return failure(entity, format(ERR_ENTITY_WAS_NOT_FOUND, entityTitle(newValue), newValue.getDesc()));
                     }
-                    return failure(entity, isPropertyDescriptor || KEY_NOT_ASSIGNED.equals(newValue.toString()) ? format(ERR_WAS_NOT_FOUND, entityTitle(newValue)) : format(WAS_NOT_FOUND_CONCRETE_ERR, entityTitle(newValue), newValue.toString()));
+                    return failure(entity, isPropertyDescriptor || KEY_NOT_ASSIGNED.equals(newValue.toString()) ? format(ERR_WAS_NOT_FOUND, entityTitle(newValue)) : format(ERR_ENTITY_WAS_NOT_FOUND, entityTitle(newValue), newValue.toString()));
                 } else {
-                    return failure(entity, format(EXISTS_BUT_NOT_ACTIVE_ERR, entityTitle(newValue), newValue.toString()));
+                    return failure(entity, format(ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE, entityTitle(newValue), newValue.toString()));
                 }
             } else {
                 return successful(entity);
