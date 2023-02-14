@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
@@ -21,8 +20,8 @@ import ua.com.fielden.platform.entity.NoKey;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
+import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.verify.ViolatingElement;
-import ua.com.fielden.platform.processors.verify.exceptions.VerifierException;
 import ua.com.fielden.platform.ref_hierarchy.AbstractTreeEntry;
 import ua.com.fielden.platform.web.action.AbstractFunEntityForDataExport;
 
@@ -73,19 +72,22 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
         }
 
         public List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
-            final List<EntityElement> entitiesMissingKeyType = roundEnv.listEntities().stream()
-                    // include only entity types missing @KeyType (whole type hierarchy is traversed)
-                    .filter(el -> entityFinder.findAnnotation(el, AT_KEY_TYPE_CLASS).isEmpty())
-                    // skip abstract entity types
-                    .filter(el -> !elementFinder.isAbstract(el))
-                    .toList();
+            return roundEnv.accept(new EntityVisitor(entityFinder));
+        }
 
-            entitiesMissingKeyType.forEach(entity -> messager.printMessage(Kind.ERROR, 
-                    ENTITY_DEFINITION_IS_MISSING_KEY_TYPE, entity.element()));
+        private class EntityVisitor extends AbstractEntityVerifyingVisitor {
 
-            return entitiesMissingKeyType.stream()
-                    .map(entity -> new ViolatingElement(entity.element(), Kind.ERROR, ENTITY_DEFINITION_IS_MISSING_KEY_TYPE))
-                    .toList();
+            public EntityVisitor(final EntityFinder entityFinder) {
+                super(entityFinder);
+            }
+
+            @Override
+            public Optional<ViolatingElement> visitEntity(final EntityElement entity) {
+                if (!elementFinder.isAbstract(entity) && entityFinder.findAnnotation(entity, AT_KEY_TYPE_CLASS).isEmpty()) {
+                    return Optional.of(new ViolatingElement(entity.element(), Kind.ERROR, ENTITY_DEFINITION_IS_MISSING_KEY_TYPE));
+                }
+                return Optional.empty();
+            }
         }
 
     }
@@ -114,29 +116,50 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
         }
 
         public List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
-            // we do not check that an element is an entity, since we assume that all elements annotated with @KeyType are entity types
-            final List<EntityElement> entitiesWithKeyType = roundEnv.getElementsAnnotatedWith(AT_KEY_TYPE_CLASS).stream()
-                    .map(el -> entityFinder.newEntityElement((TypeElement) el))
-                    .filter(el -> entityFinder.getParent(el).map(this::isOneOfAbstracts).orElse(false))
-                    .toList();
+            return roundEnv.accept(new EntityVisitor(entityFinder));
+        }
 
-            final List<ViolatingElement> violatingElements = new LinkedList<>();
+        private class EntityVisitor extends AbstractEntityVerifyingVisitor {
 
-            for (final EntityElement el : entitiesWithKeyType) {
-                final TypeMirror keyType = entityFinder.getKeyType(el.getAnnotation(AT_KEY_TYPE_CLASS));
-                final DeclaredType supertype = (DeclaredType) el.getSuperclass();
-
-                final List<? extends TypeMirror> typeArgs = supertype.getTypeArguments();
-                if (typeArgs.isEmpty()) {
-                    violatingElements.add(new ViolatingElement(el, Kind.ERROR, SUPERTYPE_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE));
-                }
-                // abstract entities accept a single type argument
-                else if (!typeUtils.isSameType(typeArgs.get(0), keyType)) {
-                    violatingElements.add(new ViolatingElement(el, Kind.ERROR, KEY_TYPE_MUST_MATCH_THE_TYPE_ARGUMENT_TO_ABSTRACT_ENTITY));
-                }
+            public EntityVisitor(final EntityFinder entityFinder) {
+                super(entityFinder);
             }
 
-            return violatingElements;
+            @Override
+            public Optional<ViolatingElement> visitEntity(final EntityElement entity) {
+                final Optional<? extends AnnotationMirror> maybeKeyTypeAnnotMirror = entityFinder.findAnnotationMirror(entity, AT_KEY_TYPE_CLASS);
+                if (maybeKeyTypeAnnotMirror.isEmpty()) {
+                    return Optional.empty();
+                }
+                final AnnotationMirror keyTypeAnnotMirror = maybeKeyTypeAnnotMirror.get();
+
+                final Optional<EntityElement> maybeParent = entityFinder.getParent(entity);
+                if (maybeParent.isEmpty()) {
+                    return Optional.empty();
+                }
+                final EntityElement parent = maybeParent.get();
+
+                if (!isOneOfAbstracts(parent)) {
+                    return Optional.empty();
+                }
+
+                final AnnotationValue keyTypeAnnotValue = entityFinder.getKeyTypeAnnotationValue(keyTypeAnnotMirror);
+                final TypeMirror actualKeyTypeMirror = (TypeMirror) keyTypeAnnotValue.getValue();
+
+                final DeclaredType entitySuperclassType = (DeclaredType) entity.getSuperclass();
+
+                final List<? extends TypeMirror> parentTypeArgs = entitySuperclassType.getTypeArguments();
+                if (parentTypeArgs.isEmpty()) {
+                    return Optional.of(new ViolatingElement(entity.element(), Kind.ERROR, SUPERTYPE_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE));
+                }
+                // abstract entities accept a single type argument
+                else if (!typeUtils.isSameType(parentTypeArgs.get(0), actualKeyTypeMirror)) {
+                    return Optional.of(new ViolatingElement(entity.element(), Kind.ERROR, KEY_TYPE_MUST_MATCH_THE_TYPE_ARGUMENT_TO_ABSTRACT_ENTITY,
+                            keyTypeAnnotMirror, keyTypeAnnotValue));
+                }
+
+                return Optional.empty();
+            }
         }
     }
 
@@ -155,40 +178,48 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
         }
 
         public List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
-            final List<EntityElement> entitiesWithDeclaredKeyType = roundEnv.getElementsAnnotatedWith(AT_KEY_TYPE_CLASS).stream()
-                    .map(el -> entityFinder.newEntityElement((TypeElement) el))
-                    .toList();
+            return roundEnv.accept(new EntityVisitor(entityFinder));
+        }
 
-            final List<ViolatingElement> violatingElements = new LinkedList<>();
+        private class EntityVisitor extends AbstractEntityVerifyingVisitor {
 
-            for (final EntityElement entity : entitiesWithDeclaredKeyType) {
+            public EntityVisitor(final EntityFinder entityFinder) {
+                super(entityFinder);
+            }
+
+            @Override
+            public Optional<ViolatingElement> visitEntity(final EntityElement entity) {
+                final Optional<? extends AnnotationMirror> maybeEntityKeyTypeAnnotMirror = entityFinder.findAnnotationMirror(entity, AT_KEY_TYPE_CLASS);
+                if (maybeEntityKeyTypeAnnotMirror.isEmpty()) {
+                    return Optional.empty();
+                }
+                final AnnotationMirror entityKeyTypeAnnotMirror = maybeEntityKeyTypeAnnotMirror.get();
+
                 final Optional<EntityElement> maybeParent = entityFinder.getParent(entity); 
-
                 // skip non-child entities and those with an abstract parent
                 // TODO handle hierarchy [non-abstract -> abstract -> non-abstract -> ...] ?
-                if (maybeParent.map(elt -> elementFinder.isAbstract(elt)).orElse(true)) continue;
-
+                if (maybeParent.map(elt -> elementFinder.isAbstract(elt)).orElse(true)) {
+                    return Optional.empty();
+                }
                 final EntityElement parent = maybeParent.get();
+
                 final Optional<TypeMirror> parentKeyTypeMirror = entityFinder.determineKeyType(parent);
                 // parent might be missing @KeyType, which should have been detected by KeyTypePresence verifier-part, so we ignore this case
-                if (parentKeyTypeMirror.isEmpty()) continue;
+                if (parentKeyTypeMirror.isEmpty()) {
+                    return Optional.empty();
+                }
 
-                // We could simply use entityFinder.determineKeyType(entity), but we need AnnotationValue and AnnotationMirror 
-                // to report a possible error message
-                // We know @KeyType must be present on entity
-                final AnnotationMirror entityKeyTypeAnnotMirror = entityFinder.findAnnotationMirror(entity, AT_KEY_TYPE_CLASS)
-                        .orElseThrow(() -> new VerifierException("Impossibly @KeyType annotation mirror was not found for [%s].".formatted(entity)));
                 final AnnotationValue entityKeyTypeAnnotValue = entityFinder.getKeyTypeAnnotationValue(entityKeyTypeAnnotMirror);
                 final TypeMirror entityKeyTypeMirror = (TypeMirror) entityKeyTypeAnnotValue.getValue();
 
                 if (!typeUtils.isSameType(parentKeyTypeMirror.get(), entityKeyTypeMirror)) {
-                    violatingElements.add(new ViolatingElement(entity.element(), Kind.ERROR,
+                    return Optional.of(new ViolatingElement(entity.element(), Kind.ERROR,
                             keyTypeMustMatchTheSupertypesKeyType(parent.getSimpleName().toString()),
                             entityKeyTypeAnnotMirror, entityKeyTypeAnnotValue));
                 }
-            }
 
-            return violatingElements;
+                return Optional.empty();
+            }
         }
     }
 
@@ -197,8 +228,8 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
      * Additionally, if {@link NoKey} is specified, then it's forbidden to declare property {@code key}.
      */
     static class DeclaredKeyPropertyTypeMatchesAtKeyTypeValue extends AbstractEntityVerifier {
-        static final String ENTITY_WITH_NOKEY_AS_KEY_TYPE_CAN_NOT_DECLARE_PROPERTY_KEY = "Entity with NoKey as key type can not declare property \"key\".";
-        static final String KEY_PROPERTY_TYPE_MUST_BE_CONSISTENT_WITH_KEYTYPE_DEFINITION = "\"key\" property type must be consistent with @KeyType definition.";
+        static final String ENTITY_WITH_NOKEY_AS_KEY_TYPE_CAN_NOT_DECLARE_PROPERTY_KEY = "Entity with NoKey as key type can not declare property [key].";
+        static final String KEY_PROPERTY_TYPE_MUST_BE_CONSISTENT_WITH_KEYTYPE_DEFINITION = "The [key] property type must be consistent with @KeyType definition.";
 
         protected DeclaredKeyPropertyTypeMatchesAtKeyTypeValue(final ProcessingEnvironment processingEnv) {
             super(processingEnv);
@@ -206,30 +237,43 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
 
         @Override
         public List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
-            final List<ViolatingElement> violatingElements = new LinkedList<>();
+            return roundEnv.accept(new EntityVisitor(entityFinder));
+        }
 
-            for (final EntityElement entity : roundEnv.listEntities()) {
+        private class EntityVisitor extends AbstractEntityVerifyingVisitor {
+
+            public EntityVisitor(final EntityFinder entityFinder) {
+                super(entityFinder);
+            }
+
+            @Override
+            public Optional<ViolatingElement> visitEntity(final EntityElement entity) {
                 final Optional<PropertyElement> maybeKeyProp = entityFinder.findDeclaredProperty(entity, AbstractEntity.KEY);
-                if (maybeKeyProp.isEmpty()) continue;
-
+                if (maybeKeyProp.isEmpty()) {
+                    return Optional.empty();
+                }
                 final PropertyElement keyProp = maybeKeyProp.get();
+
                 final Optional<TypeMirror> maybeKeyType = entityFinder.determineKeyType(entity);
                 // missing @KeyType could mean an abstract entity or an invalid definition, either way this verifier has other responsibilities
-                if (maybeKeyType.isEmpty()) continue;
-                
-                final TypeMirror keyType = maybeKeyType.get();
-                if (elementFinder.isSameType(keyType, NoKey.class)) {
-                    violatingElements.add(new ViolatingElement(keyProp.element(), Kind.ERROR, ENTITY_WITH_NOKEY_AS_KEY_TYPE_CAN_NOT_DECLARE_PROPERTY_KEY));
+                if (maybeKeyType.isEmpty()) {
+                    return Optional.empty();
                 }
-                else {
+                final TypeMirror keyType = maybeKeyType.get();
+
+                if (elementFinder.isSameType(keyType, NoKey.class)) {
+                    return Optional.of(new ViolatingElement(keyProp.element(), Kind.ERROR,
+                            ENTITY_WITH_NOKEY_AS_KEY_TYPE_CAN_NOT_DECLARE_PROPERTY_KEY));
+                } else {
                     final TypeMirror keyPropType = keyProp.getType();
                     if (!typeUtils.isSameType(keyPropType, keyType)) {
-                    violatingElements.add(new ViolatingElement(keyProp.element(), Kind.ERROR, KEY_PROPERTY_TYPE_MUST_BE_CONSISTENT_WITH_KEYTYPE_DEFINITION));
+                        return Optional.of(new ViolatingElement(keyProp.element(), Kind.ERROR,
+                                KEY_PROPERTY_TYPE_MUST_BE_CONSISTENT_WITH_KEYTYPE_DEFINITION));
                     }
                 }
+
+                return Optional.empty();
             }
-            
-            return violatingElements;
         }
     }
 
