@@ -18,7 +18,7 @@ public abstract class AbstractEntityVerifier extends AbstractVerifier<EntityRoun
 
     @Override
     protected final EntityRoundEnvironment wrapRoundEnvironment(final RoundEnvironment roundEnv) {
-        return new EntityRoundEnvironment(roundEnv, entityFinder);
+        return new EntityRoundEnvironment(roundEnv, this.messager, entityFinder);
     }
 
 }

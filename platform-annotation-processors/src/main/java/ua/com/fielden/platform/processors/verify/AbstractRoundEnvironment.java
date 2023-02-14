@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.processors.verify;
 
 import java.lang.annotation.Annotation;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
@@ -22,9 +24,11 @@ import javax.lang.model.element.TypeElement;
  */
 public abstract class AbstractRoundEnvironment {
     protected final RoundEnvironment roundEnv;
+    protected final Messager messager;
 
-    public AbstractRoundEnvironment(final RoundEnvironment roundEnv) {
+    public AbstractRoundEnvironment(final RoundEnvironment roundEnv, final Messager messager) {
         this.roundEnv = roundEnv;
+        this.messager = messager;
     }
 
     /**
@@ -43,11 +47,18 @@ public abstract class AbstractRoundEnvironment {
      * @return
      */
     public List<ViolatingElement> accept(final VerifyingVisitor visitor) {
-        return roundEnv.getRootElements().stream()
+        final List<ViolatingElement> violators = new LinkedList<>();
+
+        roundEnv.getRootElements().stream()
             .map(entity -> visitor.visitElement(entity))
             .filter(Optional::isPresent)
             .map(Optional::get)
-            .toList();
+            .forEach(ve -> {
+                ve.printMessage(messager);
+                violators.add(ve);
+            });
+
+        return violators;
     }
 
     // ==================== FORWARDING METHODS ====================

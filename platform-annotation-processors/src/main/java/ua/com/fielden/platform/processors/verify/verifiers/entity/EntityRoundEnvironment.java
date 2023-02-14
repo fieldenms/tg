@@ -4,6 +4,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
+import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.TypeElement;
 
@@ -22,8 +23,8 @@ public class EntityRoundEnvironment extends AbstractRoundEnvironment {
 
     private List<EntityElement> entities;
 
-    public EntityRoundEnvironment(final RoundEnvironment roundEnv, final EntityFinder entityFinder) {
-        super(roundEnv);
+    public EntityRoundEnvironment(final RoundEnvironment roundEnv, final Messager messager, final EntityFinder entityFinder) {
+        super(roundEnv, messager);
         this.entityFinder = entityFinder;
     }
 
@@ -49,11 +50,18 @@ public class EntityRoundEnvironment extends AbstractRoundEnvironment {
      * @return
      */
     public List<ViolatingElement> accept(final AbstractEntityVerifyingVisitor visitor) {
-        return listEntities().stream()
+        final List<ViolatingElement> violators = new LinkedList<>();
+
+        listEntities().stream()
             .map(entity -> visitor.visitEntity(entity))
             .filter(Optional::isPresent)
             .map(Optional::get)
-            .toList();
+            .forEach(ve -> {
+                ve.printMessage(messager);
+                violators.add(ve);
+            });
+
+        return violators;
     }
 
 }

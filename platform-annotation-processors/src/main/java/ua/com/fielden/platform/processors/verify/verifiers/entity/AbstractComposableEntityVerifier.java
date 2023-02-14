@@ -37,7 +37,7 @@ public abstract class AbstractComposableEntityVerifier extends AbstractComposabl
 
     @Override
     protected final EntityRoundEnvironment wrapRoundEnvironment(final RoundEnvironment roundEnv) {
-        return new EntityRoundEnvironment(roundEnv, entityFinder);
+        return new EntityRoundEnvironment(roundEnv, this.messager, entityFinder);
     }
 
 }
