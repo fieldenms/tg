@@ -13,6 +13,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -277,6 +279,20 @@ public class EntityFinder extends ElementFinder {
      */
     public TypeMirror getKeyType(final KeyType atKeyType) {
         return getAnnotationElementValueOfClassType(atKeyType, a -> a.value());
+    }
+
+    /**
+     * Returns an annotation value representing the actual key type specified by the {@link KeyType} annotation.
+     * <p>
+     * A runtime exception is thrown in case {@link KeyType#value()} could not be obtained, which might happend only if {@code annotMirror}
+     * does not represent {@link KeyType}.
+     * 
+     * @param atKeyType - annotation mirror representing the {@link KeyType} annotation.
+     * @return
+     */
+    public AnnotationValue getKeyTypeAnnotationValue(final AnnotationMirror annotMirror) {
+        return findAnnotationValue(annotMirror, "value")
+                .orElseThrow(() -> new ElementFinderException("Failed to obtain @KeyType.value() from annotation mirror."));
     }
 
     /**

@@ -1,9 +1,12 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.TypeMirror;
@@ -18,6 +21,8 @@ import ua.com.fielden.platform.entity.NoKey;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
+import ua.com.fielden.platform.processors.verify.ViolatingElement;
+import ua.com.fielden.platform.processors.verify.exceptions.VerifierException;
 import ua.com.fielden.platform.ref_hierarchy.AbstractTreeEntry;
 import ua.com.fielden.platform.web.action.AbstractFunEntityForDataExport;
 
@@ -67,7 +72,7 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
             super(processingEnv);
         }
 
-        public boolean verify(final EntityRoundEnvironment roundEnv) {
+        public List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
             final List<EntityElement> entitiesMissingKeyType = roundEnv.listEntities().stream()
                     // include only entity types missing @KeyType (whole type hierarchy is traversed)
                     .filter(el -> entityFinder.findAnnotation(el, AT_KEY_TYPE_CLASS).isEmpty())
@@ -77,9 +82,10 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
 
             entitiesMissingKeyType.forEach(entity -> messager.printMessage(Kind.ERROR, 
                     ENTITY_DEFINITION_IS_MISSING_KEY_TYPE, entity.element()));
-            violatingElements.addAll(entitiesMissingKeyType);
 
-            return entitiesMissingKeyType.isEmpty();
+            return entitiesMissingKeyType.stream()
+                    .map(entity -> new ViolatingElement(entity.element(), Kind.ERROR, ENTITY_DEFINITION_IS_MISSING_KEY_TYPE))
+                    .toList();
         }
 
     }
@@ -107,13 +113,14 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
             return ABSTRACTS.stream().anyMatch(clazz -> elementFinder.isSameType(element, clazz));
         }
 
-        public boolean verify(final EntityRoundEnvironment roundEnv) {
-            boolean allPassed = true;
+        public List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
             // we do not check that an element is an entity, since we assume that all elements annotated with @KeyType are entity types
             final List<EntityElement> entitiesWithKeyType = roundEnv.getElementsAnnotatedWith(AT_KEY_TYPE_CLASS).stream()
                     .map(el -> entityFinder.newEntityElement((TypeElement) el))
                     .filter(el -> entityFinder.getParent(el).map(this::isOneOfAbstracts).orElse(false))
                     .toList();
+
+            final List<ViolatingElement> violatingElements = new LinkedList<>();
 
             for (final EntityElement el : entitiesWithKeyType) {
                 final TypeMirror keyType = entityFinder.getKeyType(el.getAnnotation(AT_KEY_TYPE_CLASS));
@@ -121,20 +128,15 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
 
                 final List<? extends TypeMirror> typeArgs = supertype.getTypeArguments();
                 if (typeArgs.isEmpty()) {
-                    violatingElements.add(el);
-                    allPassed = false;
-                    messager.printMessage(Kind.ERROR, SUPERTYPE_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE, el.element());
+                    violatingElements.add(new ViolatingElement(el, Kind.ERROR, SUPERTYPE_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE));
                 }
                 // abstract entities accept a single type argument
                 else if (!typeUtils.isSameType(typeArgs.get(0), keyType)) {
-                    violatingElements.add(el);
-                    allPassed = false;
-                    printMessageWithAnnotationHint(Kind.ERROR, KEY_TYPE_MUST_MATCH_THE_TYPE_ARGUMENT_TO_ABSTRACT_ENTITY,
-                            el.element(), AT_KEY_TYPE_CLASS, "value");
+                    violatingElements.add(new ViolatingElement(el, Kind.ERROR, KEY_TYPE_MUST_MATCH_THE_TYPE_ARGUMENT_TO_ABSTRACT_ENTITY));
                 }
             }
 
-            return allPassed;
+            return violatingElements;
         }
     }
 
@@ -152,11 +154,12 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
             super(processingEnv);
         }
 
-        public boolean verify(final EntityRoundEnvironment roundEnv) {
-            boolean allPassed = true;
+        public List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
             final List<EntityElement> entitiesWithDeclaredKeyType = roundEnv.getElementsAnnotatedWith(AT_KEY_TYPE_CLASS).stream()
                     .map(el -> entityFinder.newEntityElement((TypeElement) el))
                     .toList();
+
+            final List<ViolatingElement> violatingElements = new LinkedList<>();
 
             for (final EntityElement entity : entitiesWithDeclaredKeyType) {
                 final Optional<EntityElement> maybeParent = entityFinder.getParent(entity); 
@@ -166,27 +169,29 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
                 if (maybeParent.map(elt -> elementFinder.isAbstract(elt)).orElse(true)) continue;
 
                 final EntityElement parent = maybeParent.get();
-                final Optional<KeyType> parentAtKeyType = entityFinder.findAnnotation(parent, AT_KEY_TYPE_CLASS);
+                final Optional<TypeMirror> parentKeyTypeMirror = entityFinder.determineKeyType(parent);
                 // parent might be missing @KeyType, which should have been detected by KeyTypePresence verifier-part, so we ignore this case
-                if (parentAtKeyType.isEmpty()) continue;
+                if (parentKeyTypeMirror.isEmpty()) continue;
 
-                final TypeMirror parentKeyType = entityFinder.getKeyType(parentAtKeyType.get());
-                final TypeMirror entityKeyType = entityFinder.getKeyType(entity.getAnnotation(AT_KEY_TYPE_CLASS));
+                // We could simply use entityFinder.determineKeyType(entity), but we need AnnotationValue and AnnotationMirror 
+                // to report a possible error message
+                // We know @KeyType must be present on entity
+                final AnnotationMirror entityKeyTypeAnnotMirror = entityFinder.findAnnotationMirror(entity, AT_KEY_TYPE_CLASS)
+                        .orElseThrow(() -> new VerifierException("Impossibly @KeyType annotation mirror was not found for [%s].".formatted(entity)));
+                final AnnotationValue entityKeyTypeAnnotValue = entityFinder.getKeyTypeAnnotationValue(entityKeyTypeAnnotMirror);
+                final TypeMirror entityKeyTypeMirror = (TypeMirror) entityKeyTypeAnnotValue.getValue();
 
-                if (!typeUtils.isSameType(parentKeyType, entityKeyType)) {
-                    violatingElements.add(entity);
-                    allPassed = false;
-
-                    // report error
-                    printMessageWithAnnotationHint(Kind.ERROR, keyTypeMustMatchTheSupertypesKeyType(parent.getSimpleName().toString()),
-                            entity.element(), AT_KEY_TYPE_CLASS, "value");
+                if (!typeUtils.isSameType(parentKeyTypeMirror.get(), entityKeyTypeMirror)) {
+                    violatingElements.add(new ViolatingElement(entity.element(), Kind.ERROR,
+                            keyTypeMustMatchTheSupertypesKeyType(parent.getSimpleName().toString()),
+                            entityKeyTypeAnnotMirror, entityKeyTypeAnnotValue));
                 }
             }
 
-            return allPassed;
+            return violatingElements;
         }
     }
-    
+
     /**
      * If an entity declares property {@code key}, then its type must match the key type defined by {@link KeyType}.
      * Additionally, if {@link NoKey} is specified, then it's forbidden to declare property {@code key}.
@@ -200,8 +205,8 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
         }
 
         @Override
-        public boolean verify(final EntityRoundEnvironment roundEnv) {
-            boolean allPassed = true;
+        public List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
+            final List<ViolatingElement> violatingElements = new LinkedList<>();
 
             for (final EntityElement entity : roundEnv.listEntities()) {
                 final Optional<PropertyElement> maybeKeyProp = entityFinder.findDeclaredProperty(entity, AbstractEntity.KEY);
@@ -214,21 +219,17 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
                 
                 final TypeMirror keyType = maybeKeyType.get();
                 if (elementFinder.isSameType(keyType, NoKey.class)) {
-                    allPassed = false;
-                    this.violatingElements.add(entity);
-                    messager.printMessage(Kind.ERROR, ENTITY_WITH_NOKEY_AS_KEY_TYPE_CAN_NOT_DECLARE_PROPERTY_KEY, keyProp.element());
+                    violatingElements.add(new ViolatingElement(keyProp.element(), Kind.ERROR, ENTITY_WITH_NOKEY_AS_KEY_TYPE_CAN_NOT_DECLARE_PROPERTY_KEY));
                 }
                 else {
                     final TypeMirror keyPropType = keyProp.getType();
                     if (!typeUtils.isSameType(keyPropType, keyType)) {
-                        allPassed = false;
-                        this.violatingElements.add(entity);
-                        messager.printMessage(Kind.ERROR, KEY_PROPERTY_TYPE_MUST_BE_CONSISTENT_WITH_KEYTYPE_DEFINITION, keyProp.element());
+                    violatingElements.add(new ViolatingElement(keyProp.element(), Kind.ERROR, KEY_PROPERTY_TYPE_MUST_BE_CONSISTENT_WITH_KEYTYPE_DEFINITION));
                     }
                 }
             }
             
-            return allPassed;
+            return violatingElements;
         }
     }
 
