@@ -33,6 +33,7 @@ import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
@@ -244,19 +245,58 @@ public class EntityFinder extends ElementFinder {
     }
 
     /**
-     * Attempts to find an accessor method for the given property by name. 
-     * <p>
-     * Only declared methods are searched as inherited accessors naturally cannot refer to declared fields. 
+     * Attempts to find an accessor method for the given property by name. The whole entity type hierarchy is searched.
      * 
      * @param entity the entity element to be analysed 
      * @param propertyName
      * @return
      */
     public Optional<ExecutableElement> findPropertyAccessor(final EntityElement entity, final String propertyName) {
+        return doFindPropertyAccessor(streamMethods(entity.element()), propertyName);
+    }
+
+    /**
+     * Attempts to find an accessor method for the given property by path. The whole entity type hierarchy is searched.
+     * <p>
+     * The property path must be of length 1 at most. 
+     * 
+     * @param entity the entity element to be analysed 
+     * @param propertyPath
+     * @return
+     */
+    public Optional<ExecutableElement> findPropertyAccessor(final EntityElement entity, final IConvertableToPath propertyPath) {
+        return doFindPropertyAccessor(streamMethods(entity.element()), propertyPath.toPath());
+    }
+
+    /**
+     * Attempts to find a declared accessor method for the given property by name.
+     * 
+     * @param entity the entity element to be analysed 
+     * @param propertyName
+     * @return
+     */
+    public Optional<ExecutableElement> findDeclaredPropertyAccessor(final EntityElement entity, final String propertyName) {
+        return doFindPropertyAccessor(streamDeclaredMethods(entity.element()), propertyName);
+    }
+
+    /**
+     * Attempts to find a declared accessor method for the given property by path.
+     * <p>
+     * The property path must be of length 1 at most. 
+     * 
+     * @param entity the entity element to be analysed 
+     * @param propertyPath
+     * @return
+     */
+    public Optional<ExecutableElement> findDeclaredPropertyAccessor(final EntityElement entity, final IConvertableToPath propertyPath) {
+        return doFindPropertyAccessor(streamDeclaredMethods(entity.element()), propertyPath.toPath());
+    }
+
+    private Optional<ExecutableElement> doFindPropertyAccessor(final Stream<ExecutableElement> methods, final String propertyName) {
         final String getName = Accessor.GET.getName(propertyName); 
         final String isName = Accessor.IS.getName(propertyName); 
 
-        return streamDeclaredMethods(entity).filter(m -> {
+        return methods.filter(m -> {
             final String methodName = m.getSimpleName().toString();
             return methodName.equals(getName) || methodName.equals(isName);
         }).findAny();
