@@ -34,7 +34,7 @@ public class MockNotFoundEntityMaker {
     private static final Cache<String, Class<? extends AbstractEntity<?>>> TYPES = CacheBuilder.newBuilder().weakKeys().initialCapacity(10).maximumSize(100).concurrencyLevel(50).build();
     public static final String MOCK_TYPE_ENDING = "_MOCK_VALUE_NOT_FOUND";
     private static final String ERR_COULD_NOT_SET = "\"%s\" error message can not be set into [%s] field of [%s] mock entity.";
-    private static final String ERR_COULD_NOT_ACCESS = "Could not be access [%s] field of [%s] mock entity.";
+    private static final String ERR_COULD_NOT_ACCESS = "Could not access [%s] field of [%s] mock entity.";
     private static final String PROP_NAME_HOLDING_ERROR_MSG = "errorMessage_";
 
     private MockNotFoundEntityMaker() { }
@@ -83,22 +83,22 @@ public class MockNotFoundEntityMaker {
     }
 
     /**
-     * Set the specified errorMessage into errorMessage_ field of mock entity.
+     * Assigns {@code errorMsg} to the {@code PROP_NAME_HOLDING_ERROR_MSG} field of entity {@code mock}.
      *
      * @param <T>
      * @param mock
-     * @param errMessage
+     * @param errorMsg
      */
-    public static <T extends AbstractEntity<?>> T setErrorMessage(final T mock, final String errMessage) {
+    public static <T extends AbstractEntity<?>> T setErrorMessage(final T mock, final String errorMsg) {
         if (isMockNotFoundValue(mock)) {
             try {
                 final Field msgField = findFieldByName(mock.getClass(), PROP_NAME_HOLDING_ERROR_MSG);
                 final boolean isAccessible = msgField.canAccess(mock);
                 msgField.setAccessible(true);
-                msgField.set(mock, errMessage);
+                msgField.set(mock, errorMsg);
                 msgField.setAccessible(isAccessible);
             } catch (IllegalArgumentException | IllegalAccessException ex) {
-                throw new MockException(format(ERR_COULD_NOT_SET, errMessage, PROP_NAME_HOLDING_ERROR_MSG, mock.getClass()), ex);
+                throw new MockException(format(ERR_COULD_NOT_SET, errorMsg, PROP_NAME_HOLDING_ERROR_MSG, mock.getClass()), ex);
             }
         }
         return mock;

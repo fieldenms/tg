@@ -47,7 +47,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
     public static final String ERR_WAS_NOT_FOUND = "%s was not found.";
     public static final String ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE = "%s [%s] exists, but is not active.";
     public static final String ERR_DIRTY = "Dirty entity %s (%s) is not acceptable.";
-    public static final String ERR_UNION_INVALID = "%s is invalid. Reason: %s";
+    private static final String ERR_UNION_INVALID = "%s is invalid: %s";
 
     private final Class<T> type;
     private final ICompanionObjectFinder coFinder;
@@ -91,15 +91,17 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             if (newValue == null) {
                 return successful(entity);
             } else if (newValue instanceof AbstractUnionEntity) {
-                // If union-typed property is marked with @SkipEntityExistsValidation, this validator will be completely by-passed.
-                // If union-typed property is marked with @SkipEntityExistsValidation(skipNew = true), union instance with non-persisted active entity will be skipped.
-                //   However, union entity must be valid and it is only possible if @SkipEntityExistsValidation[(skipNew = true)] is also present on concrete property of union entity type.
-                // If union-typed property is marked with @SkipEntityExistsValidation(skipActiveOnly = true), full validation will be performed at this stage (see https://github.com/fieldenms/tg/issues/1450).
-                if (isMockNotFoundValue(newValue)) { // for whichever implementation (instrumented or not), mock is considered invalid and its specific message is taken or otherwise standard 'not found' message is used
-                    return failure(entity, format(getErrorMessage(newValue).orElse(ERR_ENTITY_WAS_NOT_FOUND), entityTitle(newValue), newValue.getDesc())); // using newValue.getDesc() depends on the fact the it contains the value typed by the user
+                // If union-typed property is marked with @SkipEntityExistsValidation, this validator will be completely bypassed.
+                // If union-typed property is marked with @SkipEntityExistsValidation(skipNew = true), a union instance with non-persisted active entity will be skipped.
+                //   However, a union entity must be valid and it is only possible if @SkipEntityExistsValidation[(skipNew = true)] is also present on specific union properties.
+                // If union-typed property is marked with @SkipEntityExistsValidation(skipActiveOnly = true), full validation will be performed at this stage (see also https://github.com/fieldenms/tg/issues/1450).
+                if (isMockNotFoundValue(newValue)) { // mock represents an invalid value
+                    // if a specific error message is present,then this error message is reported
+                    // otherwise, a standard 'not found' message is reported 
+                    return failure(entity, getErrorMessage(newValue).orElseGet(() -> format(ERR_ENTITY_WAS_NOT_FOUND, entityTitle(newValue), newValue.getDesc()))); // newValue.getDesc() is expected to contain a string value typed by a user
                 } else {
-                    // need to create instrumented copy of uninstrumented 'newValue' union to check its integrity constraints (if 'newValue' is uninstrumented)
-                    final var newValueToCheck = !newValue.isInstrumented() ? copy(newValue, co.new_(), ID, VERSION) : newValue; // KEY and DESC are not considered as "real" props for union -- no need to skip them during copying of unistrumented instance
+                    // need to create an instrumented copy of newValue, if it is uninstrumented, to enforce validation
+                    final var newValueToCheck = !newValue.isInstrumented() ? copy(newValue, co.new_(), ID, VERSION) : newValue; // KEY and DESC are not considered as "real" props for union -- no need to skip them for the unistrumented instance
                     final var isValid = newValueToCheck.isValid();
                     if (!isValid.isSuccessful()) {
                         return failure(entity, new Exception(format(ERR_UNION_INVALID, entityTitle(newValueToCheck), isValid.getEx().getMessage()), isValid.getEx()));
@@ -118,7 +120,7 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
             }
 
             // the notion of existence is different for activatable and non-activatable entities,
-            // where for activatable entities to exists mens also to be active
+            // where for activatable entities to exist means also to be active
             final boolean exists;
             final boolean activeEnough; // Does not have to be 100% active - see below
             final boolean isMockNotFoundValue = isMockNotFoundValue(newValue);

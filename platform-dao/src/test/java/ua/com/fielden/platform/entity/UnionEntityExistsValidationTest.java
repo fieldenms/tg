@@ -62,7 +62,7 @@ public class UnionEntityExistsValidationTest extends AbstractDaoTestCase {
         assertFalse(bogie.getProperty("location").isValid());
         assertEquals(
             format(
-                "%s is invalid. Reason: %s",
+                "%s is invalid: %s",
                 getEntityTitleAndDesc(TgBogieLocation.class).getKey(),
                 format(
                     "Required property [%s] is not specified for entity [%s].",
@@ -93,7 +93,7 @@ public class UnionEntityExistsValidationTest extends AbstractDaoTestCase {
         assertFalse(bogie.getProperty("location").isValid());
         assertEquals(
             format(
-                "%s is invalid. Reason: %s",
+                "%s is invalid: %s",
                 getEntityTitleAndDesc(TgBogieLocation.class).getKey(),
                 format(
                     "%s was not found.",
@@ -156,7 +156,7 @@ public class UnionEntityExistsValidationTest extends AbstractDaoTestCase {
         assertFalse(bogie.getProperty("location").isValid());
         assertEquals(
             format(
-                "%s is invalid. Reason: %s",
+                "%s is invalid: %s",
                 getEntityTitleAndDesc(TgBogieLocation.class).getKey(),
                 format(
                     "%s [%s] was not found.",
