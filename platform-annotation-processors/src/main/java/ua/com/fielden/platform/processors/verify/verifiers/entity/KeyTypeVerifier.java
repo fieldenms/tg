@@ -20,6 +20,7 @@ import ua.com.fielden.platform.entity.NoKey;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
+import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.verify.ViolatingElement;
 import ua.com.fielden.platform.ref_hierarchy.AbstractTreeEntry;
@@ -83,7 +84,7 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
 
             @Override
             public Optional<ViolatingElement> visitEntity(final EntityElement entity) {
-                if (!elementFinder.isAbstract(entity) && entityFinder.findAnnotation(entity, AT_KEY_TYPE_CLASS).isEmpty()) {
+                if (!ElementFinder.isAbstract(entity) && entityFinder.findAnnotation(entity, AT_KEY_TYPE_CLASS).isEmpty()) {
                     return Optional.of(new ViolatingElement(entity.element(), Kind.ERROR, ENTITY_DEFINITION_IS_MISSING_KEY_TYPE));
                 }
                 return Optional.empty();
@@ -112,7 +113,7 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
         }
 
         private boolean isOneOfAbstracts(final TypeElement element) {
-            return ABSTRACTS.stream().anyMatch(clazz -> elementFinder.isSameType(element, clazz));
+            return ABSTRACTS.stream().anyMatch(clazz -> elementFinder.isSameType(element.asType(), clazz));
         }
 
         public List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
@@ -198,7 +199,7 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
                 final Optional<EntityElement> maybeParent = entityFinder.getParent(entity); 
                 // skip non-child entities and those with an abstract parent
                 // TODO handle hierarchy [non-abstract -> abstract -> non-abstract -> ...] ?
-                if (maybeParent.map(elt -> elementFinder.isAbstract(elt)).orElse(true)) {
+                if (maybeParent.map(elt -> ElementFinder.isAbstract(elt)).orElse(true)) {
                     return Optional.empty();
                 }
                 final EntityElement parent = maybeParent.get();

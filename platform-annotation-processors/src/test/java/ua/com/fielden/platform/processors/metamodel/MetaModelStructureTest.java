@@ -293,7 +293,7 @@ public class MetaModelStructureTest {
 
         aliasedMetaModels.stream()
             .forEach(mme -> {
-                final TypeElement superclass = elementFinder.findSuperclass(mme).orElseThrow();
+                final TypeElement superclass = ElementFinder.findSuperclass(mme).orElseThrow();
                 assertTrue(metaModelFinder.isMetaModel(superclass));
                 // superclass name = name - "MetaModelAliased" + "MetaModel" = name - "Aliased"
                 final String supposedName = format("%s.%s%s", mme.getPackageName(),
