@@ -1,13 +1,10 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.assertErrorReported;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.compileAndPrintDiagnostics;
 
 import java.util.List;
-import java.lang.reflect.Type;
-import java.util.function.Consumer;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Modifier;
@@ -17,14 +14,12 @@ import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 
 import com.squareup.javapoet.ClassName;
-import com.squareup.javapoet.FieldSpec;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
@@ -69,11 +64,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                     .addField(propertyBuilder(String.class, "prop").build())
                     .build();
 
-            final Compilation compilation = buildCompilation(entity, parent);
-            final boolean success = compileAndPrintDiagnostics(compilation);
-            assertFalse("Compilation should have failed.", success);
-
-            assertErrorReported(compilation, AccessorPresence.errMissingAccessor("prop"));
+            compileAndAssertError(List.of(parent, entity), AccessorPresence.errMissingAccessor("prop"));
         }
 
         @Test
@@ -86,9 +77,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                     .addMethod(MethodSpec.methodBuilder("isProp2").returns(boolean.class).build())
                     .build();
 
-            final Compilation compilation = buildCompilation(entity);
-            final boolean success = compileAndPrintDiagnostics(compilation);
-            assertTrue("Compilation should have succeeded.", success);
+            compileAndAssertSuccess(List.of(entity));
         }
     }
 
@@ -113,11 +102,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                     .addField(propertyBuilder(String.class, "prop").build())
                     .build();
 
-            final Compilation compilation = buildCompilation(entity, parent);
-            final boolean success = compileAndPrintDiagnostics(compilation);
-            assertFalse("Compilation should have failed.", success);
-
-            assertErrorReported(compilation, PropertySetterVerifier.errMissingSetter("prop"));
+            compileAndAssertError(List.of(parent, entity), PropertySetterVerifier.errMissingSetter("prop"));
         }
 
         @Test
@@ -137,50 +122,36 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
 
         @Test
         public void error_is_reported_when_property_setter_is_missing_public_or_protected() {
-            final Consumer<TypeSpec> assertor = ts -> {
-                final Compilation compilation = buildCompilation(ts);
-                final boolean success = compileAndPrintDiagnostics(compilation);
-                assertFalse("Compilation should have failed.", success);
-
-                assertErrorReported(compilation, PropertySetterVerifier.errNotPublicNorProtected("setProp"));
-            };
-
             final TypeSpec entityNoSetterModifier = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(String.class, "prop").build())
                     .addMethod(MethodSpec.methodBuilder("setProp").addAnnotation(Observable.class).build())
                     .build();
-            assertor.accept(entityNoSetterModifier);
+            compileAndAssertError(List.of(entityNoSetterModifier), PropertySetterVerifier.errNotPublicNorProtected("setProp"));
 
             final TypeSpec entityPrivateSetter = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(String.class, "prop").build())
                     .addMethod(MethodSpec.methodBuilder("setProp").addAnnotation(Observable.class).addModifiers(Modifier.PRIVATE).build())
                     .build();
-            assertor.accept(entityPrivateSetter);
+            compileAndAssertError(List.of(entityPrivateSetter), PropertySetterVerifier.errNotPublicNorProtected("setProp"));
         }
 
         @Test
         public void properties_with_declared_setter_annotated_with_Observable_and_public_or_protected_pass_verification() {
-            final Consumer<TypeSpec> assertor = ts -> {
-                final Compilation compilation = buildCompilation(ts);
-                final boolean success = compileAndPrintDiagnostics(compilation);
-                assertTrue("Compilation should have succeeded.", success);
-            };
-
             final TypeSpec entityPublicSetter = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(String.class, "prop").build())
                     .addMethod(MethodSpec.methodBuilder("setProp").addAnnotation(Observable.class).addModifiers(Modifier.PUBLIC).build())
                     .build();
-            assertor.accept(entityPublicSetter);
+            compileAndAssertSuccess(List.of(entityPublicSetter));
 
             final TypeSpec entityProtectedSetter = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(String.class, "prop").build())
                     .addMethod(MethodSpec.methodBuilder("setProp").addAnnotation(Observable.class).addModifiers(Modifier.PROTECTED).build())
                     .build();
-            assertor.accept(entityProtectedSetter);
+            compileAndAssertSuccess(List.of(entityProtectedSetter));
         }
     }
 
@@ -199,10 +170,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                     .addField(propertyBuilder(List.class, "list").build())
                     .build();
 
-            final Compilation compilation = buildCompilation(entity);
-            final boolean success = compileAndPrintDiagnostics(compilation);
-            assertFalse("Compilation should have failed.", success);
-            assertErrorReported(compilation, CollectionalPropertyVerifier.errMustBeFinal("list"));
+            compileAndAssertError(List.of(entity), CollectionalPropertyVerifier.errMustBeFinal("list"));
         }
 
         @Test
@@ -212,9 +180,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                     .addField(propertyBuilder(List.class, "list", Modifier.FINAL).build())
                     .build();
 
-            final Compilation compilation = buildCompilation(entity);
-            final boolean success = compileAndPrintDiagnostics(compilation);
-            assertTrue("Compilation should have succeeded.", success);
+            compileAndAssertSuccess(List.of(entity));
         }
     }
 

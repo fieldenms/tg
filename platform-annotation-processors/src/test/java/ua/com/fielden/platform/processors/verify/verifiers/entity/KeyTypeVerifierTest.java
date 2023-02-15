@@ -1,10 +1,6 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.assertErrorReported;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.buildProperty;
-import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.compileAndPrintDiagnostics;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier.AT_KEY_TYPE_CLASS;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier.ChildKeyTypeMatchesParentKeyType.keyTypeMustMatchTheSupertypesKeyType;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier.DeclaredKeyPropertyTypeMatchesAtKeyTypeValue.ENTITY_WITH_NOKEY_AS_KEY_TYPE_CAN_NOT_DECLARE_PROPERTY_KEY;
@@ -12,6 +8,8 @@ import static ua.com.fielden.platform.processors.verify.verifiers.entity.KeyType
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier.KeyTypePresence.ENTITY_DEFINITION_IS_MISSING_KEY_TYPE;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier.KeyTypeValueMatchesAbstractEntityTypeArgument.KEY_TYPE_MUST_MATCH_THE_TYPE_ARGUMENT_TO_ABSTRACT_ENTITY;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier.KeyTypeValueMatchesAbstractEntityTypeArgument.SUPERTYPE_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE;
+
+import java.util.List;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Modifier;
@@ -28,10 +26,8 @@ import com.squareup.javapoet.TypeSpec;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.NoKey;
-import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
 import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
-import ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier;
 
 /**
  * Tests related to the composable verifier {@link KeyTypeVerifier} and its components.
@@ -67,11 +63,7 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .build();
 
-            final Compilation compilation = buildCompilation(entity);
-            final boolean success = compileAndPrintDiagnostics(compilation);
-            assertFalse("Compilation should have failed.", success);
-
-            assertErrorReported(compilation, ENTITY_DEFINITION_IS_MISSING_KEY_TYPE);
+            compileAndAssertError(List.of(entity), ENTITY_DEFINITION_IS_MISSING_KEY_TYPE);
         }
 
         @Test
@@ -87,9 +79,7 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
                     .superclass(ClassName.get("", superEntity.name))
                     .build();
 
-            final Compilation compilation = buildCompilation(superEntity, subEntity);
-            final boolean success = compileAndPrintDiagnostics(compilation);
-            assertTrue("Compilation should have succeeded.", success);
+            compileAndAssertSuccess(List.of(superEntity, subEntity));
         }
 
         @Test
@@ -100,9 +90,7 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .build();
 
-            final Compilation compilation = buildCompilation(superEntity);
-            final boolean success = compileAndPrintDiagnostics(compilation);
-            assertTrue("Compilation should have succeeded.", success);
+            compileAndAssertSuccess(List.of(superEntity));
         }
     }
 
@@ -122,11 +110,7 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .build();
 
-            final Compilation compilation = buildCompilation(superEntity);
-            final boolean success = compileAndPrintDiagnostics(compilation);
-            assertFalse("Compilation should have failed.", success);
-
-            assertErrorReported(compilation, KEY_TYPE_MUST_MATCH_THE_TYPE_ARGUMENT_TO_ABSTRACT_ENTITY);
+            compileAndAssertError(List.of(superEntity), KEY_TYPE_MUST_MATCH_THE_TYPE_ARGUMENT_TO_ABSTRACT_ENTITY);
         }
 
         @Test
@@ -136,11 +120,7 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
                     .superclass(ClassName.get(AbstractEntity.class))
                     .build();
 
-            final Compilation compilation = buildCompilation(superEntity);
-            final boolean success = compileAndPrintDiagnostics(compilation);
-            assertFalse("Compilation should have failed.", success);
-
-            assertErrorReported(compilation, SUPERTYPE_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE);
+            compileAndAssertError(List.of(superEntity), SUPERTYPE_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE);
         }
     }
 
@@ -167,10 +147,7 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
                     .superclass(ClassName.get("", superEntity.name))
                     .build();
 
-            final Compilation compilation = buildCompilation(superEntity, subEntity);
-            final boolean success = compileAndPrintDiagnostics(compilation);
-            assertFalse("Compilation should have failed.", success);
-            assertErrorReported(compilation, keyTypeMustMatchTheSupertypesKeyType(superEntity.name));
+            compileAndAssertError(List.of(superEntity, subEntity), keyTypeMustMatchTheSupertypesKeyType(superEntity.name));
         }
     }
 
@@ -190,11 +167,7 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
                     .addField(buildProperty(Double.class, AbstractEntity.KEY))
                     .build();
 
-            final Compilation compilation = buildCompilation(incorrectEntity);
-            final boolean success = compileAndPrintDiagnostics(compilation);
-            assertFalse("Compilation should have failed.", success);
-            assertErrorReported(compilation,
-                    KEY_PROPERTY_TYPE_MUST_BE_CONSISTENT_WITH_KEYTYPE_DEFINITION);
+            compileAndAssertError(List.of(incorrectEntity), KEY_PROPERTY_TYPE_MUST_BE_CONSISTENT_WITH_KEYTYPE_DEFINITION);
         }
 
         @Test
@@ -206,11 +179,7 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
                     .addField(buildProperty(String.class, AbstractEntity.KEY))
                     .build();
 
-            final Compilation compilation = buildCompilation(incorrectEntity);
-            final boolean success = compileAndPrintDiagnostics(compilation);
-            assertFalse("Compilation should have failed.", success);
-            assertErrorReported(compilation,
-                    ENTITY_WITH_NOKEY_AS_KEY_TYPE_CAN_NOT_DECLARE_PROPERTY_KEY);
+            compileAndAssertError(List.of(incorrectEntity), ENTITY_WITH_NOKEY_AS_KEY_TYPE_CAN_NOT_DECLARE_PROPERTY_KEY);
         }
     }
 
