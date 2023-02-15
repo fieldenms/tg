@@ -657,10 +657,14 @@ public class ElementFinder {
         return element.getModifiers().contains(Modifier.PROTECTED);
     }
 
+    public static boolean isFinal(final Element element) {
+        return element.getModifiers().contains(Modifier.FINAL);
+    }
+
     public static boolean isGeneric(final TypeElement element) {
         return element != null && !element.getTypeParameters().isEmpty();
     }
-    
+
     /**
      * Wraps {@link Elements#getPackageOf} in order to avoid ClassCastException, since Sun's internal implementation of {@link Elements} expects a {@link com.sun.tools.javac.code.Symbol} instance.
      * <p>

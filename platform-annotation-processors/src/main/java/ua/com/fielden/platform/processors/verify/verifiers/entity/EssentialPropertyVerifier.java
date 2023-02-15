@@ -119,4 +119,41 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
 
     }
 
+    /**
+     * Collectional properties must be declared final.
+     */
+    static class CollectionalPropertyVerifier extends AbstractEntityVerifier {
+        protected CollectionalPropertyVerifier(final ProcessingEnvironment processingEnv) {
+            super(processingEnv);
+        }
+
+        public static final String errMustBeFinal(final String propName) {
+            return "Collectional property [%s] must be declared final.".formatted(propName);
+        }
+
+        @Override
+        protected List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
+            return roundEnv.acceptDeclaredPropertiesVisitor(new PropertyVisitor(entityFinder));
+        }
+
+        private class PropertyVisitor extends AbstractPropertyVerifyingVisitor {
+            public PropertyVisitor(final EntityFinder entityFinder) {
+                super(entityFinder);
+            }
+
+            @Override
+            public Optional<ViolatingElement> visitProperty(final EntityElement entity, final PropertyElement property) {
+                System.out.println(property);
+                if (!entityFinder.isCollectionalProperty(property)) {
+                    return Optional.empty();
+                }
+                if (!EntityFinder.isFinal(property.element())) {
+                    return Optional.of(new ViolatingElement(
+                            property.element(), Kind.ERROR, errMustBeFinal(property.getSimpleName().toString())));
+                }
+                return Optional.empty();
+            }
+        }
+    }
+
 }
