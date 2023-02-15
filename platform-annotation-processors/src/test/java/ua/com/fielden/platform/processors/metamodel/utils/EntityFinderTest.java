@@ -393,6 +393,26 @@ public class EntityFinderTest {
                 entityFinder.findDeclaredPropertyAccessor(entityFinder.findEntity(SubEntity.class), SubEntity_.prop2()).isEmpty());
     }
 
+    @Test
+    public void findPropertySetter_finds_both_declared_and_inherited_setters() {
+        entityFinder.findPropertySetter(entityFinder.findEntity(SubEntity.class), SubEntity_.parent()).ifPresentOrElse(
+                method -> assertEquals("setParent", method.getSimpleName().toString()),
+                () -> fail("Declared property setter was not found."));
+
+        entityFinder.findPropertySetter(entityFinder.findEntity(SubEntity.class), SubEntity_.prop2()).ifPresentOrElse(
+                method -> assertEquals("setProp2", method.getSimpleName().toString()),
+                () -> fail("Inherited property setter was not found."));
+    }
+
+    @Test
+    public void findDeclaredPropertySetter_finds_only_declared_setters() {
+        assertTrue("Inherited setter should not have been found.",
+                entityFinder.findDeclaredPropertySetter(entityFinder.findEntity(SubEntity.class), SubEntity_.prop2()).isEmpty());
+
+        entityFinder.findDeclaredPropertySetter(entityFinder.findEntity(SubEntity.class), SubEntity_.prop1()).ifPresentOrElse(
+                method -> assertEquals("setProp1", method.getSimpleName().toString()),
+                () -> fail("Property setter was not found."));
+    }
 
     /**
      * A type for testing purposes. Represents an entity that extends a persistent one.
