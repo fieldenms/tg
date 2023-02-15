@@ -40,6 +40,7 @@ import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderException;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -473,6 +474,14 @@ public class EntityFinder extends ElementFinder {
             return false;
         }
         return isEntityThatNeedsMetaModel(asTypeElementOfTypeMirror(type));
+    }
+
+    /**
+     * Tests whether the property element represents a collectional property.
+     * This method is similar to {@link EntityUtils#isCollectional(Class)}.
+     */
+    public boolean isCollectionalProperty(final PropertyElement property) {
+        return isSubtype(property.getType(), Collection.class);
     }
 
     /**
