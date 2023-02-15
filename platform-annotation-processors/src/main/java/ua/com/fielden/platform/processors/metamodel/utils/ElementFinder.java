@@ -649,6 +649,14 @@ public class ElementFinder {
         return element.getModifiers().contains(Modifier.ABSTRACT);
     }
 
+    public static boolean isPublic(final Element element) {
+        return element.getModifiers().contains(Modifier.PUBLIC);
+    }
+
+    public static boolean isProtected(final Element element) {
+        return element.getModifiers().contains(Modifier.PROTECTED);
+    }
+
     public boolean isGeneric(final TypeElement element) {
         return element != null && !element.getTypeParameters().isEmpty();
     }
