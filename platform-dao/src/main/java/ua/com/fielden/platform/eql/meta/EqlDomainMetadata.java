@@ -25,6 +25,7 @@ import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.UNION
 import static ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo.getEntityTypeInfo;
 import static ua.com.fielden.platform.eql.meta.DomainMetadataUtils.extractExpressionModelFromCalculatedProperty;
 import static ua.com.fielden.platform.eql.meta.DomainMetadataUtils.generateUnionEntityPropertyContextualExpression;
+import static ua.com.fielden.platform.eql.meta.DomainMetadataUtils.getOriginalEntityTypeFullName;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getKeyType;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
@@ -50,6 +51,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -86,6 +88,7 @@ import ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 import ua.com.fielden.platform.eql.meta.EqlPropertyMetadata.Builder;
+import ua.com.fielden.platform.eql.meta.utils.DependentCalcPropsOrder;
 import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnSubqueries;
@@ -123,6 +126,7 @@ public class EqlDomainMetadata {
     private final ConcurrentMap<String, Table> tables = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, TableStructForBatchInsertion> tableStructsForBatchInsertion = new ConcurrentHashMap<>();
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo;
+    private final ConcurrentMap<String, List<String>> entityTypesDependentCalcPropsOrder = new ConcurrentHashMap<>();
     private final EntQueryGenerator gen;
 
     private final Injector hibTypesInjector;
@@ -188,6 +192,12 @@ public class EqlDomainMetadata {
             }
         }
 
+        for (final EntityInfo<?> entityInfo : domainInfo.values()) {
+            if (entityInfo.getCategory() != UNION) {
+                entityTypesDependentCalcPropsOrder.put(entityInfo.javaType().getName(), DependentCalcPropsOrder.orderDependentCalcProps(this, gen, entityInfo));
+            }
+        }
+        
         validateCalcProps();
     }
 
@@ -232,6 +242,11 @@ public class EqlDomainMetadata {
         }
     }
 
+    public List<String> getCalcPropsOrder(final String entityTypeName) {
+        // it's assumed that there will be no generated types with dependent calc props
+        return entityTypesDependentCalcPropsOrder.get(getOriginalEntityTypeFullName(entityTypeName));
+    }
+     
     private <T extends AbstractEntity<?>> void addProps(final EntityInfo<T> entityInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> allEntitiesInfo, final Collection<EqlPropertyMetadata> entityPropsMetadatas) {
         for (final EqlPropertyMetadata el : entityPropsMetadatas) {
             if (!el.critOnly) {

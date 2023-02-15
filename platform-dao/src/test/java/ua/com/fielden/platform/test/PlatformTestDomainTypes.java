@@ -63,6 +63,7 @@ import ua.com.fielden.platform.sample.domain.TgPersonName;
 import ua.com.fielden.platform.sample.domain.TgPublishedYearly;
 import ua.com.fielden.platform.sample.domain.TgReVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgSubSystem;
+import ua.com.fielden.platform.sample.domain.TgSynBogie;
 import ua.com.fielden.platform.sample.domain.TgSystem;
 import ua.com.fielden.platform.sample.domain.TgTimesheet;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
@@ -110,6 +111,7 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgAuthorship.class);
         add(TgAuthorRoyalty.class);
         add(TgBogie.class);
+        add(TgSynBogie.class);
         add(TgBogieLocation.class);
         add(TgBogieClass.class);
         add(TgWagon.class);

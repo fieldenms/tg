@@ -8,7 +8,7 @@ import java.util.Objects;
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 
 public class ImplicitNode {
-    public final String name; // name within the holder source; either name or expression is null
+    public final String name; // name within the holder source; either name or expression is null TODO currently name is always provided
     public final Expression2 expr; // expression is based on the holder source
 
     public final Source2BasedOnPersistentType source;
