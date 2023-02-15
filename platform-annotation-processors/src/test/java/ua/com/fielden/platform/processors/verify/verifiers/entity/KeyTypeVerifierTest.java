@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
-import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.buildProperty;
+import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.propertyBuilder;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier.AT_KEY_TYPE_CLASS;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier.ChildKeyTypeMatchesParentKeyType.keyTypeMustMatchTheSupertypesKeyType;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier.DeclaredKeyPropertyTypeMatchesAtKeyTypeValue.ENTITY_WITH_NOKEY_AS_KEY_TYPE_CAN_NOT_DECLARE_PROPERTY_KEY;
@@ -164,7 +164,7 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
             final TypeSpec incorrectEntity = TypeSpec.classBuilder("EntityWithPropertyKey")
                     .addAnnotation(buildKeyType(String.class))
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
-                    .addField(buildProperty(Double.class, AbstractEntity.KEY))
+                    .addField(propertyBuilder(Double.class, AbstractEntity.KEY).build())
                     .build();
 
             compileAndAssertError(List.of(incorrectEntity), KEY_PROPERTY_TYPE_MUST_BE_CONSISTENT_WITH_KEYTYPE_DEFINITION);
@@ -176,7 +176,7 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
                     .addAnnotation(buildKeyType(NoKey.class))
                     .superclass(ParameterizedTypeName.get(AbstractEntity.class, NoKey.class))
                     // no matter what type is chosen for property "key"
-                    .addField(buildProperty(String.class, AbstractEntity.KEY))
+                    .addField(propertyBuilder(String.class, AbstractEntity.KEY).build())
                     .build();
 
             compileAndAssertError(List.of(incorrectEntity), ENTITY_WITH_NOKEY_AS_KEY_TYPE_CAN_NOT_DECLARE_PROPERTY_KEY);

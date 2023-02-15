@@ -3,6 +3,7 @@ package ua.com.fielden.platform.processors.verify.verifiers.entity;
 import static org.junit.Assert.assertFalse;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.assertErrorReported;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.compileAndPrintDiagnostics;
+import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.propertyBuilder;
 
 import java.util.List;
 
@@ -177,15 +178,11 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         public void collectional_properties_declared_final_pass_verification() {
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
-                    .addField(propertyBuilder(List.class, "list", Modifier.FINAL).build())
+                    .addField(propertyBuilder(List.class, "list").addModifiers(Modifier.FINAL).build())
                     .build();
 
             compileAndAssertSuccess(List.of(entity));
         }
-    }
-
-    private static FieldSpec.Builder propertyBuilder(final Type type, final String name, final Modifier... modifiers) {
-        return FieldSpec.builder(type, name, modifiers).addAnnotation(IsProperty.class);
     }
 
 }
