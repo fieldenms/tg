@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.processors.metamodel.utils;
 
 import static java.util.stream.Collectors.joining;
+import static metamodels.MetaModels.ExampleEntity_;
+import static metamodels.MetaModels.SubEntity_;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -37,6 +39,8 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
+import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
+import ua.com.fielden.platform.processors.test_entities.SubEntity;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.Pair;
@@ -361,6 +365,34 @@ public class EntityFinderTest {
 
         assertTrue(entityFinder.getParent(entityFinder.findEntity(AbstractEntity.class)).isEmpty());
     }
+
+    @Test
+    public void findPropertyAccessor_finds_accessor_that_starts_with_get() {
+        entityFinder.findPropertyAccessor(entityFinder.findEntity(ExampleEntity.class), ExampleEntity_.prop1()).ifPresentOrElse(
+                method -> assertEquals("getProp1", method.getSimpleName().toString()),
+                () -> fail("Property accessor was not found."));
+    }
+
+    @Test
+    public void findPropertyAccessor_finds_accessor_that_starts_with_is() {
+        entityFinder.findPropertyAccessor(entityFinder.findEntity(ExampleEntity.class), ExampleEntity_.flag()).ifPresentOrElse(
+                method -> assertEquals("isFlag", method.getSimpleName().toString()),
+                () -> fail("Property accessor was not found."));
+    }
+
+    @Test
+    public void findPropertyAccessor_finds_inherited_accessor() {
+        entityFinder.findPropertyAccessor(entityFinder.findEntity(SubEntity.class), SubEntity_.prop2()).ifPresentOrElse(
+                method -> assertEquals("getProp2", method.getSimpleName().toString()),
+                () -> fail("Property accessor was not found."));
+    }
+
+    @Test
+    public void findDeclaredPropertyAccessor_does_not_find_inherited_accessor() {
+        assertTrue("Inherited accessor should not have been found.",
+                entityFinder.findDeclaredPropertyAccessor(entityFinder.findEntity(SubEntity.class), SubEntity_.prop2()).isEmpty());
+    }
+
 
     /**
      * A type for testing purposes. Represents an entity that extends a persistent one.

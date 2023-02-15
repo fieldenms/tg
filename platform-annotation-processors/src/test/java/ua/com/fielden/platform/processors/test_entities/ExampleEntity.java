@@ -35,6 +35,21 @@ public class ExampleEntity extends AbstractEntity<String> {
     @Title(value = "Prop1")
     private int prop1;
 
+    @IsProperty
+    @MapTo
+    @Title(value = "Flag value (yes/no)")
+    private boolean flag;
+
+    @Observable
+    public ExampleEntity setFlag(final boolean flag) {
+        this.flag = flag;
+        return this;
+    }
+
+    public boolean isFlag() {
+        return flag;
+    }
+
     @Observable
     public ExampleEntity setProp1(final int prop1) {
         this.prop1 = prop1;
