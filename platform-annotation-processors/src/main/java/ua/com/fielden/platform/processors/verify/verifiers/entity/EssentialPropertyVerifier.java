@@ -47,7 +47,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
 
             @Override
             public Optional<ViolatingElement> visitProperty(final EntityElement entity, final PropertyElement property) {
-                if (entityFinder.findPropertyAccessor(entity, property.getSimpleName().toString()).isEmpty()) {
+                if (entityFinder.findDeclaredPropertyAccessor(entity, property.getSimpleName().toString()).isEmpty()) {
                     return Optional.of(new ViolatingElement(property.element(), Kind.ERROR, errMissingAccessor(property.getSimpleName().toString())));
                 }
                 return Optional.empty();
