@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.processors.test_entities;
 
+import java.util.Collections;
+import java.util.LinkedHashSet;
+import java.util.Set;
+
 import ua.com.fielden.platform.annotations.metamodel.DomainEntity;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
@@ -39,6 +43,21 @@ public class ExampleEntity extends AbstractEntity<String> {
     @MapTo
     @Title(value = "Flag value (yes/no)")
     private boolean flag;
+
+    @IsProperty(ExampleEntity.class)
+    @Title(value = "Collection of entities of this type")
+    private final Set<ExampleEntity> collection = new LinkedHashSet<ExampleEntity>();
+
+    @Observable
+    protected ExampleEntity setCollection(final Set<ExampleEntity> name) {
+        this.collection.clear();
+        this.collection.addAll(name);
+        return this;
+    }
+
+    public Set<ExampleEntity> getCollection() {
+        return Collections.unmodifiableSet(collection);
+    }
 
     @Observable
     public ExampleEntity setFlag(final boolean flag) {

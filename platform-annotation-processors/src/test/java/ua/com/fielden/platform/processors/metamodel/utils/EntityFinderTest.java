@@ -414,6 +414,17 @@ public class EntityFinderTest {
                 () -> fail("Property setter was not found."));
     }
 
+    @Test
+    public void isCollectionalProperty_returns_true_for_collectional_properties() {
+        final EntityElement exampleEntity = entityFinder.findEntity(ExampleEntity.class);
+
+        final PropertyElement collectionProperty = entityFinder.findProperty(exampleEntity, ExampleEntity_.collection()).orElseThrow();
+        assertTrue(entityFinder.isCollectionalProperty(collectionProperty));
+
+        final PropertyElement nonCollectionalProperty = entityFinder.findProperty(exampleEntity, ExampleEntity_.prop1()).orElseThrow();
+        assertFalse(entityFinder.isCollectionalProperty(nonCollectionalProperty));
+    }
+
     /**
      * A type for testing purposes. Represents an entity that extends a persistent one.
      */

@@ -110,6 +110,15 @@ public class EntityFinder extends ElementFinder {
     }
 
     /**
+     * Returns an optional describing a property element that represents a property of {@code entityElement} at {@code propPath}.
+     * <p>
+     * The property path must be of length 1 at most.
+     */
+    public Optional<PropertyElement> findDeclaredProperty(final EntityElement entity, final IConvertableToPath propPath) {
+        return findDeclaredProperty(entity, propPath.toPath());
+    }
+
+    /**
      * Returns a stream of all inherited properties with no guarantees on element uniqueness.
      * 
      * @see PropertyElement#equals(Object)
@@ -223,6 +232,20 @@ public class EntityFinder extends ElementFinder {
         return streamProperties(entityElement)
                 .filter(elt -> elt.getSimpleName().toString().equals(name))
                 .findFirst();
+    }
+
+    /**
+     * Returns an optional describing a property of {@code entityElement} at {@code path}.
+     * The property path must be of length 1 at most.
+     * <p>
+     * Entity type hiearchy is traversed in natural order and the first matching property is returned.
+     * 
+     * @param entity
+     * @param path
+     * @return
+     */
+    public Optional<PropertyElement> findProperty(final EntityElement entity, final IConvertableToPath path) {
+        return findProperty(entity, path.toPath());
     }
 
     /**
