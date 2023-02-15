@@ -27,6 +27,7 @@ import javax.lang.model.util.Types;
 import ua.com.fielden.platform.annotations.metamodel.MetaModelForType;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.Accessor;
+import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -300,6 +301,59 @@ public class EntityFinder extends ElementFinder {
             final String methodName = m.getSimpleName().toString();
             return methodName.equals(getName) || methodName.equals(isName);
         }).findAny();
+    }
+
+    /**
+     * Attempts to find a setter method for the given property by name. The whole entity type hierarchy is searched.
+     * 
+     * @param entity the entity element to be analysed 
+     * @param propertyName
+     * @return
+     */
+    public Optional<ExecutableElement> findPropertySetter(final EntityElement entity, final String propertyName) {
+        return doFindPropertySetter(streamMethods(entity.element()), propertyName);
+    }
+
+    /**
+     * Attempts to find a setter method for the given property by path. The whole entity type hierarchy is searched.
+     * <p>
+     * The property path must be of length 1 at most. 
+     * 
+     * @param entity the entity element to be analysed 
+     * @param propertyPath
+     * @return
+     */
+    public Optional<ExecutableElement> findPropertySetter(final EntityElement entity, final IConvertableToPath propertyPath) {
+        return doFindPropertySetter(streamMethods(entity.element()), propertyPath.toPath());
+    }
+
+    /**
+     * Attempts to find a declared setter method for the given property by name.
+     * 
+     * @param entity the entity element to be analysed 
+     * @param propertyName
+     * @return
+     */
+    public Optional<ExecutableElement> findDeclaredPropertySetter(final EntityElement entity, final String propertyName) {
+        return doFindPropertySetter(streamDeclaredMethods(entity.element()), propertyName);
+    }
+
+    /**
+     * Attempts to find a declared setter method for the given property by name.
+     * <p>
+     * The property path must be of length 1 at most. 
+     * 
+     * @param entity the entity element to be analysed 
+     * @param propertyPath
+     * @return
+     */
+    public Optional<ExecutableElement> findDeclaredPropertySetter(final EntityElement entity, final IConvertableToPath propertyPath) {
+        return doFindPropertySetter(streamDeclaredMethods(entity.element()), propertyPath.toPath());
+    }
+
+    private Optional<ExecutableElement> doFindPropertySetter(final Stream<ExecutableElement> methods, final String propertyName) {
+        final String setterName = Mutator.SETTER.getName(propertyName);
+        return methods.filter(m -> m.getSimpleName().toString().equals(setterName)).findAny();
     }
 
     /**
