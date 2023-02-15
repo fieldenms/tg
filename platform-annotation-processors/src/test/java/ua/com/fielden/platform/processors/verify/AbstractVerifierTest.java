@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.processors.verify;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
 
 import java.util.Arrays;
@@ -17,6 +19,7 @@ import com.squareup.javapoet.TypeSpec;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileManager;
 import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
+import ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils;
 
 /**
  * Base class for unit tests targeted at {@link Verifier} implementations.
@@ -54,7 +57,7 @@ public abstract class AbstractVerifierTest {
      * @param typeSpecs
      * @return
      */
-    protected Compilation buildCompilation(final Collection<TypeSpec> typeSpecs) {
+    protected final Compilation buildCompilation(final Collection<TypeSpec> typeSpecs) {
         final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         final InMemoryJavaFileManager fileManager = new InMemoryJavaFileManager(compiler.getStandardFileManager(null, null, null));
         final List<JavaFileObject> compilationTargets = typeSpecs.stream()
@@ -69,7 +72,31 @@ public abstract class AbstractVerifierTest {
     }
 
     /** Refer to {@link #buildCompilation(Collection)}. */
-    protected Compilation buildCompilation(final TypeSpec... typeSpecs) {
+    protected final Compilation buildCompilation(final TypeSpec... typeSpecs) {
         return buildCompilation(Arrays.asList(typeSpecs));
     }
+
+    /**
+     * A convenient method to compile {@code typeSpecs} and asssert that the given error message was reported.
+     * @return the resulting compilation instance
+     */
+    protected final Compilation compileAndAssertError(final Collection<TypeSpec> typeSpecs, final String expectedErrorMessage) {
+        final Compilation compilation = buildCompilation(typeSpecs);
+        final boolean success = VerifierTestUtils.compileAndPrintDiagnostics(compilation);
+        assertFalse("Compilaton should have failed.", success);
+        VerifierTestUtils.assertErrorReported(compilation, expectedErrorMessage);
+        return compilation;
+    }
+
+    /**
+     * A convenient method to compile {@code typeSpecs} and asssert compilation successs.
+     * @return the resulting compilation instance
+     */
+    protected final Compilation compileAndAssertSuccess(final Collection<TypeSpec> typeSpecs) {
+        final Compilation compilation = buildCompilation(typeSpecs);
+        final boolean success = VerifierTestUtils.compileAndPrintDiagnostics(compilation);
+        assertTrue("Compilaton should have succeeded.", success);
+        return compilation;
+    }
+
 }
