@@ -105,7 +105,7 @@ public class MockNotFoundEntityMaker {
     }
 
     /**
-     * Retrieves error message from errorMessage_ field of mock entity.
+     * Retrieves error message from field {@code PROP_NAME_HOLDING_ERROR_MSG} of {@code mock}.
      *
      * @param <T>
      * @param mock
@@ -117,9 +117,9 @@ public class MockNotFoundEntityMaker {
                 final Field msgField = findFieldByName(mock.getClass(), PROP_NAME_HOLDING_ERROR_MSG);
                 final boolean isAccessible = msgField.canAccess(mock);
                 msgField.setAccessible(true);
-                final Optional<?> msgVal = ofNullable(msgField.get(mock));
+                final Optional<String> msgVal = ofNullable((String)msgField.get(mock));
                 msgField.setAccessible(isAccessible);
-                return msgVal.map(Object::toString);
+                return msgVal;
             } catch (final IllegalAccessException ex) {
                 throw new MockException(format(ERR_COULD_NOT_ACCESS, PROP_NAME_HOLDING_ERROR_MSG, mock.getClass()), ex);
             }

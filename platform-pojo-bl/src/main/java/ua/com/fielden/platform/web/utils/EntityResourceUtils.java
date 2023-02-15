@@ -18,7 +18,6 @@ import static ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker.mock;
 import static ua.com.fielden.platform.entity.proxy.MockNotFoundEntityMaker.setErrorMessage;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_MORE_THEN_ONE_ENTITY_FOUND;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.getPropertyDescriptors;
@@ -94,6 +93,7 @@ import ua.com.fielden.platform.utils.MiscUtilities;
 public class EntityResourceUtils {
     private static final String CONFLICT_WARNING = "This property has recently been changed by another user.";
     public static final String CENTRE_CONFIG_CONFLICT_WARNING = "Configuration with this title already exists.";
+    public static final String ERR_MORE_THEN_ONE_ENTITY_FOUND = "Please choose a specific value explicitly from a drop-down.";
     private static final String RESOLVE_CONFLICT_INSTRUCTION = "Please either edit the value back to [%s] to resolve the conflict or cancel all of your changes.";
     /**
      * Used to indicate the start of 'not found mock' serialisation sequence.
@@ -340,47 +340,47 @@ public class EntityResourceUtils {
     }
 
     /**
-     * Creates lightweight mock entity instance which will be invalid against {@link EntityExistsValidator} due to empty ID.
-     * ToString conversion will give us {@link AbstractEntity#KEY_NOT_ASSIGNED}.
+     * Creates a lightweight mock entity instance, which does not pass {@link EntityExistsValidator} due to missing ID.
+     * Conversion {@code toString} results in {@link AbstractEntity#KEY_NOT_ASSIGNED}.
      * <p>
-     * This mock instance contains the string query by which the entity was not found.
+     * This mock instance contains a search string, which was used to find an entity, but none was found.
      *
      * @param type
-     * @param stringQuery -- string query by which the entity was not found
+     * @param searchString -- a search string, used to find an entity.
      *
      * @return
      */
-    public static AbstractEntity<?> createMockNotFoundEntity(final Class<? extends AbstractEntity> type, final String stringQuery) {
-        if (isEmpty(stringQuery)) {
-            throw new EntityResourceUtilsException("Mock 'not found' entity could not be created due to empty 'stringQuery'.");
+    public static AbstractEntity<?> createMockNotFoundEntity(final Class<? extends AbstractEntity> type, final String searchString) {
+        if (isEmpty(searchString)) {
+            throw new EntityResourceUtilsException("Mock [not found] entity could not be created due to empty [searchString].");
         }
         if (isUnionEntityType(type)) {
-            final List<Field> unionProps = unionProperties((Class<AbstractUnionEntity>)type);
-            final Class<? extends AbstractEntity<?>> unionPropType = (Class<? extends AbstractEntity<?>>)unionProps.get(0).getType();
-            final AbstractEntity<?> unionPropValue = newPlainEntity(mock(unionPropType), null).setDesc(stringQuery);
+            final List<Field> unionProps = unionProperties((Class<AbstractUnionEntity>) type);
+            final Class<? extends AbstractEntity<?>> unionPropType = (Class<? extends AbstractEntity<?>>) unionProps.get(0).getType();
+            final AbstractEntity<?> unionPropValue = newPlainEntity(mock(unionPropType), null).setDesc(searchString);
             return newPlainEntity(mock(type), null).set(unionProps.get(0).getName(), unionPropValue);
         }
-        return newPlainEntity(mock(type), null).setDesc(stringQuery);
+        return newPlainEntity(mock(type), null).setDesc(searchString);
     }
 
     /**
      * Creates a string that can be used for 'not found mock' entity serialisation.
      *
-     * @param stringQuery
+     * @param searchString
      * @return
      */
-    public static String createNotFoundMockString(final String stringQuery) {
-        return NOT_FOUND_MOCK_PREFIX + stringQuery;
+    public static String createNotFoundMockString(final String searchString) {
+        return NOT_FOUND_MOCK_PREFIX + searchString;
     }
 
     /**
      * Creates a string that can be used for 'more than one mock' entity serialisation.
      *
-     * @param stringQuery
+     * @param searchString
      * @return
      */
-    public static String createMoreThanOneMockString(final String stringQuery) {
-        return MORE_THAN_ONE_MOCK_PREFIX + stringQuery;
+    public static String createMoreThanOneMockString(final String searchString) {
+        return MORE_THAN_ONE_MOCK_PREFIX + searchString;
     }
 
     /**
@@ -420,7 +420,7 @@ public class EntityResourceUtils {
         if (str.startsWith(NOT_FOUND_MOCK_PREFIX)) {
             return (T) createMockNotFoundEntity(type, str.replaceFirst(quote(NOT_FOUND_MOCK_PREFIX), ""));
         } else if (str.startsWith(MORE_THAN_ONE_MOCK_PREFIX)) {
-            return (T) createMockMoreThanOneEntity(type, str.replaceFirst(quote(MORE_THAN_ONE_MOCK_PREFIX), ""));
+            return (T) createMockFoundMoreThanOneEntity(type, str.replaceFirst(quote(MORE_THAN_ONE_MOCK_PREFIX), ""));
         }
         return specificConverter.apply(str);
     }
@@ -776,7 +776,7 @@ public class EntityResourceUtils {
             } else {
                 // there can be many associated entities for unions without concrete active prop (same keys trough different subtypes);
                 // otherwise, return empty entity similarly as we do for composite ones (see UnexpectedNumberOfReturnedEntities exception)
-                return optActiveProp.isPresent() ? null : createMockMoreThanOneEntity(entityType, searchString);
+                return optActiveProp.isPresent() ? null : createMockFoundMoreThanOneEntity(entityType, searchString);
             }
         } else {
             //logger.debug(format("KEY-based restoration of value: type [%s] property [%s] propertyType [%s] id [%s] reflectedValue [%s].", type.getSimpleName(), propertyName, entityPropertyType.getSimpleName(), reflectedValueId, reflectedValue));
@@ -793,8 +793,15 @@ public class EntityResourceUtils {
         }
     }
 
-    public static AbstractEntity createMockMoreThanOneEntity(final Class<? extends AbstractEntity> type, final String stringQuery) {
-        return setErrorMessage(createMockNotFoundEntity(type, stringQuery), ERR_MORE_THEN_ONE_ENTITY_FOUND);
+    /**
+     * The same as {@link #createMockNotFoundEntity(Class, String)}, but with a specific error message assigned to field {@code PROP_NAME_HOLDING_ERROR_MSG}.
+     *
+     * @param type
+     * @param searchString -- a search string, used to find an entity.
+     * @return
+     */
+    public static AbstractEntity<?> createMockFoundMoreThanOneEntity(final Class<? extends AbstractEntity> type, final String searchString) {
+        return setErrorMessage(createMockNotFoundEntity(type, searchString), ERR_MORE_THEN_ONE_ENTITY_FOUND);
     }
 
     /**

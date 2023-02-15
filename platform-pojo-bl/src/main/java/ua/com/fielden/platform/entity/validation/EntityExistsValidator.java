@@ -44,7 +44,6 @@ import ua.com.fielden.platform.error.Result;
 public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBeforeChangeEventHandler<T> {
 
     public static final String ERR_ENTITY_WAS_NOT_FOUND = "%s [%s] was not found.";
-    public static final String ERR_MORE_THEN_ONE_ENTITY_FOUND = "%s [%s] has many associated entities. Please choose one of them from drop down list.";
     public static final String ERR_WAS_NOT_FOUND = "%s was not found.";
     public static final String ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE = "%s [%s] exists, but is not active.";
     public static final String ERR_DIRTY = "Dirty entity %s (%s) is not acceptable.";

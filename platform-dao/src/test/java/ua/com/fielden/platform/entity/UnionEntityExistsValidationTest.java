@@ -7,14 +7,9 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
-import static ua.com.fielden.platform.entity.meta.MetaProperty.ERR_REQUIRED;
-import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_UNION_INVALID;
-import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_WAS_NOT_FOUND;
-import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_MORE_THEN_ONE_ENTITY_FOUND;
-import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_ENTITY_WAS_NOT_FOUND;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createMockMoreThanOneEntity;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createMockFoundMoreThanOneEntity;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.createMockNotFoundEntity;
 
 import java.util.function.Supplier;
@@ -67,10 +62,10 @@ public class UnionEntityExistsValidationTest extends AbstractDaoTestCase {
         assertFalse(bogie.getProperty("location").isValid());
         assertEquals(
             format(
-                ERR_UNION_INVALID,
+                "%s is invalid. Reason: %s",
                 getEntityTitleAndDesc(TgBogieLocation.class).getKey(),
                 format(
-                    ERR_REQUIRED,
+                    "Required property [%s] is not specified for entity [%s].",
                     getTitleAndDesc(KEY, TgBogieLocation.class).getKey(),
                     getEntityTitleAndDesc(TgBogieLocation.class).getKey()
                 )
@@ -98,10 +93,10 @@ public class UnionEntityExistsValidationTest extends AbstractDaoTestCase {
         assertFalse(bogie.getProperty("location").isValid());
         assertEquals(
             format(
-                ERR_UNION_INVALID,
+                "%s is invalid. Reason: %s",
                 getEntityTitleAndDesc(TgBogieLocation.class).getKey(),
                 format(
-                    ERR_WAS_NOT_FOUND,
+                    "%s was not found.",
                     getEntityTitleAndDesc(TgWorkshop.class).getKey()
                 )
             ),
@@ -137,7 +132,7 @@ public class UnionEntityExistsValidationTest extends AbstractDaoTestCase {
         assertFalse(bogie.getProperty("location").isValid());
         assertEquals(
             format(
-                ERR_ENTITY_WAS_NOT_FOUND,
+                "%s [%s] was not found.",
                 getEntityTitleAndDesc(TgBogieLocation.class).getKey(),
                 "W1"
             ),
@@ -161,10 +156,10 @@ public class UnionEntityExistsValidationTest extends AbstractDaoTestCase {
         assertFalse(bogie.getProperty("location").isValid());
         assertEquals(
             format(
-                ERR_UNION_INVALID,
+                "%s is invalid. Reason: %s",
                 getEntityTitleAndDesc(TgBogieLocation.class).getKey(),
                 format(
-                    ERR_ENTITY_WAS_NOT_FOUND,
+                    "%s [%s] was not found.",
                     getEntityTitleAndDesc(TgWorkshop.class).getKey(),
                     "W1"
                 )
@@ -182,7 +177,7 @@ public class UnionEntityExistsValidationTest extends AbstractDaoTestCase {
         assertFalse(bogie.getProperty("location").isValid());
         assertEquals(
             format(
-                ERR_ENTITY_WAS_NOT_FOUND,
+                "%s [%s] was not found.",
                 getEntityTitleAndDesc(TgBogieLocation.class).getKey(),
                 "UNKNOWN"
             ),
@@ -193,17 +188,11 @@ public class UnionEntityExistsValidationTest extends AbstractDaoTestCase {
     @Test
     public void more_than_one_mock_union_entity_can_not_be_assigned() {
         final var bogie = co$(TgBogie.class).new_();
-        bogie.setLocation((TgBogieLocation) createMockMoreThanOneEntity(TgBogieLocation.class, "MANY"));
+        bogie.setLocation((TgBogieLocation) createMockFoundMoreThanOneEntity(TgBogieLocation.class, "MANY"));
 
         assertNull(bogie.getLocation());
         assertFalse(bogie.getProperty("location").isValid());
-        assertEquals(
-            format(
-                ERR_MORE_THEN_ONE_ENTITY_FOUND,
-                getEntityTitleAndDesc(TgBogieLocation.class).getKey(),
-                "MANY"
-            ),
-            bogie.getProperty("location").getFirstFailure().getMessage()
+        assertEquals("Please choose a specific value explicitly from a drop-down.", bogie.getProperty("location").getFirstFailure().getMessage()
         );
     }
 
