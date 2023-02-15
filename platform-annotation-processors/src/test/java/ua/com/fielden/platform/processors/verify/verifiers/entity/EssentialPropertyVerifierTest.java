@@ -5,6 +5,7 @@ import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.assertErrorReported;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.compileAndPrintDiagnostics;
 
+import java.util.List;
 import java.lang.reflect.Type;
 import java.util.function.Consumer;
 
@@ -29,6 +30,7 @@ import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
 import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.AccessorPresence;
+import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.CollectionalPropertyVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertySetterVerifier;
 
 /**
@@ -179,6 +181,40 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                     .addMethod(MethodSpec.methodBuilder("setProp").addAnnotation(Observable.class).addModifiers(Modifier.PROTECTED).build())
                     .build();
             assertor.accept(entityProtectedSetter);
+        }
+    }
+
+    // 3. collectional properties
+    public static class CollectionalPropertyVerifierTest extends AbstractVerifierTest {
+
+        @Override
+        protected Verifier createVerifier(final ProcessingEnvironment procEnv) {
+            return new EssentialPropertyVerifier.CollectionalPropertyVerifier(procEnv);
+        }
+
+        @Test
+        public void error_is_reported_when_collectional_property_is_not_declared_final() {
+            final TypeSpec entity = TypeSpec.classBuilder("Example")
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .addField(propertyBuilder(List.class, "list").build())
+                    .build();
+
+            final Compilation compilation = buildCompilation(entity);
+            final boolean success = compileAndPrintDiagnostics(compilation);
+            assertFalse("Compilation should have failed.", success);
+            assertErrorReported(compilation, CollectionalPropertyVerifier.errMustBeFinal("list"));
+        }
+
+        @Test
+        public void collectional_properties_declared_final_pass_verification() {
+            final TypeSpec entity = TypeSpec.classBuilder("Example")
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .addField(propertyBuilder(List.class, "list", Modifier.FINAL).build())
+                    .build();
+
+            final Compilation compilation = buildCompilation(entity);
+            final boolean success = compileAndPrintDiagnostics(compilation);
+            assertTrue("Compilation should have succeeded.", success);
         }
     }
 
