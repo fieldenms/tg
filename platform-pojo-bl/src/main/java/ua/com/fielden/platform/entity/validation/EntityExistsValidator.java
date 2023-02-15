@@ -101,7 +101,12 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                     return failure(entity, getErrorMessage(newValue).orElseGet(() -> format(ERR_ENTITY_WAS_NOT_FOUND, entityTitle(newValue), newValue.getDesc()))); // newValue.getDesc() is expected to contain a string value typed by a user
                 } else {
                     // need to create an instrumented copy of newValue, if it is uninstrumented, to enforce validation
-                    final var newValueToCheck = !newValue.isInstrumented() ? copy(newValue, co.new_(), ID, VERSION) : newValue; // KEY and DESC are not considered as "real" props for union -- no need to skip them for the unistrumented instance
+                    final T newValueToCheck;
+                    if (!newValue.isInstrumented()) {
+                        copy(newValue, newValueToCheck = co.new_(), ID, VERSION);  // KEY and DESC are not considered as "real" props for union -- no need to skip them for the unistrumented instance
+                    } else {
+                        newValueToCheck = newValue;
+                    }
                     final var isValid = newValueToCheck.isValid();
                     if (!isValid.isSuccessful()) {
                         return failure(entity, new Exception(format(ERR_UNION_INVALID, entityTitle(newValueToCheck), isValid.getEx().getMessage()), isValid.getEx()));

@@ -1138,9 +1138,8 @@ public class EntityUtils {
      * @param fromEntity
      * @param toEntity
      * @param skipProperties -- a sequence of property names, which may include ID and VERSION.
-     * @return {@code toEntity} instance
      */
-    public static <T extends AbstractEntity> T copy(final AbstractEntity<?> fromEntity, final T toEntity, final String... skipProperties) {
+    public static <T extends AbstractEntity> void copy(final AbstractEntity<?> fromEntity, final T toEntity, final String... skipProperties) {
         // convert an array with property names to be skipped into a set for more efficient use
         final Set<String> skipPropertyName = new HashSet<>(Arrays.asList(skipProperties));
 
@@ -1168,7 +1167,6 @@ public class EntityUtils {
                     }
                 }
             });
-        return toEntity;
     }
 
     /**
