@@ -760,6 +760,7 @@ public class EntityResourceUtils {
                 from(
                     select(entityType)
                     .where().prop(
+                        // using a condition for an active property, if it is present, guarantees a narrower search result in case of duplicate key values among entity types of union properties
                         optActiveProp.map(activeProp -> activeProp + "." + KEY).orElse(KEY)
                     ).iLike().val(searchString)
                     .model()
