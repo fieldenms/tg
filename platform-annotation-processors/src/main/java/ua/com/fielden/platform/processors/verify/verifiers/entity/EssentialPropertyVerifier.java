@@ -33,7 +33,11 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
 
     @Override
     protected List<AbstractEntityVerifier> createComponents(final ProcessingEnvironment procEnv) {
-        return List.of(new AccessorPresence(procEnv));
+        return List.of(
+                new AccessorPresence(procEnv), 
+                new PropertySetterVerifier(procEnv),
+                new CollectionalPropertyVerifier(procEnv),
+                new PropertyTypeVerifier(procEnv));
     }
 
     /**
