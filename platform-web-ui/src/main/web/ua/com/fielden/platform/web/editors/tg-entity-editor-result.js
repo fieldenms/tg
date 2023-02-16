@@ -20,7 +20,14 @@ import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/cla
 import {html, PolymerElement} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import {microTask} from '/resources/polymer/@polymer/polymer/lib/utils/async.js';
 
-const typeColors = ['#c7ddf5', '#e2d810', '#ffd79d', '#daf2dc', '#ffcce7', '#d7ccc8'];
+/**
+ * A set of colours used for rendering labels in the autocompletion result when autocompleting union entities, to represent values of various entity types that correspond to different union properties.
+ * These colours are selected from https://materialui.co/colors/ – a subset from the row with colour ID 50.
+ */
+//                                green     d-purple   pink       brown      teal       indigo
+const unionPropertyBgColours = ['#E8F5E9', '#EDE7F6', '#FCE4EC', '#EFEBE9', '#E0F2F1', '#E8EAF6'];
+const unionPropertyFgColours = ['#63BB6A', '#855CC2', '#E93772', '#A0887C', '#5DBBB6', '#5F6DC0'];
+
 
 const template = html`
     <style>
@@ -392,8 +399,10 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                 if (entityType.isUnionEntity()) {
                     const activeProp = v._activeProperty();
                     const title = entityType.prop(activeProp).title();
-                    const color = typeColors[entityType.unionProps().indexOf(activeProp)];
-                    html = html + `<span class="type-name" style="background-color:${color || "#eeeeee"}">${title}</span>`;
+                    const colourIndex = entityType.unionProps().indexOf(activeProp) % unionPropertyBgColours.length;
+                    const bgColor = unionPropertyBgColours[colourIndex];
+                    const fgColor = unionPropertyFgColours[colourIndex];
+                    html = html + `<span class="type-name" style="background-color:${bgColor};color:${fgColor}">${title}</span>`;
                 }
 
                 // add values for additional properties with highlighting of matching parts if required
