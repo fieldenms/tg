@@ -1,11 +1,17 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asDeclaredType;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.getSimpleName;
+
+import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.type.TypeMirror;
 import javax.tools.Diagnostic.Kind;
 
 import ua.com.fielden.platform.entity.annotation.Observable;
@@ -14,6 +20,10 @@ import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.verify.ViolatingElement;
+import ua.com.fielden.platform.types.Colour;
+import ua.com.fielden.platform.types.Hyperlink;
+import ua.com.fielden.platform.types.Money;
+import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
 public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier {
 
@@ -155,6 +165,120 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                 }
                 return Optional.empty();
             }
+        }
+    }
+
+    /**
+     * Acceptable property types:
+     * <ol>
+     *   <li>Ordinary (aka primitive) types: {@link Long}, {@link Integer}, {@link BigDecimal}, {@link Date}, {@link String}, {@link boolean}.</li>
+     *   <li>Custom platform types: {@link Money}, {@link Colour}, {@link Hyperlink}.</li>
+     *   <li>Entity types: any registered domain entity 
+     *   (at the time of writing, this means an entity, registered in an application specific class {@link ApplicationDomain}).</li>
+     *   <li>Collectional types: any type assignable to {@link java.util.Collection}, but parameterised with any of the permitted types 
+     *   in items 1-3.</li>
+     *   <li>Binary: {@code byte[]}.</li>
+     *   <li>Special case collectional: {@link Map} (key and value type verification will need to be covered by another verifier).</li>
+     * </ol>
+     */
+    static class PropertyTypeVerifier extends AbstractEntityVerifier {
+        static final List<Class<?>> ORDINARY_TYPES = List.of(String.class, Long.class, Integer.class, BigDecimal.class, Date.class, boolean.class);
+        // includes boxed boolean
+        static final List<Class<?>> ORDINARY_TYPE_ARGS = List.of(String.class, Long.class, Integer.class, BigDecimal.class, Date.class, Boolean.class);
+        static final List<Class<?>> PLATFORM_TYPES = List.of(Money.class, Colour.class, Hyperlink.class);
+        static final List<Class<?>> BINARY_TYPES = List.of(byte[].class);
+        static final List<Class<?>> SPECIAL_COLLECTION_TYPES = List.of(Map.class);
+
+        protected PropertyTypeVerifier(final ProcessingEnvironment processingEnv) {
+            super(processingEnv);
+        }
+
+        public static String errEntityTypeMustBeRegistered(final String property, final String type) {
+            return "Property [%s]: entity type [%s] must be registered before use as property type.".formatted(property, type);
+        }
+
+        public static String errEntityTypeArgMustBeRegistered(final String property, final String type) {
+            return "Property [%s]: entity type [%s] must be registered before use as collection type argument.".formatted(property, type);
+        }
+
+        public static String errInvalidCollectionTypeArg(final String property) {
+            return "Collectional property [%s] has unsupported type argument.".formatted(property);
+        }
+
+        public static String errInvalidType(final String property) {
+            return "Type of property [%s] is unsupported.".formatted(property);
+        }
+
+        private boolean isAnyOf(final TypeMirror t, final List<Class<?>> classes) {
+            return classes.stream().anyMatch(cls -> entityFinder.isSameType(t, cls));
+        }
+
+        private boolean isEntityTypeRegistered(final TypeMirror entityType) {
+            // TODO Implement when ApplicationDomain becomes analysable by annotation processors or 
+            // some other suitable entity registration mechanism is used.
+            // Currently, entity types are registered in the static initialiser block, which is unreachable to annotation processors.
+            return true;
+        }
+
+        @Override
+        protected List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
+            return roundEnv.acceptDeclaredPropertiesVisitor(new PropertyVisitor(entityFinder));
+        }
+
+        private class PropertyVisitor extends AbstractPropertyVerifyingVisitor {
+            public PropertyVisitor(final EntityFinder entityFinder) {
+                super(entityFinder);
+            }
+
+            @Override
+            public Optional<ViolatingElement> visitProperty(final EntityElement entity, final PropertyElement property) {
+                final TypeMirror propType = property.getType();
+
+                // 1. ordinary type
+                if (isAnyOf(propType, ORDINARY_TYPES)) return Optional.empty();
+                // 2. platform type
+                if (isAnyOf(propType, PLATFORM_TYPES)) return Optional.empty();
+                // 5. binary type
+                if (isAnyOf(propType, BINARY_TYPES)) return Optional.empty();
+                // 6. special case of collection-like types
+                if (isAnyOf(propertyType, SPECIAL_COLLECTION_TYPES)) return Optional.empty();
+
+                // 3. entity type
+                if (entityFinder.isEntityType(propType)) {
+                    if (!isEntityTypeRegistered(propType)) {
+                        return Optional.of(new ViolatingElement(
+                                property.element(), Kind.ERROR,
+                                errEntityTypeMustBeRegistered(getSimpleName(property.element()), getSimpleName(propType))));
+                    }
+                    return Optional.empty();
+                }
+
+                // 4. collectional type
+                if (entityFinder.isCollectionalProperty(property)) {
+                    // check type arguments
+                    final List<? extends TypeMirror> typeArguments = asDeclaredType(propType).getTypeArguments();
+                    // collection types accept a single type argument
+                    if (!typeArguments.isEmpty()) {
+                        final TypeMirror typeArg = typeArguments.get(0);
+                        System.out.println("Type argument: " + typeArg);
+
+                        if (!isAnyOf(typeArg, ORDINARY_TYPE_ARGS) && !isAnyOf(typeArg, PLATFORM_TYPES)) {
+                            return Optional.of(new ViolatingElement(
+                                    property.element(), Kind.ERROR, errInvalidCollectionTypeArg(getSimpleName(property.element()))));
+                        }
+
+                        if (entityFinder.isEntityType(typeArg) && !isEntityTypeRegistered(typeArg)) {
+                            return Optional.of(new ViolatingElement(
+                                    property.element(), Kind.ERROR,
+                                    errEntityTypeArgMustBeRegistered(getSimpleName(property.element()), getSimpleName(typeArg))));
+                        }
+                    }
+                    return Optional.empty(); // TODO process raw collection types
+                }
+
+                return Optional.of(new ViolatingElement(property.element(), Kind.ERROR, errInvalidType(getSimpleName(property.element()))));
+            }
+            
         }
     }
 
