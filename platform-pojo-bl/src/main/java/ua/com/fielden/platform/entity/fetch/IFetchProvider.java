@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
+import ua.com.fielden.platform.entity.query.fluent.fetch.FetchCategory;
 import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 
 /**
@@ -201,27 +202,32 @@ public interface IFetchProvider<T extends AbstractEntity<?>> {
     boolean instrumented();
 
     /**
-     * Adds (mutably) key properties to the fetch provider of {@code dotNotationProperty} in case it is entity-typed.
-     * <p>
-     * This method is based on a premise that property already has its provider (with NONE fetch category) if it is entity-typed.
-     * 
-     * @param dotNotationProperty
-     * @param withDesc -- specifies whether {@link AbstractEntity#DESC} property needs to be added, iff {@code dotNotationProperty} is entity-typed and has {@link AbstractEntity#DESC} property
-     * @return
+     * Returns entity type behind this {@link IFetchProvider}.
      */
-    FetchProvider<T> addKeysTo(final String dotNotationProperty, final boolean withDesc);
+    Class<T> entityType();
 
     /**
-     * Adds (mutably) key properties to the fetch provider of {@code dotNotationProperty} in case it is entity-typed.
+     * Adds property (mutably) to the fetch provider and its key sub-properties in case it is entity-typed.
      * <p>
-     * This method is based on a premise that property already has its provider (with NONE fetch category) if it is entity-typed.
+     * This method uses lean {@link FetchCategory#NONE} on dot-notation pathways.
      * 
      * @param dotNotationProperty
      * @param withDesc -- specifies whether {@link AbstractEntity#DESC} property needs to be added, iff {@code dotNotationProperty} is entity-typed and has {@link AbstractEntity#DESC} property
      * @return
      */
-    default FetchProvider<T> addKeysTo(final IConvertableToPath dotNotationProperty, final boolean withDesc) {
-        return addKeysTo(dotNotationProperty.toPath(), withDesc);
+    IFetchProvider<T> addPropWithKeys(final String dotNotationProperty, final boolean withDesc);
+
+    /**
+     * Adds property (mutably) to the fetch provider and its key sub-properties in case it is entity-typed.
+     * <p>
+     * This method uses lean {@link FetchCategory#NONE} on dot-notation pathways.
+     * 
+     * @param dotNotationProperty
+     * @param withDesc -- specifies whether {@link AbstractEntity#DESC} property needs to be added, iff {@code dotNotationProperty} is entity-typed and has {@link AbstractEntity#DESC} property
+     * @return
+     */
+    default IFetchProvider<T> addPropWithKeys(final IConvertableToPath dotNotationProperty, final boolean withDesc) {
+        return addPropWithKeys(dotNotationProperty.toPath(), withDesc);
     }
 
 }

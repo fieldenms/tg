@@ -19,6 +19,7 @@ import ua.com.fielden.platform.persistence.types.EntityWithSimpleTaxMoney;
 import ua.com.fielden.platform.persistence.types.EntityWithTaxMoney;
 import ua.com.fielden.platform.sample.domain.EntityOne;
 import ua.com.fielden.platform.sample.domain.EntityTwo;
+import ua.com.fielden.platform.sample.domain.EntityWithUnionEntityWithSkipExistsValidation;
 import ua.com.fielden.platform.sample.domain.TeAverageFuelUsage;
 import ua.com.fielden.platform.sample.domain.TeFuelUsageByType;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
@@ -66,6 +67,10 @@ import ua.com.fielden.platform.sample.domain.TgSubSystem;
 import ua.com.fielden.platform.sample.domain.TgSynBogie;
 import ua.com.fielden.platform.sample.domain.TgSystem;
 import ua.com.fielden.platform.sample.domain.TgTimesheet;
+import ua.com.fielden.platform.sample.domain.TgUnion;
+import ua.com.fielden.platform.sample.domain.TgUnionCommonType;
+import ua.com.fielden.platform.sample.domain.TgUnionType1;
+import ua.com.fielden.platform.sample.domain.TgUnionType2;
 import ua.com.fielden.platform.sample.domain.TgVehicle;
 import ua.com.fielden.platform.sample.domain.TgVehicleFinDetails;
 import ua.com.fielden.platform.sample.domain.TgVehicleFuelUsage;
@@ -81,6 +86,7 @@ import ua.com.fielden.platform.sample.domain.TgWebApiEntitySyntheticSingle;
 import ua.com.fielden.platform.sample.domain.TgWorkOrder;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
+import ua.com.fielden.platform.sample.domain.UnionEntityWithSkipExistsValidation;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityChild;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityDetail;
@@ -113,6 +119,8 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(TgBogie.class);
         add(TgSynBogie.class);
         add(TgBogieLocation.class);
+        add(UnionEntityWithSkipExistsValidation.class);
+        add(EntityWithUnionEntityWithSkipExistsValidation.class);
         add(TgBogieClass.class);
         add(TgWagon.class);
         add(TgWagonSlot.class);
@@ -187,6 +195,10 @@ public class PlatformTestDomainTypes implements IApplicationDomainProvider {
         add(EntityOne.class);
         add(EntityTwo.class);
         add(UnionEntity.class);
+        add(TgUnion.class);
+        add(TgUnionType1.class);
+        add(TgUnionType2.class);
+        add(TgUnionCommonType.class);
     }
 
     @Override

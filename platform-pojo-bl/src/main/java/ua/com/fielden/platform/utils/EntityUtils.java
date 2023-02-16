@@ -40,7 +40,6 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.EnumSet;
 import java.util.HashSet;
@@ -158,8 +157,7 @@ public class EntityUtils {
      * @return
      */
     public static BigDecimal toDecimal(final Number number, final int scale) {
-        if (number instanceof BigDecimal) {
-            final BigDecimal decimal = (BigDecimal) number;
+        if (number instanceof final BigDecimal decimal) {
             return decimal.scale() == scale ? decimal : decimal.setScale(scale, RoundingMode.HALF_UP);
         }
         return new BigDecimal(number.toString(), new MathContext(scale, RoundingMode.HALF_UP));
