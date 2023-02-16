@@ -4,8 +4,13 @@ import static org.junit.Assert.assertFalse;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.assertErrorReported;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.compileAndPrintDiagnostics;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.propertyBuilder;
+import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier.errInvalidCollectionTypeArg;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Function;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.Modifier;
@@ -14,6 +19,7 @@ import org.junit.Test;
 import org.junit.experimental.runners.Enclosed;
 import org.junit.runner.RunWith;
 
+import com.squareup.javapoet.ArrayTypeName;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterizedTypeName;
@@ -22,12 +28,14 @@ import com.squareup.javapoet.TypeSpec;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
 import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.AccessorPresence;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.CollectionalPropertyVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertySetterVerifier;
+import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier;
 
 /**
  * Tests related to the composable verifier {@link EssentialPropertyVerifier} and its components.
@@ -182,6 +190,82 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                     .build();
 
             compileAndAssertSuccess(List.of(entity));
+        }
+    }
+
+    // 4. property type
+    public static class PropertyTypeVerifierTest extends AbstractVerifierTest {
+
+        @Override
+        protected Verifier createVerifier(final ProcessingEnvironment procEnv) {
+            return new EssentialPropertyVerifier.PropertyTypeVerifier(procEnv);
+        }
+
+        private void assertTypeAllowed(final TypeName typeName) {
+            final TypeSpec entity = TypeSpec.classBuilder("Example")
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .addField(propertyBuilder(typeName, "prop").build())
+                    .build();
+
+            compileAndAssertSuccess(List.of(entity));
+        }
+
+        // TODO Once verification of this constraint is supported, devise a way to provide a mock ApplicationDomain to the processor.
+        // Also remove the "NOT".
+        @Test
+        public void error_is_NOT_reported_when_unregistered_entity_type_is_used() {
+            assertTypeAllowed(ClassName.get(ExampleEntity.class));
+            assertTypeAllowed(ClassName.get(AbstractEntity.class));
+        }
+
+        @Test
+        public void error_is_reported_when_unsupported_collection_type_argument_is_used() {
+            final TypeSpec entity = TypeSpec.classBuilder("Example")
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .addField(propertyBuilder(ParameterizedTypeName.get(List.class, Function.class), "list").build())
+                    .build();
+
+            compileAndAssertError(List.of(entity), errInvalidCollectionTypeArg("list"));
+        }
+
+        @Test
+        public void nested_collection_types_are_disallowed() {
+            // Set<List<String>>
+            final var typeName = ParameterizedTypeName.get(ClassName.get(Set.class), ParameterizedTypeName.get(List.class, String.class));
+            final TypeSpec entity = TypeSpec.classBuilder("Example")
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .addField(propertyBuilder(typeName, "collection").build())
+                    .build();
+
+            compileAndAssertError(List.of(entity), errInvalidCollectionTypeArg("collection"));
+        }
+
+        @Test
+        public void collection_type_parameterised_with_boxed_boolean_is_allowed() {
+            assertTypeAllowed(ParameterizedTypeName.get(Set.class, Boolean.class));
+        }
+
+        // TODO this might change in the future with more thorough verification of collectional properties
+        @Test
+        public void raw_collection_types_are_allowed() {
+            assertTypeAllowed(ClassName.get(List.class));
+        }
+
+        @Test
+        public void special_case_collection_type_Map_is_allowed() {
+            assertTypeAllowed(ClassName.get(Map.class));
+        }
+
+        @Test
+        public void select_custom_platform_types_are_allowed() {
+            for (final Class<?> cls: PropertyTypeVerifier.PLATFORM_TYPES) {
+                assertTypeAllowed(ClassName.get(cls));
+            }
+        }
+
+        @Test
+        public void binary_array_type_is_allowed() {
+            assertTypeAllowed(ArrayTypeName.get(byte[].class));
         }
     }
 
