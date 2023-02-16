@@ -46,7 +46,7 @@ import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
  */
 public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> extends AbstractWebResource {
 
-    private static final String ERR_CLIENT_NOT_REGISTERED = "The client should have been registered.";
+    private static final String ERR_CLIENT_NOT_REGISTERED = "The client should have been registered for SSE communication.";
 
     protected final IEntityDao<T> companion;
     private final EntityFactory factory;

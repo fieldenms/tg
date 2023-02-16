@@ -6,7 +6,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
-import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.EXISTS_BUT_NOT_ACTIVE_ERR;
+import static ua.com.fielden.platform.entity.validation.EntityExistsValidator.ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 
 import org.junit.Test;
@@ -40,7 +40,7 @@ public class ActivatableEntitiesWithSkipActivatableTrackingTest extends Abstract
         final TgSystem sys = new_(TgSystem.class, "Sys").setActive(true).setForthCat(cat1);
         final MetaProperty<?> propFirthCat = sys.getProperty("forthCat");
         assertFalse(propFirthCat.isValid());
-        assertEquals(propFirthCat.getFirstFailure().getMessage(), format(EXISTS_BUT_NOT_ACTIVE_ERR, entityTitle, cat1));
+        assertEquals(propFirthCat.getFirstFailure().getMessage(), format(ERR_ENTITY_EXISTS_BUT_NOT_ACTIVE, entityTitle, cat1));
     }
     
     @Test
