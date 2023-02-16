@@ -1131,19 +1131,23 @@ public class DynamicQueryBuilder {
      * @return
      */
     private static ConditionModel propertyLike(final String propertyNameWithKey, final List<String> searchValues, final Class<? extends AbstractEntity<?>> propType) {
-        final Map<Boolean, List<String>> searchVals = searchValues.stream().collect(groupingBy(str -> str.contains("*")));
+        // A map to separate exact (false) and wildcard (true) search values; this provides a way to optimise the database query.
+        final Map<Boolean, List<String>> exactAndWildcardSearchVals = searchValues.stream().collect(groupingBy(str -> str.contains("*")));
         final String propertyNameWithoutKey = getPropertyNameWithoutKeyPart(propertyNameWithKey);
-        if (searchVals.containsKey(false) && searchVals.containsKey(true)) {
+        if (exactAndWildcardSearchVals.containsKey(false) && exactAndWildcardSearchVals.containsKey(true)) { // both exact and whildcard search values are present
             return cond()
-                    //Need to add ".id" for union entity because EQL can not resolve union entities without it
-                    .prop(propertyNameWithoutKey + (isUnionEntityType(propType) ? ".id" : "")).in().model(select(propType).where().prop("key").in().values(searchVals.get(false).toArray()).model())
-                    .or().prop(propertyNameWithKey).iLike().anyOfValues(prepCritValuesForEntityTypedProp(searchVals.get(true))).model();
-        } else if (searchVals.containsKey(false) && !searchVals.containsKey(true)) {
+                    // Condition for exact search values; union entities need ".id" to help EQL.
+                    .prop(propertyNameWithoutKey + (isUnionEntityType(propType) ? ".id" : "")).in().model(select(propType).where().prop(KEY).in().values(exactAndWildcardSearchVals.get(false).toArray()).model())
+                    // Condition for wildcard search values.
+                    .or().prop(propertyNameWithKey).iLike().anyOfValues(prepCritValuesForEntityTypedProp(exactAndWildcardSearchVals.get(true))).model();
+        } else if (exactAndWildcardSearchVals.containsKey(false) && !exactAndWildcardSearchVals.containsKey(true)) { // only exact search values are present
             return cond()
-                    //Need to add ".id" for union entity because EQL can not resolve union entities without it
-                    .prop(propertyNameWithoutKey + (isUnionEntityType(propType) ? ".id" : "")).in().model(select(propType).where().prop("key").in().values(searchVals.get(false).toArray()).model()).model();
-        } else {
-            return cond().prop(propertyNameWithKey).iLike().anyOfValues(prepCritValuesForEntityTypedProp(searchVals.get(true))).model();
+                    // Condition for exact search values; union entities need ".id" to help EQL.
+                    .prop(propertyNameWithoutKey + (isUnionEntityType(propType) ? ".id" : "")).in().model(select(propType).where().prop(KEY).in().values(exactAndWildcardSearchVals.get(false).toArray()).model()).model();
+        } else { // only whildcard search values are present
+            return cond()
+                    // Condition for wildcard search values.
+                    .prop(propertyNameWithKey).iLike().anyOfValues(prepCritValuesForEntityTypedProp(exactAndWildcardSearchVals.get(true))).model();
         }
     }
 
