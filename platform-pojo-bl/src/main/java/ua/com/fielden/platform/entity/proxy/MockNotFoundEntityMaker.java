@@ -26,7 +26,11 @@ import ua.com.fielden.platform.entity.proxy.exceptions.MockException;
  * A class that represents runtime type information for entity types that represent mock-not-found values.
  * Factory method {@link #mock(Class)} should be used to create mock-not-found entity types.
  * Method {@link #isMockNotFoundValue(AbstractEntity)} should be used to identify whether an entity instance is of a mock-not-found type.
- *
+ * <p>
+ * FIXME The current implementation relies on the fact that {@link AbstractEntity} has property {@code desc} to capture string values, entered by users.
+         However, property {@code desc} will be removed from {@link AbstractEntity} at some stage in the future.
+         A separate, specifically generated property to hold values typed by users should be introduced instead (https://github.com/fieldenms/tg/issues/1933).
+
  * @author TG Team
  */
 public class MockNotFoundEntityMaker {

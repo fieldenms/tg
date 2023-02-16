@@ -402,6 +402,9 @@ public class EntityResourceUtils {
      */
     public static <T extends AbstractEntity<?>> String entityWithMocksToString(final Function<T, String> specificConverter, final T entity) {
         if (isMockNotFoundEntity(entity)) {
+            // entity.get(DESC) returns the actually typed by user string; property "desc" is used for this purpose, because it is of type String for any entity that may need to be mocked
+            // FIXME It would have been better to remove the use of "desc" in favour of a separate, specifically generated property to hold values typed by users (https://github.com/fieldenms/tg/issues/1933).
+            //       Property "desc" will be removed from AbstractEntity at some stage in the future.
             return getErrorMessage(entity).isPresent() ? createMoreThanOneMockString(entity.get(DESC)) : createNotFoundMockString(entity.get(DESC));
         } else {
             return specificConverter.apply(entity);

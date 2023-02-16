@@ -98,7 +98,8 @@ public class EntityExistsValidator<T extends AbstractEntity<?>> implements IBefo
                 if (isMockNotFoundValue(newValue)) { // mock represents an invalid value
                     // if a specific error message is present,then this error message is reported
                     // otherwise, a standard 'not found' message is reported 
-                    return failure(entity, getErrorMessage(newValue).orElseGet(() -> format(ERR_ENTITY_WAS_NOT_FOUND, entityTitle(newValue), newValue.getDesc()))); // newValue.getDesc() is expected to contain a string value typed by a user
+                    // FIXME newValue.getDesc() is expected to contain a string value typed by a user, but this will change (refer, issue https://github.com/fieldenms/tg/issues/1933).
+                    return failure(entity, getErrorMessage(newValue).orElseGet(() -> format(ERR_ENTITY_WAS_NOT_FOUND, entityTitle(newValue), newValue.getDesc())));
                 } else {
                     // need to create an instrumented copy of newValue, if it is uninstrumented, to enforce validation
                     final T newValueToCheck;
