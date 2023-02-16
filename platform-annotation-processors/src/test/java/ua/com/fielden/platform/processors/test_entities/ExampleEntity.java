@@ -37,7 +37,7 @@ public class ExampleEntity extends AbstractEntity<String> {
     @IsProperty
     @MapTo
     @Title(value = "Prop1")
-    private int prop1;
+    private Integer prop1;
 
     @IsProperty
     @MapTo

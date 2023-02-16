@@ -31,15 +31,15 @@ public class NonPersistentButWithMetaModelEntity extends AbstractEntity<String> 
     @IsProperty
     @MapTo
     @Title(value = "Prop1")
-    private int prop1;
+    private Integer prop1;
 
     @Observable
-    public NonPersistentButWithMetaModelEntity setProp1(final int prop1) {
+    public NonPersistentButWithMetaModelEntity setProp1(final Integer prop1) {
         this.prop1 = prop1;
         return this;
     }
 
-    public int getProp1() {
+    public Integer getProp1() {
         return prop1;
     }
 
