@@ -254,6 +254,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         @Test
         public void special_case_collection_type_Map_is_allowed() {
             assertTypeAllowed(ClassName.get(Map.class));
+            assertTypeAllowed(ClassName.get(HashMap.class));
         }
 
         @Test

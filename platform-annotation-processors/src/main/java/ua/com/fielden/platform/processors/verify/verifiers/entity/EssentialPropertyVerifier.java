@@ -209,6 +209,10 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
             return "Type of property [%s] is unsupported.".formatted(property);
         }
 
+        private boolean isSpecialCollectionType(final TypeMirror t) {
+            return SPECIAL_COLLECTION_TYPES.stream().anyMatch(cls -> entityFinder.isSubtype(t, cls));
+        }
+
         private boolean isAnyOf(final TypeMirror t, final List<Class<?>> classes) {
             return classes.stream().anyMatch(cls -> entityFinder.isSameType(t, cls));
         }
@@ -241,7 +245,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                 // 5. binary type
                 if (isAnyOf(propType, BINARY_TYPES)) return Optional.empty();
                 // 6. special case of collection-like types
-                if (isAnyOf(propertyType, SPECIAL_COLLECTION_TYPES)) return Optional.empty();
+                if (isSpecialCollectionType(propType)) return Optional.empty();
 
                 // 3. entity type
                 if (entityFinder.isEntityType(propType)) {
