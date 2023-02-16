@@ -188,6 +188,9 @@ public class AbstractUnionEntityTest {
         assertNotEquals(unionEntity1, unionEntity2);
     }
 
+    /**
+     * Remark: "the same IDs" situation should not be possible due to contiguous nature of ID values across all entities. 
+     */
     @Test
     public void union_entities_with_same_key_representations_and_same_ids_but_different_active_properties_arent_equal() {
         final UnionEntity unionEntity1 = factory.newEntity(UnionEntity.class).setPropertyOne(factory.newEntity(EntityOne.class, 1L, "1"));
@@ -195,6 +198,9 @@ public class AbstractUnionEntityTest {
         assertNotEquals(unionEntity1, unionEntity2);
     }
 
+    /**
+     * Remark: "the same IDs" situation should not be possible due to contiguous nature of ID values across all entities. 
+     */
     @Test
     public void union_entities_with_different_key_representations_and_same_ids_and_same_active_property_arent_equal() {
         final var entity1 = factory.newEntity(EntityOne.class, 1L, "1");

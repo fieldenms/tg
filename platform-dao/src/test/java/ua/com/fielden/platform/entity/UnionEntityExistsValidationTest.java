@@ -54,7 +54,7 @@ public class UnionEntityExistsValidationTest extends AbstractDaoTestCase {
         valid_union_entity_can_be_assigned(() -> new TgBogieLocation());
     }
 
-    private void union_entity_without_active_property_can_not_be_assigned(final Supplier<TgBogieLocation> creator) {
+    private void union_entity_without_active_property_cannot_be_assigned(final Supplier<TgBogieLocation> creator) {
         final var bogie = co$(TgBogie.class).new_();
         bogie.setLocation(creator.get());
 
@@ -75,16 +75,16 @@ public class UnionEntityExistsValidationTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void union_entity_without_active_property_can_not_be_assigned() {
-        union_entity_without_active_property_can_not_be_assigned(() -> co$(TgBogieLocation.class).new_());
+    public void union_entity_without_active_property_cannot_be_assigned() {
+        union_entity_without_active_property_cannot_be_assigned(() -> co$(TgBogieLocation.class).new_());
     }
 
     @Test
-    public void uninstrumented_union_entity_without_active_property_can_not_be_assigned() {
-        union_entity_without_active_property_can_not_be_assigned(() -> new TgBogieLocation());
+    public void uninstrumented_union_entity_without_active_property_cannot_be_assigned() {
+        union_entity_without_active_property_cannot_be_assigned(() -> new TgBogieLocation());
     }
 
-    private void union_entity_with_non_existing_active_property_can_not_be_assigned(final Supplier<TgBogieLocation> creator) {
+    private void union_entity_with_non_existing_active_property_cannot_be_assigned(final Supplier<TgBogieLocation> creator) {
         final var bogie = co$(TgBogie.class).new_();
         final var workshop = (TgWorkshop) co$(TgWorkshop.class).new_().setKey("W1");
         bogie.setLocation(creator.get().setWorkshop(workshop));
@@ -105,17 +105,17 @@ public class UnionEntityExistsValidationTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void union_entity_with_non_existing_active_property_can_not_be_assigned() {
-        union_entity_with_non_existing_active_property_can_not_be_assigned(() -> co$(TgBogieLocation.class).new_());
+    public void union_entity_with_non_existing_active_property_cannot_be_assigned() {
+        union_entity_with_non_existing_active_property_cannot_be_assigned(() -> co$(TgBogieLocation.class).new_());
     }
 
     @Test
-    public void uninstrumented_union_entity_with_non_existing_active_property_can_not_be_assigned() {
-        union_entity_with_non_existing_active_property_can_not_be_assigned(() -> new TgBogieLocation());
+    public void uninstrumented_union_entity_with_non_existing_active_property_cannot_be_assigned() {
+        union_entity_with_non_existing_active_property_cannot_be_assigned(() -> new TgBogieLocation());
     }
 
     @Test
-    public void union_entity_with_existing_active_property__that_has_been_deleted__can_not_be_assigned() {
+    public void union_entity_with_existing_active_property__that_has_been_deleted__cannot_be_assigned() {
         co$(TgWorkshop.class).save((TgWorkshop) co$(TgWorkshop.class).new_().setKey("W1"));
 
         final var bogie = co$(TgBogie.class).new_();
@@ -141,7 +141,7 @@ public class UnionEntityExistsValidationTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void uninstrumented_union_entity_with_existing_active_property__that_has_been_deleted__can_not_be_assigned() {
+    public void uninstrumented_union_entity_with_existing_active_property__that_has_been_deleted__cannot_be_assigned() {
         co$(TgWorkshop.class).save((TgWorkshop) co$(TgWorkshop.class).new_().setKey("W1"));
 
         final var bogie = co$(TgBogie.class).new_();
@@ -169,7 +169,7 @@ public class UnionEntityExistsValidationTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void mock_union_entity_can_not_be_assigned() {
+    public void mock_union_entity_cannot_be_assigned() {
         final var bogie = co$(TgBogie.class).new_();
         bogie.setLocation((TgBogieLocation) createMockNotFoundEntity(TgBogieLocation.class, "UNKNOWN"));
 
@@ -186,7 +186,7 @@ public class UnionEntityExistsValidationTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void more_than_one_mock_union_entity_can_not_be_assigned() {
+    public void more_than_one_mock_union_entity_cannot_be_assigned() {
         final var bogie = co$(TgBogie.class).new_();
         bogie.setLocation((TgBogieLocation) createMockFoundMoreThanOneEntity(TgBogieLocation.class, "MANY"));
 
