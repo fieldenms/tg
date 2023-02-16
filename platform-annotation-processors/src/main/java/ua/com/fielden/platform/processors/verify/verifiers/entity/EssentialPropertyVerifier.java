@@ -270,20 +270,24 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                         final TypeMirror typeArg = typeArguments.get(0);
                         System.out.println("Type argument: " + typeArg);
 
-                        if (!isAnyOf(typeArg, ORDINARY_TYPE_ARGS) && !isAnyOf(typeArg, PLATFORM_TYPES)) {
-                            return Optional.of(new ViolatingElement(
-                                    property.element(), Kind.ERROR, errInvalidCollectionTypeArg(getSimpleName(property.element()))));
+                        if (isAnyOf(typeArg, ORDINARY_TYPE_ARGS) || isAnyOf(typeArg, PLATFORM_TYPES)) {
+                            return Optional.empty();
                         }
 
-                        if (entityFinder.isEntityType(typeArg) && !isEntityTypeRegistered(typeArg)) {
-                            return Optional.of(new ViolatingElement(
-                                    property.element(), Kind.ERROR,
-                                    errEntityTypeArgMustBeRegistered(getSimpleName(property.element()), getSimpleName(typeArg))));
+                        if (entityFinder.isEntityType(typeArg)) {
+                            return isEntityTypeRegistered(typeArg) ? Optional.empty() :
+                                Optional.of(new ViolatingElement(
+                                        property.element(), Kind.ERROR,
+                                        errEntityTypeArgMustBeRegistered(getSimpleName(property.element()), getSimpleName(typeArg))));
                         }
+                        // all valid type arguments were exhausted
+                        return Optional.of(new ViolatingElement(
+                                property.element(), Kind.ERROR, errInvalidCollectionTypeArg(getSimpleName(property.element()))));
                     }
                     return Optional.empty(); // TODO process raw collection types
                 }
 
+                // all allowed types were exhausted
                 return Optional.of(new ViolatingElement(property.element(), Kind.ERROR, errInvalidType(getSimpleName(property.element()))));
             }
             
