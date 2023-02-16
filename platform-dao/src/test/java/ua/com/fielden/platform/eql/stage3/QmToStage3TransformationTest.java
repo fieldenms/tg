@@ -456,18 +456,16 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable make = source(MAKE, 4);
         
         final IJoinNode3 sources =
-                lj(
-                        ij(
+                ij(
+                        lj(
                                 veh,
-                                ij(
-                                        model,
-                                        make,
-                                        eq(entityProp("make", model, MAKE), idProp(make))
-                                  ),
-                                eq(entityProp("model", veh, MODEL), idProp(model))
-                          ),
-                        makeA,
-                        eq(entityProp("make", veh, MAKE), idProp(makeA))
+                                makeA,
+                                eq(entityProp("make", veh, MAKE), idProp(makeA))),
+                        ij(
+                                model,
+                                make,
+                                eq(entityProp("make", model, MAKE), idProp(make))),
+                        eq(entityProp("model", veh, MODEL), idProp(model))
                   );
         final Conditions3 conditions = or(and(or(isNotNull(stringProp(KEY, make)), isNotNull(stringProp(KEY, makeA)), isNotNull(stringProp(KEY, make)))));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
@@ -485,18 +483,16 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable make = source(MAKE, 4);
         
         final IJoinNode3 sources =
-                lj(
-                        ij(
+                ij(
+                        lj(
                                 veh,
-                                ij(
-                                        model,
-                                        make,
-                                        eq(entityProp("make", model, MAKE), idProp(make))
-                                  ),
-                                eq(entityProp("model", veh, MODEL), idProp(model))
-                          ),
-                        makeA,
-                        eq(entityProp("make", veh, MAKE), idProp(makeA))
+                                makeA,
+                                eq(entityProp("make", veh, MAKE), idProp(makeA))),
+                        ij(
+                                model,
+                                make,
+                                eq(entityProp("make", model, MAKE), idProp(make))),
+                        eq(entityProp("model", veh, MODEL), idProp(model))
                   );
         final Conditions3 conditions = or(and(or(isNotNull(stringProp(KEY, make)), isNotNull(stringProp(KEY, makeA)))));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);
@@ -513,20 +509,17 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable make = source(MAKE, 4);
         final Source3BasedOnTable makeA = source(MAKE, 2);
         
-        final IJoinNode3 sources = 
-                lj(
-                        ij(
+        final IJoinNode3 sources =
+                ij(
+                        lj(
                                 veh,
-                                ij(
-                                        model,
-                                        make,
-                                        eq(entityProp("make", model, MAKE), idProp(make))
-                                  ),
-                                eq(entityProp("model", veh, MODEL), idProp(model))
-                          ),
-                        makeA,
-                        eq(entityProp("make", veh, MAKE), idProp(makeA))
-
+                                makeA,
+                                eq(entityProp("make", veh, MAKE), idProp(makeA))),
+                        ij(
+                                model,
+                                make,
+                                eq(entityProp("make", model, MAKE), idProp(make))),
+                        eq(entityProp("model", veh, MODEL), idProp(model))
                   );
         final Conditions3 conditions = or(and(or(isNotNull(stringProp(KEY, make)), isNotNull(stringProp(KEY, makeA)))));
         final ResultQuery3 expQry = qryCountAll(sources, conditions);

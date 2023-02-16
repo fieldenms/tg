@@ -66,8 +66,7 @@ public class PathsToTreeTransformer {
             final List<PendingTail> pendingTails,
             final boolean explicitSource // true if sourceForCalcPropResolution is explicit source
     ) {
-        final Map<String, ImplicitNode> mapOfNodes = new HashMap<>();
-        //final List<ImplicitNode> listOfNodes = new ArrayList<>();
+        final List<ImplicitNode> listOfNodes = new ArrayList<>();
         final Map<Integer, List<ImplicitNode>> otherSourcesNodes = new HashMap<>();
         final List<ExpressionLinks> expressionLinks = new ArrayList<>();
         final List<Prop3Links> propLinks = new ArrayList<>();
@@ -91,8 +90,7 @@ public class PathsToTreeTransformer {
         	final T2<ImplicitNode, TreeResult> genRes = generateNode(propEntry, cpd != null ? cpd.expr : null, sourceForCalcPropResolution.id());
         	
             if (genRes._1 != null) {
-                mapOfNodes.put(genRes._1.name, genRes._1);
-                //listOfNodes.add(genRes._1);
+                listOfNodes.add(genRes._1);
             }
 
             if (genRes._2 != null) {
@@ -104,7 +102,7 @@ public class PathsToTreeTransformer {
         
         final List<String> orderedCalcPropsForType = isUnionEntityType(sourceForCalcPropResolution.sourceType()) || sourceForCalcPropResolution.sourceType().equals(EntityAggregates.class) ? emptyList() : domainInfo.getCalcPropsOrder(sourceForCalcPropResolution.sourceType().getName());
 
-        final List<ImplicitNode> orderedNodes = orderImplicitNodes(mapOfNodes, orderedCalcPropsForType);
+        final List<ImplicitNode> orderedNodes = orderImplicitNodes(listOfNodes, orderedCalcPropsForType);
 
         return t2(orderedNodes, new TreeResult(otherSourcesNodes, propLinks, expressionLinks));
     }
@@ -261,12 +259,12 @@ public class PathsToTreeTransformer {
      * @param dependentCalcPropOrderFromMetadata
      * @return
      */
-	private static List<ImplicitNode> orderImplicitNodes(final Map<String, ImplicitNode> all, final List<String> dependentCalcPropOrderFromMetadata) {
+	private static List<ImplicitNode> orderImplicitNodes(final List<ImplicitNode> all, final List<String> dependentCalcPropOrderFromMetadata) {
         final Map<String, ImplicitNode> dependentCalcPropNodes = new HashMap<>();
         final List<ImplicitNode> independentCalcPropNodes = new ArrayList<>();
         final List<ImplicitNode> result = new ArrayList<>(); // includes all non-calc prop nodes 
 
-        for (final ImplicitNode node : all.values()) {
+        for (final ImplicitNode node : all) {
             if (node.expr == null) { 
                 result.add(node); // adding all non-calc nodes first
             } else if (dependentCalcPropOrderFromMetadata.contains(node.name)){
