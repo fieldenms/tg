@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.getSimpleName;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,8 +51,9 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
 
             @Override
             public Optional<ViolatingElement> visitProperty(final EntityElement entity, final PropertyElement property) {
-                if (entityFinder.findDeclaredPropertyAccessor(entity, property.getSimpleName().toString()).isEmpty()) {
-                    return Optional.of(new ViolatingElement(property.element(), Kind.ERROR, errMissingAccessor(property.getSimpleName().toString())));
+                if (entityFinder.findDeclaredPropertyAccessor(entity, getSimpleName(property.element())).isEmpty()) {
+                    return Optional.of(new ViolatingElement(
+                            property.element(), Kind.ERROR, errMissingAccessor(getSimpleName(property.element()))));
                 }
                 return Optional.empty();
             }
@@ -94,23 +96,23 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
             @Override
             public Optional<ViolatingElement> visitProperty(final EntityElement entity, final PropertyElement property) {
                 // setter should be declared
-                final Optional<ExecutableElement> maybeSetter = entityFinder.findDeclaredPropertySetter(entity, property.getSimpleName().toString());
+                final Optional<ExecutableElement> maybeSetter = entityFinder.findDeclaredPropertySetter(entity, getSimpleName(property.element()));
                 if (maybeSetter.isEmpty()) {
                     return Optional.of(new ViolatingElement(
-                            property.element(), Kind.ERROR, errMissingSetter(property.getSimpleName().toString())));
+                            property.element(), Kind.ERROR, errMissingSetter(getSimpleName(property.element()))));
                 }
                 final ExecutableElement setter = maybeSetter.get();
 
                 // should be annotated with @Observable
                 if (setter.getAnnotation(AT_OBSERVABLE_CLASS) == null) {
                     return Optional.of(new ViolatingElement(
-                            property.element(), Kind.ERROR, errMissingObservable(setter.getSimpleName().toString())));
+                            property.element(), Kind.ERROR, errMissingObservable(getSimpleName(setter))));
                 }
 
                 // should be public or protected
                 if (!ElementFinder.isPublic(setter) && !ElementFinder.isProtected(setter)) {
                     return Optional.of(new ViolatingElement(
-                            property.element(), Kind.ERROR, errNotPublicNorProtected(setter.getSimpleName().toString())));
+                            property.element(), Kind.ERROR, errNotPublicNorProtected(getSimpleName(setter))));
                 }
 
                 return Optional.empty();
@@ -149,7 +151,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                 }
                 if (!EntityFinder.isFinal(property.element())) {
                     return Optional.of(new ViolatingElement(
-                            property.element(), Kind.ERROR, errMustBeFinal(property.getSimpleName().toString())));
+                            property.element(), Kind.ERROR, errMustBeFinal(getSimpleName(property.element()))));
                 }
                 return Optional.empty();
             }

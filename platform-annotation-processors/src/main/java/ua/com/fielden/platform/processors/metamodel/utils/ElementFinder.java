@@ -21,6 +21,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -712,6 +713,27 @@ public class ElementFinder {
      */
     public static TypeElement asTypeElementOfTypeMirror(final TypeMirror mirror) {
         return asTypeElement(asDeclaredType(mirror));
+    }
+
+
+    /**
+     * Returns simple name of a type represented by the type mirror.
+     * <p>
+     * If the type mirror does not represent a declared type an exception is thrown.
+     * 
+     * @throws ElementFinderException
+     */
+    public static String getSimpleName(final TypeMirror mirror) {
+        return asTypeElementOfTypeMirror(mirror).getSimpleName().toString();
+    }
+
+    /**
+     * Returns the element's simple name as a {@link String}. 
+     * <p>
+     * This is a shortcut for {@link Element#getSimpleName()} and {@link Name#toString()}.
+     */
+    public static String getSimpleName(final Element element) {
+        return element.getSimpleName().toString();
     }
 
 }
