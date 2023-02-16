@@ -6,7 +6,10 @@ import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUt
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.propertyBuilder;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier.errInvalidCollectionTypeArg;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -226,6 +229,14 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                     .build();
 
             compileAndAssertError(List.of(entity), errInvalidCollectionTypeArg("list"));
+        }
+
+        @Test
+        public void collection_types_are_allowed() {
+            assertTypeAllowed(ParameterizedTypeName.get(List.class, Integer.class));
+            assertTypeAllowed(ParameterizedTypeName.get(ArrayList.class, Long.class));
+            assertTypeAllowed(ParameterizedTypeName.get(Collection.class, String.class));
+            assertTypeAllowed(ParameterizedTypeName.get(HashSet.class, String.class));
         }
 
         @Test
