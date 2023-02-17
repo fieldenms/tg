@@ -87,6 +87,7 @@ const registerEventSourceHandlers = function (userName, uid) {
 
     source.addEventListener('message', function (e) {
         publishData(e.data);
+        localStorage.removeItem(messageKey(userName, uid));
         localStorage.setItem(messageKey(userName, uid) , e.data);
     }, false);
 
@@ -189,7 +190,7 @@ const registerLocalEventSource = function (userName, uid) {
             return;
         }
         if (event.key === aliveKey(userName, uid)) {
-            //If remote SSE is alive that this locally registered sse should be initialised
+            //If remote SSE is alive then this locally registered sse should be initialised
             eventSource.initialised = true;
             clearTimeout(heartBeatTimer);
             heartBeatTimer = setTimeout(isAlive, 10000);// Time to wait for heartBeat is 10s
@@ -202,7 +203,7 @@ const registerLocalEventSource = function (userName, uid) {
             return;
         }
 
-        if (event.key === messageKey(userName, uid)) {
+        if (event.key === messageKey(userName, uid) && event.newValue) {
             publishData(event.newValue);
         }
     };
@@ -246,9 +247,6 @@ const connectToDb = function () {
                 db.createObjectStore("uids", { keyPath: "userName" });
             }
 
-            if (!db.objectStoreNames.contains('lock')) {
-                db.createObjectStore("lock", { keyPath: "userName" });
-            } 
         };
           
         openRequest.onerror = function(evnet) {
