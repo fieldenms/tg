@@ -25,6 +25,16 @@ import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 
+/**
+ * Composable verifier for entity properties, responsible for the most essential verification, which includes:
+ * <ol>
+ *  <li>Presence of property accessor and setter methods</li>
+ *  <li>Declaration of collectional properties as {@code final} fields</li>
+ *  <li>Verification of property types</li>
+ * </ol>
+ *
+ * @author TG Team
+ */
 public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier {
 
     public EssentialPropertyVerifier(final ProcessingEnvironment processingEnv) {
@@ -198,19 +208,19 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
         }
 
         public static String errEntityTypeMustBeRegistered(final String property, final String type) {
-            return "Property [%s]: entity type [%s] must be registered before use as property type.".formatted(property, type);
+            return "Property [%s] is of unregistered entity type [%s]. Entity types must be registered before use as property types.".formatted(property, type);
         }
 
         public static String errEntityTypeArgMustBeRegistered(final String property, final String type) {
-            return "Property [%s]: entity type [%s] must be registered before use as collection type argument.".formatted(property, type);
+            return "The type of property [%s] is parameterised with unregistered entity type [%s]. Entity types must be registered before use as property type arguments.".formatted(property, type);
         }
 
         public static String errInvalidCollectionTypeArg(final String property) {
-            return "Collectional property [%s] has unsupported type argument.".formatted(property);
+            return "Collectional property [%s] is parameterised with an unsupported type.".formatted(property);
         }
 
         public static String errInvalidType(final String property) {
-            return "Type of property [%s] is unsupported.".formatted(property);
+            return "The type of property [%s] is unsupported.".formatted(property);
         }
 
         private boolean isSpecialCollectionType(final TypeMirror t) {

@@ -277,7 +277,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
 
         @Test
         public void binary_array_type_is_allowed() {
-            assertTypeAllowed(ArrayTypeName.get(byte[].class));
+            assertTypeAllowed(ArrayTypeName.of(byte.class));
         }
     }
 
