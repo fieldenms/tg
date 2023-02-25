@@ -45,6 +45,7 @@ import java.util.stream.Stream;
 import org.apache.log4j.Logger;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.inject.name.Named;
 
 import graphql.GraphQL;
@@ -91,7 +92,7 @@ public class GraphQLService implements IWebApi {
      * @param applicationDomainProvider
      * @param coFinder
      * @param dates
-     * @param authorisation
+     * @param authorisationModelProvider -- Guice {@link Provider} for {@link IAuthorisationModel}; would create auth model to authorise running of Web API queries and their {@link FieldVisibility}
      * @param securityTokensPackageName
      * @param securityTokenProvider
      */
@@ -101,7 +102,7 @@ public class GraphQLService implements IWebApi {
         final IApplicationDomainProvider applicationDomainProvider,
         final ICompanionObjectFinder coFinder,
         final IDates dates,
-        final IAuthorisationModel authorisation,
+        final Provider<IAuthorisationModel> authorisationModelProvider,
         final ISecurityTokenProvider securityTokenProvider
     ) {
         try {
@@ -124,10 +125,10 @@ public class GraphQLService implements IWebApi {
             final Map<Class<? extends AbstractEntity<?>>, GraphQLType> dictionary = createDictionary(allTypes);
 
             logger.info("\tBuilding query type...");
-            final GraphQLObjectType queryType = createQueryType(domainTypes, coFinder, dates, codeRegistryBuilder, authorisation, securityTokenProvider);
+            final GraphQLObjectType queryType = createQueryType(domainTypes, coFinder, dates, codeRegistryBuilder, authorisationModelProvider, securityTokenProvider);
 
             logger.info("\tBuilding field visibility...");
-            codeRegistryBuilder.fieldVisibility(new FieldVisibility(authorisation, domainTypes, securityTokenProvider));
+            codeRegistryBuilder.fieldVisibility(new FieldVisibility(authorisationModelProvider, domainTypes, securityTokenProvider));
 
             logger.info("\tBuilding schema...");
             schema = newSchema()
@@ -196,11 +197,11 @@ public class GraphQLService implements IWebApi {
      * @param coFinder
      * @param dates
      * @param codeRegistryBuilder -- a place to register root data fetchers
-     * @param authorisation
+     * @param authorisationModelProvider -- Guice {@link Provider} for {@link IAuthorisationModel}; would create auth model to authorise running of Web API queries
      * @param securityTokensPackageName
      * @return
      */
-    private static GraphQLObjectType createQueryType(final Set<Class<? extends AbstractEntity<?>>> dictionary, final ICompanionObjectFinder coFinder, final IDates dates, final GraphQLCodeRegistry.Builder codeRegistryBuilder, final IAuthorisationModel authorisation, final ISecurityTokenProvider securityTokenProvider) {
+    private static GraphQLObjectType createQueryType(final Set<Class<? extends AbstractEntity<?>>> dictionary, final ICompanionObjectFinder coFinder, final IDates dates, final GraphQLCodeRegistry.Builder codeRegistryBuilder, final Provider<IAuthorisationModel> authorisationModelProvider, final ISecurityTokenProvider securityTokenProvider) {
         final Builder queryTypeBuilder = newObject().name(QUERY_TYPE_NAME).description("Query following **entities** represented as GraphQL root fields:");
         dictionary.stream().forEach(entityType -> {
             final String simpleTypeName = entityType.getSimpleName();
@@ -214,7 +215,7 @@ public class GraphQLService implements IWebApi {
                 .argument(PAGE_CAPACITY_ARGUMENT)
                 .type(new GraphQLList(new GraphQLTypeReference(simpleTypeName)))
             );
-            codeRegistryBuilder.dataFetcher(coordinates(QUERY_TYPE_NAME, fieldName), new RootEntityFetcher<>((Class<AbstractEntity<?>>) entityType, coFinder, dates, authorisation, securityTokenProvider));
+            codeRegistryBuilder.dataFetcher(coordinates(QUERY_TYPE_NAME, fieldName), new RootEntityFetcher<>((Class<AbstractEntity<?>>) entityType, coFinder, dates, authorisationModelProvider, securityTokenProvider));
         });
         return queryTypeBuilder.build();
     }
