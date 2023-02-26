@@ -3,8 +3,8 @@ package ua.com.fielden.platform.eql.retrieval;
 import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
-import static ua.com.fielden.platform.eql.retrieval.EntityHibernateRetrievalQueryProducer.mkQueryProducerWithPagination;
-import static ua.com.fielden.platform.eql.retrieval.EntityHibernateRetrievalQueryProducer.mkQueryProducerWithoutPagination;
+import static ua.com.fielden.platform.eql.retrieval.EntityHibernateRetrievalQueryProducer.produceQueryWithPagination;
+import static ua.com.fielden.platform.eql.retrieval.EntityHibernateRetrievalQueryProducer.produceQueryWithoutPagination;
 import static ua.com.fielden.platform.eql.retrieval.EntityResultTreeBuilder.build;
 import static ua.com.fielden.platform.eql.stage3.EqlQueryTransformer.transform;
 
@@ -83,9 +83,8 @@ public class EntityContainerFetcher {
 
     private <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainersAsIs(final QueryModelResult<E> modelResult, final Integer pageNumber, final Integer pageCapacity) {
         final EntityTree<E> resultTree = build(modelResult.resultType, modelResult.getSortedYieldedPropsInfo(), executionContext.getDomainMetadata().eqlDomainMetadata);
-        final EntityHibernateRetrievalQueryProducer queryProducer = mkQueryProducerWithPagination(modelResult.sql, resultTree.getSortedScalars(), modelResult.getParamValues(), pageNumber, pageCapacity);
 
-        final Query query = queryProducer.produceHibernateQuery(executionContext.getSession());
+        final Query query = produceQueryWithPagination(executionContext.getSession(), modelResult.sql, resultTree.getSortedScalars(), modelResult.getParamValues(), pageNumber, pageCapacity);
 
         final EntityRawResultConverter<E> entityRawResultConverter = new EntityRawResultConverter<>(executionContext.getEntityFactory());
 
@@ -108,10 +107,8 @@ public class EntityContainerFetcher {
 
     private <E extends AbstractEntity<?>> Stream<List<EntityContainer<E>>> streamContainersAsIs(final QueryModelResult<E> modelResult, final Optional<Integer> fetchSize) {
         final EntityTree<E> resultTree = build(modelResult.resultType, modelResult.getSortedYieldedPropsInfo(), executionContext.getDomainMetadata().eqlDomainMetadata);
-        final EntityHibernateRetrievalQueryProducer queryProducer = mkQueryProducerWithoutPagination(modelResult.sql, resultTree.getSortedScalars(), modelResult.getParamValues());
         final int batchSize = fetchSize.orElse(100);
-        final Query query = queryProducer //
-                .produceHibernateQuery(executionContext.getSession()) //
+        final Query query = produceQueryWithoutPagination(executionContext.getSession(), modelResult.sql, resultTree.getSortedScalars(), modelResult.getParamValues())
                 .setFetchSize(batchSize);
         final Stream<Object[]> stream = ScrollableResultStream.streamOf(query.scroll(ScrollMode.FORWARD_ONLY));
 
