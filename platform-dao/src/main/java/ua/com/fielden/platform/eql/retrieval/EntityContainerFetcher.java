@@ -6,11 +6,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import static ua.com.fielden.platform.eql.retrieval.EntityHibernateRetrievalQueryProducer.mkQueryProducerWithPagination;
 import static ua.com.fielden.platform.eql.retrieval.EntityHibernateRetrievalQueryProducer.mkQueryProducerWithoutPagination;
 import static ua.com.fielden.platform.eql.retrieval.EntityResultTreeBuilder.build;
-import static ua.com.fielden.platform.eql.retrieval.YieldDetailsType.COMPOSITE_TYPE_HEADER;
-import static ua.com.fielden.platform.eql.retrieval.YieldDetailsType.UNION_ENTITY_HEADER;
-import static ua.com.fielden.platform.eql.retrieval.YieldDetailsType.USUAL_PROP;
 import static ua.com.fielden.platform.eql.stage3.EqlQueryTransformer.transform;
-import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.util.List;
 import java.util.Optional;
@@ -137,8 +133,7 @@ public class EntityContainerFetcher {
         for (final Yield3 yield : model.getYields()) {
             final Class<?> yieldType = yield.type != null ? yield.type : yield.operand.type();
             final Object yieldHibType = yield.hibType != null ? yield.hibType : yield.operand.hibType();
-            final YieldDetailsType yieldsDetailsType = yield.isHeader ? (isUnionEntityType(yield.type) ? UNION_ENTITY_HEADER : COMPOSITE_TYPE_HEADER) : USUAL_PROP;
-            result.add(new ResultQueryYieldDetails(yield.alias, yieldType, yieldHibType, yield.column, yieldsDetailsType));
+            result.add(new ResultQueryYieldDetails(yield.alias, yieldType, yieldHibType, yield.column));
         }
         return result;
     }

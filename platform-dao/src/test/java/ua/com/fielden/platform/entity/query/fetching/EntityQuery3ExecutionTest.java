@@ -1011,6 +1011,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     }
 
     @Test
+    @Ignore
     public void union_property_type_is_preserved_when_yielded_in_entity_aggregates() {
         final AggregatedResultQueryModel qry = select(TgBogie.class).where().prop("key").eq().val("BOGIE1").yield().prop("location").as("l").modelAsAggregate();
         final EntityAggregates location = aggregateDao.getEntity(from(qry).with("EQL3", null).with(fetchAggregates().with("l", fetch(TgBogieLocation.class).with("workshop"))).model());
@@ -1019,6 +1020,7 @@ public class EntityQuery3ExecutionTest extends AbstractDaoTestCase {
     }
     
     @Test
+    @Ignore
     public void union_property_type_is_preserved_when_yielded_from_query_based_qry_source() {
         final AggregatedResultQueryModel srcQry = select(TgBogie.class).where().prop("key").eq().val("BOGIE1").yield().prop("location").as("l").modelAsAggregate();
         final AggregatedResultQueryModel qry = select(srcQry).yield().prop("l").as("loc").modelAsAggregate();

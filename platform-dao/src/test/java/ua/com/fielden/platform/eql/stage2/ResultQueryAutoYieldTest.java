@@ -21,7 +21,6 @@ public class ResultQueryAutoYieldTest extends EqlStage2TestCase {
                 mkYield(prop(bogie, pi(BOGIE, "desc")), "desc"),
                 mkYield(prop(bogie, pi(BOGIE, "id")), "id"),
                 mkYield(prop(bogie, pi(BOGIE, "version")), "version"),
-                mkYield(prop(bogie, pi(BOGIE, "location")), "location"),
                 mkYield(prop(bogie, pi(BOGIE, "location"), pi(BOGIE, "location", "wagonSlot")), "location.wagonSlot"),
                 mkYield(prop(bogie, pi(BOGIE, "location"), pi(BOGIE, "location", "workshop")), "location.workshop"),
                 mkYield(prop(bogie, pi(BOGIE, "bogieClass")), "bogieClass"),

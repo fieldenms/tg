@@ -16,7 +16,7 @@ import ua.com.fielden.platform.eql.meta.EqlPropertyMetadata;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 
-final class EntityResultTreeBuilder {
+public final class EntityResultTreeBuilder {
     
     public static <E extends AbstractEntity<?>> EntityTree<E> build(final Class<E> resultType, final List<T2<String, ResultQueryYieldDetails>> properties, final EqlDomainMetadata md) {
         return build(resultType, properties, -1, md)._1;
@@ -112,13 +112,10 @@ final class EntityResultTreeBuilder {
 
                 currentGroup = prop._1;
                 
-                if (prop._2.isUnionEntity()) {
-                    currentResultType = prop._2.javaType;
-                } else if (prop._2.isEntity()) {
-                    currentResultType = prop._2.javaType;
-                    currentGroupDetails.add(t2(ID, new ResultQueryYieldDetails(ID, Long.class, prop._2.hibType, prop._2.column, YieldDetailsType.USUAL_PROP)));
-                } else if (prop._2.isCompositeProperty()) {
-                    currentHibType = prop._2.getHibTypeAsCompositeUserType();
+                // can be either ET prop, or primitive prop
+                if (EntityUtils.isPersistedEntityType(prop._2.javaType)) {
+                    currentResultType = (Class<? extends AbstractEntity<?>>) prop._2.javaType;
+                    currentGroupDetails.add(t2(ID, new ResultQueryYieldDetails(ID, Long.class, prop._2.hibType, prop._2.column)));
                 } else {
                     currentGroup = null; // no group is actually created for simple prop
                     localIndex = localIndex + 1;

@@ -127,7 +127,6 @@ public abstract class AbstractQuery1 {
 
     private static List<Yield2> expand(final Yield2 original) {
         final List<Yield2> expanded = new ArrayList<>();
-        expanded.add(original);
         
         if (original.operand.isHeader() && original.operand instanceof Prop2){
             final Prop2 originalYieldProp = (Prop2) original.operand;
@@ -143,6 +142,8 @@ public abstract class AbstractQuery1 {
                     expanded.addAll(expand(originalYieldProp, sub.getValue(), original.alias));             
                 }
             }
+        } else {
+            expanded.add(original);    
         }
 
         return expanded;

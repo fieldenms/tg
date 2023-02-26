@@ -24,9 +24,7 @@ public class Source3BasedOnSubqueries extends AbstractSource3 {
     private static Map<String, String> obtainColumnsFromYields(final Collection<Yield3> yields) {
         final Map<String, String> result = new HashMap<>();
         for (final Yield3 entry : yields) {
-            if (!entry.isHeader) {
-                result.put(entry.alias, entry.column);    
-            }
+            result.put(entry.alias, entry.column);    
         }
         return result;
     }

@@ -1,44 +1,19 @@
 package ua.com.fielden.platform.eql.retrieval;
 
-import static ua.com.fielden.platform.eql.retrieval.YieldDetailsType.COMPOSITE_TYPE_HEADER;
-import static ua.com.fielden.platform.eql.retrieval.YieldDetailsType.UNION_ENTITY_HEADER;
-import static ua.com.fielden.platform.eql.retrieval.YieldDetailsType.USUAL_PROP;
-import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
-
 import java.util.Objects;
-
-import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 
 public class ResultQueryYieldDetails implements Comparable<ResultQueryYieldDetails> {
 
     public final String name;
-    public final Class javaType;
+    public final Class<?> javaType;
     public final Object hibType;
     public final String column;
-    public final YieldDetailsType yieldDetailsType;
 
-    public ResultQueryYieldDetails(final String name, final Class javaType, final Object hibType, final String column, final YieldDetailsType yieldDetailsType) {
+    public ResultQueryYieldDetails(final String name, final Class<?> javaType, final Object hibType, final String column) {
         this.name = name;
         this.javaType = javaType;
         this.hibType = hibType;
         this.column = column;
-        this.yieldDetailsType = yieldDetailsType;
-    }
-
-    public ICompositeUserTypeInstantiate getHibTypeAsCompositeUserType() {
-        return hibType instanceof ICompositeUserTypeInstantiate ? (ICompositeUserTypeInstantiate) hibType : null;
-    }
-
-    public boolean isCompositeProperty() {
-        return yieldDetailsType == COMPOSITE_TYPE_HEADER;
-    }
-
-    public boolean isEntity() {
-        return isPersistedEntityType(javaType) && yieldDetailsType == USUAL_PROP;
-    }
-
-    public boolean isUnionEntity() {
-        return yieldDetailsType == UNION_ENTITY_HEADER;
     }
 
     @Override
@@ -59,7 +34,6 @@ public class ResultQueryYieldDetails implements Comparable<ResultQueryYieldDetai
         result = prime * result + name.hashCode();
         result = prime * result + javaType.hashCode();
         result = prime * result + column.hashCode();
-        result = prime * result + yieldDetailsType.hashCode();
         result = prime * result + ((hibType == null) ? 0 : hibType.hashCode());
         return result;
     }
@@ -79,7 +53,6 @@ public class ResultQueryYieldDetails implements Comparable<ResultQueryYieldDetai
         return Objects.equals(name, other.name) &&
                 Objects.equals(javaType, other.javaType) &&
                 Objects.equals(hibType, other.hibType) &&
-                Objects.equals(column, other.column) &&
-                Objects.equals(yieldDetailsType, other.yieldDetailsType);
+                Objects.equals(column, other.column);
     }
 }

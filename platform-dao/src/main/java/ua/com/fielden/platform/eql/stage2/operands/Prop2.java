@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.eql.stage2.operands;
 
-import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
@@ -53,10 +52,6 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
 
     @Override
     public TransformationResult2<ISingleOperand3> transform(final TransformationContext2 context) {
-        if (isHeader()) { //resolution to column level is not applicable here
-            return new TransformationResult2<>(new Prop3(lastPart().name, null, type, hibType), context);
-        }
-        
         if (lastPart().hasExpression()) {
             final Expression2 expr2 = context.resolveExpression(source.id(), name);
             final TransformationResult2<Expression3> exprTr = expr2.transform(context);
@@ -69,8 +64,7 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
 
     @Override
     public Set<Prop2> collectProps() {
-        // header props may happen here as they carry useful type info for yielding purposes, but since they are not going to be resolved to any columns -- will not be included during props collection 
-        return isHeader() ? emptySet() : setOf(this);
+        return setOf(this);
     }
     
     public List<AbstractPropInfo<?>> getPath() {

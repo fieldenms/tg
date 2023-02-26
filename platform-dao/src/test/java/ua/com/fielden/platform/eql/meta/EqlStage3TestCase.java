@@ -344,31 +344,31 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
     }
 
     protected static Yield3 yieldCountAll(final String alias) {
-        return new Yield3(CountAll3.INSTANCE, alias, nextSqlId(), false, INTEGER, H_INTEGER);
+        return new Yield3(CountAll3.INSTANCE, alias, nextSqlId(), INTEGER, H_INTEGER);
     }
 
     protected static Yield3 yieldEntity(final String propName, final ISource3 source, final String alias, final Class<? extends AbstractEntity<?>> propType) {
-        return new Yield3(entityProp(propName, source, propType), alias, nextSqlId(), false, propType, H_LONG);
+        return new Yield3(entityProp(propName, source, propType), alias, nextSqlId(), propType, H_LONG);
     }
 
     protected static Yield3 yieldString(final String propName, final ISource3 source, final String alias) {
-        return new Yield3(stringProp(propName, source), alias, nextSqlId(), false, String.class, H_STRING);
+        return new Yield3(stringProp(propName, source), alias, nextSqlId(), String.class, H_STRING);
     }
 
     protected static Yield3 yieldId(final ISource3 source, final String alias) {
-        return new Yield3(idProp(source), alias, nextSqlId(), false, Long.class, H_LONG);
+        return new Yield3(idProp(source), alias, nextSqlId(), Long.class, H_LONG);
     }
 
     protected static Yield3 yieldProp(final String propName, final ISource3 source, final String alias, final Class<?> type, final Type hibType) {
-        return new Yield3(prop(propName, source, type, hibType), alias, nextSqlId(), false, type, hibType);
+        return new Yield3(prop(propName, source, type, hibType), alias, nextSqlId(), type, hibType);
     }
 
     protected static Yield3 yieldProp(final String propName, final ISource3 source, final String alias) {
-        return new Yield3(prop(propName, source), alias, nextSqlId(), false, null, null);
+        return new Yield3(prop(propName, source), alias, nextSqlId(), null, null);
     }
 
     protected static Yield3 yieldModel(final SubQuery3 model, final String alias, final Class<?> type, final Type hibType) {
-        return new Yield3(model, alias, nextSqlId(), false, type, hibType);
+        return new Yield3(model, alias, nextSqlId(), type, hibType);
     }
 
     protected static Yield3 yieldSingleEntity(final String propName, final ISource3 source, final Class<? extends AbstractEntity<?>> propType) {

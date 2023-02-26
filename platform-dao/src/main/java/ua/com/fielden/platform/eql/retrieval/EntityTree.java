@@ -21,10 +21,6 @@ public class EntityTree<E extends AbstractEntity<?>> {
     private Map<String /*composite property name*/, EntityTree<? extends AbstractEntity<?>>> composites = new HashMap<>();
     private Map<String /*composite value property name*/, ValueTree> compositeValues = new HashMap<>();
 
-    protected EntityTree(final Class<E> resultType) {
-        this.resultType = resultType;
-    }
-    
     protected EntityTree(final Class<E> resultType, 
             final Map<Integer/*position in raw result array*/, YieldDetails> singles, 
             final Map<String /*composite property name*/, EntityTree<? extends AbstractEntity<?>>> entities,
