@@ -39,6 +39,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -62,13 +63,15 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Optional;
 import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.Unique;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
+import ua.com.fielden.platform.entity.annotation.factory.BeforeChangeAnnotation;
+import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -82,6 +85,9 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.ICustomValidator;
+import ua.com.fielden.platform.entity.validation.RestrictCommasValidator;
+import ua.com.fielden.platform.entity.validation.RestrictExtraWhitespaceValidator;
+import ua.com.fielden.platform.entity.validation.RestrictNonPrintableCharactersValidator;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
@@ -772,7 +778,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     }
 
     /**
-     * Analyses mutators and their annotations to collect and instantiate all property validators.
+     * Analyses the property definition to collect and instantiate all property validators.
      *
      * @param metaPropertyFactory
      * @param field
@@ -787,14 +793,36 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             final Class<?> properyType,
             final boolean isCollectional,
             final Set<Annotation> validationAnnotations)
-            throws Exception {
+            throws Exception
+    {
         try {
             final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<?>, Result>> validators = new EnumMap<>(ValidationAnnotation.class);
             // Get corresponding mutators to pick all specified validators in case of a collectional property there can be up to three mutators --
             // removeFrom[property name], addTo[property name] and set[property name]
             final Set<Annotation> propertyValidationAnotations = extractValidationAnnotationForProperty(field, properyType, isCollectional);
+
+            // let's add implicit validation as early as possible to @BeforeChange
+            // special validation of String-typed key-members
+            // applied on top of existing @BeforeChange validators, but ordered before declared handlers
+            if (Finder.isKey(field) && field.getType().equals(String.class)) {
+                final Handler[] handlers = Stream.of(
+                        RestrictNonPrintableCharactersValidator.class, RestrictExtraWhitespaceValidator.class, RestrictCommasValidator.class)
+                        .map(bce -> new HandlerAnnotation(bce).newInstance())
+                        .toArray(Handler[]::new);
+                final BeforeChange implicitBch = BeforeChangeAnnotation.from(handlers);
+
+                // merge with declared @BeforeChange, if exists
+                final Optional<BeforeChange> maybeDeclaredBch = propertyValidationAnotations.stream()
+                        .filter(at -> at.annotationType() == BeforeChange.class).map(at -> (BeforeChange) at).findAny();
+                final BeforeChange bch = maybeDeclaredBch.isPresent()
+                        ? BeforeChangeAnnotation.merged(implicitBch, maybeDeclaredBch.get())
+                        : implicitBch;
+                // TODO optimize
+                propertyValidationAnotations.removeIf(at -> at.annotationType() == BeforeChange.class);
+                propertyValidationAnotations.add(bch);
+            }
+
             for (final Annotation annotation : propertyValidationAnotations) {
-                final ValidationAnnotation validationAnnotation = ValidationAnnotation.getValueByType(annotation);
                 // if property factory cannot instantiate a validator for the specified annotation then null is returned
                 final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(annotation, this, field.getName(), properyType);
                 if (annotationValidators.length > 0) {
@@ -802,6 +830,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                     for (final IBeforeChangeEventHandler<?> handler : annotationValidators) {
                         handlersAndResults.put(handler, null);
                     }
+                    final ValidationAnnotation validationAnnotation = ValidationAnnotation.getValueByType(annotation);
                     validators.put(validationAnnotation, handlersAndResults);
                 }
             }
@@ -822,6 +851,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
                 validators.put(ValidationAnnotation.ENTITY_EXISTS, handlersAndResults);
             }
+
 
             validationAnnotations.addAll(propertyValidationAnotations);
 
@@ -870,7 +900,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                 metaProperty.setRequired(
                         AnnotationReflector.isAnnotationPresent(field, Required.class) ||
                         (AnnotationReflector.isAnnotationPresent(field, CompositeKeyMember.class) &&
-                        !AnnotationReflector.isAnnotationPresent(field, Optional.class)));
+                        !AnnotationReflector.isAnnotationPresent(field, ua.com.fielden.platform.entity.annotation.Optional.class)));
             }
 
             if (AnnotationReflector.isAnnotationPresent(field, Title.class)) {
