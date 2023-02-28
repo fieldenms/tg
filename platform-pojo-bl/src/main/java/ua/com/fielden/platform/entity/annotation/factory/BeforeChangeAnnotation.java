@@ -17,6 +17,10 @@ public class BeforeChangeAnnotation {
         this.value = value;
     }
 
+    public static BeforeChange from(final Handler... handlers) {
+        return new BeforeChangeAnnotation(handlers).newInstance();
+    }
+
     public BeforeChange newInstance() {
         return new BeforeChange() {
 
