@@ -665,7 +665,7 @@ public class Finder {
         return propertiesWithKeys;
     }
 
-    private static boolean isKey(final Field field) {
+    public static boolean isKey(final Field field) {
         return field.getName().equals(AbstractEntity.KEY) || field.isAnnotationPresent(CompositeKeyMember.class);
     }
 
