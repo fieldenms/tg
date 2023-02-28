@@ -274,18 +274,18 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     @MapTo("_ID")
     @Title(value = "Id", desc = "Surrogate unique identifier.")
     private Long id;
-    
+
     @MapTo(value = "_VERSION", defaultValue = "0")
     private Long version = 0L;
-    
+
     @IsProperty
     @UpperCase
     @MapTo("KEY_")
     @Required
     private K key;
-    
+
     private final boolean compositeKey;
-    
+
     @IsProperty
     @MapTo("DESC_")
     private String desc;
@@ -297,7 +297,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     public static final String GETKEY = "getKey()";
     public static final String DESC = "desc";
     public static final String KEY_NOT_ASSIGNED = "[key is not assigned]";
-    
+
     /**
      * A flag that provides a way to enforce more strict model verification, which is the default approach.
      */
@@ -704,8 +704,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     }
 
     /**
-     * Early runtime validation of property definitions. This kind of validations should be moved to complile time in due course. 
-     * 
+     * Early runtime validation of property definitions. This kind of validations should be moved to complile time in due course.
+     *
      * @param propName
      * @param type
      * @param isCollectional
@@ -714,19 +714,19 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      */
     private void earlyRuntimePropertyDefinitionValidation(final String propName, final Class<?> type, final boolean isCollectional, final IsProperty isPropertyAnnotation, final Class<?> propertyAnnotationType) {
         final boolean isNumeric = isNumeric(type);
-        
+
         if (!isNumeric &&
-            (isPropertyAnnotation.precision() != DEFAULT_PRECISION || 
-             isPropertyAnnotation.scale() != DEFAULT_SCALE || 
+            (isPropertyAnnotation.precision() != DEFAULT_PRECISION ||
+             isPropertyAnnotation.scale() != DEFAULT_SCALE ||
              isPropertyAnnotation.trailingZeros() != DEFAULT_TRAILING_ZEROS)) {
             final String error = format(INVALID_USE_OF_NUMERIC_PARAMS_MSG,  propName, getType().getName());
             logger.error(error);
             throw new EntityDefinitionException(error);
-            
+
         }
 
         if (isNumeric &&
-            (isPropertyAnnotation.precision() != DEFAULT_PRECISION || isPropertyAnnotation.scale() != DEFAULT_SCALE) && 
+            (isPropertyAnnotation.precision() != DEFAULT_PRECISION || isPropertyAnnotation.scale() != DEFAULT_SCALE) &&
             (isPropertyAnnotation.precision() <= 0 || isPropertyAnnotation.scale() < 0)) {
             final String error = format(INVALID_USE_FOR_PRECITION_AND_SCALE_MSG, propName, getType().getName());
             logger.error(error);
@@ -737,7 +737,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                 final String error = format(INVALID_VALUES_FOR_PRECITION_AND_SCALE_MSG, propName, getType().getName());
                 logger.error(error);
                 throw new EntityDefinitionException(error);
-                
+
         }
 
         if (!isString(type) && !type.isArray() && isPropertyAnnotation.length() != DEFAULT_LENGTH) {
@@ -745,7 +745,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             logger.error(error);
             throw new EntityDefinitionException(error);
         }
-        
+
         if ((isCollectional || PropertyDescriptor.class.isAssignableFrom(type)) && (propertyAnnotationType == Void.class || propertyAnnotationType == null)) {
             final String error = format(COLLECTIONAL_PROP_MISSING_TYPE_MSG, propName, getType().getName());
             logger.error(error);
@@ -1367,7 +1367,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             assertEntityFactoryPresence();
             copy = getEntityFactory().newEntity(type, getId());
         } else {
-            copy = EntityFactory.newPlainEntity(type,  getId()); 
+            copy = EntityFactory.newPlainEntity(type,  getId());
         }
         copy.setVersion(getVersion());
         return copy;

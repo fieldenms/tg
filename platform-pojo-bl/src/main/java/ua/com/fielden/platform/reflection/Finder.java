@@ -239,7 +239,7 @@ public class Finder {
 
     /**
      * A stream equivalent to method {@link #findProperties(Class, Class...)}.
-     * 
+     *
      * @param entityType
      * @param annotations
      * @return
@@ -270,7 +270,7 @@ public class Finder {
 
     /**
      * A stream equivalent to method {@link #findRealProperties(Class, Class...)}.
-     * 
+     *
      * @param entityType
      * @param annotations
      * @return
@@ -445,10 +445,10 @@ public class Finder {
         }
         throw new ReflectionException(format("Failed to locate field [%s] in type [%s]", name, type.getName()));
     }
-    
+
     /**
      * The same as {@link #getFieldByName(Class, String)}, but side effect free.
-     * 
+     *
      * @param type
      * @param name
      * @return
@@ -486,10 +486,10 @@ public class Finder {
         final Pair<Class<?>, String> transformed = PropertyTypeDeterminator.transform(type, dotNotationExp);
         return getFieldByName(transformed.getKey(), transformed.getValue());
     }
-    
+
     /**
      * The same as {@link Finder#findFieldByName(Class, String)}, but side effect free.
-     * 
+     *
      * @param type
      * @param dotNotationExp
      * @return
@@ -519,7 +519,7 @@ public class Finder {
         Object value = entity;
         for (final String propName : propNames) {
             value = getPropertyValue((AbstractEntity<?>) value, propName);
-            
+
             if (value == null) {
                 return null;
             }
@@ -594,7 +594,7 @@ public class Finder {
 
     /**
      * Traces through specified list of fields and returns a stream of those annotated with allAnnotations.
-     * 
+     *
      * @param fields
      * @param allAnnotations
      * @return
