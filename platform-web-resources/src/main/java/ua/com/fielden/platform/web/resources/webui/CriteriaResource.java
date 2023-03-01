@@ -760,7 +760,7 @@ public class CriteriaResource extends AbstractWebResource {
     }
 
     /**
-     * Calculates rendering hints for {@code entities}.
+     * Calculates rendering hints for {@code entities}. The returned list must be either empty or strictly of the same length as the input list.
      *
      * @param entities
      * @return
@@ -771,7 +771,7 @@ public class CriteriaResource extends AbstractWebResource {
             final IRenderingCustomiser<?> renderer = renderingCustomiser.get();
             final List<Object> renderingHints = new ArrayList<>();
             for (final Object entity : entities) {
-                renderingHints.add(renderer.getCustomRenderingFor((AbstractEntity<?>)entity).get());
+                renderingHints.add(renderer.getCustomRenderingFor((AbstractEntity<?>)entity));
             }
             return renderingHints;
         } else {
