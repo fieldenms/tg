@@ -11,6 +11,8 @@ import java.util.Map;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
+import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
+import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.meta.EqlPropertyMetadata;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -73,13 +75,13 @@ public final class EntityResultTreeBuilder {
                         currentResultType = EntityAggregates.class;
                         currentGroupDetails.add(T2.t2(prop._1.substring(firstDotIndex + 1), prop._2)); 
                     } else {
-                        final EqlPropertyMetadata pmd = md.entityPropsMetadata().get(resultType).findProp(currentGroup);
-                        if (pmd != null) {
-                            if (EntityUtils.isEntityType(pmd.javaType)) {
-                                currentResultType = (Class<? extends AbstractEntity<?>>) pmd.javaType;
+                        final AbstractPropInfo<?> propInfo = md.getEntityInfo(resultType).getProps().get(currentGroup);
+                        if (propInfo != null) {
+                            if (EntityUtils.isEntityType(propInfo.javaType())) {
+                                currentResultType = (Class<? extends AbstractEntity<?>>) propInfo.javaType();
                                 currentGroupDetails.add(T2.t2(prop._1.substring(firstDotIndex + 1), prop._2)); 
                             } else {
-                                currentHibType = (ICompositeUserTypeInstantiate) pmd.hibType;
+                                currentHibType = (ICompositeUserTypeInstantiate) propInfo.hibType;
                                 currentGroupDetails.add(T2.t2(prop._1.substring(firstDotIndex + 1), prop._2));
                             }
                         } else {

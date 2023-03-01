@@ -74,8 +74,8 @@ public class EqlDomainMetadata {
                     final EqlEntityMetadata em = eemg.generate(parentInfo, entityType);
                     entityPropsMetadata.put(entityType, em);
                     if (parentInfo.category == PERSISTENT) {
-                        tables.put(entityType.getName(), generateTable(parentInfo.tableName, em.propsList()));
-                        tableStructsForBatchInsertion.put(entityType.getName(), generateTableWithPropColumnInfo(parentInfo.tableName, em.propsList()));
+                        tables.put(entityType.getName(), generateTable(parentInfo.tableName, em.props()));
+                        tableStructsForBatchInsertion.put(entityType.getName(), generateTableWithPropColumnInfo(parentInfo.tableName, em.props()));
                     }
                 }
             } catch (final Exception ex) {
@@ -173,7 +173,6 @@ public class EqlDomainMetadata {
                             } else {
                                 ef.addProp(new PrimTypePropInfo(sub.name, sub.hibType, sub.javaType, subExpr, sub.implicit));
                             }
-
                         }
                     }
                     entityInfo.addProp(new UnionTypePropInfo(name, ef, hibType, false));
@@ -215,7 +214,7 @@ public class EqlDomainMetadata {
             return existing;
         }
         final EntityTypeInfo<?> eti = getEntityTypeInfo(type);
-        final List<EqlPropertyMetadata> propsMetadatas = eemg.generate(eti, type).propsList();
+        final List<EqlPropertyMetadata> propsMetadatas = eemg.generate(eti, type).props();
         //entityPropsMetadata.put(type, t2(eti.category, propsMetadatas));
         final EntityInfo<?> created = new EntityInfo<>(type, eti.category);
         //domainInfo.put(type, created);
@@ -237,5 +236,4 @@ public class EqlDomainMetadata {
             return getEntityInfo(type);
         }
     }
-
 }
