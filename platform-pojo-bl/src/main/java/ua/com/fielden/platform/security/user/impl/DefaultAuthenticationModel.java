@@ -47,7 +47,7 @@ public class DefaultAuthenticationModel implements IAuthenticationModel {
             if (User.system_users.UNIT_TEST_USER.matches(username)) {
                 return failedAuthResult;
             }
-            final UserSecretCo coUserSecret = coFinder.find(UserSecret.class);
+            final UserSecretCo coUserSecret = coFinder.find(UserSecret.class, true);
             // in the SSO mode, users should only be able to login with RSO if they are permitted (i.e., their ssOnly property is false).
             final ICompoundCondition0<UserSecret> rsoCondition = select(UserSecret.class).where().lowerCase().prop("key.key").eq().lowerCase().val(username).and().prop("key.active").eq().val(true);
             final EntityResultQueryModel<UserSecret> query = (authMode == AuthMode.RSO ? rsoCondition : rsoCondition.and().prop("key.ssoOnly").eq().val(false)).model();
