@@ -103,8 +103,6 @@ public class EqlDomainMetadata {
                 entityTypesDependentCalcPropsOrder.put(entityInfo.javaType().getName(), DependentCalcPropsOrder.orderDependentCalcProps(this, gen, entityInfo));
             }
         }
-        
-        validateCalcProps();
     }
 
     /**
@@ -118,34 +116,6 @@ public class EqlDomainMetadata {
         final Yields2 yields = gen.generateAsSyntheticEntityQuery(parentInfo.entityModels.get(0), parentInfo.entityType).transform(context).yields;
         final Map<String, YieldInfoNode> yieldInfoNodes = YieldInfoNodesGenerator.generate(yields.getYields());
         return Source1BasedOnSubqueries.produceEntityInfoForDefinedEntityType(this, yieldInfoNodes, actualType/*parentInfo.entityType*/);
-    }
-
-    private void validateCalcProps() {
-        final PathsToTreeTransformer p2tt = new PathsToTreeTransformer(this, gen);
-        for (final EntityInfo<?> et : domainInfo.values()) {
-            if (et.getCategory() != UNION) {
-                final Source2BasedOnPersistentType source = new Source2BasedOnPersistentType(et.javaType(), et, gen.nextSourceId() /*"dummy_id"*/); //TODO analyze
-                for (final AbstractPropInfo<?> prop : et.getProps().values()) {
-                    if (prop.expression != null && !prop.name.equals(KEY)) {
-                       try {
-                            p2tt.transform(setOf(new Prop2(source, asList(prop))));    
-                        } catch (final Exception e) {
-                            throw new EqlException("There is an error in expression of calculated property [" + et.javaType().getSimpleName() + ":" + prop.name + "]: " + e.getMessage());
-                        }
-                    } else if (prop.hasExpression() && prop instanceof ComponentTypePropInfo) {
-                        for (final AbstractPropInfo<?> subprop : ((ComponentTypePropInfo<?>) prop).getProps().values()) {
-                            if (subprop.expression != null) {
-                                try {
-                                    p2tt.transform(setOf(new Prop2(source, asList(prop, subprop))));    
-                                } catch (final Exception e) {
-                                    throw new EqlException("There is an error in expression of calculated property [" + et.javaType().getSimpleName() + ":" + prop.name  + "." + subprop.name + "]: " + e.getMessage());
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        }
     }
 
     public List<String> getCalcPropsOrder(final String entityTypeName) {

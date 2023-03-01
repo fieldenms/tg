@@ -1,8 +1,10 @@
 package ua.com.fielden.platform.eql.meta.utils;
 
+import static java.util.Arrays.asList;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 import java.util.ArrayList;
@@ -13,6 +15,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
+import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.eql.exceptions.EqlStage2ProcessingException;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
@@ -53,15 +56,19 @@ public class DependentCalcPropsOrder {
 
                 final Expression1 exp1 = (Expression1) (new StandAloneExpressionBuilder(gen, calcPropChunk.data().expression)).getResult().getValue();
                 final TransformationContext1 prc = (new TransformationContext1(dmd)).cloneWithAdded(source);
-                final Expression2 exp2 = exp1.transform(prc);
-                final Set<Prop2> expProps = exp2.collectProps();
-                final Set<Prop2> externalProps = new HashSet<>();
-                for (final Prop2 prop2 : expProps) {
-                    if (prop2.source.id().equals(source.id())) {
-                        externalProps.add(prop2);
+                try {
+                    final Expression2 exp2 = exp1.transform(prc);
+                    final Set<Prop2> expProps = exp2.collectProps();
+                    final Set<Prop2> externalProps = new HashSet<>();
+                    for (final Prop2 prop2 : expProps) {
+                        if (prop2.source.id().equals(source.id())) {
+                            externalProps.add(prop2);
+                        }
                     }
+                    propDependencies.put(calcPropChunk.name(), determineCalcPropChunksSets(externalProps));
+                } catch (final Exception e) {
+                    throw new EqlException("There is an error in expression of calculated property [" + et.javaType().getSimpleName() + ":" + calcPropChunk.name() + "]: " + e.getMessage());
                 }
-                propDependencies.put(calcPropChunk.name(), determineCalcPropChunksSets(externalProps));
         }
 
         return orderDependentCalcProps(calcPropsOfEntityType, propDependencies);
