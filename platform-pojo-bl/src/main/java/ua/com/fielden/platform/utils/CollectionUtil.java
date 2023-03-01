@@ -17,15 +17,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.types.tuples.T2;
 
 /**
  * A convenience class to provide common collection related routines and algorithms.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public final class CollectionUtil {
     private CollectionUtil() {
@@ -40,17 +41,17 @@ public final class CollectionUtil {
     public static <T> Set<T> unmodifiableSetOf(final T ... elements) {
         return unmodifiableSet(new HashSet<>(Arrays.asList(elements)));
     }
-    
+
     @SafeVarargs
     public static <T> LinkedHashSet<T> linkedSetOf(final T ... elements) {
         return new LinkedHashSet<>(Arrays.asList(elements));
     }
-    
+
     @SafeVarargs
     public static <T> List<T> listOf(final T ... elements) {
         return elements != null ? new ArrayList<>(asList(elements)) : emptyList();
     }
-    
+
     @SafeVarargs
     public static <T> List<T> unmodifiableListOf(final T ... elements) {
         return unmodifiableList(asList(elements));
@@ -76,7 +77,7 @@ public final class CollectionUtil {
 
     /**
      * A convenient method to obtain a tail of an array. Returns an empty optional if the length of arrays is 0.
-     * 
+     *
      * @param array
      * @return
      */
@@ -113,6 +114,24 @@ public final class CollectionUtil {
             buffer.append(value + (iter.hasNext() ? separator : ""));
         }
         return buffer.toString();
+    }
+
+    /**
+     * Removes the first element matching the predicate from the collection and returns an Optional describing it,
+     * otherwise returns an empty Optional. The supplied collection must be modifiable.
+     */
+    public static <E> Optional<E> removeFirst(final Collection<E> coll, final Predicate<E> pred) {
+        final Iterator<E> iter = coll.iterator();
+        E elt;
+        while (iter.hasNext()) {
+            elt = iter.next();
+            if (pred.test(elt)) {
+                iter.remove();
+                return Optional.of(elt);
+            }
+        }
+
+        return Optional.empty();
     }
 
 }
