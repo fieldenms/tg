@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.eql.stage2.operands;
 
 import static java.util.Collections.emptySet;
-import static ua.com.fielden.platform.eql.meta.EqlDomainMetadata.N;
-import static ua.com.fielden.platform.eql.meta.EqlDomainMetadata.Y;
-import static ua.com.fielden.platform.eql.meta.EqlDomainMetadata.typeResolver;
+import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.N;
+import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.Y;
+import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.typeResolver;
 
 import java.util.Objects;
 import java.util.Set;
