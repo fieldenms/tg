@@ -32,13 +32,7 @@ public interface ISecurityTokenController {
      */
     List<UserRole> findUserRolesFor(final Class<? extends ISecurityToken> securityTokenClass);
 
-    /**
-     * Returns all distinct {@link UserRole}s (It is needed for building SecurityTreeTableModel)
-     * 
-     * @return
-     */
-    List<UserRole> findUserRoles();
-
     /** Checks whether the passed in user and token are associated, indicating ability for the user to access annotated with this token methods. */
     boolean canAccess(final User user, final Class<? extends ISecurityToken> securityTokenClass);
+
 }
