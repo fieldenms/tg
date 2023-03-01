@@ -783,15 +783,16 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      *
      * @param metaPropertyFactory
      * @param field
-     * @param properyType
+     * @param propertyType
      * @param isCollectional
+     * @param validationAnnotations
      * @return map of validators
      * @throws Exception
      */
     private Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<?>, Result>> collectValidators(
             final IMetaPropertyFactory metaPropertyFactory,
             final Field field,
-            final Class<?> properyType,
+            final Class<?> propertyType,
             final boolean isCollectional,
             final Set<Annotation> validationAnnotations)
             throws Exception
@@ -801,7 +802,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             // Get corresponding mutators to pick all specified validators in case of a collectional property there can be up to three mutators --
             // removeFrom[property name], addTo[property name] and set[property name]
             // The returned Set is mutable
-            final Set<Annotation> propertyValidationAnotations = extractValidationAnnotationForProperty(field, properyType, isCollectional);
+            final Set<Annotation> propValidationAnnots = extractValidationAnnotationForProperty(field, propertyType, isCollectional);
 
             // let's add implicit validation as early as possible to @BeforeChange
             // special validation of String-typed key-members
@@ -814,16 +815,16 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                 final BeforeChange implicitBch = BeforeChangeAnnotation.from(handlers);
 
                 // merge with declared @BeforeChange, if exists
-                final Optional<Annotation> maybeDeclaredBch = removeFirst(propertyValidationAnotations, at -> at.annotationType() == BeforeChange.class);
+                final Optional<Annotation> maybeDeclaredBch = removeFirst(propValidationAnnots, at -> at.annotationType() == BeforeChange.class);
                 final BeforeChange bch = maybeDeclaredBch.isPresent()
                         ? BeforeChangeAnnotation.merged(implicitBch, (BeforeChange) maybeDeclaredBch.get())
                         : implicitBch;
-                propertyValidationAnotations.add(bch);
+                propValidationAnnots.add(bch);
             }
 
-            for (final Annotation annotation : propertyValidationAnotations) {
+            for (final Annotation annotation : propValidationAnnots) {
                 // if property factory cannot instantiate a validator for the specified annotation then null is returned
-                final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(annotation, this, field.getName(), properyType);
+                final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(annotation, this, field.getName(), propertyType);
                 if (annotationValidators.length > 0) {
                     final Map<IBeforeChangeEventHandler<?>, Result> handlersAndResults = new LinkedHashMap<>();
                     for (final IBeforeChangeEventHandler<?> handler : annotationValidators) {
@@ -836,14 +837,14 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
 
             // now let's see if we need to add EntityExists validation
             if (!validators.containsKey(ValidationAnnotation.ENTITY_EXISTS) && (isEntityExistsValidationApplicable(getType(), field))) {
-                final EntityExists eeAnnotation = entityExistsAnnotation(getType(), field.getName(),  (Class<? extends AbstractEntity<?>>) properyType);
-                final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(eeAnnotation, this, field.getName(), properyType);
+                final EntityExists eeAnnotation = entityExistsAnnotation(getType(), field.getName(),  (Class<? extends AbstractEntity<?>>) propertyType);
+                final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(eeAnnotation, this, field.getName(), propertyType);
 
                 if (annotationValidators.length != 1) {
                     throw new EntityDefinitionException(format("Unexpexted number of @EntityExists annotations (expected 1, but actual %s) for property [%s] in entity [%s].", annotationValidators.length, field.getType(), getType().getName()));
                 }
 
-                propertyValidationAnotations.add(eeAnnotation);
+                propValidationAnnots.add(eeAnnotation);
                 final Map<IBeforeChangeEventHandler<?>, Result> handlersAndResults = new LinkedHashMap<>();
                 final IBeforeChangeEventHandler<?> handler = annotationValidators[0];
                 handlersAndResults.put(handler, null);
@@ -851,8 +852,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                 validators.put(ValidationAnnotation.ENTITY_EXISTS, handlersAndResults);
             }
 
-
-            validationAnnotations.addAll(propertyValidationAnotations);
+            validationAnnotations.addAll(propValidationAnnots);
 
             return validators;
         } catch (final Exception ex) {
