@@ -8,21 +8,16 @@ import static ua.com.fielden.platform.eql.stage2.KeyPropertyExtractor.needsExtra
 import static ua.com.fielden.platform.eql.stage2.conditions.Conditions2.emptyConditions;
 import static ua.com.fielden.platform.eql.stage2.etc.GroupBys2.emptyGroupBys;
 import static ua.com.fielden.platform.eql.stage2.etc.OrderBys2.emptyOrderBys;
-import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
-import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
-import ua.com.fielden.platform.eql.meta.UnionTypePropInfo;
 import ua.com.fielden.platform.eql.stage1.PropResolution;
 import ua.com.fielden.platform.eql.stage1.QueryComponents1;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
@@ -42,8 +37,8 @@ import ua.com.fielden.platform.eql.stage2.etc.Yield2;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
-import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage2.sources.IJoinNode2;
+import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
 
 public abstract class AbstractQuery1 {
@@ -109,50 +104,6 @@ public abstract class AbstractQuery1 {
         }
         
         return new OrderBys2(enhanced);
-    }
-    
-    protected static Yields2 expand(final Yields2 original) {
-        return new Yields2(expand(original.getYields()), original.allGenerated);
-    }
-
-    private static List<Yield2> expand(final Collection<Yield2> original) {
-        final List<Yield2> expanded = new ArrayList<>();
-        
-        for (final Yield2 originalYield : original) {
-            expanded.addAll(expand(originalYield));
-        }
-
-        return expanded;
-    }
-
-    private static List<Yield2> expand(final Yield2 original) {
-        final List<Yield2> expanded = new ArrayList<>();
-        
-        if (original.operand.isHeader() && original.operand instanceof Prop2){
-            final Prop2 originalYieldProp = (Prop2) original.operand;
-
-            if (originalYieldProp.lastPart() instanceof UnionTypePropInfo) {
-                for (final Entry<String, AbstractPropInfo<?>> sub : ((UnionTypePropInfo<?>) originalYieldProp.lastPart()).propEntityInfo.getProps().entrySet()) {
-                    if (isEntityType(sub.getValue().javaType()) && !sub.getValue().hasExpression()) {
-                        expanded.addAll(expand(originalYieldProp, sub.getValue(), original.alias));             
-                    }
-                }
-            } else if (originalYieldProp.lastPart() instanceof ComponentTypePropInfo) {
-                for (final Entry<String, AbstractPropInfo<?>> sub : ((ComponentTypePropInfo<?>) originalYieldProp.lastPart()).getProps().entrySet()) {
-                    expanded.addAll(expand(originalYieldProp, sub.getValue(), original.alias));             
-                }
-            }
-        } else {
-            expanded.add(original);    
-        }
-
-        return expanded;
-    }
-    
-    private static List<Yield2> expand(final Prop2 originalYieldProp, final AbstractPropInfo<?> subProp, final String yieldAlias) {
-        final List<AbstractPropInfo<?>> expandedPath = new ArrayList<>(originalYieldProp.getPath());
-        expandedPath.add(subProp);
-        return expand(new Yield2(new Prop2(originalYieldProp.source, expandedPath), yieldAlias + "." + subProp.name, false));             
     }
     
     private static List<OrderBy2> transformForYield(final OrderBy2 original, final Yields2 yields, final ISource2<? extends ISource3> mainSource) {

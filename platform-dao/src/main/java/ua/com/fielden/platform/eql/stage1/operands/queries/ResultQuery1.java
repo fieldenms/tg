@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticEntityType;
 
@@ -17,7 +18,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityRetrievalModel;
 import ua.com.fielden.platform.entity.query.IRetrievalModel;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
+import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
+import ua.com.fielden.platform.eql.meta.UnionTypePropInfo;
 import ua.com.fielden.platform.eql.stage1.ITransformableToS2;
 import ua.com.fielden.platform.eql.stage1.QueryComponents1;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
@@ -57,7 +60,7 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
         final Yields2 yields2 = yields.transform(enhancedContext);
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
         final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());
-        final Yields2 enhancedYields2 = expand(enhanceYields(yields2, joinRoot2.mainSource(), joinRootTr._2));
+        final Yields2 enhancedYields2 = enhanceYields(yields2, joinRoot2.mainSource(), joinRootTr._2);
         final QueryComponents2 queryComponents2 = new QueryComponents2(joinRoot2, conditions2, enhancedYields2, groups2, orderings2);
 
         return new ResultQuery2(queryComponents2, resultType);
@@ -117,12 +120,36 @@ public class ResultQuery1 extends AbstractQuery1 implements ITransformableToS2<R
                     final boolean yieldSubprops = isNotTopFetch && l1PropFm != null && l1Prop.getValue() instanceof EntityTypePropInfo;
                     
                     if (!yieldSubprops) {
-                        enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(l1Prop.getValue())), l1Prop.getKey(), false));
+                        if (l1Prop.getValue() instanceof UnionTypePropInfo) {
+                            for (final Entry<String, AbstractPropInfo<?>> sub : ((UnionTypePropInfo<?>) l1Prop.getValue()).propEntityInfo.getProps().entrySet()) {
+                                if (isEntityType(sub.getValue().javaType()) && !sub.getValue().hasExpression()) {
+                                    enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(l1Prop.getValue(), sub.getValue())), l1Prop.getKey() + "." + sub.getValue().name, false));
+                                }
+                            }
+                        } else if (l1Prop.getValue() instanceof ComponentTypePropInfo) {
+                            for (final Entry<String, AbstractPropInfo<?>> sub : ((ComponentTypePropInfo<?>) l1Prop.getValue()).getProps().entrySet()) {
+                                enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(l1Prop.getValue(), sub.getValue())), l1Prop.getKey() + "." + sub.getValue().name, false));
+                            }
+                        } else {
+                            enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(l1Prop.getValue())), l1Prop.getKey(), false));    
+                        }
                     } else {
                         final EntityTypePropInfo<?> l1PropMd = ((EntityTypePropInfo<?>) l1Prop.getValue());
                         for (final Entry<String, AbstractPropInfo<?>> l2Prop : l1PropMd.propEntityInfo.getProps().entrySet()) {
                             if (l1PropFm.containsProp(l2Prop.getValue().name)) {
-                                enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(l1Prop.getValue(), l2Prop.getValue())), l1Prop.getKey() + "." + l2Prop.getKey(), false));
+                                if (l2Prop.getValue() instanceof UnionTypePropInfo) {
+                                    for (final Entry<String, AbstractPropInfo<?>> sub : ((UnionTypePropInfo<?>) l2Prop.getValue()).propEntityInfo.getProps().entrySet()) {
+                                        if (isEntityType(sub.getValue().javaType()) && !sub.getValue().hasExpression()) {
+                                            enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(l1Prop.getValue(), l2Prop.getValue(), sub.getValue())), l1Prop.getKey() + "." + l2Prop.getKey() + "." + sub.getValue().name, false));
+                                        }
+                                    }
+                                } else if (l2Prop.getValue() instanceof ComponentTypePropInfo) {
+                                    for (final Entry<String, AbstractPropInfo<?>> sub : ((ComponentTypePropInfo<?>) l2Prop.getValue()).getProps().entrySet()) {
+                                        enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(l1Prop.getValue(), l2Prop.getValue(), sub.getValue())), l1Prop.getKey() + "." + l2Prop.getKey() + "." + sub.getValue().name, false));
+                                    }
+                                } else {
+                                    enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(l1Prop.getValue(), l2Prop.getValue())), l1Prop.getKey() + "." + l2Prop.getKey(), false));
+                                }
                             }
                         }
                     }

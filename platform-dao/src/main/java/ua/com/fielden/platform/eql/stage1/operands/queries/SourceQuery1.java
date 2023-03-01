@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
 import java.util.ArrayList;
@@ -12,6 +13,8 @@ import java.util.Map.Entry;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
+import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
+import ua.com.fielden.platform.eql.meta.UnionTypePropInfo;
 import ua.com.fielden.platform.eql.stage1.ITransformableToS2;
 import ua.com.fielden.platform.eql.stage1.QueryComponents1;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
@@ -56,7 +59,7 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
         final Yields2 yields2 = yields.transform(enhancedContext);
         final GroupBys2 groups2 = enhance(groups.transform(enhancedContext));
         final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());
-        final Yields2 enhancedYields2 = expand(enhanceYields(yields2, joinRoot2.mainSource(), context.shouldIncludeCalcProps));
+        final Yields2 enhancedYields2 = enhanceYields(yields2, joinRoot2.mainSource(), context.shouldIncludeCalcProps);
         final QueryComponents2 queryComponents2 = new QueryComponents2(joinRoot2, conditions2, enhancedYields2, groups2, orderings2);
         return new SourceQuery2(queryComponents2, resultType);
     }
@@ -66,7 +69,20 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
             final List<Yield2> enhancedYields = new ArrayList<>(yields.getYields());
             for (final Entry<String, AbstractPropInfo<?>> el : mainSource.entityInfo().getProps().entrySet()) {
                 if (!el.getValue().hasExpression() || shouldIncludeCalcProps && !(el.getValue().hasAggregation() || el.getValue().implicit)) {
-                    enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(el.getValue())), el.getKey(), false));
+                    
+                    if (el.getValue() instanceof UnionTypePropInfo) {
+                        for (final Entry<String, AbstractPropInfo<?>> sub : ((UnionTypePropInfo<?>) el.getValue()).propEntityInfo.getProps().entrySet()) {
+                            if (isEntityType(sub.getValue().javaType()) && !sub.getValue().hasExpression()) {
+                                enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(el.getValue(), sub.getValue())), el.getKey() + "." + sub.getValue().name, false));
+                            }
+                        }
+                    } else if (el.getValue() instanceof ComponentTypePropInfo) {
+                        for (final Entry<String, AbstractPropInfo<?>> sub : ((ComponentTypePropInfo<?>) el.getValue()).getProps().entrySet()) {
+                            enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(el.getValue(), sub.getValue())), el.getKey() + "." + sub.getValue().name, false));
+                        }
+                    } else {
+                        enhancedYields.add(new Yield2(new Prop2(mainSource, listOf(el.getValue())), el.getKey(), false));    
+                    }
                 }
             }
             return new Yields2(enhancedYields, yields.getYields().isEmpty() && !shouldIncludeCalcProps);
