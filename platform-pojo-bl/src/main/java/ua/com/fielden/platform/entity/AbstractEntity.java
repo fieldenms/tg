@@ -24,6 +24,7 @@ import static ua.com.fielden.platform.reflection.EntityMetadata.entityExistsAnno
 import static ua.com.fielden.platform.reflection.EntityMetadata.isEntityExistsValidationApplicable;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNumeric;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
+import static ua.com.fielden.platform.utils.CollectionUtil.removeFirst;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 
 import java.lang.annotation.Annotation;
@@ -799,6 +800,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<?>, Result>> validators = new EnumMap<>(ValidationAnnotation.class);
             // Get corresponding mutators to pick all specified validators in case of a collectional property there can be up to three mutators --
             // removeFrom[property name], addTo[property name] and set[property name]
+            // The returned Set is mutable
             final Set<Annotation> propertyValidationAnotations = extractValidationAnnotationForProperty(field, properyType, isCollectional);
 
             // let's add implicit validation as early as possible to @BeforeChange
@@ -812,13 +814,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                 final BeforeChange implicitBch = BeforeChangeAnnotation.from(handlers);
 
                 // merge with declared @BeforeChange, if exists
-                final Optional<BeforeChange> maybeDeclaredBch = propertyValidationAnotations.stream()
-                        .filter(at -> at.annotationType() == BeforeChange.class).map(at -> (BeforeChange) at).findAny();
+                final Optional<Annotation> maybeDeclaredBch = removeFirst(propertyValidationAnotations, at -> at.annotationType() == BeforeChange.class);
                 final BeforeChange bch = maybeDeclaredBch.isPresent()
-                        ? BeforeChangeAnnotation.merged(implicitBch, maybeDeclaredBch.get())
+                        ? BeforeChangeAnnotation.merged(implicitBch, (BeforeChange) maybeDeclaredBch.get())
                         : implicitBch;
-                // TODO optimize
-                propertyValidationAnotations.removeIf(at -> at.annotationType() == BeforeChange.class);
                 propertyValidationAnotations.add(bch);
             }
 
