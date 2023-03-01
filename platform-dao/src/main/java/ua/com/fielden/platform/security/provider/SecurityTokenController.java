@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.security.provider;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.security.ISecurityToken;
@@ -15,6 +16,7 @@ import ua.com.fielden.platform.security.user.User;
  * @author TG Team
  *
  */
+@Singleton
 public class SecurityTokenController implements ISecurityTokenController {
 
     private final ICompanionObjectFinder coFinder;
