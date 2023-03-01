@@ -15,8 +15,6 @@ import static ua.com.fielden.platform.web_api.RootEntityUtils.rootPropAndArgumen
 import java.util.List;
 import java.util.Optional;
 
-import com.google.inject.Provider;
-
 import graphql.execution.DataFetcherResult;
 import graphql.execution.DataFetcherResult.Builder;
 import graphql.language.Argument;
@@ -47,7 +45,7 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
     private final Class<T> entityType;
     private final ICompanionObjectFinder coFinder;
     private final IDates dates;
-    private final Provider<IAuthorisationModel> authorisationModelProvider;
+    private final IAuthorisationModel authorisationModel;
     private final ISecurityTokenProvider securityTokenProvider;
     
     /**
@@ -56,19 +54,19 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
      * @param entityType
      * @param coFinder
      * @param dates
-     * @param authorisationModelProvider -- Guice {@link Provider} for {@link IAuthorisationModel}; would create auth model to authorise running of Web API queries
+     * @param authorisationModel-- authorises running of Web API queries.
      * @param securityTokenProvider
      */
     public RootEntityFetcher(
             final Class<T> entityType,
             final ICompanionObjectFinder coFinder,
             final IDates dates,
-            final Provider<IAuthorisationModel> authorisationModelProvider,
+            final IAuthorisationModel authorisationModel,
             final ISecurityTokenProvider securityTokenProvider) {
         this.entityType = entityType;
         this.coFinder = coFinder;
         this.dates = dates;
-        this.authorisationModelProvider = authorisationModelProvider;
+        this.authorisationModel = authorisationModel;
         this.securityTokenProvider = securityTokenProvider;
     }
     
@@ -79,7 +77,7 @@ public class RootEntityFetcher<T extends AbstractEntity<?>> implements DataFetch
      */
     @Override
     public DataFetcherResult<List<T>> get(final DataFetchingEnvironment environment) {
-        authoriseReading(entityType.getSimpleName(), READ, authorisationModelProvider.get(), securityTokenProvider).ifFailure(Result::throwRuntime); // always create new instance of auth model; otherwise it would contain single instance of SecurityRoleAssociationDao companion and concurrent requests may fail
+        authoriseReading(entityType.getSimpleName(), READ, authorisationModel, securityTokenProvider).ifFailure(Result::throwRuntime); // always create new instance of auth model; otherwise it would contain single instance of SecurityRoleAssociationDao companion and concurrent requests may fail
         final T3<String, List<GraphQLArgument>, List<Argument>> rootArguments = rootPropAndArguments(environment.getGraphQLSchema(), environment.getField());
         final T2<Optional<String>, QueryExecutionModel<T, EntityResultQueryModel<T>>> warningAndModel = generateQueryModelFrom(
             environment.getField(),
