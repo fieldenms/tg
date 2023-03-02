@@ -168,15 +168,15 @@ const registerLocalEventSource = function (userName, uid) {
     const heartBeatFailed = function () {
         window.removeEventListener("storage", heartBeatListener);
         window.removeEventListener("storage", dataListener);
-        //Oh no! locally registered SSE failed to hear a hart beat from remote sse. Then deinitialise this sse and register as remote one. 
+        //Oh no! locally registered SSE failed to hear a hart beat from remote sse. Then deinitialise this sse and register remote one. 
         eventSource.initialised = false;
         registerRemoteEventSource(userName, uid);
     };
 
     //Will be invoked to check whether server source event (remote sse) is alive or not.
     const isAlive = function() {
-        //First create a timer that waits for 10 seconds for response from remote sse (it might be less time but 10 seconds is more then enough)
-        heartBeatTimer = setTimeout(heartBeatFailed, 10000);
+        //First create a timer that waits for 2 seconds for response from remote sse (it might be less time but 10 seconds is more then enough)
+        heartBeatTimer = setTimeout(heartBeatFailed, 2000);
         //Set the locals storage value to fire storage event that is listened by remote sse. If remote sse is alive it will respond immediately (that's why timer can be less than 10s) 
         const newVal = localStorage.getItem(isAliveKey(userName, uid)) == 'true' ? 'false' :  'true';
         localStorage.setItem(isAliveKey(userName, uid), newVal);
@@ -193,7 +193,7 @@ const registerLocalEventSource = function (userName, uid) {
             //If remote SSE is alive then this locally registered sse should be initialised
             eventSource.initialised = true;
             clearTimeout(heartBeatTimer);
-            heartBeatTimer = setTimeout(isAlive, 10000);// Time to wait for heartBeat is 10s
+            heartBeatTimer = setTimeout(isAlive, 2000);// Time before the next heart beat
         }
     }
 
