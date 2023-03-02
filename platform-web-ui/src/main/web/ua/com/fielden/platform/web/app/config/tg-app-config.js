@@ -216,10 +216,6 @@ const registerLocalEventSource = function (userName, uid) {
     isAlive();
 };
 
-const uidKey = function (userName) {
-    return `${userName}_SSEUID`;
-}
-
 const uir = function (uid) {
     return `/sse/${uid}`;
 }
@@ -276,13 +272,13 @@ const saveUuid = function (userName, uid) {
 
 const getUid = function (userName) {
     return new Promise (function (resolve, reject) {
-        const saveRequest = db.transaction("uids", "readonly")
+        const getRequest = db.transaction("uids", "readonly")
                               .objectStore("uids")
                               .get(userName);
-        saveRequest.onsuccess = (event) => {
+        getRequest.onsuccess = (event) => {
             resolve(event.target.result.uid);
         };
-        saveRequest.onerror = (event) => {
+        getRequest.onerror = (event) => {
             reject(`Failed to get request for username: ${userName}`);
         }
     });
