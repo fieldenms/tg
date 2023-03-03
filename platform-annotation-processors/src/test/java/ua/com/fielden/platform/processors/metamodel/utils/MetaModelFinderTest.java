@@ -412,7 +412,7 @@ public class MetaModelFinderTest {
 
     // ==================== HELPER METHODS ====================
     private static void assertEqualContents(final Collection<?> c1, final Collection<?> c2) {
-        if (CollectionUtil.isEqualContents(c1, c2)) {}
+        if (CollectionUtil.areEqualByContents(c1, c2)) {}
         else {
             fail("expected:<%s> but was:<%s>".formatted(CollectionUtil.toString(c1, ", "), CollectionUtil.toString(c2, ", ")));
         }

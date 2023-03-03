@@ -7,7 +7,7 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
-import static ua.com.fielden.platform.utils.CollectionUtil.isEqualContents;
+import static ua.com.fielden.platform.utils.CollectionUtil.areEqualByContents;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -750,7 +750,7 @@ public class ElementFinderTest {
     }
 
     private static void assertEqualContents(final Collection<?> c1, final Collection<?> c2) {
-        if (isEqualContents(c1, c2)) {}
+        if (areEqualByContents(c1, c2)) {}
         else {
             fail("expected:<%s> but was:<%s>".formatted(CollectionUtil.toString(c1, ", "), CollectionUtil.toString(c2, ", ")));
         }

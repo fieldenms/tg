@@ -123,9 +123,12 @@ public final class CollectionUtil {
      * Returns {@code true} iff both collections contain the same elements with the same cardinalities
      * according to {@link Object#equals(Object)}.
      */
-    public static boolean isEqualContents(final Collection<?> c1, final Collection<?> c2) {
+    public static boolean areEqualByContents(final Collection<?> c1, final Collection<?> c2) {
         if (c1.size() != c2.size()) {
             return false;
+        }
+        if (c1 == c2) {
+            return true;
         }
         final Map<?, Long> cardinalMap1 = c1.stream().collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
         final Map<?, Long> cardinalMap2 = c2.stream().collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
