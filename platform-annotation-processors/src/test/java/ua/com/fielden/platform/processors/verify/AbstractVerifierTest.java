@@ -77,14 +77,22 @@ public abstract class AbstractVerifierTest {
     }
 
     /**
-     * A convenient method to compile {@code typeSpecs} and asssert that the given error message was reported.
+     * A convenient method to compile {@code typeSpecs} and asssert that certain error messages were reported.
      * @return the resulting compilation instance
      */
-    protected final Compilation compileAndAssertError(final Collection<TypeSpec> typeSpecs, final String expectedErrorMessage) {
+    protected final Compilation compileAndAssertErrors(final Collection<TypeSpec> typeSpecs, final String... expectedErrorMessages) {
+        return compileAndAssertErrors(typeSpecs, List.of(expectedErrorMessages));
+    }
+
+    /**
+     * A convenient method to compile {@code typeSpecs} and asssert that certain error messages were reported.
+     * @return the resulting compilation instance
+     */
+    protected final Compilation compileAndAssertErrors(final Collection<TypeSpec> typeSpecs, final Collection<String> expectedErrorMessages) {
         final Compilation compilation = buildCompilation(typeSpecs);
         final boolean success = VerifierTestUtils.compileAndPrintDiagnostics(compilation);
         assertFalse("Compilaton should have failed.", success);
-        VerifierTestUtils.assertErrorReported(compilation, expectedErrorMessage);
+        expectedErrorMessages.forEach(msg -> VerifierTestUtils.assertErrorReported(compilation, msg));
         return compilation;
     }
 
