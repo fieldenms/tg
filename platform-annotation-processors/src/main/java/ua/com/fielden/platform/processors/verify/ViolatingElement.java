@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.processors.verify;
 
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -23,6 +27,7 @@ public final class ViolatingElement {
     private final String message;
     private final AnnotationMirror annotationMirror;
     private final AnnotationValue annotationValue;
+    private final List<ViolatingElement> subElements = new LinkedList<>();
 
     public ViolatingElement(final Element element, final Kind kind, final String message) {
         Objects.requireNonNull(element, "Argument [element] cannot be null.");
@@ -60,6 +65,19 @@ public final class ViolatingElement {
         this.annotationValue = annotationValue;
     }
 
+    public ViolatingElement addSubElements(final Collection<ViolatingElement> elements) {
+        this.subElements.addAll(elements);
+        return this;
+    }
+
+    public ViolatingElement addSubElements(final ViolatingElement... elements) {
+        return addSubElements(List.of(elements));
+    }
+
+    public List<ViolatingElement> getSubElements() {
+        return Collections.unmodifiableList(this.subElements);
+    }
+
     public Element getElement() {
         return element;
     }
@@ -85,6 +103,8 @@ public final class ViolatingElement {
      * @param messager
      */
     public void printMessage(final Messager messager) {
+        this.subElements.forEach(elt -> elt.printMessage(messager));
+
         if (annotationMirror == null) {
             // simplest form of message that is present directly on the element
             messager.printMessage(kind, message, element);
