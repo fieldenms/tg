@@ -122,7 +122,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void error_is_reported_when_property_setter_is_missing_Observable() {
+        public void error_is_reported_on_setter_that_is_missing_Observable() {
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(String.class, "prop").build())
@@ -130,19 +130,19 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                     .build();
 
             compileAndAssertErrors(List.of(entity),
-                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "prop"),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "setProp"),
                     PropertySetterVerifier.errMissingObservable("setProp"));
         }
 
         @Test
-        public void error_is_reported_when_property_setter_is_missing_public_or_protected() {
+        public void error_is_reported_on_setter_that_is_neither_public_nor_protected() {
             final TypeSpec entityNoSetterModifier = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(String.class, "prop").build())
                     .addMethod(MethodSpec.methodBuilder("setProp").addAnnotation(Observable.class).build())
                     .build();
             compileAndAssertErrors(List.of(entityNoSetterModifier),
-                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "prop"),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "setProp"),
                     PropertySetterVerifier.errNotPublicNorProtected("setProp"));
 
             final TypeSpec entityPrivateSetter = TypeSpec.classBuilder("Example")
@@ -151,7 +151,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                     .addMethod(MethodSpec.methodBuilder("setProp").addAnnotation(Observable.class).addModifiers(Modifier.PRIVATE).build())
                     .build();
             compileAndAssertErrors(List.of(entityPrivateSetter),
-                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "prop"),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), "setProp"),
                     PropertySetterVerifier.errNotPublicNorProtected("setProp"));
         }
 

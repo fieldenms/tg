@@ -129,20 +129,17 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
 
                 // should be annotated with @Observable
                 if (setter.getAnnotation(AT_OBSERVABLE_CLASS) == null) {
-                    return Optional.of(new ViolatingElement(
-                            property.element(), Kind.ERROR, errMissingObservable(getSimpleName(setter))));
+                    return Optional.of(new ViolatingElement(setter, Kind.ERROR, errMissingObservable(getSimpleName(setter))));
                 }
 
                 // should be public or protected
                 if (!ElementFinder.isPublic(setter) && !ElementFinder.isProtected(setter)) {
-                    return Optional.of(new ViolatingElement(
-                            property.element(), Kind.ERROR, errNotPublicNorProtected(getSimpleName(setter))));
+                    return Optional.of(new ViolatingElement(setter, Kind.ERROR, errNotPublicNorProtected(getSimpleName(setter))));
                 }
 
                 return Optional.empty();
             }
         }
-
     }
 
     /**
