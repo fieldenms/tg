@@ -90,13 +90,19 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 --paper-input-container-focus-color: #03A9F4;
             }
 
+            /* style requiredness */
+            #decorator[is-invalid].informative {
+                --paper-input-container-color: #8E24AA;
+                --paper-input-container-invalid-color: #8E24AA;
+            }
+
             /* style warning */
             #decorator[is-invalid].warning {
                 --paper-input-container-color: #FFA000;
                 --paper-input-container-invalid-color: #FFA000;
             }
 
-            #decorator[is-invalid]:not(.warning) {
+            #decorator[is-invalid]:not(.warning):not(.informative) {
                 --paper-input-container-color: var(--google-red-500);
             }
         </style>
@@ -509,6 +515,10 @@ export class TgEditor extends PolymerElement {
         return this.$.decorator.classList.contains("warning");
     }
 
+    isWithInformative() {
+        return this.$.decorator.classList.contains("informative");
+    }
+
     reflector () {
         return this._reflector;
     }
@@ -901,6 +911,8 @@ export class TgEditor extends PolymerElement {
                 this._bindError(entity["@" + propertyName + "_error"].message);
             } else if (typeof entity["@" + propertyName + "_warning"] !== 'undefined') {
                 this._bindWarning(entity["@" + propertyName + "_warning"].message);
+            } else if (typeof entity["@" + propertyName + "_informative"] !== 'undefined') {
+                this._bindInformative(entity["@" + propertyName + "_informative"].message);
             } else if (typeof entity["@" + propertyName + "_required"] !== 'undefined') {
                 this._bindRequired(entity["@" + propertyName + "_required"]);
             } else {
@@ -946,15 +958,15 @@ export class TgEditor extends PolymerElement {
         this._invalid = false;
         this._error = null;
         this.decorator().classList.remove("warning");
+        this.decorator().classList.remove("informative");
         this.updateStyles();
     }
 
     _bindError (msg) {
         this._resetMessages();
         this.decorator().classList.remove("required");
-        this.decorator().classList.remove("warning");
         this._invalid = true;
-        this._error = msg;
+        this._error = "" + msg;
         this.updateStyles();
     }
     
@@ -962,6 +974,15 @@ export class TgEditor extends PolymerElement {
         this._resetMessages();
         this.decorator().classList.remove("required");
         this.decorator().classList.add("warning");
+        this._invalid = true;
+        this._error = "" + msg;
+        this.updateStyles();
+    }
+
+    _bindInformative (msg) {
+        this._resetMessages();
+        this.decorator().classList.remove("required");
+        this.decorator().classList.add("informative");
         this._invalid = true;
         this._error = "" + msg;
         this.updateStyles();

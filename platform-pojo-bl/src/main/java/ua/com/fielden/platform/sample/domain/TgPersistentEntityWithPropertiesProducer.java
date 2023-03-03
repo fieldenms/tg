@@ -33,6 +33,9 @@ public class TgPersistentEntityWithPropertiesProducer extends DefaultEntityProdu
 
     @Override
     public TgPersistentEntityWithProperties provideDefaultValuesForStandardNew(final TgPersistentEntityWithProperties entity, final EntityNewAction masterEntity) {
+        if (ofMasterEntity().computation().map(c -> c.apply(null, null).equals("WITH_KEY4")).orElse(false)) {
+            entity.setEntityProp(coTgPersistentEntityWithProperties.findByKeyAndFetch(coTgPersistentEntityWithProperties.getFetchProvider().<TgPersistentEntityWithProperties> fetchFor("entityProp").fetchModel(), "KEY4"));
+        }
         return provideProducerInitProp(coTgPersistentEntityWithProperties, entity, serialiser);
     }
     
