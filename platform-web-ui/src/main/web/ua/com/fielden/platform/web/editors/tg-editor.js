@@ -14,7 +14,10 @@ import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-
 import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js';
 
 const defaultLabelTemplate = html`
-    <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]" slot="label">[[propTitle]]</label>`;
+    <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]" slot="label">
+        <span>[[propTitle]]</span>
+        <iron-icon id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
+    </label>`;
 
 export function createEditorTemplate (additionalTemplate, customPrefixAttribute, customInput, inputLayer, customIconButtons, propertyAction, customLabelTemplate) {
     return html`
@@ -33,7 +36,24 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 font-weight: 500;
                 text-align: left;
             }
-
+            label {
+                cursor: default;
+                @apply --layout-horizontal;
+                @apply --layout-center;
+            }
+            #copyIcon {
+                display: none;
+                width: 18px;
+                height: 18px;
+                margin-left: 4px;
+            }
+            label #copyIcon {
+                cursor: pointer;
+            }
+            :host(:hover) #copyIcon,
+            #decorator[focused]  #copyIcon {
+                display: unset;
+            }
             .input-layer {
                 font-size: 16px;
                 line-height: 24px;
