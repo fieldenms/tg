@@ -63,7 +63,7 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .build();
 
-            compileAndAssertError(List.of(entity), ENTITY_DEFINITION_IS_MISSING_KEY_TYPE);
+            compileAndAssertErrors(List.of(entity), ENTITY_DEFINITION_IS_MISSING_KEY_TYPE);
         }
 
         @Test
@@ -110,7 +110,7 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .build();
 
-            compileAndAssertError(List.of(superEntity), KEY_TYPE_MUST_MATCH_THE_TYPE_ARGUMENT_TO_ABSTRACT_ENTITY);
+            compileAndAssertErrors(List.of(superEntity), KEY_TYPE_MUST_MATCH_THE_TYPE_ARGUMENT_TO_ABSTRACT_ENTITY);
         }
 
         @Test
@@ -120,7 +120,7 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
                     .superclass(ClassName.get(AbstractEntity.class))
                     .build();
 
-            compileAndAssertError(List.of(superEntity), SUPERTYPE_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE);
+            compileAndAssertErrors(List.of(superEntity), SUPERTYPE_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE);
         }
     }
 
@@ -147,7 +147,7 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
                     .superclass(ClassName.get("", superEntity.name))
                     .build();
 
-            compileAndAssertError(List.of(superEntity, subEntity), keyTypeMustMatchTheSupertypesKeyType(superEntity.name));
+            compileAndAssertErrors(List.of(superEntity, subEntity), keyTypeMustMatchTheSupertypesKeyType(superEntity.name));
         }
     }
 
@@ -167,7 +167,7 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
                     .addField(propertyBuilder(Double.class, AbstractEntity.KEY).build())
                     .build();
 
-            compileAndAssertError(List.of(incorrectEntity), KEY_PROPERTY_TYPE_MUST_BE_CONSISTENT_WITH_KEYTYPE_DEFINITION);
+            compileAndAssertErrors(List.of(incorrectEntity), KEY_PROPERTY_TYPE_MUST_BE_CONSISTENT_WITH_KEYTYPE_DEFINITION);
         }
 
         @Test
@@ -179,7 +179,7 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
                     .addField(propertyBuilder(String.class, AbstractEntity.KEY).build())
                     .build();
 
-            compileAndAssertError(List.of(incorrectEntity), ENTITY_WITH_NOKEY_AS_KEY_TYPE_CAN_NOT_DECLARE_PROPERTY_KEY);
+            compileAndAssertErrors(List.of(incorrectEntity), ENTITY_WITH_NOKEY_AS_KEY_TYPE_CAN_NOT_DECLARE_PROPERTY_KEY);
         }
     }
 

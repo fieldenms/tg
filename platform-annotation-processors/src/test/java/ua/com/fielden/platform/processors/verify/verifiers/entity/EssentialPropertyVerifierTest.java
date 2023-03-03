@@ -76,7 +76,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                     .addField(propertyBuilder(String.class, "prop").build())
                     .build();
 
-            compileAndAssertError(List.of(parent, entity), AccessorPresence.errMissingAccessor("prop"));
+            compileAndAssertErrors(List.of(parent, entity), AccessorPresence.errMissingAccessor("prop"));
         }
 
         @Test
@@ -114,7 +114,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                     .addField(propertyBuilder(String.class, "prop").build())
                     .build();
 
-            compileAndAssertError(List.of(parent, entity), PropertySetterVerifier.errMissingSetter("prop"));
+            compileAndAssertErrors(List.of(parent, entity), PropertySetterVerifier.errMissingSetter("prop"));
         }
 
         @Test
@@ -139,14 +139,14 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                     .addField(propertyBuilder(String.class, "prop").build())
                     .addMethod(MethodSpec.methodBuilder("setProp").addAnnotation(Observable.class).build())
                     .build();
-            compileAndAssertError(List.of(entityNoSetterModifier), PropertySetterVerifier.errNotPublicNorProtected("setProp"));
+            compileAndAssertErrors(List.of(entityNoSetterModifier), PropertySetterVerifier.errNotPublicNorProtected("setProp"));
 
             final TypeSpec entityPrivateSetter = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(String.class, "prop").build())
                     .addMethod(MethodSpec.methodBuilder("setProp").addAnnotation(Observable.class).addModifiers(Modifier.PRIVATE).build())
                     .build();
-            compileAndAssertError(List.of(entityPrivateSetter), PropertySetterVerifier.errNotPublicNorProtected("setProp"));
+            compileAndAssertErrors(List.of(entityPrivateSetter), PropertySetterVerifier.errNotPublicNorProtected("setProp"));
         }
 
         @Test
@@ -182,7 +182,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                     .addField(propertyBuilder(List.class, "list").build())
                     .build();
 
-            compileAndAssertError(List.of(entity), CollectionalPropertyVerifier.errMustBeFinal("list"));
+            compileAndAssertErrors(List.of(entity), CollectionalPropertyVerifier.errMustBeFinal("list"));
         }
 
         @Test
@@ -228,7 +228,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                     .addField(propertyBuilder(ParameterizedTypeName.get(List.class, Function.class), "list").build())
                     .build();
 
-            compileAndAssertError(List.of(entity), errInvalidCollectionTypeArg("list"));
+            compileAndAssertErrors(List.of(entity), errInvalidCollectionTypeArg("list"));
         }
 
         @Test
@@ -248,7 +248,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                     .addField(propertyBuilder(typeName, "collection").build())
                     .build();
 
-            compileAndAssertError(List.of(entity), errInvalidCollectionTypeArg("collection"));
+            compileAndAssertErrors(List.of(entity), errInvalidCollectionTypeArg("collection"));
         }
 
         @Test
