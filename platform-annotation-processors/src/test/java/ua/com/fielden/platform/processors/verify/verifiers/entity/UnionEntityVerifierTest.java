@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
+import static ua.com.fielden.platform.processors.verify.VerifyingProcessor.errVerifierNotPassedBy;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.propertyBuilder;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.UnionEntityVerifier.DistinctPropertyEntityTypesVerifier.errMultiplePropertiesOfSameType;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.UnionEntityVerifier.DistinctPropertyEntityTypesVerifier.errPropertyHasNonUniqueType;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.UnionEntityVerifier.EntityTypedPropertyPresenceVerifier.errNoEntityTypedProperties;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Consumer;
@@ -40,6 +42,7 @@ public class UnionEntityVerifierTest extends AbstractVerifierTest {
 
     // 1. presence of at least one entity-typed property
     public static class EntityTypedPropertyPresenceVerifierTest extends AbstractVerifierTest {
+        static final Class<?> VERIFIER_TYPE = UnionEntityVerifier.EntityTypedPropertyPresenceVerifier.class;
 
         @Override
         protected Verifier createVerifier(final ProcessingEnvironment procEnv) {
@@ -49,7 +52,9 @@ public class UnionEntityVerifierTest extends AbstractVerifierTest {
         @Test
         public void error_is_reported_when_a_union_entity_declares_no_entity_typed_properties() {
             final Consumer<TypeSpec> assertor = entity -> {
-                compileAndAssertErrors(List.of(entity), errNoEntityTypedProperties());
+                compileAndAssertErrors(List.of(entity),
+                        errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), entity.name),
+                        errNoEntityTypedProperties());
             };
 
             assertor.accept(unionEntityBuilder("Example").build());
@@ -68,6 +73,7 @@ public class UnionEntityVerifierTest extends AbstractVerifierTest {
 
     // 2. verification of property types in a union entity
     public static class PropertyTypeVerifierTest extends AbstractVerifierTest {
+        static final Class<?> VERIFIER_TYPE = UnionEntityVerifier.PropertyTypeVerifier.class;
 
         @Override
         protected Verifier createVerifier(final ProcessingEnvironment procEnv) {
@@ -77,7 +83,9 @@ public class UnionEntityVerifierTest extends AbstractVerifierTest {
         @Test
         public void error_is_reported_when_a_union_entity_declares_a_non_entity_typed_property() {
             final BiConsumer<TypeSpec, List<String>> assertor = (entity, properties) -> {
-                final List<String> errors = properties.stream().map(UnionEntityVerifier.PropertyTypeVerifier::errNonEntityTypedProperty).toList();
+                final List<String> errors = new LinkedList<>();
+                errors.add(errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), properties));
+                errors.addAll(properties.stream().map(UnionEntityVerifier.PropertyTypeVerifier::errNonEntityTypedProperty).toList());
                 compileAndAssertErrors(List.of(entity), errors);
             };
 
@@ -98,7 +106,9 @@ public class UnionEntityVerifierTest extends AbstractVerifierTest {
         @Test
         public void error_is_reported_when_a_union_entity_is_composed_of_union_entities() {
             final BiConsumer<TypeSpec, List<String>> assertor = (entity, properties) -> {
-                final List<String> errors = properties.stream().map(UnionEntityVerifier.PropertyTypeVerifier::errUnionEntityTypedProperty).toList();
+                final List<String> errors = new LinkedList<>();
+                errors.add(errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), properties));
+                errors.addAll(properties.stream().map(UnionEntityVerifier.PropertyTypeVerifier::errUnionEntityTypedProperty).toList());
                 compileAndAssertErrors(List.of(entity), errors);
             };
 
@@ -117,6 +127,7 @@ public class UnionEntityVerifierTest extends AbstractVerifierTest {
 
     // 3. verification of all properties as a whole to ensure that used entity types are unique
     public static class DistinctPropertyEntityTypesVerifierTest extends AbstractVerifierTest {
+        static final Class<?> VERIFIER_TYPE = UnionEntityVerifier.DistinctPropertyEntityTypesVerifier.class;
 
         @Override
         protected Verifier createVerifier(final ProcessingEnvironment procEnv) {
@@ -131,6 +142,7 @@ public class UnionEntityVerifierTest extends AbstractVerifierTest {
                     .build();
 
             compileAndAssertErrors(List.of(entity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), entity.name),
                     errMultiplePropertiesOfSameType(entity.name),
                     errPropertyHasNonUniqueType("prop1"),
                     errPropertyHasNonUniqueType("prop2"));
