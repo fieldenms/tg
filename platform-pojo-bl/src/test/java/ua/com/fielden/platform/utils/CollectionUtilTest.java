@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
@@ -89,6 +90,24 @@ public class CollectionUtilTest {
         final List<Integer> list = List.of(1, 4, 2, 5);
         final Set<Integer> set = Set.of(4, 1, 5, 2);
         assertTrue(CollectionUtil.areEqualByContents(list, set));
+    }
+
+    @Test
+    public void null_collections_are_not_equal_by_contents() {
+        assertFalse(CollectionUtil.areEqualByContents(null, null));
+    }
+
+    @Test
+    public void null_and_non_null_collections_are_not_equal_by_contents() {
+        assertFalse(CollectionUtil.areEqualByContents(null, List.of(1, 4, 2, 5)));
+        assertFalse(CollectionUtil.areEqualByContents(List.of(1, 4, 2, 5), null));
+    }
+
+    @Test
+    public void collections_with_null_elements_cannot_be_checked_for_equality_by_contents() {
+        final List<Integer> xs = CollectionUtil.listOf(1, 4, null, 5);
+        final List<Integer> ys = CollectionUtil.listOf(4, 5, 1, null);
+        assertThrows(NullPointerException.class, () -> CollectionUtil.areEqualByContents(xs, ys));
     }
 
     @Test
