@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.propertyBuilder;
+import static ua.com.fielden.platform.processors.verify.verifiers.entity.UnionEntityVerifier.DistinctPropertyEntityTypesVerifier.errMultiplePropertiesOfSameType;
+import static ua.com.fielden.platform.processors.verify.verifiers.entity.UnionEntityVerifier.DistinctPropertyEntityTypesVerifier.errPropertyHasNonUniqueType;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.UnionEntityVerifier.EntityTypedPropertyPresenceVerifier.errNoEntityTypedProperties;
 
 import java.util.List;
@@ -19,6 +21,7 @@ import com.squareup.javapoet.TypeSpec;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
 import ua.com.fielden.platform.processors.test_entities.ExampleUnionEntity;
+import ua.com.fielden.platform.processors.test_entities.PersistentEntity;
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
 import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
 
@@ -109,6 +112,38 @@ public class UnionEntityVerifierTest extends AbstractVerifierTest {
                     .addField(propertyBuilder(ClassName.get("", "Example"), "prop2").build()) // self-reference
                     .build(),
                     /*properties*/ List.of("prop1", "prop2"));
+        }
+    }
+
+    // 3. verification of all properties as a whole to ensure that used entity types are unique
+    public static class DistinctPropertyEntityTypesVerifierTest extends AbstractVerifierTest {
+
+        @Override
+        protected Verifier createVerifier(final ProcessingEnvironment procEnv) {
+            return new UnionEntityVerifier.DistinctPropertyEntityTypesVerifier(procEnv);
+        }
+
+        @Test
+        public void error_is_reported_when_a_union_entity_declares_multiple_properties_of_the_same_entity_type() {
+            final TypeSpec entity = unionEntityBuilder("Example")
+                    .addField(propertyBuilder(ExampleEntity.class, "prop1").build())
+                    .addField(propertyBuilder(ExampleEntity.class, "prop2").build())
+                    .build();
+
+            compileAndAssertErrors(List.of(entity),
+                    errMultiplePropertiesOfSameType(entity.name),
+                    errPropertyHasNonUniqueType("prop1"),
+                    errPropertyHasNonUniqueType("prop2"));
+        }
+
+        @Test
+        public void union_entities_with_distinct_entity_types_as_property_types_pass_verification() {
+            final TypeSpec entity = unionEntityBuilder("Example")
+                    .addField(propertyBuilder(ExampleEntity.class, "prop1").build())
+                    .addField(propertyBuilder(PersistentEntity.class, "prop2").build())
+                    .build();
+
+            compileAndAssertSuccess(List.of(entity));
         }
     }
 
