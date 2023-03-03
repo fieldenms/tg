@@ -269,7 +269,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
                 inactive.add(mme);
             } else {
                 final EntityElement entity = maybeEntity.get();
-                if (!entityFinder.isEntityThatNeedsMetaModel(maybeEntity.get())) {
+                if (!entityFinder.isEntityThatNeedsMetaModel(entity)) {
                     printNote(format("Entity %s is no longer a domain entity.", entity.getSimpleName()));
                     inactive.add(mme);
                 }
