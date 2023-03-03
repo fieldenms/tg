@@ -4,6 +4,7 @@ import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUt
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.UnionEntityVerifier.EntityTypedPropertyPresenceVerifier.errNoEntityTypedProperties;
 
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -17,6 +18,7 @@ import com.squareup.javapoet.TypeSpec;
 
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
+import ua.com.fielden.platform.processors.test_entities.ExampleUnionEntity;
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
 import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
 
@@ -60,6 +62,56 @@ public class UnionEntityVerifierTest extends AbstractVerifierTest {
                     .build()));
         }
     }
+
+    // 2. verification of property types in a union entity
+    public static class PropertyTypeVerifierTest extends AbstractVerifierTest {
+
+        @Override
+        protected Verifier createVerifier(final ProcessingEnvironment procEnv) {
+            return new UnionEntityVerifier.PropertyTypeVerifier(procEnv);
+        }
+
+        @Test
+        public void error_is_reported_when_a_union_entity_declares_a_non_entity_typed_property() {
+            final BiConsumer<TypeSpec, List<String>> assertor = (entity, properties) -> {
+                final List<String> errors = properties.stream().map(UnionEntityVerifier.PropertyTypeVerifier::errNonEntityTypedProperty).toList();
+                compileAndAssertErrors(List.of(entity), errors);
+            };
+
+            // 1 non-entity typed property
+            assertor.accept(unionEntityBuilder("Example")
+                    .addField(propertyBuilder(String.class, "prop").build())
+                    .build(),
+                    /*properties*/ List.of("prop"));
+
+            // 1 non-entity typed and 1 entity-typed properties
+            assertor.accept(unionEntityBuilder("Example")
+                    .addField(propertyBuilder(String.class, "prop1").build())
+                    .addField(propertyBuilder(ExampleEntity.class, "prop2").build())
+                    .build(),
+                    /*properties*/ List.of("prop1"));
+        }
+
+        @Test
+        public void error_is_reported_when_a_union_entity_is_composed_of_union_entities() {
+            final BiConsumer<TypeSpec, List<String>> assertor = (entity, properties) -> {
+                final List<String> errors = properties.stream().map(UnionEntityVerifier.PropertyTypeVerifier::errUnionEntityTypedProperty).toList();
+                compileAndAssertErrors(List.of(entity), errors);
+            };
+
+            assertor.accept(unionEntityBuilder("Example")
+                    .addField(propertyBuilder(ExampleUnionEntity.class, "prop").build())
+                    .build(),
+                    /*properties*/ List.of("prop"));
+
+            assertor.accept(unionEntityBuilder("Example")
+                    .addField(propertyBuilder(ExampleUnionEntity.class, "prop1").build())
+                    .addField(propertyBuilder(ClassName.get("", "Example"), "prop2").build()) // self-reference
+                    .build(),
+                    /*properties*/ List.of("prop1", "prop2"));
+        }
+    }
+
     // -------------------- UTILITY METHODS --------------------
 
     private static TypeSpec.Builder unionEntityBuilder(final String name) {
