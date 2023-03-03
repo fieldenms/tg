@@ -1,13 +1,16 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
 import static javax.tools.Diagnostic.Kind.ERROR;
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.getSimpleName;
 
 import java.util.List;
 import java.util.Optional;
 
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.type.TypeMirror;
 
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
+import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.verify.ViolatingElement;
 
@@ -62,6 +65,51 @@ public class UnionEntityVerifier extends AbstractComposableEntityVerifier {
                     return Optional.empty();
                 }
                 return Optional.of(new ViolatingElement(entity.element(), ERROR, errNoEntityTypedProperties()));
+            }
+        }
+    }
+
+    /**
+     * Only entity-typed properties are permitted. However, those should not be union entities themselves
+     * (i.e., nesting of union entities is not supported).
+     */
+    static class PropertyTypeVerifier extends AbstractEntityVerifier {
+
+        public static final String errNonEntityTypedProperty(final String property) {
+            return "A union entity shall declare only entity-typed properties. Property [%s] is not of entity type.".formatted(property);
+        }
+
+        public static final String errUnionEntityTypedProperty(final String property) {
+            return "A union entity can't be composed of other union entities. Property [%s] is of a union entity type.".formatted(property);
+        }
+
+        protected PropertyTypeVerifier(final ProcessingEnvironment processingEnv) {
+            super(processingEnv);
+        }
+
+        @Override
+        protected List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
+            return roundEnv.acceptDeclaredPropertiesVisitor(new PropertyVisitor(entityFinder));
+        }
+
+        private class PropertyVisitor extends AbstractPropertyVerifyingVisitor {
+            public PropertyVisitor(final EntityFinder entityFinder) {
+                super(entityFinder);
+            }
+
+            @Override
+            public Optional<ViolatingElement> visitProperty(final EntityElement entity, final PropertyElement property) {
+                final TypeMirror propType = property.getType();
+                if (!entityFinder.isEntityType(propType)) {
+                    return Optional.of(new ViolatingElement(
+                            property.element(), ERROR, errNonEntityTypedProperty(getSimpleName(property.element()))));
+                }
+                if (entityFinder.isUnionEntityType(propType)) {
+                    return Optional.of(new ViolatingElement(
+                            property.element(), ERROR, errUnionEntityTypedProperty(getSimpleName(property.element()))));
+                }
+
+                return Optional.empty();
             }
         }
     }
