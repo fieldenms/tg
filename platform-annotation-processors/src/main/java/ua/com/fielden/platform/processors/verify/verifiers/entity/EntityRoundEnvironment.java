@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
-import static java.util.Collections.unmodifiableList;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.util.LinkedList;
@@ -60,7 +59,7 @@ public class EntityRoundEnvironment extends AbstractRoundEnvironment {
     /**
      * Accepts an entity verifying visitor and applies it to each root entity element in this round.
      * Returns a list containing entity elements that did not pass verification.
-     * 
+     *
      * @param visitor
      * @return
      */
@@ -76,7 +75,7 @@ public class EntityRoundEnvironment extends AbstractRoundEnvironment {
                 violators.add(ve);
             });
 
-        return unmodifiableList(violators);
+        return violators;
     }
 
     /**
@@ -101,7 +100,7 @@ public class EntityRoundEnvironment extends AbstractRoundEnvironment {
     /**
      * Accepts a verifying visitor for declared properties of an entity and applies it to each root entity element in this round.
      * Returns a list containing property elements that did not pass verification.
-     * 
+     *
      * @param visitor
      * @return
      */
@@ -118,7 +117,7 @@ public class EntityRoundEnvironment extends AbstractRoundEnvironment {
                 violators.add(ve);
             });
 
-        return unmodifiableList(violators);
+        return violators;
     }
 
 }
