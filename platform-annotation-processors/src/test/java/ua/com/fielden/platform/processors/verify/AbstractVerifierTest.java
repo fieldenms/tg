@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_P
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.Locale;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.JavaCompiler;
@@ -18,12 +19,14 @@ import com.squareup.javapoet.TypeSpec;
 
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileManager;
+import ua.com.fielden.platform.processors.test_utils.exceptions.CompilationException;
 import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
 import ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils;
+import ua.com.fielden.platform.utils.CollectionUtil;
 
 /**
  * Base class for unit tests targeted at {@link Verifier} implementations.
- * 
+ *
  * @author TG Team
  */
 public abstract class AbstractVerifierTest {
@@ -38,7 +41,7 @@ public abstract class AbstractVerifierTest {
     abstract protected Verifier createVerifier(final ProcessingEnvironment procEnv);
 
     /**
-     * Returns a new instance of the verifying processor that will initialize and use the sole verifier provided by 
+     * Returns a new instance of the verifying processor that will initialize and use the sole verifier provided by
      * {@link #createVerifier(ProcessingEnvironment)}.
      * @return
      */
@@ -53,7 +56,7 @@ public abstract class AbstractVerifierTest {
      * <p>
      * <i>Note</i>: {@code typeSpecs} will be mapped to java sources belonging to a <i>default package</i> (empty package name).
      * @see {@link TypeSpec}
-     * 
+     *
      * @param typeSpecs
      * @return
      */
@@ -86,12 +89,22 @@ public abstract class AbstractVerifierTest {
 
     /**
      * A convenient method to compile {@code typeSpecs} and asssert that certain error messages were reported.
+     * <p>
+     * If some errors were reported that were not expected (i.e. not specified by {@code expectedErrorMessages}) then a runtime exception is thrown.
+     *
      * @return the resulting compilation instance
      */
     protected final Compilation compileAndAssertErrors(final Collection<TypeSpec> typeSpecs, final Collection<String> expectedErrorMessages) {
         final Compilation compilation = buildCompilation(typeSpecs);
         final boolean success = VerifierTestUtils.compileAndPrintDiagnostics(compilation);
         assertFalse("Compilaton should have failed.", success);
+
+        // check for unexpected errors
+        final List<String> errorMessages = compilation.getErrors().stream().map(diag -> diag.getMessage(Locale.getDefault())).toList();
+        if (!CollectionUtil.isEqualContents(expectedErrorMessages, errorMessages)) {
+            throw new CompilationException("Unexpected compilation errors were reported.");
+        }
+
         expectedErrorMessages.forEach(msg -> VerifierTestUtils.assertErrorReported(compilation, msg));
         return compilation;
     }
