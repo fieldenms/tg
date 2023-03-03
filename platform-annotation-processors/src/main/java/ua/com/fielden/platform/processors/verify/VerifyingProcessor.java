@@ -19,6 +19,7 @@ import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
 import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier;
+import ua.com.fielden.platform.processors.verify.verifiers.entity.UnionEntityVerifier;
 
 /**
  * Annotation processor responsible for verifying source definitions in a domain model.
@@ -41,6 +42,7 @@ public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
         // specify default verifiers here
         this.registeredVerifiersProviders.add(procEnv -> new KeyTypeVerifier(procEnv));
         this.registeredVerifiersProviders.add(procEnv -> new EssentialPropertyVerifier(procEnv));
+        this.registeredVerifiersProviders.add(procEnv -> new UnionEntityVerifier(procEnv));
     }
 
     /**
