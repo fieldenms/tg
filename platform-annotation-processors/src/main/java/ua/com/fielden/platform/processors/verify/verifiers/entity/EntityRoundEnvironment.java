@@ -24,8 +24,10 @@ import ua.com.fielden.platform.processors.verify.ViolatingElement;
 public class EntityRoundEnvironment extends AbstractRoundEnvironment {
     private EntityFinder entityFinder;
 
-    /** Holds a memoized list of root entity elements in the current round. */
+    /** Holds root entity elements in the current round. */
     private List<EntityElement> entities;
+    /** Holds root <b>union entity</b> elements in the current round. */
+    private List<EntityElement> unionEntities;
 
     public EntityRoundEnvironment(final RoundEnvironment roundEnv, final Messager messager, final EntityFinder entityFinder) {
         super(roundEnv, messager);
@@ -44,6 +46,15 @@ public class EntityRoundEnvironment extends AbstractRoundEnvironment {
                     .toList();
         }
         return entities;
+    }
+
+    public List<EntityElement> listUnionEntities() {
+        if (unionEntities == null) {
+            unionEntities = listEntities().stream()
+                    .filter(elt -> entityFinder.isUnionEntityType(elt.asType()))
+                    .toList();
+        }
+        return unionEntities;
     }
 
     /**
@@ -66,6 +77,25 @@ public class EntityRoundEnvironment extends AbstractRoundEnvironment {
             });
 
         return unmodifiableList(violators);
+    }
+
+    /**
+     * Accepts an entity verifying visitor and applies it to each root union entity element in this round.
+     * Returns a list containing entity elements that did not pass verification.
+     */
+    public List<ViolatingElement> acceptUnionEntityVisitor(final AbstractEntityVerifyingVisitor visitor) {
+        final List<ViolatingElement> violators = new LinkedList<>();
+
+        listUnionEntities().stream()
+            .map(entity -> visitor.visitEntity(entity))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .forEach(ve -> {
+                ve.printMessage(messager);
+                violators.add(ve);
+            });
+
+        return violators;
     }
 
     /**
