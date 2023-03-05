@@ -125,16 +125,6 @@ public class MetaModelFinderTest {
         assertFalse(finder.isSameType(elt.asType(), PersistentEntityMetaModelAliased.class));
     }
 
-//    @Test
-//    public void findEntityMetaModelFields_returns_a_list_of_declared_instance_fields_that_refer_to_meta_models() {
-//        final MetaModelElement mmWithAdjacentMetaModels = metaModelFinder.findMetaModel(EntityWithEntityTypedAndOrdinaryPropsMetaModel.class);
-//        assertEquals(List.of("entity1", "entity2"),
-//                metaModelFinder.findEntityMetaModelFields(mmWithAdjacentMetaModels).stream().map(varElt -> varElt.getSimpleName().toString()).toList());
-//
-//        final MetaModelElement mmSink = metaModelFinder.findMetaModel(EntityWithOrdinaryPropsMetaModel.class);
-//        assertEquals(List.of(), metaModelFinder.findEntityMetaModelFields(mmSink));
-//    }
-//    
     @Test
     public void listMetaModelHierarchy_returns_a_hierarchy_of_meta_model_elements() {
         final BiConsumer<Stream<Class<? extends EntityMetaModel>>, Class<? extends EntityMetaModel>> assertor = 
