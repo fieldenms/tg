@@ -51,6 +51,7 @@ import com.squareup.javapoet.TypeVariableName;
 import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderException;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileManager;
+import ua.com.fielden.platform.processors.test_utils.exceptions.CompilationException;
 import ua.com.fielden.platform.utils.CollectionUtil;
 
 /**
@@ -718,7 +719,7 @@ public class ElementFinderTest {
      * <p>
      * {@code typeSpecs} are assumed to reside in an unnamed package.
      *
-     * @throws RuntimeException if an exception was thrown during annotation processing
+     * @throws CompilationException if an exception was thrown during annotation processing
      */
     private void processAndEvaluate(final Collection<TypeSpec> typeSpecs, final Consumer<ElementFinder> consumer) {
         final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
@@ -736,7 +737,7 @@ public class ElementFinderTest {
                 consumer.accept(new ElementFinder(procEnv.getElementUtils(), procEnv.getTypeUtils())));
             assertTrue("Processing of sources failed.", success);
         } catch (final Throwable t) {
-            throw new RuntimeException(t);
+            throw new CompilationException(t);
         } finally {
             comp.printDiagnostics();
         }
