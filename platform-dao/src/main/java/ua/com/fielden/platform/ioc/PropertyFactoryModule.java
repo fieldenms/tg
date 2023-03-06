@@ -48,8 +48,8 @@ public class PropertyFactoryModule extends TransactionalModule {
     protected void configure() {
         super.configure();
         bind(EntityFactory.class).toInstance(entityFactory);
-        // bind provider for default entity controller
-        bind(ICompanionObjectFinder.class).to(DefaultCompanionObjectFinderImpl.class);
+        // bind provider for the default CO finder in singleton scope
+        bind(ICompanionObjectFinder.class).to(DefaultCompanionObjectFinderImpl.class).in(Singleton.class);
         // bind property factory
         bind(IMetaPropertyFactory.class).to(DefaultMetaPropertyFactory.class).in(Singleton.class);
         // bind entity aggregates DAO

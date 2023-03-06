@@ -89,7 +89,7 @@ public class ElementFinder {
      * @throws ElementFinderException if no coresponding type element was found
      */
     public TypeElement getTypeElement(final String name) {
-        final TypeElement elt = TypeElementCache.getInstance().getTypeElement(elements, name);
+        final TypeElement elt = TypeElementCache.getTypeElement(elements, name);
         if (elt == null) {
             throw new ElementFinderException("No type element was found for type [%s]".formatted(name));
         }

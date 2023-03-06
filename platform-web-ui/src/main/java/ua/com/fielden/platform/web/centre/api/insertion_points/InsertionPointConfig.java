@@ -2,6 +2,9 @@ package ua.com.fielden.platform.web.centre.api.insertion_points;
 
 import static java.util.Optional.empty;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
@@ -19,6 +22,7 @@ public class InsertionPointConfig {
     private final EntityActionConfig insertionPointAction;
     private boolean preferred = false;
     private boolean noResizing = false;
+    private final List<EntityActionConfig> actions = new ArrayList<>();
     private Optional<IToolbarConfig> toolbar = empty();
 
     /**
@@ -69,5 +73,15 @@ public class InsertionPointConfig {
 
     public Optional<IToolbarConfig> getToolbar() {
         return toolbar;
+    }
+
+    public InsertionPointConfig setActions(final List<EntityActionConfig> actions) {
+        this.actions.clear();
+        this.actions.addAll(actions);
+        return this;
+    }
+
+    public List<EntityActionConfig> getActions() {
+        return Collections.unmodifiableList(actions);
     }
 }

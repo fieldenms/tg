@@ -270,8 +270,7 @@ public class MetaModelLifecycleTest {
     }
 
     private static boolean isActiveMetaModel(final MetaModelElement mme) {
-        return mme.getKind() == ElementKind.CLASS;
+        return mme.getKind().equals(ElementKind.CLASS);
     }
-
 
 }
