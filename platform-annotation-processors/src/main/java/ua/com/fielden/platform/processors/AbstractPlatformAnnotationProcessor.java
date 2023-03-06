@@ -61,10 +61,6 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
     /** Indicates whether the last round of processing initial inputs has already been passed. Makes sense during incremental compilation. */
     private boolean pastLastRound;
 
-    /**
-     * The processor-specific options passed to the annotation processing tool.
-     */
-    protected Map<String, String> options;
     private static final String CACHE_STATS_OPTION = "cacheStats";
     private boolean reportCacheStats = false;
 
@@ -76,11 +72,11 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
         this.filer = processingEnv.getFiler();
         this.elementUtils = processingEnv.getElementUtils();
         this.typeUtils = processingEnv.getTypeUtils();
-        this.options = processingEnv.getOptions();
         this.roundNumber = this.batchRoundNumber = 0; 
         this.pastLastRound = false;
 
-        if (!this.options.isEmpty()) {
+        final Map<String, String> options = processingEnv.getOptions();
+        if (!options.isEmpty()) {
             printNote("Options: " + options);
             parseOptions(options);
         }
