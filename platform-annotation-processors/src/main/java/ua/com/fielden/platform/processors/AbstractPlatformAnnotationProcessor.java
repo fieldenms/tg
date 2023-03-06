@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.processors;
 
+import static java.lang.Boolean.parseBoolean;
 import static java.util.concurrent.TimeUnit.MILLISECONDS;
 import static java.util.stream.Collectors.joining;
 import static javax.tools.Diagnostic.Kind.NOTE;
@@ -60,7 +61,9 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
     /** Indicates whether the last round of processing initial inputs has already been passed. Makes sense during incremental compilation. */
     private boolean pastLastRound;
 
-    // options
+    /**
+     * The processor-specific options passed to the annotation processing tool.
+     */
     protected Map<String, String> options;
     private static final String CACHE_STATS_OPTION = "cacheStats";
     private boolean reportCacheStats = false;
@@ -91,16 +94,17 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
 
     @Override
     public Set<String> getSupportedOptions() {
-        return Set.of("cacheStats");
+        return Set.of(CACHE_STATS_OPTION);
     }
 
     /**
      * Performs parsing of options that were passed to this processor.
      * Subclasses might wish to call the super implementation when overriding this method.
+     *
      * @param options
      */
     protected void parseOptions(final Map<String, String> options) { 
-        if ("true".equals(options.get(CACHE_STATS_OPTION))) {
+        if (parseBoolean(options.get(CACHE_STATS_OPTION))) {
             reportCacheStats = true;
             TypeElementCache.recordStats();
         }
