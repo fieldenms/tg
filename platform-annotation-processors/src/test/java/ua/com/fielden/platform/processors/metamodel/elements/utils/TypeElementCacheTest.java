@@ -32,18 +32,17 @@ public class TypeElementCacheTest {
     @Rule public CompilationRule rule1 = new CompilationRule();
     @Rule public CompilationRule rule2 = new CompilationRule();
 
-    private TypeElementCache cache = TypeElementCache.getInstance();
 
     @After
     public void after() {
         // clear the cache after each @Test to achieve test isolation
-        cache.clear();
+        TypeElementCache.clear();
     }
 
     @Test
     public void getTypeElement_returns_the_expected_element() {
         final Consumer<Elements> assertor = (elements) -> {
-            final TypeElement objectElt = cache.getTypeElement(elements, Object.class.getCanonicalName());
+            final TypeElement objectElt = TypeElementCache.getTypeElement(elements, Object.class.getCanonicalName());
             assertNotNull(objectElt);
             assertSame(objectElt, elements.getTypeElement(Object.class.getCanonicalName()));
         };
@@ -56,10 +55,10 @@ public class TypeElementCacheTest {
     public void elements_are_cached_upon_retrieval() {
         final Elements elements = rule1.getElements();
 
-        final TypeElement objectElt = cache.getTypeElement(elements, Object.class.getCanonicalName());
+        final TypeElement objectElt = TypeElementCache.getTypeElement(elements, Object.class.getCanonicalName());
         assertNotNull(objectElt);
 
-        final Map<String, TypeElement> cacheView = cache.cacheViewFor(elements).orElseThrow();
+        final Map<String, TypeElement> cacheView = TypeElementCache.cacheViewFor(elements).orElseThrow();
         assertEquals("Element should have been cached.", Set.of(Object.class.getCanonicalName()), cacheView.keySet());
         final TypeElement cachedObjectElt = cacheView.get(Object.class.getCanonicalName());
         assertNotNull(cachedObjectElt);
@@ -70,10 +69,10 @@ public class TypeElementCacheTest {
     public void getTypeElement_returns_and_caches_null_if_no_element_was_found() {
         final Elements elements = rule1.getElements();
 
-        final TypeElement stubElt = cache.getTypeElement(elements, "stub");
+        final TypeElement stubElt = TypeElementCache.getTypeElement(elements, "stub");
         assertNull(stubElt);
 
-        final Map<String, TypeElement> cacheView = cache.cacheViewFor(elements).orElseThrow();
+        final Map<String, TypeElement> cacheView = TypeElementCache.cacheViewFor(elements).orElseThrow();
         assertEquals(Set.of("stub"), cacheView.keySet());
         assertNull(cacheView.get("stub"));
     }
@@ -81,25 +80,25 @@ public class TypeElementCacheTest {
     @Test
     public void different_instances_of_Elements_have_independent_caches() {
         final Elements elements1 = rule1.getElements();
-        cache.getTypeElement(elements1, Object.class.getCanonicalName());
-        cache.getTypeElement(elements1, String.class.getCanonicalName());
+        TypeElementCache.getTypeElement(elements1, Object.class.getCanonicalName());
+        TypeElementCache.getTypeElement(elements1, String.class.getCanonicalName());
 
         final Elements elements2 = rule2.getElements();
-        cache.getTypeElement(elements2, List.class.getCanonicalName());
+        TypeElementCache.getTypeElement(elements2, List.class.getCanonicalName());
 
-        final Map<String, TypeElement> cacheView1 = cache.cacheViewFor(elements1).orElseThrow();
+        final Map<String, TypeElement> cacheView1 = TypeElementCache.cacheViewFor(elements1).orElseThrow();
         assertEquals(Set.of(Object.class.getCanonicalName(), String.class.getCanonicalName()), cacheView1.keySet());
 
-        final Map<String, TypeElement> cacheView2 = cache.cacheViewFor(elements2).orElseThrow();
+        final Map<String, TypeElement> cacheView2 = TypeElementCache.cacheViewFor(elements2).orElseThrow();
         assertNotSame(cacheView1, cacheView2);
         assertEquals(Set.of(List.class.getCanonicalName()), cacheView2.keySet());
     }
 
     @Test
     public void elements_with_same_names_produced_by_different_instances_of_Elements_are_not_same_nor_equal() {
-        final TypeElement objectElt1 = cache.getTypeElement(rule1.getElements(), Object.class.getCanonicalName());
+        final TypeElement objectElt1 = TypeElementCache.getTypeElement(rule1.getElements(), Object.class.getCanonicalName());
         assertNotNull(objectElt1);
-        final TypeElement objectElt2 = cache.getTypeElement(rule2.getElements(), Object.class.getCanonicalName());
+        final TypeElement objectElt2 = TypeElementCache.getTypeElement(rule2.getElements(), Object.class.getCanonicalName());
         assertNotNull(objectElt2);
 
         assertNotSame(objectElt1, objectElt2);
@@ -108,9 +107,9 @@ public class TypeElementCacheTest {
 
     @Test
     public void elements_with_same_names_produced_by_different_instances_of_Elements_cannot_be_meaningfully_compared() {
-        final TypeElement objectElt1 = cache.getTypeElement(rule1.getElements(), Object.class.getCanonicalName());
+        final TypeElement objectElt1 = TypeElementCache.getTypeElement(rule1.getElements(), Object.class.getCanonicalName());
         assertNotNull(objectElt1);
-        final TypeElement objectElt2 = cache.getTypeElement(rule2.getElements(), Object.class.getCanonicalName());
+        final TypeElement objectElt2 = TypeElementCache.getTypeElement(rule2.getElements(), Object.class.getCanonicalName());
         assertNotNull(objectElt2);
 
         // even though both type elements represent Object, their different origins prevent meaningful comparison

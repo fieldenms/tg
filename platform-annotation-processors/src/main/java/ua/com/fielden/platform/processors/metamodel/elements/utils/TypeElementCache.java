@@ -26,7 +26,7 @@ import javax.lang.model.util.Elements;
 public final class TypeElementCache {
 
     private static boolean statsEnabled = false;
-    private static TypeElementCache instance;
+    private static final TypeElementCache INSTANCE = new TypeElementCache();
 
     /** Top-level cache keyed on instances of {@link Elements} and based on reference-equality. */
     private final IdentityHashMap<Elements, Cache<String, TypeElement>> cache = new IdentityHashMap<>();
@@ -42,62 +42,53 @@ public final class TypeElementCache {
     }
 
     /**
-     * Returns the singleton instance.
-     * @return
-     */
-    public static TypeElementCache getInstance() {
-        if (instance == null) {
-            instance = new TypeElementCache();
-        }
-        return instance;
-    }
-
-    /**
      * Returns an optional describing an unmodifiable cache for the specified {@link Elements} instance. 
      * @param elements
      * @return
      */
-    protected Optional<Map<String, TypeElement>> cacheViewFor(final Elements elements) {
-        return Optional.ofNullable(cache.get(elements)).map(eltCache -> eltCache.cacheView());
+    protected static Optional<Map<String, TypeElement>> cacheViewFor(final Elements elements) {
+        return Optional.ofNullable(INSTANCE.cache.get(elements)).map(eltCache -> eltCache.cacheView());
     }
 
     /**
      * Clears this cache by first clearing all sub-caches associated with {@link Elements} instances, and then clears the top-level cache.
      * Cache statistics, if enabled, are cleared as well.
      */
-    public void clear() {
-        cache.forEach((elements, eltCache) -> eltCache.clear());
-        cache.clear();
+    public static void clear() {
+        INSTANCE.cache.forEach((elements, eltCache) -> eltCache.clear());
+        INSTANCE.cache.clear();
     }
 
     /**
      * Similar to {@link Elements#getTypeElement(CharSequence)} with the results being cached. No-match results (when {@code null} is returned)
      * are cached as well. Another distinction of this method is that in case of a multi-module application, where multiple type elements
      * have the same canonical name, it will return the first one, unlike the specification, which dictates that {@code null} be returned.
-     * 
+     *
      * @param elements the {@link Elements} instance to use for lookup
      * @param name canonical name of the type element to find
      * @return the named type element or {@code null} if there was no matches
      */
-    public TypeElement getTypeElement(final Elements elements, final String name) {
+    public static TypeElement getTypeElement(final Elements elements, final String name) {
         Objects.requireNonNull(elements, "Argument elements cannot be null.");
         Objects.requireNonNull(name, "Argument name cannot be null.");
-        final var elementCache = getCache(elements);
+        final var elementCache = INSTANCE.getCache(elements);
         return elementCache.get(name, () -> elements.getAllTypeElements(name).stream().findFirst().orElse(null));
     }
 
     /**
      * Returns an unmodifiable view of the map containing statistics about type element caches.
      * Each cache's statistics is represented by a map keyed on type element names that map to their respective hit counts.
+     *
      * @return
      */
-    public Map<Elements, Map<String, Long>> getStats() {
-        return cache.entrySet().stream()
+    public static Map<Elements, Map<String, Long>> getStats() {
+        return INSTANCE.cache.entrySet().stream()
                 .collect(Collectors.toUnmodifiableMap(entry -> entry.getKey(), entry -> entry.getValue().getStats()));
     }
 
     /**
      * Returns the cache associated with the given instance of {@link Elements}. If a cache doesn't exist yet, it will be created.
+     *
      * @param elements
      * @return
      */

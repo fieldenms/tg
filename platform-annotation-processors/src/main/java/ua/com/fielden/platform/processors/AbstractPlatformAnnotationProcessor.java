@@ -166,7 +166,7 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
      */
     protected void postProcess() {
         if (reportCacheStats) {
-            printNote("Type element cache statistics: " + TypeElementCache.getInstance().getStats());
+            printNote("Type element cache statistics: " + TypeElementCache.getStats());
         }
     }
 
