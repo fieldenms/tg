@@ -23,14 +23,14 @@ import org.junit.Test;
 import com.google.testing.compile.CompilationRule;
 
 /**
- * A test class for {@link TypeElementCache}.
+ * A test case for {@link TypeElementCache}.
  *
  * @author TG Team
  */
 public class TypeElementCacheTest {
 
-    @Rule public CompilationRule rule1 = new CompilationRule();
-    @Rule public CompilationRule rule2 = new CompilationRule();
+    @Rule public final CompilationRule rule1 = new CompilationRule();
+    @Rule public final CompilationRule rule2 = new CompilationRule();
 
 
     @After
