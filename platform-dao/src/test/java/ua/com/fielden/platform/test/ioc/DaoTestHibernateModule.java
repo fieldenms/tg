@@ -61,10 +61,10 @@ import ua.com.fielden.platform.security.user.UserRoleCo;
 import ua.com.fielden.platform.security.user.UserRoleDao;
 import ua.com.fielden.platform.security.user.UserSecretCo;
 import ua.com.fielden.platform.security.user.UserSecretDao;
+import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
-import ua.com.fielden.platform.test.UserProviderForTesting;
 import ua.com.fielden.platform.test.domain.entities.daos.BogieDao;
 import ua.com.fielden.platform.test.domain.entities.daos.IBogieDao;
 import ua.com.fielden.platform.test.domain.entities.daos.IWagonDao;
@@ -125,7 +125,7 @@ public class DaoTestHibernateModule extends CommonFactoryModule {
         bind(IUser.class).to(UserDao.class);
         bind(UserSecretCo.class).to(UserSecretDao.class);
         // bind IUserProvider
-        bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);
+        bind(IUserProvider.class).to(ThreadLocalUserProvider.class).in(Scopes.SINGLETON);
 
         bind(EntityCentreConfigCo.class).to(EntityCentreConfigDao.class);
         bind(EntityCentreAnalysisConfigCo.class).to(EntityCentreAnalysisConfigDao.class);
