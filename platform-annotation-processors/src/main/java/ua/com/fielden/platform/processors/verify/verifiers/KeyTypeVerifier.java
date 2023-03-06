@@ -73,7 +73,7 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
             final List<EntityElement> entitiesMissingKeyType = roundEnv.getRootElements().stream()
                     .filter(el -> elementFinder.isTopLevelClass(el))
                     .map(el -> (TypeElement) el)
-                    .filter(el -> entityFinder.isEntityType(el))
+                    .filter(el -> entityFinder.isEntityType(el.asType()))
                     .map(el -> entityFinder.newEntityElement(el))
                     // include only entity types missing @KeyType (whole type hierarchy is traversed)
                     .filter(el -> entityFinder.findAnnotation(el, AT_KEY_TYPE_CLASS).isEmpty())
@@ -105,14 +105,14 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
                 AbstractFunEntityForDataExport.class);
 
         private boolean isOneOfAbstracts(final TypeElement element) {
-            return ABSTRACTS.stream().anyMatch(clazz -> elementFinder.equals(element, clazz));
+            return ABSTRACTS.stream().anyMatch(clazz -> elementFinder.isSameType(element, clazz));
         }
 
         public boolean verify(final RoundEnvironment roundEnv) {
             boolean allPassed = true;
             final List<EntityElement> entitiesWithKeyType = roundEnv.getElementsAnnotatedWith(AT_KEY_TYPE_CLASS).stream()
                     .map(el -> entityFinder.newEntityElement((TypeElement) el))
-                    .filter(el -> isOneOfAbstracts(entityFinder.getParent(el)))
+                    .filter(el -> entityFinder.getParent(el).map(this::isOneOfAbstracts).orElse(false))
                     .toList();
 
             for (final EntityElement el : entitiesWithKeyType) {
@@ -155,12 +155,13 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
                     .toList();
 
             for (final EntityElement entity : entitiesWithDeclaredKeyType) {
-                final EntityElement parent = entityFinder.getParent(entity); 
+                final Optional<EntityElement> maybeParent = entityFinder.getParent(entity); 
 
                 // skip non-child entities and those with an abstract parent
                 // TODO handle hierarchy [non-abstract -> abstract -> non-abstract -> ...] ?
-                if (parent == null || elementFinder.isAbstract(parent)) continue;
+                if (maybeParent.map(elt -> elementFinder.isAbstract(elt)).orElse(true)) continue;
 
+                final EntityElement parent = maybeParent.get();
                 final Optional<KeyType> parentAtKeyType = entityFinder.findAnnotation(parent, AT_KEY_TYPE_CLASS);
                 // parent might be missing @KeyType, which should have been detected by KeyTypePresence verifier-part, so we ignore this case
                 if (parentAtKeyType.isEmpty()) continue;
@@ -197,14 +198,15 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
             final List<EntityElement> entities = roundEnv.getRootElements().stream()
                     .filter(el -> elementFinder.isTopLevelClass(el))
                     .map(el -> (TypeElement) el)
-                    .filter(el -> entityFinder.isEntityType(el))
+                    .filter(el -> entityFinder.isEntityType(el.asType()))
                     .map(el -> entityFinder.newEntityElement(el))
                     .toList();
             
             for (final EntityElement entity : entities) {
-                final PropertyElement keyProp = entityFinder.findDeclaredProperty(entity, AbstractEntity.KEY);
-                if (keyProp == null) continue;
+                final Optional<PropertyElement> maybeKeyProp = entityFinder.findDeclaredProperty(entity, AbstractEntity.KEY);
+                if (maybeKeyProp.isEmpty()) continue;
 
+                final PropertyElement keyProp = maybeKeyProp.get();
                 final Optional<TypeMirror> maybeKeyType = entityFinder.determineKeyType(entity);
                 // missing @KeyType could mean an abstract entity or an invalid definition, either way this verifier has other responsibilities
                 if (maybeKeyType.isEmpty()) continue;
@@ -230,23 +232,24 @@ public class KeyTypeVerifier extends AbstractComposableVerifier {
     }
 
     private void printMessageWithAnnotationHint(final Kind kind, final String msg, final Element element, final Class<? extends Annotation> annotationType, final String annotationElementName) {
-        final AnnotationMirror annotMirror = elementFinder.getElementAnnotationMirror(element, annotationType);
-        if (annotMirror == null) {
+        final Optional<? extends AnnotationMirror> maybeMirror = elementFinder.findAnnotationMirror(element, annotationType);
+        if (maybeMirror.isEmpty()) {
             // simplest form of message that is present directly on the element
             messager.printMessage(kind, msg, element);
         }
         else {
-            final Optional<AnnotationValue> annotElementValue = elementFinder.getAnnotationValue(annotMirror, annotationElementName);
+            final AnnotationMirror mirror = maybeMirror.get();
+            final Optional<AnnotationValue> annotElementValue = elementFinder.findAnnotationValue(mirror, annotationElementName);
             if (annotElementValue.isPresent()) {
                 // fullest form of error message present on the element's annotation element value
-                messager.printMessage(kind, msg, element, annotMirror, annotElementValue.get());
+                messager.printMessage(kind, msg, element, mirror, annotElementValue.get());
             }
             else {
                 // useful message for debugging
                 messager.printMessage(Kind.OTHER, "ANOMALY: AnnotationValue [%s.%s()] was absent. Element: %s. Annotation: %s."
-                        .formatted(annotMirror.getAnnotationType().asElement().getSimpleName(), annotationElementName, element.getSimpleName(), annotMirror.toString()));
+                        .formatted(mirror.getAnnotationType().asElement().getSimpleName(), annotationElementName, element.getSimpleName(), mirror.toString()));
                 // error message present on the element's annotation
-                messager.printMessage(kind, msg, element, annotMirror);
+                messager.printMessage(kind, msg, element, mirror);
             }
         }
     }

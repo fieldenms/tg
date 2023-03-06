@@ -17,7 +17,7 @@ import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
  * @author TG Team
  */
 public abstract class AbstractVerifier implements Verifier {
-    
+
     protected ProcessingEnvironment processingEnv;
     protected Messager messager;
     protected Types typeUtils;
@@ -32,12 +32,12 @@ public abstract class AbstractVerifier implements Verifier {
         this.elementFinder = new ElementFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
         this.entityFinder = new EntityFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
     }
-    
+
     /**
      * Returns a set of elements that did not pass verification.
      */
     public Set<Element> getViolatingElements() {
         return this.violatingElements;
     }
-    
+
 }

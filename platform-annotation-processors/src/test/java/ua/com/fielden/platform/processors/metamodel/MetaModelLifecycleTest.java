@@ -18,6 +18,7 @@ import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
@@ -156,10 +157,10 @@ public class MetaModelLifecycleTest {
                     assertNotNull(te);
                     // its meta-model exists and is active
                     final Optional<MetaModelElement> mme = mmFinder.findMetaModelForEntity(entityFinder.newEntityElement(te));
-                    assertTrue(mme.isPresent() && mmFinder.isActive(mme.get()));
+                    assertTrue(mme.isPresent() && isActiveMetaModel(mme.get()));
                     // its aliased meta-model exists and is active
                     final Optional<MetaModelElement> mmeAliased = mmFinder.findMetaModelAliased(mme.get());
-                    assertTrue(mmeAliased.isPresent() && mmFinder.isActive(mmeAliased.get()));
+                    assertTrue(mmeAliased.isPresent() && isActiveMetaModel(mmeAliased.get()));
                     // MetaModels class contains this meta-model and its aliased version
                     final Optional<MetaModelsElement> mmse = mmFinder.findMetaModelsElement();
                     assertTrue(mmse.isPresent() && mmse.get().getMetaModels().containsAll(List.of(mme.get(), mmeAliased.get())));
@@ -182,18 +183,18 @@ public class MetaModelLifecycleTest {
                     final MetaModelFinder mmFinder = new MetaModelFinder(procEnv.getElementUtils(), procEnv.getTypeUtils());
 
                     // find meta-model by its name, since its entity may not exist
-                    final String metaModelQualName = mmFinder.resolveMetaModelName(entityPkgName, entitySimpleName);
+                    final String metaModelQualName = MetaModelFinder.resolveMetaModelName(entityPkgName, entitySimpleName);
                     final TypeElement mmeTe = procEnv.getElementUtils().getTypeElement(metaModelQualName);
                     assertNotNull(mmeTe);
                     final MetaModelElement mme = mmFinder.newMetaModelElement(mmeTe);
-                    assertFalse(mmFinder.isActive(mme));
+                    assertFalse(isActiveMetaModel(mme));
 
                     // same for the aliased meta-model
-                    final String aliasedMetaModelQualName = mmFinder.resolveAliasedMetaModelName(entityPkgName, entitySimpleName);
+                    final String aliasedMetaModelQualName = MetaModelFinder.resolveAliasedMetaModelName(entityPkgName, entitySimpleName);
                     final TypeElement alMmeTe = procEnv.getElementUtils().getTypeElement(aliasedMetaModelQualName);
                     assertNotNull(alMmeTe);
                     final MetaModelElement alMme = mmFinder.newMetaModelElement(alMmeTe);
-                    assertFalse(mmFinder.isActive(alMme));
+                    assertFalse(isActiveMetaModel(alMme));
 
                     // make sure that MetaModels doesn't contain these two
                     final MetaModelsElement mmse = mmFinder.findMetaModelsElement()
@@ -266,6 +267,10 @@ public class MetaModelLifecycleTest {
      */
     private static JavaFileObject toJfo(final TypeSpec typeSpec, final String pkgName) {
         return JavaFile.builder(pkgName, typeSpec).build().toJavaFileObject();
+    }
+
+    private static boolean isActiveMetaModel(final MetaModelElement mme) {
+        return mme.getKind().equals(ElementKind.CLASS);
     }
 
 }

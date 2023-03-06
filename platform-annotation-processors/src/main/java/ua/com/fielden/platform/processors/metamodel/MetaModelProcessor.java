@@ -4,12 +4,10 @@ import static java.lang.String.format;
 import static java.lang.String.join;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.empty;
-import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.METAMODELS_CLASS_PKG_NAME;
-import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.METAMODELS_CLASS_QUAL_NAME;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.METAMODELS_CLASS_SIMPLE_NAME;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_SUPERCLASS_CLASSNAME;
 
@@ -42,9 +40,7 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
-import javax.tools.Diagnostic.Kind;
 
 import org.apache.commons.lang3.StringUtils;
 
@@ -61,7 +57,6 @@ import com.squareup.javapoet.WildcardTypeName;
 import ua.com.fielden.platform.annotations.metamodel.MetaModelForType;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.NoKey;
-import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
 import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
@@ -69,8 +64,10 @@ import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelsElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
+import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderException;
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelAliasedException;
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntitySourceDefinitionException;
+import ua.com.fielden.platform.processors.metamodel.exceptions.MetaModelProcessorException;
 import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
@@ -87,7 +84,6 @@ import ua.com.fielden.platform.utils.Pair;
 public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
 
     private static final String INDENT = "    ";
-    private static final String CLASS_SIMPLE_NAME = MetaModelProcessor.class.getSimpleName();
     private ElementFinder elementFinder;
     private EntityFinder entityFinder;
     private MetaModelFinder metaModelFinder;
@@ -110,9 +106,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
     public boolean processRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
         // we need the meta-model entry point if it exists, as it provides a definitive list of meta-models that have been generated previously
         // this information is used for processing optimisation and identification of meta-models that should be deactivated
-        final Optional<MetaModelsElement> maybeMetaModelsElement = ofNullable(elementUtils.getTypeElement(METAMODELS_CLASS_QUAL_NAME))
-                .map(metaModelsTypeElement -> new MetaModelsElement(metaModelsTypeElement,
-                                                                    metaModelFinder.findMetaModels(metaModelsTypeElement)));
+        final Optional<MetaModelsElement> maybeMetaModelsElement = metaModelFinder.findMetaModelsElement();
         
         // meta-models need to be generated at every processing round for the matching entities, which where included into the round by the compiler
         // except those that were already generated on one of the subsequent rounds during the current compilation process
@@ -127,12 +121,13 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
                 // if the MetaModels class does not yet exist, let's generate it to include meta-models, which were generated during this first round 
                 writeMetaModelsClass(generatedMetaModels);
             } else {
+                final MetaModelsElement metaModelsElt = maybeMetaModelsElement.get();
                 // if MetaModels class already exists, we need to analyse its content and identify meta-models that represent "inactive" entities -- those that either no longer exist or are not considered to be domain entities.
                 // such meta-models need to be regenerated as empty and abstract classes and MetaModels should be re-generated without those fields
-                printNote("Entry point [%s] already exists. It needs to be processed and re-generated.", METAMODELS_CLASS_QUAL_NAME);
+                printNote("Entry point [%s] already exists. It needs to be processed and re-generated.", metaModelsElt.getQualifiedName());
 
                 // analyse fields in the MetaModels class to identify meta-models that do not represent domain entities any longer
-                final Set<MetaModelElement> inactiveMetaModels = findInactiveMetaModels(maybeMetaModelsElement.get());
+                final Set<MetaModelElement> inactiveMetaModels = findInactiveMetaModels(metaModelsElt);
 
                 printNote("Inactive meta-models: [%s]", inactiveMetaModels.stream().map(MetaModelElement::getSimpleName).collect(joining(", ")));
 
@@ -247,11 +242,11 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         try {
             javaFile.writeTo(filer);
         } catch (final IOException ex) {
-            messager.printMessage(Kind.WARNING, ex.getMessage());
+            printWarning(ex.getMessage());
             return false;
         }
 
-        printNote("Generated empty meta-model %s.", mme.getSimpleName());
+        printNote("Generated empty meta-model [%s].", mme.getSimpleName());
         return true;
     }
 
@@ -262,19 +257,24 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
      * @return a set of inactive meta-models; could be empty
      */
     private Set<MetaModelElement> findInactiveMetaModels(final MetaModelsElement metaModelsElement) {
-        printNote("Verifying %s.", metaModelsElement.getSimpleName());
+        printNote("Verifying [%s].", metaModelsElement.getSimpleName());
         final Set<MetaModelElement> inactive = new LinkedHashSet<>();
+
         for (final MetaModelElement mme: metaModelsElement.getMetaModels()) {
-            final EntityElement entity = entityFinder.findEntityForMetaModel(mme);
-            if (entity == null || !entityFinder.isEntityThatNeedsMetaModel(entity)) {
-                if (entity != null) {
-                    printNote("Entity %s is no longer a domain entity.", entity.getSimpleName());
-                } else {
-                    printNote("Entity for %s does not exist anymore.", mme.getSimpleName());
-                }
+            final Optional<EntityElement> maybeEntity = entityFinder.findEntityForMetaModel(mme);
+
+            if (maybeEntity.isEmpty()) {
+                printNote(format("Entity for [%s] does not exist anymore.", mme.getSimpleName()));
                 inactive.add(mme);
+            } else {
+                final EntityElement entity = maybeEntity.get();
+                if (!entityFinder.isEntityThatNeedsMetaModel(entity)) {
+                    printNote(format("Entity [%s] is no longer a domain entity.", entity.getSimpleName()));
+                    inactive.add(mme);
+                }
             }
         }
+
         return inactive;
     }
 
@@ -313,7 +313,8 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         final String thisMetaModelPkgName = mmc.getPackageName();
 
         final EntityElement entityElement = mmc.getEntityElement();
-        final EntityElement entitySupertype = entityFinder.getParent(entityElement);
+        // can safely unpack optional, since entityElement is guaranteed to extend something
+        final EntityElement entitySupertype =  entityFinder.getParent(entityElement).orElseThrow();
         final Optional<EntityElement> maybeMetaModelledSupertype = Optional.ofNullable(entityFinder.isEntityThatNeedsMetaModel(entitySupertype) ? entitySupertype : null);
 
         final Collection<PropertyElement> properties;
@@ -541,7 +542,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         try {
             metaModelJavaFile.writeTo(filer);
         } catch (final IOException ex) {
-            messager.printMessage(Kind.WARNING, ex.getMessage());
+            printWarning(ex.getMessage());
             return false;
         }
         
@@ -594,7 +595,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         try {
             metaModelAliasedJavaFile.writeTo(filer);
         } catch (final IOException ex) {
-            messager.printMessage(Kind.WARNING, ex.getMessage());
+            printWarning(ex.getMessage());
             return false;
         }
 
@@ -615,8 +616,10 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         if (maybeMetaModelledSupertype.isPresent()) {
             // declared properties + property key
             properties.addAll(entityFinder.processProperties(entityFinder.findDeclaredProperties(entity), entity));
-            final VariableElement veKey = elementFinder.findField(maybeMetaModelledSupertype.get().element(), AbstractEntity.KEY);
-            properties.add(new PropertyElement(veKey));
+            // "key" is guaranteed to exist
+            final PropertyElement keyElt = entityFinder.findProperty(maybeMetaModelledSupertype.get(), AbstractEntity.KEY)
+                    .orElseThrow(() -> new ElementFinderException("Property [%s] was not found in [%s].".formatted(AbstractEntity.KEY, entity)));
+            properties.add(keyElt);
         } else {
             properties.addAll(entityFinder.processProperties(entityFinder.findProperties(entity), entity));
         }
@@ -718,7 +721,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         final List<String> annotationsStrings = elementFinder.getFieldAnnotations(prop).stream()
                 .map(annotMirror -> {
                     final StringBuilder builder = new StringBuilder();
-                    builder.append(format("{@literal @}{@link %s}", elementFinder.getAnnotationMirrorSimpleName(annotMirror)));
+                    builder.append(format("{@literal @}{@link %s}", annotMirror.getAnnotationType().asElement().getSimpleName().toString()));
                     final Map<? extends ExecutableElement, ? extends AnnotationValue> valuesMap = annotMirror.getElementValues();
                     if (!valuesMap.isEmpty()) {
                         builder.append("(");
@@ -791,7 +794,9 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
                     .sorted().collect(joining(", ")));
             
             for (final MetaModelElement mme: activeUnchangedMetaModels) {
-                final EntityElement entity = entityFinder.findEntityForMetaModel(mme);
+                // active meta-model must have a coresponding entity
+                final EntityElement entity = entityFinder.findEntityForMetaModel(mme)
+                        .orElseThrow(() -> new MetaModelProcessorException("Missing entity for active meta-model [%s]".formatted(mme.getSimpleName())));
                 final String fieldName = nameFieldForMetaModel(entity.getSimpleName().toString());
                 // add a method for an aliased meta-model
                 if (metaModelFinder.isMetaModelAliased(mme)) {
@@ -827,7 +832,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         try {
             javaFile.writeTo(filer);
         } catch (final IOException ex) {
-            messager.printMessage(Kind.WARNING, ex.getMessage());
+            printWarning(ex.getMessage());
             return;
         }
 
