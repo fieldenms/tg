@@ -253,8 +253,6 @@ public class MetaModelLifecycleTest {
         } catch (final Throwable ex) {
             ex.printStackTrace();
             return false;
-        } finally {
-            System.out.println(compilation.getDiagnostics().stream().map(Diagnostic::toString).collect(Collectors.joining("\n")));
         }
     }
 
