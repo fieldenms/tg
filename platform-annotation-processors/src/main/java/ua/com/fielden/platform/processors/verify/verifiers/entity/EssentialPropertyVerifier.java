@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
+import static javax.tools.Diagnostic.Kind.NOTE;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asDeclaredType;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.getSimpleName;
 
@@ -12,6 +13,7 @@ import java.util.Optional;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
+import javax.tools.Diagnostic;
 import javax.tools.Diagnostic.Kind;
 
 import ua.com.fielden.platform.entity.annotation.Observable;
@@ -169,7 +171,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
 
             @Override
             public Optional<ViolatingElement> visitProperty(final EntityElement entity, final PropertyElement property) {
-                System.out.println(property);
+                messager.printMessage(NOTE, "Visiting [%s], property [%s].".formatted(entity, property));
                 if (!entityFinder.isCollectionalProperty(property)) {
                     return Optional.empty();
                 }
@@ -278,7 +280,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                     // collection types accept a single type argument
                     if (!typeArguments.isEmpty()) {
                         final TypeMirror typeArg = typeArguments.get(0);
-                        System.out.println("Type argument: " + typeArg);
+                        messager.printMessage(NOTE, "Type argument: " + typeArg);
 
                         if (isAnyOf(typeArg, ORDINARY_TYPE_ARGS) || isAnyOf(typeArg, PLATFORM_TYPES)) {
                             return Optional.empty();
