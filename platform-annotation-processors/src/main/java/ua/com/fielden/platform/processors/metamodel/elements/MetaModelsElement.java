@@ -1,10 +1,8 @@
 package ua.com.fielden.platform.processors.metamodel.elements;
 
-import static java.util.Collections.unmodifiableSet;
-
 import java.util.Collection;
+import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 
 import javax.lang.model.element.TypeElement;
 
@@ -15,15 +13,15 @@ import javax.lang.model.element.TypeElement;
  *
  */
 public final class MetaModelsElement extends AbstractForwardingTypeElement {
-    private final Set<MetaModelElement> metaModels;
+    private final List<MetaModelElement> metaModels;
 
     public MetaModelsElement(final TypeElement typeElement, final Collection<MetaModelElement> metaModelElements) {
         super(typeElement);
-        this.metaModels = Set.copyOf(metaModelElements);
+        this.metaModels = List.copyOf(metaModelElements);
     }
 
-    public Set<MetaModelElement> getMetaModels() {
-        return unmodifiableSet(metaModels);
+    public List<MetaModelElement> getMetaModels() {
+        return metaModels;
     }
 
     @Override

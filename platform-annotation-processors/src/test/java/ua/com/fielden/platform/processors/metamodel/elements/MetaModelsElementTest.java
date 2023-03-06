@@ -7,8 +7,8 @@ import java.util.Set;
 
 import javax.lang.model.element.TypeElement;
 
-import org.junit.Before;
-import org.junit.Rule;
+import org.junit.BeforeClass;
+import org.junit.ClassRule;
 import org.junit.Test;
 
 import com.google.testing.compile.CompilationRule;
@@ -26,12 +26,13 @@ import ua.com.fielden.platform.security.user.User;
  */
 public class MetaModelsElementTest {
 
-    public @Rule CompilationRule rule = new CompilationRule();
-    private MetaModelFinder metaModelFinder;
-    private MetaModelsElement metaModelsElement;
+    @ClassRule
+    public static CompilationRule rule = new CompilationRule();
+    private static MetaModelFinder metaModelFinder;
+    private static MetaModelsElement metaModelsElement;
 
-    @Before
-    public void setup() {
+    @BeforeClass
+    public static void setupOnce() {
         metaModelFinder = new MetaModelFinder(rule.getElements(), rule.getTypes());
         final TypeElement typeElement = rule.getElements().getTypeElement(MetaModels.class.getCanonicalName());
         metaModelsElement = new MetaModelsElement(typeElement, metaModelFinder.findMetaModels(typeElement));
@@ -42,9 +43,10 @@ public class MetaModelsElementTest {
         assertEquals(Set.of(AttachmentMetaModel.class.getSimpleName(), UserMetaModel.class.getSimpleName()), metaModelsElement.getMetaModels().stream().map(mme -> mme.getSimpleName().toString()).collect(toSet()));
     }
 
+    // in practice this should never occur  
     @Test
-    public void meta_models_do_not_contain_duplicate_models() {
-        assertEquals(2, metaModelsElement.getMetaModels().size());
+    public void MetaModels_can_contain_duplicate_meta_models() {
+        assertEquals(3, metaModelsElement.getMetaModels().size());
     }
 
     /**
