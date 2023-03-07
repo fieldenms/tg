@@ -110,10 +110,10 @@ public abstract class AbstractVerifierTest {
                 msg -> assertTrue("No error was reported with message [%s].".formatted(msg), uniqueErrorMessages.contains(msg)));
 
         // now test for unexpected errors
-        final List<String> errorMessages = compilation.getErrors().stream().map(diag -> diag.getMessage(Locale.getDefault())).toList();
-        if (errorMessages.size() != expectedErrorMessages.size()) {
+        final int diff = compilation.getErrors().size() - expectedErrorMessages.size();
+        if (diff > 0) {
             compilation.printDiagnostics();
-            fail("Unexpected errors were reported.");
+            fail("%s unexpected error(s) were reported.".formatted(diff));
         }
 
         return compilation;
