@@ -171,7 +171,6 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
 
             @Override
             public Optional<ViolatingElement> visitProperty(final EntityElement entity, final PropertyElement property) {
-                messager.printMessage(NOTE, "Visiting [%s], property [%s].".formatted(entity, property));
                 if (!entityFinder.isCollectionalProperty(property)) {
                     return Optional.empty();
                 }
@@ -280,7 +279,6 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                     // collection types accept a single type argument
                     if (!typeArguments.isEmpty()) {
                         final TypeMirror typeArg = typeArguments.get(0);
-                        messager.printMessage(NOTE, "Type argument: " + typeArg);
 
                         if (isAnyOf(typeArg, ORDINARY_TYPE_ARGS) || isAnyOf(typeArg, PLATFORM_TYPES)) {
                             return Optional.empty();
