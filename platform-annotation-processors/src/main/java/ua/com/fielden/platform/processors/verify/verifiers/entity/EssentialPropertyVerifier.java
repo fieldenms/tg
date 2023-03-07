@@ -53,7 +53,9 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
 
     /**
      * All properties must have a coresponding accessor method with a name starting with "get" or "is".
-     * An accessor's return type must match its property type.
+     * <p>
+     * An accessor's return type must match its property type with the exception of collectional properties, where return type must be
+     * <b>assignable to</b> the property type.
      */
     static class PropertyAccessorVerifier extends AbstractEntityVerifier {
 
@@ -62,7 +64,11 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
         }
 
         public static final String errIncorrectReturnType(final String accessorName, final String propertyType) {
-            return "Accessor [%s] must have return type %s".formatted(accessorName, propertyType);
+            return "Accessor [%s] must have return %s".formatted(accessorName, propertyType);
+        }
+
+        public static final String errCollectionalIncorrectReturnType(final String accessorName, final String propertyType) {
+            return "Accessor [%s] must have return type assignable from %s".formatted(accessorName, propertyType);
         }
 
         protected PropertyAccessorVerifier(final ProcessingEnvironment processingEnv) {
@@ -90,10 +96,21 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
 
                 final ExecutableElement accessor = maybeAccessor.get();
 
-                // acessor's return type must match the property type
-                if (!elementFinder.types.isSameType(property.getType(), accessor.getReturnType())) {
-                    return Optional.of(new ViolatingElement(
-                            accessor, Kind.ERROR, errIncorrectReturnType(getSimpleName(accessor), property.getType().toString())));
+                // collectional properties
+                if (entityFinder.isCollectionalProperty(property)) {
+                    // acessor's return type must be assignable from the property type,
+                    // i.e., property type should be assignable to accessor return type
+                    if (!elementFinder.types.isAssignable(property.getType(), accessor.getReturnType())) {
+                        return Optional.of(new ViolatingElement(
+                                accessor, Kind.ERROR, errCollectionalIncorrectReturnType(getSimpleName(accessor), property.getType().toString())));
+                    }
+                }
+                else { /* other properties */
+                    // acessor's return type must match the property type
+                    if (!elementFinder.types.isSameType(accessor.getReturnType(), property.getType())) {
+                        return Optional.of(new ViolatingElement(
+                                accessor, Kind.ERROR, errIncorrectReturnType(getSimpleName(accessor), property.getType().toString())));
+                    }
                 }
 
                 return Optional.empty();
