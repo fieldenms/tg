@@ -1,8 +1,6 @@
 package ua.com.fielden.platform.web.sse.exceptions;
 
-import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
-
-public class InvalidSseUriException extends AbstractPlatformRuntimeException {
+public class InvalidSseUriException extends SseException {
     private static final long serialVersionUID = 1L;
 
     public InvalidSseUriException(final String msg) {

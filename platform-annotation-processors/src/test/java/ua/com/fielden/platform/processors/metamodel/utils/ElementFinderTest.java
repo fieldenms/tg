@@ -7,7 +7,7 @@ import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
-import static ua.com.fielden.platform.utils.CollectionUtil.isEqualContents;
+import static ua.com.fielden.platform.utils.CollectionUtil.areEqualByContents;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -51,6 +51,7 @@ import com.squareup.javapoet.TypeVariableName;
 import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderException;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileManager;
+import ua.com.fielden.platform.processors.test_utils.exceptions.CompilationException;
 import ua.com.fielden.platform.utils.CollectionUtil;
 
 /**
@@ -718,7 +719,7 @@ public class ElementFinderTest {
      * <p>
      * {@code typeSpecs} are assumed to reside in an unnamed package.
      *
-     * @throws RuntimeException if an exception was thrown during annotation processing
+     * @throws CompilationException if an exception was thrown during annotation processing
      */
     private void processAndEvaluate(final Collection<TypeSpec> typeSpecs, final Consumer<ElementFinder> consumer) {
         final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
@@ -736,7 +737,7 @@ public class ElementFinderTest {
                 consumer.accept(new ElementFinder(procEnv.getElementUtils(), procEnv.getTypeUtils())));
             assertTrue("Processing of sources failed.", success);
         } catch (final Throwable t) {
-            throw new RuntimeException(t);
+            throw new CompilationException(t);
         } finally {
             comp.printDiagnostics();
         }
@@ -750,7 +751,7 @@ public class ElementFinderTest {
     }
 
     private static void assertEqualContents(final Collection<?> c1, final Collection<?> c2) {
-        if (isEqualContents(c1, c2)) {}
+        if (areEqualByContents(c1, c2)) {}
         else {
             fail("expected:<%s> but was:<%s>".formatted(CollectionUtil.toString(c1, ", "), CollectionUtil.toString(c2, ", ")));
         }

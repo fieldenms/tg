@@ -257,7 +257,7 @@ const TgEgiMasterBehaviorImpl = {
             this._focusNextEgiElementTo(event, true, activeElement);
         }
         if (!this.saveButton._disabled) {
-            if (this.editors.some(editor => editor._invalid)) {
+            if (this.editors.some(editor => editor._invalid && !editor.isInWarning() && !editor.isWithInformative())) {
                 this._resetEgiMasterState();
                 this.focusView(); // focus invalid editor (and select it's contents if it is preferred)
             } else {
@@ -280,7 +280,7 @@ const TgEgiMasterBehaviorImpl = {
             this._focusNextEgiElementTo(event, false, activeElement);
         }
         if (!this.saveButton._disabled) {
-            if (this.editors.some(editor => editor._invalid)) {
+            if (this.editors.some(editor => editor._invalid && !editor.isInWarning() && !editor.isWithInformative())) {
                 this._resetEgiMasterState();
                 this.focusView(); // focus invalid editor (and select it's contents if it is preferred)
             } else {

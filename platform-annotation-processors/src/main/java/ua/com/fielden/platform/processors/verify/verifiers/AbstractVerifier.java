@@ -20,9 +20,9 @@ import ua.com.fielden.platform.processors.verify.ViolatingElement;
 
 /**
  * Abstract base verifier type providing common behaviour.
- * 
+ *
  * @param <RE> the type of round environment wrapper used by this verifier
- * 
+ *
  * @author TG Team
  */
 public abstract class AbstractVerifier<RE extends AbstractRoundEnvironment> implements Verifier {
@@ -45,7 +45,7 @@ public abstract class AbstractVerifier<RE extends AbstractRoundEnvironment> impl
      * Serves the same purpose as {@link #verify(RoundEnvironment)}, but is designed to be used with an implementation
      * of {@link AbstractRoundEnvironment} (see its documentation for details).
      * <p>
-     * This is the primary method to be implemented by subclasses. 
+     * This is the primary method to be implemented by subclasses.
      * @param roundEnv
      * @return
      */
@@ -75,7 +75,7 @@ public abstract class AbstractVerifier<RE extends AbstractRoundEnvironment> impl
      */
 
     protected final void printMessageWithAnnotationHint(
-            final Kind kind, final String msg, final Element element, 
+            final Kind kind, final String msg, final Element element,
             final Class<? extends Annotation> annotationType, final String annotationElementName)
     {
         final Optional<? extends AnnotationMirror> maybeMirror = elementFinder.findAnnotationMirror(element, annotationType);

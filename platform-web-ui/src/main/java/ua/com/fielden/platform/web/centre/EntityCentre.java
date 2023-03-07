@@ -1171,6 +1171,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final DomContainer rightInsertionPointsDom = new DomContainer();
         final DomContainer bottomInsertionPointsDom = new DomContainer();
         final List<String> alternativeViewsDom = new ArrayList<>();
+        //Alternative view actions should be generated into EGI's top action config list, that's why the order of alternative view actions should starts from the last index of EGI's top action + 1.
+        final AtomicInteger alternativeViewActionOrder = new AtomicInteger(this.dslDefaultConfig.getTopLevelActions().map(actions -> actions.size()).orElse(0));
         for (final InsertionPointBuilder el : insertionPointActionsElements) {
             final DomElement insertionPoint = el.render();
             el.toolbar().ifPresent(toolbar -> {
@@ -1187,7 +1189,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                 bottomInsertionPointsDom.add(insertionPoint);
             } else if (el.whereToInsert() == InsertionPoints.ALTERNATIVE_VIEW) {
                 final Optional<DomElement> switchButtons = switchViewButtons(insertionPointActionsElements, Optional.of(el));
-                alternativeViewsDom.add(insertionPoint.toString().replace(SWITCH_VIEW_ACTION_DOM, switchButtons.map(domElem -> domElem.toString()).orElse("")));
+                final Optional<DomElement> topActions = alternativeViewActions(el, importPaths, functionalActionsObjects, alternativeViewActionOrder);
+                alternativeViewsDom.add(insertionPoint.toString()
+                        .replace(SWITCH_VIEW_ACTION_DOM, switchButtons.map(domElem -> domElem.toString()).orElse(""))
+                        .replace(EGI_FUNCTIONAL_ACTION_DOM, topActions.map(domElem -> domElem.toString()).orElse("")));
             } else {
                 throw new IllegalArgumentException("Unexpected insertion point type.");
             }
@@ -1298,6 +1303,29 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         };
         logger.debug("Done.");
         return representation;
+    }
+
+    /**
+     * Generates DOM for alternative view actions. Also updates action's order, import path and action object.
+     *
+     * @param el
+     * @param importPaths
+     * @param functionalActionsObjects
+     * @param alternativeViewActionOrder
+     * @return
+     */
+    private Optional<DomElement> alternativeViewActions(final InsertionPointBuilder el, final LinkedHashSet<String> importPaths, final StringBuilder functionalActionsObjects, final AtomicInteger alternativeViewActionOrder) {
+        if (!el.getActions().isEmpty()) {
+            final DomElement domContainer = new DomContainer();
+            for (final EntityActionConfig actionConfig: el.getActions()) {
+                final FunctionalActionElement funcAction = new FunctionalActionElement(actionConfig, alternativeViewActionOrder.getAndIncrement(), FunctionalActionKind.TOP_LEVEL);
+                importPaths.add(funcAction.importPath());
+                domContainer.add(funcAction.render());
+                functionalActionsObjects.append(",\n" + createActionObject(funcAction));
+            }
+            return of(domContainer);
+        }
+        return empty();
     }
 
     /**
@@ -1563,12 +1591,12 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * @return
      */
     public static <V extends AbstractEntity<?>> fetch<V> createFetchModelForAutocompleterFrom(final Class<V> propType, final Set<String> additionalProperties) {
-        final IFetchProvider<V> fetchProvider = fetchNone(propType).with(additionalProperties);
-        fetchProvider.addKeysTo("", false); // adding deep keys for entity itself (no 'desc' property is required, it should be explicitly added by withProps() API or otherwise it will be in default additional properties)
-        for (final String additionalProperty: additionalProperties) {
-            fetchProvider.addKeysTo(additionalProperty, true); // adding deep keys [and first-level 'desc' property, if exists] for additional [dot-notated] property
-        }
-        return fetchProvider.fetchModel();
+        return additionalProperties.stream().reduce(
+            fetchNone(propType),
+            (fp, additionalProp) -> fp.addPropWithKeys(additionalProp, true), // adding deep keys [and first-level 'desc' property, if exists] for additional [dot-notated] property
+            (fp1, fp2) -> {throw new UnsupportedOperationException("Combining is not applicable here.");}
+        ).addPropWithKeys("", false) // adding deep keys for entity itself (no 'desc' property is required, it should be explicitly added by withProps() API or otherwise it will be in default additional properties)
+        .fetchModel();
     }
 
     public Optional<Class<? extends ICustomPropsAssignmentHandler>> getCustomPropertiesAsignmentHandler() {

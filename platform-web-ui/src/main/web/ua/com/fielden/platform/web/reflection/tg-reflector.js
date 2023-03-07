@@ -54,6 +54,13 @@ var _isWarning0 = function (result) {
 };
 
 /**
+ * Determines whether the result is informative.
+ */
+var _isInformative0 = function (result) {
+    return result !== null && result["@resultType"] === "ua.com.fielden.platform.error.Informative";
+};
+
+/**
  * 'EntityTypeProp' creator. Dependencies: none.
  */
 var _createEntityTypePropPrototype = function () {
@@ -434,17 +441,22 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
     /**
      * Returns 'active entity' in this union entity.
      * 
-     * This method closely resembles methods 'AbstractUnionEntity.activeEntity' and 'AbstractUnionEntity.getNameOfAssignedUnionProperty'.
+     * This method closely resembles method 'AbstractUnionEntity.activeEntity'.
      */
     Entity.prototype._activeEntity = function () {
-        const self = this;
-        let activeEntity = null;
-        this.traverseProperties(function (name) {
-            if (self.get(name) !== null) {
-                activeEntity = self.get(name);
-            }
-        });
-        return activeEntity;
+        const activeProperty = this._activeProperty();
+        return activeProperty !== null ? this.get(activeProperty) : null;
+    }
+
+     /**
+      * Returns 'active property' in this union entity. Active property is a property among union properties that is not null.
+      * If there are no such property then null is returned.
+      *
+      * This method closely resembles methods 'AbstractUnionEntity.getNameOfAssignedUnionProperty'.
+      */
+    Entity.prototype._activeProperty = function () {
+        const type = this.constructor.prototype.type.call(this);
+        return type.unionProps().find(prop => this.get(prop) !== null) || null;
     }
 
     /**
@@ -652,7 +664,7 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
      */
     Entity.prototype.toString = function () {
         const convertedKey = _toString(_convert(this.get('key')), this.constructor.prototype.type.call(this), 'key');
-        return convertedKey === '' && !this.constructor.prototype.type.call(this).isUnionEntity() ? KEY_NOT_ASSIGNED : convertedKey;
+        return convertedKey === '' ? KEY_NOT_ASSIGNED : convertedKey;
     }
     
     return Entity;
@@ -813,7 +825,7 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
      *
      */
     EntityType.prototype.isUnionEntity = function () {
-        return typeof this['_unionCommonProps'] !== 'undefined';
+        return typeof this['_unionCommonProps'] !== 'undefined' && typeof this['_unionProps'] !== 'undefined';
     }
 
     /** 
@@ -821,6 +833,13 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
      */
     EntityType.prototype.unionCommonProps = function () {
         return this._unionCommonProps;
+    }
+
+    /** 
+     * Returns the property names for union properties in case of union entity; not defined otherwise.
+     */
+     EntityType.prototype.unionProps = function () {
+        return this._unionProps;
     }
 
     /**
@@ -902,6 +921,8 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
                 } else if (this.isUnionEntity()) { // the key type for union entities at the Java level is "String", but for JS its actual type is determined at runtime base on the active property
                     return { type: function () { return 'String'; } }
                 }
+            } else if (!prop && name === 'desc' && this.isUnionEntity()) { // the 'desc' type for union entities always return "String", even if there is no @DescTitle annotation on union type
+                return { type: function () { return 'String'; } }
             }
             return prop ? prop : null;
         }
@@ -1211,6 +1232,9 @@ const _convertFullPropertyValue = function (bindingView, propertyName, fullValue
     if (_isEntity(fullValue)) {
         if (fullValue.get('id') !== null) {
             bindingView['@' + propertyName + '_id'] = fullValue.get('id');
+        }
+        if (fullValue.type().isUnionEntity()) {
+            bindingView[`@${propertyName}_activeProperty`] = fullValue._activeProperty(); 
         }
         try {
             const desc = fullValue.get('desc');
@@ -1524,6 +1548,13 @@ export const TgReflector = Polymer({
      */
     isWarning: function (result) {
         return _isWarning0(result);
+    },
+
+    /**
+     * Determines whether result is informative.
+     */
+    isInformative: function (result) {
+        return _isInformative0(result);
     },
 
     //////////////////// SERVER EXCEPTIONS UTILS ////////////////////
@@ -2112,6 +2143,10 @@ export const TgReflector = Polymer({
      */
     get LINK_CONFIG_TITLE() {
         return _LINK_CONFIG_TITLE;
+    },
+
+    get KEY_NOT_ASSIGNED() {
+        return KEY_NOT_ASSIGNED;
     }
 
 });

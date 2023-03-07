@@ -5,6 +5,7 @@ import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.security.SecurityTokenInfoUtils.shortDesc;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.provider.ISecurityTokenController;
@@ -17,6 +18,7 @@ import ua.com.fielden.platform.security.user.User;
  * @author TG Team
  *
  */
+@Singleton
 public class ServerAuthorisationModel extends AbstractAuthorisationModel {
 
     protected final ISecurityTokenController controller;
