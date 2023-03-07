@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.processors.verify;
 
-import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
 
 import java.util.Arrays;
@@ -19,10 +18,8 @@ import com.squareup.javapoet.TypeSpec;
 
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileManager;
-import ua.com.fielden.platform.processors.test_utils.exceptions.CompilationException;
 import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
 import ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils;
-import ua.com.fielden.platform.utils.CollectionUtil;
 
 /**
  * Base class for unit tests targeted at {@link Verifier} implementations.
@@ -90,33 +87,48 @@ public abstract class AbstractVerifierTest {
     /**
      * A convenient method to compile {@code typeSpecs} and asssert that certain error messages were reported.
      * <p>
-     * If some errors were reported that were not expected (i.e. not specified by {@code expectedErrorMessages}) then a runtime exception is thrown.
+     * If some errors were reported that were not expected (i.e. not specified by {@code expectedErrorMessages}) then a runtime exception is thrown
+     * and all diagnostic messages are printed to standard output.
      *
      * @return the resulting compilation instance
      */
     protected final Compilation compileAndAssertErrors(final Collection<TypeSpec> typeSpecs, final Collection<String> expectedErrorMessages) {
         final Compilation compilation = buildCompilation(typeSpecs);
-        final boolean success = VerifierTestUtils.compileAndPrintDiagnostics(compilation);
-        assertFalse("Compilaton should have failed.", success);
+        final boolean success = compilation.compile();
 
-        // check for unexpected errors
-        final List<String> errorMessages = compilation.getErrors().stream().map(diag -> diag.getMessage(Locale.getDefault())).toList();
-        if (!CollectionUtil.areEqualByContents(expectedErrorMessages, errorMessages)) {
-            throw new CompilationException("Unexpected compilation errors were reported.");
+        if (success) {
+            compilation.printDiagnostics();
+            fail("Compilaton should have failed.");
         }
 
+        // first assert that all expected errors were reported
         expectedErrorMessages.forEach(msg -> VerifierTestUtils.assertErrorReported(compilation, msg));
+
+        // now test for unexpected errors
+        final List<String> errorMessages = compilation.getErrors().stream().map(diag -> diag.getMessage(Locale.getDefault())).toList();
+        if (errorMessages.size() != expectedErrorMessages.size()) {
+            compilation.printDiagnostics();
+            fail("Unexpected errors were reported.");
+        }
+
         return compilation;
     }
 
     /**
      * A convenient method to compile {@code typeSpecs} and asssert compilation successs.
+     * In the case of an unsuccessful compilation, all diagnostic messages are printed to standard output.
+     *
      * @return the resulting compilation instance
      */
     protected final Compilation compileAndAssertSuccess(final Collection<TypeSpec> typeSpecs) {
         final Compilation compilation = buildCompilation(typeSpecs);
-        final boolean success = VerifierTestUtils.compileAndPrintDiagnostics(compilation);
-        assertTrue("Compilaton should have succeeded.", success);
+        final boolean success = compilation.compile();
+
+        if (!success) {
+            compilation.printDiagnostics();
+            fail("Compilation should have succeeded.");
+        }
+
         return compilation;
     }
 
