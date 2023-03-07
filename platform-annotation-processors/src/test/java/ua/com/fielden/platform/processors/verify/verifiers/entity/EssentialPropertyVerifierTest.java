@@ -150,6 +150,69 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
+        public void error_is_reported_when_property_setter_declares_more_than_1_parameter() {
+            final TypeSpec entity = TypeSpec.classBuilder("Example")
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .addField(propertyBuilder(String.class, "prop").build())
+                    .addMethod(MethodSpec.methodBuilder("setProp").addAnnotation(Observable.class).addModifiers(Modifier.PUBLIC)
+                            .addParameter(String.class, "prop").addParameter(String.class, "extra")
+                            .build())
+                    .build();
+
+            compileAndAssertError(List.of(entity), PropertySetterVerifier.errIncorrectParameters("setProp", "java.lang.String"));
+        }
+
+        @Test
+        public void error_is_reported_when_property_setter_declares_no_parameters() {
+            final TypeSpec entity = TypeSpec.classBuilder("Example")
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .addField(propertyBuilder(String.class, "prop").build())
+                    .addMethod(MethodSpec.methodBuilder("setProp").addAnnotation(Observable.class).addModifiers(Modifier.PUBLIC).build())
+                    .build();
+
+            compileAndAssertError(List.of(entity), PropertySetterVerifier.errIncorrectParameters("setProp", "java.lang.String"));
+        }
+
+        @Test
+        public void error_is_reported_when_property_setter_declares_a_parameter_of_a_wrong_type() {
+            final TypeSpec entity = TypeSpec.classBuilder("Example")
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .addField(propertyBuilder(Integer.class, "prop").build())
+                    .addMethod(MethodSpec.methodBuilder("setProp").addAnnotation(Observable.class).addModifiers(Modifier.PUBLIC)
+                            .addParameter(int.class, "prop")
+                            .build())
+                    .build();
+
+            compileAndAssertError(List.of(entity), PropertySetterVerifier.errIncorrectParameters("setProp", "java.lang.Integer"));
+        }
+
+        @Test
+        public void error_is_reported_when_collectional_property_setter_declares_a_parameter_of_a_wrong_type() {
+            final TypeSpec entity = TypeSpec.classBuilder("Example")
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .addField(propertyBuilder(ParameterizedTypeName.get(List.class, String.class), "prop").build())
+                    .addMethod(MethodSpec.methodBuilder("setProp").addAnnotation(Observable.class).addModifiers(Modifier.PUBLIC)
+                            .addParameter(ParameterizedTypeName.get(Collection.class, String.class), "prop")
+                            .build())
+                    .build();
+
+            compileAndAssertError(List.of(entity), PropertySetterVerifier.errIncorrectParameters("setProp", "java.util.List<java.lang.String>"));
+        }
+
+        @Test
+        public void verification_is_passed_when_collectional_property_setter_declares_a_parameter_of_property_type() {
+            final TypeSpec entity = TypeSpec.classBuilder("Example")
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .addField(propertyBuilder(ParameterizedTypeName.get(List.class, String.class), "prop").build())
+                    .addMethod(MethodSpec.methodBuilder("setProp").addAnnotation(Observable.class).addModifiers(Modifier.PUBLIC)
+                            .addParameter(ParameterizedTypeName.get(List.class, String.class), "prop")
+                            .build())
+                    .build();
+
+            compileAndAssertSuccess(List.of(entity));
+        }
+
+        @Test
         public void properties_with_declared_setter_annotated_with_Observable_and_public_or_protected_pass_verification() {
             final TypeSpec entityPublicSetter = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
