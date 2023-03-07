@@ -36,7 +36,10 @@ public class UnionEntityVerifier extends AbstractComposableEntityVerifier {
 
     @Override
     protected List<AbstractEntityVerifier> createComponents(final ProcessingEnvironment procEnv) {
-        return List.of(new EntityTypedPropertyPresenceVerifier(procEnv));
+        return List.of(
+                new EntityTypedPropertyPresenceVerifier(procEnv),
+                new PropertyTypeVerifier(procEnv),
+                new DistinctPropertyEntityTypesVerifier(procEnv));
     }
 
     /**
