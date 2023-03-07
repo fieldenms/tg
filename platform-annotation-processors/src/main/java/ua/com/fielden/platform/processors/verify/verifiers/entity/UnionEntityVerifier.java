@@ -95,7 +95,7 @@ public class UnionEntityVerifier extends AbstractComposableEntityVerifier {
 
         @Override
         protected List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
-            return roundEnv.acceptDeclaredPropertiesVisitor(new PropertyVisitor(entityFinder));
+            return roundEnv.acceptUnionEntityDeclaredPropertiesVisitor(new PropertyVisitor(entityFinder));
         }
 
         private class PropertyVisitor extends AbstractPropertyVerifyingVisitor {
@@ -139,7 +139,7 @@ public class UnionEntityVerifier extends AbstractComposableEntityVerifier {
 
         @Override
         protected List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
-            return roundEnv.accept(new EntityVisitor(entityFinder));
+            return roundEnv.acceptUnionEntityVisitor(new EntityVisitor(entityFinder));
         }
 
         private class EntityVisitor extends AbstractEntityVerifyingVisitor {
