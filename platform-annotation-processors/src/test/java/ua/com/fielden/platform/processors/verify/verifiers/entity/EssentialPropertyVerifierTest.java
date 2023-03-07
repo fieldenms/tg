@@ -35,8 +35,8 @@ import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
 import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
-import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.AccessorPresence;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.CollectionalPropertyVerifier;
+import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyAccessorVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertySetterVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier;
 
@@ -56,11 +56,11 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
     }
 
     // 1. property accessor presence
-    public static class AccessorPresenceTest extends AbstractVerifierTest {
+    public static class PropertyAccessorVerifierTest extends AbstractVerifierTest {
 
         @Override
         protected Verifier createVerifier(final ProcessingEnvironment procEnv) {
-            return new EssentialPropertyVerifier.AccessorPresence(procEnv);
+            return new EssentialPropertyVerifier.PropertyAccessorVerifier(procEnv);
         }
 
         @Test
@@ -76,7 +76,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
                     .addField(propertyBuilder(String.class, "prop").build())
                     .build();
 
-            compileAndAssertError(List.of(parent, entity), AccessorPresence.errMissingAccessor("prop"));
+            compileAndAssertError(List.of(parent, entity), PropertyAccessorVerifier.errMissingAccessor("prop"));
         }
 
         @Test

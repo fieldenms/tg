@@ -45,7 +45,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
     @Override
     protected List<AbstractEntityVerifier> createComponents(final ProcessingEnvironment procEnv) {
         return List.of(
-                new AccessorPresence(procEnv), 
+                new PropertyAccessorVerifier(procEnv), 
                 new PropertySetterVerifier(procEnv),
                 new CollectionalPropertyVerifier(procEnv),
                 new PropertyTypeVerifier(procEnv));
@@ -54,13 +54,13 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
     /**
      * All properties must have a coresponding accessor method with a name starting with "get" or "is".
      */
-    static class AccessorPresence extends AbstractEntityVerifier {
+    static class PropertyAccessorVerifier extends AbstractEntityVerifier {
 
         public static final String errMissingAccessor(final String propName) {
             return "Missing accessor for property [%s].".formatted(propName);
         }
 
-        protected AccessorPresence(final ProcessingEnvironment processingEnv) {
+        protected PropertyAccessorVerifier(final ProcessingEnvironment processingEnv) {
             super(processingEnv);
         }
 
