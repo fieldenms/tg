@@ -101,7 +101,7 @@ public abstract class AbstractVerifierTest {
 
         // check for unexpected errors
         final List<String> errorMessages = compilation.getErrors().stream().map(diag -> diag.getMessage(Locale.getDefault())).toList();
-        if (!CollectionUtil.isEqualContents(expectedErrorMessages, errorMessages)) {
+        if (!CollectionUtil.areEqualByContents(expectedErrorMessages, errorMessages)) {
             throw new CompilationException("Unexpected compilation errors were reported.");
         }
 
