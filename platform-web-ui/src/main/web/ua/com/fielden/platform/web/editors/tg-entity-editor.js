@@ -105,7 +105,7 @@ const customInputTemplate = html`
             autocomplete="off"/>
     </iron-input>`;
 const inputLayerTemplate = html`
-    <div class="input-layer" tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]">
+    <div id="inputLayer" class="input-layer" tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]">
         <template is="dom-repeat" items="[[_customPropTitle]]">
             <span hidden$="[[!item.title]]" style="color:#737373; font-size:0.8rem; padding-right:2px;"><span>[[item.title]]</span>:  </span>
             <span style$="[[_valueStyle(item, index)]]">[[item.value]]</span>
@@ -158,6 +158,17 @@ function setKeyFields(entity, embeddedMaster) {
             embeddedMaster.setEditorValue4PropertyFromConcreteValue(keyProp, entity.get(keyProp));
         }
     })
+}
+
+/**
+ * Copies specified text into clipboard if it is supported with client's navigator.
+ * 
+ * @param {String} text - text to copy into clipboard.
+ */
+function copyToClipboard(text) {
+    if (navigator.clipboard) {
+        navigator.clipboard.writeText(text.replace(/\n/g, " ").replace(/\s+/g, " ").trim());
+    }
 }
 
 export class TgEntityEditor extends TgEditor {
@@ -522,6 +533,18 @@ export class TgEntityEditor extends TgEditor {
             });
         } else {
             this._openEntityMaster();
+        }
+    }
+
+    _copyTap () {
+        if (!this._hasLayer) {
+            super._copyTap();
+        } else if (this.lastValidationAttemptPromise) {
+            this.lastValidationAttemptPromise.then(res => {
+                copyToClipboard(this.$.inputLayer.innerText);
+            });
+        } else {
+            copyToClipboard(this.$.inputLayer.innerText);
         }
     }
 

@@ -14,6 +14,12 @@ export class TgNumericEditor extends TgEditor {
         }
         return '';
     }
+
+    _copyTap () {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(this.$.inputLayer.innerText);
+        }
+    }
     
     /**
      * Overridden to provide value adjustment for zeroes.

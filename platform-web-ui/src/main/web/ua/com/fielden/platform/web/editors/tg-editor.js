@@ -772,6 +772,12 @@ export class TgEditor extends PolymerElement {
         }
         this._tryFireErrorMsg(this._error);
     }
+
+    _copyTap () {
+        if (navigator.clipboard) {
+            navigator.clipboard.writeText(this._editingValue);
+        }
+    }
     
     _updateMessagesForEntity (newEntity) {
         if (this._validationComponentsDefined === true) {
