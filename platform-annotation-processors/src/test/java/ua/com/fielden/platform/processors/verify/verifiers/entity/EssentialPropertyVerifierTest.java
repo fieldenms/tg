@@ -217,14 +217,18 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
             final TypeSpec entityPublicSetter = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(String.class, "prop").build())
-                    .addMethod(MethodSpec.methodBuilder("setProp").addAnnotation(Observable.class).addModifiers(Modifier.PUBLIC).build())
+                    .addMethod(MethodSpec.methodBuilder("setProp").addAnnotation(Observable.class).addModifiers(Modifier.PUBLIC)
+                            .addParameter(String.class, "prop")
+                            .build())
                     .build();
             compileAndAssertSuccess(List.of(entityPublicSetter));
 
             final TypeSpec entityProtectedSetter = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(String.class, "prop").build())
-                    .addMethod(MethodSpec.methodBuilder("setProp").addAnnotation(Observable.class).addModifiers(Modifier.PROTECTED).build())
+                    .addMethod(MethodSpec.methodBuilder("setProp").addAnnotation(Observable.class).addModifiers(Modifier.PROTECTED)
+                            .addParameter(String.class, "prop")
+                            .build())
                     .build();
             compileAndAssertSuccess(List.of(entityProtectedSetter));
         }
