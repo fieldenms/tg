@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
-import static javax.tools.Diagnostic.Kind.NOTE;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asDeclaredType;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.getSimpleName;
 
@@ -12,8 +11,8 @@ import java.util.Optional;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
-import javax.tools.Diagnostic;
 import javax.tools.Diagnostic.Kind;
 
 import ua.com.fielden.platform.entity.annotation.Observable;
@@ -109,6 +108,10 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
             return "Setter [%s] must be declared public or protected".formatted(setterName);
         }
 
+        public static final String errIncorrectParameters(final String setterName, final String propertyType) {
+            return "Setter [%s] must declare a single parameter of type %s".formatted(setterName, propertyType);
+        }
+
         @Override
         protected List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
             return roundEnv.acceptDeclaredPropertiesVisitor(new PropertyVisitor(entityFinder));
@@ -139,6 +142,13 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                 if (!ElementFinder.isPublic(setter) && !ElementFinder.isProtected(setter)) {
                     return Optional.of(new ViolatingElement(
                             property.element(), Kind.ERROR, errNotPublicNorProtected(getSimpleName(setter))));
+                }
+
+                // should accept single argument of the property type
+                final List<? extends VariableElement> params =  setter.getParameters();
+                if (params.size() != 1 || !elementFinder.types.isSameType(params.get(0).asType(), property.getType())) {
+                    return Optional.of(new ViolatingElement(
+                            setter, Kind.ERROR, errIncorrectParameters(getSimpleName(setter), property.getType().toString())));
                 }
 
                 return Optional.empty();
