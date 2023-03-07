@@ -70,12 +70,12 @@ public class ExampleEntity extends AbstractEntity<String> {
     }
 
     @Observable
-    public ExampleEntity setProp1(final int prop1) {
+    public ExampleEntity setProp1(final Integer prop1) {
         this.prop1 = prop1;
         return this;
     }
 
-    public int getProp1() {
+    public Integer getProp1() {
         return prop1;
     }
 
