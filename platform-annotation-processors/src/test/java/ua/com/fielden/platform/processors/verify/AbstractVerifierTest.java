@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.processors.verify;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
 
@@ -7,6 +8,8 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.JavaCompiler;
@@ -19,7 +22,6 @@ import com.squareup.javapoet.TypeSpec;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileManager;
 import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
-import ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils;
 
 /**
  * Base class for unit tests targeted at {@link Verifier} implementations.
@@ -102,7 +104,10 @@ public abstract class AbstractVerifierTest {
         }
 
         // first assert that all expected errors were reported
-        expectedErrorMessages.forEach(msg -> VerifierTestUtils.assertErrorReported(compilation, msg));
+        final Set<String> uniqueErrorMessages = compilation.getErrors().stream()
+                .map(err -> err.getMessage(Locale.getDefault())).collect(Collectors.toSet());
+        expectedErrorMessages.forEach(
+                msg -> assertTrue("No error was reported with message [%s].".formatted(msg), uniqueErrorMessages.contains(msg)));
 
         // now test for unexpected errors
         final List<String> errorMessages = compilation.getErrors().stream().map(diag -> diag.getMessage(Locale.getDefault())).toList();

@@ -1,14 +1,8 @@
 package ua.com.fielden.platform.processors.verify.verifiers;
 
-import static org.junit.Assert.assertTrue;
-
 import java.lang.reflect.Type;
-import java.util.List;
-import java.util.Locale;
 
 import javax.lang.model.element.Modifier;
-import javax.tools.Diagnostic;
-import javax.tools.JavaFileObject;
 
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.FieldSpec;
@@ -31,17 +25,6 @@ public class VerifierTestUtils {
         final boolean success = compilation.compile();
         compilation.printDiagnostics();
         return success;
-    }
-
-    /**
-     * Asserts that an error containing {@code msg} was reported during compilation.
-     * @param compilation
-     * @param msg
-     */
-    public static void assertErrorReported(final Compilation compilation, final String msg) {
-        final List<Diagnostic<? extends JavaFileObject>> errors = compilation.getErrors();
-        assertTrue("No error was reported with message [%s].".formatted(msg),
-                compilation.getErrors().stream().anyMatch(err -> msg.equals(err.getMessage(Locale.getDefault()))));
     }
 
     /**
