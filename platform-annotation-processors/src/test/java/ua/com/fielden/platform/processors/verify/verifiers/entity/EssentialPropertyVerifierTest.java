@@ -91,6 +91,33 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
 
             compileAndAssertSuccess(List.of(entity));
         }
+
+        @Test
+        public void error_is_reported_when_accessor_declares_wrong_return_type() {
+            final TypeSpec entity = TypeSpec.classBuilder("Example")
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .addField(propertyBuilder(Integer.class, "prop1").build())
+                    .addField(propertyBuilder(boolean.class, "prop2").build())
+                    .addMethod(MethodSpec.methodBuilder("getProp1").returns(int.class).build())
+                    .addMethod(MethodSpec.methodBuilder("isProp2").returns(Boolean.class).build())
+                    .build();
+
+            compileAndAssertError(List.of(entity), PropertyAccessorVerifier.errIncorrectReturnType("getProp1", "java.lang.Integer"));
+            compileAndAssertError(List.of(entity), PropertyAccessorVerifier.errIncorrectReturnType("isProp2", "boolean"));
+        }
+
+        @Test
+        public void verification_is_passed_when_accessor_return_type_matches_property_type() {
+            final TypeSpec entity = TypeSpec.classBuilder("Example")
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .addField(propertyBuilder(Integer.class, "prop1").build())
+                    .addField(propertyBuilder(boolean.class, "prop2").build())
+                    .addMethod(MethodSpec.methodBuilder("getProp1").returns(Integer.class).build())
+                    .addMethod(MethodSpec.methodBuilder("isProp2").returns(boolean.class).build())
+                    .build();
+
+            compileAndAssertSuccess(List.of(entity));
+        }
     }
 
     // 2. property setter
