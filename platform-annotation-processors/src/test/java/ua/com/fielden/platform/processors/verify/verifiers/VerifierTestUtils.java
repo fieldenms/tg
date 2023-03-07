@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.processors.verify.verifiers;
 
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 import java.lang.reflect.Type;
@@ -41,8 +40,7 @@ public class VerifierTestUtils {
      */
     public static void assertErrorReported(final Compilation compilation, final String msg) {
         final List<Diagnostic<? extends JavaFileObject>> errors = compilation.getErrors();
-        assertFalse("An error should have been reported.", errors.isEmpty());
-        assertTrue("No error with a matching message was reported.",
+        assertTrue("No error was reported with message [%s].".formatted(msg),
                 compilation.getErrors().stream().anyMatch(err -> msg.equals(err.getMessage(Locale.getDefault()))));
     }
 
