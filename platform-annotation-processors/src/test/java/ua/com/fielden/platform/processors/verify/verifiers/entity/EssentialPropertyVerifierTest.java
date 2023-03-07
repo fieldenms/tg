@@ -4,6 +4,7 @@ import static org.junit.Assert.assertFalse;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.assertErrorReported;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.compileAndPrintDiagnostics;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.propertyBuilder;
+import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyAccessorVerifier.errCollectionalIncorrectReturnType;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier.errInvalidCollectionTypeArg;
 
 import java.util.ArrayList;
@@ -104,6 +105,34 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
 
             compileAndAssertError(List.of(entity), PropertyAccessorVerifier.errIncorrectReturnType("getProp1", "java.lang.Integer"));
             compileAndAssertError(List.of(entity), PropertyAccessorVerifier.errIncorrectReturnType("isProp2", "boolean"));
+        @Test
+        public void error_is_reported_when_collectional_accessor_declares_return_type_unassignable_from_property_type() {
+            final TypeSpec entity = TypeSpec.classBuilder("Example")
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .addField(propertyBuilder(ParameterizedTypeName.get(HashSet.class, String.class), "prop1").build())
+                    .addField(propertyBuilder(ArrayList.class, "prop2").build())
+                    .addField(propertyBuilder(ParameterizedTypeName.get(ArrayList.class, String.class), "prop3").build())
+                    // prop1 is HashSet<String>, but getProp1() returns List<String>
+                    .addMethod(MethodSpec.methodBuilder("getProp1").returns(ParameterizedTypeName.get(List.class, String.class)).build())
+                    // prop2 is ArrayList, but getProp2() returns Set
+                    .addMethod(MethodSpec.methodBuilder("getProp2").returns(Set.class).build())
+                    .build();
+
+            compileAndAssertError(List.of(entity), errCollectionalIncorrectReturnType("getProp1", "java.util.HashSet<java.lang.String>"));
+            compileAndAssertError(List.of(entity), errCollectionalIncorrectReturnType("getProp2", "java.util.ArrayList"));
+        }
+
+        @Test
+        public void verification_is_passed_when_collectional_accessor_declares_return_type_assignable_from_property_type() {
+            final TypeSpec entity = TypeSpec.classBuilder("Example")
+                    .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
+                    .addField(propertyBuilder(ParameterizedTypeName.get(HashSet.class, String.class), "prop1").build())
+                    .addField(propertyBuilder(ArrayList.class, "prop2").build())
+                    .addMethod(MethodSpec.methodBuilder("getProp1").returns(ParameterizedTypeName.get(Set.class, String.class)).build())
+                    .addMethod(MethodSpec.methodBuilder("getProp2").returns(List.class).build())
+                    .build();
+
+            compileAndAssertSuccess(List.of(entity));
         }
 
         @Test
