@@ -29,7 +29,7 @@ import ua.com.fielden.platform.web.test.config.ApplicationDomain;
 /**
  * Composable verifier for entity properties, responsible for the most essential verification, which includes:
  * <ol>
- *  <li>Presence of property accessor and setter methods</li>
+ *  <li>Correctness of property accessor and setter definitions</li>
  *  <li>Declaration of collectional properties as {@code final} fields</li>
  *  <li>Verification of property types</li>
  * </ol>
@@ -53,6 +53,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
 
     /**
      * All properties must have a coresponding accessor method with a name starting with "get" or "is".
+     * An accessor's return type must match its property type.
      */
     static class PropertyAccessorVerifier extends AbstractEntityVerifier {
 
@@ -103,6 +104,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
 
     /**
      * All properties must have a coresponding setter that is either public or protected, and annotated with {@link Observable}.
+     * A setter must accept a single argument of its property type.
      */
     static class PropertySetterVerifier extends AbstractEntityVerifier {
         private static final Class<Observable> AT_OBSERVABLE_CLASS = Observable.class;
