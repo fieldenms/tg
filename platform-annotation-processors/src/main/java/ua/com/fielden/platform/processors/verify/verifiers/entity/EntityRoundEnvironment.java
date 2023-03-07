@@ -47,6 +47,9 @@ public class EntityRoundEnvironment extends AbstractRoundEnvironment {
         return entities;
     }
 
+    /**
+     * Returns a list of union entity elements being processed in the current round. The result is memoized.
+     */
     public List<EntityElement> listUnionEntities() {
         if (unionEntities == null) {
             unionEntities = listEntities().stream()
@@ -108,6 +111,29 @@ public class EntityRoundEnvironment extends AbstractRoundEnvironment {
         final List<ViolatingElement> violators = new LinkedList<>();
 
         listEntities().stream()
+            .flatMap(entity -> entityFinder.streamDeclaredProperties(entity).map(prop -> t2(entity, prop)))
+            .map(entityAndProp -> visitor.visitProperty(entityAndProp._1, entityAndProp._2))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .forEach(ve -> {
+                ve.printMessage(messager);
+                violators.add(ve);
+            });
+
+        return violators;
+    }
+
+    /**
+     * Accepts a verifying visitor for declared properties of a union entity and applies it to each root union entity element in this round.
+     * Returns a list containing property elements that did not pass verification.
+     *
+     * @param visitor
+     * @return
+     */
+    public List<ViolatingElement> acceptUnionEntityDeclaredPropertiesVisitor(final AbstractPropertyVerifyingVisitor visitor) {
+        final List<ViolatingElement> violators = new LinkedList<>();
+
+        listUnionEntities().stream()
             .flatMap(entity -> entityFinder.streamDeclaredProperties(entity).map(prop -> t2(entity, prop)))
             .map(entityAndProp -> visitor.visitProperty(entityAndProp._1, entityAndProp._2))
             .filter(Optional::isPresent)
