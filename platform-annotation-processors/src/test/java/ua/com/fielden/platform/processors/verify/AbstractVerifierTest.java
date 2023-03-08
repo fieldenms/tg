@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.processors.verify;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
 
@@ -79,8 +78,7 @@ public abstract class AbstractVerifierTest {
     }
 
     /**
-     * A convenient method to compile {@code typeSpecs} and asssert that certain error messages were reported.
-     * @return the resulting compilation instance
+     * Another signature for {@link #compileAndAssertErrors(Collection, Collection)}.
      */
     protected final Compilation compileAndAssertErrors(final Collection<TypeSpec> typeSpecs, final String... expectedErrorMessages) {
         return compileAndAssertErrors(typeSpecs, List.of(expectedErrorMessages));
@@ -89,7 +87,7 @@ public abstract class AbstractVerifierTest {
     /**
      * A convenient method to compile {@code typeSpecs} and asssert that certain error messages were reported.
      * <p>
-     * If some errors were reported that were not expected (i.e. not specified by {@code expectedErrorMessages}) then a runtime exception is thrown
+     * If some errors were reported that were not expected (i.e. not specified by {@code expectedErrorMessages}) then the assertion fails
      * and all diagnostic messages are printed to standard output.
      *
      * @return the resulting compilation instance
@@ -97,44 +95,42 @@ public abstract class AbstractVerifierTest {
     protected final Compilation compileAndAssertErrors(final Collection<TypeSpec> typeSpecs, final Collection<String> expectedErrorMessages) {
         final Compilation compilation = buildCompilation(typeSpecs);
         final boolean success = compilation.compile();
-
-        if (success) {
-            compilation.printDiagnostics();
-            fail("Compilaton should have failed.");
-        }
+        assertTrueOrFailWith("Compilaton should have failed.", !success, () -> compilation.printDiagnostics());
 
         // first assert that all expected errors were reported
         final Set<String> uniqueErrorMessages = compilation.getErrors().stream()
                 .map(err -> err.getMessage(Locale.getDefault())).collect(Collectors.toSet());
         expectedErrorMessages.forEach(
-                msg -> assertTrue("No error was reported with message [%s].".formatted(msg), uniqueErrorMessages.contains(msg)));
+                msg -> assertTrueOrFailWith("No error was reported with message [%s].".formatted(msg),
+                        uniqueErrorMessages.contains(msg), () -> compilation.printDiagnostics()));
 
         // now test for unexpected errors
         final int diff = compilation.getErrors().size() - expectedErrorMessages.size();
-        if (diff > 0) {
-            compilation.printDiagnostics();
-            fail("%s unexpected error(s) were reported.".formatted(diff));
-        }
+        assertTrueOrFailWith("%s unexpected error(s) were reported.".formatted(diff), diff == 0, () -> compilation.printDiagnostics());
 
         return compilation;
     }
 
     /**
      * A convenient method to compile {@code typeSpecs} and asssert compilation successs.
-     * In the case of an unsuccessful compilation, all diagnostic messages are printed to standard output.
+     * <p>
+     * In the case of an unsuccessful compilation, the assertion fails and all diagnostic messages are printed to standard output.
      *
      * @return the resulting compilation instance
      */
     protected final Compilation compileAndAssertSuccess(final Collection<TypeSpec> typeSpecs) {
         final Compilation compilation = buildCompilation(typeSpecs);
         final boolean success = compilation.compile();
-
-        if (!success) {
-            compilation.printDiagnostics();
-            fail("Compilation should have succeeded.");
-        }
+        assertTrueOrFailWith("Compilation should have succeeded.", success, () -> compilation.printDiagnostics());
 
         return compilation;
+    }
+
+    private void assertTrueOrFailWith(final String message, boolean condition, final Runnable failAction) {
+        if (!condition) {
+            failAction.run();
+            fail(message);
+        }
     }
 
 }
