@@ -268,8 +268,10 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
             return "Collectional property [%s] is parameterised with an unsupported type.".formatted(property);
         }
 
-        public static String errInvalidType(final String property) {
-            return "The type of property [%s] is unsupported.".formatted(property);
+        public static String errUnsupportedType(final String property) {
+            return ("Unsupported type for property [%s]." + "\n" +
+                    "Supported types include: String, Long, Integer, BigDecimal, Date, boolean, Money, Colour, Hyperlink, byte[], Set, List, Map, and Entity Types.")
+                    .formatted(property);
         }
 
         private boolean isSpecialCollectionType(final TypeMirror t) {
@@ -345,8 +347,8 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                     return Optional.empty(); // TODO process raw collection types
                 }
 
-                // all allowed types were exhausted
-                return Optional.of(new ViolatingElement(property.element(), Kind.ERROR, errInvalidType(getSimpleName(property.element()))));
+                // all supported types were exhausted
+                return Optional.of(new ViolatingElement(property.element(), Kind.ERROR, errUnsupportedType(getSimpleName(property.element()))));
             }
 
         }
