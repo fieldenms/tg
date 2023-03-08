@@ -2,6 +2,7 @@ package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asDeclaredType;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.getSimpleName;
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.isRawType;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -68,7 +69,8 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
         }
 
         public static final String errCollectionalIncorrectReturnType(final String accessorName, final String propertyType) {
-            return "Accessor [%s] must have return type assignable from %s".formatted(accessorName, propertyType);
+            return "Accessor [%s] must have return type assignable from %s and parameterised with the collection element type"
+                    .formatted(accessorName, propertyType);
         }
 
         protected PropertyAccessorVerifier(final ProcessingEnvironment processingEnv) {
@@ -99,8 +101,10 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
                 // collectional properties
                 if (entityFinder.isCollectionalProperty(property)) {
                     // acessor's return type must be assignable from the property type,
-                    // i.e., property type should be assignable to accessor return type
-                    if (!elementFinder.types.isAssignable(property.getType(), accessor.getReturnType())) {
+                    // i.e., property type should be a subtype of the accessor's return type
+                    // AND the return type must be parameterised
+                    if (isRawType(accessor.getReturnType()) ||
+                            !elementFinder.types.isSubtype(property.getType(), accessor.getReturnType())) {
                         return Optional.of(new ViolatingElement(
                                 accessor, Kind.ERROR, errCollectionalIncorrectReturnType(getSimpleName(accessor), property.getType().toString())));
                     }

@@ -666,6 +666,10 @@ public class ElementFinder {
         return element != null && !element.getTypeParameters().isEmpty();
     }
 
+    public static boolean isRawType(final TypeMirror type) {
+        return TypeKind.DECLARED.equals(type.getKind()) && ((DeclaredType) type).getTypeArguments().isEmpty();
+    }
+
     /**
      * Wraps {@link Elements#getPackageOf} in order to avoid ClassCastException, since Sun's internal implementation of {@link Elements} expects a {@link com.sun.tools.javac.code.Symbol} instance.
      * <p>
