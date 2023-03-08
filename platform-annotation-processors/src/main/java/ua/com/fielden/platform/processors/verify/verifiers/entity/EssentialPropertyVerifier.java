@@ -65,7 +65,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
         }
 
         public static final String errIncorrectReturnType(final String accessorName, final String propertyType) {
-            return "Accessor [%s] must have return %s".formatted(accessorName, propertyType);
+            return "Accessor [%s] must have return type %s".formatted(accessorName, propertyType);
         }
 
         public static final String errCollectionalIncorrectReturnType(final String accessorName, final String propertyType) {
