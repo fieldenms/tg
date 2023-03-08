@@ -21,10 +21,10 @@ import com.squareup.javapoet.TypeSpec;
 
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileManager;
-import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
+import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 
 /**
- * Base class for unit tests targeted at {@link Verifier} implementations.
+ * Base class for unit tests targeted at {@link IVerifier} implementations.
  *
  * @author TG Team
  */
@@ -37,7 +37,7 @@ public abstract class AbstractVerifierTest {
      * this method might be irrelevant.
      * @return
      */
-    abstract protected Verifier createVerifier(final ProcessingEnvironment procEnv);
+    abstract protected IVerifier createVerifier(final ProcessingEnvironment procEnv);
 
     /**
      * Returns a new instance of the verifying processor that will initialize and use the sole verifier provided by

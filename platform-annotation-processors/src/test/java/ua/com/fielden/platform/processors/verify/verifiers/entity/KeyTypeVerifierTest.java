@@ -28,7 +28,7 @@ import com.squareup.javapoet.TypeSpec;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.NoKey;
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
-import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
+import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 
 /**
  * Tests related to the composable verifier {@link KeyTypeVerifier} and its components.
@@ -45,7 +45,7 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
     }
 
     @Override
-    protected Verifier createVerifier(final ProcessingEnvironment procEnv) {
+    protected IVerifier createVerifier(final ProcessingEnvironment procEnv) {
         throw new UnsupportedOperationException();
     }
 
@@ -54,7 +54,7 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
         static final Class<?> VERIFIER_TYPE = KeyTypeVerifier.KeyTypePresence.class;
 
         @Override
-        protected Verifier createVerifier(final ProcessingEnvironment procEnv) {
+        protected IVerifier createVerifier(final ProcessingEnvironment procEnv) {
             return new KeyTypeVerifier.KeyTypePresence(procEnv);
         }
 
@@ -104,7 +104,7 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
         static final Class<?> VERIFIER_TYPE = KeyTypeVerifier.KeyTypeValueMatchesAbstractEntityTypeArgument.class;
 
         @Override
-        protected Verifier createVerifier(final ProcessingEnvironment procEnv) {
+        protected IVerifier createVerifier(final ProcessingEnvironment procEnv) {
             return new KeyTypeVerifier.KeyTypeValueMatchesAbstractEntityTypeArgument(procEnv);
         }
 
@@ -138,7 +138,7 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
         static final Class<?> VERIFIER_TYPE = KeyTypeVerifier.ChildKeyTypeMatchesParentKeyType.class;
 
         @Override
-        protected Verifier createVerifier(final ProcessingEnvironment procEnv) {
+        protected IVerifier createVerifier(final ProcessingEnvironment procEnv) {
             return new KeyTypeVerifier.ChildKeyTypeMatchesParentKeyType(procEnv);
         }
 
@@ -168,7 +168,7 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
         static final Class<?> VERIFIER_TYPE = KeyTypeVerifier.DeclaredKeyPropertyTypeMatchesAtKeyTypeValue.class;
 
         @Override
-        protected Verifier createVerifier(ProcessingEnvironment procEnv) {
+        protected IVerifier createVerifier(ProcessingEnvironment procEnv) {
             return new KeyTypeVerifier.DeclaredKeyPropertyTypeMatchesAtKeyTypeValue(procEnv);
         }
 

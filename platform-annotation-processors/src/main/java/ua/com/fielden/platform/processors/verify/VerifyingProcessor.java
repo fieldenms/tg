@@ -15,7 +15,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 
 import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
-import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
+import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.UnionEntityVerifier;
@@ -24,7 +24,7 @@ import ua.com.fielden.platform.utils.CollectionUtil;
 /**
  * Annotation processor responsible for verifying source definitions in a domain model.
  * <p>
- * The processor itself does not define any specific verification logic. Instead it delegates to implementations of the {@link Verifier} interface,
+ * The processor itself does not define any specific verification logic. Instead it delegates to implementations of the {@link IVerifier} interface,
  * providing them its own inputs and respective processing/round environments.
  *
  * @author TG Team
@@ -32,8 +32,8 @@ import ua.com.fielden.platform.utils.CollectionUtil;
 @SupportedAnnotationTypes("*")
 public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
 
-    private final List<Function<ProcessingEnvironment, Verifier>> registeredVerifiersProviders = new LinkedList<>();
-    private final List<Verifier> registeredVerifiers = new LinkedList<>();
+    private final List<Function<ProcessingEnvironment, IVerifier>> registeredVerifiersProviders = new LinkedList<>();
+    private final List<IVerifier> registeredVerifiers = new LinkedList<>();
 
     /** Round-cumulative indicator of whether all verifiers were passed. */
     private boolean passed;
@@ -50,7 +50,7 @@ public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
      * This constructor is required for unit testing of verifiers.
      * @param verifierProviders
      */
-    VerifyingProcessor(final Collection<Function<ProcessingEnvironment, Verifier>> verifierProviders) {
+    VerifyingProcessor(final Collection<Function<ProcessingEnvironment, IVerifier>> verifierProviders) {
         this.registeredVerifiersProviders.addAll(verifierProviders);
     }
 
@@ -100,7 +100,7 @@ public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
     private boolean verify(final RoundEnvironment roundEnv) {
         boolean roundPassed = true;
 
-        for (final Verifier verifier : registeredVerifiers) {
+        for (final IVerifier verifier : registeredVerifiers) {
             final List<ViolatingElement> violators = verifier.verify(roundEnv);
             if (!violators.isEmpty()) {
                 roundPassed = false;

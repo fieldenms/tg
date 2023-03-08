@@ -61,7 +61,7 @@ public class EntityFinder extends ElementFinder {
      * Returns the element representing the given entity type.
      * 
      * @see ElementFinder#getTypeElement(Class)
-     * @throws ElementFinderException if no coresponding type element was found
+     * @throws ElementFinderException if no corresponding type element was found
      */
     public EntityElement findEntity(final Class<? extends AbstractEntity> clazz) {
         return newEntityElement(getTypeElement(clazz));
@@ -71,7 +71,7 @@ public class EntityFinder extends ElementFinder {
      * Returns the element representing the entity type with the specified canonical name.
      * 
      * @see ElementFinder#getTypeElement(Class)
-     * @throws ElementFinderException if no coresponding type element was found
+     * @throws ElementFinderException if no corresponding type element was found
      */
     public EntityElement findEntity(final String name) {
         return newEntityElement(getTypeElement(name));

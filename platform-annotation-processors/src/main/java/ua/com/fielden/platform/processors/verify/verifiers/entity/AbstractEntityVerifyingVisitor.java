@@ -7,7 +7,7 @@ import javax.lang.model.element.TypeElement;
 
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
-import ua.com.fielden.platform.processors.verify.VerifyingVisitor;
+import ua.com.fielden.platform.processors.verify.IVerifyingVisitor;
 import ua.com.fielden.platform.processors.verify.ViolatingElement;
 
 /**
@@ -15,7 +15,7 @@ import ua.com.fielden.platform.processors.verify.ViolatingElement;
  *
  * @author TG Team
  */
-public abstract class AbstractEntityVerifyingVisitor implements VerifyingVisitor {
+public abstract class AbstractEntityVerifyingVisitor implements IVerifyingVisitor {
     protected EntityFinder entityFinder;
 
     public AbstractEntityVerifyingVisitor(final EntityFinder entityFinder) {

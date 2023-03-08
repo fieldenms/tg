@@ -15,7 +15,8 @@ import com.squareup.javapoet.ClassName;
  *
  */
 public final class EntityElement extends AbstractForwardingTypeElement {
-    private String packageName;
+    private final String packageName;
+    private final ClassName entityClassName;
 
     /**
      * Creates an {@link EntityElement} without a package name. Use at your own risk.
@@ -30,6 +31,7 @@ public final class EntityElement extends AbstractForwardingTypeElement {
     public EntityElement(final TypeElement typeElement, final String packageName) {
         super(typeElement);
         this.packageName = packageName;
+        this.entityClassName = packageName == null ? ClassName.get(typeElement) : ClassName.get(packageName, getSimpleName().toString());
     }
 
     public String getPackageName() {
@@ -37,7 +39,7 @@ public final class EntityElement extends AbstractForwardingTypeElement {
     }
 
     public ClassName getEntityClassName() {
-        return ClassName.get(packageName, getSimpleName().toString());
+        return entityClassName;
     }
 
     public boolean isAbstract() {
@@ -61,4 +63,8 @@ public final class EntityElement extends AbstractForwardingTypeElement {
         return Objects.equals(this.getQualifiedName(), that.getQualifiedName());
     }
 
+    @Override
+    public String toString() {
+        return entityClassName.toString();
+    }
 }

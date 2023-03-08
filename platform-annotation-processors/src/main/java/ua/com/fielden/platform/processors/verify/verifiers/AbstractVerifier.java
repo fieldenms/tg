@@ -19,7 +19,7 @@ import ua.com.fielden.platform.processors.verify.ViolatingElement;
  *
  * @author TG Team
  */
-public abstract class AbstractVerifier<RE extends AbstractRoundEnvironment> implements Verifier {
+public abstract class AbstractVerifier<RE extends AbstractRoundEnvironment> implements IVerifier {
 
     protected final ProcessingEnvironment processingEnv;
     protected final Messager messager;

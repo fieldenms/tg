@@ -46,7 +46,7 @@ public abstract class AbstractRoundEnvironment {
      * @param visitor
      * @return
      */
-    public List<ViolatingElement> accept(final VerifyingVisitor visitor) {
+    public List<ViolatingElement> accept(final IVerifyingVisitor visitor) {
         final List<ViolatingElement> violators = new LinkedList<>();
 
         roundEnv.getRootElements().stream()
