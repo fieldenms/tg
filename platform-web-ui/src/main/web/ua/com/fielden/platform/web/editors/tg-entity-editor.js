@@ -107,9 +107,9 @@ const customInputTemplate = html`
 const inputLayerTemplate = html`
     <div id="inputLayer" class="input-layer" tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]">
         <template is="dom-repeat" items="[[_customPropTitle]]">
-            <span hidden$="[[!item.title]]" style="color:#737373; font-size:0.8rem; padding-right:2px;"><span>[[item.title]]</span>:  </span>
-            <span style$="[[_valueStyle(item, index)]]">[[item.value]]</span>
-            <span hidden$="[[!item.separator]]" style="white-space: pre;">[[item.separator]]</span>
+            <span hidden$="[[!item.title]]" style="color:#737373; font-size:0.8rem; white-space: pre;"><span>[[item.title]]</span>: </span>
+            <span>[[item.value]]</span>
+            <span style="white-space: pre;">[[_itemSeparator(item, index)]]</span>
         </template>
         <span style="color:#737373" hidden$="[[!_hasDesc(entity)]]">&nbsp;&ndash;&nbsp;<i>[[_formatDesc(entity)]]</i></span>
     </div>`;
@@ -165,9 +165,10 @@ function setKeyFields(entity, embeddedMaster) {
  * 
  * @param {String} text - text to copy into clipboard.
  */
-function copyToClipboard(text) {
+function copyToClipboard(inputLayer) {
     if (navigator.clipboard) {
-        navigator.clipboard.writeText(text.replace(/\n/g, " ").replace(/\s+/g, " ").trim());
+        const text = [...inputLayer.childNodes].filter(node => node.style && getComputedStyle(node).display !== 'none').map(node => node.innerText).join("");
+        navigator.clipboard.writeText(text);
     }
 }
 
@@ -428,6 +429,8 @@ export class TgEntityEditor extends TgEditor {
                        if (event.keyCode === 13 && this.opened === true) { // 'Enter' has been pressed
                            this._done();
                            tearDownEvent(event);
+                       } else if (event.keyCode === 67 && event.altKey && (event.ctrlKey || event.metaKey)) {
+                           this._copyTap();
                        } else if ((event.keyCode === 38 /*up*/ || event.keyCode === 40 /*down*/) && !event.ctrlKey) { // up/down arrow keys
                            // By default up/down arrow keys work like home/end for and input field
                            // That's why this event should be suppressed.
@@ -541,10 +544,10 @@ export class TgEntityEditor extends TgEditor {
             super._copyTap();
         } else if (this.lastValidationAttemptPromise) {
             this.lastValidationAttemptPromise.then(res => {
-                copyToClipboard(this.$.inputLayer.innerText);
+                copyToClipboard(this.$.inputLayer);
             });
         } else {
-            copyToClipboard(this.$.inputLayer.innerText);
+            copyToClipboard(this.$.inputLayer);
         }
     }
 
@@ -1188,15 +1191,6 @@ export class TgEntityEditor extends TgEditor {
         return "";
     }
 
-    _valueStyle (item, index) {
-        if (this._customPropTitle && this._customPropTitle.length > 1) {
-            if (index < this._customPropTitle.length - 1 && item.title && !item.separator) {
-                return "padding-right: 5px";
-            }
-        }
-        return "";
-    }
-
     _createTitleObject (entity) {
         if (entity !== null) {
             const entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
@@ -1259,6 +1253,15 @@ export class TgEntityEditor extends TgEditor {
             }
         }
         return '';
+    }
+
+    _itemSeparator (item, index) {
+        if (this._customPropTitle && this._customPropTitle.length > 1) {
+            if (index < this._customPropTitle.length - 1 && item.title) {
+                return item.separator || " ";
+            }
+        }
+        return "";
     }
 
     _changeLayerExistance (_editingValue, entity) {
