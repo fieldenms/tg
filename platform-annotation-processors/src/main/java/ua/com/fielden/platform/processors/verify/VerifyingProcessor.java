@@ -105,7 +105,7 @@ public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
             if (!violators.isEmpty()) {
                 roundPassed = false;
                 printError(errVerifierNotPassedBy(verifier.getClass().getSimpleName(),
-                        violators.stream().map(ve -> ve.getElement().getSimpleName().toString()).toList()));
+                        violators.stream().map(ve -> ve.element().getSimpleName().toString()).toList()));
             }
         }
 
