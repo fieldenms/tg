@@ -25,7 +25,7 @@ import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
 import ua.com.fielden.platform.processors.test_entities.ExampleUnionEntity;
 import ua.com.fielden.platform.processors.test_entities.PersistentEntity;
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
-import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
+import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 
 /**
  * Tests related to the composable verifier {@link UnionEntityVerifier} and its components.
@@ -36,7 +36,7 @@ import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
 public class UnionEntityVerifierTest extends AbstractVerifierTest {
 
     @Override
-    protected Verifier createVerifier(final ProcessingEnvironment procEnv) {
+    protected IVerifier createVerifier(final ProcessingEnvironment procEnv) {
         throw new UnsupportedOperationException();
     }
 
@@ -45,7 +45,7 @@ public class UnionEntityVerifierTest extends AbstractVerifierTest {
         static final Class<?> VERIFIER_TYPE = UnionEntityVerifier.EntityTypedPropertyPresenceVerifier.class;
 
         @Override
-        protected Verifier createVerifier(final ProcessingEnvironment procEnv) {
+        protected IVerifier createVerifier(final ProcessingEnvironment procEnv) {
             return new UnionEntityVerifier.EntityTypedPropertyPresenceVerifier(procEnv);
         }
 
@@ -76,7 +76,7 @@ public class UnionEntityVerifierTest extends AbstractVerifierTest {
         static final Class<?> VERIFIER_TYPE = UnionEntityVerifier.PropertyTypeVerifier.class;
 
         @Override
-        protected Verifier createVerifier(final ProcessingEnvironment procEnv) {
+        protected IVerifier createVerifier(final ProcessingEnvironment procEnv) {
             return new UnionEntityVerifier.PropertyTypeVerifier(procEnv);
         }
 
@@ -130,7 +130,7 @@ public class UnionEntityVerifierTest extends AbstractVerifierTest {
         static final Class<?> VERIFIER_TYPE = UnionEntityVerifier.DistinctPropertyEntityTypesVerifier.class;
 
         @Override
-        protected Verifier createVerifier(final ProcessingEnvironment procEnv) {
+        protected IVerifier createVerifier(final ProcessingEnvironment procEnv) {
             return new UnionEntityVerifier.DistinctPropertyEntityTypesVerifier(procEnv);
         }
 
