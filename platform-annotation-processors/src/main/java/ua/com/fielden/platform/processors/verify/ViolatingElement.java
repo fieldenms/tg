@@ -47,16 +47,17 @@ public record ViolatingElement(Element element, Kind kind, String message, Optio
      * @param messager
      */
     public void printMessage(final Messager messager) {
-        if (annotationMirror == null) {
+        if (annotationMirror.isEmpty()) {
             // simplest form of message that is present directly on the element
             messager.printMessage(kind, message, element);
             return;
         }
-        if (annotationValue == null) {
-            messager.printMessage(kind, message, element, annotationMirror.orElse(null));
+        if (annotationValue.isEmpty()) {
+            // message present on the element's annotation
+            messager.printMessage(kind, message, element, annotationMirror.get());
         } else {
             // complete message form - present on the element annotation's element value
-            messager.printMessage(kind, message, element, annotationMirror.orElse(null), annotationValue.orElse(null));
+            messager.printMessage(kind, message, element, annotationMirror.get(), annotationValue.get());
         }
     }
 
