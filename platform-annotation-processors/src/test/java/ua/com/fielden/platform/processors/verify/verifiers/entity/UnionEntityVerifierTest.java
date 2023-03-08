@@ -50,7 +50,7 @@ public class UnionEntityVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void error_is_reported_when_a_union_entity_declares_no_entity_typed_properties() {
+        public void union_entity_must_declare_at_least_one_entity_typed_property() {
             final Consumer<TypeSpec> assertor = entity -> {
                 compileAndAssertErrors(List.of(entity),
                         errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), entity.name),
@@ -81,7 +81,7 @@ public class UnionEntityVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void error_is_reported_when_a_union_entity_declares_a_non_entity_typed_property() {
+        public void union_entity_cannot_declare_non_entity_typed_properties() {
             final BiConsumer<TypeSpec, List<String>> assertor = (entity, properties) -> {
                 final List<String> errors = new LinkedList<>();
                 errors.add(errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), properties));
@@ -104,7 +104,7 @@ public class UnionEntityVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void error_is_reported_when_a_union_entity_is_composed_of_union_entities() {
+        public void union_entity_cannot_be_composed_of_union_entities() {
             final BiConsumer<TypeSpec, List<String>> assertor = (entity, properties) -> {
                 final List<String> errors = new LinkedList<>();
                 errors.add(errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), properties));
@@ -135,7 +135,7 @@ public class UnionEntityVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void error_is_reported_when_a_union_entity_declares_multiple_properties_of_the_same_entity_type() {
+        public void union_entity_cannot_declare__multiple_properties_of_the_same_entity_type() {
             final TypeSpec entity = unionEntityBuilder("Example")
                     .addField(propertyBuilder(ExampleEntity.class, "prop1").build())
                     .addField(propertyBuilder(ExampleEntity.class, "prop2").build())

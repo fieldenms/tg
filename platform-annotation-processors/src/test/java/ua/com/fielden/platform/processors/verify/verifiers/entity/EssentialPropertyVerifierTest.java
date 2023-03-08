@@ -68,7 +68,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void error_is_reported_when_a_property_is_missing_a_declared_accessor() {
+        public void entity_property_must_have_a_coresponding_declared_accessor() {
             final TypeSpec parent = TypeSpec.classBuilder("Parent")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(String.class, "prop").build())
@@ -99,7 +99,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void error_is_reported_when_accessor_declares_return_type_different_from_property_type() {
+        public void accessor_return_type_must_match_its_property_type() {
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(Integer.class, "prop1").build())
@@ -115,7 +115,8 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void error_is_reported_when_collectional_accessor_declares_return_type_unassignable_from_property_type() {
+        public void collectional_accessor_return_type_must_be_assignable_from_property_type() {
+            // i.e., property type must be a subtype of the accessor's return type
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(ParameterizedTypeName.get(HashSet.class, String.class), "prop1").build())
@@ -134,7 +135,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void error_is_reported_when_collectional_accessor_declares_raw_return_type() {
+        public void collectional_accessor_return_type_cannot_be_a_raw_type() {
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(HashSet.class, "prop1").build())
@@ -152,7 +153,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void verification_is_passed_when_collectional_accessor_declares_return_type_assignable_from_property_type_and_correctly_parameterised() {
+        public void collectional_accessors_with_return_type_assignable_from_property_type_and_correctly_parameterised_pass_verification() {
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(ParameterizedTypeName.get(HashSet.class, String.class), "prop1").build())
@@ -167,7 +168,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void verification_is_passed_when_accessor_return_type_matches_property_type() {
+        public void accessors_with_return_type_matching_property_type_pass_verification() {
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(Integer.class, "prop1").build())
@@ -190,7 +191,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void error_is_reported_when_property_is_missing_declared_setter() {
+        public void entity_property_must_have_a_coresponding_declared_setter() {
             final TypeSpec parent = TypeSpec.classBuilder("Parent")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(String.class, "prop").build())
@@ -208,7 +209,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void error_is_reported_on_setter_that_is_missing_Observable() {
+        public void setter_must_be_annotated_with_Observable() {
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(String.class, "prop").build())
@@ -221,7 +222,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void error_is_reported_on_setter_that_is_neither_public_nor_protected() {
+        public void setter_must_be_either_public_or_protected() {
             final TypeSpec entityNoSetterModifier = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(String.class, "prop").build())
@@ -242,7 +243,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void error_is_reported_when_property_setter_declares_more_than_1_parameter() {
+        public void setter_must_declare_no_more_than_1_parameter() {
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(String.class, "prop").build())
@@ -257,7 +258,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void error_is_reported_when_property_setter_declares_no_parameters() {
+        public void setter_cannot_omit_declaration_of_parameters() {
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(String.class, "prop").build())
@@ -270,7 +271,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void error_is_reported_when_property_setter_declares_a_parameter_of_a_wrong_type() {
+        public void the_type_of_setter_parameter_must_match_the_property_type() {
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(Integer.class, "prop").build())
@@ -285,7 +286,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void error_is_reported_when_collectional_property_setter_declares_a_parameter_of_a_wrong_type() {
+        public void the_type_of_collectional_property_setter_must_match_the_property_type() {
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(ParameterizedTypeName.get(List.class, String.class), "prop").build())
@@ -300,7 +301,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void verification_is_passed_when_collectional_property_setter_declares_a_parameter_of_property_type() {
+        public void collectional_property_setters_that_declare_parameters_of_their_property_types_pass_verification() {
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(ParameterizedTypeName.get(List.class, String.class), "prop").build())
@@ -344,7 +345,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void error_is_reported_when_collectional_property_is_not_declared_final() {
+        public void collectional_property_must_be_declared_final() {
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(List.class, "list").build())
@@ -393,7 +394,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void error_is_reported_when_unsupported_collection_type_argument_is_used() {
+        public void unsupported_types_cannot_be_used_as_collection_type_arguments() {
             final TypeSpec entity = TypeSpec.classBuilder("Example")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .addField(propertyBuilder(ParameterizedTypeName.get(List.class, Function.class), "list").build())
