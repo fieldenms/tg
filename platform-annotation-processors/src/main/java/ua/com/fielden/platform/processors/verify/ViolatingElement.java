@@ -9,10 +9,10 @@ import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.Element;
 import javax.tools.Diagnostic.Kind;
 
-import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
+import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 
 /**
- * Represents an element that did not pass verification by some {@link Verifier}.
+ * Represents an element that did not pass verification by some {@link IVerifier}.
  * This class is tailored for convenient use with {@link javax.annotation.processing.Messager}.
  *
  * @author TG Team

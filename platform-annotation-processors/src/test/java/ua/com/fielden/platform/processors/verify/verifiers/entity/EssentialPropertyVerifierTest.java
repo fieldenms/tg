@@ -42,7 +42,7 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
-import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
+import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier.PropertyTypeVerifier;
 
 /**
@@ -56,7 +56,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
     private static final TypeName ABSTRACT_ENTITY_STRING_TYPE_NAME = ParameterizedTypeName.get(AbstractEntity.class, String.class);
 
     @Override
-    protected Verifier createVerifier(final ProcessingEnvironment procEnv) {
+    protected IVerifier createVerifier(final ProcessingEnvironment procEnv) {
         throw new UnsupportedOperationException();
     }
 
@@ -64,7 +64,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
     public static class PropertyAccessorVerifierTest extends AbstractVerifierTest {
 
         @Override
-        protected Verifier createVerifier(final ProcessingEnvironment procEnv) {
+        protected IVerifier createVerifier(final ProcessingEnvironment procEnv) {
             return new EssentialPropertyVerifier.PropertyAccessorVerifier(procEnv);
         }
 
@@ -159,7 +159,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
     public static class PropertySetterVerifierTest extends AbstractVerifierTest {
 
         @Override
-        protected Verifier createVerifier(final ProcessingEnvironment procEnv) {
+        protected IVerifier createVerifier(final ProcessingEnvironment procEnv) {
             return new EssentialPropertyVerifier.PropertySetterVerifier(procEnv);
         }
 
@@ -300,7 +300,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
     public static class CollectionalPropertyVerifierTest extends AbstractVerifierTest {
 
         @Override
-        protected Verifier createVerifier(final ProcessingEnvironment procEnv) {
+        protected IVerifier createVerifier(final ProcessingEnvironment procEnv) {
             return new EssentialPropertyVerifier.CollectionalPropertyVerifier(procEnv);
         }
 
@@ -329,7 +329,7 @@ public class EssentialPropertyVerifierTest extends AbstractVerifierTest {
     public static class PropertyTypeVerifierTest extends AbstractVerifierTest {
 
         @Override
-        protected Verifier createVerifier(final ProcessingEnvironment procEnv) {
+        protected IVerifier createVerifier(final ProcessingEnvironment procEnv) {
             return new EssentialPropertyVerifier.PropertyTypeVerifier(procEnv);
         }
 

@@ -12,13 +12,13 @@ import ua.com.fielden.platform.processors.verify.VerifyingProcessor;
  * 
  * @author TG Team
  */
-public interface Verifier {
+public interface IVerifier {
 
     /**
-     * Performs verification in the current round accoring to implementation-specific rules. Returns {@code true} if verification was passed,
-     * {@code false} otherwise.
+     * Performs verification in the current round according to implementation-specific rules.
+     *
      * @param roundEnv
-     * @return
+     * @return {@code true} if verification was passed.
      */
     public List<ViolatingElement> verify(final RoundEnvironment roundEnv);
 

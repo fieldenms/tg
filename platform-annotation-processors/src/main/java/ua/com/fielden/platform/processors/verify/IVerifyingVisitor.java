@@ -11,7 +11,7 @@ import javax.lang.model.element.Element;
  *
  * @author TG Team
  */
-public interface VerifyingVisitor {
+public interface IVerifyingVisitor {
 
     /**
      * Visits an arbitrary element and returns an optional describing it in case verification was not passed.
