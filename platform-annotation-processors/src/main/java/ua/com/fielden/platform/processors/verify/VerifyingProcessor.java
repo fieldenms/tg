@@ -7,7 +7,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
@@ -103,7 +102,7 @@ public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
             if (!violators.isEmpty()) {
                 roundPassed = false;
                 printError("%s was not passed by: [%s]", verifier.getClass().getSimpleName(),
-                        violators.stream().map(ve -> ve.getElement().getSimpleName()).collect(Collectors.joining(", ")));
+                        violators.stream().map(ve -> ve.element().getSimpleName()).collect(joining(", ")));
             }
         }
 

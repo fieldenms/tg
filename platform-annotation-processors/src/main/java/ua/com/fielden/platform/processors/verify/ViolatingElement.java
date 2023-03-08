@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.processors.verify;
 
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
+
 import java.util.Objects;
 import java.util.Optional;
 
@@ -17,67 +20,26 @@ import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
  *
  * @author TG Team
  */
-public final class ViolatingElement {
-    private final Element element;
-    private final Kind kind;
-    private final String message;
-    private final AnnotationMirror annotationMirror;
-    private final AnnotationValue annotationValue;
+public record ViolatingElement(Element element, Kind kind, String message, Optional<AnnotationMirror> annotationMirror, Optional<AnnotationValue> annotationValue) {
 
-    public ViolatingElement(final Element element, final Kind kind, final String message) {
-        Objects.requireNonNull(element, "Argument [element] cannot be null.");
-        Objects.requireNonNull(kind, "Argument [kind] cannot be null.");
-        Objects.requireNonNull(message, "Argument [message] cannot be null.");
-        this.element = element;
-        this.kind = kind;
-        this.message = message;
-        this.annotationMirror = null;
-        this.annotationValue = null;
-    }
-
-    public ViolatingElement(final Element element, final Kind kind, final String message, final AnnotationMirror annotationMirror) {
-        Objects.requireNonNull(element, "Argument [element] cannot be null.");
-        Objects.requireNonNull(kind, "Argument [kind] cannot be null.");
-        Objects.requireNonNull(message, "Argument [message] cannot be null.");
-        Objects.requireNonNull(annotationMirror, "Argument [annotationMirror] cannot be null.");
-        this.element = element;
-        this.kind = kind;
-        this.message = message;
-        this.annotationMirror = annotationMirror;
-        this.annotationValue = null;
-    }
-
-    public ViolatingElement(final Element element, final Kind kind, final String message, final AnnotationMirror annotationMirror, final AnnotationValue annotationValue) {
+    public ViolatingElement {
         Objects.requireNonNull(element, "Argument [element] cannot be null.");
         Objects.requireNonNull(kind, "Argument [kind] cannot be null.");
         Objects.requireNonNull(message, "Argument [message] cannot be null.");
         Objects.requireNonNull(annotationMirror, "Argument [annotationMirror] cannot be null.");
         Objects.requireNonNull(annotationValue, "Argument [annotationValue] cannot be null.");
-        this.element = element;
-        this.kind = kind;
-        this.message = message;
-        this.annotationMirror = annotationMirror;
-        this.annotationValue = annotationValue;
     }
 
-    public Element getElement() {
-        return element;
+    public ViolatingElement(final Element element, final Kind kind, final String message) {
+        this(element, kind, message, empty(), empty());
     }
 
-    public Kind getKind() {
-        return kind;
+    public ViolatingElement(final Element element, final Kind kind, final String message, final AnnotationMirror annotationMirror) {
+        this(element, kind, message, of(annotationMirror), empty());
     }
 
-    public String getMessage() {
-        return message;
-    }
-
-    public Optional<AnnotationMirror> getAnnotationMirror() {
-        return Optional.ofNullable(annotationMirror);
-    }
-
-    public Optional<AnnotationValue> getAnnotationValue() {
-        return Optional.ofNullable(annotationValue);
+    public ViolatingElement(final Element element, final Kind kind, final String message, final AnnotationMirror annotationMirror, final AnnotationValue annotationValue) {
+        this(element, kind, message, of(annotationMirror), of(annotationValue));
     }
 
     /**
@@ -91,10 +53,10 @@ public final class ViolatingElement {
             return;
         }
         if (annotationValue == null) {
-            messager.printMessage(kind, message, element, annotationMirror);
+            messager.printMessage(kind, message, element, annotationMirror.orElse(null));
         } else {
             // complete message form - present on the element annotation's element value
-            messager.printMessage(kind, message, element, annotationMirror, annotationValue);
+            messager.printMessage(kind, message, element, annotationMirror.orElse(null), annotationValue.orElse(null));
         }
     }
 
