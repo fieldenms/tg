@@ -18,6 +18,7 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.tools.Diagnostic.Kind;
 
+import ua.com.fielden.platform.processors.verify.annotation.RelaxVerification;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 
 /**
@@ -73,12 +74,15 @@ public record ViolatingElement(
      * @param messager
      */
     public void printMessage(final Messager messager) {
+        // consider @RelaxVerification and relax the diagnostic kind if needed
+        final Kind relaxedKind = RelaxVerification.Factory.policyFor(element).map(pol -> pol.relaxedKind(kind)).orElse(kind);
+
         if (annotationMirror.isEmpty()) { /* simplest form of message that is present directly on the element */
-            messager.printMessage(kind, message, element);
+            messager.printMessage(relaxedKind, message, element);
         } else if (annotationValue.isEmpty()) { /* message present on the element's annotation */
-            messager.printMessage(kind, message, element, annotationMirror.get());
+            messager.printMessage(relaxedKind, message, element, annotationMirror.get());
         } else { /* complete message form - present on the element annotation's element value */
-            messager.printMessage(kind, message, element, annotationMirror.get(), annotationValue.get());
+            messager.printMessage(relaxedKind, message, element, annotationMirror.get(), annotationValue.get());
         }
 
         subElements.forEach(elt -> elt.printMessage(messager));
