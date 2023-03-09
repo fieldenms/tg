@@ -38,7 +38,7 @@ public class EntityRoundEnvironment extends AbstractRoundEnvironment {
      */
     public List<EntityElement> listEntities() {
         if (entities == null) {
-            entities = roundEnv.getRootElements().stream()
+            entities = streamRootElements()
                     .map(elt -> (TypeElement) elt)
                     .filter(el -> entityFinder.isEntityType(el.asType()))
                     .map(el -> entityFinder.newEntityElement(el))
