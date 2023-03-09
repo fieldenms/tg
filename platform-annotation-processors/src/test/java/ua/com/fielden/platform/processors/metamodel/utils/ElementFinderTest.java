@@ -50,6 +50,7 @@ import com.squareup.javapoet.TypeVariableName;
 
 import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderException;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
+import ua.com.fielden.platform.processors.test_utils.CompilationResult;
 import ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileManager;
 import ua.com.fielden.platform.processors.test_utils.exceptions.CompilationException;
 import ua.com.fielden.platform.utils.CollectionUtil;
@@ -733,13 +734,12 @@ public class ElementFinderTest {
                 .setFileManager(fileManager)
                 .setOptions(OPTION_PROC_ONLY);
         try {
-            final boolean success = comp.compileAndEvaluate(procEnv -> 
+            final CompilationResult result = comp.compileAndEvaluate(procEnv ->
                 consumer.accept(new ElementFinder(procEnv.getElementUtils(), procEnv.getTypeUtils())));
-            assertTrue("Processing of sources failed.", success);
+            // TODO print diagnostics in case of failure
+            assertTrue("Processing of sources failed.", result.success());
         } catch (final Throwable t) {
             throw new CompilationException(t);
-        } finally {
-            comp.printDiagnostics();
         }
     }
 
