@@ -104,6 +104,7 @@ export class TgMultilineTextEditor extends TgEditor {
                 value: function () {
                     return (function (event) {
                         if (event.keyCode === 67 && event.altKey && (event.ctrlKey || event.metaKey)) {
+                            this.commitIfChanged();
                             this._copyTap();
                         }
                         // need to invoke base function-property? Just do it like this:

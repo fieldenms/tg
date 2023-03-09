@@ -466,6 +466,7 @@ export class TgEditor extends PolymerElement {
                         if (event.keyCode === 13) { // 'Enter' has been pressed
                             this.commitIfChanged();
                         } else if (event.keyCode === 67 && event.altKey && (event.ctrlKey || event.metaKey)) {
+                            this.commitIfChanged();
                             this._copyTap();
                         } else if ((event.keyCode === 38 || event.keyCode === 40) 
                                     && (event.altKey || event.ctlKey || event.metaKey || event.shiftKey)) {

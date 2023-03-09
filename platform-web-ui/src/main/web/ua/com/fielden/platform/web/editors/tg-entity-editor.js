@@ -430,6 +430,7 @@ export class TgEntityEditor extends TgEditor {
                            this._done();
                            tearDownEvent(event);
                        } else if (event.keyCode === 67 && event.altKey && (event.ctrlKey || event.metaKey)) {
+                           this.commitIfChanged();
                            this._copyTap();
                        } else if ((event.keyCode === 38 /*up*/ || event.keyCode === 40 /*down*/) && !event.ctrlKey) { // up/down arrow keys
                            // By default up/down arrow keys work like home/end for and input field
@@ -540,14 +541,22 @@ export class TgEntityEditor extends TgEditor {
     }
 
     _copyTap () {
-        if (!this._hasLayer) {
+        if (this.multi) {
             super._copyTap();
         } else if (this.lastValidationAttemptPromise) {
             this.lastValidationAttemptPromise.then(res => {
-                copyToClipboard(this.$.inputLayer);
+                this._copyFromLayerIfPresent(super._copyTap.bind(this));
             });
         } else {
+            this._copyFromLayerIfPresent(super._copyTap.bind(this));
+        }
+    }
+
+    _copyFromLayerIfPresent(superCopy) {
+        if (this._hasLayer) {
             copyToClipboard(this.$.inputLayer);
+        } else {
+            superCopy();
         }
     }
 
