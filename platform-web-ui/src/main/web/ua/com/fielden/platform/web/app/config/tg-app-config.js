@@ -21,11 +21,6 @@ moment.locale('custom-locale', {
 let timerIdForReconnection = null;
 
 /**
- * Keeps data base connection
- */
-let db = null;
-
-/**
  * Holds registered event sources in application.
  */
 export let eventSource = {initialised: false, shouldReconnectWhenError: true, errorReconnectionDelay: 15000};
@@ -256,7 +251,7 @@ const connectToDb = function () {
     });
 }
 
-const saveUuid = function (userName, uid) {
+const saveUuid = function (userName, uid, db) {
     return new Promise (function (resolve, reject) {
         const saveRequest = db.transaction("uids", "readwrite")
                               .objectStore("uids")
@@ -270,7 +265,7 @@ const saveUuid = function (userName, uid) {
     });
 }
 
-const getUid = function (userName) {
+const getUid = function (userName, db) {
     return new Promise (function (resolve, reject) {
         const getRequest = db.transaction("uids", "readonly")
                               .objectStore("uids")
@@ -300,18 +295,18 @@ export async function establishSSE (userName) {
         return eventSource;
     }
     //1. Connect to tg indexDb.
-    db = await connectToDb();
+    const db = await connectToDb();
     //2. Try to save generated id into tg index db if it is successful then register remote sse otherwise create local one.
-    await saveUuid(userName, generateUUID()).then(uid => {
+    await saveUuid(userName, generateUUID(), db).then(uid => {
         initEventSource(uid);
         registerRemoteEventSource(userName, uid);
-    }).catch (e => {
-        return getUid(userName);
-    }).then(uid => {
-        initEventSource(uid);
-        registerLocalEventSource(userName, uid);
-    }).catch (e => {
-        throw new Error(`Failed to get uid for user: ${userName}`);
+    }).catch (async (e) => {
+        await getUid(userName, db).then(uid => {
+            initEventSource(uid);
+            registerLocalEventSource(userName, uid);
+        }).catch (e => {
+            throw new Error(`Failed to get uid for user: ${userName}`);
+        });
     });
 
     return eventSource;
