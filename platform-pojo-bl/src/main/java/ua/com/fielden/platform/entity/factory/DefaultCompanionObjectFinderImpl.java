@@ -15,7 +15,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 
 /**
- * Default implementation for {@link ICompanionObjectFinder}, which utilises injector for creating controller instances.
+ * Default implementation for {@link ICompanionObjectFinder}, which utilises injector (thread-safe) for creating Companion Object (CO) instances.
  * 
  * @author TG Team
  * 
@@ -79,4 +79,5 @@ public class DefaultCompanionObjectFinderImpl implements ICompanionObjectFinder 
         
         return co;
     }
- }
+
+}
