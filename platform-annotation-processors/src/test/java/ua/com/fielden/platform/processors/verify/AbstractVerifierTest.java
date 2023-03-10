@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.processors.verify;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
 
@@ -11,6 +12,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.annotation.processing.ProcessingEnvironment;
+import javax.tools.Diagnostic.Kind;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.ToolProvider;
@@ -125,6 +127,22 @@ public abstract class AbstractVerifierTest {
         assertTrueOrFailWith("Compilation should have succeeded.", result.success(), () -> result.printDiagnostics());
 
         return result;
+    }
+
+    /**
+     * Asserts that diagnostic messages of a given kind were reported as a result of a compilation.
+     *
+     * @param result    represents compilation results
+     * @param kind      the message kind
+     * @param messages  the messages, existence of which is to be asserted
+     */
+    protected final void assertMessages(final CompilationResult result, final Kind kind, final String... messages) {
+        Arrays.stream(messages).forEach(msg -> assertMessage(result, kind, msg));
+    }
+
+    private final void assertMessage(final CompilationResult result, final Kind kind, final String message) {
+        assertTrue("No %s was reported with message \"%s\"".formatted(kind, message),
+                result.diagnosticsByKind(kind).stream().anyMatch(diag -> diag.getMessage(Locale.getDefault()).equals(message)));
     }
 
     private void assertTrueOrFailWith(final String message, boolean condition, final Runnable failAction) {
