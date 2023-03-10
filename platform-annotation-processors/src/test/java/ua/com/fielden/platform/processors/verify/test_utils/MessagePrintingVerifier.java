@@ -1,0 +1,48 @@
+package ua.com.fielden.platform.processors.verify.test_utils;
+
+import java.util.LinkedList;
+import java.util.List;
+
+import javax.annotation.processing.ProcessingEnvironment;
+import javax.annotation.processing.RoundEnvironment;
+
+import ua.com.fielden.platform.processors.verify.AbstractRoundEnvironment;
+import ua.com.fielden.platform.processors.verify.ViolatingElement;
+import ua.com.fielden.platform.processors.verify.verifiers.AbstractVerifier;
+
+/**
+ * A verifier that finds all elements annotated with {@link Message} and for each found element reports the specified message
+ * of the specified kind. This verifier enables a convenient technique for making assertions about reported messages in tests.
+ * To get started, simply annotate an input element with {@link Message} and then assert the existence of the reported message.
+ *
+ * @author homedirectory
+ */
+public class MessagePrintingVerifier extends AbstractVerifier<AbstractRoundEnvironment> {
+
+    public MessagePrintingVerifier(final ProcessingEnvironment processingEnv) {
+        super(processingEnv);
+    }
+
+    @Override
+    protected List<ViolatingElement> verify(final AbstractRoundEnvironment roundEnv) {
+        final List<ViolatingElement> violators = new LinkedList<>();
+
+        roundEnv.getElementsAnnotatedWith(Message.class).stream()
+        .map(elt -> {
+            final Message annot = elt.getAnnotation(Message.class);
+            return new ViolatingElement(elt, annot.kind(), annot.value());
+        })
+        .forEach(ve -> {
+            ve.printMessage(messager);
+            violators.add(ve);
+        });
+
+        return violators;
+    }
+
+    @Override
+    protected AbstractRoundEnvironment wrapRoundEnvironment(RoundEnvironment roundEnv) {
+        return new AbstractRoundEnvironment(roundEnv, messager) { };
+    }
+
+}
