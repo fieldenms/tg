@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.processors.verify;
 
+import static java.util.stream.Collectors.toSet;
+
 import java.lang.annotation.Annotation;
 import java.util.LinkedList;
 import java.util.List;
@@ -45,12 +47,21 @@ public abstract class AbstractRoundEnvironment {
     }
 
     /**
+     * Filters out elements annotated with {@link RelaxVerification} that have {@link RelaxationPolicy#SKIP}.
+     *
+     * @param elements  stream of input elements
+     * @return          filtered stream of input elements
+     */
+    private Stream<? extends Element> skipElements(final Stream<? extends Element> elements) {
+        return elements.filter(elt -> !RelaxVerification.Factory.hasPolicy(elt, RelaxationPolicy.SKIP));
+    }
+
+    /**
      * Streams the elements returned by {@link RoundEnvironment#getRootElements()} taking into account the {@link RelaxVerification} annotation
      * to possibly skip annotated elements.
      */
     public final Stream<? extends Element> streamRootElements() {
-        return roundEnv.getRootElements().stream()
-                .filter(elt -> !RelaxVerification.Factory.hasPolicy(elt, RelaxationPolicy.SKIP));
+        return skipElements(roundEnv.getRootElements().stream());
     }
 
     /**
@@ -58,6 +69,22 @@ public abstract class AbstractRoundEnvironment {
      */
     public final List<? extends Element> getRootElements() {
         return streamRootElements().collect(Collectors.toCollection(LinkedList::new));
+    }
+
+    public final Set<? extends Element> getElementsAnnotatedWith(TypeElement a) {
+        return skipElements(roundEnv.getElementsAnnotatedWith(a).stream()).collect(toSet());
+    }
+
+    public final Set<? extends Element> getElementsAnnotatedWithAny(TypeElement... annotations){
+        return skipElements(roundEnv.getElementsAnnotatedWithAny(annotations).stream()).collect(toSet());
+    }
+
+    public final Set<? extends Element> getElementsAnnotatedWith(Class<? extends Annotation> a) {
+        return skipElements(roundEnv.getElementsAnnotatedWith(a).stream()).collect(toSet());
+    }
+
+    public final Set<? extends Element> getElementsAnnotatedWithAny(Set<Class<? extends Annotation>> annotations){
+        return skipElements(roundEnv.getElementsAnnotatedWithAny(annotations).stream()).collect(toSet());
     }
 
     /**
@@ -71,7 +98,7 @@ public abstract class AbstractRoundEnvironment {
         final List<ViolatingElement> violators = new LinkedList<>();
 
         streamRootElements()
-            .map(entity -> visitor.visitElement(entity))
+            .map(elt -> visitor.visitElement(elt))
             .filter(Optional::isPresent)
             .map(Optional::get)
             .forEach(ve -> {
@@ -95,34 +122,6 @@ public abstract class AbstractRoundEnvironment {
      */
     public final boolean errorRaised() {
         return roundEnv.errorRaised();
-    }
-
-    /**
-     * Forwards to {@link RoundEnvironment#getElementsAnnotatedWith(TypeElement)}.
-     */
-    public final Set<? extends Element> getElementsAnnotatedWith(TypeElement a) {
-        return roundEnv.getElementsAnnotatedWith(a);
-    }
-
-    /**
-     * Forwards to {@link RoundEnvironment#getElementsAnnotatedWithAny(TypeElement)}.
-     */
-    public final Set<? extends Element> getElementsAnnotatedWithAny(TypeElement... annotations){
-        return roundEnv.getElementsAnnotatedWithAny(annotations);
-    }
-
-    /**
-     * Forwards to {@link RoundEnvironment#getElementsAnnotatedWith(Class<? extends Annotation>)}.
-     */
-    public final Set<? extends Element> getElementsAnnotatedWith(Class<? extends Annotation> a) {
-        return roundEnv.getElementsAnnotatedWith(a);
-    }
-
-    /**
-     * Forwards to {@link RoundEnvironment#getElementsAnnotatedWithAny(Set<Class<? extends Annotation>>)}.
-     */
-    public final Set<? extends Element> getElementsAnnotatedWithAny(Set<Class<? extends Annotation>> annotations){
-        return roundEnv.getElementsAnnotatedWithAny(annotations);
     }
 
 }
