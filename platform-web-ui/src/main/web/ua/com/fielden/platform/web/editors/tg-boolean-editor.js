@@ -91,6 +91,15 @@ export class TgBooleanEditor extends TgEditor {
             return editingValue === 'true';
         }).bind(this);
     }
+
+    /**
+     * This function returns the tooltip for this editor.
+     */
+    _getTooltip (value) {
+        var tooltip = this._formatTooltipText(value);
+        tooltip += this.propDesc && (tooltip ? '<br><br>' : '') + this.propDesc;
+        return tooltip;
+    }
     
     /**
      * This method returns a default value for '_editingValue', which is used 

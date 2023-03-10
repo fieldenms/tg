@@ -1098,7 +1098,7 @@ export class TgEntityEditor extends TgEditor {
     _generateTooltip (value, actionAvailable) {
         let tooltip = this._formatTooltipText(value);
         tooltip += this.propDesc ? (tooltip ? '<br><br>' : '') + this.propDesc : '';
-        tooltip += actionAvailable ? ((tooltip ? '<br><br>' : '') + this._getActionTooltip()) : '';
+        tooltip += (tooltip ? '<br><br>' : '') + this._getActionTooltip(actionAvailable);
         return tooltip;
     }
 
@@ -1120,20 +1120,25 @@ export class TgEntityEditor extends TgEditor {
     /**
      * Calculates title action tooltip.
      */
-    _getActionTooltip () {
-        const entityMaster = this._valueToEdit(this.entity, this.propertyName) ? this.entityMaster : this.newEntityMaster;
-        const shortDesc = entityMaster.shortDesc ? "<b>" + entityMaster.shortDesc + "</b>" : "";
-        let longDesc;
-        if (shortDesc) {
-            longDesc = entityMaster.longDesc ? "<br>" + entityMaster.longDesc : "";
-        } else {
-            longDesc = entityMaster.longDesc ? "<b>" + entityMaster.longDesc + "</b>" : "";
+    _getActionTooltip (actionAvailable) {
+        let editActionShortDesc = "", editActionLongDesc = "";
+        if (actionAvailable) {
+            const entityMaster = this._valueToEdit(this.entity, this.propertyName) ? this.entityMaster : this.newEntityMaster;
+            editActionShortDesc = entityMaster.shortDesc ? `<b>${entityMaster.shortDesc}</b>` : "";
+            if (editActionShortDesc) {
+                editActionLongDesc = entityMaster.longDesc ? `<br>${entityMaster.longDesc}` : "";
+            } else {
+                editActionLongDesc = entityMaster.longDesc ? `<b>${entityMaster.longDesc}</b>` : "";
+            }
         }
-        const tooltip = shortDesc + longDesc;
-        return tooltip && "<div style='display:flex;'>" +
-            "<div style='margin-right:10px;'>With action: </div>" +
-            "<div style='flex-grow:1;'>" + tooltip + "</div>" +
-            "</div>"
+        const editNewActionTooltip = editActionShortDesc + editActionLongDesc;
+        const copyActionTooltip = "<b>Copy</b><br>Copy content";
+        const withActionTitle = editNewActionTooltip ? "With actions: " : "With action: ";
+        const actionsTooltip = (editNewActionTooltip ? `${editNewActionTooltip}<br><br>` : "") + copyActionTooltip
+        return `<div style='display:flex;'>
+            <div style='margin-right:10px;'>${withActionTitle}</div>
+            <div style='flex-grow:1;'>${actionsTooltip}</div>
+            </div>`
     }
 
     _createEntityTooltip (entity) {

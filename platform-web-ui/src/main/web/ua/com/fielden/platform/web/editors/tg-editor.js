@@ -643,7 +643,18 @@ export class TgEditor extends PolymerElement {
     _getTooltip (value) {
         var tooltip = this._formatTooltipText(value);
         tooltip += this.propDesc && (tooltip ? '<br><br>' : '') + this.propDesc;
+        tooltip += (tooltip ? '<br><br>' : '') + this._getActionTooltip();
         return tooltip;
+    }
+
+    /**
+     * Returns tooltip for action
+     */
+    _getActionTooltip () {
+        return `<div style='display:flex;'>
+            <div style='margin-right:10px;'>With action: </div>
+            <div style='flex-grow:1;'><b>Copy</b><br>Copy content</div>
+            </div>`
     }
     
     /**
