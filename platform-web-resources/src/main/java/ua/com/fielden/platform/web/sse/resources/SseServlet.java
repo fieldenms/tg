@@ -57,7 +57,7 @@ public final class SseServlet extends HttpServlet {
     private static final Logger LOGGER = Logger.getLogger(SseServlet.class);
 
     private static final ScheduledExecutorService HEARTBEAT_SCHEDULER = Executors.newSingleThreadScheduledExecutor(new ThreadFactoryBuilder().setNameFormat("SSE-heartbeat-%d").build());
-    private static final int HEARTBEAT_FREQUENCY_IN_SECONDS = 10;
+    private static final int HEARTBEAT_FREQUENCY_IN_SECONDS = 5;
 
     private final IEventSourceEmitterRegister eseRegister;
     private final ICompanionObjectFinder coFinder;
@@ -129,6 +129,7 @@ public final class SseServlet extends HttpServlet {
         // any errors that may occur during subscription or a normal lifecycle after, should result in deregistering and closing of the emitter, created during this request
         final AtomicBoolean wasRegisterd = new AtomicBoolean(false);
         try {
+            LOGGER.info(format("Registering event emitter for web client [%s, %s].", user, sseIdString));
             eseRegister.registerEmitter(user, sseIdString, () -> {
                 wasRegisterd.set(true);
                 try {
@@ -147,6 +148,7 @@ public final class SseServlet extends HttpServlet {
             if (wasRegisterd.get()) {
                 LOGGER.info(format("SSE subscription for client [%s, %s] completed.", user, sseIdString));
             } else {
+                LOGGER.info(format("SSE subscription for client [%s, %s] already registered, skip.", user, sseIdString));
                 super.doGet(request, response);
                 return;
             }

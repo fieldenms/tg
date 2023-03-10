@@ -95,7 +95,6 @@ public class EventSourceDispatchingEmitter implements IEventSourceEmitter, IEven
 
     @Override
     public Result registerEmitter(final User user, final String sseUid, final Supplier<IEventSourceEmitter> emitterFactory) {
-        LOGGER.info(format("Registering event emitter for web client [%s, %s].", user, sseUid));
         if (isActive.get()) {
             final IEventSourceEmitter emitter = register.computeIfAbsent(key(user, sseUid), argNotUsed -> emitterFactory.get());
             logRegisterSize();
