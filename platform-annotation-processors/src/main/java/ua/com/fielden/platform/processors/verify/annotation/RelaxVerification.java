@@ -10,7 +10,7 @@ import java.util.Optional;
 import javax.lang.model.element.Element;
 
 /**
- * Indicates to which degree should the verification of a program element be relaxed or skipped entirely.
+ * Indicates to which degree should the verification of a program element be relaxed.
  * <p>
  * Enclosed elements of the annotated element are also affected by the annotation. For example, annotating a class with
  * {@code RelaxVerification(WARN)} will also relax verification of the fields, methods, etc. of that class.

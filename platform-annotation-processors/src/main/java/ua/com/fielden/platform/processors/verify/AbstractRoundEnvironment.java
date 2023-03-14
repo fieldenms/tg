@@ -15,8 +15,6 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 
-import ua.com.fielden.platform.processors.verify.annotation.RelaxVerification;
-import ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 
 /**
@@ -58,7 +56,7 @@ public abstract class AbstractRoundEnvironment {
     }
 
     /**
-     * Streams the elements returned by {@link RoundEnvironment#getRootElements()} taking into account the {@link RelaxVerification} annotation
+     * Streams the elements returned by {@link RoundEnvironment#getRootElements()} taking into account the {@link SkipVerification} annotation
      * to possibly skip annotated elements.
      */
     public final Stream<? extends Element> streamRootElements() {
