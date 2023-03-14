@@ -13,6 +13,27 @@ import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-
 
 import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js';
 
+let copyTooltip = document.querySelector("#editorCopyTooltip");
+if (!copyTooltip) {
+    copyTooltip = document.createElement("div");
+    copyTooltip.setAttribute("id", "editorCopyTooltip");
+    copyTooltip.style.position = "fixed";
+    copyTooltip.style.display = "block";
+    copyTooltip.style.outline = "none";
+    copyTooltip.style.fontSize = "12px";
+    copyTooltip.style.backgroundColor = "#616161";
+    copyTooltip.style.opacity = "0.9";
+    copyTooltip.style.color = "white";
+    copyTooltip.style.padding = "8px";
+    copyTooltip.style.borderRadius = "2px";
+    copyTooltip.style.visibility = "hidden"
+    copyTooltip.style.top = "-100px";
+    copyTooltip.style.left = "-100px";
+    copyTooltip.style.zIndex = "1002";
+    copyTooltip.innerText = "Copied!"
+    document.body.appendChild(copyTooltip);
+}
+
 const defaultLabelTemplate = html`
     <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]" slot="label">
         <span>[[propTitle]]</span>
@@ -795,8 +816,16 @@ export class TgEditor extends PolymerElement {
     }
 
     _showCopiedIcon () {
+        const copyTooltipRect = copyTooltip.getBoundingClientRect();
+        const copyIconRect = this.$.copyIcon.getBoundingClientRect();
+        copyTooltip.style.top = `${copyIconRect.top - copyTooltipRect.height - 8}px`;
+        copyTooltip.style.left = `${copyIconRect.left + (copyIconRect.width - copyTooltipRect.width) / 2}px`;
+        copyTooltip.style.visibility = "visible";
         this.$.copyIcon.icon = "icons:check";
         setTimeout(function() {
+            copyTooltip.style.top = "-100px";
+            copyTooltip.style.left = "-100px";
+            copyTooltip.style.visibility = "hidden";
             this.$.copyIcon.icon = "icons:content-copy";
         }.bind(this), 1000);
     }
