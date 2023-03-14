@@ -13,7 +13,10 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.element.AnnotationValue;
 import javax.lang.model.element.ElementKind;
+import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeKind;
@@ -23,17 +26,21 @@ import javax.lang.model.util.Types;
 
 import ua.com.fielden.platform.annotations.metamodel.MetaModelForType;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.Accessor;
+import ua.com.fielden.platform.entity.Mutator;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.EntityTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderException;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
+import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
@@ -52,7 +59,7 @@ public class EntityFinder extends ElementFinder {
      * Returns the element representing the given entity type.
      * 
      * @see ElementFinder#getTypeElement(Class)
-     * @throws ElementFinderException if no coresponding type element was found
+     * @throws ElementFinderException if no corresponding type element was found
      */
     public EntityElement findEntity(final Class<? extends AbstractEntity> clazz) {
         return newEntityElement(getTypeElement(clazz));
@@ -62,7 +69,7 @@ public class EntityFinder extends ElementFinder {
      * Returns the element representing the entity type with the specified canonical name.
      * 
      * @see ElementFinder#getTypeElement(Class)
-     * @throws ElementFinderException if no coresponding type element was found
+     * @throws ElementFinderException if no corresponding type element was found
      */
     public EntityElement findEntity(final String name) {
         return newEntityElement(getTypeElement(name));
@@ -79,6 +86,7 @@ public class EntityFinder extends ElementFinder {
                 .map(PropertyElement::new);
     }
 
+    // TODO possible optimisation: move this method to EntityElement and memoize its result
    /**
     * Collects the elements of {@link #streamDeclaredFields(TypeElement)} into a list.
     *
@@ -99,6 +107,15 @@ public class EntityFinder extends ElementFinder {
         return streamDeclaredProperties(entityElement)
                 .filter(elt -> elt.getSimpleName().toString().equals(propName))
                 .findFirst();
+    }
+
+    /**
+     * Returns an optional describing a property element that represents a property of {@code entityElement} at {@code propPath}.
+     * <p>
+     * The property path must be of length 1 at most.
+     */
+    public Optional<PropertyElement> findDeclaredProperty(final EntityElement entity, final IConvertableToPath propPath) {
+        return findDeclaredProperty(entity, propPath.toPath());
     }
 
     /**
@@ -218,6 +235,20 @@ public class EntityFinder extends ElementFinder {
     }
 
     /**
+     * Returns an optional describing a property of {@code entityElement} at {@code path}.
+     * The property path must be of length 1 at most.
+     * <p>
+     * Entity type hiearchy is traversed in natural order and the first matching property is returned.
+     * 
+     * @param entity
+     * @param path
+     * @return
+     */
+    public Optional<PropertyElement> findProperty(final EntityElement entity, final IConvertableToPath path) {
+        return findProperty(entity, path.toPath());
+    }
+
+    /**
      * Finds a property of an entity by traversing it and its hierarchy below {@code rootType}, which is not searched.
      * 
      * @param entity
@@ -236,6 +267,117 @@ public class EntityFinder extends ElementFinder {
             .filter(Optional::isPresent)
             .map(Optional::get)
             .findFirst();
+    }
+
+    /**
+     * Attempts to find an accessor method for the given property by name. The whole entity type hierarchy is searched.
+     * 
+     * @param entity the entity element to be analysed 
+     * @param propertyName
+     * @return
+     */
+    public Optional<ExecutableElement> findPropertyAccessor(final EntityElement entity, final String propertyName) {
+        return doFindPropertyAccessor(streamMethods(entity.element()), propertyName);
+    }
+
+    /**
+     * Attempts to find an accessor method for the given property by path. The whole entity type hierarchy is searched.
+     * <p>
+     * The property path must be of length 1 at most. 
+     * 
+     * @param entity the entity element to be analysed 
+     * @param propertyPath
+     * @return
+     */
+    public Optional<ExecutableElement> findPropertyAccessor(final EntityElement entity, final IConvertableToPath propertyPath) {
+        return doFindPropertyAccessor(streamMethods(entity.element()), propertyPath.toPath());
+    }
+
+    /**
+     * Attempts to find a declared accessor method for the given property by name.
+     * 
+     * @param entity the entity element to be analysed 
+     * @param propertyName
+     * @return
+     */
+    public Optional<ExecutableElement> findDeclaredPropertyAccessor(final EntityElement entity, final String propertyName) {
+        return doFindPropertyAccessor(streamDeclaredMethods(entity.element()), propertyName);
+    }
+
+    /**
+     * Attempts to find a declared accessor method for the given property by path.
+     * <p>
+     * The property path must be of length 1 at most. 
+     * 
+     * @param entity the entity element to be analysed 
+     * @param propertyPath
+     * @return
+     */
+    public Optional<ExecutableElement> findDeclaredPropertyAccessor(final EntityElement entity, final IConvertableToPath propertyPath) {
+        return doFindPropertyAccessor(streamDeclaredMethods(entity.element()), propertyPath.toPath());
+    }
+
+    private Optional<ExecutableElement> doFindPropertyAccessor(final Stream<ExecutableElement> methods, final String propertyName) {
+        final String getName = Accessor.GET.getName(propertyName); 
+        final String isName = Accessor.IS.getName(propertyName); 
+
+        return methods.filter(m -> {
+            final String methodName = m.getSimpleName().toString();
+            return methodName.equals(getName) || methodName.equals(isName);
+        }).findAny();
+    }
+
+    /**
+     * Attempts to find a setter method for the given property by name. The whole entity type hierarchy is searched.
+     * 
+     * @param entity the entity element to be analysed 
+     * @param propertyName
+     * @return
+     */
+    public Optional<ExecutableElement> findPropertySetter(final EntityElement entity, final String propertyName) {
+        return doFindPropertySetter(streamMethods(entity.element()), propertyName);
+    }
+
+    /**
+     * Attempts to find a setter method for the given property by path. The whole entity type hierarchy is searched.
+     * <p>
+     * The property path must be of length 1 at most. 
+     * 
+     * @param entity the entity element to be analysed 
+     * @param propertyPath
+     * @return
+     */
+    public Optional<ExecutableElement> findPropertySetter(final EntityElement entity, final IConvertableToPath propertyPath) {
+        return doFindPropertySetter(streamMethods(entity.element()), propertyPath.toPath());
+    }
+
+    /**
+     * Attempts to find a declared setter method for the given property by name.
+     * 
+     * @param entity the entity element to be analysed 
+     * @param propertyName
+     * @return
+     */
+    public Optional<ExecutableElement> findDeclaredPropertySetter(final EntityElement entity, final String propertyName) {
+        return doFindPropertySetter(streamDeclaredMethods(entity.element()), propertyName);
+    }
+
+    /**
+     * Attempts to find a declared setter method for the given property by name.
+     * <p>
+     * The property path must be of length 1 at most. 
+     * 
+     * @param entity the entity element to be analysed 
+     * @param propertyPath
+     * @return
+     */
+    public Optional<ExecutableElement> findDeclaredPropertySetter(final EntityElement entity, final IConvertableToPath propertyPath) {
+        return doFindPropertySetter(streamDeclaredMethods(entity.element()), propertyPath.toPath());
+    }
+
+    private Optional<ExecutableElement> doFindPropertySetter(final Stream<ExecutableElement> methods, final String propertyName) {
+        final String setterName = Mutator.SETTER.getName(propertyName);
+        return methods.filter(m -> m.getSimpleName().toString().equals(setterName)).findAny();
     }
 
     /**
@@ -277,6 +419,20 @@ public class EntityFinder extends ElementFinder {
      */
     public TypeMirror getKeyType(final KeyType atKeyType) {
         return getAnnotationElementValueOfClassType(atKeyType, a -> a.value());
+    }
+
+    /**
+     * Returns an annotation value representing the actual key type specified by the {@link KeyType} annotation.
+     * <p>
+     * A runtime exception is thrown in case {@link KeyType#value()} could not be obtained, which might happend only if {@code annotMirror}
+     * does not represent {@link KeyType}.
+     * 
+     * @param atKeyType - annotation mirror representing the {@link KeyType} annotation.
+     * @return
+     */
+    public AnnotationValue getKeyTypeAnnotationValue(final AnnotationMirror annotMirror) {
+        return findAnnotationValue(annotMirror, "value")
+                .orElseThrow(() -> new ElementFinderException("Failed to obtain @KeyType.value() from annotation mirror."));
     }
 
     /**
@@ -341,6 +497,14 @@ public class EntityFinder extends ElementFinder {
             return false;
         }
         return isEntityThatNeedsMetaModel(asTypeElementOfTypeMirror(type));
+    }
+
+    /**
+     * Tests whether the property element represents a collectional property.
+     * This method is similar to {@link EntityUtils#isCollectional(Class)}.
+     */
+    public boolean isCollectionalProperty(final PropertyElement property) {
+        return isSubtype(property.getType(), Collection.class);
     }
 
     /**

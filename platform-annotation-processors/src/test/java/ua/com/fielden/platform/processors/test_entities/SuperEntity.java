@@ -58,7 +58,7 @@ public class SuperEntity extends AbstractEntity<String> {
         return this;
     }
 
-    public String getName() {
+    public String getProp1() {
         return prop1;
     }
 

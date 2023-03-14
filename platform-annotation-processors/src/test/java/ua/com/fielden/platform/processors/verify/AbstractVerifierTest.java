@@ -1,11 +1,12 @@
 package ua.com.fielden.platform.processors.verify;
 
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
 
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Function;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.JavaCompiler;
@@ -17,27 +18,32 @@ import com.squareup.javapoet.TypeSpec;
 
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileManager;
-import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
+import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
+import ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils;
 
 /**
- * Base class for unit tests targeted at {@link Verifier} implementations.
+ * Base class for unit tests targeted at {@link IVerifier} implementations.
  * 
  * @author TG Team
  */
 public abstract class AbstractVerifierTest {
-    
-    /**
-     * Returns a provider of a {@link Verifier} implementation that will be initialized by the {@link VerifyingProcessor} during tests.
-     * @return
-     */
-    abstract protected Function<ProcessingEnvironment, Verifier> verifierProvider();
 
     /**
-     * Returns a new instance of the verifying processor that will initialize and use the sole verifier provided by {@link #verifierProvider()}.
+     * Returns a verifier instance that will be used by the {@link VerifyingProcessor} during tests.
+     * <p>
+     * In case of a test class that targets a composable verifier and contains nested test classes for its respective components
+     * this method might be irrelevant.
      * @return
      */
-    protected final VerifyingProcessor createProcessor() {
-        return new VerifyingProcessor(List.of(verifierProvider()));
+    abstract protected IVerifier createVerifier(final ProcessingEnvironment procEnv);
+
+    /**
+     * Returns a new instance of the verifying processor that will initialize and use the sole verifier provided by 
+     * {@link #createVerifier(ProcessingEnvironment)}.
+     * @return
+     */
+    private final VerifyingProcessor createProcessor() {
+        return new VerifyingProcessor(List.of(this::createVerifier));
     }
 
     /**
@@ -51,7 +57,7 @@ public abstract class AbstractVerifierTest {
      * @param typeSpecs
      * @return
      */
-    protected Compilation buildCompilation(final Collection<TypeSpec> typeSpecs) {
+    protected final Compilation buildCompilation(final Collection<TypeSpec> typeSpecs) {
         final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
         final InMemoryJavaFileManager fileManager = new InMemoryJavaFileManager(compiler.getStandardFileManager(null, null, null));
         final List<JavaFileObject> compilationTargets = typeSpecs.stream()
@@ -64,9 +70,33 @@ public abstract class AbstractVerifierTest {
                 .setFileManager(fileManager)
                 .setOptions(OPTION_PROC_ONLY);
     }
-    
+
     /** Refer to {@link #buildCompilation(Collection)}. */
-    protected Compilation buildCompilation(final TypeSpec... typeSpecs) {
+    protected final Compilation buildCompilation(final TypeSpec... typeSpecs) {
         return buildCompilation(Arrays.asList(typeSpecs));
     }
+
+    /**
+     * A convenient method to compile {@code typeSpecs} and asssert that the given error message was reported.
+     * @return the resulting compilation instance
+     */
+    protected final Compilation compileAndAssertError(final Collection<TypeSpec> typeSpecs, final String expectedErrorMessage) {
+        final Compilation compilation = buildCompilation(typeSpecs);
+        final boolean success = VerifierTestUtils.compileAndPrintDiagnostics(compilation);
+        assertFalse("Compilaton should have failed.", success);
+        VerifierTestUtils.assertErrorReported(compilation, expectedErrorMessage);
+        return compilation;
+    }
+
+    /**
+     * A convenient method to compile {@code typeSpecs} and asssert compilation successs.
+     * @return the resulting compilation instance
+     */
+    protected final Compilation compileAndAssertSuccess(final Collection<TypeSpec> typeSpecs) {
+        final Compilation compilation = buildCompilation(typeSpecs);
+        final boolean success = VerifierTestUtils.compileAndPrintDiagnostics(compilation);
+        assertTrue("Compilaton should have succeeded.", success);
+        return compilation;
+    }
+
 }
