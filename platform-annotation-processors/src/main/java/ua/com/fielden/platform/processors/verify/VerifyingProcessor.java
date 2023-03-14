@@ -15,6 +15,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 
 import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
+import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier;
@@ -101,7 +102,10 @@ public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
         boolean roundPassed = true;
 
         for (final IVerifier verifier : registeredVerifiers) {
-            final List<ViolatingElement> erronousElements = verifier.verify(roundEnv).stream().filter(ViolatingElement::hasError).toList();
+            final List<ViolatingElement> erronousElements = verifier.verify(roundEnv).stream()
+                    .filter(ve -> !SkipVerification.Factory.shouldSkipVerification(ve.element()))
+                    .filter(ViolatingElement::hasError)
+                    .toList();
             if (!erronousElements.isEmpty()) {
                 roundPassed = false;
                 printError(errVerifierNotPassedBy(verifier.getClass().getSimpleName(),

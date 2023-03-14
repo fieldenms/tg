@@ -19,6 +19,7 @@ import javax.tools.Diagnostic;
 import javax.tools.Diagnostic.Kind;
 
 import ua.com.fielden.platform.processors.verify.annotation.RelaxVerification;
+import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 
 /**
@@ -33,6 +34,7 @@ import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 public class ViolatingElement {
     private final Element element;
     private final Kind kind;
+    /** The relaxed kind of this element if it's annotated with {@link RelaxVerification}, otherwise equal to the original kind. */
     private final Kind relaxedKind;
     private final String message;
     private final Optional<AnnotationMirror> annotationMirror;
@@ -92,9 +94,16 @@ public class ViolatingElement {
 
     /**
      * Prints a message using the information stored by this instance.
+     * <p>
+     * If the underlying element is annotated with {@link SkipVerification}, then nothing is printed.
+     *
      * @param messager
      */
     public void printMessage(final Messager messager) {
+        if (SkipVerification.Factory.shouldSkipVerification(element)) {
+            return;
+        }
+
         // use the relaxed kind for the message
         if (annotationMirror.isEmpty()) { /* simplest form of message that is present directly on the element */
             messager.printMessage(relaxedKind, message, element);
