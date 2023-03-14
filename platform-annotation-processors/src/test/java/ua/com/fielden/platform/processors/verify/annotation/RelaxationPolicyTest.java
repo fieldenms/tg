@@ -5,9 +5,7 @@ import static javax.tools.Diagnostic.Kind.MANDATORY_WARNING;
 import static javax.tools.Diagnostic.Kind.NOTE;
 import static javax.tools.Diagnostic.Kind.WARNING;
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertThrows;
 import static ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy.INFO;
-import static ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy.SKIP;
 import static ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy.WARN;
 
 import java.util.EnumSet;
@@ -44,12 +42,6 @@ public class RelaxationPolicyTest {
         for (final var kind: List.of(ERROR, WARNING, MANDATORY_WARNING)) {
             assertEquals(NOTE, INFO.relaxedKind(kind));
         }
-    }
-
-    @Test
-    public void policy_SKIP_throws_if_relaxedKind_is_called() {
-        assertThrows("Relaxation Policy SKIP cannot be used to relax a diagnostic kind.", Throwable.class,
-                () -> SKIP.relaxedKind(ERROR));
     }
 
 }

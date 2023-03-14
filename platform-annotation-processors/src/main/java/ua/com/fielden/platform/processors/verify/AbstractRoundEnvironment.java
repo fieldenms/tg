@@ -17,6 +17,7 @@ import javax.lang.model.element.TypeElement;
 
 import ua.com.fielden.platform.processors.verify.annotation.RelaxVerification;
 import ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy;
+import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 
 /**
  * A base class for wrappers around {@link RoundEnvironment} that shall provide additional functionality, such as finding specific elements and
@@ -47,13 +48,13 @@ public abstract class AbstractRoundEnvironment {
     }
 
     /**
-     * Filters out elements annotated with {@link RelaxVerification} that have {@link RelaxationPolicy#SKIP}.
+     * Filters out elements annotated with {@link SkipVerifciation}.
      *
      * @param elements  stream of input elements
      * @return          filtered stream of input elements
      */
     private Stream<? extends Element> skipElements(final Stream<? extends Element> elements) {
-        return elements.filter(elt -> !RelaxVerification.Factory.hasPolicy(elt, RelaxationPolicy.SKIP));
+        return elements.filter(elt -> !SkipVerification.Factory.shouldSkipVerification(elt));
     }
 
     /**

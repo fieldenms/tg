@@ -6,7 +6,6 @@ import static javax.tools.Diagnostic.Kind.NOTE;
 import static javax.tools.Diagnostic.Kind.WARNING;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy.INFO;
-import static ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy.SKIP;
 import static ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy.WARN;
 
 import java.util.List;
@@ -44,16 +43,6 @@ public class RelaxVerificationTest extends AbstractVerifierTest {
     @Override
     protected IVerifier createVerifier(final ProcessingEnvironment procEnv) {
         return new MessagePrintingVerifier(procEnv);
-    }
-
-    @Test
-    public void root_elements_with_RelaxationPolicy_SKIP_are_not_verified() {
-        final TypeSpec example = TypeSpec.classBuilder("Example")
-                .addAnnotation(AnnotationSpec.get(RelaxVerification.Factory.create(SKIP)))
-                .addAnnotation(AnnotationSpec.get(Message.Factory.create("INVALID CLASS", ERROR)))
-                .build();
-
-        compileAndAssertSuccess(List.of(example));
     }
 
     @Test

@@ -2,9 +2,7 @@ package ua.com.fielden.platform.processors.verify.annotation;
 
 import java.util.EnumMap;
 
-import javax.tools.Diagnostic.Kind;
-
-import ua.com.fielden.platform.processors.verify.exceptions.VerifierException;;
+import javax.tools.Diagnostic.Kind;;
 
 /**
  * Verification relaxation policy. The constants of this enumerated class describe the various policies for relaxing verification.
@@ -23,12 +21,7 @@ public enum RelaxationPolicy {
      * Report errors and warnings as informative messages.
      * That is, relax {@link Kind#ERROR}, {@link Kind#WARNING}, {@link Kind#MANDATORY_WARNING} to {@link Kind#NOTE}.
      */
-    INFO(Kind.NOTE),
-
-    /**
-     * Skip verification entirely.
-     */
-    SKIP(null);
+    INFO(Kind.NOTE);
 
 
     private final Kind kind;
@@ -42,13 +35,9 @@ public enum RelaxationPolicy {
      * than the given one.
      *
      * @param kind
-     * @return
-     * @throws VerifierExceptioin   if this enum constant is {@link #SKIP}
+     * @return the relaxed kind
      */
     public Kind relaxedKind(final Kind kind) {
-        if (this == SKIP) {
-            throw new VerifierException("Relaxation Policy SKIP cannot be used to relax a diagnostic kind.");
-        }
         // if given kind is more severe, then relax it
         return (severityOf(kind) > severityOf(this.kind)) ? this.kind : kind;
     }

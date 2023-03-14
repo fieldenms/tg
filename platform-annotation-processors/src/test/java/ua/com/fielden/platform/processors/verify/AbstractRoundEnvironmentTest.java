@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.processors.verify;
 
 import static org.junit.Assert.assertEquals;
-import static ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy.SKIP;
 
 import java.util.List;
 import java.util.Set;
@@ -22,7 +21,7 @@ import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.test_utils.ExampleAnnotation;
 import ua.com.fielden.platform.processors.test_utils.SelectedRoundsProcessor;
-import ua.com.fielden.platform.processors.verify.annotation.RelaxVerification;
+import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
 
 /**
  * A test case for {@link AbstractRoundEnvironment}.
@@ -32,10 +31,10 @@ import ua.com.fielden.platform.processors.verify.annotation.RelaxVerification;
 public class AbstractRoundEnvironmentTest {
 
     @Test
-    public void getRootElements_does_not_include_elements_with_RelaxationPolicy_SKIP() {
+    public void getRootElements_does_not_include_elements_annotated_with_SkipVerification() {
         List<? extends JavaFileObject> sources = Stream.of(
                 // @RelaxationPolicy(SKIP) class Skip {}
-                TypeSpec.classBuilder("Skip").addAnnotation(AnnotationSpec.get(RelaxVerification.Factory.create(SKIP))).build(),
+                TypeSpec.classBuilder("Skip").addAnnotation(AnnotationSpec.get(SkipVerification.Factory.create())).build(),
                 // class Include {}
                 TypeSpec.classBuilder("Include").build())
                 .map(ts -> JavaFile.builder(/*packageName*/ "", ts).build().toJavaFileObject())
@@ -56,11 +55,11 @@ public class AbstractRoundEnvironmentTest {
     }
 
     @Test
-    public void getElementsAnnotatedWith_does_not_include_elements_with_RelaxationPolicy_SKIP() {
+    public void getElementsAnnotatedWith_does_not_include_elements_annotated_with_SkipVerification() {
         List<? extends JavaFileObject> sources = Stream.of(
                 // @ExampleAnnotation @RelaxationPolicy(SKIP) class Skip {}
                 TypeSpec.classBuilder("Skip")
-                    .addAnnotation(AnnotationSpec.get(RelaxVerification.Factory.create(SKIP)))
+                    .addAnnotation(AnnotationSpec.get(SkipVerification.Factory.create()))
                     .addAnnotation(ExampleAnnotation.class)
                     .build(),
                 // @ExampleAnnotation class Include {}
