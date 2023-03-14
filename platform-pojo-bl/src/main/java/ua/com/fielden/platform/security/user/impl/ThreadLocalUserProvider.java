@@ -2,6 +2,8 @@ package ua.com.fielden.platform.security.user.impl;
 
 import static java.lang.String.format;
 
+import com.google.inject.Singleton;
+
 import ua.com.fielden.platform.security.exceptions.SecurityException;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
@@ -13,6 +15,7 @@ import ua.com.fielden.platform.security.user.User;
  * @author TG Team
  * 
  */
+@Singleton
 public class ThreadLocalUserProvider implements IUserProvider {
 
     private final ThreadLocal<User> users = new ThreadLocal<>();
