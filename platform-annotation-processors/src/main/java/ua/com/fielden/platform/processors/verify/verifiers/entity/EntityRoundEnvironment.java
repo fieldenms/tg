@@ -21,7 +21,7 @@ import ua.com.fielden.platform.processors.verify.ViolatingElement;
  *
  * @author TG Team
  */
-public class EntityRoundEnvironment extends AbstractRoundEnvironment {
+public class EntityRoundEnvironment extends AbstractRoundEnvironment<AbstractEntityElementVerifier> {
     private EntityFinder entityFinder;
 
     /** Holds a memoized list of root entity elements in the current round. */
@@ -47,17 +47,18 @@ public class EntityRoundEnvironment extends AbstractRoundEnvironment {
     }
 
     /**
-     * Accepts an entity verifying visitor and applies it to each root entity element in this round.
+     * Accepts an entity verifier and applies it to each root entity element in this round.
      * Returns a list containing entity elements that did not pass verification.
      * 
-     * @param visitor
+     * @param verifier
      * @return
      */
-    public List<ViolatingElement> accept(final AbstractEntityVerifyingVisitor visitor) {
+    @Override
+    public List<ViolatingElement> findViolatingElements(final AbstractEntityElementVerifier verifier) {
         final List<ViolatingElement> violators = new LinkedList<>();
 
         listEntities().stream()
-            .map(entity -> visitor.visitEntity(entity))
+            .map(entity -> verifier.verifyEntity(entity))
             .filter(Optional::isPresent)
             .map(Optional::get)
             .forEach(ve -> {
@@ -69,18 +70,18 @@ public class EntityRoundEnvironment extends AbstractRoundEnvironment {
     }
 
     /**
-     * Accepts a verifying visitor for declared properties of an entity and applies it to each root entity element in this round.
+     * Accepts a verifier for declared properties of an entity and applies it to each root entity element in this round.
      * Returns a list containing property elements that did not pass verification.
      * 
-     * @param visitor
+     * @param verifier
      * @return
      */
-    public List<ViolatingElement> acceptDeclaredPropertiesVisitor(final AbstractPropertyVerifyingVisitor visitor) {
+    public List<ViolatingElement> findViolatingDeclaredProperties(final AbstractPropertyElementVerifier verifier) {
         final List<ViolatingElement> violators = new LinkedList<>();
 
         listEntities().stream()
             .flatMap(entity -> entityFinder.streamDeclaredProperties(entity).map(prop -> t2(entity, prop)))
-            .map(entityAndProp -> visitor.visitProperty(entityAndProp._1, entityAndProp._2))
+            .map(entityAndProp -> verifier.verifyProperty(entityAndProp._1, entityAndProp._2))
             .filter(Optional::isPresent)
             .map(Optional::get)
             .forEach(ve -> {

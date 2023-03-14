@@ -11,28 +11,28 @@ import ua.com.fielden.platform.processors.verify.IElementVerifier;
 import ua.com.fielden.platform.processors.verify.ViolatingElement;
 
 /**
- * Verifying visitor for entity properties.
+ * A base type for verifiers that verify entity properties, represented by {@link PropertyElement}.
  *
  * @author TG Team
  */
-public abstract class AbstractPropertyVerifyingVisitor implements IElementVerifier {
+public abstract class AbstractPropertyElementVerifier implements IElementVerifier {
     protected EntityFinder entityFinder;
 
-    public AbstractPropertyVerifyingVisitor(final EntityFinder entityFinder) {
+    public AbstractPropertyElementVerifier(final EntityFinder entityFinder) {
         this.entityFinder = entityFinder;
     }
 
     /**
-     * This operation is unsupported for this visitor.
+     * This operation is unsupported for this verifier.
      */
     @Override
-    public final Optional<ViolatingElement> verify(final Element element) { 
+    public final Optional<ViolatingElement> verify(final Element element) {
         throw new UnsupportedOperationException();
     }
 
     /**
-     * Visits a property of an entity.
+     * Verifies a property of an entity.
      */
-    public abstract Optional<ViolatingElement> visitProperty(final EntityElement entity, final PropertyElement property);
+    public abstract Optional<ViolatingElement> verifyProperty(final EntityElement entity, final PropertyElement property);
 
 }

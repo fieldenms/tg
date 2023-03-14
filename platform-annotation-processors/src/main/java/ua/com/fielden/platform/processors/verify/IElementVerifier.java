@@ -17,7 +17,7 @@ import ua.com.fielden.platform.processors.verify.verifiers.AbstractVerifier;
 public interface IElementVerifier {
 
     /**
-     * Visits an arbitrary element and returns an optional describing it in case verification was not passed.
+     * Verifies an arbitrary element and returns an optional describing it in case verification did not succeed.
      * @param element
      * @return
      */

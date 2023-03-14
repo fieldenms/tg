@@ -73,17 +73,17 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
         }
 
         public List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
-            return roundEnv.accept(new EntityVisitor(entityFinder));
+            return roundEnv.findViolatingElements(new EntityVerifier(entityFinder));
         }
 
-        private class EntityVisitor extends AbstractEntityVerifyingVisitor {
+        private class EntityVerifier extends AbstractEntityElementVerifier {
 
-            public EntityVisitor(final EntityFinder entityFinder) {
+            public EntityVerifier(final EntityFinder entityFinder) {
                 super(entityFinder);
             }
 
             @Override
-            public Optional<ViolatingElement> visitEntity(final EntityElement entity) {
+            public Optional<ViolatingElement> verifyEntity(final EntityElement entity) {
                 if (!ElementFinder.isAbstract(entity) && entityFinder.findAnnotation(entity, AT_KEY_TYPE_CLASS).isEmpty()) {
                     return Optional.of(new ViolatingElement(entity.element(), Kind.ERROR, ENTITY_DEFINITION_IS_MISSING_KEY_TYPE));
                 }
@@ -117,17 +117,17 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
         }
 
         public List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
-            return roundEnv.accept(new EntityVisitor(entityFinder));
+            return roundEnv.findViolatingElements(new EntityVerifier(entityFinder));
         }
 
-        private class EntityVisitor extends AbstractEntityVerifyingVisitor {
+        private class EntityVerifier extends AbstractEntityElementVerifier {
 
-            public EntityVisitor(final EntityFinder entityFinder) {
+            public EntityVerifier(final EntityFinder entityFinder) {
                 super(entityFinder);
             }
 
             @Override
-            public Optional<ViolatingElement> visitEntity(final EntityElement entity) {
+            public Optional<ViolatingElement> verifyEntity(final EntityElement entity) {
                 final Optional<? extends AnnotationMirror> maybeKeyTypeAnnotMirror = entityFinder.findAnnotationMirror(entity, AT_KEY_TYPE_CLASS);
                 if (maybeKeyTypeAnnotMirror.isEmpty()) {
                     return Optional.empty();
@@ -179,17 +179,17 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
         }
 
         public List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
-            return roundEnv.accept(new EntityVisitor(entityFinder));
+            return roundEnv.findViolatingElements(new EntityVerifier(entityFinder));
         }
 
-        private class EntityVisitor extends AbstractEntityVerifyingVisitor {
+        private class EntityVerifier extends AbstractEntityElementVerifier {
 
-            public EntityVisitor(final EntityFinder entityFinder) {
+            public EntityVerifier(final EntityFinder entityFinder) {
                 super(entityFinder);
             }
 
             @Override
-            public Optional<ViolatingElement> visitEntity(final EntityElement entity) {
+            public Optional<ViolatingElement> verifyEntity(final EntityElement entity) {
                 final Optional<? extends AnnotationMirror> maybeEntityKeyTypeAnnotMirror = entityFinder.findAnnotationMirror(entity, AT_KEY_TYPE_CLASS);
                 if (maybeEntityKeyTypeAnnotMirror.isEmpty()) {
                     return Optional.empty();
@@ -238,17 +238,17 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
 
         @Override
         public List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
-            return roundEnv.accept(new EntityVisitor(entityFinder));
+            return roundEnv.findViolatingElements(new EntityVerifier(entityFinder));
         }
 
-        private class EntityVisitor extends AbstractEntityVerifyingVisitor {
+        private class EntityVerifier extends AbstractEntityElementVerifier {
 
-            public EntityVisitor(final EntityFinder entityFinder) {
+            public EntityVerifier(final EntityFinder entityFinder) {
                 super(entityFinder);
             }
 
             @Override
-            public Optional<ViolatingElement> visitEntity(final EntityElement entity) {
+            public Optional<ViolatingElement> verifyEntity(final EntityElement entity) {
                 final Optional<PropertyElement> maybeKeyProp = entityFinder.findDeclaredProperty(entity, AbstractEntity.KEY);
                 if (maybeKeyProp.isEmpty()) {
                     return Optional.empty();

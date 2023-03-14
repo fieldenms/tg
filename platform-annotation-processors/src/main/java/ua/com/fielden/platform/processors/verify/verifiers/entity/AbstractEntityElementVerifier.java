@@ -11,29 +11,29 @@ import ua.com.fielden.platform.processors.verify.IElementVerifier;
 import ua.com.fielden.platform.processors.verify.ViolatingElement;
 
 /**
- * Verifying visitor for entity elements.
+ * A base type for verifiers that verify entities, represented by {@link EntityElement}.
  *
  * @author TG Team
  */
-public abstract class AbstractEntityVerifyingVisitor implements IElementVerifier {
+public abstract class AbstractEntityElementVerifier implements IElementVerifier {
     protected EntityFinder entityFinder;
 
-    public AbstractEntityVerifyingVisitor(final EntityFinder entityFinder) {
+    public AbstractEntityElementVerifier(final EntityFinder entityFinder) {
         this.entityFinder = entityFinder;
     }
 
     /**
-     * Visits an element and forwards to {@link #visitEntity(EntityElement)} only if the element represents an entity.
+     * Verifies an element and forwards to {@link #verifyEntity(EntityElement)} only if the element represents an entity.
      * Otherwise returns an empty optional.
      */
     @Override
     public final Optional<ViolatingElement> verify(final Element element) { 
         if (entityFinder.isEntityType(element.asType())) {
-            return visitEntity(entityFinder.newEntityElement((TypeElement) element));
+            return verifyEntity(entityFinder.newEntityElement((TypeElement) element));
         }
         return Optional.empty();
     }
 
-    public abstract Optional<ViolatingElement> visitEntity(final EntityElement entity);
+    public abstract Optional<ViolatingElement> verifyEntity(final EntityElement entity);
 
 }
