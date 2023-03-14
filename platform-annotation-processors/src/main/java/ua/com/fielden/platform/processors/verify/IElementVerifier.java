@@ -11,6 +11,8 @@ import ua.com.fielden.platform.processors.verify.verifiers.AbstractVerifier;
  * <p>
  * Element verifiers can be accepted by {@link AbstractRoundEnvironment}, which is used by {@link AbstractVerifier}.
  *
+ * @param <EL> the type of the element being verified
+ *
  * @author TG Team
  */
 public interface IElementVerifier<EL> {

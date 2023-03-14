@@ -1,9 +1,7 @@
 package ua.com.fielden.platform.processors.verify;
 
 import java.lang.annotation.Annotation;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.processing.Messager;
@@ -13,12 +11,15 @@ import javax.lang.model.element.TypeElement;
 
 /**
  * A base class for wrappers around {@link RoundEnvironment} that shall provide additional functionality, such as finding specific elements and
- * memoizing results to improve performance. 
+ * memoizing results to improve performance.
  * <p>
  * In the context of composable verifiers memoization can significanly improve performance, since a single instance is shared between
  * all components.
  * <p>
  * For convenience this class declares forwarding methods that replicate those declared by {@link RoundEnvironment} interface.
+ *
+ * @param <EV> the type of the element verifier accepted by this round environment
+ * @param <EL> the type of the element verified by the accepted verifier
  *
  * @author TG Team
  */
