@@ -286,6 +286,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
             // TODO Implement when ApplicationDomain becomes analysable by annotation processors or
             // some other suitable entity registration mechanism is used.
             // Currently, entity types are registered in the static initialiser block, which is unreachable to annotation processors.
+            // Refer issue https://github.com/fieldenms/tg/issues/1946
             return true;
         }
 
