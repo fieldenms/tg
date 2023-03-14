@@ -9,7 +9,6 @@ import java.util.Optional;
 
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
@@ -22,8 +21,8 @@ import ua.com.fielden.platform.processors.verify.ViolatingElement;
  *
  * @author TG Team
  */
-public class EntityRoundEnvironment extends AbstractRoundEnvironment<Element, AbstractEntityElementVerifier> {
-    private EntityFinder entityFinder;
+public class EntityRoundEnvironment extends AbstractRoundEnvironment<EntityElement, AbstractEntityElementVerifier> {
+    private final EntityFinder entityFinder;
 
     /** Holds a memoized list of root entity elements in the current round. */
     private List<EntityElement> entities;
@@ -50,7 +49,7 @@ public class EntityRoundEnvironment extends AbstractRoundEnvironment<Element, Ab
     /**
      * Accepts an entity verifier and applies it to each root entity element in this round.
      * Returns a list containing entity elements that did not pass verification.
-     * 
+     *
      * @param verifier
      * @return
      */
@@ -73,7 +72,7 @@ public class EntityRoundEnvironment extends AbstractRoundEnvironment<Element, Ab
     /**
      * Accepts a verifier for declared properties of an entity and applies it to each root entity element in this round.
      * Returns a list containing property elements that did not pass verification.
-     * 
+     *
      * @param verifier
      * @return
      */
