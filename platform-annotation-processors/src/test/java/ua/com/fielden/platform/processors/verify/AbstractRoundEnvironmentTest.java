@@ -3,12 +3,10 @@ package ua.com.fielden.platform.processors.verify;
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy.SKIP;
 
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
-import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.TypeElement;
@@ -23,6 +21,7 @@ import com.squareup.javapoet.TypeSpec;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.test_utils.ExampleAnnotation;
+import ua.com.fielden.platform.processors.test_utils.SelectedRoundsProcessor;
 import ua.com.fielden.platform.processors.verify.annotation.RelaxVerification;
 
 /**
@@ -82,50 +81,6 @@ public class AbstractRoundEnvironmentTest {
         };
 
         new Compilation(sources).setProcessor(processor).compile();
-    }
-
-    /**
-     * An abstract annotation processor that processes only the selected rounds. It is designed primarily for testing purposes.
-     *
-     * @author homedirectory
-     */
-    public static abstract class SelectedRoundsProcessor extends AbstractProcessor {
-
-        private int roundNumber = 0;
-        private final Set<Integer> selectedRounds = new HashSet<>();
-
-        public SelectedRoundsProcessor(Set<Integer> selectedRounds) {
-            this.selectedRounds.addAll(selectedRounds);
-        }
-
-        @Override
-        public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-            this.roundNumber++;
-            if (selectedRounds.contains(roundNumber)) {
-                return processRound(annotations, roundEnv, roundNumber);
-            }
-            return false;
-        }
-
-        protected abstract boolean processRound(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv, int roundNumber);
-
-        /**
-         * An abstract annotation processor that processes only the first round. It is designed primarily for testing purposes.
-         *
-         * @author homedirectory
-         */
-        public static abstract class FirstRoundProcessor extends SelectedRoundsProcessor {
-            private static final Set<Integer> SELECTED_ROUNDS = Set.of(1);
-
-            private FirstRoundProcessor(Set<Integer> selectedRounds) {
-                super(selectedRounds);
-            }
-
-            public FirstRoundProcessor() {
-                this(SELECTED_ROUNDS);
-            }
-        }
-
     }
 
 }
