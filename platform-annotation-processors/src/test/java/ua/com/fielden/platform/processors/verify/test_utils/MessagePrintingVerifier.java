@@ -4,11 +4,9 @@ import java.util.LinkedList;
 import java.util.List;
 
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.annotation.processing.RoundEnvironment;
 
 import ua.com.fielden.platform.processors.verify.AbstractRoundEnvironment;
 import ua.com.fielden.platform.processors.verify.ViolatingElement;
-import ua.com.fielden.platform.processors.verify.verifiers.AbstractVerifier;
 
 /**
  * A verifier that finds all elements annotated with {@link Message} and for each found element reports the specified message
@@ -17,7 +15,7 @@ import ua.com.fielden.platform.processors.verify.verifiers.AbstractVerifier;
  *
  * @author homedirectory
  */
-public class MessagePrintingVerifier extends AbstractVerifier<AbstractRoundEnvironment> {
+public class MessagePrintingVerifier extends AbstractSimpleVerifier {
 
     public MessagePrintingVerifier(final ProcessingEnvironment processingEnv) {
         super(processingEnv);
@@ -38,11 +36,6 @@ public class MessagePrintingVerifier extends AbstractVerifier<AbstractRoundEnvir
         });
 
         return violators;
-    }
-
-    @Override
-    protected AbstractRoundEnvironment wrapRoundEnvironment(RoundEnvironment roundEnv) {
-        return new AbstractRoundEnvironment(roundEnv, messager) { };
     }
 
 }
