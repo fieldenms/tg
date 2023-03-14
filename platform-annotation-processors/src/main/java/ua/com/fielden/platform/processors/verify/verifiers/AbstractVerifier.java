@@ -63,7 +63,7 @@ public abstract class AbstractVerifier<RE extends AbstractRoundEnvironment> impl
      * {@inheritDoc}
      * <p>
      * Verifier implementations shall use {@link #verify(AbstractRoundEnvironment)} instead of this method, which is kept for interface
-     * conformability and also for testing purposes.
+     * conformity and also for testing purposes.
      */
     @Override
     public final List<ViolatingElement> verify(final RoundEnvironment roundEnv) {

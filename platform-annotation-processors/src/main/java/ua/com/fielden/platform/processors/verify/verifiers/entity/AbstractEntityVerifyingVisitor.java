@@ -7,7 +7,7 @@ import javax.lang.model.element.TypeElement;
 
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
-import ua.com.fielden.platform.processors.verify.IVerifyingVisitor;
+import ua.com.fielden.platform.processors.verify.IElementVerifier;
 import ua.com.fielden.platform.processors.verify.ViolatingElement;
 
 /**
@@ -15,7 +15,7 @@ import ua.com.fielden.platform.processors.verify.ViolatingElement;
  *
  * @author TG Team
  */
-public abstract class AbstractEntityVerifyingVisitor implements IVerifyingVisitor {
+public abstract class AbstractEntityVerifyingVisitor implements IElementVerifier {
     protected EntityFinder entityFinder;
 
     public AbstractEntityVerifyingVisitor(final EntityFinder entityFinder) {
@@ -27,7 +27,7 @@ public abstract class AbstractEntityVerifyingVisitor implements IVerifyingVisito
      * Otherwise returns an empty optional.
      */
     @Override
-    public final Optional<ViolatingElement> visitElement(final Element element) { 
+    public final Optional<ViolatingElement> verify(final Element element) { 
         if (entityFinder.isEntityType(element.asType())) {
             return visitEntity(entityFinder.newEntityElement((TypeElement) element));
         }

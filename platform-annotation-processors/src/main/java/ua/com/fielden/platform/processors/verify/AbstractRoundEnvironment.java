@@ -46,11 +46,11 @@ public abstract class AbstractRoundEnvironment {
      * @param visitor
      * @return
      */
-    public List<ViolatingElement> accept(final IVerifyingVisitor visitor) {
+    public List<ViolatingElement> accept(final IElementVerifier visitor) {
         final List<ViolatingElement> violators = new LinkedList<>();
 
         roundEnv.getRootElements().stream()
-            .map(entity -> visitor.visitElement(entity))
+            .map(entity -> visitor.verify(entity))
             .filter(Optional::isPresent)
             .map(Optional::get)
             .forEach(ve -> {

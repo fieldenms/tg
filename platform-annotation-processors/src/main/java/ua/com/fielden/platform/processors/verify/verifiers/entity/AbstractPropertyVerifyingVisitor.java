@@ -7,7 +7,7 @@ import javax.lang.model.element.Element;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
-import ua.com.fielden.platform.processors.verify.IVerifyingVisitor;
+import ua.com.fielden.platform.processors.verify.IElementVerifier;
 import ua.com.fielden.platform.processors.verify.ViolatingElement;
 
 /**
@@ -15,7 +15,7 @@ import ua.com.fielden.platform.processors.verify.ViolatingElement;
  *
  * @author TG Team
  */
-public abstract class AbstractPropertyVerifyingVisitor implements IVerifyingVisitor {
+public abstract class AbstractPropertyVerifyingVisitor implements IElementVerifier {
     protected EntityFinder entityFinder;
 
     public AbstractPropertyVerifyingVisitor(final EntityFinder entityFinder) {
@@ -26,7 +26,7 @@ public abstract class AbstractPropertyVerifyingVisitor implements IVerifyingVisi
      * This operation is unsupported for this visitor.
      */
     @Override
-    public final Optional<ViolatingElement> visitElement(final Element element) { 
+    public final Optional<ViolatingElement> verify(final Element element) { 
         throw new UnsupportedOperationException();
     }
 
