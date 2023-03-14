@@ -165,10 +165,11 @@ function setKeyFields(entity, embeddedMaster) {
  * 
  * @param {String} text - text to copy into clipboard.
  */
-function copyToClipboard(inputLayer) {
+function copyToClipboard(inputLayer, showCopiedIcon) {
     if (navigator.clipboard) {
         const text = [...inputLayer.childNodes].filter(node => node.style && getComputedStyle(node).display !== 'none').map(node => node.innerText).join("");
         navigator.clipboard.writeText(text);
+        showCopiedIcon();
     }
 }
 
@@ -554,7 +555,7 @@ export class TgEntityEditor extends TgEditor {
 
     _copyFromLayerIfPresent(superCopy) {
         if (this._hasLayer) {
-            copyToClipboard(this.$.inputLayer);
+            copyToClipboard(this.$.inputLayer, this._showCopiedIcon.bind(this));
         } else {
             superCopy();
         }

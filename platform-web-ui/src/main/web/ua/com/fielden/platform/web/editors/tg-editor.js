@@ -790,7 +790,15 @@ export class TgEditor extends PolymerElement {
     _copyTap () {
         if (navigator.clipboard) {
             navigator.clipboard.writeText(this._editingValue);
+            this._showCopiedIcon();
         }
+    }
+
+    _showCopiedIcon () {
+        this.$.copyIcon.icon = "icons:check";
+        setTimeout(function() {
+            this.$.copyIcon.icon = "icons:content-copy";
+        }.bind(this), 1000);
     }
     
     _updateMessagesForEntity (newEntity) {
