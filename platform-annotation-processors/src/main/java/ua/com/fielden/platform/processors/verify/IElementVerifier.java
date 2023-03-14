@@ -14,13 +14,13 @@ import ua.com.fielden.platform.processors.verify.verifiers.AbstractVerifier;
  *
  * @author TG Team
  */
-public interface IElementVerifier {
+public interface IElementVerifier<EL> {
 
     /**
      * Verifies an arbitrary element and returns an optional describing it in case verification did not succeed.
      * @param element
      * @return
      */
-    public Optional<ViolatingElement> verify(final Element element);
+    public Optional<ViolatingElement> verify(final EL element);
 
 }

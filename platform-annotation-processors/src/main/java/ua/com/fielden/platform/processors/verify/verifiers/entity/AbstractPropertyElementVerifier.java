@@ -2,20 +2,19 @@ package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
 import java.util.Optional;
 
-import javax.lang.model.element.Element;
-
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.verify.IElementVerifier;
 import ua.com.fielden.platform.processors.verify.ViolatingElement;
+import ua.com.fielden.platform.types.tuples.T2;
 
 /**
  * A base type for verifiers that verify entity properties, represented by {@link PropertyElement}.
  *
  * @author TG Team
  */
-public abstract class AbstractPropertyElementVerifier implements IElementVerifier {
+public abstract class AbstractPropertyElementVerifier implements IElementVerifier<T2<EntityElement, PropertyElement>> {
     protected EntityFinder entityFinder;
 
     public AbstractPropertyElementVerifier(final EntityFinder entityFinder) {
@@ -23,11 +22,11 @@ public abstract class AbstractPropertyElementVerifier implements IElementVerifie
     }
 
     /**
-     * This operation is unsupported for this verifier.
+     * Delegates to {@link #verifyProperty(EntityElement, PropertyElement)}.
      */
     @Override
-    public final Optional<ViolatingElement> verify(final Element element) {
-        throw new UnsupportedOperationException();
+    public final Optional<ViolatingElement> verify(final T2<EntityElement, PropertyElement> element) {
+        return verifyProperty(element._1, element._2);
     }
 
     /**

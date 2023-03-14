@@ -15,7 +15,7 @@ import ua.com.fielden.platform.processors.verify.ViolatingElement;
  *
  * @author TG Team
  */
-public abstract class AbstractEntityElementVerifier implements IElementVerifier {
+public abstract class AbstractEntityElementVerifier implements IElementVerifier<Element> {
     protected EntityFinder entityFinder;
 
     public AbstractEntityElementVerifier(final EntityFinder entityFinder) {

@@ -9,6 +9,7 @@ import java.util.Optional;
 
 import javax.annotation.processing.Messager;
 import javax.annotation.processing.RoundEnvironment;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
@@ -21,7 +22,7 @@ import ua.com.fielden.platform.processors.verify.ViolatingElement;
  *
  * @author TG Team
  */
-public class EntityRoundEnvironment extends AbstractRoundEnvironment<AbstractEntityElementVerifier> {
+public class EntityRoundEnvironment extends AbstractRoundEnvironment<Element, AbstractEntityElementVerifier> {
     private EntityFinder entityFinder;
 
     /** Holds a memoized list of root entity elements in the current round. */

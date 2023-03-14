@@ -22,7 +22,7 @@ import javax.lang.model.element.TypeElement;
  *
  * @author TG Team
  */
-public abstract class AbstractRoundEnvironment<EV extends IElementVerifier> {
+public abstract class AbstractRoundEnvironment<EL, EV extends IElementVerifier<EL>> {
     protected final RoundEnvironment roundEnv;
     protected final Messager messager;
 
@@ -42,24 +42,13 @@ public abstract class AbstractRoundEnvironment<EV extends IElementVerifier> {
     /**
      * Accepts a verifier and applies it to each root element in this round.
      * Returns a list containing elements that did not pass verification.
-     * 
+     * <b>
+     * Needs to be implemented by sub-types.
+     *
      * @param verifier
      * @return
      */
-    public List<ViolatingElement> findViolatingElements(final EV verifier) {
-        final List<ViolatingElement> violators = new LinkedList<>();
-
-        roundEnv.getRootElements().stream()
-            .map(entity -> verifier.verify(entity))
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .forEach(ve -> {
-                ve.printMessage(messager);
-                violators.add(ve);
-            });
-
-        return violators;
-    }
+    public abstract List<ViolatingElement> findViolatingElements(final EV verifier);
 
     // ==================== FORWARDING METHODS ====================
     /**
