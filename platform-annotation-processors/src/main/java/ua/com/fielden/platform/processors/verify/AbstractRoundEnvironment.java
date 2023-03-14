@@ -66,10 +66,11 @@ public abstract class AbstractRoundEnvironment {
     }
 
     /**
-     * Collects the elements of {@link #streamRootElements()} into a modifiable list.
+     * Collects the elements of {@link #streamRootElements()} into a set.
+     * There are no guarantees on the type, mutability, serializability, or thread-safety of the returned set.
      */
-    public final List<? extends Element> getRootElements() {
-        return streamRootElements().collect(Collectors.toCollection(LinkedList::new));
+    public final Set<? extends Element> getRootElements() {
+        return streamRootElements().collect(Collectors.toSet());
     }
 
     public final Set<? extends Element> getElementsAnnotatedWith(TypeElement a) {
