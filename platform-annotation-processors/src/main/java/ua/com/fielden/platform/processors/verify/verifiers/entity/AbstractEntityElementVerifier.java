@@ -19,18 +19,7 @@ public abstract class AbstractEntityElementVerifier implements IElementVerifier<
         this.entityFinder = entityFinder;
     }
 
-    /**
-     * Verifies an element and forwards to {@link #verifyEntity(EntityElement)} only if the element represents an entity.
-     * Otherwise returns an empty optional.
-     */
     @Override
-    public final Optional<ViolatingElement> verify(final EntityElement element) {
-        if (entityFinder.isEntityType(element.asType())) {
-            return verifyEntity(entityFinder.newEntityElement(element));
-        }
-        return Optional.empty();
-    }
-
-    public abstract Optional<ViolatingElement> verifyEntity(final EntityElement entity);
+    public abstract Optional<ViolatingElement> verify(final EntityElement element);
 
 }

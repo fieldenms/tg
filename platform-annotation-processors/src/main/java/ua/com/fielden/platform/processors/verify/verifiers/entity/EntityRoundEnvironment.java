@@ -58,7 +58,7 @@ public class EntityRoundEnvironment extends AbstractRoundEnvironment<EntityEleme
         final List<ViolatingElement> violators = new LinkedList<>();
 
         listEntities().stream()
-            .map(entity -> verifier.verifyEntity(entity))
+            .map(entity -> verifier.verify(entity))
             .filter(Optional::isPresent)
             .map(Optional::get)
             .forEach(ve -> {

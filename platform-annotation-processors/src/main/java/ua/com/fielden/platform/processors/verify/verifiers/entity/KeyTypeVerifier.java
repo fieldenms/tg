@@ -36,8 +36,8 @@ import ua.com.fielden.platform.web.action.AbstractFunEntityForDataExport;
  *  <li>Child entity declares {@link KeyType} that does not match the type at the super type level.</li>
  *  <li>Entity declares property {@code key} having a type that does not match the one defined by {@link KeyType}.
  *      Additionally, if {@link NoKey} is specified, then it's forbidden to declare property {@code key}.</li>
- * </ol> 
- * 
+ * </ol>
+ *
  * @author TG Team
  */
 public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
@@ -58,9 +58,9 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
     }
 
     /**
-     * Entity definition must include {@link KeyType} i.e., the entity type itself or its super types must have this annotation declared. 
+     * Entity definition must include {@link KeyType} i.e., the entity type itself or its super types must have this annotation declared.
      * Abstract entities should be able to omit this annotation.
-     * 
+     *
      * @author TG Team
      */
     static class KeyTypePresence extends AbstractEntityVerifier {
@@ -72,6 +72,7 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
             super(processingEnv);
         }
 
+        @Override
         public List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
             return roundEnv.findViolatingElements(new EntityVerifier(entityFinder));
         }
@@ -83,7 +84,7 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
             }
 
             @Override
-            public Optional<ViolatingElement> verifyEntity(final EntityElement entity) {
+            public Optional<ViolatingElement> verify(final EntityElement entity) {
                 if (!ElementFinder.isAbstract(entity) && entityFinder.findAnnotation(entity, AT_KEY_TYPE_CLASS).isEmpty()) {
                     return Optional.of(new ViolatingElement(entity.element(), Kind.ERROR, ENTITY_DEFINITION_IS_MISSING_KEY_TYPE));
                 }
@@ -96,7 +97,7 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
     // TODO Consider indirect parameterisation of AbstractEntity types
     // e.g. Sub extends Super<KeyType>, where Super<K> extends AbstractEntity<K>
     /**
-     * The type of key as defined by {@link KeyType} must match the one specified as the type argument to the direct supertype, 
+     * The type of key as defined by {@link KeyType} must match the one specified as the type argument to the direct supertype,
      * if it is a member of the {@link AbstractEntity} type family (i.e. is parameterized with a key type).
      */
     static class KeyTypeValueMatchesAbstractEntityTypeArgument extends AbstractEntityVerifier {
@@ -116,6 +117,7 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
             return ABSTRACTS.stream().anyMatch(clazz -> elementFinder.isSameType(element.asType(), clazz));
         }
 
+        @Override
         public List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
             return roundEnv.findViolatingElements(new EntityVerifier(entityFinder));
         }
@@ -127,7 +129,7 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
             }
 
             @Override
-            public Optional<ViolatingElement> verifyEntity(final EntityElement entity) {
+            public Optional<ViolatingElement> verify(final EntityElement entity) {
                 final Optional<? extends AnnotationMirror> maybeKeyTypeAnnotMirror = entityFinder.findAnnotationMirror(entity, AT_KEY_TYPE_CLASS);
                 if (maybeKeyTypeAnnotMirror.isEmpty()) {
                     return Optional.empty();
@@ -166,7 +168,7 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
 
     /**
      * {@link KeyType} declared by a child entity must match the one declared at the super type level.
-     * 
+     *
      * @author TG Team
      */
     static class ChildKeyTypeMatchesParentKeyType extends AbstractEntityVerifier {
@@ -178,6 +180,7 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
             super(processingEnv);
         }
 
+        @Override
         public List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
             return roundEnv.findViolatingElements(new EntityVerifier(entityFinder));
         }
@@ -189,14 +192,14 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
             }
 
             @Override
-            public Optional<ViolatingElement> verifyEntity(final EntityElement entity) {
+            public Optional<ViolatingElement> verify(final EntityElement entity) {
                 final Optional<? extends AnnotationMirror> maybeEntityKeyTypeAnnotMirror = entityFinder.findAnnotationMirror(entity, AT_KEY_TYPE_CLASS);
                 if (maybeEntityKeyTypeAnnotMirror.isEmpty()) {
                     return Optional.empty();
                 }
                 final AnnotationMirror entityKeyTypeAnnotMirror = maybeEntityKeyTypeAnnotMirror.get();
 
-                final Optional<EntityElement> maybeParent = entityFinder.getParent(entity); 
+                final Optional<EntityElement> maybeParent = entityFinder.getParent(entity);
                 // skip non-child entities and those with an abstract parent
                 // TODO handle hierarchy [non-abstract -> abstract -> non-abstract -> ...] ?
                 if (maybeParent.map(elt -> ElementFinder.isAbstract(elt)).orElse(true)) {
@@ -248,7 +251,7 @@ public class KeyTypeVerifier extends AbstractComposableEntityVerifier {
             }
 
             @Override
-            public Optional<ViolatingElement> verifyEntity(final EntityElement entity) {
+            public Optional<ViolatingElement> verify(final EntityElement entity) {
                 final Optional<PropertyElement> maybeKeyProp = entityFinder.findDeclaredProperty(entity, AbstractEntity.KEY);
                 if (maybeKeyProp.isEmpty()) {
                     return Optional.empty();
