@@ -53,7 +53,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
     }
 
     /**
-     * All properties must have a coresponding accessor method with a name starting with "get" or "is".
+     * All properties must have a corresponding accessor method with a name starting with "get" or "is".
      * <p>
      * An accessor's return type must match its property type with the exception of collectional properties, where return type must be
      * <b>assignable to</b> the property type.

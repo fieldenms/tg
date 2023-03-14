@@ -73,7 +73,6 @@ public abstract class AbstractVerifier<RE extends AbstractRoundEnvironment> impl
     /**
      * Returns an unmodifiable set of elements that did not pass verification.
      */
-
     protected final void printMessageWithAnnotationHint(
             final Kind kind, final String msg, final Element element, 
             final Class<? extends Annotation> annotationType, final String annotationElementName)
