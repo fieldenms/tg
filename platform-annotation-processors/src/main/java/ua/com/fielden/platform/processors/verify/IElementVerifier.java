@@ -3,7 +3,6 @@ package ua.com.fielden.platform.processors.verify;
 import java.util.Optional;
 
 import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.element.Element;
 
 import ua.com.fielden.platform.processors.verify.verifiers.AbstractVerifier;
 
