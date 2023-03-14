@@ -17,7 +17,7 @@ import javax.tools.Diagnostic.Kind;
 import org.junit.Test;;
 
 /**
- * Tests covering the {@link RelaxationPolicy} annotation.
+ * Tests covering the {@link RelaxationPolicy} enum.
  *
  * @author homedirectory
  */

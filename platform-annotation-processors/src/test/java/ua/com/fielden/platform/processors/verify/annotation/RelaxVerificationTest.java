@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.processors.verify.verifiers;
+package ua.com.fielden.platform.processors.verify.annotation;
 
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static javax.tools.Diagnostic.Kind.MANDATORY_WARNING;
@@ -22,9 +22,9 @@ import com.squareup.javapoet.TypeSpec;
 
 import ua.com.fielden.platform.processors.test_utils.CompilationResult;
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
-import ua.com.fielden.platform.processors.verify.annotation.RelaxVerification;
 import ua.com.fielden.platform.processors.verify.test_utils.Message;
 import ua.com.fielden.platform.processors.verify.test_utils.MessagePrintingVerifier;
+import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 
 /**
  * Tests covering logic associated with the {@link RelaxVerification} annotation.
