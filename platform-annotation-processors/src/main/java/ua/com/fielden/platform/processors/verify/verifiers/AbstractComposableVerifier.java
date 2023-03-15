@@ -1,7 +1,8 @@
 package ua.com.fielden.platform.processors.verify.verifiers;
 
+import static java.util.stream.Collectors.toUnmodifiableList;
+
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -11,22 +12,23 @@ import ua.com.fielden.platform.processors.verify.ViolatingElement;
 
 /**
  * Abstract representation of a verifier that is composed of other more specific verifiers (also called <i>components</i>).
- * Such a verifier can be composed only of verifiers that are paratemerised with the same {@link AbstractRoundEnvironment}
- * (e.g. composable entity verifier can be composed only of entity verifiers).
+ * Such a verifier can be composed only of verifiers that are parameterised with the same {@link AbstractRoundEnvironment}
+ * (e.g., a composable entity verifier can only be composed of entity verifiers).
  * <p>
- * It is envisioned that this abstraction be used solely for grouping of verifiers and possibly defining common logic.
+ * It is envisioned that this abstraction would be used solely for grouping of verifiers and possibly defining common logic.
  * The components themselves should be designed as autonomous verifiers. That is, no shared state is permitted between components.
- * To enforce this constraint the components should be implemented either as standalone classes or <b>nested static classes</b>.
+ * To enforce this constraint, the components should be implemented either as standalone classes or <b>nested static classes</b>.
  * <p>
  * Mutual independence of components provides a very useful property for testing composable verifiers: correctness of all
  * components guarantees the correctness of the whole. So it's sufficient to test just the components.
  * 
- * @param <RE> the type of round environment wrapper used by this verifier
+ * @param <RE> a type of the round environment wrapper used by this verifier
+ * @param <V> a bottom common type for verifier-components.
  * 
  * @author TG Team
  */
-public abstract class AbstractComposableVerifier<RE extends AbstractRoundEnvironment> extends AbstractVerifier<RE> {
-    protected final List<? extends AbstractVerifier<RE>> components;
+public abstract class AbstractComposableVerifier<RE extends AbstractRoundEnvironment, V extends AbstractVerifier<RE>> extends AbstractVerifier<RE> {
+    protected final List<V> components;
 
     protected AbstractComposableVerifier(final ProcessingEnvironment procEnv) {
         super(procEnv);
@@ -38,13 +40,13 @@ public abstract class AbstractComposableVerifier<RE extends AbstractRoundEnviron
      * @param procEnv
      * @return
      */
-    protected abstract List<? extends AbstractVerifier<RE>> createComponents(final ProcessingEnvironment procEnv);
+    protected abstract List<V> createComponents(final ProcessingEnvironment procEnv);
 
     /**
      * Returns an unmodifiable list of this verifier's components.
      * @return
      */
-    public List<? extends AbstractVerifier<RE>> getComponents() {
+    public List<V> getComponents() {
         return Collections.unmodifiableList(components);
     }
 
@@ -55,10 +57,7 @@ public abstract class AbstractComposableVerifier<RE extends AbstractRoundEnviron
      */
     @Override
     public final List<ViolatingElement> verify(final RE roundEnv) {
-        final List<ViolatingElement> elements = new LinkedList<>();
-        components.stream().map(v -> v.verify(roundEnv)).forEach(lst -> elements.addAll(lst));
-        return Collections.unmodifiableList(elements);
+        return components.stream().flatMap(v -> v.verify(roundEnv).stream()).collect(toUnmodifiableList());
     }
-
 
 }
