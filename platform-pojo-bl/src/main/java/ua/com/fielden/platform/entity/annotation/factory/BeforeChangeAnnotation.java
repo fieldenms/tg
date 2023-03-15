@@ -45,9 +45,6 @@ public class BeforeChangeAnnotation {
         if (Stream.of(annotations).anyMatch(Objects::isNull)) {
             throw new InvalidArgumentException("No annotation can be null.");
         }
-        if (annotations == null || annotations.length == 0) {
-            throw new InvalidArgumentException("There are no BeforeChange annotations to merge.");
-        }
 
         if (annotations.length == 1) {
             return annotations[0];
