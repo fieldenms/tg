@@ -314,7 +314,8 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
 
         final EntityElement entityElement = mmc.getEntityElement();
         // can safely unpack optional, since entityElement is guaranteed to extend something
-        final EntityElement entitySupertype =  entityFinder.getParent(entityElement).orElseThrow();
+        final EntityElement entitySupertype =  entityFinder.getParent(entityElement)
+                .orElseThrow(() -> new MetaModelProcessorException("Parent entity type of %s is misssing."));
         final Optional<EntityElement> maybeMetaModelledSupertype = Optional.ofNullable(entityFinder.isEntityThatNeedsMetaModel(entitySupertype) ? entitySupertype : null);
 
         final Collection<PropertyElement> properties;
