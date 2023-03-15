@@ -21,11 +21,11 @@ import ua.com.fielden.platform.error.Result;
  * @author TG Team
  */
 public class RestrictExtraWhitespaceValidator implements IBeforeChangeEventHandler<String> {
-    public static final String ERR_CONTAINS_LEADING_WHITESPACE = "Leading whitespace characters are not perimtted.";
-    public static final String ERR_CONTAINS_LEADING_WHITESPACE_VALUE = "Leading whitespace characters are not perimtted: [%s]";
+    public static final String ERR_CONTAINS_LEADING_WHITESPACE = "Leading whitespace characters are not permitted.";
+    public static final String ERR_CONTAINS_LEADING_WHITESPACE_VALUE = "Leading whitespace characters are not permitted: [%s]";
 
-    public static final String ERR_CONTAINS_TRAILING_WHITESPACE = "Trailing whitespace characters are not perimtted.";
-    public static final String ERR_CONTAINS_TRAILING_WHITESPACE_VALUE = "Trailing whitespace characters are not perimtted: [%s]";
+    public static final String ERR_CONTAINS_TRAILING_WHITESPACE = "Trailing whitespace characters are not permitted.";
+    public static final String ERR_CONTAINS_TRAILING_WHITESPACE_VALUE = "Trailing whitespace characters are not permitted: [%s]";
 
     public static final String ERR_CONTAINS_CONSECUTIVE_WHITESPACE = "Consecutive whitespace characters are not permitted.";
     public static final String ERR_CONTAINS_CONSECUTIVE_WHITESPACE_VALUE = "Consecutive whitespace characters are not permitted: [%s]";
