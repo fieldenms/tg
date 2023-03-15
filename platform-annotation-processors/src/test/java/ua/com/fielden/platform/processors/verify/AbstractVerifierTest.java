@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.processors.verify;
 
-import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
 
@@ -141,8 +140,9 @@ public abstract class AbstractVerifierTest {
     }
 
     private final void assertMessage(final CompilationResult result, final Kind kind, final String message) {
-        assertTrue("No %s was reported with message \"%s\"".formatted(kind, message),
-                result.diagnosticsByKind(kind).stream().anyMatch(diag -> diag.getMessage(Locale.getDefault()).equals(message)));
+        assertTrueOrFailWith("No %s was reported with message \"%s\"".formatted(kind, message),
+                result.diagnosticsByKind(kind).stream().anyMatch(diag -> diag.getMessage(Locale.getDefault()).equals(message)),
+                () -> result.printDiagnostics());
     }
 
     private void assertTrueOrFailWith(final String message, boolean condition, final Runnable failAction) {
