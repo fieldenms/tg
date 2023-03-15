@@ -107,7 +107,7 @@ public class StringKeysValidationTest {
     public void String_key_member_with_fully_skipped_validation_permits_non_printable_chars_consecutive_whitespace_chars_and_commas() {
         final EntityWithStringKeyMembersThatSkipDefaultStringValidation entity = factory.newEntity(EntityWithStringKeyMembersThatSkipDefaultStringValidation.class);
         final MetaProperty<String> mpMember1 = entity.getProperty("member1");
-        
+
         entity.setMember1(" hello\n world,  and some  ");
         assertTrue(mpMember1.isValid());
     }
@@ -126,14 +126,14 @@ public class StringKeysValidationTest {
     }
 
     @Test
-    public void String_key_member_with_skipped_validation_for_commas_and_consecuritve_whitespace_chars_restricts_only_non_printable_chars() {
+    public void String_key_member_with_skipped_validation_for_commas_and_consecutive_whitespace_chars_restricts_only_non_printable_chars() {
         final EntityWithStringKeyMembersThatSkipDefaultStringValidation entity = factory.newEntity(EntityWithStringKeyMembersThatSkipDefaultStringValidation.class);
         final String propName = "member3";
         final BiConsumer<String, String> assertor = mkAssertor(entity, propName);
 
         assertor.accept("hello\n", format(ERR_CONTAINS_NON_PRINTABLE_VALUE, "hello{?}"));
 
-        entity.setMember3("  hello, world  ");
+        entity.setMember3("  hello,  world  ");
         assertTrue(entity.getProperty(propName).isValid());
     }
 
