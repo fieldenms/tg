@@ -20,6 +20,7 @@ import com.google.inject.Injector;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.validation.test_entities.EntityWithImplicitStringKey;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithStringKey;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithStringKeyMember;
 import ua.com.fielden.platform.entity.validation.test_entities.EntityWithStringKeyMembersThatSkipDefaultStringValidation;
@@ -46,6 +47,15 @@ public class StringKeysValidationTest {
         final BiConsumer<String, String> assertor = mkAssertor(entity, "key");
         assertor.accept("  hello", format(ERR_CONTAINS_LEADING_WHITESPACE_VALUE, "{?}hello"));
         assertor.accept("hello world", ERR_RUDE_MESSAGE);
+        assertor.accept("hello,world", ERR_CONTAINS_COMMAS);
+    }
+
+    @Test
+    public void implicit_String_key_property_attacts_default_validation() {
+        final EntityWithImplicitStringKey entity = factory.newEntity(EntityWithImplicitStringKey.class);
+        final BiConsumer<String, String> assertor = mkAssertor(entity, "key");
+        assertor.accept("  hello", format(ERR_CONTAINS_LEADING_WHITESPACE_VALUE, "{?}hello"));
+        assertor.accept("hello\n", format(ERR_CONTAINS_NON_PRINTABLE_VALUE, "hello{?}"));
         assertor.accept("hello,world", ERR_CONTAINS_COMMAS);
     }
 

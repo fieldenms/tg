@@ -805,10 +805,11 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             // The returned Set is mutable
             final Set<Annotation> propValidationAnnots = extractValidationAnnotationForProperty(field, propertyType, isCollectional);
 
-            // let's add implicit validation as early as possible to @BeforeChange
-            // special validation of String-typed key-members
-            // applied on top of existing @BeforeChange validators, but ordered before declared handlers
-            if (Finder.isKey(field) && String.class == field.getType()) {
+            // let's add implicit default validation as early as possible to @BeforeChange
+            // special validation of String-typed key or String-typed key-members
+            // applied on top of existing @BeforeChange validators, if any, but placed before the explicitly defined handlers
+            if (AbstractEntity.KEY.equals(field.getName()) && String.class == this.getKeyType() || // the type of property "key" cannot be determined from field, hence a separate check
+                field.isAnnotationPresent(CompositeKeyMember.class) && String.class == field.getType()) {
                 final SkipDefaultStringKeyMemberValidation skipAnnot = field.getAnnotation(SkipDefaultStringKeyMemberValidation.class);
                 final Set<Class<? extends IBeforeChangeEventHandler<String>>> allDefaultStringValidators = linkedSetOf(SkipDefaultStringKeyMemberValidation.ALL_DEFAULT_STRING_KEY_VALIDATORS);
                 allDefaultStringValidators.removeAll(skipAnnot == null ? emptySet() : setOf(skipAnnot.value()));
