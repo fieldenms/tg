@@ -120,14 +120,14 @@ public final class CollectionUtil {
     /**
      * Removes the first element matching the predicate from the collection and returns an {@link Optional} describing it, otherwise returns an empty {@link Optional}.
      * <p>
-     * The supplied collection must be modifiable.
+     * The supplied collection must be modifiable and must not contain {@code null} values.
      *
      * @param <E> a type of elements in {@code xs}.
      * @param xs a modifiable collection, which gets modified by removing the first element matching {@code pred}.
      * @param pred a predicate for identifying the first element to be removed from {@code xs}.
      * @return
      */
-    public static <E> Optional<E> removeFirst(final Collection<E> xs, final Predicate<E> pred) {
+    public static <E> Optional<E> removeFirst(final Collection<E> xs, final Predicate<? super E> pred) {
         if (xs == null) {
             throw new InvalidArgumentException("Collection cannot be null.");
         }
