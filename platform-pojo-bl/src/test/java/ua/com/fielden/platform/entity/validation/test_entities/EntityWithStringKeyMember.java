@@ -5,7 +5,6 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.annotation.CompositeKeyMember;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
-import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
@@ -20,7 +19,6 @@ import ua.com.fielden.platform.entity.validators.RudeValidator;
 public class EntityWithStringKeyMember extends AbstractEntity<DynamicEntityKey> {
 
     @IsProperty
-    @MapTo
     @CompositeKeyMember(1)
     @BeforeChange(@Handler(RudeValidator.class))
     private String name;

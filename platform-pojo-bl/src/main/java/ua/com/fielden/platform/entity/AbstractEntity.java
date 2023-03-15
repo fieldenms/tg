@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity;
 
 import static java.lang.String.format;
+import static java.util.Collections.emptySet;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toCollection;
@@ -24,7 +25,9 @@ import static ua.com.fielden.platform.reflection.EntityMetadata.entityExistsAnno
 import static ua.com.fielden.platform.reflection.EntityMetadata.isEntityExistsValidationApplicable;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNumeric;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.removeFirst;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 
 import java.lang.annotation.Annotation;
@@ -66,6 +69,7 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Required;
+import ua.com.fielden.platform.entity.annotation.SkipDefaultStringKeyMemberValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.Unique;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
@@ -86,9 +90,6 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.StrictProxyException;
 import ua.com.fielden.platform.entity.validation.IBeforeChangeEventHandler;
 import ua.com.fielden.platform.entity.validation.ICustomValidator;
-import ua.com.fielden.platform.entity.validation.RestrictCommasValidator;
-import ua.com.fielden.platform.entity.validation.RestrictExtraWhitespaceValidator;
-import ua.com.fielden.platform.entity.validation.RestrictNonPrintableCharactersValidator;
 import ua.com.fielden.platform.entity.validation.annotation.EntityExists;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
@@ -807,19 +808,21 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             // let's add implicit validation as early as possible to @BeforeChange
             // special validation of String-typed key-members
             // applied on top of existing @BeforeChange validators, but ordered before declared handlers
-            if (Finder.isKey(field) && field.getType().equals(String.class)) {
-                final Handler[] handlers = Stream.of(
-                        RestrictNonPrintableCharactersValidator.class, RestrictExtraWhitespaceValidator.class, RestrictCommasValidator.class)
-                        .map(bce -> new HandlerAnnotation(bce).newInstance())
-                        .toArray(Handler[]::new);
-                final BeforeChange implicitBch = BeforeChangeAnnotation.from(handlers);
-
-                // merge with declared @BeforeChange, if exists
-                final Optional<Annotation> maybeDeclaredBch = removeFirst(propValidationAnnots, at -> at.annotationType() == BeforeChange.class);
-                final BeforeChange bch = maybeDeclaredBch.isPresent()
-                        ? BeforeChangeAnnotation.merged(implicitBch, (BeforeChange) maybeDeclaredBch.get())
-                        : implicitBch;
-                propValidationAnnots.add(bch);
+            if (Finder.isKey(field) && String.class == field.getType()) {
+                final SkipDefaultStringKeyMemberValidation skipAnnot = field.getAnnotation(SkipDefaultStringKeyMemberValidation.class);
+                final Set<Class<? extends IBeforeChangeEventHandler<String>>> allDefaultStringValidators = linkedSetOf(SkipDefaultStringKeyMemberValidation.ALL_DEFAULT_STRING_KEY_VALIDATORS);
+                allDefaultStringValidators.removeAll(skipAnnot == null ? emptySet() : setOf(skipAnnot.value()));
+                if (!allDefaultStringValidators.isEmpty()) {
+                    final Handler[] handlers = allDefaultStringValidators.stream()
+                            .map(bce -> new HandlerAnnotation(bce).newInstance())
+                            .toArray(Handler[]::new);
+                    final BeforeChange implicitBch = BeforeChangeAnnotation.newInstance(handlers);
+    
+                    // merge with declared @BeforeChange, if exists
+                    final Optional<Annotation> maybeDeclaredBch = removeFirst(propValidationAnnots, at -> at.annotationType() == BeforeChange.class);
+                    final BeforeChange bch = maybeDeclaredBch.map(annotation -> BeforeChangeAnnotation.merge(implicitBch, (BeforeChange) annotation)).orElse(implicitBch);
+                    propValidationAnnots.add(bch);
+                }
             }
 
             for (final Annotation annotation : propValidationAnnots) {

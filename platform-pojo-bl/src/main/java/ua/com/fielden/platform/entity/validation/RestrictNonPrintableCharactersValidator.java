@@ -35,7 +35,6 @@ public class RestrictNonPrintableCharactersValidator implements IBeforeChangeEve
             return successful(newValue);
         }
 
-        
         if (MATCHER.matchesNoneOf(newValue)) {
             return successful(newValue);
         }
