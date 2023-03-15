@@ -5,6 +5,7 @@ import static javax.tools.Diagnostic.Kind.MANDATORY_WARNING;
 import static javax.tools.Diagnostic.Kind.NOTE;
 import static javax.tools.Diagnostic.Kind.OTHER;
 import static javax.tools.Diagnostic.Kind.WARNING;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy.INFO;
 import static ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy.WARN;
@@ -103,6 +104,41 @@ public class RelaxVerificationTest extends AbstractVerifierTest {
         assertMessages(result, NOTE, "Just a note");
     }
 
+    @Test
+    public void enclosed_elements_inherit_the_effect_of_RelaxVerification_annotation_if_enclosed_is_true() {
+        final TypeSpec example = TypeSpec.classBuilder("Example")
+                .addAnnotation(AnnotationSpec.get(RelaxVerification.Factory.create(WARN, true)))
+                .addField(FieldSpec.builder(String.class, "name")
+                        .addAnnotation(makeMessageAnnotation("INVALID FIELD", ERROR))
+                        .build())
+                .addMethod(MethodSpec.methodBuilder("apply")
+                        .addAnnotation(makeMessageAnnotation("INVALID METHOD", ERROR))
+                        .build())
+                .build();
+
+        final CompilationResult result = buildCompilation(List.of(example)).compile();
+        assertTrue("Compilation should have succeeded", result.success());
+        assertMessages(result, MANDATORY_WARNING, "INVALID FIELD", "INVALID METHOD");
+    }
+
+    @Test
+    public void enclosed_elements_dont_inherit_the_effect_of_RelaxVerification_annotation_if_enclosed_is_false() {
+        final TypeSpec example = TypeSpec.classBuilder("Example")
+                .addAnnotation(AnnotationSpec.get(RelaxVerification.Factory.create(WARN, false)))
+                .addField(FieldSpec.builder(String.class, "name")
+                        .addAnnotation(makeMessageAnnotation("INVALID FIELD", ERROR))
+                        .build())
+                .addMethod(MethodSpec.methodBuilder("apply")
+                        .addAnnotation(makeMessageAnnotation("INVALID METHOD", ERROR))
+                        .build())
+                .build();
+
+        final CompilationResult result = buildCompilation(List.of(example)).compile();
+        assertFalse("Compilation should have failed", result.success());
+        assertMessages(result, ERROR, "INVALID FIELD", "INVALID METHOD");
+    }
+
+    // ------------------------------ UTILITY METHODS ------------------------------
     private AnnotationSpec makeMessageAnnotation(final String msg, final Kind kind) {
         return AnnotationSpec.get(Message.Factory.create(msg, kind));
     }
