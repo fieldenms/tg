@@ -12,16 +12,13 @@ import java.util.stream.Collectors;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.tools.Diagnostic.Kind;
-import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
-import javax.tools.ToolProvider;
 
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.TypeSpec;
 
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.test_utils.CompilationResult;
-import ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileManager;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 
 /**
@@ -61,16 +58,12 @@ public abstract class AbstractVerifierTest {
      * @return
      */
     protected final Compilation buildCompilation(final Collection<TypeSpec> typeSpecs) {
-        final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        final InMemoryJavaFileManager fileManager = new InMemoryJavaFileManager(compiler.getStandardFileManager(null, null, null));
         final List<JavaFileObject> compilationTargets = typeSpecs.stream()
                 .map(ts -> JavaFile.builder(/*packageName*/ "", ts).build().toJavaFileObject())
                 .toList();
 
-        return new Compilation(compilationTargets)
+        return Compilation.newInMemory(compilationTargets)
                 .setProcessor(createProcessor())
-                .setCompiler(compiler)
-                .setFileManager(fileManager)
                 .setOptions(OPTION_PROC_ONLY);
     }
 

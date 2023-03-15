@@ -47,6 +47,19 @@ public final class Compilation {
     private DiagnosticCollector<JavaFileObject> diagnosticListener = new DiagnosticCollector<>();
 
     /**
+     * Creates a new instance that stores the compiled sources in memory by using a preconfigured {@link #compiler} and {@link #fileManager}.
+     *
+     * @param javaSources   java sources to be compiled
+     * @return              a new compilation instance
+     */
+    public static Compilation newInMemory(final Collection<? extends JavaFileObject> javaSources) {
+        final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        final InMemoryJavaFileManager fileManager = new InMemoryJavaFileManager(compiler.getStandardFileManager(null, null, null));
+
+        return new Compilation(javaSources).setCompiler(compiler).setFileManager(fileManager);
+    }
+
+    /**
      * Only a single annotation processor is allowed to ensure that the processing environment is not shared with other processors, which could lead to unexpected behaviour.
      *
      * @param javaSources java sources to compile
