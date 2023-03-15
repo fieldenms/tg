@@ -103,7 +103,7 @@ export class TgMultilineTextEditor extends TgEditor {
                 type: Function,
                 value: function () {
                     return (function (event) {
-                        if (event.keyCode === 67 && event.altKey && (event.ctrlKey || event.metaKey)) {
+                        if (event.keyCode === 67 && event.altKey && (event.ctrlKey || event.metaKey)) { //(CTRL/Meta) + ALT + C
                             this.commitIfChanged();
                             this._copyTap();
                         }

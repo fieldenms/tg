@@ -486,7 +486,7 @@ export class TgEditor extends PolymerElement {
                         // console.debug("_onKeydown:", event);
                         if (event.keyCode === 13) { // 'Enter' has been pressed
                             this.commitIfChanged();
-                        } else if (event.keyCode === 67 && event.altKey && (event.ctrlKey || event.metaKey)) {
+                        } else if (event.keyCode === 67 && event.altKey && (event.ctrlKey || event.metaKey)) { //(CTRL/Meta) + ALT + C
                             this.commitIfChanged();
                             this._copyTap();
                         } else if ((event.keyCode === 38 || event.keyCode === 40) 
@@ -811,11 +811,11 @@ export class TgEditor extends PolymerElement {
     _copyTap () {
         if (navigator.clipboard) {
             navigator.clipboard.writeText(this._editingValue);
-            this._showCopiedIcon();
+            this._showCheckIconAndTooltip();
         }
     }
 
-    _showCopiedIcon () {
+    _showCheckIconAndTooltip () {
         const copyTooltipRect = copyTooltip.getBoundingClientRect();
         const copyIconRect = this.$.copyIcon.getBoundingClientRect();
         copyTooltip.style.top = `${copyIconRect.top - copyTooltipRect.height - 8}px`;

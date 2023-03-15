@@ -430,7 +430,7 @@ export class TgEntityEditor extends TgEditor {
                        if (event.keyCode === 13 && this.opened === true) { // 'Enter' has been pressed
                            this._done();
                            tearDownEvent(event);
-                       } else if (event.keyCode === 67 && event.altKey && (event.ctrlKey || event.metaKey)) {
+                       } else if (event.keyCode === 67 && event.altKey && (event.ctrlKey || event.metaKey)) { //(CTRL/Meta) + ALT + C
                            this.commitIfChanged();
                            this._copyTap();
                        } else if ((event.keyCode === 38 /*up*/ || event.keyCode === 40 /*down*/) && !event.ctrlKey) { // up/down arrow keys
@@ -555,7 +555,7 @@ export class TgEntityEditor extends TgEditor {
 
     _copyFromLayerIfPresent(superCopy) {
         if (this._hasLayer) {
-            copyToClipboard(this.$.inputLayer, this._showCopiedIcon.bind(this));
+            copyToClipboard(this.$.inputLayer, this._showCheckIconAndTooltip.bind(this));
         } else {
             superCopy();
         }
