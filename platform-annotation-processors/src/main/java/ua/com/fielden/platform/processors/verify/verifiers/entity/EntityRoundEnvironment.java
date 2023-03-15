@@ -83,10 +83,10 @@ public class EntityRoundEnvironment extends AbstractRoundEnvironment<EntityEleme
     }
 
     /**
-     * Accepts an entity verifying visitor and applies it to each root union entity element in this round.
+     * Accepts a verifier for union entities and applies it to each root union entity element in this round.
      * Returns a list containing entity elements that did not pass verification.
      */
-    public List<ViolatingElement> acceptUnionEntityVisitor(final AbstractEntityElementVerifier verifier) {
+    public List<ViolatingElement> findViolatingUnionEntities(final AbstractEntityElementVerifier verifier) {
         final List<ViolatingElement> violators = new LinkedList<>();
 
         listUnionEntities().stream()
@@ -125,18 +125,18 @@ public class EntityRoundEnvironment extends AbstractRoundEnvironment<EntityEleme
     }
 
     /**
-     * Accepts a verifying visitor for declared properties of a union entity and applies it to each root union entity element in this round.
+     * Accepts a verifier for declared properties of a union entity and applies it to each root union entity element in this round.
      * Returns a list containing property elements that did not pass verification.
      *
-     * @param visitor
+     * @param verifier
      * @return
      */
-    public List<ViolatingElement> acceptUnionEntityDeclaredPropertiesVisitor(final AbstractPropertyElementVerifier visitor) {
+    public List<ViolatingElement> findViolatingUnionEntityDeclaredProperties(final AbstractPropertyElementVerifier verifier) {
         final List<ViolatingElement> violators = new LinkedList<>();
 
         listUnionEntities().stream()
             .flatMap(entity -> entityFinder.streamDeclaredProperties(entity).map(prop -> t2(entity, prop)))
-            .map(entityAndProp -> visitor.verifyProperty(entityAndProp._1, entityAndProp._2))
+            .map(entityAndProp -> verifier.verifyProperty(entityAndProp._1, entityAndProp._2))
             .filter(Optional::isPresent)
             .map(Optional::get)
             .forEach(ve -> {
