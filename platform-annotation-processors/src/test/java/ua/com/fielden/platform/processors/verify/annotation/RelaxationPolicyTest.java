@@ -2,7 +2,7 @@ package ua.com.fielden.platform.processors.verify.annotation;
 
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static javax.tools.Diagnostic.Kind.MANDATORY_WARNING;
-import static javax.tools.Diagnostic.Kind.NOTE;
+import static javax.tools.Diagnostic.Kind.OTHER;
 import static javax.tools.Diagnostic.Kind.WARNING;
 import static org.junit.Assert.assertEquals;
 import static ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy.INFO;
@@ -38,9 +38,9 @@ public class RelaxationPolicyTest {
     }
 
     @Test
-    public void policy_INFO_relaxes_ERROR_and_WARNING_and_MANDATORY_WARNING_to_NOTE() {
+    public void policy_INFO_relaxes_ERROR_and_WARNING_and_MANDATORY_WARNING_to_OTHER() {
         for (final var kind: List.of(ERROR, WARNING, MANDATORY_WARNING)) {
-            assertEquals(NOTE, INFO.relaxedKind(kind));
+            assertEquals(OTHER, INFO.relaxedKind(kind));
         }
     }
 

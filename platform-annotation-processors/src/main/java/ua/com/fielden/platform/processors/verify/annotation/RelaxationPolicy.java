@@ -19,9 +19,12 @@ public enum RelaxationPolicy {
 
     /**
      * Report errors and warnings as informative messages.
-     * That is, relax {@link Kind#ERROR}, {@link Kind#WARNING}, {@link Kind#MANDATORY_WARNING} to {@link Kind#NOTE}.
+     * That is, relax {@link Kind#ERROR}, {@link Kind#WARNING}, {@link Kind#MANDATORY_WARNING} to {@link Kind#OTHER}.
+     * <p>
+     * {@code OTHER} differs from {@link Kind#NOTE} in that it can be reported on an element. In this regard it is just like
+     * {@code ERROR}, but less severe, whereas {@code NOTE} represents a log message.
      */
-    INFO(Kind.NOTE);
+    INFO(Kind.OTHER);
 
 
     private final Kind kind;

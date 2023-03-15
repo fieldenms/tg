@@ -3,6 +3,7 @@ package ua.com.fielden.platform.processors.verify.annotation;
 import static javax.tools.Diagnostic.Kind.ERROR;
 import static javax.tools.Diagnostic.Kind.MANDATORY_WARNING;
 import static javax.tools.Diagnostic.Kind.NOTE;
+import static javax.tools.Diagnostic.Kind.OTHER;
 import static javax.tools.Diagnostic.Kind.WARNING;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy.INFO;
@@ -46,7 +47,7 @@ public class RelaxVerificationTest extends AbstractVerifierTest {
     }
 
     @Test
-    public void elements_with_RelaxationPolicy_INFO_have_messages_reported_with_Kind_NOTE() {
+    public void elements_with_RelaxationPolicy_INFO_have_messages_reported_with_Kind_OTHER() {
         final var relaxINFO = AnnotationSpec.get(RelaxVerification.Factory.create(INFO));
 
         final TypeSpec example = TypeSpec.classBuilder("Example")
@@ -64,7 +65,14 @@ public class RelaxVerificationTest extends AbstractVerifierTest {
 
         final CompilationResult result = buildCompilation(List.of(example)).compile();
         assertTrue("Compilation should have succeeded", result.success());
-        assertMessages(result, NOTE, "INVALID CLASS", "POSSIBLY INVALID FIELD", "POSSIBLY INVALID METHOD");
+        // the Java compiler instance used in tests disregards the diagnostic kind OTHER, using NOTE instead
+        try {
+            assertMessages(result, OTHER, "INVALID CLASS", "POSSIBLY INVALID FIELD", "POSSIBLY INVALID METHOD");
+        } catch (AssertionError e) {
+            // make sure that kind OTHER was truly disregarded
+            assertTrue("Diagnostic kind OTHER was not disregarded by the compiler.", result.other().isEmpty());
+            assertMessages(result, NOTE, "INVALID CLASS", "POSSIBLY INVALID FIELD", "POSSIBLY INVALID METHOD");
+        }
     }
 
     @Test
