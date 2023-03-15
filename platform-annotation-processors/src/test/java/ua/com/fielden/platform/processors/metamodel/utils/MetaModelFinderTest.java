@@ -54,6 +54,8 @@ import ua.com.fielden.platform.processors.test_entities.meta.EntityWithoutDescTi
 import ua.com.fielden.platform.processors.test_entities.meta.EntityWithoutDescTitle_extends_EntityWithDescTitleWithoutMetaModelMetaModelAliased;
 import ua.com.fielden.platform.processors.test_entities.meta.ExampleEntityMetaModel;
 import ua.com.fielden.platform.processors.test_entities.meta.ExampleEntityMetaModelAliased;
+import ua.com.fielden.platform.processors.test_entities.meta.ExampleUnionEntityMetaModel;
+import ua.com.fielden.platform.processors.test_entities.meta.ExampleUnionEntityMetaModelAliased;
 import ua.com.fielden.platform.processors.test_entities.meta.KeyTypeAsComposite_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModel;
 import ua.com.fielden.platform.processors.test_entities.meta.KeyTypeAsComposite_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModelAliased;
 import ua.com.fielden.platform.processors.test_entities.meta.KeyTypeAsEntity_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModel;
@@ -329,6 +331,7 @@ public class MetaModelFinderTest {
                 EntityWithoutDescTitleAndPropertyDesc_extends_EntityWithPropertyDescWithoutMetaModelMetaModel.class,
                 EntityWithoutDescTitle_extends_EntityWithDescTitleWithoutMetaModelMetaModel.class,
                 ExampleEntityMetaModel.class,
+                ExampleUnionEntityMetaModel.class,
                 KeyTypeAsComposite_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModel.class,
                 KeyTypeAsEntity_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModel.class,
                 KeyTypeAsString_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModel.class,
@@ -348,6 +351,7 @@ public class MetaModelFinderTest {
                 EntityWithoutDescTitleAndPropertyDesc_extends_EntityWithPropertyDescWithoutMetaModelMetaModelAliased.class,
                 EntityWithoutDescTitle_extends_EntityWithDescTitleWithoutMetaModelMetaModelAliased.class,
                 ExampleEntityMetaModelAliased.class,
+                ExampleUnionEntityMetaModelAliased.class,
                 KeyTypeAsComposite_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModelAliased.class,
                 KeyTypeAsEntity_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModelAliased.class,
                 KeyTypeAsString_SubEntityExtendingAbstractSuperEntityWithoutKeyTypeMetaModelAliased.class,
