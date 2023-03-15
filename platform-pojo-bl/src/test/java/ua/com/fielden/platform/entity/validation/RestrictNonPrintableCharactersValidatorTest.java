@@ -53,6 +53,34 @@ public class RestrictNonPrintableCharactersValidatorTest {
     }
 
     @Test
+    public void string_property_value_cannot_contain_emoji_characters() {
+        final EntityWithRestrictNonPrintableCharactersValidation entity = factory.newEntity(EntityWithRestrictNonPrintableCharactersValidation.class);
+        final MetaProperty<String> mp = entity.getProperty("stringProp");
+
+        final BiConsumer<String, String> assertor = (newValue, msgValue) -> {
+            entity.setStringProp(newValue);
+            final Result ff = mp.getFirstFailure();
+            assertNotNull("Validation should have failed.", ff);
+            assertEquals(format(ERR_CONTAINS_NON_PRINTABLE_VALUE, msgValue), ff.getMessage());
+        };
+
+        assertor.accept(format("That's a nice joke 😆", 0), "That's a nice joke {?}{?}"); // Emoji is represented by 2 characters, hence {?}{?} instead of {?}.
+    }
+
+    @Test
+    public void string_property_value_can_contain_non_ASCII_characters() {
+        final EntityWithRestrictNonPrintableCharactersValidation entity = factory.newEntity(EntityWithRestrictNonPrintableCharactersValidation.class);
+        final MetaProperty<String> mp = entity.getProperty("stringProp");
+
+        entity.setStringProp("Добрий день, ми з України!");
+        assertTrue(mp.isValid());
+        entity.setStringProp("你好，我们来自中国");
+        assertTrue(mp.isValid());
+        entity.setStringProp("Diese Mäuse ist aus Deutschland.");
+        assertTrue(mp.isValid());
+    }
+
+    @Test
     public void string_property_value_can_contain_regular_space_characters() {
         final EntityWithRestrictNonPrintableCharactersValidation entity = factory.newEntity(EntityWithRestrictNonPrintableCharactersValidation.class);
         final MetaProperty<String> mp = entity.getProperty("stringProp");
