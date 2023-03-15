@@ -7,14 +7,14 @@ import java.lang.annotation.Retention;
 import javax.lang.model.element.Element;
 
 /**
- * Indicates that verification of a program element should be skipped.
+ * Indicates whether the verification of a program element should be skipped.
  *
  * @author homedirectory
  */
 @Retention(SOURCE)
 public @interface SkipVerification {
 
-    public record Factory() {
+    public static record Factory() {
 
         public static boolean shouldSkipVerification(final Element element) {
             return element.getAnnotation(SkipVerification.class) != null;

@@ -12,8 +12,8 @@ import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 /**
  * Indicates to which degree should the verification of a program element be relaxed.
  * <p>
- * Enclosed elements of the annotated element are also affected by the annotation. For example, annotating a class with
- * {@code RelaxVerification(WARN)} will also relax verification of the fields, methods, etc. of that class.
+ * Enclosed elements of the annotated element may also affected by the annotation, which is controlled with {@link #enclosed()}.
+ * For example, annotating a class with {@code RelaxVerification(WARN)} will also relax verification of the fields, methods, etc. of that class.
  *
  * @author homedirectory
  */
@@ -34,7 +34,7 @@ public @interface RelaxVerification {
     boolean enclosed() default DEFAULT_ENCLOSED;
 
 
-    public record Factory(RelaxationPolicy value, boolean enclosed) {
+    public static record Factory(RelaxationPolicy value, boolean enclosed) {
 
         /**
          * Returns an optional describing the {@link RelaxationPolicy} of the given element by inspecting it and its enclosing elements
@@ -58,6 +58,13 @@ public @interface RelaxVerification {
                 .flatMap(annot -> annot.enclosed() ? Optional.of(annot.value()) : Optional.empty());
         }
 
+        /**
+         * Tests whether the given element has the specified relaxation policy by inspecting it and its enclosing elements for the
+         * {@link RelaxVerification} annotation.
+         *
+         * @param element   the element being inspected
+         * @return          {@code true} if the element has the specified policy, {@code false} otherwise
+         */
         public static boolean hasPolicy(final Element element, final RelaxationPolicy policy) {
             return policyFor(element).map(pol -> pol.equals(policy)).orElse(false);
         }
