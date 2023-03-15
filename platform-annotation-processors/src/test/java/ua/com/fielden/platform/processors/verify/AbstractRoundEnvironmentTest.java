@@ -51,7 +51,7 @@ public class AbstractRoundEnvironmentTest {
             }
         };
 
-        new Compilation(sources).setProcessor(processor).compile();
+        Compilation.newInMemory(sources).setProcessor(processor).compile();
     }
 
     @Test
@@ -79,7 +79,7 @@ public class AbstractRoundEnvironmentTest {
             }
         };
 
-        new Compilation(sources).setProcessor(processor).compile();
+        Compilation.newInMemory(sources).setProcessor(processor).compile();
     }
 
 }
