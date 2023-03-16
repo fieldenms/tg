@@ -34,6 +34,56 @@ if (!copyTooltip) {
     document.body.appendChild(copyTooltip);
 }
 
+let checkIconTimer = null;
+
+let lastEditor = null;
+
+const timeoutCheckIconAndTooltip = function (editor) {
+    if (checkIconTimer) {
+        clearTimeout(checkIconTimer);
+        if(editor !== lastEditor) {
+            hideCheckIconAndTooltip();
+            showCheckIconAndTooltip(editor);
+        }
+    } else {
+        showCheckIconAndTooltip(editor);
+    }
+    checkIconTimer = setTimeout(function() {
+        hideCheckIconAndTooltip();
+    }, 1000);
+}
+
+const showCheckIconAndTooltip = function (editor) {
+    lastEditor = editor;
+    const copyTooltipRect = copyTooltip.getBoundingClientRect();
+    const copyIconRect = lastEditor.$.copyIcon.getBoundingClientRect();
+    copyTooltip.style.top = `${copyIconRect.top - copyTooltipRect.height - 8}px`;
+    copyTooltip.style.left = `${copyIconRect.left + (copyIconRect.width - copyTooltipRect.width) / 2}px`;
+    copyTooltip.style.visibility = "visible";
+    lastEditor.$.copyIcon.icon = "icons:check";
+    lastEditor.addEventListener("mouseleave", hideCheckIconAndTooltipOnMouseLeave);
+}
+
+const hideCheckIconAndTooltip = function () {
+    copyTooltip.style.top = "-100px";
+    copyTooltip.style.left = "-100px";
+    copyTooltip.style.visibility = "hidden";
+    lastEditor.$.copyIcon.icon = "icons:content-copy";
+    lastEditor.removeEventListener("mouseleave", hideCheckIconAndTooltipOnMouseLeave);
+    checkIconTimer = null;
+    lastEditor = null;
+}
+
+const hideCheckIconAndTooltipOnMouseLeave = function () {
+    if (!lastEditor.focused) {
+        if (checkIconTimer) {
+            clearTimeout(checkIconTimer);
+            checkIconTimer = null;
+        }
+        hideCheckIconAndTooltip();
+    }
+}
+
 const defaultLabelTemplate = html`
     <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]" slot="label">
         <span>[[propTitle]]</span>
@@ -811,23 +861,12 @@ export class TgEditor extends PolymerElement {
     _copyTap () {
         if (navigator.clipboard) {
             navigator.clipboard.writeText(this._editingValue);
-            this._showCheckIconAndTooltip();
+            this._showCheckIconAndTooltip(this);
         }
     }
 
     _showCheckIconAndTooltip () {
-        const copyTooltipRect = copyTooltip.getBoundingClientRect();
-        const copyIconRect = this.$.copyIcon.getBoundingClientRect();
-        copyTooltip.style.top = `${copyIconRect.top - copyTooltipRect.height - 8}px`;
-        copyTooltip.style.left = `${copyIconRect.left + (copyIconRect.width - copyTooltipRect.width) / 2}px`;
-        copyTooltip.style.visibility = "visible";
-        this.$.copyIcon.icon = "icons:check";
-        setTimeout(function() {
-            copyTooltip.style.top = "-100px";
-            copyTooltip.style.left = "-100px";
-            copyTooltip.style.visibility = "hidden";
-            this.$.copyIcon.icon = "icons:content-copy";
-        }.bind(this), 1000);
+        timeoutCheckIconAndTooltip(this);
     }
     
     _updateMessagesForEntity (newEntity) {
