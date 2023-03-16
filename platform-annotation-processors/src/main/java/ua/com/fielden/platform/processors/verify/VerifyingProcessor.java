@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.processors.verify;
 
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toSet;
 
 import java.util.Collection;
 import java.util.LinkedList;
@@ -109,7 +110,7 @@ public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
             if (!erronousElements.isEmpty()) {
                 roundPassed = false;
                 printError(errVerifierNotPassedBy(verifier.getClass().getSimpleName(),
-                        erronousElements.stream().map(ve -> ve.element().getSimpleName().toString()).toList()));
+                        erronousElements.stream().map(ve -> ve.element().getSimpleName().toString()).collect(toSet())));
             }
         }
 
