@@ -242,7 +242,7 @@ public class Finder {
 
     /**
      * A stream equivalent to method {@link #findProperties(Class, Class...)}.
-     * 
+     *
      * @param entityType
      * @param annotations
      * @return
@@ -273,7 +273,7 @@ public class Finder {
 
     /**
      * A stream equivalent to method {@link #findRealProperties(Class, Class...)}.
-     * 
+     *
      * @param entityType
      * @param annotations
      * @return
@@ -451,7 +451,7 @@ public class Finder {
 
     /**
      * The same as {@link #getFieldByName(Class, String)}, but side effect free.
-     * 
+     *
      * @param type
      * @param name
      * @return
@@ -504,7 +504,7 @@ public class Finder {
 
     /**
      * The same as {@link Finder#findFieldByName(Class, String)}, but side effect free.
-     * 
+     *
      * @param type
      * @param dotNotationExp
      * @return
@@ -534,7 +534,7 @@ public class Finder {
         Object value = entity;
         for (final String propName : propNames) {
             value = getPropertyValue((AbstractEntity<?>) value, propName);
-            
+
             if (value == null) {
                 return null;
             }
@@ -609,7 +609,7 @@ public class Finder {
 
     /**
      * Traces through specified list of fields and returns a stream of those annotated with allAnnotations.
-     * 
+     *
      * @param fields
      * @param allAnnotations
      * @return
@@ -680,7 +680,7 @@ public class Finder {
         return propertiesWithKeys;
     }
 
-    private static boolean isKey(final Field field) {
+    public static boolean isKey(final Field field) {
         return field.getName().equals(AbstractEntity.KEY) || field.isAnnotationPresent(CompositeKeyMember.class);
     }
 
