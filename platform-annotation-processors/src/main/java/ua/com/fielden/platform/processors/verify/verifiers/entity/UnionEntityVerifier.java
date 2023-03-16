@@ -57,16 +57,16 @@ public class UnionEntityVerifier extends AbstractComposableEntityVerifier {
 
         @Override
         protected List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
-            return roundEnv.acceptUnionEntityVisitor(new EntityVisitor(entityFinder));
+            return roundEnv.findViolatingUnionEntities(new EntityElementVerifier(entityFinder));
         }
 
-        private class EntityVisitor extends AbstractEntityVerifyingVisitor {
-            public EntityVisitor(final EntityFinder entityFinder) {
+        private class EntityElementVerifier extends AbstractEntityElementVerifier {
+            public EntityElementVerifier(final EntityFinder entityFinder) {
                 super(entityFinder);
             }
 
             @Override
-            public Optional<ViolatingElement> visitEntity(final EntityElement entity) {
+            public Optional<ViolatingElement> verify(final EntityElement entity) {
                 if (entityFinder.streamDeclaredProperties(entity).anyMatch(prop -> entityFinder.isEntityType(prop.getType()))) {
                     return Optional.empty();
                 }
@@ -95,16 +95,16 @@ public class UnionEntityVerifier extends AbstractComposableEntityVerifier {
 
         @Override
         protected List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
-            return roundEnv.acceptUnionEntityDeclaredPropertiesVisitor(new PropertyVisitor(entityFinder));
+            return roundEnv.findViolatingUnionEntityDeclaredProperties(new PropertyElementVerifier(entityFinder));
         }
 
-        private class PropertyVisitor extends AbstractPropertyVerifyingVisitor {
-            public PropertyVisitor(final EntityFinder entityFinder) {
+        private class PropertyElementVerifier extends AbstractPropertyElementVerifier {
+            public PropertyElementVerifier(final EntityFinder entityFinder) {
                 super(entityFinder);
             }
 
             @Override
-            public Optional<ViolatingElement> visitProperty(final EntityElement entity, final PropertyElement property) {
+            public Optional<ViolatingElement> verifyProperty(final EntityElement entity, final PropertyElement property) {
                 final TypeMirror propType = property.getType();
                 if (!entityFinder.isEntityType(propType)) {
                     return Optional.of(new ViolatingElement(
@@ -139,16 +139,16 @@ public class UnionEntityVerifier extends AbstractComposableEntityVerifier {
 
         @Override
         protected List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
-            return roundEnv.acceptUnionEntityVisitor(new EntityVisitor(entityFinder));
+            return roundEnv.findViolatingUnionEntities(new EntityElementVerifier(entityFinder));
         }
 
-        private class EntityVisitor extends AbstractEntityVerifyingVisitor {
-            public EntityVisitor(final EntityFinder entityFinder) {
+        private class EntityElementVerifier extends AbstractEntityElementVerifier {
+            public EntityElementVerifier(final EntityFinder entityFinder) {
                 super(entityFinder);
             }
 
             @Override
-            public Optional<ViolatingElement> visitEntity(final EntityElement entity) {
+            public Optional<ViolatingElement> verify(final EntityElement entity) {
                 // key is an entity type and value - properties having that type
                 final Map<EntityElement, List<PropertyElement>> map = entityFinder.streamDeclaredProperties(entity)
                         .filter(prop -> entityFinder.isEntityType(prop.asType()))

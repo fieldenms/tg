@@ -21,6 +21,8 @@ import java.util.Set;
 
 import org.junit.Test;
 
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
+
 public class CollectionUtilTest {
 
     @Test
@@ -85,7 +87,7 @@ public class CollectionUtilTest {
         assertArrayEquals(new Integer[] {2, 3}, tail(new Integer[] {1, 2, 3}).get());
     }
 
-    @Test
+     @Test
     public void collections_of_different_types_but_the_same_elements_are_equal_by_contents() {
         final List<Integer> list = List.of(1, 4, 2, 5);
         final Set<Integer> set = Set.of(4, 1, 5, 2);
@@ -142,17 +144,36 @@ public class CollectionUtilTest {
         assertTrue(CollectionUtil.areEqualByContents(xs, zs));
     }
 
+    @Test
     public void removeFirst_removes_only_the_first_element_matching_the_predicate() {
-        final List<Integer> list = listOf(1, 2, 3);
-        assertEquals(Integer.valueOf(2), removeFirst(list, x -> x >=2).get());
-        assertArrayEquals(new Integer[] {1, 3}, list.toArray());
+        final List<Integer> xs = listOf(1, 2, 3);
+        assertEquals(Integer.valueOf(2), removeFirst(xs, x -> x >=2).get());
+        assertEquals(listOf(1, 3), xs);
     }
 
     @Test
     public void removeFirst_removes_nothing_and_returns_empty_Optional_if_no_elements_match_the_predicate() {
-        final List<Integer> list = listOf(1, 2, 3);
-        assertFalse(removeFirst(list, x -> x < 0).isPresent());
-        assertArrayEquals(new Integer[] {1, 2, 3}, list.toArray());
+        final List<Integer> xs = listOf(1, 2, 3);
+        assertFalse(removeFirst(xs, x -> x < 0).isPresent());
+        assertEquals(listOf(1, 2, 3), xs);
+    }
+
+    @Test
+    public void removeFirst_passing_null_collection_throws_InvalidArgumentException() {
+        final List<Integer> xs = null;
+        assertThrows(InvalidArgumentException.class, () -> removeFirst(xs, x -> x >=2));
+    }
+
+    @Test
+    public void removeFirst_passing_null_predicate_throws_InvalidArgumentException() {
+        final List<Integer> xs = listOf(1, 2, 3);
+        assertThrows(InvalidArgumentException.class, () -> removeFirst(xs, null));
+    }
+
+    @Test
+    public void removeFirst_does_not_permit_null_elements_throwing_InvalidArgumentException() {
+        final List<Integer> xs = listOf(1, null, 3);
+        assertThrows(InvalidArgumentException.class, () -> removeFirst(xs, x -> x >=2));
     }
 
 }

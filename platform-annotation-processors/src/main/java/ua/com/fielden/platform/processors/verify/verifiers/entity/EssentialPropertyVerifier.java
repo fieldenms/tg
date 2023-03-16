@@ -53,7 +53,7 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
     }
 
     /**
-     * All properties must have a coresponding accessor method with a name starting with "get" or "is".
+     * All properties must have a corresponding accessor method with a name starting with "get" or "is".
      * <p>
      * An accessor's return type must match its property type with the exception of collectional properties, where return type must be
      * <b>assignable to</b> the property type.
@@ -79,16 +79,16 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
 
         @Override
         protected List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
-            return roundEnv.acceptDeclaredPropertiesVisitor(new PropertyVisitor(entityFinder));
+            return roundEnv.findViolatingDeclaredProperties(new PropertyVerifier(entityFinder));
         }
 
-        private class PropertyVisitor extends AbstractPropertyVerifyingVisitor {
-            public PropertyVisitor(final EntityFinder entityFinder) {
+        private class PropertyVerifier extends AbstractPropertyElementVerifier {
+            public PropertyVerifier(final EntityFinder entityFinder) {
                 super(entityFinder);
             }
 
             @Override
-            public Optional<ViolatingElement> visitProperty(final EntityElement entity, final PropertyElement property) {
+            public Optional<ViolatingElement> verifyProperty(final EntityElement entity, final PropertyElement property) {
                 // accessor must be declared
                 final Optional<ExecutableElement> maybeAccessor = entityFinder.findDeclaredPropertyAccessor(entity, getSimpleName(property.element()));
                 if (maybeAccessor.isEmpty()) {
@@ -152,16 +152,16 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
 
         @Override
         protected List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
-            return roundEnv.acceptDeclaredPropertiesVisitor(new PropertyVisitor(entityFinder));
+            return roundEnv.findViolatingDeclaredProperties(new PropertyVerifier(entityFinder));
         }
 
-        private class PropertyVisitor extends AbstractPropertyVerifyingVisitor {
-            public PropertyVisitor(final EntityFinder entityFinder) {
+        private class PropertyVerifier extends AbstractPropertyElementVerifier {
+            public PropertyVerifier(final EntityFinder entityFinder) {
                 super(entityFinder);
             }
 
             @Override
-            public Optional<ViolatingElement> visitProperty(final EntityElement entity, final PropertyElement property) {
+            public Optional<ViolatingElement> verifyProperty(final EntityElement entity, final PropertyElement property) {
                 // setter should be declared
                 final Optional<ExecutableElement> maybeSetter = entityFinder.findDeclaredPropertySetter(entity, getSimpleName(property.element()));
                 if (maybeSetter.isEmpty()) {
@@ -206,16 +206,16 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
 
         @Override
         protected List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
-            return roundEnv.acceptDeclaredPropertiesVisitor(new PropertyVisitor(entityFinder));
+            return roundEnv.findViolatingDeclaredProperties(new PropertyVerifier(entityFinder));
         }
 
-        private class PropertyVisitor extends AbstractPropertyVerifyingVisitor {
-            public PropertyVisitor(final EntityFinder entityFinder) {
+        private class PropertyVerifier extends AbstractPropertyElementVerifier {
+            public PropertyVerifier(final EntityFinder entityFinder) {
                 super(entityFinder);
             }
 
             @Override
-            public Optional<ViolatingElement> visitProperty(final EntityElement entity, final PropertyElement property) {
+            public Optional<ViolatingElement> verifyProperty(final EntityElement entity, final PropertyElement property) {
                 if (!entityFinder.isCollectionalProperty(property)) {
                     return Optional.empty();
                 }
@@ -283,21 +283,22 @@ public class EssentialPropertyVerifier extends AbstractComposableEntityVerifier 
             // TODO Implement when ApplicationDomain becomes analysable by annotation processors or
             // some other suitable entity registration mechanism is used.
             // Currently, entity types are registered in the static initialiser block, which is unreachable to annotation processors.
+            // Refer issue https://github.com/fieldenms/tg/issues/1946
             return true;
         }
 
         @Override
         protected List<ViolatingElement> verify(final EntityRoundEnvironment roundEnv) {
-            return roundEnv.acceptDeclaredPropertiesVisitor(new PropertyVisitor(entityFinder));
+            return roundEnv.findViolatingDeclaredProperties(new PropertyVerifier(entityFinder));
         }
 
-        private class PropertyVisitor extends AbstractPropertyVerifyingVisitor {
-            public PropertyVisitor(final EntityFinder entityFinder) {
+        private class PropertyVerifier extends AbstractPropertyElementVerifier {
+            public PropertyVerifier(final EntityFinder entityFinder) {
                 super(entityFinder);
             }
 
             @Override
-            public Optional<ViolatingElement> visitProperty(final EntityElement entity, final PropertyElement property) {
+            public Optional<ViolatingElement> verifyProperty(final EntityElement entity, final PropertyElement property) {
                 final TypeMirror propType = property.getType();
 
                 // 1. ordinary type

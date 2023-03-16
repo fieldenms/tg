@@ -36,12 +36,15 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Optional;
 import ua.com.fielden.platform.entity.annotation.Readonly;
+import ua.com.fielden.platform.entity.annotation.SkipDefaultStringKeyMemberValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
+import ua.com.fielden.platform.entity.validation.RestrictCommasValidator;
+import ua.com.fielden.platform.entity.validation.RestrictExtraWhitespaceValidator;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.expression.ExpressionText2ModelConverter;
 import ua.com.fielden.platform.expression.ast.AstNode;
@@ -91,6 +94,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
     // revalidates "originationProperty" to ensure that it is correct after "contextualExpression" has been changed
     @BeforeChange(@Handler(BceContextualExpressionValidation.class))
     @AfterChange(AceCalculatedPropertyMetaInformationPopulation.class)
+    @SkipDefaultStringKeyMemberValidation(RestrictCommasValidator.class)
     private String contextualExpression;
 
     @IsProperty
@@ -98,6 +102,7 @@ public/* final */class CalculatedProperty extends AbstractEntity<DynamicEntityKe
     @Title(value = "Title", desc = "Calculated property title")
     @BeforeChange(@Handler(BceTitleValidation.class))
     @AfterChange(AceCalculatedPropertyNamePopulation.class)
+    @SkipDefaultStringKeyMemberValidation({RestrictExtraWhitespaceValidator.class, RestrictCommasValidator.class})
     private String title;
 
     // Required contextually and mutable stuff

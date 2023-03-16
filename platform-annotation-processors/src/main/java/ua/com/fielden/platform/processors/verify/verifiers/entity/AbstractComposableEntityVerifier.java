@@ -10,11 +10,11 @@ import ua.com.fielden.platform.processors.verify.verifiers.AbstractComposableVer
 
 /**
  * Base composable verifier type to be subclassed by entity-oriented composable verifiers. Utilises {@link EntityRoundEnvironment}.
- * May be composed strictly of {@link AbstractEntityVerifier} implementations.
+ * It can be composed strictly of {@link AbstractEntityVerifier} subtypes.
  * 
  * @author TG Team
  */
-public abstract class AbstractComposableEntityVerifier extends AbstractComposableVerifier<EntityRoundEnvironment> {
+public abstract class AbstractComposableEntityVerifier extends AbstractComposableVerifier<EntityRoundEnvironment, AbstractEntityVerifier> {
 
     protected AbstractComposableEntityVerifier(final ProcessingEnvironment procEnv) {
         super(procEnv);
