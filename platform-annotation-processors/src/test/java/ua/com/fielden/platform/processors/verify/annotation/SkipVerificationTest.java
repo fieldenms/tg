@@ -11,10 +11,10 @@ import org.junit.runner.RunWith;
 
 import com.squareup.javapoet.TypeSpec;
 
-import ua.com.fielden.platform.processors.verify.AbstractRoundEnvironment;
 import ua.com.fielden.platform.processors.verify.AbstractVerifierTest;
 import ua.com.fielden.platform.processors.verify.ViolatingElement;
-import ua.com.fielden.platform.processors.verify.test_utils.AbstractSimpleVerifier;
+import ua.com.fielden.platform.processors.verify.test_utils.SimpleRoundEnvironment;
+import ua.com.fielden.platform.processors.verify.test_utils.SimpleVerifier;
 import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
 
 /**
@@ -29,9 +29,9 @@ public class SkipVerificationTest {
 
         @Override
         protected IVerifier createVerifier(final ProcessingEnvironment procEnv) {
-            return new AbstractSimpleVerifier(procEnv) {
+            return new SimpleVerifier(procEnv) {
                 @Override
-                protected List<ViolatingElement> verify(final AbstractRoundEnvironment roundEnv) {
+                protected List<ViolatingElement> verify(final SimpleRoundEnvironment roundEnv) {
                     // obtain the element directly, bypassing AbstractRoundEnvironment that would skip it
                      return List.of(new ViolatingElement(elementFinder.getTypeElement("Example"), Kind.ERROR, "SOME ERROR MESSAGE"));
                 }

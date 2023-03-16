@@ -5,7 +5,6 @@ import java.util.List;
 
 import javax.annotation.processing.ProcessingEnvironment;
 
-import ua.com.fielden.platform.processors.verify.AbstractRoundEnvironment;
 import ua.com.fielden.platform.processors.verify.ViolatingElement;
 
 /**
@@ -15,14 +14,14 @@ import ua.com.fielden.platform.processors.verify.ViolatingElement;
  *
  * @author homedirectory
  */
-public class MessagePrintingVerifier extends AbstractSimpleVerifier {
+public class MessagePrintingVerifier extends SimpleVerifier {
 
     public MessagePrintingVerifier(final ProcessingEnvironment processingEnv) {
         super(processingEnv);
     }
 
     @Override
-    protected List<ViolatingElement> verify(final AbstractRoundEnvironment roundEnv) {
+    protected List<ViolatingElement> verify(final SimpleRoundEnvironment roundEnv) {
         final List<ViolatingElement> violators = new LinkedList<>();
 
         roundEnv.getElementsAnnotatedWith(Message.class).stream()

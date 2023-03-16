@@ -22,6 +22,7 @@ import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.test_utils.ExampleAnnotation;
 import ua.com.fielden.platform.processors.test_utils.SelectedRoundsProcessor;
 import ua.com.fielden.platform.processors.verify.annotation.SkipVerification;
+import ua.com.fielden.platform.processors.verify.test_utils.SimpleRoundEnvironment;
 
 /**
  * A test case for {@link AbstractRoundEnvironment}.
@@ -43,7 +44,7 @@ public class AbstractRoundEnvironmentTest {
         Processor processor = new SelectedRoundsProcessor.FirstRoundProcessor() {
             @Override
             protected boolean processRound(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv, int roundNumber) {
-                AbstractRoundEnvironment abstractRoundEnv = new AbstractRoundEnvironment(roundEnv, this.processingEnv.getMessager()) {};
+                AbstractRoundEnvironment<?, ?> abstractRoundEnv = new SimpleRoundEnvironment(roundEnv, this.processingEnv.getMessager()) {};
                 assertEquals(List.of("Include"),
                         abstractRoundEnv.getRootElements().stream().map(elt -> ElementFinder.getSimpleName(elt)).toList());
 
@@ -70,7 +71,7 @@ public class AbstractRoundEnvironmentTest {
         Processor processor = new SelectedRoundsProcessor.FirstRoundProcessor() {
             @Override
             protected boolean processRound(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv, int roundNumber) {
-                AbstractRoundEnvironment abstractRoundEnv = new AbstractRoundEnvironment(roundEnv, this.processingEnv.getMessager()) {};
+                AbstractRoundEnvironment<?, ?> abstractRoundEnv = new SimpleRoundEnvironment(roundEnv, this.processingEnv.getMessager()) {};
                 assertEquals(List.of("Include"),
                         abstractRoundEnv.getElementsAnnotatedWith(ExampleAnnotation.class).stream()
                             .map(elt -> ElementFinder.getSimpleName(elt)).toList());
