@@ -22,6 +22,7 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.types.tuples.T2;
 
 /**
@@ -140,14 +141,28 @@ public final class CollectionUtil {
     }
 
     /**
-     * Removes the first element matching the predicate from the collection and returns an Optional describing it,
-     * otherwise returns an empty Optional. The supplied collection must be modifiable.
+     * Removes the first element matching the predicate from the collection and returns an {@link Optional} describing it, otherwise returns an empty {@link Optional}.
+     * <p>
+     * The supplied collection must be modifiable and must not contain {@code null} values.
+     *
+     * @param <E> a type of elements in {@code xs}.
+     * @param xs a modifiable collection, which gets modified by removing the first element matching {@code pred}.
+     * @param pred a predicate for identifying the first element to be removed from {@code xs}.
+     * @return
      */
-    public static <E> Optional<E> removeFirst(final Collection<E> coll, final Predicate<E> pred) {
-        final Iterator<E> iter = coll.iterator();
-        E elt;
-        while (iter.hasNext()) {
-            elt = iter.next();
+    public static <E> Optional<E> removeFirst(final Collection<E> xs, final Predicate<? super E> pred) {
+        if (xs == null) {
+            throw new InvalidArgumentException("Collection cannot be null.");
+        }
+        if (pred == null) {
+            throw new InvalidArgumentException("Predicate cannot be null.");
+        }
+
+        for (final Iterator<E> iter = xs.iterator(); iter.hasNext();) {
+            final E elt = iter.next();
+            if (elt == null) {
+                throw new InvalidArgumentException("Collection contains null elements, which is not permitted.");
+            }
             if (pred.test(elt)) {
                 iter.remove();
                 return Optional.of(elt);
