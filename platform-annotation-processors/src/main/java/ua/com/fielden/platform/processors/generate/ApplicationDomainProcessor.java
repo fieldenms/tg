@@ -56,6 +56,13 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
 
     @Override
     protected boolean processRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+        // if this is an incremental build, then any newly created entity types will be passed to the first round
+        // otherwise it's a full build and all sources will passed to the first round
+        // therefore, we do not care about further rounds
+        if (getRoundNumber() > 1) {
+            return false;
+        }
+
         final Set<EntityElement> entities = roundEnv.getRootElements().stream()
             .filter(elt -> entityFinder.isEntityType(elt.asType()))
             .map(elt -> entityFinder.newEntityElement((TypeElement) elt))
