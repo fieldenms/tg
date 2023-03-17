@@ -97,6 +97,16 @@ public class ElementFinder {
     }
 
     /**
+     * A safer version of {@link #getTypeElement(String)} that doesn't throw but returns an optional.
+     *
+     * @param name canonical name of the element to be found
+     * @return
+     */
+    public Optional<TypeElement> findTypeElement(final String name) {
+        return Optional.ofNullable(TypeElementCache.getTypeElement(elements, name));
+    }
+
+    /**
      * Tests whether the type element and class represent the same type.
      * <p>
      * The comparison is based on the canonical name of the underlying type.
