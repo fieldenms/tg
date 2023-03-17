@@ -45,7 +45,7 @@ public class ProcessingRule implements TestRule {
      * @param processor annotation processor instance to use
      */
     public ProcessingRule(final Collection<? extends JavaFileObject> javaSources, final Processor processor) {
-        this.javaSources = javaSources.isEmpty() || javaSources == null ? List.of(PLACEHOLDER) : javaSources;
+        this.javaSources = javaSources == null || javaSources.isEmpty() ? List.of(PLACEHOLDER) : javaSources;
         this.processor = processor;
     }
 
