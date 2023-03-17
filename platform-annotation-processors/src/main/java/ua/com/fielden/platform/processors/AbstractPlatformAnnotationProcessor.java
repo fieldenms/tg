@@ -206,6 +206,10 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
         messager.printMessage(Diagnostic.Kind.MANDATORY_WARNING, msg.formatted(args));
     }
 
+    /**
+     * Returns the current processing round number. Numbering starts at 1.
+     * @return
+     */
     protected int getRoundNumber() {
         return roundNumber;
     }
