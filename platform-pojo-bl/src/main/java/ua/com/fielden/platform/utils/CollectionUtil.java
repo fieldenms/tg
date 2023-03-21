@@ -172,5 +172,4 @@ public final class CollectionUtil {
         return Optional.empty();
     }
 
-
 }

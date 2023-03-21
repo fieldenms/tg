@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.processors.verify.verifiers.entity;
 
+import static ua.com.fielden.platform.processors.verify.VerifyingProcessor.errVerifierNotPassedBy;
 import static ua.com.fielden.platform.processors.verify.verifiers.VerifierTestUtils.propertyBuilder;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier.AT_KEY_TYPE_CLASS;
 import static ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier.ChildKeyTypeMatchesParentKeyType.keyTypeMustMatchTheSupertypesKeyType;
@@ -50,6 +51,7 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
 
     // 1. @KeyType presence
     public static class KeyTypePresenceTest extends AbstractVerifierTest {
+        static final Class<?> VERIFIER_TYPE = KeyTypeVerifier.KeyTypePresence.class;
 
         @Override
         protected IVerifier createVerifier(final ProcessingEnvironment procEnv) {
@@ -57,17 +59,19 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
         }
 
         @Test
-        public void entity_missing_KeyType_does_not_pass_verification() {
+        public void entity_must_be_annotated_with_KeyType() {
             // build an entity
             final TypeSpec entity = TypeSpec.classBuilder("EntityWithoutKeyType")
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .build();
 
-            compileAndAssertError(List.of(entity), ENTITY_DEFINITION_IS_MISSING_KEY_TYPE);
+            compileAndAssertErrors(List.of(entity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), entity.name),
+                    ENTITY_DEFINITION_IS_MISSING_KEY_TYPE);
         }
 
         @Test
-        public void entity_can_ommit_KeyType_if_declared_by_supertype() {
+        public void entity_can_ommit_KeyType_if_supertype_is_alredy_annotated() {
             // build a supertype entity
             final TypeSpec superEntity = TypeSpec.classBuilder("EntityWithKeyType")
                     .addAnnotation(buildKeyType(String.class))
@@ -97,6 +101,7 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
     // 2. @KeyType value and AbstractEntity type family parameterization
     // AbstractEntity type family includes AbstractEntity and those descendants that are parameterized with a key type
     public static class KeyTypeValueMatchesAbstractEntityTypeArgumentTest extends AbstractVerifierTest {
+        static final Class<?> VERIFIER_TYPE = KeyTypeVerifier.KeyTypeValueMatchesAbstractEntityTypeArgument.class;
 
         @Override
         protected IVerifier createVerifier(final ProcessingEnvironment procEnv) {
@@ -110,7 +115,9 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
                     .superclass(ABSTRACT_ENTITY_STRING_TYPE_NAME)
                     .build();
 
-            compileAndAssertError(List.of(superEntity), KEY_TYPE_MUST_MATCH_THE_TYPE_ARGUMENT_TO_ABSTRACT_ENTITY);
+            compileAndAssertErrors(List.of(superEntity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), superEntity.name),
+                    KEY_TYPE_MUST_MATCH_THE_TYPE_ARGUMENT_TO_ABSTRACT_ENTITY);
         }
 
         @Test
@@ -120,12 +127,15 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
                     .superclass(ClassName.get(AbstractEntity.class))
                     .build();
 
-            compileAndAssertError(List.of(superEntity), SUPERTYPE_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE);
+            compileAndAssertErrors(List.of(superEntity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), superEntity.name),
+                    SUPERTYPE_MUST_BE_PARAMETERIZED_WITH_ENTITY_KEY_TYPE);
         }
     }
 
     // 3. Declaration of @KeyType by a child entity
     public static class ChildKeyTypeMatchesParentKeyTypeTest extends AbstractVerifierTest {
+        static final Class<?> VERIFIER_TYPE = KeyTypeVerifier.ChildKeyTypeMatchesParentKeyType.class;
 
         @Override
         protected IVerifier createVerifier(final ProcessingEnvironment procEnv) {
@@ -147,12 +157,15 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
                     .superclass(ClassName.get("", superEntity.name))
                     .build();
 
-            compileAndAssertError(List.of(superEntity, subEntity), keyTypeMustMatchTheSupertypesKeyType(superEntity.name));
+            compileAndAssertErrors(List.of(superEntity, subEntity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), subEntity.name),
+                    keyTypeMustMatchTheSupertypesKeyType(superEntity.name));
         }
     }
 
     // 4. Explicit declaration of property "key" by an entity
     public static class DeclaredKeyPropertyTypeMatchesAtKeyTypeValueTest extends AbstractVerifierTest {
+        static final Class<?> VERIFIER_TYPE = KeyTypeVerifier.DeclaredKeyPropertyTypeMatchesAtKeyTypeValue.class;
 
         @Override
         protected IVerifier createVerifier(ProcessingEnvironment procEnv) {
@@ -167,7 +180,9 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
                     .addField(propertyBuilder(Double.class, AbstractEntity.KEY).build())
                     .build();
 
-            compileAndAssertError(List.of(incorrectEntity), KEY_PROPERTY_TYPE_MUST_BE_CONSISTENT_WITH_KEYTYPE_DEFINITION);
+            compileAndAssertErrors(List.of(incorrectEntity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), AbstractEntity.KEY),
+                    KEY_PROPERTY_TYPE_MUST_BE_CONSISTENT_WITH_KEYTYPE_DEFINITION);
         }
 
         @Test
@@ -179,7 +194,9 @@ public class KeyTypeVerifierTest extends AbstractVerifierTest {
                     .addField(propertyBuilder(String.class, AbstractEntity.KEY).build())
                     .build();
 
-            compileAndAssertError(List.of(incorrectEntity), ENTITY_WITH_NOKEY_AS_KEY_TYPE_CAN_NOT_DECLARE_PROPERTY_KEY);
+            compileAndAssertErrors(List.of(incorrectEntity),
+                    errVerifierNotPassedBy(VERIFIER_TYPE.getSimpleName(), AbstractEntity.KEY),
+                    ENTITY_WITH_NOKEY_AS_KEY_TYPE_CAN_NOT_DECLARE_PROPERTY_KEY);
         }
     }
 

@@ -1,13 +1,10 @@
 package ua.com.fielden.platform.processors.test_utils;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -15,7 +12,6 @@ import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.TypeElement;
-import javax.tools.Diagnostic;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaCompiler.CompilationTask;
@@ -33,10 +29,10 @@ import ua.com.fielden.platform.types.try_wrapper.ThrowableConsumer;
  * <p>
  * In order to obtain independent results it is recommended to use a fresh instance for every invokation of a method responsible for compilation.
  * In other words, compiling more than once with the same instance of this class does not guarantee the result will be independent of the
- * previous compilation. 
+ * previous compilation.
  * <p>
  * Makes a convenient annotation processor testing utility.
- * 
+ *
  * @author TG Team
  */
 public final class Compilation {
@@ -50,11 +46,22 @@ public final class Compilation {
     private Iterable<String> options;
     private DiagnosticCollector<JavaFileObject> diagnosticListener = new DiagnosticCollector<>();
 
-    private final List<Diagnostic<? extends JavaFileObject>> diagnostics = new ArrayList<>();
+    /**
+     * Creates a new instance that stores the compiled sources in memory by using a preconfigured {@link #compiler} and {@link #fileManager}.
+     *
+     * @param javaSources   java sources to be compiled
+     * @return              a new compilation instance
+     */
+    public static Compilation newInMemory(final Collection<? extends JavaFileObject> javaSources) {
+        final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        final InMemoryJavaFileManager fileManager = new InMemoryJavaFileManager(compiler.getStandardFileManager(null, null, null));
+
+        return new Compilation(javaSources).setCompiler(compiler).setFileManager(fileManager);
+    }
 
     /**
      * Only a single annotation processor is allowed to ensure that the processing environment is not shared with other processors, which could lead to unexpected behaviour.
-     * 
+     *
      * @param javaSources java sources to compile
      * @param processor annotation processor to use during compilation
      * @param compiler
@@ -91,7 +98,7 @@ public final class Compilation {
         this.options = options;
         return this;
     }
-    
+
     public Compilation setOptions(final String... options) {
         this.options = Arrays.asList(options);
         return this;
@@ -108,34 +115,34 @@ public final class Compilation {
      * Use whenever {@code evaluator} might throw.
      *
      * @param evaluator
-     * @return
+     * @return result of the compilation
      * @throws Throwable
      */
-    public boolean compileAndEvaluatef(final ThrowableConsumer<ProcessingEnvironment> evaluator) {
+    public CompilationResult compileAndEvaluatef(final ThrowableConsumer<ProcessingEnvironment> evaluator) {
         final EvaluatingProcessor evaluatingProcessor = new EvaluatingProcessor(evaluator);
-        final boolean success = doCompile(evaluatingProcessor);
+        final CompilationResult result = doCompile(evaluatingProcessor);
         evaluatingProcessor.throwIfStatementThrew();
-        return success;
+        return result;
     }
-    
+
     /**
      * Performs compilation and applies {@code evaluator} during the last round of annotation processing.
      *
      * @param evaluator
-     * @return
+     * @return result of the compilation
      * @throws Throwable
      */
-    public boolean compileAndEvaluate(final Consumer<ProcessingEnvironment> evaluator) {
+    public CompilationResult compileAndEvaluate(final Consumer<ProcessingEnvironment> evaluator) {
         return compileAndEvaluatef((procEnv) -> evaluator.accept(procEnv));
     }
-    
-    public boolean compile() {
+
+    public CompilationResult compile() {
         return compileAndEvaluate((procEnv) -> {});
     }
 
-    private boolean doCompile(final EvaluatingProcessor processor) {
+    private CompilationResult doCompile(final EvaluatingProcessor processor) {
         final CompilationTask task = compiler.getTask(
-                null, // Writer for additional output from the compiler (null => System.err)                
+                null, // Writer for additional output from the compiler (null => System.err)
                 fileManager,
                 diagnosticListener,
                 options,
@@ -144,25 +151,7 @@ public final class Compilation {
         task.setProcessors(List.of(processor));
         final boolean success = task.call();
 
-        diagnostics.clear();
-        diagnostics.addAll(diagnosticListener.getDiagnostics());
-
-        return success;
-    }
-
-    public List<Diagnostic<? extends JavaFileObject>> getDiagnostics() {
-        return Collections.unmodifiableList(diagnostics);
-    }
-
-    public List<Diagnostic<? extends JavaFileObject>> getErrors() {
-        return diagnostics.stream()
-                .filter(diag -> diag.getKind().equals(Diagnostic.Kind.ERROR))
-                .collect(Collectors.toUnmodifiableList());
-    }
-    
-    /** A convenient method that prints collected diagnostics to {@link System#out}. */
-    public void printDiagnostics() {
-        System.out.println(diagnostics.stream().map(Diagnostic::toString).collect(Collectors.joining("\n")));
+        return new CompilationResult(success, diagnosticListener.getDiagnostics());
     }
 
     /**
@@ -211,8 +200,8 @@ public final class Compilation {
             return false;
         }
 
-        /** 
-         * Throws what {@code base} {@link Statement} threw, if anything. 
+        /**
+         * Throws what {@code base} {@link Statement} threw, if anything.
          */
         void throwIfStatementThrew() {
             if (thrown != null) {
