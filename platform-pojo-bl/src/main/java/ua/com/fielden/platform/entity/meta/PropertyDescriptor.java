@@ -11,8 +11,12 @@ import org.apache.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
+import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.SkipDefaultStringKeyMemberValidation;
+import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
@@ -48,6 +52,14 @@ public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEnt
     private Class<T> entityType;
     private String propertyName;
 
+    @IsProperty
+    @Title(value = "Property", desc = "Property title")
+    @SkipDefaultStringKeyMemberValidation
+    private String key;
+
+    /**
+     * Default constructor is required for serialisation.
+     */
     protected PropertyDescriptor() {
         super(null, null, null);
     }
@@ -99,6 +111,18 @@ public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEnt
         return propertyName;
     }
 
+    @Observable
+    @Override
+    public PropertyDescriptor setKey(final String key) {
+        this.key = key;
+        return this;
+    }
+
+    @Override
+    public String getKey() {
+        return key;
+    }
+
     @Override
     public String toString() {
         return entityType.getName() + ":" + propertyName;
@@ -122,7 +146,7 @@ public class PropertyDescriptor<T extends AbstractEntity<?>> extends AbstractEnt
         final PropertyDescriptor<?> that = (PropertyDescriptor<?>) obj;
         return equalsEx(this.entityType, that.entityType) && equalsEx(this.propertyName, that.propertyName);
     }
-    
+
     /** A convenient factory method, which instantiates property descriptor from its toString representation. */
     public static <T extends AbstractEntity<?>> PropertyDescriptor<T> fromString(final String toStringRepresentation) {
         return fromString(toStringRepresentation, Optional.empty());
