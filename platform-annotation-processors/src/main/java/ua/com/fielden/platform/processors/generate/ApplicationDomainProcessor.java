@@ -37,6 +37,11 @@ import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 
+/**
+ * An annotation processor that generates and maintains the {@code ApplicationDomain} class, which implements {@link IApplicationDomainProvider}.
+ *
+ * @author TG Team
+ */
 @SupportedAnnotationTypes("*")
 public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProcessor {
 
@@ -129,7 +134,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
              */
             .addMethod(MethodSpec.methodBuilder("add")
                     .addModifiers(PRIVATE, STATIC)
-                    .returns(Void.class)
+                    .returns(void.class)
                     .addParameter(classExtendsAbstractEntity, "domainType", FINAL)
                     .addStatement("entityTypes.add(domainType)")
                     .addStatement("domainTypes.add(domainType)")
