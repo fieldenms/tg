@@ -74,12 +74,12 @@ public class ElementFinderTest {
     @Test
     public void isSameType_tests_whether_type_element_and_class_represent_the_same_type() {
         processAndEvaluate(finder -> {
-            assertTrue(finder.isSameType(finder.getTypeElement(String.class), String.class));
-            assertTrue(finder.isSameType(finder.getTypeElement(java.util.Date.class), java.util.Date.class));
+            assertTrue(ElementFinder.isSameType(finder.getTypeElement(String.class), String.class));
+            assertTrue(ElementFinder.isSameType(finder.getTypeElement(java.util.Date.class), java.util.Date.class));
             // java.sql.Date != java.util.Date
-            assertFalse(finder.isSameType(finder.getTypeElement(java.sql.Date.class), java.util.Date.class));
+            assertFalse(ElementFinder.isSameType(finder.getTypeElement(java.sql.Date.class), java.util.Date.class));
             // java.util.Date != java.sql.Date
-            assertFalse(finder.isSameType(finder.getTypeElement(java.util.Date.class), java.sql.Date.class));
+            assertFalse(ElementFinder.isSameType(finder.getTypeElement(java.util.Date.class), java.sql.Date.class));
         });
     }
 
@@ -94,15 +94,15 @@ public class ElementFinderTest {
                 .build();
         
         processAndEvaluate(List.of(iface, sup, sub), finder -> {
-            final TypeElement superclassOfSub = finder.findSuperclass(finder.elements.getTypeElement(sub.name)).orElseThrow();
+            final TypeElement superclassOfSub = ElementFinder.findSuperclass(finder.elements.getTypeElement(sub.name)).orElseThrow();
             assertEquals(finder.elements.getTypeElement(sup.name), superclassOfSub);
-            assertOptEquals(finder.getTypeElement(Object.class), finder.findSuperclass(superclassOfSub));
+            assertOptEquals(finder.getTypeElement(Object.class), ElementFinder.findSuperclass(superclassOfSub));
         });
     }
 
     @Test 
     public void findSuperclass_returns_empty_optional_for_Object() {
-        processAndEvaluate(finder -> assertTrue(finder.findSuperclass(finder.getTypeElement(Object.class)).isEmpty()));
+        processAndEvaluate(finder -> assertTrue(ElementFinder.findSuperclass(finder.getTypeElement(Object.class)).isEmpty()));
     }
 
     @Test 
@@ -113,8 +113,8 @@ public class ElementFinderTest {
                 .build();
 
         processAndEvaluate(List.of(isup, isub), finder -> {
-            assertTrue(finder.findSuperclass(finder.elements.getTypeElement(isup.name)).isEmpty());
-            assertTrue(finder.findSuperclass(finder.elements.getTypeElement(isub.name)).isEmpty());
+            assertTrue(ElementFinder.findSuperclass(finder.elements.getTypeElement(isup.name)).isEmpty());
+            assertTrue(ElementFinder.findSuperclass(finder.elements.getTypeElement(isub.name)).isEmpty());
         });
     }
 
@@ -281,7 +281,7 @@ public class ElementFinderTest {
             // Sub.i
             assertEquals(subEl, finder.findField(subEl, "i").orElseThrow().getEnclosingElement());
             // Sup.s
-            assertEquals(supEl, finder.findField(subEl, "s", f -> finder.isStatic(f)).orElseThrow().getEnclosingElement());
+            assertEquals(supEl, finder.findField(subEl, "s", f -> ElementFinder.isStatic(f)).orElseThrow().getEnclosingElement());
             // Sup.b
             assertEquals(supEl, finder.findField(subEl, "b").orElseThrow().getEnclosingElement());
             // non-existent field

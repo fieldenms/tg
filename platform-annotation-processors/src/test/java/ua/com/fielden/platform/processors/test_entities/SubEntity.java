@@ -32,7 +32,7 @@ public class SubEntity extends SuperEntity {
     @IsProperty
     @MapTo
     @Title(value = "Prop1")
-    private int prop1;
+    private String prop1;
 
     @IsProperty
     @MapTo
@@ -50,12 +50,12 @@ public class SubEntity extends SuperEntity {
     }
 
     @Observable
-    public SubEntity setProp1(final int prop1) {
+    public SubEntity setProp1(final String prop1) {
         this.prop1 = prop1;
         return this;
     }
 
-    public int getProp1() {
+    public String getProp1() {
         return prop1;
     }
 

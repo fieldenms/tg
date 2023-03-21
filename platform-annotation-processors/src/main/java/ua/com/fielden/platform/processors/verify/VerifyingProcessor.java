@@ -3,10 +3,10 @@ package ua.com.fielden.platform.processors.verify;
 import static java.util.stream.Collectors.joining;
 
 import java.util.Collection;
-import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
@@ -15,13 +15,14 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 
 import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
-import ua.com.fielden.platform.processors.verify.verifiers.KeyTypeVerifier;
-import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
+import ua.com.fielden.platform.processors.verify.verifiers.IVerifier;
+import ua.com.fielden.platform.processors.verify.verifiers.entity.EssentialPropertyVerifier;
+import ua.com.fielden.platform.processors.verify.verifiers.entity.KeyTypeVerifier;
 
 /**
  * Annotation processor responsible for verifying source definitions in a domain model.
  * <p>
- * The processor itself does not define any specific verification logic. Instead it delegates to implementations of the {@link Verifier} interface,
+ * The processor itself does not define any specific verification logic. Instead it delegates to implementations of the {@link IVerifier} interface,
  * providing them its own inputs and respective processing/round environments.
  * 
  * @author TG Team
@@ -29,15 +30,16 @@ import ua.com.fielden.platform.processors.verify.verifiers.Verifier;
 @SupportedAnnotationTypes("*")
 public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
     
-    private final Set<Function<ProcessingEnvironment, Verifier>> registeredVerifiersProviders;
-    private final Set<Verifier> registeredVerifiers = new HashSet<>();
+    private final List<Function<ProcessingEnvironment, IVerifier>> registeredVerifiersProviders = new LinkedList<>();
+    private final List<IVerifier> registeredVerifiers = new LinkedList<>();
 
     /** Round-cumulative indicator of whether all verifiers were passed. */
     private boolean passed;
 
     public VerifyingProcessor() {
         // specify default verifiers here
-        this.registeredVerifiersProviders = Set.of((procEnv) -> new KeyTypeVerifier(procEnv));
+        this.registeredVerifiersProviders.add(procEnv -> new KeyTypeVerifier(procEnv));
+        this.registeredVerifiersProviders.add(procEnv -> new EssentialPropertyVerifier(procEnv));
     }
 
     /**
@@ -45,10 +47,10 @@ public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
      * This constructor is required for unit testing of verifiers.
      * @param verifierProviders
      */
-    VerifyingProcessor(final Collection<Function<ProcessingEnvironment, Verifier>> verifierProviders) {
-        this.registeredVerifiersProviders = verifierProviders.stream().collect(Collectors.toUnmodifiableSet());
+    VerifyingProcessor(final Collection<Function<ProcessingEnvironment, IVerifier>> verifierProviders) {
+        this.registeredVerifiersProviders.addAll(verifierProviders);
     }
-    
+
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
@@ -94,17 +96,16 @@ public class VerifyingProcessor extends AbstractPlatformAnnotationProcessor {
      */
     private boolean verify(final RoundEnvironment roundEnv) {
         boolean roundPassed = true;
-        for (final Verifier verifier : registeredVerifiers) {
-            final boolean verifierPassed = verifier.verify(roundEnv);
-            roundPassed = roundPassed && verifierPassed;
-            if (!verifierPassed) {
-                final Set<Element> violatingElements = verifier.getViolatingElements();
-                if (!violatingElements.isEmpty()) {
-                    printError("%s was not passed by: [%s]", verifier.getClass().getSimpleName(),
-                            violatingElements.stream().map(el -> el.getSimpleName().toString()).sorted().collect(joining(", ")));
-                }
+
+        for (final IVerifier verifier : registeredVerifiers) {
+            final List<ViolatingElement> violators = verifier.verify(roundEnv);
+            if (!violators.isEmpty()) {
+                roundPassed = false;
+                printError("%s was not passed by: [%s]", verifier.getClass().getSimpleName(),
+                        violators.stream().map(ve -> ve.element().getSimpleName()).collect(joining(", ")));
             }
         }
+
         return roundPassed;
     }
 

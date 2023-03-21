@@ -21,6 +21,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.Name;
 import javax.lang.model.element.PackageElement;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
@@ -107,7 +108,7 @@ public class ElementFinder {
      * @param element
      * @param clazz
      */
-    public boolean isSameType(final TypeElement element, final Class<?> clazz) {
+    public static boolean isSameType(final TypeElement element, final Class<?> clazz) {
         if (element == null || clazz == null) {
             throw new EntityMetaModelException("Neither typeElement nor type arguments can be null.");
         }
@@ -118,7 +119,7 @@ public class ElementFinder {
      * Returns the immediate superclass of a type element if there is one.
      * An empty optional is returned if the type element represents an interface type or the {@link Object} class.
      */
-    public Optional<TypeElement> findSuperclass(final TypeElement element) {
+    public static Optional<TypeElement> findSuperclass(final TypeElement element) {
         final TypeMirror superclass = element.getSuperclass();
         if (superclass.getKind() == TypeKind.NONE) {
             return Optional.empty();
@@ -143,8 +144,8 @@ public class ElementFinder {
             return Stream.empty();
         }
         return stopAfter(
-                iterate(Optional.of(typeElement), Optional::isPresent, elt -> elt.flatMap(this::findSuperclass)).map(Optional::get),
-                elt -> isSameType(elt, rootType))
+                iterate(Optional.of(typeElement), Optional::isPresent, elt -> elt.flatMap(ElementFinder::findSuperclass)).map(Optional::get),
+                elt -> isSameType(elt.asType(), rootType))
                 .skip(1); // drop the typeElement itself
     }
 
@@ -184,9 +185,9 @@ public class ElementFinder {
         if (!isSubtype(typeElement.asType(), rootType)) {
             return Stream.empty();
         }
-        return iterate(Optional.of(typeElement), Optional::isPresent, elt -> elt.flatMap(this::findSuperclass))
+        return iterate(Optional.of(typeElement), Optional::isPresent, elt -> elt.flatMap(ElementFinder::findSuperclass))
                 .map(Optional::get)
-                .takeWhile(elt -> !isSameType(elt, rootType))
+                .takeWhile(elt -> !isSameType(elt.asType(), rootType))
                 // drop the typeElement itself
                 .skip(1);
     }
@@ -420,7 +421,7 @@ public class ElementFinder {
      */
     public Optional<? extends AnnotationMirror> findAnnotationMirror(final AnnotatedConstruct element, final Class<? extends Annotation> annotType) {
         return element.getAnnotationMirrors().stream()
-                .filter(mirror -> isSameType((TypeElement) mirror.getAnnotationType().asElement(), annotType))
+                .filter(mirror -> isSameType(mirror.getAnnotationType(), annotType))
                 .findAny();
     }
 
@@ -483,13 +484,6 @@ public class ElementFinder {
     }
 
     /**
-     * Tests whether the element contains the {@code static} modifier.
-     */
-    public boolean isStatic(final Element element) {
-        return element.getModifiers().contains(Modifier.STATIC);
-    }
-
-    /**
      * Returns a type mirror coresponding to the type represented by {@code clazz}.
      * <p>
      * For generic types a raw type representation is returned.
@@ -534,7 +528,7 @@ public class ElementFinder {
      * @return
      * @throws ElementFinderException
      */
-    public DeclaredType asDeclaredType(final TypeMirror mirror) {
+    public static DeclaredType asDeclaredType(final TypeMirror mirror) {
         if (mirror.getKind() != TypeKind.DECLARED) {
             throw new ElementFinderException("Illegal type kind [%s] of [%s]".formatted(mirror.getKind(), mirror.toString()));
         }
@@ -641,18 +635,41 @@ public class ElementFinder {
         }
     }
 
-    public boolean isTopLevelClass(final Element element) {
+    public static boolean isTopLevelClass(final Element element) {
         return element.getKind() == ElementKind.CLASS && element.getEnclosingElement().getKind() == ElementKind.PACKAGE;
     }
-    
-    public boolean isAbstract(final Element element) {
+
+    /**
+     * Tests whether the element contains the {@code static} modifier.
+     */
+    public static boolean isStatic(final Element element) {
+        return element.getModifiers().contains(Modifier.STATIC);
+
+    }
+    public static boolean isAbstract(final Element element) {
         return element.getModifiers().contains(Modifier.ABSTRACT);
     }
 
-    public boolean isGeneric(final TypeElement element) {
+    public static boolean isPublic(final Element element) {
+        return element.getModifiers().contains(Modifier.PUBLIC);
+    }
+
+    public static boolean isProtected(final Element element) {
+        return element.getModifiers().contains(Modifier.PROTECTED);
+    }
+
+    public static boolean isFinal(final Element element) {
+        return element.getModifiers().contains(Modifier.FINAL);
+    }
+
+    public static boolean isGeneric(final TypeElement element) {
         return element != null && !element.getTypeParameters().isEmpty();
     }
-    
+
+    public static boolean isRawType(final TypeMirror type) {
+        return TypeKind.DECLARED.equals(type.getKind()) && ((DeclaredType) type).getTypeArguments().isEmpty();
+    }
+
     /**
      * Wraps {@link Elements#getPackageOf} in order to avoid ClassCastException, since Sun's internal implementation of {@link Elements} expects a {@link com.sun.tools.javac.code.Symbol} instance.
      * <p>
@@ -687,7 +704,7 @@ public class ElementFinder {
     /**
      * Returns the type element coresponding to the given declared type.
      */
-    public TypeElement asTypeElement(final DeclaredType type) {
+    public static TypeElement asTypeElement(final DeclaredType type) {
         return (TypeElement) type.asElement();
     }
 
@@ -698,8 +715,29 @@ public class ElementFinder {
      * @return
      * @throws ElementFinderException
      */
-    public TypeElement asTypeElementOfTypeMirror(final TypeMirror mirror) {
+    public static TypeElement asTypeElementOfTypeMirror(final TypeMirror mirror) {
         return asTypeElement(asDeclaredType(mirror));
+    }
+
+
+    /**
+     * Returns simple name of a type represented by the type mirror.
+     * <p>
+     * If the type mirror does not represent a declared type an exception is thrown.
+     * 
+     * @throws ElementFinderException
+     */
+    public static String getSimpleName(final TypeMirror mirror) {
+        return asTypeElementOfTypeMirror(mirror).getSimpleName().toString();
+    }
+
+    /**
+     * Returns the element's simple name as a {@link String}. 
+     * <p>
+     * This is a shortcut for {@link Element#getSimpleName()} and {@link Name#toString()}.
+     */
+    public static String getSimpleName(final Element element) {
+        return element.getSimpleName().toString();
     }
 
 }

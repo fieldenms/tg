@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.processors.metamodel.utils;
 
 import static java.util.stream.Collectors.joining;
+import static metamodels.MetaModels.ExampleEntity_;
+import static metamodels.MetaModels.SubEntity_;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
@@ -37,6 +39,8 @@ import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.PropertyElement;
+import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
+import ua.com.fielden.platform.processors.test_entities.SubEntity;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.Pair;
@@ -360,6 +364,65 @@ public class EntityFinderTest {
                 () -> fail("Entity parent was not found."));
 
         assertTrue(entityFinder.getParent(entityFinder.findEntity(AbstractEntity.class)).isEmpty());
+    }
+
+    @Test
+    public void findPropertyAccessor_finds_accessor_that_starts_with_get() {
+        entityFinder.findPropertyAccessor(entityFinder.findEntity(ExampleEntity.class), ExampleEntity_.prop1()).ifPresentOrElse(
+                method -> assertEquals("getProp1", method.getSimpleName().toString()),
+                () -> fail("Property accessor was not found."));
+    }
+
+    @Test
+    public void findPropertyAccessor_finds_accessor_that_starts_with_is() {
+        entityFinder.findPropertyAccessor(entityFinder.findEntity(ExampleEntity.class), ExampleEntity_.flag()).ifPresentOrElse(
+                method -> assertEquals("isFlag", method.getSimpleName().toString()),
+                () -> fail("Property accessor was not found."));
+    }
+
+    @Test
+    public void findPropertyAccessor_finds_inherited_accessor() {
+        entityFinder.findPropertyAccessor(entityFinder.findEntity(SubEntity.class), SubEntity_.prop2()).ifPresentOrElse(
+                method -> assertEquals("getProp2", method.getSimpleName().toString()),
+                () -> fail("Property accessor was not found."));
+    }
+
+    @Test
+    public void findDeclaredPropertyAccessor_does_not_find_inherited_accessor() {
+        assertTrue("Inherited accessor should not have been found.",
+                entityFinder.findDeclaredPropertyAccessor(entityFinder.findEntity(SubEntity.class), SubEntity_.prop2()).isEmpty());
+    }
+
+    @Test
+    public void findPropertySetter_finds_both_declared_and_inherited_setters() {
+        entityFinder.findPropertySetter(entityFinder.findEntity(SubEntity.class), SubEntity_.parent()).ifPresentOrElse(
+                method -> assertEquals("setParent", method.getSimpleName().toString()),
+                () -> fail("Declared property setter was not found."));
+
+        entityFinder.findPropertySetter(entityFinder.findEntity(SubEntity.class), SubEntity_.prop2()).ifPresentOrElse(
+                method -> assertEquals("setProp2", method.getSimpleName().toString()),
+                () -> fail("Inherited property setter was not found."));
+    }
+
+    @Test
+    public void findDeclaredPropertySetter_finds_only_declared_setters() {
+        assertTrue("Inherited setter should not have been found.",
+                entityFinder.findDeclaredPropertySetter(entityFinder.findEntity(SubEntity.class), SubEntity_.prop2()).isEmpty());
+
+        entityFinder.findDeclaredPropertySetter(entityFinder.findEntity(SubEntity.class), SubEntity_.prop1()).ifPresentOrElse(
+                method -> assertEquals("setProp1", method.getSimpleName().toString()),
+                () -> fail("Property setter was not found."));
+    }
+
+    @Test
+    public void isCollectionalProperty_returns_true_for_collectional_properties() {
+        final EntityElement exampleEntity = entityFinder.findEntity(ExampleEntity.class);
+
+        final PropertyElement collectionProperty = entityFinder.findProperty(exampleEntity, ExampleEntity_.collection()).orElseThrow();
+        assertTrue(entityFinder.isCollectionalProperty(collectionProperty));
+
+        final PropertyElement nonCollectionalProperty = entityFinder.findProperty(exampleEntity, ExampleEntity_.prop1()).orElseThrow();
+        assertFalse(entityFinder.isCollectionalProperty(nonCollectionalProperty));
     }
 
     /**
