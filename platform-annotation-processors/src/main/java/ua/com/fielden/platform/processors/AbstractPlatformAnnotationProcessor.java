@@ -214,4 +214,8 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
         return roundNumber;
     }
 
+    public ProcessingEnvironment getProcessingEnvironment() {
+        return this.processingEnv;
+    }
+
 }
