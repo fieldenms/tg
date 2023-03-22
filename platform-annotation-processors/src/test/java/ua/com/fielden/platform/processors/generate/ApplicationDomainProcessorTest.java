@@ -49,7 +49,7 @@ public class ApplicationDomainProcessorTest {
 
                 });
 
-        Compilation.newInMemory(List.of(PLACEHOLDER)).setProcessor(processor).compile();
+        assertTrue("Compilation failed.", Compilation.newInMemory(List.of(PLACEHOLDER)).setProcessor(processor).compile().success());
     }
 
 }
