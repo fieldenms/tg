@@ -6,6 +6,8 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 
 import java.io.IOException;
+import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
@@ -51,12 +53,14 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
 
     private ElementFinder elementFinder;
     private EntityFinder entityFinder;
+    private ApplicationDomainFinder appDomainFinder;
 
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
         this.elementFinder = new ElementFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
         this.entityFinder = new EntityFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
+        this.appDomainFinder = new ApplicationDomainFinder(entityFinder);
     }
 
     @Override
@@ -78,8 +82,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
             return false;
         }
 
-        final Optional<TypeElement> appDomainElt = elementFinder.findTypeElement(APPLICATION_DOMAIN_QUAL_NAME);
-        generateApplicationDomain(appDomainElt, entities);
+        generateApplicationDomain(elementFinder.findTypeElement(APPLICATION_DOMAIN_QUAL_NAME), entities);
 
         return false;
     }
@@ -88,19 +91,18 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         return !ElementFinder.isAbstract(entity.element());
     }
 
-    private void generateApplicationDomain(final Optional<TypeElement> appDomainElt, final Set<EntityElement> entities) {
-        final Set<EntityElement> registeredEntities;
-        if (appDomainElt.isPresent()) {
-            registeredEntities = collectRegisteredEntities(appDomainElt.get());
-            registeredEntities.addAll(entities);
-        } else {
-            registeredEntities = entities;
+    private void generateApplicationDomain(final Optional<TypeElement> maybeAppDomainElt, final Collection<EntityElement> rootEntities) {
+        final Set<EntityElement> registeredEntities = new HashSet<>();
+        if (maybeAppDomainElt.isPresent()) {
+            // TODO validate registered entities (some could be renamed/deleted)
+            registeredEntities.addAll(appDomainFinder.findRegisteredEntities(maybeAppDomainElt.get()));
         }
+        registeredEntities.addAll(rootEntities);
 
         writeApplicationDomain(registeredEntities);
     }
 
-    private void writeApplicationDomain(final Set<EntityElement> registeredEntities) {
+    private void writeApplicationDomain(final Collection<EntityElement> registeredEntities) {
         final ParameterizedTypeName classExtendsAbstractEntity = ParameterizedTypeName.get(
                 ClassName.get(Class.class),
                 WildcardTypeName.subtypeOf(ParameterizedTypeName.get(
@@ -199,10 +201,6 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         }
 
         printNote("Generated %s.", APPLICATION_DOMAIN_QUAL_NAME);
-    }
-
-    private Set<EntityElement> collectRegisteredEntities(final TypeElement typeElement) {
-        return Set.of();
     }
 
 }
