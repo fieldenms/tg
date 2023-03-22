@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.processors.test_utils;
 
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.function.Consumer;
@@ -43,7 +43,7 @@ public final class Compilation {
     private Processor processor;
     private JavaCompiler compiler;
     private JavaFileManager fileManager;
-    private Iterable<String> options;
+    private List<String> options = new LinkedList<>();
     private DiagnosticCollector<JavaFileObject> diagnosticListener = new DiagnosticCollector<>();
 
     /**
@@ -94,13 +94,18 @@ public final class Compilation {
         return this;
     }
 
-    public Compilation setOptions(final Iterable<String> options) {
-        this.options = options;
+    public Compilation addOptions(final Iterable<String> options) {
+        options.forEach(opt -> this.options.add(opt));
         return this;
     }
 
-    public Compilation setOptions(final String... options) {
-        this.options = Arrays.asList(options);
+    public Compilation addOptions(final String... options) {
+        this.options.addAll(List.of(options));
+        return this;
+    }
+
+    public Compilation addProcessorOption(final String key, final String value) {
+        this.options.add("-A%s=%s".formatted(key, value));
         return this;
     }
 

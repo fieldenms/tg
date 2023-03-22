@@ -64,7 +64,7 @@ public abstract class AbstractVerifierTest {
 
         return Compilation.newInMemory(compilationTargets)
                 .setProcessor(createProcessor())
-                .setOptions(OPTION_PROC_ONLY);
+                .addOptions(OPTION_PROC_ONLY);
     }
 
     /** Refer to {@link #buildCompilation(Collection)}. */

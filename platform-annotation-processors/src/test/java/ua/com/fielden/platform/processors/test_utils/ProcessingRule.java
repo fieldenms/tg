@@ -70,7 +70,7 @@ public class ProcessingRule implements TestRule {
                 final Compilation compilation = Compilation.newInMemory(javaSources)
                         .setProcessor(processor)
                         // perform only annotation processing without subsequent compilation
-                        .setOptions(OPTION_PROC_ONLY);
+                        .addOptions(OPTION_PROC_ONLY);
 
                 compilation.compileAndEvaluatef((procEnv) -> {
                     elements = procEnv.getElementUtils();
