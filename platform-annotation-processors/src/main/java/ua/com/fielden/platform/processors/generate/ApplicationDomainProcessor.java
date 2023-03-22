@@ -4,13 +4,13 @@ import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
-import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.getSimpleName;
 
 import java.io.IOException;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -101,12 +101,21 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
                 WildcardTypeName.subtypeOf(ParameterizedTypeName.get(
                         ClassName.get(AbstractEntity.class), WildcardTypeName.subtypeOf(Object.class))));
 
-        // fields of the form: public static final Class<? extends AbstractEntity<?>> $ENTITY_SIMPLE_NAME = $ENTITY_TYPE.class;
+        // fields of the form: public static final String $ENTITY_SIMPLE_NAME = $ENTITY_QUAL_NAME;
         final List<FieldSpec> entityTypesStaticFields = registeredEntities.stream()
-                    .map(elt -> FieldSpec.builder(classExtendsAbstractEntity, getSimpleName(elt), PUBLIC, STATIC, FINAL)
-                            .initializer("$T.class", ClassName.get(elt.asType()))
+                    .map(elt -> FieldSpec.builder(String.class, elt.getSimpleName().toString(), PUBLIC, STATIC, FINAL)
+                            .initializer("$S", elt.getQualifiedName().toString())
                             .build())
                     .toList();
+
+        // used below in the static initialisation block
+        final Function<CodeBlock.Builder, CodeBlock.Builder> addStatementsForRegisteredEntities = builder -> {
+            var bld = builder;
+            for (final var entity: registeredEntities) {
+                bld = bld.addStatement("add($T.class)", ClassName.get(entity.element()));
+            }
+            return bld;
+        };
 
         // public class ApplicationDomain implements IApplicationDomainProvider
         final TypeSpec typeSpec = TypeSpec.classBuilder(APPLICATION_DOMAIN_SIMPLE_NAME)
@@ -144,16 +153,14 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
             /*
              * static {
              *     entityTypes.addAll(PlatformDomainTypes.types);
-             *     // for each static field representing a registered entity type:
-             *     add($FIELD_NAME);
+             *     for each registered entity type:
+             *          add($ENTITY_TYPE.class);
              * }
              */
-            .addStaticBlock(CodeBlock.join(List.of(
-                    CodeBlock.of("entityTypes.addAll($T.types);", PlatformDomainTypes.class),
-                    CodeBlock.of(entityTypesStaticFields.stream()
-                            .map(field -> "add(%s);".formatted(field.name))
-                            .collect(Collectors.joining("\n")))),
-                    "\n"))
+            .addStaticBlock(addStatementsForRegisteredEntities.apply(
+                    CodeBlock.builder()
+                    .addStatement("entityTypes.addAll($T.types)", PlatformDomainTypes.class))
+                    .build())
             /*
              * @Override
              * public List<Class<? extends AbstractEntity<?>>> entityTypes() {
