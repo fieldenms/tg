@@ -63,7 +63,7 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
         final ConditionModel keyCriteria = createRelaxedSearchByKeyCriteriaModel(searchString);
         final Class<T> entityType = maybeCompanion.orElseThrow(CO_MISSING_EXCEPTION_SUPPLIER).getEntityType();
 
-        return hasDescProperty(entityType) ? cond().condition(keyCriteria).or().prop(AbstractEntity.DESC).iLike().val("%" + searchString).model() : keyCriteria;
+        return hasDescProperty(entityType) ? cond().condition(keyCriteria).or().prop(AbstractEntity.DESC).iLike().val(searchString).model() : keyCriteria;
     }
 
     /**
