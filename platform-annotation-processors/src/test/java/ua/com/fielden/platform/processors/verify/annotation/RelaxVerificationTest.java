@@ -7,6 +7,7 @@ import static javax.tools.Diagnostic.Kind.OTHER;
 import static javax.tools.Diagnostic.Kind.WARNING;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertMessages;
 import static ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy.INFO;
 import static ua.com.fielden.platform.processors.verify.annotation.RelaxationPolicy.WARN;
 
