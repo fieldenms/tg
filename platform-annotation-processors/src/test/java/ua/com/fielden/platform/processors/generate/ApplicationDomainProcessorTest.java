@@ -2,6 +2,7 @@ package ua.com.fielden.platform.processors.generate;
 
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.processors.generate.ApplicationDomainProcessor.APPLICATION_DOMAIN_QUAL_NAME;
+import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccess;
 import static ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileObjects.createJavaSource;
 
 import java.util.List;
@@ -49,7 +50,7 @@ public class ApplicationDomainProcessorTest {
 
                 });
 
-        assertTrue("Compilation failed.", Compilation.newInMemory(List.of(PLACEHOLDER)).setProcessor(processor).compile().success());
+        assertSuccess(Compilation.newInMemory(List.of(PLACEHOLDER)).setProcessor(processor).compile());
     }
 
 }

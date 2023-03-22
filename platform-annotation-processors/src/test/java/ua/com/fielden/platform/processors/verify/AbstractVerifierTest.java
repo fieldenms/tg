@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.processors.verify;
 
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
+import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccess;
 import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertTrueOrFailWith;
 
 import java.util.Arrays;
@@ -115,7 +116,7 @@ public abstract class AbstractVerifierTest {
     protected final CompilationResult compileAndAssertSuccess(final Collection<TypeSpec> typeSpecs) {
         final Compilation compilation = buildCompilation(typeSpecs);
         final CompilationResult result = compilation.compile();
-        assertTrueOrFailWith("Compilation should have succeeded.", result.success(), () -> result.printDiagnostics());
+        assertSuccess(result);
 
         return result;
     }

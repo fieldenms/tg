@@ -40,4 +40,13 @@ public class CompilationTestUtils {
         }
     }
 
+    /**
+     * Asserts the success of a compilation. In case of an unsuccessful compilation, all diagnostic messages are printed to standard output.
+     *
+     * @param result    compilation results
+     */
+    public static void assertSuccess(final CompilationResult result) {
+        assertTrueOrFailWith("Compilation failed.", result.success(), () -> result.printDiagnostics());
+    }
+
 }
