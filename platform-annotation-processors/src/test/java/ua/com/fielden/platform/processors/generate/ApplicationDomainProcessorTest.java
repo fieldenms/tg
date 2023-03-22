@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.processors.generate;
 
+import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.processors.generate.ApplicationDomainProcessor.APPLICATION_DOMAIN_QUAL_NAME;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.findDeclaredField;
+import static ua.com.fielden.platform.processors.test_utils.CollectionTestUtils.assertEqualByContents;
 import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccess;
 import static ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileObjects.createJavaSource;
 import static ua.com.fielden.platform.processors.test_utils.TestUtils.assertPresent;
@@ -27,6 +29,7 @@ import com.squareup.javapoet.TypeSpec;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.test_utils.ProcessorListener;
 import ua.com.fielden.platform.processors.test_utils.ProcessorListener.AbstractRoundListener;
@@ -97,6 +100,38 @@ public class ApplicationDomainProcessorTest {
                 });
 
         final List<JavaFileObject> javaFileObjects = javaFiles.stream().map(file -> file.toJavaFileObject()).toList();
+        assertSuccess(Compilation.newInMemory(javaFileObjects).setProcessor(processor).compile());
+    }
+
+    @Test
+    public void abstract_entity_types_are_not_registered() {
+        final List<TypeSpec> typeSpecs = List.of(
+                TypeSpec.classBuilder("AbstractExampleEntity").addModifiers(PUBLIC, ABSTRACT)
+                .superclass(ParameterizedTypeName.get(AbstractEntity.class, String.class))
+                .build(),
+                TypeSpec.classBuilder("ExampleEntity").addModifiers(PUBLIC)
+                .superclass(ParameterizedTypeName.get(AbstractEntity.class, String.class))
+                .build());
+        final List<JavaFileObject> javaFileObjects = typeSpecs.stream().map(ts -> JavaFile.builder("test", ts).build().toJavaFileObject()).toList();
+
+        final Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
+                .setRoundListener(new AbstractRoundListener<ApplicationDomainProcessor>() {
+
+                    @BeforeRound(2)
+                    public void beforeSecondRound(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+                        final TypeElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
+                                roundEnv.getRootElements().stream()
+                                .filter(elt -> elt.getKind() == ElementKind.CLASS)
+                                .map(elt -> (TypeElement) elt).filter(elt -> elt.getQualifiedName().contentEquals(APPLICATION_DOMAIN_QUAL_NAME))
+                                .findFirst());
+                        final ApplicationDomainFinder finder = new ApplicationDomainFinder(new EntityFinder(
+                                processor.getProcessingEnvironment().getElementUtils(), processor.getProcessingEnvironment().getTypeUtils()));
+
+                        assertEqualByContents(List.of("test.ExampleEntity"),
+                                finder.findRegisteredEntities(appDomainElt).stream().map(elt -> elt.getQualifiedName().toString()).toList());
+                    }
+                });
+
         assertSuccess(Compilation.newInMemory(javaFileObjects).setProcessor(processor).compile());
     }
 

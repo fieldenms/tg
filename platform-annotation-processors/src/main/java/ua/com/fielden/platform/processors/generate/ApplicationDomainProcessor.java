@@ -71,6 +71,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         final Set<EntityElement> entities = roundEnv.getRootElements().stream()
             .filter(elt -> entityFinder.isEntityType(elt.asType()))
             .map(elt -> entityFinder.newEntityElement((TypeElement) elt))
+            .filter(this::isDomainEntity)
             .collect(Collectors.toSet());
 
         if (entities.isEmpty()) {
@@ -81,6 +82,10 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         generateApplicationDomain(appDomainElt, entities);
 
         return false;
+    }
+
+    private boolean isDomainEntity(final EntityElement entity) {
+        return !ElementFinder.isAbstract(entity.element());
     }
 
     private void generateApplicationDomain(final Optional<TypeElement> appDomainElt, final Set<EntityElement> entities) {
