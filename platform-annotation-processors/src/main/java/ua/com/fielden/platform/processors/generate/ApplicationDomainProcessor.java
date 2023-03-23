@@ -132,9 +132,9 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
                 WildcardTypeName.subtypeOf(ParameterizedTypeName.get(
                         ClassName.get(AbstractEntity.class), WildcardTypeName.subtypeOf(Object.class))));
 
-        // fields of the form: public static final String $ENTITY_SIMPLE_NAME = $ENTITY_QUAL_NAME;
+        // fields of the form: private static final String $ENTITY_SIMPLE_NAME = $ENTITY_QUAL_NAME;
         final List<FieldSpec> entityTypesStaticFields = registeredEntities.stream()
-                    .map(elt -> FieldSpec.builder(String.class, elt.getSimpleName().toString(), PUBLIC, STATIC, FINAL)
+                    .map(elt -> FieldSpec.builder(String.class, elt.getSimpleName().toString(), PRIVATE, STATIC, FINAL)
                             .initializer("$S", elt.getQualifiedName().toString())
                             .build())
                     .toList();
@@ -179,8 +179,6 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
                     .addStatement("entityTypes.add(domainType)")
                     .addStatement("domainTypes.add(domainType)")
                     .build())
-            // static field for each registered entity type
-            .addFields(entityTypesStaticFields)
             /*
              * static {
              *     entityTypes.addAll(PlatformDomainTypes.types);
@@ -214,6 +212,9 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
                     .returns(ParameterizedTypeName.get(ClassName.get(List.class), classExtendsAbstractEntity))
                     .addStatement("return domainTypes.stream().collect($T.toUnmodifiableList())", Collectors.class)
                     .build())
+            // static field for each registered entity type
+            // added at the end of the class to reduce visual clutter, alas, JavaPoet still writes them at the top
+            .addFields(entityTypesStaticFields)
             .build();
 
         final JavaFile javaFile = JavaFile.builder(packageName, typeSpec).indent("    ").build();
