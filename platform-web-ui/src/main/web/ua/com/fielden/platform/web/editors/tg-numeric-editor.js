@@ -18,7 +18,7 @@ export class TgNumericEditor extends TgEditor {
     _copyTap () {
         if (navigator.clipboard) {
             navigator.clipboard.writeText(this.$.inputLayer.innerText);
-            this._showCheckIconAndTooltip();
+            this._showCheckIconAndToast(this.$.inputLayer.innerText);
         }
     }
     

@@ -13,74 +13,45 @@ import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-
 
 import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js';
 
-let copyTooltip = document.querySelector("#editorCopyTooltip");
-if (!copyTooltip) {
-    copyTooltip = document.createElement("div");
-    copyTooltip.setAttribute("id", "editorCopyTooltip");
-    copyTooltip.style.position = "fixed";
-    copyTooltip.style.display = "block";
-    copyTooltip.style.outline = "none";
-    copyTooltip.style.fontSize = "12px";
-    copyTooltip.style.backgroundColor = "#616161";
-    copyTooltip.style.opacity = "0.9";
-    copyTooltip.style.color = "white";
-    copyTooltip.style.padding = "8px";
-    copyTooltip.style.borderRadius = "2px";
-    copyTooltip.style.visibility = "hidden"
-    copyTooltip.style.top = "-100px";
-    copyTooltip.style.left = "-100px";
-    copyTooltip.style.zIndex = "1002";
-    copyTooltip.innerText = "Copied!"
-    document.body.appendChild(copyTooltip);
-}
-
 let checkIconTimer = null;
 
 let lastEditor = null;
 
-const timeoutCheckIconAndTooltip = function (editor) {
+const timeoutCheckIcon = function (editor) {
     if (checkIconTimer) {
         clearTimeout(checkIconTimer);
         if(editor !== lastEditor) {
-            hideCheckIconAndTooltip();
-            showCheckIconAndTooltip(editor);
+            hideCheckIcon();
+            showCheckIcon(editor);
         }
     } else {
-        showCheckIconAndTooltip(editor);
+        showCheckIcon(editor);
     }
     checkIconTimer = setTimeout(function() {
-        hideCheckIconAndTooltip();
+        hideCheckIcon();
     }, 1000);
 }
 
-const showCheckIconAndTooltip = function (editor) {
+const showCheckIcon = function (editor) {
     lastEditor = editor;
-    const copyTooltipRect = copyTooltip.getBoundingClientRect();
-    const copyIconRect = lastEditor.$.copyIcon.getBoundingClientRect();
-    copyTooltip.style.top = `${copyIconRect.top - copyTooltipRect.height - 8}px`;
-    copyTooltip.style.left = `${copyIconRect.left + (copyIconRect.width - copyTooltipRect.width) / 2}px`;
-    copyTooltip.style.visibility = "visible";
     lastEditor.$.copyIcon.icon = "icons:check";
-    lastEditor.addEventListener("mouseleave", hideCheckIconAndTooltipOnMouseLeave);
+    lastEditor.addEventListener("mouseleave", hideCheckIconOnMouseLeave);
 }
 
-const hideCheckIconAndTooltip = function () {
-    copyTooltip.style.top = "-100px";
-    copyTooltip.style.left = "-100px";
-    copyTooltip.style.visibility = "hidden";
+const hideCheckIcon = function () {
     lastEditor.$.copyIcon.icon = "icons:content-copy";
-    lastEditor.removeEventListener("mouseleave", hideCheckIconAndTooltipOnMouseLeave);
+    lastEditor.removeEventListener("mouseleave", hideCheckIconOnMouseLeave);
     checkIconTimer = null;
     lastEditor = null;
 }
 
-const hideCheckIconAndTooltipOnMouseLeave = function () {
+const hideCheckIconOnMouseLeave = function () {
     if (!lastEditor.focused) {
         if (checkIconTimer) {
             clearTimeout(checkIconTimer);
             checkIconTimer = null;
         }
-        hideCheckIconAndTooltip();
+        hideCheckIcon();
     }
 }
 
@@ -343,6 +314,14 @@ export class TgEditor extends PolymerElement {
              */
             previousModifiedPropertiesHolder: {
                 type: Object
+            },
+
+            /**
+             * The object that holds callbacks for showing toast.
+             */
+            toaster: {
+                type: Object,
+                value: null
             },
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -861,12 +840,15 @@ export class TgEditor extends PolymerElement {
     _copyTap () {
         if (navigator.clipboard) {
             navigator.clipboard.writeText(this._editingValue);
-            this._showCheckIconAndTooltip(this);
+            this._showCheckIconAndToast(this._editingValue);
         }
     }
 
-    _showCheckIconAndTooltip () {
-        timeoutCheckIconAndTooltip(this);
+    _showCheckIconAndToast (text) {
+        if (this.toaster) {
+            this.toaster.openToastWithoutEntity("Copied!", true, text, false);
+        }
+        timeoutCheckIcon(this);
     }
     
     _updateMessagesForEntity (newEntity) {
