@@ -15,8 +15,8 @@ import javax.lang.model.element.TypeElement;
 import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaCompiler.CompilationTask;
-import javax.tools.JavaFileManager;
 import javax.tools.JavaFileObject;
+import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 
 import org.junit.runners.model.Statement;
@@ -42,7 +42,7 @@ public final class Compilation {
     private Collection<? extends JavaFileObject> javaSources;
     private Processor processor;
     private JavaCompiler compiler;
-    private JavaFileManager fileManager;
+    public StandardJavaFileManager fileManager;
     private List<String> options = new LinkedList<>();
     private DiagnosticCollector<JavaFileObject> diagnosticListener = new DiagnosticCollector<>();
 
@@ -89,7 +89,7 @@ public final class Compilation {
         return this;
     }
 
-    public Compilation setFileManager(final JavaFileManager fileManager) {
+    public Compilation setFileManager(final StandardJavaFileManager fileManager) {
         this.fileManager = fileManager;
         return this;
     }
