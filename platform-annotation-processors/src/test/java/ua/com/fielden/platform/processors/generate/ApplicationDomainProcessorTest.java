@@ -41,7 +41,7 @@ import ua.com.fielden.platform.processors.test_utils.ProcessorListener.AbstractR
  */
 public class ApplicationDomainProcessorTest {
     private static final JavaFileObject PLACEHOLDER = createJavaSource("Placeholder", "final class Placeholder {}");
-    private static final String GENERATED_PACKAGE = "test.generated.config"; // to prevent conflicts with the real processor
+    private static final String GENERATED_PKG = "test.generated.config"; // to prevent conflicts with the real processor
 
     @Test
     public void ApplicationDomain_is_not_generated_without_input_entities() {
@@ -61,7 +61,7 @@ public class ApplicationDomainProcessorTest {
                 });
 
         assertSuccess(Compilation.newInMemory(List.of(PLACEHOLDER))
-                .setProcessor(processor).addProcessorOption(PACKAGE_OPTION, GENERATED_PACKAGE)
+                .setProcessor(processor).addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
                 .compile());
     }
 
@@ -81,7 +81,7 @@ public class ApplicationDomainProcessorTest {
                     .build());
 
         // we can access the generated ApplicationDomain in the 2nd round
-        Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
+        final Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
                 .setRoundListener(new AbstractRoundListener<ApplicationDomainProcessor>() {
 
                     @BeforeRound(2)
@@ -104,7 +104,7 @@ public class ApplicationDomainProcessorTest {
 
         final List<JavaFileObject> javaFileObjects = javaFiles.stream().map(file -> file.toJavaFileObject()).toList();
         assertSuccess(Compilation.newInMemory(javaFileObjects)
-                .setProcessor(processor).addProcessorOption(PACKAGE_OPTION, GENERATED_PACKAGE)
+                .setProcessor(processor).addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
                 .compile());
     }
 
@@ -138,7 +138,7 @@ public class ApplicationDomainProcessorTest {
                 });
 
         assertSuccess(Compilation.newInMemory(javaFileObjects)
-                .setProcessor(processor).addProcessorOption(PACKAGE_OPTION, GENERATED_PACKAGE)
+                .setProcessor(processor).addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
                 .compile());
     }
 
