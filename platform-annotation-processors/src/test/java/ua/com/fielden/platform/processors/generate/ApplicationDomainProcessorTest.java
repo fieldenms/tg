@@ -4,7 +4,7 @@ import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.processors.generate.ApplicationDomainProcessor.APPLICATION_DOMAIN_QUAL_NAME;
+import static ua.com.fielden.platform.processors.generate.ApplicationDomainProcessor.PACKAGE_OPTION;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.findDeclaredField;
 import static ua.com.fielden.platform.processors.test_utils.CollectionTestUtils.assertEqualByContents;
 import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccess;
@@ -41,6 +41,7 @@ import ua.com.fielden.platform.processors.test_utils.ProcessorListener.AbstractR
  */
 public class ApplicationDomainProcessorTest {
     private static final JavaFileObject PLACEHOLDER = createJavaSource("Placeholder", "final class Placeholder {}");
+    private static final String GENERATED_PACKAGE = "test.generated.config"; // to prevent conflicts with the real processor
 
     @Test
     public void ApplicationDomain_is_not_generated_without_input_entities() {
@@ -59,7 +60,9 @@ public class ApplicationDomainProcessorTest {
 
                 });
 
-        assertSuccess(Compilation.newInMemory(List.of(PLACEHOLDER)).setProcessor(processor).compile());
+        assertSuccess(Compilation.newInMemory(List.of(PLACEHOLDER))
+                .setProcessor(processor).addProcessorOption(PACKAGE_OPTION, GENERATED_PACKAGE)
+                .compile());
     }
 
     @Test
@@ -100,7 +103,9 @@ public class ApplicationDomainProcessorTest {
                 });
 
         final List<JavaFileObject> javaFileObjects = javaFiles.stream().map(file -> file.toJavaFileObject()).toList();
-        assertSuccess(Compilation.newInMemory(javaFileObjects).setProcessor(processor).compile());
+        assertSuccess(Compilation.newInMemory(javaFileObjects)
+                .setProcessor(processor).addProcessorOption(PACKAGE_OPTION, GENERATED_PACKAGE)
+                .compile());
     }
 
     @Test
@@ -132,7 +137,9 @@ public class ApplicationDomainProcessorTest {
                     }
                 });
 
-        assertSuccess(Compilation.newInMemory(javaFileObjects).setProcessor(processor).compile());
+        assertSuccess(Compilation.newInMemory(javaFileObjects)
+                .setProcessor(processor).addProcessorOption(PACKAGE_OPTION, GENERATED_PACKAGE)
+                .compile());
     }
 
 }
