@@ -7,11 +7,17 @@ import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.processors.generate.ApplicationDomainProcessor.PACKAGE_OPTION;
 import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.findDeclaredField;
 import static ua.com.fielden.platform.processors.test_utils.CollectionTestUtils.assertEqualByContents;
+import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
 import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccess;
 import static ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileObjects.createJavaSource;
 import static ua.com.fielden.platform.processors.test_utils.TestUtils.assertPresent;
 
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 
 import javax.annotation.processing.Processor;
@@ -19,8 +25,13 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
+import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
+import javax.tools.StandardJavaFileManager;
+import javax.tools.StandardLocation;
+import javax.tools.ToolProvider;
 
+import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
 import com.squareup.javapoet.JavaFile;
@@ -29,6 +40,7 @@ import com.squareup.javapoet.TypeSpec;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.test_utils.ProcessorListener;
@@ -140,6 +152,99 @@ public class ApplicationDomainProcessorTest {
         assertSuccess(Compilation.newInMemory(javaFileObjects)
                 .setProcessor(processor).addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
                 .compile());
+    }
+
+    @Test
+    public void new_input_entities_are_registered_with_the_existing_ApplicationDomain() throws IOException {
+        // we need to perform 2 compilations with a temporary storage for generated sources:
+        // 1. ApplicationDomain is generated using a single input entity
+        // 2. ApplicationDomain is REgenerated to include new input entities
+
+        // set up temporary storage
+        final Path rootTmpDir = Files.createTempDirectory("java-test");
+        final Path srcTmpDir = Files.createDirectory(Path.of(rootTmpDir.toString(), "src"));
+        final Path generatedTmpDir = Files.createDirectory(Path.of(rootTmpDir.toString(), "generated-sources"));
+
+        // configure compilation settings
+        final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        final StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, Locale.getDefault(), StandardCharsets.UTF_8);
+        fileManager.setLocationFromPaths(StandardLocation.SOURCE_OUTPUT, List.of(generatedTmpDir));
+        fileManager.setLocationFromPaths(StandardLocation.SOURCE_PATH, List.of(srcTmpDir, generatedTmpDir));
+
+        // we will reuse this instance
+        final Compilation compilation = new Compilation(List.of(PLACEHOLDER))
+                .setCompiler(compiler)
+                .setFileManager(fileManager)
+                .addOptions(OPTION_PROC_ONLY)
+                .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG);
+
+        // wrap the test in a big try-catch block to clean up temporary storage afterwards
+        try {
+            // 1
+            final JavaFile entity1 = JavaFile.builder("test",
+                    TypeSpec.classBuilder("First").addModifiers(PUBLIC)
+                        .superclass(ParameterizedTypeName.get(AbstractEntity.class, String.class))
+                        .build())
+                .build();
+            // write the first entity to file, so we can look it up during the 2nd compilation
+            entity1.writeTo(srcTmpDir);
+
+            compilation.setJavaSources(List.of(entity1.toJavaFileObject())).setProcessor(new ApplicationDomainProcessor());
+            assertSuccess(compilation.compile());
+
+            // 2
+            final JavaFile entity2 = JavaFile.builder("test",
+                    TypeSpec.classBuilder("Second").addModifiers(PUBLIC)
+                        .superclass(ParameterizedTypeName.get(AbstractEntity.class, String.class))
+                        .build())
+                .build();
+            final Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
+                    .setRoundListener(new AbstractRoundListener<ApplicationDomainProcessor>() {
+
+                        private ApplicationDomainFinder getApplicationDomainFinder() {
+                            return new ApplicationDomainFinder(new EntityFinder(
+                                    processor.getProcessingEnvironment().getElementUtils(), processor.getProcessingEnvironment().getTypeUtils()));
+                        }
+
+                        @BeforeRound(1)
+                        public void beforeFirstRound(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+                            ElementFinder elementFinder = new ElementFinder(processor.getProcessingEnvironment().getElementUtils(), processor.getProcessingEnvironment().getTypeUtils());
+                            // assert that ApplicationDomain generated during the previous compilation exists
+                            final TypeElement appDomainElt = assertPresent("ApplicationDomain is missing.",
+                                    elementFinder.findTypeElement(processor.getApplicationDomainQualifiedName()));
+
+                            final ApplicationDomainFinder finder = getApplicationDomainFinder();
+                            // assert that exactly one entity is currently registered
+                            assertEqualByContents(List.of(getQualifiedName(entity1)),
+                                    finder.findRegisteredEntities(appDomainElt).stream().map(elt -> elt.getQualifiedName().toString()).toList());
+                        }
+
+                        @BeforeRound(2)
+                        public void beforeSecondRound(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+                            // assert that ApplicationDomain was generated in the previous round
+                            final TypeElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
+                                    roundEnv.getRootElements().stream()
+                                    .filter(elt -> elt.getKind() == ElementKind.CLASS)
+                                    .map(elt -> (TypeElement) elt).filter(elt -> elt.getQualifiedName().contentEquals(processor.getApplicationDomainQualifiedName()))
+                                    .findFirst());
+
+                            final ApplicationDomainFinder finder = getApplicationDomainFinder();
+                            // assert that exactly two entities were registered
+                            assertEqualByContents(List.of(getQualifiedName(entity1), getQualifiedName(entity2)),
+                                    finder.findRegisteredEntities(appDomainElt).stream().map(elt -> elt.getQualifiedName().toString()).toList());
+                        }
+                    });
+
+            compilation.setJavaSources(List.of(entity2.toJavaFileObject())).setProcessor(processor);
+            assertSuccess(compilation.compile());
+        } finally {
+            FileUtils.deleteQuietly(rootTmpDir.toFile());
+        }
+    }
+
+    private static String getQualifiedName(final JavaFile javaFile) {
+        final String pkgPrefix = javaFile.packageName.isEmpty() ? "" : javaFile.packageName + ".";
+        return pkgPrefix + javaFile.typeSpec.name;
     }
 
 }
