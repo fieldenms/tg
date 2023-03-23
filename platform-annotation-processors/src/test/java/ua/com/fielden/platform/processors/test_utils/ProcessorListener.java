@@ -23,6 +23,7 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.TypeElement;
 
+import ua.com.fielden.platform.exceptions.AbstractPlatformRuntimeException;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 
 /**
@@ -133,8 +134,12 @@ public class ProcessorListener<P extends Processor> extends AbstractProcessor {
                     // anonymous classes have no modifiers (0x0), thus they are not public
                     method.setAccessible(true);
                     method.invoke(this, annotations, roundEnv);
-                } catch (final IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+                } catch (final IllegalAccessException | IllegalArgumentException ex) {
                     throw new ReflectionException("Failed to invoke a round-listening method.", ex);
+                } catch (final InvocationTargetException ex) {
+                    // the invoked method threw, so just wrap it into a runtime exception
+                    final Throwable cause = ex.getCause() != null ? ex.getCause() : ex;
+                    throw new RoundListenerException(cause);
                 }
             };
         }
@@ -171,6 +176,22 @@ public class ProcessorListener<P extends Processor> extends AbstractProcessor {
         public static @interface AfterRound {
             /** Number of the round, at the end of which the annotated method should be run. */
             int value();
+        }
+
+        protected static class RoundListenerException extends AbstractPlatformRuntimeException {
+            private static final long serialVersionUID = 1L;
+
+            public RoundListenerException(final String msg) {
+                super(msg);
+            }
+
+            public RoundListenerException(final Throwable cause) {
+                super(cause);
+            }
+
+            public RoundListenerException(final String msg, final Throwable cause) {
+                super(msg, cause);
+            }
         }
 
     }
