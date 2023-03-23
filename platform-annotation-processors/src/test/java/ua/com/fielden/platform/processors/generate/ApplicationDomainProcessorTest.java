@@ -52,7 +52,7 @@ public class ApplicationDomainProcessorTest {
                     public void beforeSecondRound(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
                         assertTrue("ApplicationDomain should not have been generated.",
                                 roundEnv.getRootElements().stream().filter(elt -> elt.getKind() == ElementKind.CLASS)
-                                .map(elt -> (TypeElement) elt).filter(elt -> elt.getQualifiedName().contentEquals(APPLICATION_DOMAIN_QUAL_NAME))
+                                .map(elt -> (TypeElement) elt).filter(elt -> elt.getQualifiedName().contentEquals(processor.getApplicationDomainQualifiedName()))
                                 .findFirst()
                                 .isEmpty());
                     }
@@ -86,7 +86,7 @@ public class ApplicationDomainProcessorTest {
                         final TypeElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
                                 roundEnv.getRootElements().stream()
                                 .filter(elt -> elt.getKind() == ElementKind.CLASS)
-                                .map(elt -> (TypeElement) elt).filter(elt -> elt.getQualifiedName().contentEquals(APPLICATION_DOMAIN_QUAL_NAME))
+                                .map(elt -> (TypeElement) elt).filter(elt -> elt.getQualifiedName().contentEquals(processor.getApplicationDomainQualifiedName()))
                                 .findFirst());
 
                         javaFiles.forEach(file -> {
@@ -122,7 +122,7 @@ public class ApplicationDomainProcessorTest {
                         final TypeElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
                                 roundEnv.getRootElements().stream()
                                 .filter(elt -> elt.getKind() == ElementKind.CLASS)
-                                .map(elt -> (TypeElement) elt).filter(elt -> elt.getQualifiedName().contentEquals(APPLICATION_DOMAIN_QUAL_NAME))
+                                .map(elt -> (TypeElement) elt).filter(elt -> elt.getQualifiedName().contentEquals(processor.getApplicationDomainQualifiedName()))
                                 .findFirst());
                         final ApplicationDomainFinder finder = new ApplicationDomainFinder(new EntityFinder(
                                 processor.getProcessingEnvironment().getElementUtils(), processor.getProcessingEnvironment().getTypeUtils()));

@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.processors.generate;
 
+import static java.util.Optional.ofNullable;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
@@ -10,9 +11,11 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import javax.annotation.processing.ProcessingEnvironment;
@@ -35,6 +38,7 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
+import ua.com.fielden.platform.processors.exceptions.ProcessorInitializationException;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
@@ -48,8 +52,9 @@ import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProcessor {
 
     public static final String APPLICATION_DOMAIN_SIMPLE_NAME = "ApplicationDomain";
-    public static final String APPLICATION_DOMAIN_PKG_NAME = "generated.config";
-    public static final String APPLICATION_DOMAIN_QUAL_NAME = APPLICATION_DOMAIN_PKG_NAME + "." + APPLICATION_DOMAIN_SIMPLE_NAME;
+
+    public static final String PACKAGE_OPTION = "packageName";
+    private String packageName = "generated.config";
 
     private ElementFinder elementFinder;
     private EntityFinder entityFinder;
@@ -61,6 +66,25 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         this.elementFinder = new ElementFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
         this.entityFinder = new EntityFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
         this.appDomainFinder = new ApplicationDomainFinder(entityFinder);
+    }
+
+    @Override
+    public Set<String> getSupportedOptions() {
+        final Set<String> options = new HashSet<>(super.getSupportedOptions());
+        options.add(PACKAGE_OPTION);
+        return options;
+    }
+
+    @Override
+    protected void parseOptions(final Map<String, String> options) {
+        super.parseOptions(options);
+
+        ofNullable(options.get(PACKAGE_OPTION)).ifPresent(pkg -> {
+            if (!Pattern.matches("([a-zA-Z]\\w*\\.)*[a-zA-Z]\\w*", pkg)) {
+                throw new ProcessorInitializationException("Option [%s] specifies an illegal package name.".formatted(PACKAGE_OPTION));
+            }
+            this.packageName = pkg;
+        });
     }
 
     @Override
@@ -82,7 +106,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
             return false;
         }
 
-        generateApplicationDomain(elementFinder.findTypeElement(APPLICATION_DOMAIN_QUAL_NAME), entities);
+        generateApplicationDomain(elementFinder.findTypeElement(getApplicationDomainQualifiedName()), entities);
 
         return false;
     }
@@ -192,15 +216,19 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
                     .build())
             .build();
 
-        final JavaFile javaFile = JavaFile.builder(APPLICATION_DOMAIN_PKG_NAME, typeSpec).indent("    ").build();
+        final JavaFile javaFile = JavaFile.builder(packageName, typeSpec).indent("    ").build();
         try {
             javaFile.writeTo(filer);
         } catch (final IOException ex) {
-            printError("Failed to generate %s: %s\n%s", APPLICATION_DOMAIN_QUAL_NAME, ex.getMessage(), ExceptionUtils.getStackTrace(ex));
+            printError("Failed to generate %s: %s\n%s", getApplicationDomainQualifiedName(), ex.getMessage(), ExceptionUtils.getStackTrace(ex));
             return;
         }
 
-        printNote("Generated %s.", APPLICATION_DOMAIN_QUAL_NAME);
+        printNote("Generated %s.", getApplicationDomainQualifiedName());
+    }
+
+    protected String getApplicationDomainQualifiedName() {
+        return "%s.%s".formatted(packageName, APPLICATION_DOMAIN_SIMPLE_NAME);
     }
 
 }
