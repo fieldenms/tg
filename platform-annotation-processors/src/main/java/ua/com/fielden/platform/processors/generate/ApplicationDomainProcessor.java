@@ -22,6 +22,7 @@ import javax.annotation.processing.Generated;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -105,11 +106,32 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
             .filter(this::isDomainEntity)
             .collect(Collectors.toSet());
 
-        if (entities.isEmpty()) {
+        // removal of a registered entity will cause recompilation of ApplicationDomain, so we need to check if it's among root elements
+        final Optional<TypeElement> maybeAppDomainRootElt = roundEnv.getRootElements().stream()
+                .filter(elt -> elt.getKind() == ElementKind.CLASS)
+                .map(elt -> (TypeElement) elt)
+                .filter(elt -> elt.getQualifiedName().contentEquals(getApplicationDomainQualifiedName()))
+                .findFirst();
+
+        if (entities.isEmpty() && maybeAppDomainRootElt.isEmpty()) {
+            printNote("There is nothing to do.");
             return false;
         }
 
-        generateApplicationDomain(elementFinder.findTypeElement(getApplicationDomainQualifiedName()), entities);
+        // if ApplicationDomain is not among root elements, then search through the whole environment
+        final Optional<TypeElement> maybeAppDomainElt = maybeAppDomainRootElt.isPresent() ?
+                maybeAppDomainRootElt : elementFinder.findTypeElement(getApplicationDomainQualifiedName());
+
+        if (maybeAppDomainElt.isPresent()) {
+            printNote("Found existing %s", APPLICATION_DOMAIN_SIMPLE_NAME);
+        } else {
+            printNote("%s hasn't been generated yet.", APPLICATION_DOMAIN_SIMPLE_NAME);
+        }
+
+        // TODO save the effort of regeneration if all root entities are already registered
+
+        printNote("Beginning generation of %s", APPLICATION_DOMAIN_SIMPLE_NAME);
+        generateApplicationDomain(maybeAppDomainElt, entities);
 
         return false;
     }
@@ -241,7 +263,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
             return;
         }
 
-        printNote("Generated %s.", getApplicationDomainQualifiedName());
+        printNote("Generated %s with %s registered entities.", getApplicationDomainQualifiedName(), registeredEntities.size());
     }
 
     protected String getApplicationDomainQualifiedName() {
