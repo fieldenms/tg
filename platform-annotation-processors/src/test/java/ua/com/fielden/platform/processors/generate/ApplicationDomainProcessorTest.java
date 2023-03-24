@@ -2,10 +2,8 @@ package ua.com.fielden.platform.processors.generate;
 
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
-import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.processors.generate.ApplicationDomainProcessor.PACKAGE_OPTION;
-import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.findDeclaredField;
 import static ua.com.fielden.platform.processors.test_utils.CollectionTestUtils.assertEqualByContents;
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
 import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccess;
@@ -25,7 +23,6 @@ import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
@@ -56,6 +53,7 @@ public class ApplicationDomainProcessorTest {
     private static final JavaFileObject PLACEHOLDER = createJavaSource("Placeholder", "final class Placeholder {}");
     private static final String GENERATED_PKG = "test.generated.config"; // to prevent conflicts with the real processor
 
+    // no input entities => nothing is generated
     @Test
     public void ApplicationDomain_is_not_generated_without_input_entities() {
         Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
@@ -72,8 +70,9 @@ public class ApplicationDomainProcessorTest {
                 .compile());
     }
 
+    // input entities and no pre-existing ApplicationDomain => ApplicationDomain is generated using only input entities
     @Test
-    public void ApplicationDomain_contains_a_static_String_field_for_each_entity_initialised_with_a_canonical_name() {
+    public void from_clean_state_ApplicationDomain_is_generated_using_only_input_entities() {
         // define 2 entity sources in different packages
         final List<JavaFile> javaFiles = List.of(
                 JavaFile.builder("a.b",
@@ -95,13 +94,9 @@ public class ApplicationDomainProcessorTest {
                     public void beforeSecondRound(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
                         final TypeElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.", findApplicationDomain(roundEnv));
 
-                        javaFiles.forEach(file -> {
-                            final String simpleName = file.typeSpec.name;
-                            final VariableElement field = assertPresent("Declared field for entity [%s] is missing".formatted(simpleName),
-                                    findDeclaredField(appDomainElt, simpleName));
-                            assertEquals("Incorrect initialised value of the field [%s]".formatted(field.getSimpleName()),
-                                    getQualifiedName(file), field.getConstantValue());
-                        });
+                        assertEqualByContents(javaFiles.stream().map(jf -> getQualifiedName(jf)).toList(),
+                                applicationDomainFinder().streamRegisteredEntities(appDomainElt)
+                                    .map(elt -> elt.getQualifiedName().toString()).toList());
                     }
                 });
 
@@ -140,6 +135,7 @@ public class ApplicationDomainProcessorTest {
                 .compile());
     }
 
+    // input entities and pre-existing ApplicationDomain => ApplicationDomain is regenerated to include input entities
     @Test
     public void new_input_entities_are_registered_with_the_existing_ApplicationDomain() throws IOException {
         // we need to perform 2 compilations with a temporary storage for generated sources:
@@ -218,6 +214,9 @@ public class ApplicationDomainProcessorTest {
             FileUtils.deleteQuietly(rootTmpDir.toFile());
         }
     }
+
+
+    // -------------------- UTILITIES --------------------
 
     private static String getQualifiedName(final JavaFile javaFile) {
         final String pkgPrefix = javaFile.packageName.isEmpty() ? "" : javaFile.packageName + ".";
