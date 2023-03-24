@@ -12,8 +12,8 @@ public class Expression3 extends AbstractSingleOperand3 {
     public final ISingleOperand3 first;
     private final List<CompoundSingleOperand3> items;
 
-    public Expression3(final ISingleOperand3 first, final List<CompoundSingleOperand3> items, final Class<?> type, final Object hibType) {
-        super(type, hibType);
+    public Expression3(final ISingleOperand3 first, final List<CompoundSingleOperand3> items, final Class<?> type) {
+        super(type);
         this.first = first;
         this.items = items;
     }

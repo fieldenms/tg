@@ -60,7 +60,7 @@ public abstract class AbstractPropInfo<T> implements IResolvable<T> {
         final int prime = 31;
         int result = 1;
         result = prime * result + name.hashCode();
-        result = prime * result + hibType.hashCode();
+        result = prime * result + ((hibType == null) ? 0 : hibType.hashCode());
         result = prime * result + ((expression == null) ? 0 : expression.hashCode());
         result = prime * result + (implicit ? 1231 : 1237);
         return result;

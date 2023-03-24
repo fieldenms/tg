@@ -4,27 +4,20 @@ import java.util.Objects;
 
 public abstract class AbstractSingleOperand3 implements ISingleOperand3 {
     public final Class<?> type;
-    public final Object hibType;
     
-    public AbstractSingleOperand3(final Class<?> type, final Object hibType) {
+    public AbstractSingleOperand3(final Class<?> type) {
         this.type = type;
-        this.hibType = hibType;
     }
     
     public Class<?> type() {
         return type;
     }
 
-    public Object hibType() {
-        return hibType;
-    }
-    
     @Override
     public int hashCode() {
         final int prime = 31;
         int result = 1;
         result = prime * result + type.hashCode();
-        result = prime * result + hibType.hashCode();
         return result;
     }
 
@@ -40,6 +33,6 @@ public abstract class AbstractSingleOperand3 implements ISingleOperand3 {
 
         final AbstractSingleOperand3 other = (AbstractSingleOperand3) obj;
 
-        return Objects.equals(type, other.type) && Objects.equals(hibType, other.hibType);
+        return Objects.equals(type, other.type);
     }
 }

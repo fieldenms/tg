@@ -11,8 +11,8 @@ abstract class SingleOperandFunction2<S3 extends ISingleOperand3> extends Abstra
 
     public final ISingleOperand2<? extends ISingleOperand3> operand;
 
-    public SingleOperandFunction2(final ISingleOperand2<? extends ISingleOperand3> operand, final Class<?> type, final Object hibType) {
-        super(type, hibType);
+    public SingleOperandFunction2(final ISingleOperand2<? extends ISingleOperand3> operand, final Class<?> type) {
+        super(type);
         this.operand = operand;
     }
 

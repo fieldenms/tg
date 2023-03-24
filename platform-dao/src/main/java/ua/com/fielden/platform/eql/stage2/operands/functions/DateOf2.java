@@ -8,18 +8,17 @@ import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.DateOf3;
-import ua.com.fielden.platform.persistence.types.DateTimeType;
 
 public class DateOf2 extends SingleOperandFunction2<DateOf3> {
 
     public DateOf2(final ISingleOperand2<? extends ISingleOperand3> operand) {
-        super(operand, Date.class, DateTimeType.INSTANCE);
+        super(operand, Date.class);
     }
 
     @Override
     public TransformationResult2<DateOf3> transform(final TransformationContext2 context) {
         final TransformationResult2<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
-        return new TransformationResult2<>(new DateOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
+        return new TransformationResult2<>(new DateOf3(operandTransformationResult.item, type), operandTransformationResult.updatedContext);
     }
     
     @Override

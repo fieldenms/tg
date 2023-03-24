@@ -6,20 +6,12 @@ public class ResultQueryYieldDetails implements Comparable<ResultQueryYieldDetai
 
     public final String name;
     public final Class<?> javaType;
-    public final Object hibType;
     public final String column;
 
-    public ResultQueryYieldDetails(final String name, final Class<?> javaType, final Object hibType, final String column) {
+    public ResultQueryYieldDetails(final String name, final Class<?> javaType, final String column) {
         this.name = name;
         this.javaType = javaType;
-        this.hibType = hibType;
         this.column = column;
-    }
-
-    @Override
-    public String toString() {
-        return "\nname = " + name + "\njavaType = " + (javaType != null ? javaType.getSimpleName() : javaType) + "\nhibType = "
-                + (hibType != null ? hibType.getClass().getSimpleName() : hibType) + "\ncolumn(s) = " + column;
     }
 
     @Override
@@ -34,7 +26,6 @@ public class ResultQueryYieldDetails implements Comparable<ResultQueryYieldDetai
         result = prime * result + name.hashCode();
         result = prime * result + javaType.hashCode();
         result = prime * result + column.hashCode();
-        result = prime * result + ((hibType == null) ? 0 : hibType.hashCode());
         return result;
     }
 
@@ -52,7 +43,6 @@ public class ResultQueryYieldDetails implements Comparable<ResultQueryYieldDetai
 
         return Objects.equals(name, other.name) &&
                 Objects.equals(javaType, other.javaType) &&
-                Objects.equals(hibType, other.hibType) &&
                 Objects.equals(column, other.column);
     }
 }

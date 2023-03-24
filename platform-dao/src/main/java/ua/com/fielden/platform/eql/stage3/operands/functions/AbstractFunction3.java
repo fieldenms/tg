@@ -11,8 +11,8 @@ import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
 public abstract class AbstractFunction3 extends AbstractSingleOperand3 {
     
-    public AbstractFunction3(Class<?> type, Object hibType) {
-        super(type, hibType);
+    public AbstractFunction3(Class<?> type) {
+        super(type);
     }
 
     @Override

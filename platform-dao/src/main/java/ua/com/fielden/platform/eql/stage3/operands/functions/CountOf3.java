@@ -8,8 +8,8 @@ import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 public class CountOf3 extends SingleOperandFunction3 {
     private final boolean distinct;
     
-    public CountOf3(final ISingleOperand3 operand, final boolean distinct, final Class<?> type, final Object hibType) {
-        super(operand, type, hibType);
+    public CountOf3(final ISingleOperand3 operand, final boolean distinct, final Class<?> type) {
+        super(operand, type);
         this.distinct = distinct;
     }
     

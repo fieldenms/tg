@@ -55,14 +55,14 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final SourceQuery2 vehSourceSubQry = srcqry(vehSources, vehConditions, vehYields);
         
         final EntityInfo<EntityAggregates> entityInfo = new EntityInfo<>(EntityAggregates.class, QUERY_BASED);
-        entityInfo.addProp(new PrimTypePropInfo<>("qty", H_INTEGER, INTEGER));
+        entityInfo.addProp(new PrimTypePropInfo<>("qty", null, INTEGER));
         
         final Source2BasedOnSubqueries qtyQrySource = source(entityInfo, 2, vehSourceSubQry);
         final IJoinNode2<? extends IJoinNode3> qtyQrySources = sources(qtyQrySource);
-        final Yields2 qtyQryYields = mkYields(QmToStage2TransformationTest.mkYield(prop(qtyQrySource, new PrimTypePropInfo<>("qty", H_INTEGER, INTEGER)), ""));
+        final Yields2 qtyQryYields = mkYields(QmToStage2TransformationTest.mkYield(prop(qtyQrySource, new PrimTypePropInfo<>("qty", null, INTEGER)), ""));
         
         
-        final Yields2 modelQryYields = mkYields(QmToStage2TransformationTest.mkYield(subqry(qtyQrySources, qtyQryYields, INTEGER, H_INTEGER), "qty"));
+        final Yields2 modelQryYields = mkYields(QmToStage2TransformationTest.mkYield(subqry(qtyQrySources, qtyQryYields, INTEGER), "qty"));
         
         final ResultQuery2 expQry = qry(sources(modelSource), modelQryYields);
         assertEquals(expQry, actQry);
@@ -99,14 +99,14 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
         final SourceQuery2 vehSourceSubQry2 = srcqry(vehSources2, vehConditions2, vehYields2);
 
         final EntityInfo<EntityAggregates> entityInfo = new EntityInfo<>(EntityAggregates.class, QUERY_BASED);
-        entityInfo.addProp(new PrimTypePropInfo<>("qty", H_INTEGER, INTEGER));
+        entityInfo.addProp(new PrimTypePropInfo<>("qty", null, INTEGER));
         
         final Source2BasedOnSubqueries qtyQrySource = source(entityInfo, 3, vehSourceSubQry1, vehSourceSubQry2);
         final IJoinNode2<? extends IJoinNode3> qtyQrySources = sources(qtyQrySource);
-        final Yields2 qtyQryYields = mkYields(mkYield(prop(qtyQrySource, new PrimTypePropInfo<>("qty", H_INTEGER, INTEGER)), ""));
+        final Yields2 qtyQryYields = mkYields(mkYield(prop(qtyQrySource, new PrimTypePropInfo<>("qty", null, INTEGER)), ""));
         
         
-        final Yields2 modelQryYields = mkYields(mkYield(subqry(qtyQrySources, qtyQryYields, INTEGER, H_INTEGER), "qty"));
+        final Yields2 modelQryYields = mkYields(mkYield(subqry(qtyQrySources, qtyQryYields, INTEGER), "qty"));
         
         final ResultQuery2 expQry = qry(sources(modelSource), modelQryYields);
         assertEquals(expQry, actQry);

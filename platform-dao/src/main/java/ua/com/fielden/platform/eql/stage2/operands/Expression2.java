@@ -26,7 +26,7 @@ public class Expression2 extends AbstractSingleOperand2 implements ISingleOperan
     }
 
     public Expression2(final ISingleOperand2<? extends ISingleOperand3> first) {
-        super(first.type(), first.hibType());
+        super(first.type());
         this.first = first;
         this.items = emptyList();
     }
@@ -41,7 +41,7 @@ public class Expression2 extends AbstractSingleOperand2 implements ISingleOperan
             transformed.add(new CompoundSingleOperand3(itemTr.item, item.operator));
             currentContext = itemTr.updatedContext;
         }
-        return new TransformationResult2<>(new Expression3(firstTr.item, transformed, type, hibType), currentContext);
+        return new TransformationResult2<>(new Expression3(firstTr.item, transformed, type), currentContext);
     }
 
     @Override

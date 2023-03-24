@@ -129,8 +129,7 @@ public class EntityContainerFetcher {
         final SortedSet<ResultQueryYieldDetails> result = new TreeSet<>();
         for (final Yield3 yield : model.getYields()) {
             final Class<?> yieldType = yield.type != null ? yield.type : yield.operand.type();
-            final Object yieldHibType = yield.hibType != null ? yield.hibType : yield.operand.hibType();
-            result.add(new ResultQueryYieldDetails(yield.alias, yieldType, yieldHibType, yield.column));
+            result.add(new ResultQueryYieldDetails(yield.alias, yieldType, yield.column));
         }
         return result;
     }

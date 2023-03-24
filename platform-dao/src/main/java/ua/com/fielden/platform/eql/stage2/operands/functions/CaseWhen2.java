@@ -64,7 +64,7 @@ public class CaseWhen2 extends AbstractFunction2<CaseWhen3> {
         }
         final TransformationResult2<? extends ISingleOperand3> elseOperandTr = elseOperand == null ? null : elseOperand.transform(currentContext);
         
-        return new TransformationResult2<>(new CaseWhen3(transformedWhenThenPairs, elseOperandTr == null ? null : elseOperandTr.item, typeCast, type, hibType), elseOperandTr == null ? currentContext : elseOperandTr.updatedContext);
+        return new TransformationResult2<>(new CaseWhen3(transformedWhenThenPairs, elseOperandTr == null ? null : elseOperandTr.item, typeCast, type), elseOperandTr == null ? currentContext : elseOperandTr.updatedContext);
     }
 
     @Override

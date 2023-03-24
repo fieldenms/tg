@@ -18,8 +18,8 @@ public class CaseWhen3 extends AbstractFunction3 {
     private final ISingleOperand3 elseOperand;
     private final ITypeCast typeCast;
 
-    public CaseWhen3(final List<T2<ICondition3, ISingleOperand3>> whenThenPairs, final ISingleOperand3 elseOperand, final ITypeCast typeCast, final Class<?> type, final Object hibType) {
-        super(type, hibType);
+    public CaseWhen3(final List<T2<ICondition3, ISingleOperand3>> whenThenPairs, final ISingleOperand3 elseOperand, final ITypeCast typeCast, final Class<?> type) {
+        super(type);
         this.whenThenPairs.addAll(whenThenPairs);
         this.elseOperand = elseOperand;
         this.typeCast = typeCast;

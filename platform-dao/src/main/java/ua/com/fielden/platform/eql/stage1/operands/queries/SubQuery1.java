@@ -3,8 +3,6 @@ package ua.com.fielden.platform.eql.stage1.operands.queries;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
-import org.hibernate.type.LongType;
-
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.QueryComponents1;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
@@ -35,7 +33,7 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
         
         if (joinRoot == null) {
             final QueryComponents2 qb = transformSourceless(localContext);
-            return new SubQuery2(qb, enhance(null, qb.yields),  qb.yields.getYields().iterator().next().operand.hibType());
+            return new SubQuery2(qb, enhance(null, qb.yields));
         }
 
         final TransformationResult1<? extends IJoinNode2<?>> joinRootTr = joinRoot.transform(localContext);
@@ -47,8 +45,7 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
         final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());
         final Yields2 enhancedYields2 = enhanceYields(yields2, joinRoot2);
         final QueryComponents2 queryComponents2 = new QueryComponents2(joinRoot2, conditions2, enhancedYields2, groups2, orderings2);
-        final Object hibType = resultType == null ? enhancedYields2.getYields().iterator().next().operand.hibType() : LongType.INSTANCE;
-        return new SubQuery2(queryComponents2, enhance(resultType, enhancedYields2), hibType);
+        return new SubQuery2(queryComponents2, enhance(resultType, enhancedYields2));
     }
 
     private static Class<?> enhance(final Class<?> resultType, final Yields2 yields) {

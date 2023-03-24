@@ -97,7 +97,7 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
                     // adding not declared props
                     entityInfo.addProp(isEntityType(yield.getValue().javaType)
                             ? new EntityTypePropInfo(yield.getKey(), domainInfo.getEntityInfo((Class<? extends AbstractEntity<?>>) yield.getValue().javaType), LongType.INSTANCE, false /*yield.hasRequiredHint*/)
-                                    : new PrimTypePropInfo(yield.getKey(), yield.getValue().hibType, yield.getValue().javaType));
+                                    : new PrimTypePropInfo(yield.getKey(), null/*yield.getValue().hibType*/, yield.getValue().javaType));
                 }
             }
             
@@ -116,6 +116,8 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
         final Yields2 yields = models.get(0).yields;
         
         if (!EntityAggregates.class.equals(sourceType)) {
+            // If all yields (from PE or SE) are generated implicitly, then it will correspond to canonical representation.
+            // The same is true if given qry-source based on queries represents SE model (for which canonical representation has been generated and cached during startup).
             if (yields.allGenerated || isSyntheticEntity) {
                 return domainInfo.getEnhancedEntityInfo(sourceType);
             } else {
@@ -134,7 +136,7 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
                 } else {
                     entityInfo.addProp(isEntityType(yield.javaType())
                             ? new EntityTypePropInfo(yield.alias, domainInfo.getEntityInfo((Class<? extends AbstractEntity<?>>) yield.javaType()), LongType.INSTANCE, yield.hasRequiredHint)
-                            : new PrimTypePropInfo(yield.alias, yield.operand.hibType(), yield.javaType()));
+                            : new PrimTypePropInfo(yield.alias, null/*yield.operand.hibType()*/, yield.javaType()));
                 }
             }
             return entityInfo;

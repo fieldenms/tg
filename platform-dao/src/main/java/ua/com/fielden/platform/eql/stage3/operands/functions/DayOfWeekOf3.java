@@ -7,8 +7,8 @@ import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
 public class DayOfWeekOf3 extends SingleOperandFunction3 {
 
-    public DayOfWeekOf3(final ISingleOperand3 operand, final Class<?> type, final Object hibType) {
-        super(operand, type, hibType);
+    public DayOfWeekOf3(final ISingleOperand3 operand, final Class<?> type) {
+        super(operand, type);
     }
     
     @Override

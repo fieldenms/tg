@@ -8,8 +8,8 @@ abstract class TwoOperandsFunction3 extends AbstractFunction3 {
     public final ISingleOperand3 operand1;
     public final ISingleOperand3 operand2;
 
-    public TwoOperandsFunction3(final ISingleOperand3 operand1, final ISingleOperand3 operand2, final Class<?> type, final Object hibType) {
-        super(type, hibType);
+    public TwoOperandsFunction3(final ISingleOperand3 operand1, final ISingleOperand3 operand2, final Class<?> type) {
+        super(type);
         this.operand1 = operand1;
         this.operand2 = operand2;
     }

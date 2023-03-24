@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.stage2.operands;
 import static java.util.Collections.emptySet;
 import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.N;
 import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.Y;
-import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.typeResolver;
 
 import java.util.Objects;
 import java.util.Set;
@@ -45,18 +44,13 @@ public class Value2 implements ISingleOperand2<Value3> {
     }
     
     @Override
-    public Object hibType() {
-        return value != null ? typeResolver.basic(type().getName()) : null;
-    }
-    
-    @Override
     public TransformationResult2<Value3> transform(final TransformationContext2 context) {
         if (needsParameter()) {
             final T2<String, TransformationContext2> paramTr = context.obtainParamNameAndUpdateContext(value);
-            final Value3 transformed = new Value3(value, paramTr._1, hibType());
+            final Value3 transformed = new Value3(value, paramTr._1);
             return new TransformationResult2<>(transformed, paramTr._2);
         } else {
-            return new TransformationResult2<>(new Value3(value, null, hibType()), context);
+            return new TransformationResult2<>(new Value3(value, null), context);
         }
     }
 

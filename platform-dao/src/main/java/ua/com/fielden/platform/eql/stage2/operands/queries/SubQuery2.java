@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.eql.stage2.operands.queries;
 
-import java.util.Objects;
-
 import ua.com.fielden.platform.eql.stage2.QueryComponents2;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
@@ -16,11 +14,8 @@ import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 
 public class SubQuery2 extends AbstractQuery2 implements ISingleOperand2<SubQuery3> {
 
-    public final Object hibType;
-
-    public SubQuery2(final QueryComponents2 queryComponents, final Class<?> resultType, final Object hibType) {
+    public SubQuery2(final QueryComponents2 queryComponents, final Class<?> resultType) {
         super(queryComponents, resultType);
-        this.hibType = hibType;
     }
 
     @Override
@@ -33,17 +28,12 @@ public class SubQuery2 extends AbstractQuery2 implements ISingleOperand2<SubQuer
 
         final QueryComponents3 queryComponents3 = new QueryComponents3(joinRootTr.item, conditionsTr.item, yieldsTr.item, groupsTr.item, orderingsTr.item);
 
-        return new TransformationResult2<>(new SubQuery3(queryComponents3, resultType, hibType), orderingsTr.updatedContext);
+        return new TransformationResult2<>(new SubQuery3(queryComponents3, resultType), orderingsTr.updatedContext);
     }
 
     @Override
     public Class<?> type() {
         return resultType;
-    }
-
-    @Override
-    public Object hibType() {
-        return hibType;
     }
 
     @Override
@@ -55,26 +45,11 @@ public class SubQuery2 extends AbstractQuery2 implements ISingleOperand2<SubQuer
     public int hashCode() {
         final int prime = 31;
         int result = super.hashCode();
-        result = prime * result + hibType.hashCode();
         return prime * result + SubQuery2.class.getName().hashCode();
     }
 
     @Override
     public boolean equals(final Object obj) {
-        if (this == obj) {
-            return true;
-        }
-
-        if (!super.equals(obj)) {
-            return false;
-        }
-
-        if (!(obj instanceof SubQuery2)) {
-            return false;
-        }
-
-        final SubQuery2 other = (SubQuery2) obj;
-
-        return Objects.equals(hibType, other.hibType);
+        return this == obj || super.equals(obj) && obj instanceof SubQuery2;
     }
 }

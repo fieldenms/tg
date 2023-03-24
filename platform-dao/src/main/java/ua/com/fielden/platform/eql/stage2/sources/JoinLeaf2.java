@@ -70,14 +70,14 @@ public class JoinLeaf2 implements IJoinNode2<IJoinNode3> {
         final ISingleOperand3 lo;
         
         if (implicitNode.expr == null) {
-            lo = new Prop3(implicitNode.name, rootSource, implicitNode.source.sourceType(), LongType.INSTANCE);
+            lo = new Prop3(implicitNode.name, rootSource, implicitNode.source.sourceType());
         } else {
             final TransformationResult2<Expression3> expTr = implicitNode.expr.transform(currentContext);
             lo = expTr.item.isSingle() ? expTr.item.first : expTr.item;
             currentContext = expTr.updatedContext;
         }
         
-        final Prop3 ro = new Prop3(ID, addedSource, Long.class, LongType.INSTANCE);
+        final Prop3 ro = new Prop3(ID, addedSource, Long.class);
         final ComparisonTest3 ct = new ComparisonTest3(lo, EQ, ro);
         final Conditions3 jc = new Conditions3(false, asList(asList(ct)));
         final TransformationResult2<IJoinNode3> implicitJoinNodeTr = generateJoinNode(addedSource, implicitNode.subnodes(), currentContext);

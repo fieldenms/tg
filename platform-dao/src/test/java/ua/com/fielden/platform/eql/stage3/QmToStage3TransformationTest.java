@@ -8,7 +8,6 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 
 import java.math.BigDecimal;
 
-import org.hibernate.type.BigDecimalType;
 import org.junit.Ignore;
 import org.junit.Test;
 
@@ -43,7 +42,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final ResultQuery3 actQry = qryCountAll(select(MODEL).where().prop("make.id").isNotNull());
         
         final Source3BasedOnTable model = source(MODEL, 1);
-        final Conditions3 conditions = or(isNotNull(prop("make", model, LONG, H_LONG)));
+        final Conditions3 conditions = or(isNotNull(prop("make", model, LONG)));
         final ResultQuery3 expQry = qryCountAll(sources(model), conditions);
         
         assertEquals(expQry, actQry);
@@ -77,12 +76,12 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable veh1 = source(VEHICLE, 2);
         final IJoinNode3 subQrySources1 = sources(veh1); 
         final Conditions3 subQryConditions1 = cond(eq(entityProp("station", veh1, ORG5), idProp(ou5)));
-        final SubQuery3 expSubQry1 = subqry(subQrySources1, subQryConditions1, yields(new Yield3(new MaxOf3(prop("price.amount", veh1, BigDecimal.class, H_BIG_DECIMAL), BigDecimal.class, H_BIG_DECIMAL), "", nextSqlId(), BigDecimal.class, H_BIG_DECIMAL)), BigDecimal.class, BigDecimalType.INSTANCE);
+        final SubQuery3 expSubQry1 = subqry(subQrySources1, subQryConditions1, yields(new Yield3(new MaxOf3(prop("price.amount", veh1, BigDecimal.class), BigDecimal.class), "", nextSqlId(), BigDecimal.class)), BigDecimal.class);
 
         final Source3BasedOnTable veh2 = source(VEHICLE, 3);
         final IJoinNode3 subQrySources2 = sources(veh2); 
         final Conditions3 subQryConditions2 = cond(eq(entityProp("station", veh2, ORG5), idProp(ou5)));
-        final SubQuery3 expSubQry2 = subqry(subQrySources2, subQryConditions2, yields(new Yield3(new MaxOf3(prop("purchasePrice.amount", veh2, BigDecimal.class, H_BIG_DECIMAL), BigDecimal.class, H_BIG_DECIMAL), "", nextSqlId(), BigDecimal.class, H_BIG_DECIMAL)), BigDecimal.class, BigDecimalType.INSTANCE);
+        final SubQuery3 expSubQry2 = subqry(subQrySources2, subQryConditions2, yields(new Yield3(new MaxOf3(prop("purchasePrice.amount", veh2, BigDecimal.class), BigDecimal.class), "", nextSqlId(), BigDecimal.class)), BigDecimal.class);
 
         final IJoinNode3 sources = sources(ou5);
         final Conditions3 conditions = or(and(or(isNotNull(expSubQry1), isNotNull(expSubQry2))));
@@ -102,7 +101,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         final Source3BasedOnTable source = source(MODEL, 1);
         
         final Yield3 modelYield = yieldId(source, "model");
-        final Yield3 makeYield = yieldProp("make", source, "make", MAKE, H_LONG);
+        final Yield3 makeYield = yieldProp("make", source, "make", MAKE);
         final Yields3 yields = yields(modelYield, makeYield);
         
         final ResultQuery3 expQry = qry(sources(source), yields);
@@ -130,9 +129,9 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         
         final Source3BasedOnSubqueries qtyQrySource = source(2, vehSourceSubQry);
         final IJoinNode3 qtyQrySources = sources(qtyQrySource);
-        final Yields3 qtyQryYields = yields(yieldProp("qty", qtyQrySource, "", INTEGER, H_INTEGER));
+        final Yields3 qtyQryYields = yields(yieldProp("qty", qtyQrySource, "", INTEGER));
         
-        final Yields3 modelQryYields = yields(yieldModel(subqry(qtyQrySources, qtyQryYields, INTEGER, H_INTEGER), "qty", INTEGER, H_INTEGER));
+        final Yields3 modelQryYields = yields(yieldModel(subqry(qtyQrySources, qtyQryYields, INTEGER), "qty", INTEGER));
         
         final ResultQuery3 expQry = qry(sources(modelSource), modelQryYields);
         assertEquals(expQry, actQry);
@@ -264,7 +263,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         
         final Conditions3 subQryConditions = cond(eq(idProp(veh), entityProp("vehicle", wo, VEHICLE)));
         
-        final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleEntity("make", model, MAKE)), MAKE, H_LONG);
+        final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleEntity("make", model, MAKE)), MAKE);
 
         final IJoinNode3 sources = 
                 lj(
@@ -295,7 +294,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         
         final Conditions3 subQryConditions = cond(eq(idProp(veh), entityProp("vehicle", wo, VEHICLE)));
         
-        final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleEntity("make", model, MAKE)), MAKE, H_LONG);
+        final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleEntity("make", model, MAKE)), MAKE);
 
         final IJoinNode3 sources = sources(wo);
         final Conditions3 conditions = or(isNotNull(expSubQry));
@@ -326,7 +325,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         
         final Conditions3 subQryConditions = cond(eq(idProp(veh), entityProp("vehicle", wo, VEHICLE)));
         
-        final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleString(KEY, make)), String.class, H_STRING);
+        final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleString(KEY, make)), String.class);
 
         final IJoinNode3 sources = sources(wo);
         final Conditions3 conditions = or(isNotNull(expSubQry));
@@ -629,7 +628,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         
         final Conditions3 subQryConditions = cond(eq(idProp(subQryMake), entityProp("make", model, MAKE)));
         
-        final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleString(KEY, subQryMake)), String.class, H_STRING);
+        final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleString(KEY, subQryMake)), String.class);
 
         
         final IJoinNode3 sources = 
@@ -655,7 +654,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         
         final Conditions3 subQryConditions = cond(eq(idProp(subQryMake), entityProp("make", model, MAKE)));
         
-        final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleString(KEY, subQryMake)), String.class, H_STRING);
+        final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleString(KEY, subQryMake)), String.class);
 
         
         final IJoinNode3 sources = 
@@ -699,7 +698,7 @@ public class QmToStage3TransformationTest extends EqlStage3TestCase {
         
         final Conditions3 subQryConditions = cond(eq(idProp(subQryMake), entityProp("make", model, MAKE)));
         
-        final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleString(KEY, subQryMake)), String.class, H_STRING);
+        final SubQuery3 expSubQry = subqry(subQrySources, subQryConditions, yields(yieldSingleString(KEY, subQryMake)), String.class);
 
         final IJoinNode3 sources = sources(model);
         final Conditions3 conditions = or(isNotNull(expSubQry));

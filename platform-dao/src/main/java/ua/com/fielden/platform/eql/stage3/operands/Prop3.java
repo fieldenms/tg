@@ -9,8 +9,8 @@ public class Prop3 extends AbstractSingleOperand3 {
     public final String name;
     public final ISource3 source; // can be null for prop headers
 
-    public Prop3(final String name, final ISource3 source, final Class<?> type, final Object hibType) {
-        super(type, hibType);
+    public Prop3(final String name, final ISource3 source, final Class<?> type) {
+        super(type);
         this.name = name;
         this.source = source;
     }

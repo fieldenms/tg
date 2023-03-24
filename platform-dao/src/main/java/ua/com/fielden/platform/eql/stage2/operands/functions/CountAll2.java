@@ -4,8 +4,6 @@ import static java.util.Collections.emptySet;
 
 import java.util.Set;
 
-import org.hibernate.type.IntegerType;
-
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
@@ -16,7 +14,7 @@ public class CountAll2 extends AbstractFunction2<CountAll3> {
     public static CountAll2 INSTANCE = new CountAll2();
     
     private CountAll2() {
-        super(Integer.class, IntegerType.INSTANCE);
+        super(Integer.class);
     }
 
     @Override

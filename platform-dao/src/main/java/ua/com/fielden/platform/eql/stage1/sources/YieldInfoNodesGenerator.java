@@ -17,22 +17,22 @@ import ua.com.fielden.platform.types.tuples.T2;
 public class YieldInfoNodesGenerator {
     public static Map<String, YieldInfoNode> generate(final Collection<Yield2> yields) {
 
-        final List<T2<List<String>, T2<Class<?>, Object>>> yieldsInfo = new ArrayList<>();
+        final List<T2<List<String>, Class<?>>> yieldsInfo = new ArrayList<>();
         for (final Yield2 yield : yields) {
-            yieldsInfo.add(t2(asList(yield.alias.split("\\.")), t2(yield.javaType(), yield.operand.hibType())));
+            yieldsInfo.add(t2(asList(yield.alias.split("\\.")), yield.javaType()));
         }
 
         return group(yieldsInfo);
     }
 
-    private static Map<String, YieldInfoNode> group(final List<T2<List<String>, T2<Class<?>, Object>>> yieldsData) {
-        final Map<String, List<T2<List<String>, T2<Class<?>, Object>>>> yieldsTreeData = new HashMap<>();
-        final Map<String, T2<Class<?>, Object>> yieldsWithoutSubprops = new HashMap<>();
+    private static Map<String, YieldInfoNode> group(final List<T2<List<String>, Class<?>>> yieldsData) {
+        final Map<String, List<T2<List<String>, Class<?>>>> yieldsTreeData = new HashMap<>();
+        final Map<String, Class<?>> yieldsWithoutSubprops = new HashMap<>();
 
-        for (final T2<List<String>, T2<Class<?>, Object>> yieldData : yieldsData) {
+        for (final T2<List<String>, Class<?>> yieldData : yieldsData) {
             final String first = yieldData._1.get(0);
 
-            List<T2<List<String>, T2<Class<?>, Object>>> existing = yieldsTreeData.get(first);
+            List<T2<List<String>, Class<?>>> existing = yieldsTreeData.get(first);
 
             if (existing == null) {
                 existing = new ArrayList<>();
@@ -48,10 +48,9 @@ public class YieldInfoNodesGenerator {
 
         final Map<String, YieldInfoNode> result = new HashMap<>();
 
-        for (final Entry<String, List<T2<List<String>, T2<Class<?>, Object>>>> yieldTree : yieldsTreeData.entrySet()) {
-            final T2<Class<?>, Object> yieldWithoutSubprops = yieldsWithoutSubprops.get(yieldTree.getKey());
-            result.put(yieldTree.getKey(), new YieldInfoNode(yieldTree.getKey(), yieldWithoutSubprops == null ? null : yieldWithoutSubprops._1, yieldWithoutSubprops == null ? null
-                    : yieldWithoutSubprops._2, yieldTree.getValue().isEmpty() ? emptyMap() : group(yieldTree.getValue())));
+        for (final Entry<String, List<T2<List<String>, Class<?>>>> yieldTree : yieldsTreeData.entrySet()) {
+            final Class<?> yieldWithoutSubprops = yieldsWithoutSubprops.get(yieldTree.getKey());
+            result.put(yieldTree.getKey(), new YieldInfoNode(yieldTree.getKey(), yieldWithoutSubprops == null ? null : yieldWithoutSubprops, yieldTree.getValue().isEmpty() ? emptyMap() : group(yieldTree.getValue())));
         }
 
         return result;

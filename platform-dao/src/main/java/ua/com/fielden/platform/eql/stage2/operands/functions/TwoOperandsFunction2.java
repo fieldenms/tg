@@ -12,8 +12,8 @@ abstract class TwoOperandsFunction2<S3 extends ISingleOperand3> extends Abstract
     public final ISingleOperand2<? extends ISingleOperand3> operand1;
     public final ISingleOperand2<? extends ISingleOperand3> operand2;
 
-    public TwoOperandsFunction2(final ISingleOperand2<? extends ISingleOperand3> operand1, final ISingleOperand2<? extends ISingleOperand3> operand2, final Class<?> type, final Object hibType) {
-        super(type, hibType);
+    public TwoOperandsFunction2(final ISingleOperand2<? extends ISingleOperand3> operand1, final ISingleOperand2<? extends ISingleOperand3> operand2, final Class<?> type) {
+        super(type);
         this.operand1 = operand1;
         this.operand2 = operand2;
     }

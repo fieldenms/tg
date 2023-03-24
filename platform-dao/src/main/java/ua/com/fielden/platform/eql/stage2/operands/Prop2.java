@@ -43,8 +43,7 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
     }
 
     public Prop2(final ISource2<? extends ISource3> source, final List<AbstractPropInfo<?>> path, final boolean shouldBeTreatedAsId) {
-        super(shouldBeTreatedAsId ? Long.class : path.stream().reduce((first, second) -> second).orElse(null).javaType(), 
-                path.stream().reduce((first, second) -> second).orElse(null).hibType);
+        super(shouldBeTreatedAsId ? Long.class : path.stream().reduce((first, second) -> second).orElse(null).javaType());
         this.source = source;
         this.path = path;
         this.name = path.stream().map(k -> k.name).collect(Collectors.joining("."));
@@ -58,7 +57,7 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
             return new TransformationResult2<>(exprTr.item.isSingle() ? exprTr.item.first : exprTr.item, exprTr.updatedContext);
         } else {
             final T2<String, ISource3> resolution = context.resolve(source.id(), name);
-            return new TransformationResult2<>(new Prop3(resolution._1, resolution._2, type, hibType), context);
+            return new TransformationResult2<>(new Prop3(resolution._1, resolution._2, type), context);
         }
     }
 

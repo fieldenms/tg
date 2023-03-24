@@ -9,13 +9,13 @@ import ua.com.fielden.platform.eql.stage3.operands.functions.MaxOf3;
 public class MaxOf2 extends SingleOperandFunction2<MaxOf3> {
 
     public MaxOf2(final ISingleOperand2<? extends ISingleOperand3> operand) {
-        super(operand, operand.type(), operand.hibType());
+        super(operand, operand.type());
     }
 
     @Override
     public TransformationResult2<MaxOf3> transform(final TransformationContext2 context) {
         final TransformationResult2<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
-        return new TransformationResult2<>(new MaxOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
+        return new TransformationResult2<>(new MaxOf3(operandTransformationResult.item, type), operandTransformationResult.updatedContext);
     }
     
     @Override

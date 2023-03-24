@@ -14,8 +14,6 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
-import org.hibernate.type.LongType;
-import org.hibernate.type.StringType;
 import org.hibernate.type.Type;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -51,7 +49,6 @@ import ua.com.fielden.platform.eql.stage3.sources.JoinBranch3;
 import ua.com.fielden.platform.eql.stage3.sources.JoinLeaf3;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnTable;
-import ua.com.fielden.platform.persistence.types.DateTimeType;
 
 public abstract class EqlStage3TestCase extends EqlTestCase {
     public static int sqlId = 0;
@@ -111,32 +108,32 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
         return new Source3BasedOnSubqueries(Arrays.asList(sourceQueries), sourceForContextId, nextSqlId());
     }
 
-    protected static Expression3 expr(final ISingleOperand3 op1, final Class<?> type, final Object hibType) {
-        return new Expression3(op1, emptyList(), type, hibType);
+    protected static Expression3 expr(final ISingleOperand3 op1, final Class<?> type) {
+        return new Expression3(op1, emptyList(), type);
     }
 
     protected static ISingleOperand3 prop(final String name, final ISource3 source) {
-        return new Prop3(name, source, null, null);
+        return new Prop3(name, source, null);
     }
 
     protected static ISingleOperand3 entityProp(final String name, final ISource3 source, final Class<? extends AbstractEntity<?>> entityType) {
-        return new Prop3(name, source, entityType, LongType.INSTANCE);
+        return new Prop3(name, source, entityType);
     }
 
     protected static ISingleOperand3 idProp(final ISource3 source) {
-        return new Prop3(ID, source, Long.class, LongType.INSTANCE);
+        return new Prop3(ID, source, Long.class);
     }
 
     protected static ISingleOperand3 stringProp(final String name, final ISource3 source) {
-        return new Prop3(name, source, String.class, StringType.INSTANCE);
+        return new Prop3(name, source, String.class);
     }
 
-    protected static ISingleOperand3 prop(final String name, final ISource3 source, final Class<?> type, final Type hibType) {
-        return new Prop3(name, source, type, hibType);
+    protected static ISingleOperand3 prop(final String name, final ISource3 source, final Class<?> type) {
+        return new Prop3(name, source, type);
     }
 
     protected static ISingleOperand3 dateProp(final String name, final ISource3 source) {
-        return new Prop3(name, source, Date.class, DateTimeType.INSTANCE);
+        return new Prop3(name, source, Date.class);
     }
 
     protected static ComparisonTest3 eq(final ISingleOperand3 op1, final ISingleOperand3 op2) {
@@ -271,12 +268,12 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
     //        return new EntQuery3(new EntQueryBlocks3(sources, new Conditions3(false, emptyList()), yields, groups(), orders()), queryCategory, resultType);
     //    }
 
-    protected static SubQuery3 subqry(final IJoinNode3 sources, final Yields3 yields, final Class<?> resultType, final Type hibType) {
-        return new SubQuery3(new QueryComponents3(sources, null, yields, null, null), resultType, hibType);
+    protected static SubQuery3 subqry(final IJoinNode3 sources, final Yields3 yields, final Class<?> resultType) {
+        return new SubQuery3(new QueryComponents3(sources, null, yields, null, null), resultType);
     }
 
-    protected static SubQuery3 subqry(final IJoinNode3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType, final Type hibType) {
-        return new SubQuery3(new QueryComponents3(sources, conditions, yields, null, null), resultType, hibType);
+    protected static SubQuery3 subqry(final IJoinNode3 sources, final Conditions3 conditions, final Yields3 yields, final Class<?> resultType) {
+        return new SubQuery3(new QueryComponents3(sources, conditions, yields, null, null), resultType);
     }
 
     private static ResultQuery3 resultQry(final IJoinNode3 sources, final Yields3 yields, final Class<?> resultType) {
@@ -344,31 +341,31 @@ public abstract class EqlStage3TestCase extends EqlTestCase {
     }
 
     protected static Yield3 yieldCountAll(final String alias) {
-        return new Yield3(CountAll3.INSTANCE, alias, nextSqlId(), INTEGER, H_INTEGER);
+        return new Yield3(CountAll3.INSTANCE, alias, nextSqlId(), INTEGER);
     }
 
     protected static Yield3 yieldEntity(final String propName, final ISource3 source, final String alias, final Class<? extends AbstractEntity<?>> propType) {
-        return new Yield3(entityProp(propName, source, propType), alias, nextSqlId(), propType, H_LONG);
+        return new Yield3(entityProp(propName, source, propType), alias, nextSqlId(), propType);
     }
 
     protected static Yield3 yieldString(final String propName, final ISource3 source, final String alias) {
-        return new Yield3(stringProp(propName, source), alias, nextSqlId(), String.class, H_STRING);
+        return new Yield3(stringProp(propName, source), alias, nextSqlId(), String.class);
     }
 
     protected static Yield3 yieldId(final ISource3 source, final String alias) {
-        return new Yield3(idProp(source), alias, nextSqlId(), Long.class, H_LONG);
+        return new Yield3(idProp(source), alias, nextSqlId(), Long.class);
     }
 
-    protected static Yield3 yieldProp(final String propName, final ISource3 source, final String alias, final Class<?> type, final Type hibType) {
-        return new Yield3(prop(propName, source, type, hibType), alias, nextSqlId(), type, hibType);
+    protected static Yield3 yieldProp(final String propName, final ISource3 source, final String alias, final Class<?> type) {
+        return new Yield3(prop(propName, source, type), alias, nextSqlId(), type);
     }
 
     protected static Yield3 yieldProp(final String propName, final ISource3 source, final String alias) {
-        return new Yield3(prop(propName, source), alias, nextSqlId(), null, null);
+        return new Yield3(prop(propName, source), alias, nextSqlId(), null);
     }
 
-    protected static Yield3 yieldModel(final SubQuery3 model, final String alias, final Class<?> type, final Type hibType) {
-        return new Yield3(model, alias, nextSqlId(), type, hibType);
+    protected static Yield3 yieldModel(final SubQuery3 model, final String alias, final Class<?> type) {
+        return new Yield3(model, alias, nextSqlId(), type);
     }
 
     protected static Yield3 yieldSingleEntity(final String propName, final ISource3 source, final Class<? extends AbstractEntity<?>> propType) {

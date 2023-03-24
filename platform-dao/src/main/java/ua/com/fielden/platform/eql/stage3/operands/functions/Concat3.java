@@ -13,8 +13,8 @@ public class Concat3 extends AbstractFunction3 {
 
     private final List<ISingleOperand3> operands;
 
-    public Concat3(final List<ISingleOperand3> operands, final Class<?> type, final Object hibType) {
-        super(type, hibType);
+    public Concat3(final List<ISingleOperand3> operands, final Class<?> type) {
+        super(type);
         this.operands = operands;
     }
 

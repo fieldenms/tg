@@ -296,15 +296,15 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
         return new ResultQuery2(qc2(sources, emptyConditions, mkYields(yieldCountAll("KOUNT"))), EntityAggregates.class);
     }
 
-    protected static SubQuery2 subqry(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType, final Object hibType) {
-        return new SubQuery2(qc2(sources, conditions, yields), resultType, hibType);
+    protected static SubQuery2 subqry(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType) {
+        return new SubQuery2(qc2(sources, conditions, yields), resultType);
     }
 
     protected static TypelessSubQuery2 typelessSubqry(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions) {
         return new TypelessSubQuery2(new QueryComponents2(sources, conditions, nullYields, emptyGroupBys, emptyOrderBys));
     }
 
-    protected static SubQuery2 subqry(final IJoinNode2<? extends IJoinNode3> sources, final Yields2 yields, final Class<?> resultType, final Object hibType) {
-        return new SubQuery2(qc2(sources, emptyConditions, yields), resultType, hibType);
+    protected static SubQuery2 subqry(final IJoinNode2<? extends IJoinNode3> sources, final Yields2 yields, final Class<?> resultType) {
+        return new SubQuery2(qc2(sources, emptyConditions, yields), resultType);
     }
 }

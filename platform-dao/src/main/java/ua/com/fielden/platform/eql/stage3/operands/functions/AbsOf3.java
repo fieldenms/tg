@@ -7,8 +7,8 @@ import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 
 public class AbsOf3 extends SingleOperandFunction3 {
 
-    public AbsOf3(final ISingleOperand3 operand, final Class<?> type, final Object hibType) {
-        super(operand, type, hibType);
+    public AbsOf3(final ISingleOperand3 operand, final Class<?> type) {
+        super(operand, type);
     }
 
     @Override

@@ -15,7 +15,7 @@ public class HourOf2 extends DatePartFunction2<HourOf3> {
     @Override
     public TransformationResult2<HourOf3> transform(final TransformationContext2 context) {
         final TransformationResult2<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
-        return new TransformationResult2<>(new HourOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
+        return new TransformationResult2<>(new HourOf3(operandTransformationResult.item, type), operandTransformationResult.updatedContext);
     }
     
     @Override

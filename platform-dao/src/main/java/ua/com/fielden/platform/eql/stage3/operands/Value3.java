@@ -7,12 +7,10 @@ import ua.com.fielden.platform.entity.query.DbVersion;
 public class Value3 implements ISingleOperand3 {
     public final Object value; // can be 'null' in case of yield stmt
     public final String paramName;
-    public final Object hibType;
 
-    public Value3(final Object value, final String paramName, final Object hibType) {
+    public Value3(final Object value, final String paramName) {
         this.value = value;
         this.paramName = paramName;
-        this.hibType = hibType;
     }
 
     @Override
@@ -50,10 +48,5 @@ public class Value3 implements ISingleOperand3 {
     @Override
     public Class<?> type() {
         return value != null ? value.getClass() : null;
-    }
-
-    @Override
-    public Object hibType() {
-        return hibType;
     }
 }

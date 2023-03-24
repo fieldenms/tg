@@ -6,12 +6,10 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import org.hibernate.type.StringType;
-
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
-import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
+import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.Concat3;
 
@@ -20,7 +18,7 @@ public class Concat2 extends AbstractFunction2<Concat3> {
     private final List<ISingleOperand2<? extends ISingleOperand3>> operands;
 
     public Concat2(final List<ISingleOperand2<? extends ISingleOperand3>> operands) {
-        super(String.class, StringType.INSTANCE);
+        super(String.class);
         this.operands = operands;
     }
 
@@ -33,7 +31,7 @@ public class Concat2 extends AbstractFunction2<Concat3> {
             transformed.add(operandTr.item);
             currentContext = operandTr.updatedContext;
         }
-        return new TransformationResult2<>(new Concat3(transformed, type, hibType), currentContext);
+        return new TransformationResult2<>(new Concat3(transformed, type), currentContext);
     }
 
     @Override

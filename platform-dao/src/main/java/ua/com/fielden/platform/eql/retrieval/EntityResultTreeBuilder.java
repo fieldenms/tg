@@ -2,24 +2,33 @@ package ua.com.fielden.platform.eql.retrieval;
 
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.hibernate.type.BigDecimalType;
+import org.hibernate.type.IntegerType;
+import org.hibernate.type.LongType;
+import org.hibernate.type.StringType;
+import org.hibernate.type.YesNoType;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.ICompositeUserTypeInstantiate;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
+import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.meta.EntityInfo;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
-import ua.com.fielden.platform.eql.meta.EqlPropertyMetadata;
+import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public final class EntityResultTreeBuilder {
-    
     public static <E extends AbstractEntity<?>> EntityTree<E> build(final Class<E> resultType, final List<T2<String, ResultQueryYieldDetails>> properties, final EqlDomainMetadata md) {
         return build(resultType, properties, -1, md)._1;
     }
@@ -38,8 +47,9 @@ public final class EntityResultTreeBuilder {
         
         String currentGroup = null;
         Class<? extends AbstractEntity<?>> currentResultType = null;
-        ICompositeUserTypeInstantiate currentHibType = null;
+        ComponentTypePropInfo<?> currentComponentInfo = null;
         List<T2<String, ResultQueryYieldDetails>> currentGroupDetails = new ArrayList<>();
+        final EntityInfo<?> entityInfo = resultType.equals(EntityAggregates.class) ? null : md.getEntityInfo(resultType);
         
         for (final T2<String, ResultQueryYieldDetails> prop : properties) {
             if (prop._1.contains(".")) {
@@ -55,8 +65,8 @@ public final class EntityResultTreeBuilder {
                             final T2<?, Integer> t2 = build(currentResultType, currentGroupDetails, localIndex, md);
                             entities.put(currentGroup, (EntityTree<? extends AbstractEntity<?>>) t2._1);
                             localIndex = t2._2;
-                        } else if (currentHibType != null){ // composites
-                            final T2<ValueTree, Integer> t2 = buildValueTree(currentHibType, currentGroupDetails, localIndex);
+                        } else if (currentComponentInfo != null){ // composites
+                            final T2<ValueTree, Integer> t2 = buildValueTree(currentComponentInfo, currentGroupDetails, localIndex);
                             compositeValues.put(currentGroup, t2._1);
                             localIndex = t2._2;
                         } else {
@@ -65,7 +75,7 @@ public final class EntityResultTreeBuilder {
 
                         // "restart" current group
                         currentResultType = null;
-                        currentHibType = null;
+                        currentComponentInfo = null;
                         currentGroupDetails = new ArrayList<>();
                     }
 
@@ -75,13 +85,13 @@ public final class EntityResultTreeBuilder {
                         currentResultType = EntityAggregates.class;
                         currentGroupDetails.add(T2.t2(prop._1.substring(firstDotIndex + 1), prop._2)); 
                     } else {
-                        final AbstractPropInfo<?> propInfo = md.getEntityInfo(resultType).getProps().get(currentGroup);
+                        final AbstractPropInfo<?> propInfo = entityInfo.getProps().get(currentGroup);
                         if (propInfo != null) {
                             if (EntityUtils.isEntityType(propInfo.javaType())) {
                                 currentResultType = (Class<? extends AbstractEntity<?>>) propInfo.javaType();
                                 currentGroupDetails.add(T2.t2(prop._1.substring(firstDotIndex + 1), prop._2)); 
                             } else {
-                                currentHibType = (ICompositeUserTypeInstantiate) propInfo.hibType;
+                                currentComponentInfo = (ComponentTypePropInfo<?>) propInfo;
                                 currentGroupDetails.add(T2.t2(prop._1.substring(firstDotIndex + 1), prop._2));
                             }
                         } else {
@@ -97,8 +107,8 @@ public final class EntityResultTreeBuilder {
                         final T2<?, Integer> t2 = build(currentResultType, currentGroupDetails, localIndex, md);
                         entities.put(currentGroup, (EntityTree<? extends AbstractEntity<?>>) t2._1);
                         localIndex = t2._2;
-                    } else if (currentHibType != null){ // composites
-                        final T2<ValueTree, Integer> t2 = buildValueTree(currentHibType, currentGroupDetails, localIndex);
+                    } else if (currentComponentInfo != null){ // composites
+                        final T2<ValueTree, Integer> t2 = buildValueTree(currentComponentInfo, currentGroupDetails, localIndex);
                         compositeValues.put(currentGroup, t2._1);
                         localIndex = t2._2;
                     } else {
@@ -107,7 +117,7 @@ public final class EntityResultTreeBuilder {
 
                     // "restart" current group
                     currentResultType = null;
-                    currentHibType = null;
+                    currentComponentInfo = null;
                     currentGroupDetails = new ArrayList<>();
 
                 }
@@ -117,11 +127,24 @@ public final class EntityResultTreeBuilder {
                 // can be either ET prop, or primitive prop
                 if (EntityUtils.isPersistedEntityType(prop._2.javaType)) {
                     currentResultType = (Class<? extends AbstractEntity<?>>) prop._2.javaType;
-                    currentGroupDetails.add(t2(ID, new ResultQueryYieldDetails(ID, Long.class, prop._2.hibType, prop._2.column)));
+                    currentGroupDetails.add(t2(ID, new ResultQueryYieldDetails(ID, Long.class, prop._2.column)));
                 } else {
                     currentGroup = null; // no group is actually created for simple prop
                     localIndex = localIndex + 1;
-                    singles.put(localIndex, new YieldDetails(prop._1, prop._2.hibType, prop._2.column));
+                    
+                    if (entityInfo == null) { // the case of EntityAggregates
+                        final Object derivedHibType = prop._2.javaType == null ? null : hibTypeFromJavaType(prop._2.javaType);
+                        singles.put(localIndex, new YieldDetails(prop._1, derivedHibType, prop._2.column));
+                    } else { 
+                        final AbstractPropInfo<?> propInfo = entityInfo.getProps().get(prop._1);
+                        if (propInfo != null) {
+                            final Object declaredHibType = propInfo.hibType;
+                            singles.put(localIndex, new YieldDetails(prop._1, declaredHibType, prop._2.column));
+                        } else {
+                            final Object deducedHibType = hibTypeFromJavaType(prop._2.javaType);
+                            singles.put(localIndex, new YieldDetails(prop._1, deducedHibType, prop._2.column));
+                        }
+                    }
                 }
             }
         }
@@ -132,8 +155,8 @@ public final class EntityResultTreeBuilder {
                 final T2<?, Integer> t2 = build(currentResultType, currentGroupDetails, localIndex, md);
                 entities.put(currentGroup, (EntityTree<? extends AbstractEntity<?>>) t2._1);
                 localIndex = t2._2;
-            } else  if (currentHibType != null) { // composites
-                final T2<ValueTree, Integer> t2 = buildValueTree(currentHibType, currentGroupDetails, localIndex);
+            } else  if (currentComponentInfo != null) { // composites
+                final T2<ValueTree, Integer> t2 = buildValueTree(currentComponentInfo, currentGroupDetails, localIndex);
                 compositeValues.put(currentGroup, t2._1);
                 localIndex = t2._2;
             } else {
@@ -145,7 +168,7 @@ public final class EntityResultTreeBuilder {
     }
 
     private static T2<ValueTree, Integer> buildValueTree(
-            final ICompositeUserTypeInstantiate hibType,
+            final ComponentTypePropInfo<?> propInfo,
             final List<T2<String, ResultQueryYieldDetails>> properties,
             final Integer initialIndex) {
         
@@ -154,9 +177,30 @@ public final class EntityResultTreeBuilder {
         
         for (final T2<String, ResultQueryYieldDetails> prop : properties) {
             localIndex = localIndex + 1;
-            singles.put(localIndex, new YieldDetails(prop._1, prop._2.hibType, prop._2.column));
+            final Object declaredHibType = propInfo.getProps().get(prop._1).hibType;
+            singles.put(localIndex, new YieldDetails(prop._1, declaredHibType, prop._2.column));
         }
         
-        return T2.t2(new ValueTree(hibType, singles), localIndex);
+        return T2.t2(new ValueTree((ICompositeUserTypeInstantiate) propInfo.hibType, singles), localIndex);
+    }
+    
+    private static Object hibTypeFromJavaType(final Class<?> type) {
+        if (Date.class.equals(type)) {
+            return DateTimeType.INSTANCE; 
+        } else if (BigDecimal.class.equals(type)) {
+            return BigDecimalType.INSTANCE; 
+        } else if (Long.class.equals(type)) {
+            return LongType.INSTANCE; 
+        } else if (Integer.class.equals(type) || int.class.equals(type)){
+            return IntegerType.INSTANCE; 
+        } else if (String.class.equals(type)){
+            return StringType.INSTANCE; 
+        } else if (isEntityType(type)) {
+                return LongType.INSTANCE; 
+        } else if (type == boolean.class || Boolean.class.equals(type)){
+                return YesNoType.INSTANCE;
+        } else {
+            return null;
+        }
     }
 }

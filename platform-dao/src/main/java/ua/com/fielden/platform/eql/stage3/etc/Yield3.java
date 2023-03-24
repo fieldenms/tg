@@ -12,13 +12,11 @@ public class Yield3 {
     public final String alias;
     public final String column;
     public final Class<?> type;
-    public final Object hibType;
 
-    public Yield3(final ISingleOperand3 operand, final String alias, final int columnId, final Class<?> type, final Object hibType) {
+    public Yield3(final ISingleOperand3 operand, final String alias, final int columnId, final Class<?> type) {
         this.operand = operand;
         this.alias = alias;
         this.column = isEmpty(alias) ? null : "C_" + columnId;
-        this.hibType = hibType;
         this.type = type;
     }
 
@@ -32,7 +30,6 @@ public class Yield3 {
         int result = 1;
         result = prime * result + ((alias == null) ? 0 : alias.hashCode());
         result = prime * result + operand.hashCode();
-        result = prime * result + ((hibType == null) ? 0 : hibType.hashCode());
         result = prime * result + ((type == null) ? 0 : type.hashCode());
         return result;
     }
@@ -49,6 +46,6 @@ public class Yield3 {
         
         final Yield3 other = (Yield3) obj;
         
-        return Objects.equals(operand, other.operand) && Objects.equals(alias, other.alias) && Objects.equals(hibType, other.hibType) && Objects.equals(type, other.type);
+        return Objects.equals(operand, other.operand) && Objects.equals(alias, other.alias) && Objects.equals(type, other.type);
     }
 }

@@ -85,7 +85,10 @@ public class SourceQuery1 extends AbstractQuery1 implements ITransformableToS2<S
                     }
                 }
             }
-            return new Yields2(enhancedYields, yields.getYields().isEmpty() && !shouldIncludeCalcProps);
+            final boolean allGenerated = yields.getYields().isEmpty() && !shouldIncludeCalcProps;
+            // generated yields with shouldIncludeCalcProps=true will produce different EntityInfo from the canonical one (calc props will be yielded, thus turned from calc to persistent)
+            // if necessary additional separate cache can be created for such cases (allGeneratedButWithCalcPropsMaterialised)
+            return new Yields2(enhancedYields, allGenerated);
         }
 
         final Yield2 firstYield = yields.getYields().iterator().next();

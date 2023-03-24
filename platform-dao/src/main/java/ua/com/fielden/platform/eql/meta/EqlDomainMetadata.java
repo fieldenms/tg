@@ -1,9 +1,7 @@
 package ua.com.fielden.platform.eql.meta;
 
-import static java.util.Arrays.asList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
-import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSISTENT;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PURE;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
@@ -12,7 +10,6 @@ import static ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo.getEn
 import static ua.com.fielden.platform.eql.meta.DomainMetadataUtils.getOriginalEntityTypeFullName;
 import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.generateTable;
 import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.generateTableWithPropColumnInfo;
-import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
@@ -29,7 +26,6 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation.TableStructForBatchInsertion;
-import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
@@ -40,9 +36,6 @@ import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnSubqueries;
 import ua.com.fielden.platform.eql.stage1.sources.YieldInfoNode;
 import ua.com.fielden.platform.eql.stage1.sources.YieldInfoNodesGenerator;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
-import ua.com.fielden.platform.eql.stage2.operands.Prop2;
-import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnPersistentType;
-import ua.com.fielden.platform.eql.stage2.sources.enhance.PathsToTreeTransformer;
 import ua.com.fielden.platform.eql.stage3.Table;
 import ua.com.fielden.platform.utils.EntityUtils;
 

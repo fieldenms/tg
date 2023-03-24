@@ -13,8 +13,8 @@ public class CountDateInterval3 extends TwoOperandsFunction3 {
 
     private DateIntervalUnit intervalUnit;
 
-    public CountDateInterval3(final DateIntervalUnit intervalUnit, final ISingleOperand3 periodEndDate, final ISingleOperand3 periodStartDate, final Class<?> type, final Object hibType) {
-        super(periodEndDate, periodStartDate, type, hibType);
+    public CountDateInterval3(final DateIntervalUnit intervalUnit, final ISingleOperand3 periodEndDate, final ISingleOperand3 periodStartDate, final Class<?> type) {
+        super(periodEndDate, periodStartDate, type);
         this.intervalUnit = intervalUnit;
     }
 
