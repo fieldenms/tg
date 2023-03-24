@@ -10,7 +10,7 @@ import java.util.stream.Stream;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 
-import ua.com.fielden.platform.processors.annotation.ProcessedValues;
+import ua.com.fielden.platform.processors.annotation.ProcessedValue;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
@@ -29,7 +29,7 @@ public record ApplicationDomainFinder(EntityFinder entityFinder) {
      * @return              stream of registered entity elements
      */
     public Stream<EntityElement> streamRegisteredEntities(final TypeElement appDomainElt) {
-        return ProcessedValues.Mirror.fromAnnotated(appDomainElt, entityFinder)
+        return ProcessedValue.Mirror.fromAnnotated(appDomainElt, entityFinder)
                 .map(elt -> elt.classes()).orElseGet(() -> List.of()) // unpack the Optional
                 .stream().map(tm -> entityFinder.newEntityElement(asTypeElementOfTypeMirror(tm)));
     }

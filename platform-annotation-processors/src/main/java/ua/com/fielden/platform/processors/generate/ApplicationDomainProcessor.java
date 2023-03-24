@@ -40,7 +40,7 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
-import ua.com.fielden.platform.processors.annotation.ProcessedValues;
+import ua.com.fielden.platform.processors.annotation.ProcessedValue;
 import ua.com.fielden.platform.processors.exceptions.ProcessorInitializationException;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
@@ -150,31 +150,27 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
                 .addMember("date", "$S", initDateTime)
                 .build();
 
-        // We use the @ProcessedValues annotation just to enable the processor to get access to the list of registered types,
+        // We use @ProcessedValue annotations just to enable the processor to get access to the list of registered types,
         // since we can't analyse the insides of the static initialiser block.
-        // Also, the SOURCE retention policy ensures that the annotation will get discarded right after the processor is done with it.
         // This approach lends itself well to refactoring. When entity types are renamed, ApplicationDomain will be automatically adjusted,
         // because class literals are used to refer to registered entity types.
 
-        // @ProcessedValues(classes = { all registered entity types go here... })
-        final CodeBlock entityTypesCodeBlock = CodeBlock.join(
-                registeredEntities.stream()
-                .map(elt -> CodeBlock.of("$T.class", ClassName.get(elt.element())))
-                .toList(),
-                ",\n");
-        final AnnotationSpec atProcessedValues = AnnotationSpec.builder(ProcessedValues.class)
-                .addMember("classes", CodeBlock.builder().add("{").add(entityTypesCodeBlock).add("}").build())
-                .build();
+         // @ProcessedValue(cls = $ENTITY_TYPE)...
+        final List<AnnotationSpec> processedValueAnnots = registeredEntities.stream()
+                .map(entity -> AnnotationSpec.builder(ProcessedValue.class)
+                        .addMember("cls", CodeBlock.of("$T.class", entity.element()))
+                        .build())
+                .toList();
         /*
          * @Generated(...)
-         * @ProcessedValues(...)
+         * @ProcessedValue(...)...
          * public class ApplicationDomain implements IApplicationDomainProvider
          */
         final TypeSpec typeSpec = TypeSpec.classBuilder(APPLICATION_DOMAIN_SIMPLE_NAME)
             .addModifiers(PUBLIC)
             .addSuperinterface(IApplicationDomainProvider.class)
             .addAnnotation(atGenerated)
-            .addAnnotation(atProcessedValues)
+            .addAnnotations(processedValueAnnots)
             // private static final Set<Class<? extends AbstractEntity<?>>> entityTypes = new LinkedHashSet<>();
             .addField(FieldSpec.builder(
                     ParameterizedTypeName.get(ClassName.get(Set.class), classExtendsAbstractEntity),
