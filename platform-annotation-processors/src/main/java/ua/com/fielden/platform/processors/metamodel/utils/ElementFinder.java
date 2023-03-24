@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import javax.lang.model.AnnotatedConstruct;
@@ -28,6 +29,7 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.ArrayType;
 import javax.lang.model.type.DeclaredType;
 import javax.lang.model.type.MirroredTypeException;
+import javax.lang.model.type.MirroredTypesException;
 import javax.lang.model.type.NoType;
 import javax.lang.model.type.PrimitiveType;
 import javax.lang.model.type.TypeKind;
@@ -503,6 +505,27 @@ public class ElementFinder {
         } catch (final MirroredTypeException ex) {
             // the exception provides the desired type mirror
             return ex.getTypeMirror();
+        }
+    }
+
+    /**
+     * Returns the type mirrors representing the {@link Class[]}-typed value of the annotation's element.
+     * <p>
+     * Special care is required for {@link Class} values, since information to locate and load a class is unavailable during annotation processing.
+     * For a more detailed explanation refer to {@link Element#getAnnotation(Class)}.
+     *
+     * @param valueSupplier  the supplier of a {@link Class[]}-typed value
+     * @return  a list of type mirrors
+     */
+    public List<? extends TypeMirror> getAnnotationElementValueOfClassArrayType(final Supplier<Class<?>[]> valueSupplier) {
+        try {
+            // should ALWAYS throw, since the information to locate and load a class is unavailable during annotation processing
+            final Class<?>[] classes = valueSupplier.get();
+            // if it somehow was available, then construct TypeMirrors
+            return Stream.of(classes).map(this::asType).toList();
+        } catch (final MirroredTypesException ex) {
+            // the exception provides the desired type mirrors
+            return ex.getTypeMirrors();
         }
     }
 

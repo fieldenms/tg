@@ -1,8 +1,7 @@
 package ua.com.fielden.platform.processors.generate;
 
 import static java.util.stream.Collectors.toCollection;
-import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.isStatic;
-import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.streamDeclaredFields;
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asTypeElementOfTypeMirror;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -11,6 +10,7 @@ import java.util.stream.Stream;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 
+import ua.com.fielden.platform.processors.annotation.ProcessedValues;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.web.test.config.ApplicationDomain;
@@ -29,9 +29,9 @@ public record ApplicationDomainFinder(EntityFinder entityFinder) {
      * @return              stream of registered entity elements
      */
     public Stream<EntityElement> streamRegisteredEntities(final TypeElement appDomainElt) {
-        return streamDeclaredFields(appDomainElt)
-                .filter(elt -> isStatic(elt) && entityFinder.isSameType(elt.asType(), String.class))
-                .map(elt -> entityFinder.findEntity((String) elt.getConstantValue()));
+        return ProcessedValues.Mirror.fromAnnotated(appDomainElt, entityFinder)
+                .map(elt -> elt.classes()).orElseGet(() -> List.of()) // unpack the Optional
+                .stream().map(tm -> entityFinder.newEntityElement(asTypeElementOfTypeMirror(tm)));
     }
 
     /**

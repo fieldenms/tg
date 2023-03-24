@@ -25,6 +25,7 @@ import javax.lang.model.element.TypeElement;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
+import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.CodeBlock;
 import com.squareup.javapoet.FieldSpec;
@@ -38,6 +39,7 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
+import ua.com.fielden.platform.processors.annotation.ProcessedValues;
 import ua.com.fielden.platform.processors.exceptions.ProcessorInitializationException;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
@@ -132,13 +134,6 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
                 WildcardTypeName.subtypeOf(ParameterizedTypeName.get(
                         ClassName.get(AbstractEntity.class), WildcardTypeName.subtypeOf(Object.class))));
 
-        // fields of the form: private static final String $ENTITY_SIMPLE_NAME = $ENTITY_QUAL_NAME;
-        final List<FieldSpec> entityTypesStaticFields = registeredEntities.stream()
-                    .map(elt -> FieldSpec.builder(String.class, elt.getSimpleName().toString(), PRIVATE, STATIC, FINAL)
-                            .initializer("$S", elt.getQualifiedName().toString())
-                            .build())
-                    .toList();
-
         // used below in the static initialisation block
         final Function<CodeBlock.Builder, CodeBlock.Builder> addStatementsForRegisteredEntities = builder -> {
             var bld = builder;
@@ -148,10 +143,29 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
             return bld;
         };
 
-        // public class ApplicationDomain implements IApplicationDomainProvider
+        // We use the @ProcessedValues annotation just to enable the processor to get access to the list of registered types,
+        // since we can't analyse the insides of the static initialiser block.
+        // Also, the SOURCE retention policy ensures that the annotation will get discarded right after the processor is done with it.
+        // This approach lends itself well to refactoring. When entity types are renamed, ApplicationDomain will be automatically adjusted,
+        // because class literals are used to refer to registered entity types.
+
+        // @ProcessedValues(classes = { all registered entity types go here... })
+        final CodeBlock entityTypesCodeBlock = CodeBlock.join(
+                registeredEntities.stream()
+                .map(elt -> CodeBlock.of("$T.class", ClassName.get(elt.element())))
+                .toList(),
+                ",\n");
+        final AnnotationSpec atProcessedValues = AnnotationSpec.builder(ProcessedValues.class)
+                .addMember("classes", CodeBlock.builder().add("{").add(entityTypesCodeBlock).add("}").build())
+                .build();
+        /*
+         * @ProcessedValues(...)
+         * public class ApplicationDomain implements IApplicationDomainProvider
+         */
         final TypeSpec typeSpec = TypeSpec.classBuilder(APPLICATION_DOMAIN_SIMPLE_NAME)
             .addModifiers(PUBLIC)
             .addSuperinterface(IApplicationDomainProvider.class)
+            .addAnnotation(atProcessedValues)
             // private static final Set<Class<? extends AbstractEntity<?>>> entityTypes = new LinkedHashSet<>();
             .addField(FieldSpec.builder(
                     ParameterizedTypeName.get(ClassName.get(Set.class), classExtendsAbstractEntity),
@@ -212,9 +226,6 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
                     .returns(ParameterizedTypeName.get(ClassName.get(List.class), classExtendsAbstractEntity))
                     .addStatement("return domainTypes.stream().collect($T.toUnmodifiableList())", Collectors.class)
                     .build())
-            // static field for each registered entity type
-            // added at the end of the class to reduce visual clutter, alas, JavaPoet still writes them at the top
-            .addFields(entityTypesStaticFields)
             .build();
 
         final JavaFile javaFile = JavaFile.builder(packageName, typeSpec).indent("    ").build();
