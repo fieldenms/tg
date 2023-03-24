@@ -18,6 +18,7 @@ import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import javax.annotation.processing.Generated;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
@@ -143,6 +144,12 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
             return bld;
         };
 
+        // class-level @Generated annotation
+        final AnnotationSpec atGenerated = AnnotationSpec.builder(ClassName.get(Generated.class))
+                .addMember("value", "$S", this.getClass().getCanonicalName())
+                .addMember("date", "$S", initDateTime)
+                .build();
+
         // We use the @ProcessedValues annotation just to enable the processor to get access to the list of registered types,
         // since we can't analyse the insides of the static initialiser block.
         // Also, the SOURCE retention policy ensures that the annotation will get discarded right after the processor is done with it.
@@ -159,12 +166,14 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
                 .addMember("classes", CodeBlock.builder().add("{").add(entityTypesCodeBlock).add("}").build())
                 .build();
         /*
+         * @Generated(...)
          * @ProcessedValues(...)
          * public class ApplicationDomain implements IApplicationDomainProvider
          */
         final TypeSpec typeSpec = TypeSpec.classBuilder(APPLICATION_DOMAIN_SIMPLE_NAME)
             .addModifiers(PUBLIC)
             .addSuperinterface(IApplicationDomainProvider.class)
+            .addAnnotation(atGenerated)
             .addAnnotation(atProcessedValues)
             // private static final Set<Class<? extends AbstractEntity<?>>> entityTypes = new LinkedHashSet<>();
             .addField(FieldSpec.builder(
