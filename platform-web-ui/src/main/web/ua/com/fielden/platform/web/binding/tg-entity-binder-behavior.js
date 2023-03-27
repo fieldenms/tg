@@ -469,7 +469,7 @@ export const TgEntityBinderBehavior = {
                             reader.onload = function () {
                                 const resultAsObj = JSON.parse(reader.result);
                                 const result = self._serialiser().deserialise(resultAsObj);
-                                self._openToastForError(errorMessages(result).short, self._reflector().stackTrace(result.ex), true);
+                                self._openToastForErrorResult(result, true);
                             }
                             reader.readAsText(xhr.response);
                         }
@@ -533,7 +533,7 @@ export const TgEntityBinderBehavior = {
                     // The current logic of tg-toast will discard all other messages after this message, until this message disappears.
                     if (this._reflector().isError(deserialisedResult)) {
                         console.log('deserialisedResult: ', deserialisedResult);
-                        this._openToastForError(errorMessages(deserialisedResult).short, this._reflector().stackTrace(deserialisedResult.ex), !this._reflector().isContinuationError(deserialisedResult) || this.showContinuationsAsErrors);
+                        this._openToastForErrorResult(deserialisedResult, !this._reflector().isContinuationError(deserialisedResult) || this.showContinuationsAsErrors);
                     }
                     e.detail.successful = customHandlerFor(deserialisedInstance, this._reflector().isError(deserialisedResult) ? deserialisedResult : null);
                     if (this._reflector().isError(deserialisedResult)) {
@@ -740,7 +740,8 @@ export const TgEntityBinderBehavior = {
 
         //Toaster object Can be used in other components on binder to show toasts.
         self.toaster = {
-            openToastForError : self._openToastForError.bind(self),
+            openToastForError: self._openToastForError.bind(self),
+            openToastForErrorResult: self._openToastForErrorResult.bind(self),
             openToast: self._openToast.bind(self),
             openToastWithoutEntity: self._openToastWithoutEntity.bind(self)
         };
@@ -792,6 +793,13 @@ export const TgEntityBinderBehavior = {
      */
     _validateForDescendants: function (preparedModifHolder) {
         return this._validator().validate(preparedModifHolder);
+    },
+
+    /**
+     * Opens the toast for erroneous Result.
+     */
+    _openToastForErrorResult: function (result, isCritical) {
+        this._openToastForError(errorMessages(result).short, this._reflector().stackTrace(result.ex), isCritical);
     },
 
     /**
