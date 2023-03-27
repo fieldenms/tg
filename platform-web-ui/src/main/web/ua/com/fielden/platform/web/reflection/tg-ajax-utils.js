@@ -1,4 +1,4 @@
-import { tearDownEvent, errorMessages } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent } from '/resources/reflection/tg-polymer-utils.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
 export function processResponseError (e, reflector, serialiser, customHandler, toaster) {

@@ -92,7 +92,14 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 --paper-input-container-focus-color: #03A9F4;
             }
 
-            /* style requiredness */
+            /* style informative, warning and error */
+            #decorator[is-invalid] {
+                --paper-input-error: {
+                    cursor: pointer;
+                }
+            }
+
+            /* style informative */
             #decorator[is-invalid].informative {
                 --paper-input-container-color: #8E24AA;
                 --paper-input-container-invalid-color: #8E24AA;
@@ -104,6 +111,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 --paper-input-container-invalid-color: #FFA000;
             }
 
+            /* style error */
             #decorator[is-invalid]:not(.warning):not(.informative) {
                 --paper-input-container-color: var(--google-red-500);
             }
