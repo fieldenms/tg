@@ -1550,13 +1550,6 @@ export const TgReflector = Polymer({
     },
 
     /**
-     * Returns a meaninful representation for errorObject message.
-     */
-    exceptionMessageForErrorObject: function (errorObject) {
-        return errorObject.message;
-    },
-
-    /**
      * Returns html representation for the specified exception trace (including 'cause' expanded, if any).
      */
     stackTrace: function (ex) {
@@ -1597,15 +1590,6 @@ export const TgReflector = Polymer({
             return causes;
         }
 
-    },
-
-    /**
-     * Returns html representation for the specified errorObject stack.
-     */
-    stackTraceForErrorObjectStack: function (stack) {
-        console.log("STACK", stack);
-        // TODO still "NOT IMPLEMENTED!";
-        return stack.toString();
     },
 
     //////////////////// SERVER EXCEPTIONS UTILS [END] //////////////

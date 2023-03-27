@@ -1,5 +1,5 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
-import {processResponseError, toastMsgForError} from '/resources/reflection/tg-ajax-utils.js';
+import { processResponseError } from '/resources/reflection/tg-ajax-utils.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 import { errorMessages } from '/resources/reflection/tg-polymer-utils.js';
 
@@ -469,7 +469,7 @@ export const TgEntityBinderBehavior = {
                             reader.onload = function () {
                                 const resultAsObj = JSON.parse(reader.result);
                                 const result = self._serialiser().deserialise(resultAsObj);
-                                self._openToastForError(errorMessages(result).short, toastMsgForError(self._reflector(), result), true);
+                                self._openToastForError(errorMessages(result).short, self._reflector().stackTrace(result.ex), true);
                             }
                             reader.readAsText(xhr.response);
                         }
@@ -524,10 +524,7 @@ export const TgEntityBinderBehavior = {
                 e.detail.successful = true;
                 const deserialisedResult = this._serialiser().deserialise(e.detail.response);
                 
-                if (this._reflector().isWarning(deserialisedResult)) {
-                    console.warn(toastMsgForError(this._reflector(), deserialisedResult));
-                    //this._openToastForError('Warning.', toastMsgForError(this._reflector(), deserialisedResult), false);
-                } else {
+                if (!this._reflector().isWarning(deserialisedResult)) {
                     // continue with normal handling of the result's instance
                     const deserialisedInstance = deserialisedResult.instance;
                     deserialisedResult.instance = null;
@@ -536,7 +533,7 @@ export const TgEntityBinderBehavior = {
                     // The current logic of tg-toast will discard all other messages after this message, until this message disappears.
                     if (this._reflector().isError(deserialisedResult)) {
                         console.log('deserialisedResult: ', deserialisedResult);
-                        this._openToastForError(errorMessages(deserialisedResult).short, toastMsgForError(this._reflector(), deserialisedResult), !this._reflector().isContinuationError(deserialisedResult) || this.showContinuationsAsErrors);
+                        this._openToastForError(errorMessages(deserialisedResult).short, this._reflector().stackTrace(deserialisedResult.ex), !this._reflector().isContinuationError(deserialisedResult) || this.showContinuationsAsErrors);
                     }
                     e.detail.successful = customHandlerFor(deserialisedInstance, this._reflector().isError(deserialisedResult) ? deserialisedResult : null);
                     if (this._reflector().isError(deserialisedResult)) {
@@ -816,11 +813,6 @@ export const TgEntityBinderBehavior = {
         this._toastGreeting().msgHeading = "Error";
         console.log('about to show ... this._toastGreeting().isCritical = ', isCritical);
         this._toastGreeting().show();
-    },
-
-    _toastMsgForErrorObject: function (errorObject) {
-        var stack = errorObject.stack;
-        return this._reflector().stackTraceForErrorObjectStack(stack);
     },
 
     _toastMsg: function (actionName, entity) {

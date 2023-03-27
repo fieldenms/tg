@@ -13,7 +13,6 @@ import { TgElementSelectorBehavior } from '/resources/components/tg-element-sele
 import { tearDownEvent, getFirstEntityType } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import {processResponseError, toastMsgForError} from '/resources/reflection/tg-ajax-utils.js';
 import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
 
 const template = html`
