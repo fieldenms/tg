@@ -1542,12 +1542,6 @@ export const TgReflector = Polymer({
     },
 
     //////////////////// SERVER EXCEPTIONS UTILS ////////////////////
-    /**
-     * Returns a meaningful representation for exception message (including user-friendly version for NPE, not just 'null').
-     */
-    exceptionMessage: function (exception) {
-        return errorMessages(exception);
-    },
 
     /**
      * Returns html representation for the specified exception trace (including 'cause' expanded, if any).
@@ -1556,7 +1550,7 @@ export const TgReflector = Polymer({
         // collects error cause by traversing the stack into an ordered list
         var causeCollector = function (ex, causes) {
             if (ex) {
-                causes = causes + "<li>" + this.exceptionMessage(ex).extended + "</li>";
+                causes = causes + "<li>" + errorMessages(ex).extended + "</li>";
                 printStackTrace(ex);
                 if (ex.cause !== null) {
                     causes = causeCollector(ex.cause, causes);
@@ -1569,7 +1563,7 @@ export const TgReflector = Polymer({
         var printStackTrace = function (ex) {
             var msg = "No cause and stack trace.";
             if (ex) {
-                msg = this.exceptionMessage(ex).short + '\n';
+                msg = errorMessages(ex).short + '\n';
                 if (Array.isArray(ex.stackTrace)) {
                     for (var i = 0; i < ex.stackTrace.length; i += 1) {
                         var st = ex.stackTrace[i];
@@ -1581,7 +1575,7 @@ export const TgReflector = Polymer({
         }.bind(this);
 
         if (ex) {
-            var causes = "<b>" + this.exceptionMessage(ex).extended + "</b>";
+            var causes = "<b>" + errorMessages(ex).extended + "</b>";
             printStackTrace(ex);
             if (ex.cause !== null) {
                 causes = causeCollector(ex.cause, causes + "<br><br>Cause(s):<br><ol>")
