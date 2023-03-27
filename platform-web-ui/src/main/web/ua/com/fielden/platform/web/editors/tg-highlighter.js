@@ -12,7 +12,7 @@ RegExp.escape = function (text) {
 
 export function searchRegExp (str) {
     const pattern = RegExp.escape(str).replace(/%/gi, ".*");
-    return new RegExp(pattern, 'gi');
+    return new RegExp(str.includes("%") ? `^${pattern}$` : pattern, 'gi');
 };
 
 /* 
