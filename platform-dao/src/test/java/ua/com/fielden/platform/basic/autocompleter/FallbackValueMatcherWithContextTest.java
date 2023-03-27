@@ -82,7 +82,7 @@ public class FallbackValueMatcherWithContextTest extends AbstractDaoTestCase {
     public void matching_is_done_key_from_start_then_key_anywhere_then_desc_anywere_case_1() {
         final FallbackValueMatcherWithContext<TgCategory, TgCategory> matcher = new FallbackValueMatcherWithContext<>(co(TgCategory.class), true);
 
-        final List<TgCategory> result = matcher.findMatches("METFAX%");
+        final List<TgCategory> result = matcher.findMatches("%METFAX%");
         assertEquals(6, result.size());
         assertEquals("AAMETFAX", result.get(0).getKey());
         assertEquals("WNMETFAX", result.get(1).getKey());
@@ -96,7 +96,7 @@ public class FallbackValueMatcherWithContextTest extends AbstractDaoTestCase {
     public void matching_is_done_key_from_start_then_key_anywhere_then_desc_anywere_case_2() {
         final FallbackValueMatcherWithContext<TgCategory, TgCategory> matcher = new FallbackValueMatcherWithContext<>(co(TgCategory.class), true);
 
-        final List<TgCategory> result = matcher.findMatches("MET%");
+        final List<TgCategory> result = matcher.findMatches("%MET%");
         assertEquals(6, result.size());
         assertEquals("AA20000MET", result.get(0).getKey());
         assertEquals("AAMETFAX", result.get(1).getKey());
@@ -110,7 +110,7 @@ public class FallbackValueMatcherWithContextTest extends AbstractDaoTestCase {
     public void matching_is_done_key_from_start_then_key_anywhere_then_desc_anywere_case_3() {
         final FallbackValueMatcherWithContext<TgCategory, TgCategory> matcher = new FallbackValueMatcherWithContext<>(co(TgCategory.class), true);
 
-        final List<TgCategory> result = matcher.findMatches("FAX%");
+        final List<TgCategory> result = matcher.findMatches("%FAX%");
         assertEquals(6, result.size());
         assertEquals("AA10000FAX", result.get(0).getKey());
         assertEquals("AAMETFAX", result.get(1).getKey());
