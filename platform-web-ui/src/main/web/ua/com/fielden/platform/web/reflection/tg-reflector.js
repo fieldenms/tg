@@ -1546,7 +1546,7 @@ export const TgReflector = Polymer({
      * Returns a meaningful representation for exception message (including user-friendly version for NPE, not just 'null').
      */
     exceptionMessage: function (exception) {
-        return errorMessages(exception, "Null pointer exception");
+        return errorMessages(exception);
     },
 
     /**

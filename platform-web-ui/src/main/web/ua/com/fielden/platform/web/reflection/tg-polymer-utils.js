@@ -154,20 +154,30 @@ export function deepestActiveElement () {
     return _deepestActiveElementOf(document.activeElement);
 };
 
-export function errorMessages (result, defaultMessage) {
-    if(result.message) {
-        const messages = result.message.split("<extended/>");
-        const shortMessage = messages[0] ? messages[0] : defaultMessage;
+export function errorMessages (result) {
+    if (result.message === null) {
+        const npeMsg = 'Null pointer exception';
+        return {
+            short: npeMsg,
+            extended: npeMsg
+        };
+    }
+    if (result.message) { // non-empty string
+        const messages = result.message.split('<extended/>');
+        const shortMessage = messages[0] || messages[1]; // return exact message before <extended/>, only if non-empty; otherwise return ext message; or whole message if there is no <extended/> part
         return {
             short: shortMessage,
-            extended: messages[1] ? messages[1] : shortMessage
-        }
+            extended: messages[1] || shortMessage // return exact message after <extended/>, only if non-empty; otherwise return short message; or whole message if there is no <extended/> part
+        };
     }
-    return {
-        short: defaultMessage,
-        extended: defaultMessage
-    }
-}
+    // only '' value are possible here (inside Result / Exception deserialised instances);
+    // however, the method may be used for some artificial values from Web UI;
+    // just return the same empty '' or undefined in both short / extended parts -- delegate further
+    return { 
+        short: result.message,
+        extended: result.message
+    };
+};
 
 /**
  * The selector for focusable elements.
