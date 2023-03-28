@@ -138,8 +138,6 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
             generate(domainEntities);
         }
 
-        // TODO save the effort of regeneration if all root entities are already registered
-
         return false;
     }
 
@@ -166,10 +164,16 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         printNote("Previously registered entities: %s unchanged, %s missing, %s to be unregistered",
                 unchanged.size(), appDomainElt.errorTypes().size(), toBeUnregistered.size());
 
-        final Set<EntityElement> toRegister = new HashSet<>();
-        toRegister.addAll(unchanged);
-        toRegister.addAll(entities);
-        writeApplicationDomain(toRegister);
+        // consider if we actually need to regenerate
+        if (!appDomainElt.errorTypes().isEmpty() || !toBeUnregistered.isEmpty()                  // anything to exclude?
+                || entities.stream().anyMatch(elt -> !appDomainElt.entities().contains(elt))) {  // anything to include?
+            printNote("Regenerating %s", appDomainElt.getSimpleName());
+
+            final Set<EntityElement> toRegister = new HashSet<>(unchanged.size() + entities.size());
+            toRegister.addAll(unchanged);
+            toRegister.addAll(entities);
+            writeApplicationDomain(toRegister);
+        }
     }
 
     private void writeApplicationDomain(final Collection<EntityElement> registeredEntities) {
