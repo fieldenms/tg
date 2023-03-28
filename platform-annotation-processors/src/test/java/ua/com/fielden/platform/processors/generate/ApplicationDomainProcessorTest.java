@@ -296,6 +296,93 @@ public class ApplicationDomainProcessorTest {
         }
     }
 
+    @Test
+    public void non_domain_entity_types_are_unregistered_from_the_existing_ApplicationDomain() throws IOException {
+        // we need to perform 2 compilations with a temporary storage for generated sources:
+        // 1. ApplicationDomain is generated using 2 input entities
+        // 2. One of input entities is modified so that it's no longer a domain entity, hence ApplicationDomain is regenerated to exclude it
+
+        // set up temporary storage
+        final Path rootTmpDir = Files.createTempDirectory("java-test");
+        final Path srcTmpDir = Files.createDirectory(Path.of(rootTmpDir.toString(), "src"));
+        final Path generatedTmpDir = Files.createDirectory(Path.of(rootTmpDir.toString(), "generated-sources"));
+
+        // configure compilation settings
+        final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        final StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, Locale.getDefault(), StandardCharsets.UTF_8);
+        fileManager.setLocationFromPaths(StandardLocation.SOURCE_OUTPUT, List.of(generatedTmpDir));
+        fileManager.setLocationFromPaths(StandardLocation.SOURCE_PATH, List.of(srcTmpDir, generatedTmpDir));
+
+        // we will reuse this instance
+        final Compilation compilation = new Compilation(List.of(PLACEHOLDER))
+                .setCompiler(compiler)
+                .setFileManager(fileManager)
+                .addOptions(OPTION_PROC_ONLY)
+                .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG);
+
+        // wrap the test in a big try-catch block to clean up temporary storage afterwards
+        try {
+            // 1
+            final JavaFile entity1 = JavaFile.builder("test",
+                    TypeSpec.classBuilder("First").addModifiers(PUBLIC)
+                        .superclass(ParameterizedTypeName.get(AbstractEntity.class, String.class))
+                        .build())
+                .build();
+            // write this entity to file, so we can look it up during the 2nd compilation
+            entity1.writeTo(srcTmpDir);
+
+            // we will modify this entity
+            final JavaFile entity2 = JavaFile.builder("test",
+                    TypeSpec.classBuilder("Second").addModifiers(PUBLIC)
+                        .superclass(ParameterizedTypeName.get(AbstractEntity.class, String.class))
+                        .build())
+                .build();
+
+            compilation
+                .setJavaSources(List.of(entity1.toJavaFileObject(), entity2.toJavaFileObject()))
+                .setProcessor(new ApplicationDomainProcessor());
+            assertSuccess(compilation.compile());
+
+            // 2
+            final JavaFile abstractEntity2 = JavaFile.builder(entity2.packageName,
+                    entity2.typeSpec.toBuilder().addModifiers(ABSTRACT).build())
+                .build();
+            // write the modified entity to file, so we can look it up during the 2nd compilation
+            abstractEntity2.writeTo(srcTmpDir);
+
+            final Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
+                    .setRoundListener(new RoundListener() {
+
+                        @BeforeRound(1)
+                        public void beforeFirstRound(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+                            // assert that ApplicationDomain was generated during the previous compilation
+                            final ApplicationDomainElement appDomainElt = assertPresent("ApplicationDomain is missing.",
+                                    processor.findApplicationDomain());
+
+                            // assert that exactly 2 entities are currently registered
+                            assertEqualByContents(List.of("test.First", "test.Second"),
+                                    appDomainElt.entities().stream().map(elt -> elt.getQualifiedName().toString()).toList());
+                        }
+
+                        @BeforeRound(2)
+                        public void beforeSecondRound(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+                            // assert that ApplicationDomain was regenerated in the previous round
+                            final ApplicationDomainElement appDomainElt = assertPresent("Regenerated ApplicationDomain is missing.",
+                                    processor.findApplicationDomainInRound(roundEnv));
+
+                            // assert that only entity "First" was registered
+                            assertEqualByContents(List.of("test.First"),
+                                    appDomainElt.entities().stream().map(elt -> elt.getQualifiedName().toString()).toList());
+                        }
+                    });
+
+            compilation.setJavaSources(List.of(abstractEntity2.toJavaFileObject())).setProcessor(processor);
+            assertSuccess(compilation.compile());
+        } finally {
+            FileUtils.deleteQuietly(rootTmpDir.toFile());
+        }
+    }
+
     // -------------------- UTILITIES --------------------
 
     private static String getQualifiedName(final JavaFile javaFile) {
