@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -49,6 +50,17 @@ import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 
 /**
  * An annotation processor that generates and maintains the {@code ApplicationDomain} class, which implements {@link IApplicationDomainProvider}.
+ * <p>
+ * The processor's behaviour depends on the existence of previously generated {@code ApplicationDomain}:
+ * <ul>
+ *   <li>Doesn't exist -- simply generates it from scratch</li>
+ *   <li>Exists -- might need to regenerate it considering the following:</li>
+ *   <ul>
+ *     <li>Register new domain entity types</li>
+ *     <li>Remove entity types that cannot be located any more (e.g., due to removal of the java source)</li>
+ *     <li>Remove entity types that are no longer domain entities</li>
+ *   </ul>
+ * </ul>
  *
  * @author TG Team
  */
@@ -107,31 +119,27 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
             .collect(Collectors.toSet());
 
         // removal of a registered entity will cause recompilation of ApplicationDomain, so we need to check if it's among root elements
-        final Optional<TypeElement> maybeAppDomainRootElt = roundEnv.getRootElements().stream()
-                .filter(elt -> elt.getKind() == ElementKind.CLASS)
-                .map(elt -> (TypeElement) elt)
-                .filter(elt -> elt.getQualifiedName().contentEquals(getApplicationDomainQualifiedName()))
-                .findFirst();
+        final Optional<ApplicationDomainElement> maybeAppDomainRootElt = findApplicationDomainInRound(roundEnv);
 
+        // no input entities and no input ApplicationDomain => this change does not affect ApplicationDomain
         if (entities.isEmpty() && maybeAppDomainRootElt.isEmpty()) {
             printNote("There is nothing to do.");
             return false;
         }
 
         // if ApplicationDomain is not among root elements, then search through the whole environment
-        final Optional<TypeElement> maybeAppDomainElt = maybeAppDomainRootElt.isPresent() ?
-                maybeAppDomainRootElt : elementFinder.findTypeElement(getApplicationDomainQualifiedName());
+        final Optional<ApplicationDomainElement> maybeAppDomainElt = maybeAppDomainRootElt.isEmpty() ?
+                findApplicationDomain() : maybeAppDomainRootElt.map(elt -> new ApplicationDomainElement(elt, entityFinder));
 
         if (maybeAppDomainElt.isPresent()) {
-            printNote("Found existing %s", APPLICATION_DOMAIN_SIMPLE_NAME);
+            printNote("Found existing %s", maybeAppDomainElt.get().getSimpleName());
+            regenerate(entities, maybeAppDomainElt.get());
         } else {
             printNote("%s hasn't been generated yet.", APPLICATION_DOMAIN_SIMPLE_NAME);
+            generate(entities);
         }
 
         // TODO save the effort of regeneration if all root entities are already registered
-
-        printNote("Beginning generation of %s", APPLICATION_DOMAIN_SIMPLE_NAME);
-        generateApplicationDomain(maybeAppDomainElt, entities);
 
         return false;
     }
@@ -140,15 +148,29 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         return !ElementFinder.isAbstract(entity.element());
     }
 
-    private void generateApplicationDomain(final Optional<TypeElement> maybeAppDomainElt, final Collection<EntityElement> rootEntities) {
-        final Set<EntityElement> registeredEntities = new HashSet<>();
-        if (maybeAppDomainElt.isPresent()) {
-            // TODO validate registered entities (some could be renamed/deleted)
-            registeredEntities.addAll(appDomainFinder.findRegisteredEntities(maybeAppDomainElt.get()));
-        }
-        registeredEntities.addAll(rootEntities);
+    private void generate(final Collection<EntityElement> entities) {
+        printNote("Generating %s from scratch", APPLICATION_DOMAIN_SIMPLE_NAME);
+        writeApplicationDomain(entities);
+    }
 
-        writeApplicationDomain(registeredEntities);
+    private void regenerate(final Collection<EntityElement> entities, final ApplicationDomainElement appDomainElt) {
+        final List<EntityElement> unchanged = new LinkedList<>();
+        final List<EntityElement> toBeUnregistered = new LinkedList<>();
+        appDomainElt.entities().forEach(ent -> {
+            if (isDomainEntity(ent)) {
+                unchanged.add(ent);
+            } else {
+                toBeUnregistered.add(ent);
+            }
+        });
+
+        printNote("Previously registered entities: %s unchanged, %s missing, %s to be unregistered",
+                unchanged.size(), appDomainElt.errorTypes().size(), toBeUnregistered.size());
+
+        final Set<EntityElement> toRegister = new HashSet<>();
+        toRegister.addAll(unchanged);
+        toRegister.addAll(entities);
+        writeApplicationDomain(toRegister);
     }
 
     private void writeApplicationDomain(final Collection<EntityElement> registeredEntities) {
@@ -268,6 +290,19 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
 
     protected String getApplicationDomainQualifiedName() {
         return "%s.%s".formatted(packageName, APPLICATION_DOMAIN_SIMPLE_NAME);
+    }
+
+    protected Optional<ApplicationDomainElement> findApplicationDomain() {
+        return elementFinder.findTypeElement(getApplicationDomainQualifiedName()).map(elt -> new ApplicationDomainElement(elt, entityFinder));
+    }
+
+    protected Optional<ApplicationDomainElement> findApplicationDomainInRound(final RoundEnvironment roundEnv) {
+        return roundEnv.getRootElements().stream()
+                .filter(elt -> elt.getKind() == ElementKind.CLASS)
+                .map(elt -> (TypeElement) elt)
+                .filter(elt -> elt.getQualifiedName().contentEquals(getApplicationDomainQualifiedName()))
+                .findFirst()
+                .map(elt -> new ApplicationDomainElement(elt, entityFinder));
     }
 
 }
