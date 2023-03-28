@@ -112,20 +112,21 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
             return false;
         }
 
-        final Set<EntityElement> entities = roundEnv.getRootElements().stream()
+        final Set<EntityElement> inputEntities = roundEnv.getRootElements().stream()
             .filter(elt -> entityFinder.isEntityType(elt.asType()))
             .map(elt -> entityFinder.newEntityElement((TypeElement) elt))
-            .filter(this::isDomainEntity)
             .collect(Collectors.toSet());
 
         // removal of a registered entity will cause recompilation of ApplicationDomain, so we need to check if it's among root elements
         final Optional<ApplicationDomainElement> maybeAppDomainRootElt = findApplicationDomainInRound(roundEnv);
 
         // no input entities and no input ApplicationDomain => this change does not affect ApplicationDomain
-        if (entities.isEmpty() && maybeAppDomainRootElt.isEmpty()) {
+        if (inputEntities.isEmpty() && maybeAppDomainRootElt.isEmpty()) {
             printNote("There is nothing to do.");
             return false;
         }
+
+        final List<EntityElement> domainEntities = inputEntities.stream().filter(this::isDomainEntity).toList();
 
         // if ApplicationDomain is not among root elements, then search through the whole environment
         final Optional<ApplicationDomainElement> maybeAppDomainElt = maybeAppDomainRootElt.isEmpty() ?
@@ -133,10 +134,10 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
 
         if (maybeAppDomainElt.isPresent()) {
             printNote("Found existing %s", maybeAppDomainElt.get().getSimpleName());
-            regenerate(entities, maybeAppDomainElt.get());
+            regenerate(domainEntities, maybeAppDomainElt.get());
         } else {
             printNote("%s hasn't been generated yet.", APPLICATION_DOMAIN_SIMPLE_NAME);
-            generate(entities);
+            generate(domainEntities);
         }
 
         // TODO save the effort of regeneration if all root entities are already registered
