@@ -43,6 +43,21 @@ import ua.com.fielden.platform.processors.test_utils.ProcessorListener.AbstractR
 
 /**
  * A test suite related to {@link ApplicationDomainProcessor}.
+ * </p>
+ * Table of contents:
+ * <ul>
+ *   <li>1. Empty set of input entities -- {@code ApplicationDomain} is not generated</li>
+ *   <li>2. Non-empty set of input entities</li>
+ *   <ul>
+ *     <li>2.1 With previously generated {@code ApplicationDomain}</li>
+ *     <ul>
+ *       <li>2.1.1 Domain entity types among inputs -- {@code ApplicationDomain} is regenerated to include them</li>
+ *       <li>2.2.2 Missing entity types (e.g., due to removal) -- {@code ApplicationDomain} is regenerated to exclude them</li>
+ *       <li>2.2.3 Non-domain entity types (e.g., due to modifications) -- {@code ApplicationDomain} is regenerated to exclude them</li>
+ *     </ul>
+ *     <li>2.2 Without previously generated {@code ApplicationDomain} -- is generated from input entities</li>
+ *   </ul>
+ * </ul>
  *
  * @author TG Team
  */
@@ -50,9 +65,8 @@ public class ApplicationDomainProcessorTest {
     private static final JavaFileObject PLACEHOLDER = createJavaSource("Placeholder", "final class Placeholder {}");
     private static final String GENERATED_PKG = "test.generated.config"; // to prevent conflicts with the real processor
 
-    // no input entities => nothing is generated
     @Test
-    public void ApplicationDomain_is_not_generated_without_input_entities() {
+    public void t1_ApplicationDomain_is_not_generated_without_input_entities() {
         Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
                 .setRoundListener(new RoundListener() {
                     // we can access the generated ApplicationDomain in the 2nd round
@@ -68,9 +82,8 @@ public class ApplicationDomainProcessorTest {
                 .compile());
     }
 
-    // input entities and no pre-existing ApplicationDomain => ApplicationDomain is generated using only input entities
     @Test
-    public void from_clean_state_ApplicationDomain_is_generated_using_only_input_entities() {
+    public void t2_2_from_clean_state_ApplicationDomain_is_generated_using_only_input_entities() {
         // define 2 entity sources in different packages
         final List<JavaFile> javaFiles = List.of(
                 JavaFile.builder("a.b",
@@ -133,9 +146,8 @@ public class ApplicationDomainProcessorTest {
                 .compile());
     }
 
-    // input entities and pre-existing ApplicationDomain => ApplicationDomain is regenerated to include input entities
     @Test
-    public void new_input_entities_are_registered_with_the_existing_ApplicationDomain() throws IOException {
+    public void t2_1_1_input_domain_entities_are_registered_with_the_existing_ApplicationDomain() throws IOException {
         // we need to perform 2 compilations with a temporary storage for generated sources:
         // 1. ApplicationDomain is generated using a single input entity
         // 2. ApplicationDomain is REgenerated to include new input entities
@@ -212,7 +224,7 @@ public class ApplicationDomainProcessorTest {
     }
 
     @Test
-    public void missing_entity_types_are_unregistered_from_the_existing_ApplicationDomain() throws IOException {
+    public void t2_2_2_missing_entity_types_are_unregistered_from_the_existing_ApplicationDomain() throws IOException {
         // we need to perform 2 compilations with a temporary storage for generated sources:
         // 1. ApplicationDomain is generated using 2 input entities
         // 2. One of input entities is removed, hence ApplicationDomain is regenerated to exclude it
@@ -297,7 +309,7 @@ public class ApplicationDomainProcessorTest {
     }
 
     @Test
-    public void non_domain_entity_types_are_unregistered_from_the_existing_ApplicationDomain() throws IOException {
+    public void t2_2_3_non_domain_entity_types_are_unregistered_from_the_existing_ApplicationDomain() throws IOException {
         // we need to perform 2 compilations with a temporary storage for generated sources:
         // 1. ApplicationDomain is generated using 2 input entities
         // 2. One of input entities is modified so that it's no longer a domain entity, hence ApplicationDomain is regenerated to exclude it
