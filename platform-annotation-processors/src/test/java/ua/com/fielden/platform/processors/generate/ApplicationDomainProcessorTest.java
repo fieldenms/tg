@@ -16,12 +16,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
-import java.util.Optional;
 import java.util.Set;
 
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
@@ -38,8 +36,6 @@ import com.squareup.javapoet.TypeSpec;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
-import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.test_utils.ProcessorListener;
 import ua.com.fielden.platform.processors.test_utils.ProcessorListener.AbstractRoundListener;
@@ -61,7 +57,8 @@ public class ApplicationDomainProcessorTest {
                     // we can access the generated ApplicationDomain in the 2nd round
                     @BeforeRound(2)
                     public void beforeSecondRound(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-                        assertTrue("ApplicationDomain should not have been generated.", findApplicationDomain(roundEnv).isEmpty());
+                        assertTrue("ApplicationDomain should not have been generated.",
+                                processor.findApplicationDomainInRound(roundEnv).isEmpty());
                     }
                 });
 
@@ -92,11 +89,11 @@ public class ApplicationDomainProcessorTest {
 
                     @BeforeRound(2)
                     public void beforeSecondRound(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-                        final TypeElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.", findApplicationDomain(roundEnv));
+                        final ApplicationDomainElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
+                                processor.findApplicationDomainInRound(roundEnv));
 
                         assertEqualByContents(javaFiles.stream().map(jf -> getQualifiedName(jf)).toList(),
-                                applicationDomainFinder().streamRegisteredEntities(appDomainElt)
-                                    .map(elt -> elt.getQualifiedName().toString()).toList());
+                                appDomainElt.entities().stream().map(elt -> elt.getQualifiedName().toString()).toList());
                     }
                 });
 
@@ -122,11 +119,11 @@ public class ApplicationDomainProcessorTest {
 
                     @BeforeRound(2)
                     public void beforeSecondRound(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-                        final TypeElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.", findApplicationDomain(roundEnv));
+                        final ApplicationDomainElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
+                                processor.findApplicationDomainInRound(roundEnv));
 
                         assertEqualByContents(List.of("test.ExampleEntity"),
-                                applicationDomainFinder().streamRegisteredEntities(appDomainElt)
-                                    .map(elt -> elt.getQualifiedName().toString()).toList());
+                                appDomainElt.entities().stream().map(elt -> elt.getQualifiedName().toString()).toList());
                     }
                 });
 
@@ -185,26 +182,24 @@ public class ApplicationDomainProcessorTest {
 
                         @BeforeRound(1)
                         public void beforeFirstRound(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
-                            ElementFinder elementFinder = new ElementFinder(processor.getProcessingEnvironment().getElementUtils(), processor.getProcessingEnvironment().getTypeUtils());
-                            // assert that ApplicationDomain generated during the previous compilation exists
-                            final TypeElement appDomainElt = assertPresent("ApplicationDomain is missing.",
-                                    elementFinder.findTypeElement(processor.getApplicationDomainQualifiedName()));
+                            // assert that ApplicationDomain was generated during the previous compilation
+                            final ApplicationDomainElement appDomainElt = assertPresent("ApplicationDomain is missing.",
+                                    processor.findApplicationDomain());
+
                             // assert that exactly one entity is currently registered
                             assertEqualByContents(List.of(getQualifiedName(entity1)),
-                                    applicationDomainFinder().streamRegisteredEntities(appDomainElt)
-                                        .map(elt -> elt.getQualifiedName().toString()).toList());
+                                    appDomainElt.entities().stream().map(elt -> elt.getQualifiedName().toString()).toList());
                         }
 
                         @BeforeRound(2)
                         public void beforeSecondRound(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
                             // assert that ApplicationDomain was generated in the previous round
-                            final TypeElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
-                                    findApplicationDomain(roundEnv));
+                            final ApplicationDomainElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
+                                    processor.findApplicationDomainInRound(roundEnv));
 
                             // assert that exactly two entities were registered
                             assertEqualByContents(List.of(getQualifiedName(entity1), getQualifiedName(entity2)),
-                                    applicationDomainFinder().streamRegisteredEntities(appDomainElt)
-                                        .map(elt -> elt.getQualifiedName().toString()).toList());
+                                    appDomainElt.entities().stream().map(elt -> elt.getQualifiedName().toString()).toList());
                         }
                     });
 
@@ -224,27 +219,6 @@ public class ApplicationDomainProcessorTest {
     }
 
     /** A round listener tailored for {@link ApplicationDomainProcessor}. */
-    private static abstract class RoundListener extends AbstractRoundListener<ApplicationDomainProcessor> {
-
-        public ApplicationDomainFinder applicationDomainFinder() {
-            return new ApplicationDomainFinder(new EntityFinder(
-                    processor.getProcessingEnvironment().getElementUtils(), processor.getProcessingEnvironment().getTypeUtils()));
-        }
-
-        /**
-         * Finds a type element representing {@link ApplicationDomain} among the root elements of a processing round.
-         *
-         * @param roundEnv  the round environment
-         * @return  {@link Optional} describing the type element that represents {@link ApplicationDomain}
-         */
-        public Optional<TypeElement> findApplicationDomain(final RoundEnvironment roundEnv) {
-            return roundEnv.getRootElements().stream()
-                .filter(elt -> elt.getKind() == ElementKind.CLASS)
-                .map(elt -> (TypeElement) elt)
-                .filter(elt -> elt.getQualifiedName().contentEquals(processor.getApplicationDomainQualifiedName()))
-                .findFirst();
-        }
-
-    }
+    private static abstract class RoundListener extends AbstractRoundListener<ApplicationDomainProcessor> { }
 
 }
