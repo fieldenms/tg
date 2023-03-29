@@ -31,12 +31,15 @@ import javax.tools.ToolProvider;
 import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
+import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeSpec;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
+import ua.com.fielden.platform.processors.generate.annotation.RegisterExternalEntity;
+import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.test_utils.ProcessorListener;
 import ua.com.fielden.platform.processors.test_utils.ProcessorListener.AbstractRoundListener;
@@ -46,7 +49,12 @@ import ua.com.fielden.platform.processors.test_utils.ProcessorListener.AbstractR
  * </p>
  * Table of contents:
  * <ul>
- *   <li>1. Empty set of input entities -- {@code ApplicationDomain} is not generated</li>
+ *   <li>1. Empty set of input entities</li>
+ *     <ul>
+ *       <li>1.1 A type annotated with {@link RegisterExternalEntity} among input elements -- {@code ApplicationDomain} is regenerated to
+ *       include external entities if they hadn't been registered yet</li>
+ *       <li>1.2 Empty set of types annotated with {@link RegisterExternalEntity} among inputs -- nothing to do</li>
+ *     </ul>
  *   <li>2. Non-empty set of input entities</li>
  *   <ul>
  *     <li>2.1 With previously generated {@code ApplicationDomain}</li>
@@ -66,7 +74,44 @@ public class ApplicationDomainProcessorTest {
     private static final String GENERATED_PKG = "test.generated.config"; // to prevent conflicts with the real processor
 
     @Test
-    public void t1_ApplicationDomain_is_not_generated_without_input_entities() {
+    public void t1_1_external_entities_can_be_specified_to_be_registered() {
+        final JavaFile internalEntity = JavaFile.builder("test",
+                TypeSpec.classBuilder("First").addModifiers(PUBLIC)
+                .superclass(ParameterizedTypeName.get(AbstractEntity.class, String.class))
+                .build())
+            .build();
+        final JavaFile externalRegister = JavaFile.builder("test",
+                TypeSpec.classBuilder("ExternalEntities")
+                .addAnnotation(AnnotationSpec.builder(RegisterExternalEntity.class)
+                        .addMember("value", "$T.class", ExampleEntity.class) // suppose this is an external entity
+                        .build())
+                // include an internal entity to assert that it will be registered only once
+                .addAnnotation(AnnotationSpec.builder(RegisterExternalEntity.class)
+                        .addMember("value", "$N.class", internalEntity.typeSpec)
+                        .build())
+                .build())
+            .build();
+
+        final Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
+                .setRoundListener(new RoundListener() {
+
+                    @BeforeRound(2)
+                    public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+                        final ApplicationDomainElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
+                                processor.findApplicationDomainInRound(roundEnv));
+
+                        assertEqualByContents(List.of(ExampleEntity.class.getCanonicalName(), getQualifiedName(internalEntity)),
+                                appDomainElt.entities().stream().map(elt -> elt.getQualifiedName().toString()).toList());
+                    }
+                });
+
+        assertSuccess(Compilation.newInMemory(List.of(internalEntity.toJavaFileObject(), externalRegister.toJavaFileObject()))
+                .setProcessor(processor).addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
+                .compile());
+    }
+
+    @Test
+    public void t1_2_ApplicationDomain_is_not_generated_without_input_entities() {
         final Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
                 .setRoundListener(new RoundListener() {
                     // we can access the generated ApplicationDomain in the 2nd round

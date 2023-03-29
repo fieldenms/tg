@@ -44,6 +44,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
 import ua.com.fielden.platform.processors.annotation.ProcessedValue;
 import ua.com.fielden.platform.processors.exceptions.ProcessorInitializationException;
+import ua.com.fielden.platform.processors.generate.annotation.RegisterExternalEntity;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
@@ -61,6 +62,9 @@ import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
  *     <li>Remove entity types that are no longer domain entities</li>
  *   </ul>
  * </ul>
+ *
+ * To register 3rd-party entities (e.g., those that come from dependencies), they must be declared by annotating an arbitrary type with
+ * {@link RegisterExternalEntity}. Typically, this would be a designated bare class declaring the mentioned annotations.
  *
  * @author TG Team
  */
@@ -115,16 +119,22 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
             .map(elt -> entityFinder.newEntityElement((TypeElement) elt))
             .collect(Collectors.toSet());
 
+        // find 3rd-party entities in this round
+        final List<EntityElement> externalEntities = collectExternalEntitiesInRound(roundEnv);
+        printNote("Found %s external entities to register.".formatted(externalEntities.size()));
+
         // removal of a registered entity will cause recompilation of ApplicationDomain, so we need to check if it's among root elements
         final Optional<ApplicationDomainElement> maybeAppDomainRootElt = findApplicationDomainInRound(roundEnv);
 
         // no input entities and no input ApplicationDomain => this change does not affect ApplicationDomain
-        if (inputEntities.isEmpty() && maybeAppDomainRootElt.isEmpty()) {
+        if (inputEntities.isEmpty() && externalEntities.isEmpty() && maybeAppDomainRootElt.isEmpty()) {
             printNote("There is nothing to do.");
             return false;
         }
 
-        final List<EntityElement> domainEntities = inputEntities.stream().filter(this::isDomainEntity).toList();
+        final Set<EntityElement> domainEntities = new HashSet<>(inputEntities.size() + externalEntities.size());
+        domainEntities.addAll(inputEntities.stream().filter(this::isDomainEntity).toList());
+        domainEntities.addAll(externalEntities);
 
         // if ApplicationDomain is not among root elements, then search through the whole environment
         final Optional<ApplicationDomainElement> maybeAppDomainElt = maybeAppDomainRootElt.isEmpty() ?
@@ -306,6 +316,16 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
                 .filter(elt -> elt.getQualifiedName().contentEquals(getApplicationDomainQualifiedName()))
                 .findFirst()
                 .map(elt -> new ApplicationDomainElement(elt, entityFinder));
+    }
+
+    protected List<EntityElement> collectExternalEntitiesInRound(final RoundEnvironment roundEnv) {
+        return roundEnv.getRootElements().stream()
+                .map(elt -> RegisterExternalEntity.Mirror.fromAnnotated(elt, elementFinder))
+                .filter(Optional::isPresent)
+                // extract the TypeMirror instances representing the external entities from annotations
+                .flatMap(annotMirror -> annotMirror.get().values().stream())
+                .map(typeMirror -> entityFinder.newEntityElement(ElementFinder.asTypeElementOfTypeMirror(typeMirror)))
+                .toList();
     }
 
 }
