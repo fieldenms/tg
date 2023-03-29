@@ -51,7 +51,7 @@ import ua.com.fielden.platform.processors.test_utils.ProcessorListener.AbstractR
  *   <ul>
  *     <li>2.1 With previously generated {@code ApplicationDomain}</li>
  *     <ul>
- *       <li>2.1.1 Domain entity types among inputs -- {@code ApplicationDomain} is regenerated to include them</li>
+ *       <li>2.1.1 Domain entity types among inputs -- {@code ApplicationDomain} is regenerated to include them in case they hadn't been included yet</li>
  *       <li>2.2.2 Missing entity types (e.g., due to removal) -- {@code ApplicationDomain} is regenerated to exclude them</li>
  *       <li>2.2.3 Non-domain entity types (e.g., due to modifications) -- {@code ApplicationDomain} is regenerated to exclude them</li>
  *     </ul>
@@ -67,11 +67,11 @@ public class ApplicationDomainProcessorTest {
 
     @Test
     public void t1_ApplicationDomain_is_not_generated_without_input_entities() {
-        Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
+        final Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
                 .setRoundListener(new RoundListener() {
                     // we can access the generated ApplicationDomain in the 2nd round
                     @BeforeRound(2)
-                    public void beforeSecondRound(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+                    public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                         assertTrue("ApplicationDomain should not have been generated.",
                                 processor.findApplicationDomainInRound(roundEnv).isEmpty());
                     }
@@ -102,7 +102,7 @@ public class ApplicationDomainProcessorTest {
                 .setRoundListener(new RoundListener() {
 
                     @BeforeRound(2)
-                    public void beforeSecondRound(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+                    public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                         final ApplicationDomainElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
                                 processor.findApplicationDomainInRound(roundEnv));
 
@@ -132,7 +132,7 @@ public class ApplicationDomainProcessorTest {
                 .setRoundListener(new RoundListener() {
 
                     @BeforeRound(2)
-                    public void beforeSecondRound(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+                    public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                         final ApplicationDomainElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
                                 processor.findApplicationDomainInRound(roundEnv));
 
@@ -194,7 +194,7 @@ public class ApplicationDomainProcessorTest {
                     .setRoundListener(new RoundListener() {
 
                         @BeforeRound(1)
-                        public void beforeFirstRound(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+                        public void beforeFirstRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                             // assert that ApplicationDomain was generated during the previous compilation
                             final ApplicationDomainElement appDomainElt = assertPresent("ApplicationDomain is missing.",
                                     processor.findApplicationDomain());
@@ -205,7 +205,7 @@ public class ApplicationDomainProcessorTest {
                         }
 
                         @BeforeRound(2)
-                        public void beforeSecondRound(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+                        public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                             // assert that ApplicationDomain was generated in the previous round
                             final ApplicationDomainElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
                                     processor.findApplicationDomainInRound(roundEnv));
@@ -275,7 +275,7 @@ public class ApplicationDomainProcessorTest {
                     .setRoundListener(new RoundListener() {
 
                         @BeforeRound(1)
-                        public void beforeFirstRound(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+                        public void beforeFirstRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                             // assert that ApplicationDomain was generated during the previous compilation
                             final ApplicationDomainElement appDomainElt = assertPresent("ApplicationDomain is missing.",
                                     processor.findApplicationDomain());
@@ -288,7 +288,7 @@ public class ApplicationDomainProcessorTest {
                         }
 
                         @BeforeRound(2)
-                        public void beforeSecondRound(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+                        public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                             // assert that ApplicationDomain was regenerated in the previous round
                             final ApplicationDomainElement appDomainElt = assertPresent("Regenerated ApplicationDomain is missing.",
                                     processor.findApplicationDomainInRound(roundEnv));
@@ -366,7 +366,7 @@ public class ApplicationDomainProcessorTest {
                     .setRoundListener(new RoundListener() {
 
                         @BeforeRound(1)
-                        public void beforeFirstRound(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+                        public void beforeFirstRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                             // assert that ApplicationDomain was generated during the previous compilation
                             final ApplicationDomainElement appDomainElt = assertPresent("ApplicationDomain is missing.",
                                     processor.findApplicationDomain());
@@ -377,7 +377,7 @@ public class ApplicationDomainProcessorTest {
                         }
 
                         @BeforeRound(2)
-                        public void beforeSecondRound(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+                        public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
                             // assert that ApplicationDomain was regenerated in the previous round
                             final ApplicationDomainElement appDomainElt = assertPresent("Regenerated ApplicationDomain is missing.",
                                     processor.findApplicationDomainInRound(roundEnv));
