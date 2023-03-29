@@ -65,6 +65,9 @@ import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
  *
  * To register 3rd-party entities (e.g., those that come from dependencies), they must be declared by annotating an arbitrary type with
  * {@link RegisterExternalEntity}. Typically, this would be a designated bare class declaring the mentioned annotations.
+ * <p>
+ * <i>Incremental unregistration</i> of 3rd-party entities is currently not supported as it would add more complexity to the processor for little
+ * benefit (due to the rarity of such occurences). Therefore, a clean build should be used for this purpose.
  *
  * @author TG Team
  */
@@ -121,7 +124,9 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
 
         // find 3rd-party entities in this round
         final List<EntityElement> externalEntities = collectExternalEntitiesInRound(roundEnv);
-        printNote("Found %s external entities to register.".formatted(externalEntities.size()));
+        if (!externalEntities.isEmpty()) {
+            printNote("Found %s external entities to register.".formatted(externalEntities.size()));
+        }
 
         // removal of a registered entity will cause recompilation of ApplicationDomain, so we need to check if it's among root elements
         final Optional<ApplicationDomainElement> maybeAppDomainRootElt = findApplicationDomainInRound(roundEnv);
