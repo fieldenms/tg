@@ -32,6 +32,7 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
 import com.squareup.javapoet.AnnotationSpec;
+import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeSpec;
@@ -87,7 +88,7 @@ public class ApplicationDomainProcessorTest {
                         .build())
                 // include an internal entity to assert that it will be registered only once
                 .addAnnotation(AnnotationSpec.builder(RegisterExternalEntity.class)
-                        .addMember("value", "$N.class", internalEntity.typeSpec)
+                        .addMember("value", "$T.class", ClassName.get(internalEntity.packageName, internalEntity.typeSpec.name))
                         .build())
                 .build())
             .build();
