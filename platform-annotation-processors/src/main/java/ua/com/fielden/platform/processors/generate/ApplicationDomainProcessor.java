@@ -165,8 +165,8 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
                 unchanged.size(), appDomainElt.errorTypes().size(), toBeUnregistered.size());
 
         // consider if we actually need to regenerate
-        if (!appDomainElt.errorTypes().isEmpty() || !toBeUnregistered.isEmpty()                  // anything to exclude?
-                || entities.stream().anyMatch(elt -> !appDomainElt.entities().contains(elt))) {  // anything to include?
+        if (!appDomainElt.errorTypes().isEmpty() || !toBeUnregistered.isEmpty() // anything to exclude?
+                || !appDomainElt.entities().containsAll(entities)) {  // anything to include?
             printNote("Regenerating %s", appDomainElt.getSimpleName());
 
             final Set<EntityElement> toRegister = new HashSet<>(unchanged.size() + entities.size());
