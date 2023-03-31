@@ -1,6 +1,6 @@
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
-import '/resources/polymer/@polymer/paper-dialog/paper-dialog.js'
-import '/resources/polymer/@polymer/paper-dialog-scrollable/paper-dialog-scrollable.js'
+import '/resources/polymer/@polymer/paper-dialog/paper-dialog.js';
+import '/resources/polymer/@polymer/paper-dialog-scrollable/paper-dialog-scrollable.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/polymer/@polymer/paper-button/paper-button.js';
 import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';

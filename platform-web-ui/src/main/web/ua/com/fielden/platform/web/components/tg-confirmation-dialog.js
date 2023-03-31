@@ -1,11 +1,14 @@
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
+import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/paper-button/paper-button.js';
 import '/resources/polymer/@polymer/paper-dialog/paper-dialog.js';
+import '/resources/polymer/@polymer/paper-dialog-scrollable/paper-dialog-scrollable.js';
 import '/resources/polymer/@polymer/polymer/lib/elements/dom-bind.js';
 import '/resources/polymer/@polymer/polymer/lib/elements/dom-repeat.js';
 
+import { containsRestictedTags } from '/resources/reflection/tg-polymer-utils.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { ExpectedError } from '/resources/components/tg-global-error-handler.js';
 
@@ -35,7 +38,9 @@ dialogModel.innerHTML = `
             on-iron-overlay-canceled="rejectDialog"
             on-iron-overlay-opened="dialogOpened"
             on-iron-overlay-closed="dialogClosed">
-            <div style="padding: 20px;" inner-h-t-m-l="[[message]]"></div>
+            <paper-dialog-scrollable>
+                <p id="msgPar" style="padding: 10px;white-space: break-spaces;"></p>
+            </paper-dialog-scrollable>
             <div class="buttons">
                 <template is="dom-repeat" items="[[buttons]]">
                     <paper-button dialog-confirm$="[[item.confirm]]" dialog-dismiss$="[[!item.confirm]]" autofocus$="[[item.autofocus]]" on-tap="_action">[[item.name]]</paper-button>
@@ -133,7 +138,11 @@ Polymer({
                 restoreActiveElement();
             };
 
-            dialogModel.message = message;
+            if (containsRestictedTags(message) === true) {
+                dialogModel.$.msgPar.textContent = message;
+            } else {
+                dialogModel.$.msgPar.innerHTML = message;
+            }
             dialogModel.buttons = buttons;
             dialogModel.showDialog();
         });
