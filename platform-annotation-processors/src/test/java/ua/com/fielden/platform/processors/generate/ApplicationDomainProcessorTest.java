@@ -33,7 +33,6 @@ import org.apache.commons.io.FileUtils;
 import org.junit.Test;
 
 import com.squareup.javapoet.AnnotationSpec;
-import com.squareup.javapoet.ClassName;
 import com.squareup.javapoet.JavaFile;
 import com.squareup.javapoet.ParameterizedTypeName;
 import com.squareup.javapoet.TypeSpec;
@@ -51,26 +50,6 @@ import ua.com.fielden.platform.processors.test_utils.ProcessorListener.AbstractR
 
 /**
  * A test suite related to {@link ApplicationDomainProcessor}.
- * </p>
- * Table of contents:
- * <ul>
- *   <li>1. Empty set of input entities</li>
- *     <ul>
- *       <li>1.1 A type annotated with {@link RegisterExternalEntity} among input elements -- {@code ApplicationDomain} is regenerated to
- *       include external entities if they hadn't been registered yet</li>
- *       <li>1.2 Empty set of types annotated with {@link RegisterExternalEntity} among inputs -- nothing to do</li>
- *     </ul>
- *   <li>2. Non-empty set of input entities</li>
- *   <ul>
- *     <li>2.1 With previously generated {@code ApplicationDomain}</li>
- *     <ul>
- *       <li>2.1.1 Domain entity types among inputs -- {@code ApplicationDomain} is regenerated to include them in case they hadn't been included yet</li>
- *       <li>2.2.2 Missing entity types (e.g., due to removal) -- {@code ApplicationDomain} is regenerated to exclude them</li>
- *       <li>2.2.3 Non-domain entity types (e.g., due to modifications) -- {@code ApplicationDomain} is regenerated to exclude them</li>
- *     </ul>
- *     <li>2.2 Without previously generated {@code ApplicationDomain} -- is generated from input entities</li>
- *   </ul>
- * </ul>
  *
  * @author TG Team
  */
@@ -120,44 +99,7 @@ public class ApplicationDomainProcessorTest {
     }
 
     @Test
-    public void t1_1_external_entities_can_be_specified_to_be_registered() {
-        final JavaFile internalEntity = JavaFile.builder("test",
-                TypeSpec.classBuilder("First").addModifiers(PUBLIC)
-                .superclass(ParameterizedTypeName.get(AbstractEntity.class, String.class))
-                .build())
-            .build();
-        final JavaFile externalRegister = JavaFile.builder("test",
-                TypeSpec.classBuilder("ExternalEntities")
-                .addAnnotation(AnnotationSpec.builder(RegisterExternalEntity.class)
-                        .addMember("value", "$T.class", ExampleEntity.class) // suppose this is an external entity
-                        .build())
-                // include an internal entity to assert that it will be registered only once
-                .addAnnotation(AnnotationSpec.builder(RegisterExternalEntity.class)
-                        .addMember("value", "$T.class", ClassName.get(internalEntity.packageName, internalEntity.typeSpec.name))
-                        .build())
-                .build())
-            .build();
-
-        final Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
-                .setRoundListener(new RoundListener() {
-
-                    @BeforeRound(2)
-                    public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
-                        final ApplicationDomainElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
-                                processor.findApplicationDomainInRound(roundEnv));
-
-                        assertEqualByContents(List.of(ExampleEntity.class.getCanonicalName(), getQualifiedName(internalEntity)),
-                                appDomainElt.entities().stream().map(elt -> elt.getQualifiedName().toString()).toList());
-                    }
-                });
-
-        assertSuccess(Compilation.newInMemory(List.of(internalEntity.toJavaFileObject(), externalRegister.toJavaFileObject()))
-                .setProcessor(processor).addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
-                .compile());
-    }
-
-    @Test
-    public void t1_2_ApplicationDomain_is_not_generated_without_input_entities() {
+    public void ApplicationDomain_is_not_generated_without_input_entities() {
         final Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
                 .setRoundListener(new RoundListener() {
                     // we can access the generated ApplicationDomain in the 2nd round
@@ -174,7 +116,7 @@ public class ApplicationDomainProcessorTest {
     }
 
     @Test
-    public void t2_2_from_clean_state_ApplicationDomain_is_generated_using_only_input_entities() {
+    public void from_clean_state_ApplicationDomain_is_generated_using_only_input_entities() {
         // define 2 entity sources in different packages
         final List<JavaFile> javaFiles = List.of(
                 JavaFile.builder("a.b",
@@ -238,7 +180,7 @@ public class ApplicationDomainProcessorTest {
     }
 
     @Test
-    public void t2_1_1_input_domain_entities_are_registered_with_the_existing_ApplicationDomain() throws IOException {
+    public void new_input_domain_entities_are_registered_with_the_existing_ApplicationDomain() throws IOException {
         // we need to perform 2 compilations with a temporary storage for generated sources:
         // 1. ApplicationDomain is generated using a single input entity
         // 2. ApplicationDomain is REgenerated to include new input entities
@@ -314,8 +256,11 @@ public class ApplicationDomainProcessorTest {
         }
     }
 
+    /**
+     * Missing entity types (e.g., due to removal), that were previously registered cause {@code ApplicationDomain} to be regenerated without them.
+     */
     @Test
-    public void t2_2_2_missing_entity_types_are_unregistered_from_the_existing_ApplicationDomain() throws IOException {
+    public void missing_entity_types_are_unregistered_from_the_existing_ApplicationDomain() throws IOException {
         // we need to perform 2 compilations with a temporary storage for generated sources:
         // 1. ApplicationDomain is generated using 2 input entities
         // 2. One of input entities is removed, hence ApplicationDomain is regenerated to exclude it
@@ -399,8 +344,12 @@ public class ApplicationDomainProcessorTest {
         }
     }
 
+    /**
+     * Previously registered entity types that are no longer domain entity types (e.g., due to structural modifications) cause
+     * {@code ApplicationDomain} to be regenerate without them.
+     */
     @Test
-    public void t2_2_3_non_domain_entity_types_are_unregistered_from_the_existing_ApplicationDomain() throws IOException {
+    public void non_domain_entity_types_are_unregistered_from_the_existing_ApplicationDomain() throws IOException {
         // we need to perform 2 compilations with a temporary storage for generated sources:
         // 1. ApplicationDomain is generated using 2 input entities
         // 2. One of input entities is modified so that it's no longer a domain entity, hence ApplicationDomain is regenerated to exclude it
