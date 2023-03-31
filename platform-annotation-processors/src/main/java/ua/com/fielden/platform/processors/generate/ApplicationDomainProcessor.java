@@ -124,40 +124,41 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
             return false;
         }
 
+        // Gather information sources.
+        // We look only at input elements to determine the kind of build being performed (incremental / full) with respect to ApplicationDomain
+        // (regenerate / generate from scratch).
+
+        // 1. input entities (all of them, not just domain ones)
         final Set<EntityElement> inputEntities = roundEnv.getRootElements().stream()
             .filter(elt -> entityFinder.isEntityType(elt.asType()))
             .map(elt -> entityFinder.newEntityElement((TypeElement) elt))
             .collect(Collectors.toSet());
 
-        // find 3rd-party entities in this round
-        final List<EntityElement> externalEntities = collectExternalEntitiesInRound(roundEnv);
-        if (!externalEntities.isEmpty()) {
-            printNote("Found %s external entities to register.".formatted(externalEntities.size()));
-        }
-
-        // removal of a registered entity will cause recompilation of ApplicationDomain, so we need to check if it's among root elements
+        // 2. previously generated ApplicationDomain
+        // removal of a registered entity will cause recompilation of ApplicationDomain
         final Optional<ApplicationDomainElement> maybeAppDomainRootElt = findApplicationDomainInRound(roundEnv);
 
-        // no input entities and no input ApplicationDomain => this change does not affect ApplicationDomain
-        if (inputEntities.isEmpty() && externalEntities.isEmpty() && maybeAppDomainRootElt.isEmpty()) {
+        // 3. input extensions
+        final List<ExtendApplicationDomain.Mirror> inputExtensions = findApplicationDomainExtensionsInRound(roundEnv);
+
+        // this is an incremental build, but it doesn't affect us
+        if (inputEntities.isEmpty() && maybeAppDomainRootElt.isEmpty() && inputExtensions.isEmpty()) {
             printNote("There is nothing to do.");
             return false;
         }
-
-        final Set<EntityElement> domainEntities = new HashSet<>(inputEntities.size() + externalEntities.size());
-        domainEntities.addAll(inputEntities.stream().filter(this::isDomainEntity).toList());
-        domainEntities.addAll(externalEntities);
 
         // if ApplicationDomain is not among root elements, then search through the whole environment
         final Optional<ApplicationDomainElement> maybeAppDomainElt = maybeAppDomainRootElt.isEmpty() ?
                 findApplicationDomain() : maybeAppDomainRootElt.map(elt -> new ApplicationDomainElement(elt, entityFinder));
 
         if (maybeAppDomainElt.isPresent()) {
+            // incremental build <=> regenerate
             printNote("Found existing %s", maybeAppDomainElt.get().getSimpleName());
-            regenerate(domainEntities, maybeAppDomainElt.get());
+            regenerate(maybeAppDomainElt.get(), inputEntities, inputExtensions);
         } else {
+            // generate from scratch
             printNote("%s hasn't been generated yet.", APPLICATION_DOMAIN_SIMPLE_NAME);
-            generate(domainEntities);
+            generate(inputEntities, inputExtensions);
         }
 
         return false;
@@ -167,12 +168,24 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         return !ElementFinder.isAbstract(entity.element());
     }
 
-    private void generate(final Collection<EntityElement> entities) {
+    private void generate(final Collection<EntityElement> inputEntities, final Collection<ExtendApplicationDomain.Mirror> inputExtensions) {
         printNote("Generating %s from scratch", APPLICATION_DOMAIN_SIMPLE_NAME);
-        writeApplicationDomain(entities);
+        // TODO collect entities from extensions
+        writeApplicationDomain(inputEntities);
     }
 
-    private void regenerate(final Collection<EntityElement> entities, final ApplicationDomainElement appDomainElt) {
+    private void regenerate(
+            final ApplicationDomainElement appDomainElt,
+            final Collection<EntityElement> inputEntities, final Collection<ExtendApplicationDomain.Mirror> inputExtensions)
+    {
+        // TODO analyse input entities
+        // * domain entities -- are there any new ones we need to register?
+        // * non-domain entities -- were any of them registered? (which will mean we need to unregister them)
+
+        // TODO analyse input extensions
+        // * are there any new entity types we need to register?
+        // * are there any registered entities originating from extensions that need to be unregistered?
+
         final List<EntityElement> unchanged = new LinkedList<>();
         final List<EntityElement> toBeUnregistered = new LinkedList<>();
         appDomainElt.entities().forEach(ent -> {
@@ -188,12 +201,12 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
 
         // consider if we actually need to regenerate
         if (!appDomainElt.errorTypes().isEmpty() || !toBeUnregistered.isEmpty() // anything to exclude?
-                || !appDomainElt.entities().containsAll(entities)) {  // anything to include?
+                || !appDomainElt.entities().containsAll(inputEntities)) {  // anything to include?
             printNote("Regenerating %s", appDomainElt.getSimpleName());
 
-            final Set<EntityElement> toRegister = new HashSet<>(unchanged.size() + entities.size());
+            final Set<EntityElement> toRegister = new HashSet<>(unchanged.size() + inputEntities.size());
             toRegister.addAll(unchanged);
-            toRegister.addAll(entities);
+            toRegister.addAll(inputEntities);
             writeApplicationDomain(toRegister);
         }
     }
@@ -328,6 +341,19 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
                 .filter(elt -> elt.getQualifiedName().contentEquals(getApplicationDomainQualifiedName()))
                 .findFirst()
                 .map(elt -> new ApplicationDomainElement(elt, entityFinder));
+    }
+
+    /**
+     * Returns a list of modelled instances of {@link ExtendApplicationDomain} annotation.
+     * @param roundEnv
+     * @return
+     */
+    protected List<ExtendApplicationDomain.Mirror> findApplicationDomainExtensionsInRound(final RoundEnvironment roundEnv) {
+        return roundEnv.getRootElements().stream()
+                .map(elt -> ExtendApplicationDomain.Mirror.fromAnnotated(elt, entityFinder))
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .toList();
     }
 
     protected List<EntityElement> collectExternalEntitiesInRound(final RoundEnvironment roundEnv) {
