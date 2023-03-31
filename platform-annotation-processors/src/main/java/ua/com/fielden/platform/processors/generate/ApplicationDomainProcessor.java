@@ -44,7 +44,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
 import ua.com.fielden.platform.processors.annotation.ProcessedValue;
 import ua.com.fielden.platform.processors.exceptions.ProcessorInitializationException;
-import ua.com.fielden.platform.processors.generate.annotation.RegisterExternalEntity;
+import ua.com.fielden.platform.processors.generate.annotation.ExtendApplicationDomain;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
@@ -52,22 +52,29 @@ import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 /**
  * An annotation processor that generates and maintains the {@code ApplicationDomain} class, which implements {@link IApplicationDomainProvider}.
  * <p>
- * The processor's behaviour depends on the existence of previously generated {@code ApplicationDomain}:
+ * The following sources of information are taken into account during processing:
+ * <ol>
+ *   <li>Set of input entities.</li>
+ *   <li>Previously generated {@code ApplicationDomain}.</li>
+ *   <li>Extensions, i.e., types annotated with {@link ExtendApplicationDomain}. Generally, there should be a single such type.</li>
+ * </ol>
+ *
+ * <p>
+ * The maintenance of the generated {@code ApplicationDomain} is carried out according to the following rules:
  * <ul>
- *   <li>Doesn't exist -- simply generates it from scratch</li>
- *   <li>Exists -- might need to regenerate it considering the following:</li>
- *   <ul>
- *     <li>Register new domain entity types</li>
- *     <li>Remove entity types that cannot be located any more (e.g., due to removal of the java source)</li>
- *     <li>Remove entity types that are no longer domain entities</li>
- *   </ul>
+ *  <li>New domain entity types are incrementally registered.</li>
+ *  <li>Registered entity types that cannot be located any more (e.g., due to removal of the java source) are deregistered.</li>
+ *  <li>Registered entity types that no longer wish to be registered or are structurally modified in such a way that they are no longer
+ *      domain entity types are deregistered.</li>
  * </ul>
  *
- * To register 3rd-party entities (e.g., those that come from dependencies), they must be declared by annotating an arbitrary type with
- * {@link RegisterExternalEntity}. Typically, this would be a designated bare class declaring the mentioned annotations.
+ * Renaming of java sources by means of the IDE refactoring capabilites should automatically lead to the respective renaming in the generated
+ * {@code ApplicationDomain}.
  * <p>
- * <i>Incremental unregistration</i> of 3rd-party entities is currently not supported as it would add more complexity to the processor for little
- * benefit (due to the rarity of such occurences). Therefore, a clean build should be used for this purpose.
+ *
+ * <h3>Registration of 3rd-party entities</h3>
+ * 3rd-party entities are those that come from dependencies. Their registration requires a designated application-level class that
+ * must be annotated with {@link ExtendApplicationDomain}, which shall be used to specify them.
  *
  * @author TG Team
  */
@@ -324,13 +331,15 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
     }
 
     protected List<EntityElement> collectExternalEntitiesInRound(final RoundEnvironment roundEnv) {
-        return roundEnv.getRootElements().stream()
-                .map(elt -> RegisterExternalEntity.Mirror.fromAnnotated(elt, elementFinder))
-                .filter(Optional::isPresent)
-                // extract the TypeMirror instances representing the external entities from annotations
-                .flatMap(annotMirror -> annotMirror.get().values().stream())
-                .map(typeMirror -> entityFinder.newEntityElement(ElementFinder.asTypeElementOfTypeMirror(typeMirror)))
-                .toList();
+//        return roundEnv.getRootElements().stream()
+//                .map(elt -> RegisterEntity.Mirror.fromAnnotated(elt, elementFinder))
+//                .filter(Optional::isPresent)
+//                // extract the TypeMirror instances representing the external entities from annotations
+//                .flatMap(annotMirror -> annotMirror.get().values().stream())
+//                .map(typeMirror -> entityFinder.newEntityElement(ElementFinder.asTypeElementOfTypeMirror(typeMirror)))
+//                .toList();
+        // FIXME
+        return List.of();
     }
 
 }
