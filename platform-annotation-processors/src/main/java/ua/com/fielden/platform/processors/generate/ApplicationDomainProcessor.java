@@ -45,6 +45,7 @@ import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
 import ua.com.fielden.platform.processors.annotation.ProcessedValue;
 import ua.com.fielden.platform.processors.exceptions.ProcessorInitializationException;
 import ua.com.fielden.platform.processors.generate.annotation.ExtendApplicationDomain;
+import ua.com.fielden.platform.processors.generate.annotation.RegisterEntity;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
@@ -170,8 +171,21 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
 
     private void generate(final Collection<EntityElement> inputEntities, final Collection<ExtendApplicationDomain.Mirror> inputExtensions) {
         printNote("Generating %s from scratch", APPLICATION_DOMAIN_SIMPLE_NAME);
-        // TODO collect entities from extensions
-        writeApplicationDomain(inputEntities);
+
+        final Set<EntityElement> extensionEntities = inputExtensions.stream()
+            .flatMap(mirr -> mirr.entities().stream()) // stream of Mirror instances of @RegisterEntity
+            .map(RegisterEntity.Mirror::value) // map to EntityElement
+            .collect(Collectors.toSet());
+
+        if (extensionEntities.isEmpty()) {
+            writeApplicationDomain(inputEntities);
+        } else {
+            printNote("Found %s entities from extensions.".formatted(extensionEntities.size()));
+            final Set<EntityElement> allEntities = new HashSet<>(inputEntities.size() + extensionEntities.size());
+            allEntities.addAll(inputEntities);
+            allEntities.addAll(extensionEntities);
+            writeApplicationDomain(allEntities);
+        }
     }
 
     private void regenerate(
