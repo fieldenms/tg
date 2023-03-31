@@ -25,14 +25,25 @@ confirmationDialogStyle.setAttribute('style', 'display: none;');
 document.head.appendChild(confirmationDialogStyle.content);
 
 const dialogModel = document.createElement('dom-bind');
-dialogModel.innerHTML = '<template><paper-dialog id="confirmDialog" class="confirm-dialog layout vertical" modal always-on-top entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-canceled="dialogCanceled" on-iron-overlay-opened="dialogOpened" on-iron-overlay-closed="dialogClosed">' +
-    '<div style="padding: 20px;" inner-h-t-m-l="[[message]]"></div>' +
-    '<div class="buttons">' +
-    '<template is="dom-repeat" items="[[buttons]]">' +
-    '<paper-button dialog-confirm$="[[item.confirm]]" dialog-dismiss$="[[!item.confirm]]" autofocus$="[[item.autofocus]]" on-tap="_action">[[item.name]]</paper-button>' +
-    '</template>' +
-    '</div>' +
-    '</paper-dialog></template>';
+dialogModel.innerHTML = `
+    <template>
+        <paper-dialog id="confirmDialog" class="confirm-dialog layout vertical"
+            modal
+            always-on-top
+            entry-animation="scale-up-animation"
+            exit-animation="fade-out-animation"
+            on-iron-overlay-canceled="dialogCanceled"
+            on-iron-overlay-opened="dialogOpened"
+            on-iron-overlay-closed="dialogClosed">
+            <div style="padding: 20px;" inner-h-t-m-l="[[message]]"></div>
+            <div class="buttons">
+                <template is="dom-repeat" items="[[buttons]]">
+                    <paper-button dialog-confirm$="[[item.confirm]]" dialog-dismiss$="[[!item.confirm]]" autofocus$="[[item.autofocus]]" on-tap="_action">[[item.name]]</paper-button>
+                </template>
+            </div>
+        </paper-dialog>
+    </template>
+`;
 
 dialogModel.showDialog = function () {
     const dialog = dialogModel.$.confirmDialog;
