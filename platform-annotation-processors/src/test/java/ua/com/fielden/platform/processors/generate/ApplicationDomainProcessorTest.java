@@ -18,6 +18,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.stream.Stream;
 
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
@@ -39,8 +40,11 @@ import com.squareup.javapoet.TypeSpec;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.processors.generate.annotation.RegisterExternalEntity;
+import ua.com.fielden.platform.processors.generate.annotation.ExtendApplicationDomain;
+import ua.com.fielden.platform.processors.generate.annotation.RegisterEntity;
 import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
+import ua.com.fielden.platform.processors.test_entities.PersistentEntity;
+import ua.com.fielden.platform.processors.test_entities.SuperEntity;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.test_utils.ProcessorListener;
 import ua.com.fielden.platform.processors.test_utils.ProcessorListener.AbstractRoundListener;
@@ -73,6 +77,47 @@ import ua.com.fielden.platform.processors.test_utils.ProcessorListener.AbstractR
 public class ApplicationDomainProcessorTest {
     private static final JavaFileObject PLACEHOLDER = createJavaSource("Placeholder", "final class Placeholder {}");
     private static final String GENERATED_PKG = "test.generated.config"; // to prevent conflicts with the real processor
+
+    @Test
+    public void entities_specified_by_extensions_are_registered() {
+        final JavaFile firstExtension = JavaFile.builder("test",
+                TypeSpec.classBuilder("FirstExtension")
+                .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
+                        .addMember("entities", "{ $L, $L }",
+                                AnnotationSpec.get(RegisterEntity.Builder.builder(ExampleEntity.class).build()),
+                                AnnotationSpec.get(RegisterEntity.Builder.builder(PersistentEntity.class).build()))
+                        .build())
+                .build())
+            .build();
+        final JavaFile secondExtension = JavaFile.builder("test",
+                TypeSpec.classBuilder("SecondExtension")
+                .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
+                        // include ExampleEntity twice, but it should be registered once
+                        .addMember("entities", "{ $L, $L }",
+                                AnnotationSpec.get(RegisterEntity.Builder.builder(ExampleEntity.class).build()),
+                                AnnotationSpec.get(RegisterEntity.Builder.builder(SuperEntity.class).build()))
+                        .build())
+                .build())
+            .build();
+
+        final Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
+                .setRoundListener(new RoundListener() {
+
+                    @BeforeRound(2)
+                    public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+                        final ApplicationDomainElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
+                                processor.findApplicationDomainInRound(roundEnv));
+
+                        assertEqualByContents(
+                                Stream.of(ExampleEntity.class, PersistentEntity.class, SuperEntity.class).map(Class::getCanonicalName).toList(),
+                                appDomainElt.entities().stream().map(elt -> elt.getQualifiedName().toString()).toList());
+                    }
+                });
+
+        assertSuccess(Compilation.newInMemory(List.of(firstExtension.toJavaFileObject(), secondExtension.toJavaFileObject()))
+                .setProcessor(processor).addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
+                .compile());
+    }
 
     @Test
     public void t1_1_external_entities_can_be_specified_to_be_registered() {
