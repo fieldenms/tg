@@ -8,7 +8,7 @@ import '/resources/polymer/@polymer/polymer/lib/elements/dom-bind.js';
 
 import '/resources/components/tg-paper-toast.js';
 
-import { tearDownEvent, containsRestictedTags } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, containsRestrictedTags } from '/resources/reflection/tg-polymer-utils.js';
 import { TgToastBehavior } from '/resources/components/tg-toast-behavior.js';
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
@@ -150,7 +150,7 @@ Polymer({
 
             this.async(function () {
                 // please note that domBind.$.msgPar is rendered after body.appendChild(domBind), but has been put here (into async(100)) to provide stronger guarantees along with msgDialog.open()
-                if (containsRestictedTags(_msgText) === true) {
+                if (containsRestrictedTags(_msgText) === true) {
                     domBind.$.msgPar.textContent = _msgText;
                 } else {
                     domBind.$.msgPar.innerHTML = _msgText;

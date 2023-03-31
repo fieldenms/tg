@@ -8,7 +8,7 @@ import '/resources/polymer/@polymer/paper-dialog-scrollable/paper-dialog-scrolla
 import '/resources/polymer/@polymer/polymer/lib/elements/dom-bind.js';
 import '/resources/polymer/@polymer/polymer/lib/elements/dom-repeat.js';
 
-import { containsRestictedTags } from '/resources/reflection/tg-polymer-utils.js';
+import { containsRestrictedTags } from '/resources/reflection/tg-polymer-utils.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { ExpectedError } from '/resources/components/tg-global-error-handler.js';
 
@@ -138,7 +138,7 @@ Polymer({
                 restoreActiveElement();
             };
 
-            if (containsRestictedTags(message) === true) {
+            if (containsRestrictedTags(message) === true) {
                 dialogModel.$.msgPar.textContent = message;
             } else {
                 dialogModel.$.msgPar.innerHTML = message;

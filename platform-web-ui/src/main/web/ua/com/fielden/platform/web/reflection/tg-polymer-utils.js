@@ -262,7 +262,7 @@ export const getKeyEventTarget = function (startFrom, orElse, doDuringSearch) {
  * Returns true if specified text contains html tags which are not allowed to be inserted as html text. 
  *  
  */
-export const containsRestictedTags = function (htmlText) {
+export const containsRestrictedTags = function (htmlText) {
     const offensiveTag = new RegExp('<html|<body|<script|<img|<a', 'mi');
     return offensiveTag.exec(htmlText) !== null;
 }
