@@ -94,9 +94,9 @@ Polymer({
         return new Promise(function (resolve, reject) {
 
             dialogModel._onCaptureKeyDown = function (e) {
-                var dialog = dialogModel.$.confirmDialog;
+                // ensures on-Enter closing even if no button is focused, i.e. tapped on dialog somewhere or even outside dialog
                 if (e.keyCode === 13) {
-                    dialog.close();
+                    dialogModel.$.confirmDialog.close();
                     resolve("ENTER");
                     restoreActiveElement();
                 }

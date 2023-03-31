@@ -155,6 +155,12 @@ Polymer({
                 } else {
                     domBind.$.msgPar.innerHTML = _msgText;
                 }
+                domBind.$.msgDialog.addEventListener('keydown', e => { // will be removed along with domBind in _dialogClosed
+                    // ensures on-Enter closing even if Close button is not focused, i.e. tapped on dialog somewhere
+                    if (e.keyCode === 13) {
+                       domBind.$.msgDialog.close();
+                    }
+                }, true);
                 // actual msgDialog opening
                 domBind.$.msgDialog.open();
                 self.$.toast.close(); // must close paper-toast after msgDialog is opened; this is because other fast toast messages can interfere -- paper-toast should still be opened to prevent other messages early opening (see '... && previousToast.opened && ...' condition in 'show' method)
