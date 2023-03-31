@@ -607,12 +607,11 @@ export class TgEntityEditor extends TgEditor {
         return str;
     }
 
-    /* Invokes _search with '*' as the default search value, so than when nothing was typed, but
-        * the search button has been pressed then the search happens as if wildcard has been typed. */
+    /* 
+     * Invokes _search with '*' and ignores the input text, which forces to search for values as if wildcard was typed.
+     */
     _searchOnTap (e) {
-        // need to execute the tap action on async to ensure committing of any uncommitted
-        // values in other property editors that might influence the matching logic at the server side
-        microTask.run(() => this._search('*'));
+        this._search('*', null, true);
     }
 
     /** Loads more matching values. */
@@ -626,13 +625,15 @@ export class TgEntityEditor extends TgEditor {
         }
     }
 
-    _search (defaultSearchQuery, dataPage) {
+    _search (defaultSearchQuery, dataPage, ignoreInputText) {
         // cancel any other search
         this._cancelSearchByOtherEditor();
 
         // What is the query string?
         let inputText = ''; // default value
-        if (this.multi === false) {
+        if (ignoreInputText === true) {
+            inputText = defaultSearchQuery;
+        } else if (this.multi === false) {
             // assign the actual search string
             inputText = this._prepInput(this.decoratedInput().value) || defaultSearchQuery;
         } else {
@@ -1031,7 +1032,9 @@ export class TgEntityEditor extends TgEditor {
             console.log('select next');
             this.result.selectNext();
         } else {
-            this._searchOnTap();
+            // unlike the search action, key down should perform the search with the input text in mind
+            // need to execute the tap action on async to ensure committing of any uncommitted values in other property editors that might influence the matching logic at the server side
+            microTask.run(() => this._search('*', null, false));
         }
     }
 
