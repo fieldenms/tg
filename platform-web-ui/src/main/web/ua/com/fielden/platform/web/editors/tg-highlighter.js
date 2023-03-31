@@ -8,12 +8,12 @@
  */
 RegExp.escape = function (text) {
     return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
-};
+}
 
 export function searchRegExp (str) {
     const pattern = RegExp.escape(str).replace(/%/gi, ".*");
-    return new RegExp(pattern, 'gi');
-};
+    return new RegExp(pattern.includes("*") ? `^${pattern}$` : pattern, 'gi');
+}
 
 /* 
     * Method that identifies matching parts in the str for the searchQuery.
@@ -21,13 +21,12 @@ export function searchRegExp (str) {
     * It is used to identify those parts that needs to be highlighted during rendering.
     */
 export function matchedParts (str, searchQuery) {
-    const safeStr = str ? str : '';
+    const text = (str ? str : "").replace(/\s/g, " ");
     const parts = [];
-    const text = safeStr.toUpperCase();
     // if all is matched then return a single value
     if ("%" == searchQuery) {
         parts.push({
-            part: safeStr,
+            part: text,
             matched: false
         });
         return parts;
@@ -42,7 +41,7 @@ export function matchedParts (str, searchQuery) {
     while ((match = searchExp.exec(text)) !== null) {
         if (match.index > startIndex) { // match is not from the start, so need to record thing before as not matched
             const part = {
-                part: safeStr.substring(startIndex, match.index),
+                part: text.substring(startIndex, match.index),
                 matched: false
             };
             parts.push(part);
@@ -50,7 +49,7 @@ export function matchedParts (str, searchQuery) {
 
         // record the matched part
         const part = {
-            part: safeStr.substring(match.index, searchExp.lastIndex),
+            part: text.substring(match.index, searchExp.lastIndex),
             matched: true
         };
         parts.push(part);
@@ -59,9 +58,9 @@ export function matchedParts (str, searchQuery) {
 
     }
     // check if there is an unmatched part at the end
-    if (startIndex < safeStr.length) {
+    if (startIndex < text.length) {
         const part = {
-            part: safeStr.substring(startIndex, text.length),
+            part: text.substring(startIndex, text.length),
             matched: false
         };
         parts.push(part);
