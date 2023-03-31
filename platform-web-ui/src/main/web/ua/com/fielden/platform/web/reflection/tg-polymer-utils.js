@@ -316,3 +316,28 @@ export const escapeHtmlText = function(text) {
     });
     return escapedStr;
 };
+
+export const nodeFromPoint = function(startingEl, x, y){
+    var el = startingEl.elementFromPoint(x, y);
+    if (el && el.shadowRoot && el.shadowRoot !== startingEl) {
+        return nodeFromPoint(el.shadowRoot, x, y);
+    } else if (!el) {
+        return el;
+    }
+    
+    // see https://stackoverflow.com/questions/13597157/get-dom-text-node-from-point
+    var nodes = el.childNodes;
+    for ( var i = 0, n; n = nodes[i++];) {
+        if (n.nodeType === 3) {
+            var r = document.createRange();
+            r.selectNode(n);
+            var rects = r.getClientRects();
+            for ( var j = 0, rect; rect = rects[j++];) {
+                if (x > rect.left && x < rect.right && y > rect.top && y < rect.bottom) {
+                    return n;
+                }
+            }
+        }
+    }
+    return el;
+};

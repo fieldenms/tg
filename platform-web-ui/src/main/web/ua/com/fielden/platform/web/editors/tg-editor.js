@@ -13,7 +13,7 @@ import {TgReflector} from '/app/tg-reflector.js';
 
 import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
-import { tearDownEvent, allDefined, errorMessages } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, allDefined, errorMessages, nodeFromPoint } from '/resources/reflection/tg-polymer-utils.js';
 
 const defaultLabelTemplate = html`
     <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]" slot="label">[[propTitle]]</label>`;
@@ -93,7 +93,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
             }
 
             /* style informative, warning and error */
-            #decorator[is-invalid] {
+            #decorator[is-invalid].hover-error-text {
                 --paper-input-error: {
                     cursor: pointer;
                 }
@@ -134,7 +134,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 ${propertyAction}
             </div>
             <!-- 'autoValidate' attribute for paper-input-container is 'false' -- all validation is performed manually and is bound to paper-input-error, which could be hidden in case of empty '_error' property -->
-            <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]" tooltip-text$="[[_extendedError]]" slot="add-on" on-tap="_showExtendedErrorMessage">[[_error]]</paper-input-error>
+            <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]" tooltip-text$="[[_extendedError]]" slot="add-on" on-tap="_showExtendedErrorMessage" on-mousemove="_inputErrorTextMouseMove">[[_error]]</paper-input-error>
             <!-- paper-input-char-counter addon is updated whenever 'bindValue' property of child '#input' element is changed -->
             <paper-input-char-counter id="inputCounter" class="footer" hidden$="[[!_isMultilineText(_editorKind)]]" disabled$="[[_disabled]]" slot="add-on"></paper-input-char-counter>
         </paper-input-container>
@@ -1050,9 +1050,20 @@ export class TgEditor extends PolymerElement {
         return contextHolder;
     }
 
-    _showExtendedErrorMessage () {
-        if (this._extendedError) {
+    _showExtendedErrorMessage (event) {
+        const nodeTapped = nodeFromPoint(document, event.detail.x, event.detail.y);
+        if (this._extendedError && nodeTapped instanceof Text) {
             this.$.confirmationDialog.showConfirmationDialog(this._extendedError, [{name:'Close', confirm:true, autofocus:true}]);
         }
     }
+
+    _inputErrorTextMouseMove (event) {
+        const nodeHovered = nodeFromPoint(document, event.x, event.y);
+        if (nodeHovered instanceof Text) {
+            this.decorator().classList.add("hover-error-text");
+        } else {
+            this.decorator().classList.remove("hover-error-text");
+        }
+    }
+
 }
