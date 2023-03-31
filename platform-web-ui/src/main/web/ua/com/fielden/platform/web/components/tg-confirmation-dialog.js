@@ -32,7 +32,7 @@ dialogModel.innerHTML = `
             always-on-top
             entry-animation="scale-up-animation"
             exit-animation="fade-out-animation"
-            on-iron-overlay-canceled="dialogCanceled"
+            on-iron-overlay-canceled="rejectDialog"
             on-iron-overlay-opened="dialogOpened"
             on-iron-overlay-closed="dialogClosed">
             <div style="padding: 20px;" inner-h-t-m-l="[[message]]"></div>
@@ -102,13 +102,25 @@ Polymer({
                 }
             }
 
-            dialogModel.dialogCanceled = function (e) {
+            /**
+             * Rejects confirmation dialog promise and restores previously active element.
+             */
+            dialogModel.rejectDialog = function (e) {
                 reject(new ExpectedError("ESC"));
                 restoreActiveElement();
             };
-            dialogModel.closeDialog = function () {
-                reject(new ExpectedError("ESC"));
-                restoreActiveElement();
+
+            /**
+             * Custom method for confirmation dialog closing.
+             * It closes corresponding <paper-dialog>, but also rejects confirmation dialog promise and restores previously active element,
+             *  as if ESC or non-confirming button was pressed.
+             * 
+             * This custom logic is necessary in tg-app-template _closeDialog logic, where BACK button must reject confirmation dialog (mobile profile only).
+             * Otherwise, _lastPromise will be forever pending and all other confirmation dialogs would never open.
+             */
+            dialogModel.$.confirmDialog.closeDialog = function () {
+                this.close();
+                dialogModel.rejectDialog();
             };
 
             dialogModel._action = function (e) {
