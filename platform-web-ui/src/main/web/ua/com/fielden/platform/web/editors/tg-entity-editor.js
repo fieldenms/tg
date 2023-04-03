@@ -641,9 +641,7 @@ export class TgEntityEditor extends TgEditor {
         this._cancelSearchByOtherEditor();
         // What is the query string?
         let inputText = ''; // default value
-        if (ignoreInputText === true) {
-            inputText = defaultSearchQuery;
-        } else if (this.multi === false) {
+        if (this.multi === false) {
             // assign the actual search string
             inputText = this._prepInput(this.decoratedInput().value) || defaultSearchQuery;
         } else {
@@ -655,13 +653,13 @@ export class TgEntityEditor extends TgEditor {
             const caretPos = this.decoratedInput().selectionStart;
             const toIndex = text.indexOf(this.separator, caretPos) < 0 ? text.length : text.indexOf(this.separator, caretPos);
             const startOfText = text.substring(0, caretPos);
-            const fromIndex = startOfText.lastIndexOf(this.separator) < 0? -1 : startOfText.lastIndexOf(this.separator); // just to make sure that it is -1
+            const fromIndex = startOfText.lastIndexOf(this.separator) < 0 ? -1 : startOfText.lastIndexOf(this.separator); // just to make sure that it is -1
 
             this._replaceFromIndex = fromIndex;
             this._replaceToIndex = toIndex;
 
             // assign the actual search string
-            inputText = this._prepInput(text.substring(fromIndex + 1, toIndex).trim()) || defaultSearchQuery;
+            inputText = ignoreInputText === true ? defaultSearchQuery : this._prepInput(text.substring(fromIndex + 1, toIndex).trim()) || defaultSearchQuery;
         }
 
         // prep this.searchQuery for highlighting of the matching parts in the search result
@@ -888,7 +886,7 @@ export class TgEntityEditor extends TgEditor {
         this.opened = false;
         this.result.close();
 
-        // value accpetance logic...
+        // value acceptance logic...
         if (hasValuesToProcess) {
             // compose a string value, which would be a comma separated string in case of multi
             const selectedValuesAsStr = Object.values(this.result.selectedValues).map(obj => obj.key).join(this.separator);// 'key' field contains converted representation of the entity
@@ -906,7 +904,7 @@ export class TgEntityEditor extends TgEditor {
 
                 this._editingValue = newEditingValue;
 
-                // let's highlight the inseted values
+                // let's highlight the inserted values
                 input.selectionStart = this._replaceFromIndex;
                 input.selectionEnd = input.selectionStart + selectedValuesAsStr.length + 1;
 
