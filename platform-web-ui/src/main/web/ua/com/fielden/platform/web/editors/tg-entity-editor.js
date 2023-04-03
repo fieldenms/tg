@@ -643,7 +643,7 @@ export class TgEntityEditor extends TgEditor {
         let inputText = ''; // default value
         if (this.multi === false) {
             // assign the actual search string
-            inputText = this._prepInput(this.decoratedInput().value) || defaultSearchQuery;
+            inputText = ignoreInputText === true ? defaultSearchQuery : this._prepInput(this.decoratedInput().value) || defaultSearchQuery;
         } else {
             // The following manipulations with indexes are required in case of multi selection
             // in order to determine what part of the input text should be used for search and
@@ -655,7 +655,7 @@ export class TgEntityEditor extends TgEditor {
             const startOfText = text.substring(0, caretPos);
             const fromIndex = startOfText.lastIndexOf(this.separator) < 0 ? -1 : startOfText.lastIndexOf(this.separator); // just to make sure that it is -1
 
-            this._replaceFromIndex = fromIndex;
+            this._replaceFromIndex = fromIndex < 0 ? 0 : fromIndex; //  negative index is not suitable for text selection that happens after insertion of selected values
             this._replaceToIndex = toIndex;
 
             // assign the actual search string
