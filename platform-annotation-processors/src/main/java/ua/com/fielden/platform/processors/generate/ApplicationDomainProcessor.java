@@ -11,12 +11,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -26,6 +26,7 @@ import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
+import javax.lang.model.type.ErrorType;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
@@ -190,37 +191,53 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
             final ApplicationDomainElement appDomainElt,
             final Collection<EntityElement> inputEntities, final Collection<ExtendApplicationDomain.Mirror> inputExtensions)
     {
-        // TODO analyse input entities
+        final Set<EntityElement> toUnregister = new HashSet<>();
+        final Set<EntityElement> toRegister = new HashSet<>();
+
+        // analyse input entities
         // * domain entities -- are there any new ones we need to register?
-        // * non-domain entities -- were any of them registered? (which will mean we need to unregister them)
+        toRegister.addAll(inputEntities.stream()
+                .filter(this::isDomainEntity)
+                .filter(ent -> !appDomainElt.entities().contains(ent))
+                .toList());
+        // * non-domain entities -- were any of them registered? (we need to unregister them)
+        toUnregister.addAll(inputEntities.stream()
+                .filter(Predicate.not(this::isDomainEntity))
+                .filter(ent -> appDomainElt.entities().contains(ent))
+                .toList());
 
-        // TODO analyse input extensions
-        // * are there any new entity types we need to register?
-        // * are there any registered entities originating from extensions that need to be unregistered?
+        // analyse input extensions
+        final Set<EntityElement> externalEntities = inputExtensions.stream()
+            .flatMap(mirr -> mirr.entities().stream()) // stream of Mirror instances of @RegisterEntity
+            .map(RegisterEntity.Mirror::value) // map to EntityElement
+            .collect(Collectors.toSet());
+        // * are there any new external entities we need to register?
+        final List<EntityElement> externalToRegister = externalEntities.stream()
+                .filter(ent -> !appDomainElt.entities().contains(ent))
+                .toList();
+        // * are there any external entities that need to be unregistered?
+        final List<EntityElement> externalToUnregister = appDomainElt.externalEntities().stream()
+                .filter(ent -> !externalEntities.contains(ent))
+                .toList();
 
-        final List<EntityElement> unchanged = new LinkedList<>();
-        final List<EntityElement> toBeUnregistered = new LinkedList<>();
-        appDomainElt.entities().forEach(ent -> {
-            if (isDomainEntity(ent)) {
-                unchanged.add(ent);
-            } else {
-                toBeUnregistered.add(ent);
-            }
-        });
-
-        printNote("Previously registered entities: %s unchanged, %s missing, %s to be unregistered",
-                unchanged.size(), appDomainElt.errorTypes().size(), toBeUnregistered.size());
+        // analyse ApplicationDomain
+        // are there any missing entity types (e.g., due to removal)?
+        final List<ErrorType> missingRegisteredTypes = appDomainElt.errorTypes();
 
         // consider if we actually need to regenerate
-        if (!appDomainElt.errorTypes().isEmpty() || !toBeUnregistered.isEmpty() // anything to exclude?
-                || !appDomainElt.entities().containsAll(inputEntities)) {  // anything to include?
+        if (!missingRegisteredTypes.isEmpty() || !toUnregister.isEmpty() || !externalToUnregister.isEmpty() // anything to exclude?
+                || !toRegister.isEmpty() || !externalToRegister.isEmpty()) {  // anything to include?
             printNote("Regenerating %s", appDomainElt.getSimpleName());
 
-            final Set<EntityElement> toRegister = new HashSet<>(unchanged.size() + inputEntities.size());
-            toRegister.addAll(unchanged);
-            toRegister.addAll(inputEntities);
-            writeApplicationDomain(toRegister);
-            writeApplicationDomain(registeredEntities, appDomainElt.externalEntities());
+            final Set<EntityElement> registeredEntities = new HashSet<>(appDomainElt.entities());
+            registeredEntities.removeAll(toUnregister);
+            registeredEntities.addAll(toRegister);
+
+            final Set<EntityElement> externalRegisteredEntities = new HashSet<>(appDomainElt.externalEntities());
+            externalRegisteredEntities.removeAll(externalToUnregister);
+            externalRegisteredEntities.addAll(externalToRegister);
+
+            writeApplicationDomain(registeredEntities, externalRegisteredEntities);
         }
     }
 
@@ -234,6 +251,9 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         final Function<CodeBlock.Builder, CodeBlock.Builder> addStatementsForRegisteredEntities = builder -> {
             var bld = builder;
             for (final var entity: registeredEntities) {
+                bld = bld.addStatement("add($T.class)", ClassName.get(entity.element()));
+            }
+            for (final var entity: externalEntities) {
                 bld = bld.addStatement("add($T.class)", ClassName.get(entity.element()));
             }
             return bld;
