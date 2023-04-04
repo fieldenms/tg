@@ -89,7 +89,7 @@ public class ApplicationDomainProcessorTest {
 
                         assertEqualByContents(
                                 Stream.of(ExampleEntity.class, PersistentEntity.class, SuperEntity.class).map(Class::getCanonicalName).toList(),
-                                appDomainElt.entities().stream().map(elt -> elt.getQualifiedName().toString()).toList());
+                                getQualifiedNames(allRegisteredEntities(appDomainElt)));
                     }
                 });
 
@@ -140,7 +140,7 @@ public class ApplicationDomainProcessorTest {
                                 processor.findApplicationDomainInRound(roundEnv));
 
                         assertEqualByContents(javaFiles.stream().map(jf -> getQualifiedName(jf)).toList(),
-                                appDomainElt.entities().stream().map(elt -> elt.getQualifiedName().toString()).toList());
+                                getQualifiedNames(allRegisteredEntities(appDomainElt)));
                     }
                 });
 
@@ -170,7 +170,7 @@ public class ApplicationDomainProcessorTest {
                                 processor.findApplicationDomainInRound(roundEnv));
 
                         assertEqualByContents(List.of("test.ExampleEntity"),
-                                appDomainElt.entities().stream().map(elt -> elt.getQualifiedName().toString()).toList());
+                                getQualifiedNames(allRegisteredEntities(appDomainElt)));
                     }
                 });
 
@@ -234,7 +234,7 @@ public class ApplicationDomainProcessorTest {
 
                             // assert that exactly one entity is currently registered
                             assertEqualByContents(List.of(getQualifiedName(entity1)),
-                                    appDomainElt.entities().stream().map(elt -> elt.getQualifiedName().toString()).toList());
+                                    getQualifiedNames(allRegisteredEntities(appDomainElt)));
                         }
 
                         @BeforeRound(2)
@@ -245,7 +245,7 @@ public class ApplicationDomainProcessorTest {
 
                             // assert that exactly two entities were registered
                             assertEqualByContents(List.of(getQualifiedName(entity1), getQualifiedName(entity2)),
-                                    appDomainElt.entities().stream().map(elt -> elt.getQualifiedName().toString()).toList());
+                                    getQualifiedNames(allRegisteredEntities(appDomainElt)));
                         }
                     });
 
@@ -318,7 +318,7 @@ public class ApplicationDomainProcessorTest {
 
                             // assert that exactly 2 entities are currently registered
                             assertEqualByContents(List.of("test.First"),
-                                    appDomainElt.entities().stream().map(elt -> elt.getQualifiedName().toString()).toList());
+                                    getQualifiedNames(allRegisteredEntities(appDomainElt)));
                             // entity Second will be represented as an ErrorType, since it couldn't be located
                             assertEquals("Incorrect number of error types", 1, appDomainElt.errorTypes().size());
                         }
@@ -331,7 +331,7 @@ public class ApplicationDomainProcessorTest {
 
                             // assert that only entity "First" was registered
                             assertEqualByContents(List.of("test.First"),
-                                    appDomainElt.entities().stream().map(elt -> elt.getQualifiedName().toString()).toList());
+                                    getQualifiedNames(allRegisteredEntities(appDomainElt)));
                         }
                     });
 
@@ -413,7 +413,7 @@ public class ApplicationDomainProcessorTest {
 
                             // assert that exactly 2 entities are currently registered
                             assertEqualByContents(List.of("test.First", "test.Second"),
-                                    appDomainElt.entities().stream().map(elt -> elt.getQualifiedName().toString()).toList());
+                                    getQualifiedNames(allRegisteredEntities(appDomainElt)));
                         }
 
                         @BeforeRound(2)
@@ -424,7 +424,7 @@ public class ApplicationDomainProcessorTest {
 
                             // assert that only entity "First" was registered
                             assertEqualByContents(List.of("test.First"),
-                                    appDomainElt.entities().stream().map(elt -> elt.getQualifiedName().toString()).toList());
+                                    getQualifiedNames(allRegisteredEntities(appDomainElt)));
                         }
                     });
 
@@ -440,6 +440,17 @@ public class ApplicationDomainProcessorTest {
     private static String getQualifiedName(final JavaFile javaFile) {
         final String pkgPrefix = javaFile.packageName.isEmpty() ? "" : javaFile.packageName + ".";
         return pkgPrefix + javaFile.typeSpec.name;
+    }
+
+    private static List<String> getQualifiedNames(final Collection<? extends TypeElement> elements) {
+        return elements.stream().map(elt -> elt.getQualifiedName().toString()).toList();
+    }
+
+    private static List<EntityElement> allRegisteredEntities(final ApplicationDomainElement appDomainElt) {
+        final List<EntityElement> entities = new ArrayList<>(appDomainElt.entities().size() + appDomainElt.externalEntities().size());
+        entities.addAll(appDomainElt.entities());
+        entities.addAll(appDomainElt.externalEntities());
+        return entities;
     }
 
     /** A round listener tailored for {@link ApplicationDomainProcessor}. */
