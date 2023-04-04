@@ -476,8 +476,8 @@ const TgEntityMasterBehaviorImpl = {
                 /* TODO && !this._currEntity.isPersisted() */
                 && !potentiallySavedOrNewEntity.isPersisted() && !this._reflector().equalsEx(this._currEntity, potentiallySavedOrNewEntity);
 
-            const msg = this._toastMsg("Operation", potentiallySavedOrNewEntity);
-            this._openToast(potentiallySavedOrNewEntity, msg.short, !potentiallySavedOrNewEntity.isValid() || potentiallySavedOrNewEntity.isValidWithWarning(), msg.extended, false);
+            const messages = this._toastMessages("Operation", potentiallySavedOrNewEntity);
+            this._openToast(potentiallySavedOrNewEntity, messages.short, !potentiallySavedOrNewEntity.isValid() || potentiallySavedOrNewEntity.isValidWithWarning(), messages.extended, false);
 
             // isRefreshingProcess should be 'true' to reset old binding information in case where 'continuously created' entity arrive
             const newBindingEntity = this._postEntityReceived(potentiallySavedOrNewEntity, isContinuouslyCreated);

@@ -649,13 +649,13 @@ export const TgEntityBinderBehavior = {
         // 				retrieval:
         self._postRetrievedDefault = (function (entityAndCustomObject) {
             // console.timeEnd('actual-retrieval');
-            var entity = this.preRetrieved(entityAndCustomObject[0]);
-            var customObject = this._reflector().customObject(entityAndCustomObject);
+            const entity = this.preRetrieved(entityAndCustomObject[0]);
+            const customObject = this._reflector().customObject(entityAndCustomObject);
 
-            var msg = this._toastMsg("Refreshing", entity);
-            this._openToast(entity, msg.short, !entity.isValid() || entity.isValidWithWarning(), msg.extended, false);
+            const messages = this._toastMessages("Refreshing", entity);
+            this._openToast(entity, messages.short, !entity.isValid() || entity.isValidWithWarning(), messages.extended, false);
 
-            var newBindingEntity = this._postEntityReceived(entity, true);
+            const newBindingEntity = this._postEntityReceived(entity, true);
 
             this._postRetrievedDefaultForDescendants(entity, newBindingEntity, customObject);
             // custom external action
@@ -701,8 +701,8 @@ export const TgEntityBinderBehavior = {
             }
             console.log('validate received (', customObject['@validationCounter'], ')');
             if (!validatedEntity.isValid()) {
-                const msg = this._toastMsg("Validation", validatedEntity);
-                this._openToast(validatedEntity, msg.short, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), msg.extended, false);
+                const messages = this._toastMessages("Validation", validatedEntity);
+                this._openToast(validatedEntity, messages.short, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), messages.extended, false);
             }
             // in case where _continuations property exists (only in tg-entity-master) there is a need to reset continuations (they become stale after any change in initiating entity)
             if (typeof this._continuations === 'object') {
@@ -823,7 +823,13 @@ export const TgEntityBinderBehavior = {
         this._toastGreeting().show();
     },
 
-    _toastMsg: function (actionName, entity) {
+    /**
+     * Returns a pair of short and extended messages for toast.
+     * 
+     * Takes them from entity if it is invalid or in warning.
+     * Otherwise, returns 'ACTION completed successfully' as both short and extended.
+     */
+    _toastMessages: function (actionName, entity) {
         if (!entity.isValid()) {
             return errorMessages(entity.firstFailure());
         } else if (entity.isValidWithWarning()) {

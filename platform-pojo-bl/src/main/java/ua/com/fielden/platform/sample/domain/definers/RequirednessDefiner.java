@@ -15,7 +15,7 @@ public class RequirednessDefiner implements IAfterChangeEventHandler<Integer> {
                     mp.setEditable(prop.getValue() == null || prop.getValue() != 13);
                 });
         if (entityPropertyValue.intValue() > 75) {
-            prop.setDomainValidationResult(informativeEx("Information that is over 75", "<b>The value is over 75.</b><br><i>Please correct this to cpntinue</i>"));
+            prop.setDomainValidationResult(informativeEx("Information that is over 75", "<b>The value is over 75.</b><br><i>Please correct this to continue</i>"));
         }
     }
 
