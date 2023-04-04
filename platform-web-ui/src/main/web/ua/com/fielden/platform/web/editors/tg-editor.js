@@ -134,7 +134,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 ${propertyAction}
             </div>
             <!-- 'autoValidate' attribute for paper-input-container is 'false' -- all validation is performed manually and is bound to paper-input-error, which could be hidden in case of empty '_error' property -->
-            <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]" tooltip-text$="[[_extendedError]]" slot="add-on" on-tap="_showExtendedErrorMessage" on-mousemove="_inputErrorTextMouseMove">[[_error]]</paper-input-error>
+            <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]" tooltip-text$="[[_extendedError]]" slot="add-on" on-tap="_inputErrorTapHandler" on-mousemove="_inputErrorMousemoveHandler">[[_error]]</paper-input-error>
             <!-- paper-input-char-counter addon is updated whenever 'bindValue' property of child '#input' element is changed -->
             <paper-input-char-counter id="inputCounter" class="footer" hidden$="[[!_isMultilineText(_editorKind)]]" disabled$="[[_disabled]]" slot="add-on"></paper-input-char-counter>
         </paper-input-container>
@@ -1050,19 +1050,34 @@ export class TgEditor extends PolymerElement {
         return contextHolder;
     }
 
-    _showExtendedErrorMessage (event) {
-        const nodeTapped = nodeFromPoint(document, event.detail.x, event.detail.y);
-        if (this._extendedError && nodeTapped instanceof Text) {
+    /**
+     * Checks whether there is a Text node under [x, y] coordinates.
+     */
+    _textNodeUnderPointPresent(x, y) {
+        return nodeFromPoint(document, x, y, node => node.nodeType === Node.TEXT_NODE);
+    }
+
+    /**
+     * Opens confirmation dialog for extended error / warning / informative message on tap.
+     * If the message text is shorter than editor, tapping only works for textual non-empty part of <paper-input-error>.
+     * This is to be consistent with title action for entity editors.
+     */
+    _inputErrorTapHandler (event) {
+        if (this._extendedError && this._textNodeUnderPointPresent(event.detail.x, event.detail.y)) {
             this.$.confirmationDialog.showConfirmationDialog(this._extendedError, [{name:'Close', confirm:true, autofocus:true}]);
         }
     }
 
-    _inputErrorTextMouseMove (event) {
-        const nodeHovered = nodeFromPoint(document, event.x, event.y);
-        if (nodeHovered instanceof Text) {
-            this.decorator().classList.add("hover-error-text");
+    /**
+     * Changes cursor for extended error / warning / informative message on hovering.
+     * If the message text is shorter than editor, cursor:pointer only shows for textual non-empty part of <paper-input-error>.
+     * This is to be consistent with title action for entity editors.
+     */
+    _inputErrorMousemoveHandler (event) {
+        if (this._textNodeUnderPointPresent(event.x, event.y)) {
+            this.decorator().classList.add('hover-error-text');
         } else {
-            this.decorator().classList.remove("hover-error-text");
+            this.decorator().classList.remove('hover-error-text');
         }
     }
 
