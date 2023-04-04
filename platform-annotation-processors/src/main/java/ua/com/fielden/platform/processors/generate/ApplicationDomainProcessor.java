@@ -172,17 +172,19 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
     private void generate(final Collection<EntityElement> inputEntities, final Collection<ExtendApplicationDomain.Mirror> inputExtensions) {
         printNote("Generating %s from scratch", APPLICATION_DOMAIN_SIMPLE_NAME);
 
+        final List<EntityElement> inputDomainEntities = inputEntities.stream().filter(this::isDomainEntity).toList();
+
         final Set<EntityElement> extensionEntities = inputExtensions.stream()
             .flatMap(mirr -> mirr.entities().stream()) // stream of Mirror instances of @RegisterEntity
             .map(RegisterEntity.Mirror::value) // map to EntityElement
             .collect(Collectors.toSet());
 
         if (extensionEntities.isEmpty()) {
-            writeApplicationDomain(inputEntities);
+            writeApplicationDomain(inputDomainEntities);
         } else {
             printNote("Found %s entities from extensions.".formatted(extensionEntities.size()));
-            final Set<EntityElement> allEntities = new HashSet<>(inputEntities.size() + extensionEntities.size());
-            allEntities.addAll(inputEntities);
+            final Set<EntityElement> allEntities = new HashSet<>(inputDomainEntities.size() + extensionEntities.size());
+            allEntities.addAll(inputDomainEntities);
             allEntities.addAll(extensionEntities);
             writeApplicationDomain(allEntities);
         }
