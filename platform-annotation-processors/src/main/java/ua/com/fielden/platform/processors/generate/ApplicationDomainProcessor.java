@@ -7,6 +7,7 @@ import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -42,10 +43,10 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
-import ua.com.fielden.platform.processors.annotation.ProcessedValue;
 import ua.com.fielden.platform.processors.exceptions.ProcessorInitializationException;
 import ua.com.fielden.platform.processors.generate.annotation.ExtendApplicationDomain;
 import ua.com.fielden.platform.processors.generate.annotation.RegisterEntity;
+import ua.com.fielden.platform.processors.generate.annotation.RegisteredEntity;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
@@ -179,15 +180,10 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
             .map(RegisterEntity.Mirror::value) // map to EntityElement
             .collect(Collectors.toSet());
 
-        if (extensionEntities.isEmpty()) {
-            writeApplicationDomain(inputDomainEntities);
-        } else {
+        if (!extensionEntities.isEmpty()) {
             printNote("Found %s entities from extensions.".formatted(extensionEntities.size()));
-            final Set<EntityElement> allEntities = new HashSet<>(inputDomainEntities.size() + extensionEntities.size());
-            allEntities.addAll(inputDomainEntities);
-            allEntities.addAll(extensionEntities);
-            writeApplicationDomain(allEntities);
         }
+        writeApplicationDomain(inputDomainEntities, extensionEntities);
     }
 
     private void regenerate(
@@ -224,10 +220,11 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
             toRegister.addAll(unchanged);
             toRegister.addAll(inputEntities);
             writeApplicationDomain(toRegister);
+            writeApplicationDomain(registeredEntities, appDomainElt.externalEntities());
         }
     }
 
-    private void writeApplicationDomain(final Collection<EntityElement> registeredEntities) {
+    private void writeApplicationDomain(final Collection<EntityElement> registeredEntities, final Collection<EntityElement> externalEntities) {
         final ParameterizedTypeName classExtendsAbstractEntity = ParameterizedTypeName.get(
                 ClassName.get(Class.class),
                 WildcardTypeName.subtypeOf(ParameterizedTypeName.get(
@@ -248,27 +245,37 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
                 .addMember("date", "$S", initDateTime)
                 .build();
 
-        // We use @ProcessedValue annotations just to enable the processor to get access to the list of registered types,
+        // We use @RegisteredEntity annotations just to enable the processor to get access to the list of registered types,
         // since we can't analyse the insides of the static initialiser block.
         // This approach lends itself well to refactoring. When entity types are renamed, ApplicationDomain will be automatically adjusted,
         // because class literals are used to refer to registered entity types.
 
-         // @ProcessedValue(cls = $ENTITY_TYPE)...
-        final List<AnnotationSpec> processedValueAnnots = registeredEntities.stream()
-                .map(entity -> AnnotationSpec.builder(ProcessedValue.class)
-                        .addMember("cls", CodeBlock.of("$T.class", entity.element()))
+         // @RegisteredEntity($ENTITY.class)...
+        final List<AnnotationSpec> registeredEntityAnnots = new ArrayList<>(registeredEntities.size() + externalEntities.size());
+        registeredEntityAnnots.addAll(registeredEntities.stream()
+                .map(entity -> AnnotationSpec.builder(RegisteredEntity.class)
+                        .addMember("value", "$T.class", entity.element())
                         .build())
-                .toList();
+                .toList());
+
+         // @RegisteredEntity($ENTITY.class, external = true)...
+        registeredEntityAnnots.addAll(externalEntities.stream()
+                .map(entity -> AnnotationSpec.builder(RegisteredEntity.class)
+                        .addMember("value", "$T.class", entity.element())
+                        .addMember("external", "$L", true)
+                        .build())
+                .toList());
+
         /*
          * @Generated(...)
-         * @ProcessedValue(...)...
+         * @RegisteredEntity(...)...
          * public class ApplicationDomain implements IApplicationDomainProvider
          */
         final TypeSpec typeSpec = TypeSpec.classBuilder(APPLICATION_DOMAIN_SIMPLE_NAME)
             .addModifiers(PUBLIC)
             .addSuperinterface(IApplicationDomainProvider.class)
             .addAnnotation(atGenerated)
-            .addAnnotations(processedValueAnnots)
+            .addAnnotations(registeredEntityAnnots)
             // private static final Set<Class<? extends AbstractEntity<?>>> entityTypes = new LinkedHashSet<>();
             .addField(FieldSpec.builder(
                     ParameterizedTypeName.get(ClassName.get(Set.class), classExtendsAbstractEntity),
@@ -339,7 +346,8 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
             return;
         }
 
-        printNote("Generated %s with %s registered entities.", getApplicationDomainQualifiedName(), registeredEntities.size());
+        final int totalRegistered = registeredEntities.size() + externalEntities.size();
+        printNote("Generated %s with %s registered entities.", getApplicationDomainQualifiedName(), totalRegistered);
     }
 
     protected String getApplicationDomainQualifiedName() {
