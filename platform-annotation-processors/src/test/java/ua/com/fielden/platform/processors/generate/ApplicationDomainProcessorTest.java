@@ -15,6 +15,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -41,6 +43,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.processors.generate.annotation.ExtendApplicationDomain;
 import ua.com.fielden.platform.processors.generate.annotation.RegisterEntity;
+import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
 import ua.com.fielden.platform.processors.test_entities.PersistentEntity;
 import ua.com.fielden.platform.processors.test_entities.SuperEntity;
@@ -250,6 +253,102 @@ public class ApplicationDomainProcessorTest {
                     });
 
             compilation.setJavaSources(List.of(entity2.toJavaFileObject())).setProcessor(processor);
+            assertSuccess(compilation.compile());
+        } finally {
+            FileUtils.deleteQuietly(rootTmpDir.toFile());
+        }
+    }
+
+    @Test
+    public void new_external_entities_are_registered_with_the_existing_ApplicationDomain() throws IOException {
+        // we need to perform 2 compilations with a temporary storage for generated sources:
+        // 1. ApplicationDomain is generated using input entities and external entities
+        // 2. ApplicationDomain is REgenerated to include new external entities
+
+        // set up temporary storage
+        final Path rootTmpDir = Files.createTempDirectory("java-test");
+        final Path srcTmpDir = Files.createDirectory(Path.of(rootTmpDir.toString(), "src"));
+        final Path generatedTmpDir = Files.createDirectory(Path.of(rootTmpDir.toString(), "generated-sources"));
+
+        // configure compilation settings
+        final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+        final StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, Locale.getDefault(), StandardCharsets.UTF_8);
+        fileManager.setLocationFromPaths(StandardLocation.SOURCE_OUTPUT, List.of(generatedTmpDir));
+        fileManager.setLocationFromPaths(StandardLocation.SOURCE_PATH, List.of(srcTmpDir, generatedTmpDir));
+
+        // we will reuse this instance
+        final Compilation compilation = new Compilation(List.of(PLACEHOLDER))
+                .setCompiler(compiler)
+                .setFileManager(fileManager)
+                .addOptions(OPTION_PROC_ONLY)
+                .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG);
+
+        // wrap the test in a big try-catch block to clean up temporary storage afterwards
+        try {
+            // 1
+            final JavaFile inputEntity = JavaFile.builder("test",
+                    TypeSpec.classBuilder("First").addModifiers(PUBLIC)
+                        .superclass(ParameterizedTypeName.get(AbstractEntity.class, String.class))
+                        .build())
+                .build();
+            // write the first entity to file, so we can look it up during the 2nd compilation
+            inputEntity.writeTo(srcTmpDir);
+
+            final JavaFile extensionV1 = JavaFile.builder("test.extension",
+                    TypeSpec.classBuilder("FirstExtension")
+                    .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
+                            .addMember("entities", "{ $L }",
+                                    // initally, register 1 external entity
+                                    AnnotationSpec.get(RegisterEntity.Builder.builder(ExampleEntity.class).build()))
+                            .build())
+                    .build())
+                .build();
+
+            compilation
+                .setJavaSources(List.of(inputEntity.toJavaFileObject(), extensionV1.toJavaFileObject()))
+                .setProcessor(new ApplicationDomainProcessor());
+            assertSuccess(compilation.compile());
+
+            // 2
+            // simulate modification of the same source file test.extension.FirstExtension
+            final JavaFile extensionV2 = JavaFile.builder("test.extension",
+                    TypeSpec.classBuilder("FirstExtension")
+                    .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
+                            .addMember("entities", "{ $L, $L }",
+                                    // the previous one
+                                    AnnotationSpec.get(RegisterEntity.Builder.builder(ExampleEntity.class).build()),
+                                    // include a new external entity
+                                    AnnotationSpec.get(RegisterEntity.Builder.builder(PersistentEntity.class).build()))
+                            .build())
+                    .build())
+                .build();
+            final Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
+                    .setRoundListener(new RoundListener() {
+
+                        @BeforeRound(1)
+                        public void beforeFirstRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+                            // assert that ApplicationDomain was generated during the previous compilation
+                            final ApplicationDomainElement appDomainElt = assertPresent("ApplicationDomain is missing.",
+                                    processor.findApplicationDomain());
+
+                            assertEqualByContents(List.of(getQualifiedName(inputEntity), ExampleEntity.class.getCanonicalName()),
+                                    getQualifiedNames(allRegisteredEntities(appDomainElt)));
+                        }
+
+                        @BeforeRound(2)
+                        public void beforeSecondRound(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
+                            // assert that ApplicationDomain was generated in the previous round
+                            final ApplicationDomainElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
+                                    processor.findApplicationDomainInRound(roundEnv));
+
+                            assertEqualByContents(List.of(getQualifiedName(inputEntity), ExampleEntity.class.getCanonicalName(), PersistentEntity.class.getCanonicalName()),
+                                    getQualifiedNames(allRegisteredEntities(appDomainElt)));
+                        }
+                    });
+
+            compilation
+                .setJavaSources(List.of(extensionV2.toJavaFileObject()))
+                .setProcessor(processor);
             assertSuccess(compilation.compile());
         } finally {
             FileUtils.deleteQuietly(rootTmpDir.toFile());
