@@ -8,7 +8,7 @@ import '/resources/polymer/@polymer/paper-progress/paper-progress.js';
 
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
 import { TgFileProcessingBehavior } from '/resources/file_operations/tg-file-processing-behavior.js';
-import { errorMessages } from '/resources/reflection/tg-polymer-utils.js';
+import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
 
 const template = html`
     <style>
@@ -379,7 +379,7 @@ Polymer({
 
             if (e.currentTarget.response) {
                 this.error = getResult(e.currentTarget.response);
-                this._errorMsg = errorMessages(this.error).short;
+                this._errorMsg = resultMessages(this.error).short;
             } else {
                 this._errorMsg = "Networking error occurred.";
                 this.error = { message: this._errorMsg };

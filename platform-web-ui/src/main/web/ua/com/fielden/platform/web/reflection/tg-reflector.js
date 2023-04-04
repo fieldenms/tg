@@ -2,7 +2,7 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 
 import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
-import { errorMessages } from '/resources/reflection/tg-polymer-utils.js';
+import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
 
 /**
  * Used for decimal and money formatting. If the scale value for formatting wasn't specified then the default one is used.
@@ -1550,7 +1550,7 @@ export const TgReflector = Polymer({
         // collects error cause by traversing the stack into an ordered list
         var causeCollector = function (ex, causes) {
             if (ex) {
-                causes = causes + "<li>" + errorMessages(ex).extended + "</li>";
+                causes = causes + "<li>" + resultMessages(ex).extended + "</li>";
                 printStackTrace(ex);
                 if (ex.cause !== null) {
                     causes = causeCollector(ex.cause, causes);
@@ -1563,7 +1563,7 @@ export const TgReflector = Polymer({
         var printStackTrace = function (ex) {
             var msg = "No cause and stack trace.";
             if (ex) {
-                msg = errorMessages(ex).short + '\n';
+                msg = resultMessages(ex).short + '\n';
                 if (Array.isArray(ex.stackTrace)) {
                     for (var i = 0; i < ex.stackTrace.length; i += 1) {
                         var st = ex.stackTrace[i];
@@ -1575,7 +1575,7 @@ export const TgReflector = Polymer({
         }.bind(this);
 
         if (ex) {
-            var causes = "<b>" + errorMessages(ex).extended + "</b>";
+            var causes = "<b>" + resultMessages(ex).extended + "</b>";
             printStackTrace(ex);
             if (ex.cause !== null) {
                 causes = causeCollector(ex.cause, causes + "<br><br>Cause(s):<br><ol>")

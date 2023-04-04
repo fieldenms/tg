@@ -13,7 +13,7 @@ import {TgReflector} from '/app/tg-reflector.js';
 
 import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
-import { tearDownEvent, allDefined, errorMessages, nodeFromPoint } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, allDefined, resultMessages, nodeFromPoint } from '/resources/reflection/tg-polymer-utils.js';
 
 const defaultLabelTemplate = html`
     <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]" slot="label">[[propTitle]]</label>`;
@@ -927,11 +927,11 @@ export class TgEditor extends PolymerElement {
             //     - for these props it does not make sense to propagate such meta-information from
             //     parent property -- the parent prop (if added in master) will show that errors concisely
             if (typeof entity["@" + propertyName + "_error"] !== 'undefined') {
-                this._bindError(errorMessages(entity["@" + propertyName + "_error"]));
+                this._bindError(resultMessages(entity["@" + propertyName + "_error"]));
             } else if (typeof entity["@" + propertyName + "_warning"] !== 'undefined') {
-                this._bindWarning(errorMessages(entity["@" + propertyName + "_warning"]));
+                this._bindWarning(resultMessages(entity["@" + propertyName + "_warning"]));
             } else if (typeof entity["@" + propertyName + "_informative"] !== 'undefined') {
-                this._bindInformative(errorMessages(entity["@" + propertyName + "_informative"]));
+                this._bindInformative(resultMessages(entity["@" + propertyName + "_informative"]));
             } else if (typeof entity["@" + propertyName + "_required"] !== 'undefined') {
                 this._bindRequired(entity["@" + propertyName + "_required"]);
             } else {

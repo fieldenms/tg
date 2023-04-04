@@ -150,11 +150,19 @@ const _deepestActiveElementOf = function (element) {
 /**
  * Finds deepest active element including those inside Shadow root children of custom web components starting lookup from document.activeElement.
  */
-export function deepestActiveElement () {
+export const deepestActiveElement = function () {
     return _deepestActiveElementOf(document.activeElement);
 };
 
-export function errorMessages (result) {
+/**
+ * Returns a pair of { short: ..., extended: ... } messages, associated with the 'result'.
+ * The 'result' may be of type Result, Warning or Informative (java).
+ * 
+ * 'result' message should never be 'null' (see Result.getMessage()), except the case where java's NPE was causing failure Result -- in this case we return 'Null pointer exception' for both short and extended messages.
+ * If Result was constructed with single message, it will be used for both short and extended messages.
+ * Otherwise we do splitting by <extended/> part (and try to be smart if there are missing parts before or after <extended/>).
+ */
+export const resultMessages = function (result) {
     if (result.message === null) {
         const npeMsg = 'Null pointer exception';
         return {

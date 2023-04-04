@@ -1,7 +1,7 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { processResponseError } from '/resources/reflection/tg-ajax-utils.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
-import { errorMessages } from '/resources/reflection/tg-polymer-utils.js';
+import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
 
 export const TgEntityBinderBehavior = {
 
@@ -799,7 +799,7 @@ export const TgEntityBinderBehavior = {
      * Opens the toast for erroneous Result.
      */
     _openToastForErrorResult: function (result, isCritical) {
-        this._openToastForError(errorMessages(result).short, this._reflector().stackTrace(result.ex), isCritical);
+        this._openToastForError(resultMessages(result).short, this._reflector().stackTrace(result.ex), isCritical);
     },
 
     /**
@@ -831,9 +831,9 @@ export const TgEntityBinderBehavior = {
      */
     _toastMessages: function (actionName, entity) {
         if (!entity.isValid()) {
-            return errorMessages(entity.firstFailure());
+            return resultMessages(entity.firstFailure());
         } else if (entity.isValidWithWarning()) {
-            return errorMessages(entity.firstWarning());
+            return resultMessages(entity.firstWarning());
         } else {
             return {
                 short: actionName + " completed successfully.",
