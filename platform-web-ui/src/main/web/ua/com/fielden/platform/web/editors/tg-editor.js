@@ -921,7 +921,7 @@ export class TgEditor extends PolymerElement {
     _bindMessages (entity, propertyName, _editorValidationMsg) {
         // console.log("_bindMessages: ", entity, propertyName, _editorValidationMsg);
         if (_editorValidationMsg !== null) {
-            this._bindError(_editorValidationMsg);
+            this._bindError(resultMessages({ message: _editorValidationMsg }));
         } else if (this.reflector().isEntity(entity)) {
             // please, note that dot-notated property will not have any errors / warnings / requiredness
             //     - for these props it does not make sense to propagate such meta-information from
