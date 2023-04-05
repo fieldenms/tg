@@ -282,7 +282,7 @@ public class ApplicationDomainProcessorTest {
     }
 
     @Test
-    public void new_input_domain_entities_are_registered_with_the_existing_ApplicationDomain() {
+    public void new_input_domain_entities_are_incrementally_registered_with_ApplicationDomain() {
         // we need to perform 2 compilations with a temporary storage for generated sources:
         // 1. ApplicationDomain is generated using a single input entity
         // 2. ApplicationDomain is REgenerated to include new input entities
@@ -340,7 +340,7 @@ public class ApplicationDomainProcessorTest {
     }
 
     @Test
-    public void new_external_entities_are_registered_with_the_existing_ApplicationDomain() {
+    public void new_external_entities_are_incrementally_registered_with_ApplicationDomain() {
         // we need to perform 2 compilations with a temporary storage for generated sources:
         // 1. ApplicationDomain is generated using input entities and external entities
         // 2. ApplicationDomain is REgenerated to include new external entities
@@ -420,7 +420,7 @@ public class ApplicationDomainProcessorTest {
      * Missing entity types (e.g., due to removal), that were previously registered cause {@code ApplicationDomain} to be regenerated without them.
      */
     @Test
-    public void missing_entity_types_are_unregistered_from_the_existing_ApplicationDomain() {
+    public void missing_entity_types_are_incrementally_unregistered_from_ApplicationDomain() {
         // we need to perform 2 compilations with a temporary storage for generated sources:
         // 1. ApplicationDomain is generated using 2 input entities
         // 2. One of input entities is removed, hence ApplicationDomain is regenerated to exclude it
@@ -488,7 +488,7 @@ public class ApplicationDomainProcessorTest {
      * {@code ApplicationDomain} to be regenerate without them.
      */
     @Test
-    public void non_domain_entity_types_are_unregistered_from_the_existing_ApplicationDomain() {
+    public void non_domain_entity_types_are_incrementally_unregistered_from_ApplicationDomain() {
         // we need to perform 2 compilations with a temporary storage for generated sources:
         // 1. ApplicationDomain is generated using 2 input entities
         // 2. One of input entities is modified so that it's no longer a domain entity, hence ApplicationDomain is regenerated to exclude it
@@ -560,7 +560,7 @@ public class ApplicationDomainProcessorTest {
      * to be regenerated without them.
      */
     @Test
-    public void external_entities_can_be_unregistered_from_the_existing_ApplicationDomain() {
+    public void external_entities_can_be_incrementally_unregistered_from_ApplicationDomain() {
         compileWithTempStorage((compilation, srcPath) -> {
             // 1
             final JavaFile extensionV1 = JavaFile.builder("test.extension",
@@ -641,6 +641,11 @@ public class ApplicationDomainProcessorTest {
         return elements.stream().map(elt -> elt.getQualifiedName().toString()).toList();
     }
 
+    /**
+     * Returns all entities registered with the given {@code ApplicationDomain}, including application-level and external ones.
+     * @param appDomainElt
+     * @return
+     */
     private static List<EntityElement> allRegisteredEntities(final ApplicationDomainElement appDomainElt) {
         final List<EntityElement> entities = new ArrayList<>(appDomainElt.entities().size() + appDomainElt.externalEntities().size());
         entities.addAll(appDomainElt.entities());
