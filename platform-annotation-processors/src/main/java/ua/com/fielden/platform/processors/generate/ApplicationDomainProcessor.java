@@ -211,6 +211,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
             .flatMap(mirr -> mirr.entities().stream()) // stream of Mirror instances of @RegisterEntity
             .map(RegisterEntity.Mirror::value) // map to EntityElement
             .collect(Collectors.toSet());
+        // NOTE: we assume that external entities are always domain entities, thus don't perform additional checks
         // * are there any new external entities we need to register?
         final List<EntityElement> externalToRegister = externalEntities.stream()
                 .filter(ent -> !appDomainElt.entities().contains(ent))
@@ -398,18 +399,6 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .toList();
-    }
-
-    protected List<EntityElement> collectExternalEntitiesInRound(final RoundEnvironment roundEnv) {
-//        return roundEnv.getRootElements().stream()
-//                .map(elt -> RegisterEntity.Mirror.fromAnnotated(elt, elementFinder))
-//                .filter(Optional::isPresent)
-//                // extract the TypeMirror instances representing the external entities from annotations
-//                .flatMap(annotMirror -> annotMirror.get().values().stream())
-//                .map(typeMirror -> entityFinder.newEntityElement(ElementFinder.asTypeElementOfTypeMirror(typeMirror)))
-//                .toList();
-        // FIXME
-        return List.of();
     }
 
 }
