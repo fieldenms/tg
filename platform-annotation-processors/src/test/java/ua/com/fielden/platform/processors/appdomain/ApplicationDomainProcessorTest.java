@@ -20,6 +20,8 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Consumer;
 import java.util.stream.Stream;
 
 import javax.annotation.processing.Processor;
@@ -50,6 +52,7 @@ import ua.com.fielden.platform.processors.test_entities.PersistentEntity;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.test_utils.ProcessorListener;
 import ua.com.fielden.platform.processors.test_utils.ProcessorListener.AbstractRoundListener;
+import ua.com.fielden.platform.processors.test_utils.exceptions.TestCaseConfigException;
 
 /**
  * A test suite related to {@link ApplicationDomainProcessor}.
@@ -178,31 +181,12 @@ public class ApplicationDomainProcessorTest {
     }
 
     @Test
-    public void entities_annotated_with_SkipEntityRegistration_are_incrementally_unregistered() throws IOException {
+    public void entities_annotated_with_SkipEntityRegistration_are_incrementally_unregistered() {
         // we need to perform 2 compilations with a temporary storage for generated sources:
         // 1. ApplicationDomain is generated using input entities
         // 2. One of the input entities is modified to be annotated with @SkipEntityRegistration, so ApplicationDomain is regenerated
 
-        // set up temporary storage
-        final Path rootTmpDir = Files.createTempDirectory("java-test");
-        final Path srcTmpDir = Files.createDirectory(Path.of(rootTmpDir.toString(), "src"));
-        final Path generatedTmpDir = Files.createDirectory(Path.of(rootTmpDir.toString(), "generated-sources"));
-
-        // configure compilation settings
-        final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        final StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, Locale.getDefault(), StandardCharsets.UTF_8);
-        fileManager.setLocationFromPaths(StandardLocation.SOURCE_OUTPUT, List.of(generatedTmpDir));
-        fileManager.setLocationFromPaths(StandardLocation.SOURCE_PATH, List.of(srcTmpDir, generatedTmpDir));
-
-        // we will reuse this instance
-        final Compilation compilation = new Compilation(List.of(PLACEHOLDER))
-                .setCompiler(compiler)
-                .setFileManager(fileManager)
-                .addOptions(OPTION_PROC_ONLY)
-                .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG);
-
-        // wrap the test in a big try-catch block to clean up temporary storage afterwards
-        try {
+        compileWithTempStorage((compilation, javaFileWriter) -> {
             // 1
             final JavaFile entity1 = JavaFile.builder("test",
                     TypeSpec.classBuilder("First").addModifiers(PUBLIC)
@@ -210,7 +194,7 @@ public class ApplicationDomainProcessorTest {
                         .build())
                 .build();
             // write this entity to file, so we can look it up during the 2nd compilation
-            entity1.writeTo(srcTmpDir);
+            javaFileWriter.accept(entity1);
 
             // we will annotate this entity before the 2nd compilation
             final JavaFile entity2_v1 = JavaFile.builder("test",
@@ -262,9 +246,7 @@ public class ApplicationDomainProcessorTest {
                 .setJavaSources(List.of(entity2_v2.toJavaFileObject()))
                 .setProcessor(processor);
             assertSuccess(compilation.compile());
-        } finally {
-            FileUtils.deleteQuietly(rootTmpDir.toFile());
-        }
+        });
     }
 
     @Test
@@ -300,31 +282,12 @@ public class ApplicationDomainProcessorTest {
     }
 
     @Test
-    public void new_input_domain_entities_are_registered_with_the_existing_ApplicationDomain() throws IOException {
+    public void new_input_domain_entities_are_registered_with_the_existing_ApplicationDomain() {
         // we need to perform 2 compilations with a temporary storage for generated sources:
         // 1. ApplicationDomain is generated using a single input entity
         // 2. ApplicationDomain is REgenerated to include new input entities
 
-        // set up temporary storage
-        final Path rootTmpDir = Files.createTempDirectory("java-test");
-        final Path srcTmpDir = Files.createDirectory(Path.of(rootTmpDir.toString(), "src"));
-        final Path generatedTmpDir = Files.createDirectory(Path.of(rootTmpDir.toString(), "generated-sources"));
-
-        // configure compilation settings
-        final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        final StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, Locale.getDefault(), StandardCharsets.UTF_8);
-        fileManager.setLocationFromPaths(StandardLocation.SOURCE_OUTPUT, List.of(generatedTmpDir));
-        fileManager.setLocationFromPaths(StandardLocation.SOURCE_PATH, List.of(srcTmpDir, generatedTmpDir));
-
-        // we will reuse this instance
-        final Compilation compilation = new Compilation(List.of(PLACEHOLDER))
-                .setCompiler(compiler)
-                .setFileManager(fileManager)
-                .addOptions(OPTION_PROC_ONLY)
-                .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG);
-
-        // wrap the test in a big try-catch block to clean up temporary storage afterwards
-        try {
+        compileWithTempStorage((compilation, javaFileWriter) -> {
             // 1
             final JavaFile entity1 = JavaFile.builder("test",
                     TypeSpec.classBuilder("First").addModifiers(PUBLIC)
@@ -332,7 +295,7 @@ public class ApplicationDomainProcessorTest {
                         .build())
                 .build();
             // write the first entity to file, so we can look it up during the 2nd compilation
-            entity1.writeTo(srcTmpDir);
+            javaFileWriter.accept(entity1);
 
             compilation.setJavaSources(List.of(entity1.toJavaFileObject())).setProcessor(new ApplicationDomainProcessor());
             assertSuccess(compilation.compile());
@@ -373,37 +336,16 @@ public class ApplicationDomainProcessorTest {
 
             compilation.setJavaSources(List.of(entity2.toJavaFileObject())).setProcessor(processor);
             assertSuccess(compilation.compile());
-        } finally {
-            FileUtils.deleteQuietly(rootTmpDir.toFile());
-        }
+        });
     }
 
     @Test
-    public void new_external_entities_are_registered_with_the_existing_ApplicationDomain() throws IOException {
+    public void new_external_entities_are_registered_with_the_existing_ApplicationDomain() {
         // we need to perform 2 compilations with a temporary storage for generated sources:
         // 1. ApplicationDomain is generated using input entities and external entities
         // 2. ApplicationDomain is REgenerated to include new external entities
 
-        // set up temporary storage
-        final Path rootTmpDir = Files.createTempDirectory("java-test");
-        final Path srcTmpDir = Files.createDirectory(Path.of(rootTmpDir.toString(), "src"));
-        final Path generatedTmpDir = Files.createDirectory(Path.of(rootTmpDir.toString(), "generated-sources"));
-
-        // configure compilation settings
-        final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        final StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, Locale.getDefault(), StandardCharsets.UTF_8);
-        fileManager.setLocationFromPaths(StandardLocation.SOURCE_OUTPUT, List.of(generatedTmpDir));
-        fileManager.setLocationFromPaths(StandardLocation.SOURCE_PATH, List.of(srcTmpDir, generatedTmpDir));
-
-        // we will reuse this instance
-        final Compilation compilation = new Compilation(List.of(PLACEHOLDER))
-                .setCompiler(compiler)
-                .setFileManager(fileManager)
-                .addOptions(OPTION_PROC_ONLY)
-                .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG);
-
-        // wrap the test in a big try-catch block to clean up temporary storage afterwards
-        try {
+        compileWithTempStorage((compilation, javaFileWriter) -> {
             // 1
             final JavaFile inputEntity = JavaFile.builder("test",
                     TypeSpec.classBuilder("First").addModifiers(PUBLIC)
@@ -411,7 +353,7 @@ public class ApplicationDomainProcessorTest {
                         .build())
                 .build();
             // write the first entity to file, so we can look it up during the 2nd compilation
-            inputEntity.writeTo(srcTmpDir);
+            javaFileWriter.accept(inputEntity);
 
             final JavaFile extensionV1 = JavaFile.builder("test.extension",
                     TypeSpec.classBuilder("FirstExtension")
@@ -471,40 +413,19 @@ public class ApplicationDomainProcessorTest {
                 .setJavaSources(List.of(extensionV2.toJavaFileObject()))
                 .setProcessor(processor);
             assertSuccess(compilation.compile());
-        } finally {
-            FileUtils.deleteQuietly(rootTmpDir.toFile());
-        }
+        });
     }
 
     /**
      * Missing entity types (e.g., due to removal), that were previously registered cause {@code ApplicationDomain} to be regenerated without them.
      */
     @Test
-    public void missing_entity_types_are_unregistered_from_the_existing_ApplicationDomain() throws IOException {
+    public void missing_entity_types_are_unregistered_from_the_existing_ApplicationDomain() {
         // we need to perform 2 compilations with a temporary storage for generated sources:
         // 1. ApplicationDomain is generated using 2 input entities
         // 2. One of input entities is removed, hence ApplicationDomain is regenerated to exclude it
 
-        // set up temporary storage
-        final Path rootTmpDir = Files.createTempDirectory("java-test");
-        final Path srcTmpDir = Files.createDirectory(Path.of(rootTmpDir.toString(), "src"));
-        final Path generatedTmpDir = Files.createDirectory(Path.of(rootTmpDir.toString(), "generated-sources"));
-
-        // configure compilation settings
-        final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        final StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, Locale.getDefault(), StandardCharsets.UTF_8);
-        fileManager.setLocationFromPaths(StandardLocation.SOURCE_OUTPUT, List.of(generatedTmpDir));
-        fileManager.setLocationFromPaths(StandardLocation.SOURCE_PATH, List.of(srcTmpDir, generatedTmpDir));
-
-        // we will reuse this instance
-        final Compilation compilation = new Compilation(List.of(PLACEHOLDER))
-                .setCompiler(compiler)
-                .setFileManager(fileManager)
-                .addOptions(OPTION_PROC_ONLY)
-                .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG);
-
-        // wrap the test in a big try-catch block to clean up temporary storage afterwards
-        try {
+        compileWithTempStorage((compilation, javaFileWriter) -> {
             // 1
             final JavaFile entity1 = JavaFile.builder("test",
                     TypeSpec.classBuilder("First").addModifiers(PUBLIC)
@@ -512,7 +433,7 @@ public class ApplicationDomainProcessorTest {
                         .build())
                 .build();
             // write this entity to file, so we can look it up during the 2nd compilation
-            entity1.writeTo(srcTmpDir);
+            javaFileWriter.accept(entity1);
 
             final JavaFile entity2 = JavaFile.builder("test",
                     TypeSpec.classBuilder("Second").addModifiers(PUBLIC)
@@ -559,9 +480,7 @@ public class ApplicationDomainProcessorTest {
             // the first entity for simplicity's sake
             compilation.setJavaSources(List.of(entity1.toJavaFileObject())).setProcessor(processor);
             assertSuccess(compilation.compile());
-        } finally {
-            FileUtils.deleteQuietly(rootTmpDir.toFile());
-        }
+        });
     }
 
     /**
@@ -569,31 +488,12 @@ public class ApplicationDomainProcessorTest {
      * {@code ApplicationDomain} to be regenerate without them.
      */
     @Test
-    public void non_domain_entity_types_are_unregistered_from_the_existing_ApplicationDomain() throws IOException {
+    public void non_domain_entity_types_are_unregistered_from_the_existing_ApplicationDomain() {
         // we need to perform 2 compilations with a temporary storage for generated sources:
         // 1. ApplicationDomain is generated using 2 input entities
         // 2. One of input entities is modified so that it's no longer a domain entity, hence ApplicationDomain is regenerated to exclude it
 
-        // set up temporary storage
-        final Path rootTmpDir = Files.createTempDirectory("java-test");
-        final Path srcTmpDir = Files.createDirectory(Path.of(rootTmpDir.toString(), "src"));
-        final Path generatedTmpDir = Files.createDirectory(Path.of(rootTmpDir.toString(), "generated-sources"));
-
-        // configure compilation settings
-        final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        final StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, Locale.getDefault(), StandardCharsets.UTF_8);
-        fileManager.setLocationFromPaths(StandardLocation.SOURCE_OUTPUT, List.of(generatedTmpDir));
-        fileManager.setLocationFromPaths(StandardLocation.SOURCE_PATH, List.of(srcTmpDir, generatedTmpDir));
-
-        // we will reuse this instance
-        final Compilation compilation = new Compilation(List.of(PLACEHOLDER))
-                .setCompiler(compiler)
-                .setFileManager(fileManager)
-                .addOptions(OPTION_PROC_ONLY)
-                .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG);
-
-        // wrap the test in a big try-catch block to clean up temporary storage afterwards
-        try {
+        compileWithTempStorage((compilation, javaFileWriter) -> {
             // 1
             final JavaFile entity1 = JavaFile.builder("test",
                     TypeSpec.classBuilder("First").addModifiers(PUBLIC)
@@ -601,7 +501,7 @@ public class ApplicationDomainProcessorTest {
                         .build())
                 .build();
             // write this entity to file, so we can look it up during the 2nd compilation
-            entity1.writeTo(srcTmpDir);
+            javaFileWriter.accept(entity1);
 
             // we will modify this entity
             final JavaFile entity2 = JavaFile.builder("test",
@@ -620,7 +520,7 @@ public class ApplicationDomainProcessorTest {
                     entity2.typeSpec.toBuilder().addModifiers(ABSTRACT).build())
                 .build();
             // write the modified entity to file, so we can look it up during the 2nd compilation
-            abstractEntity2.writeTo(srcTmpDir);
+            javaFileWriter.accept(abstractEntity2);
 
             final Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
                     .setRoundListener(new RoundListener() {
@@ -652,9 +552,7 @@ public class ApplicationDomainProcessorTest {
 
             compilation.setJavaSources(List.of(abstractEntity2.toJavaFileObject())).setProcessor(processor);
             assertSuccess(compilation.compile());
-        } finally {
-            FileUtils.deleteQuietly(rootTmpDir.toFile());
-        }
+        });
     }
 
     /**
@@ -662,31 +560,8 @@ public class ApplicationDomainProcessorTest {
      * to be regenerated without them.
      */
     @Test
-    public void external_entities_can_be_unregistered_from_the_existing_ApplicationDomain() throws IOException {
-        // we need to perform 2 compilations with a temporary storage for generated sources:
-        // 1. ApplicationDomain is generated using an extension that declares external entities
-        // 2. The extension is modified so that it no longer declares one of the external entities, and ApplicationDomain is regenerated
-
-        // set up temporary storage
-        final Path rootTmpDir = Files.createTempDirectory("java-test");
-        final Path srcTmpDir = Files.createDirectory(Path.of(rootTmpDir.toString(), "src"));
-        final Path generatedTmpDir = Files.createDirectory(Path.of(rootTmpDir.toString(), "generated-sources"));
-
-        // configure compilation settings
-        final JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-        final StandardJavaFileManager fileManager = compiler.getStandardFileManager(null, Locale.getDefault(), StandardCharsets.UTF_8);
-        fileManager.setLocationFromPaths(StandardLocation.SOURCE_OUTPUT, List.of(generatedTmpDir));
-        fileManager.setLocationFromPaths(StandardLocation.SOURCE_PATH, List.of(srcTmpDir, generatedTmpDir));
-
-        // we will reuse this instance
-        final Compilation compilation = new Compilation(List.of(PLACEHOLDER))
-                .setCompiler(compiler)
-                .setFileManager(fileManager)
-                .addOptions(OPTION_PROC_ONLY)
-                .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG);
-
-        // wrap the test in a big try-catch block to clean up temporary storage afterwards
-        try {
+    public void external_entities_can_be_unregistered_from_the_existing_ApplicationDomain() {
+        compileWithTempStorage((compilation, srcPath) -> {
             // 1
             final JavaFile extensionV1 = JavaFile.builder("test.extension",
                     TypeSpec.classBuilder("FirstExtension")
@@ -744,9 +619,7 @@ public class ApplicationDomainProcessorTest {
                 .setJavaSources(List.of(extensionV2.toJavaFileObject()))
                 .setProcessor(processor);
             assertSuccess(compilation.compile());
-        } finally {
-            FileUtils.deleteQuietly(rootTmpDir.toFile());
-        }
+        });
     }
 
     // -------------------- UTILITIES --------------------
@@ -773,6 +646,63 @@ public class ApplicationDomainProcessorTest {
         entities.addAll(appDomainElt.entities());
         entities.addAll(appDomainElt.externalEntities());
         return entities;
+    }
+
+    /**
+     * Evaluates the given consumer with a configured {@link Compilation} instance and a {@link Consumer} to persist source files
+     * between compilations.
+     * <p>
+     * Temporary storage is set up in the form of a filesystem directory, which is deleted after {@code consumer} returns or throws an exception.
+     *
+     * @param consumer
+     */
+    private static void compileWithTempStorage(final BiConsumer<Compilation, Consumer<JavaFile>> consumer) {
+        final Path rootTmpDir;
+        try {
+            // set up temporary storage
+            rootTmpDir = Files.createTempDirectory("java-test");
+        } catch (final IOException ex) {
+            throw new TestCaseConfigException("Failed to create a temporary directory", ex);
+        }
+
+        final Path srcTmpDir;
+        final JavaCompiler compiler;
+        final StandardJavaFileManager fileManager ;
+        try {
+            srcTmpDir = Files.createDirectory(Path.of(rootTmpDir.toString(), "src"));
+            final Path generatedTmpDir = Files.createDirectory(Path.of(rootTmpDir.toString(), "generated-sources"));
+
+            // configure compilation settings
+            compiler = ToolProvider.getSystemJavaCompiler();
+            fileManager = compiler.getStandardFileManager(null, Locale.getDefault(), StandardCharsets.UTF_8);
+            fileManager.setLocationFromPaths(StandardLocation.SOURCE_OUTPUT, List.of(generatedTmpDir));
+            fileManager.setLocationFromPaths(StandardLocation.SOURCE_PATH, List.of(srcTmpDir, generatedTmpDir));
+        } catch (final IOException ex) {
+            FileUtils.deleteQuietly(rootTmpDir.toFile());
+            throw new TestCaseConfigException("Failed to configure compilation with temporary storage.", ex);
+        }
+
+        // this instance can be reused by setting different java sources each time
+        final Compilation compilation = new Compilation(List.of(PLACEHOLDER))
+                .setCompiler(compiler)
+                .setFileManager(fileManager)
+                .addOptions(OPTION_PROC_ONLY)
+                .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG);
+
+        final Consumer<JavaFile> javaFileWriter = javaFile -> {
+            try {
+                javaFile.writeTo(srcTmpDir);
+            } catch (final IOException ex) {
+                throw new TestCaseConfigException("Failed to write java file.", ex);
+            }
+        };
+
+        // wrap the consumer in a big try-catch block to clean up temporary storage afterwards
+        try {
+            consumer.accept(compilation, javaFileWriter);
+        } finally {
+            FileUtils.deleteQuietly(rootTmpDir.toFile());
+        }
     }
 
     /** A round listener tailored for {@link ApplicationDomainProcessor}. */
