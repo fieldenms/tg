@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.processors.appdomain;
 
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static javax.lang.model.element.Modifier.STATIC;
+import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asTypeElementOfTypeMirror;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -18,6 +20,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.annotation.processing.Generated;
 import javax.annotation.processing.ProcessingEnvironment;
@@ -46,7 +49,6 @@ import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
 import ua.com.fielden.platform.processors.appdomain.annotation.ExtendApplicationDomain;
-import ua.com.fielden.platform.processors.appdomain.annotation.RegisterEntity;
 import ua.com.fielden.platform.processors.appdomain.annotation.RegisteredEntity;
 import ua.com.fielden.platform.processors.appdomain.annotation.SkipEntityRegistration;
 import ua.com.fielden.platform.processors.exceptions.ProcessorInitializationException;
@@ -186,11 +188,8 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
                 .filter(ent -> isDomainEntity(ent) && !shouldSkipRegistration(ent))
                 .toList();
 
-        final Set<EntityElement> externalEntities = inputExtension.map(mirr -> mirr.entities().stream()
-                // stream of Mirror instances of @RegisterEntity
-                .map(RegisterEntity.Mirror::value)  // map to EntityElement
-                .collect(Collectors.toSet()))
-                .orElseGet(() -> Set.of());
+        final List<EntityElement> externalEntities = inputExtension.map(mirr -> streamEntitiesFromExtension(mirr).toList())
+                .orElseGet(() -> List.of());
 
         if (!externalEntities.isEmpty()) {
             printNote("Found %s entities from extensions.".formatted(externalEntities.size()));
@@ -218,9 +217,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
                 .toList());
 
         // analyse the input extension if it exists
-        final Set<EntityElement> externalEntities = inputExtension.map(mirr -> mirr.entities().stream()
-                .map(RegisterEntity.Mirror::value)
-                .collect(Collectors.toSet()))
+        final Set<EntityElement> externalEntities = inputExtension.map(mirr -> streamEntitiesFromExtension(mirr).collect(toSet()))
                 .orElseGet(() -> Set.of());
         // NOTE: we assume that external entities are always domain entities, thus don't perform additional checks
         // * are there any new external entities we need to register?
@@ -441,6 +438,12 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         return extensions.stream()
                 .map(elt -> ExtendApplicationDomain.Mirror.from(elt.getAnnotation(ExtendApplicationDomain.class), entityFinder))
                 .findFirst();
+    }
+
+    protected Stream<EntityElement> streamEntitiesFromExtension(final ExtendApplicationDomain.Mirror mirror) {
+        return mirror.entities().stream() // stream of Mirror instances of @RegisterEntity
+                // map to EntityElement
+                .map(atRegEntityMirror -> entityFinder.newEntityElement(asTypeElementOfTypeMirror(atRegEntityMirror.value())));
     }
 
 }

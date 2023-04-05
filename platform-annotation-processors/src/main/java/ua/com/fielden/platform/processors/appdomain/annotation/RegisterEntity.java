@@ -2,7 +2,6 @@ package ua.com.fielden.platform.processors.appdomain.annotation;
 
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.SOURCE;
-import static ua.com.fielden.platform.processors.metamodel.utils.ElementFinder.asTypeElementOfTypeMirror;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
@@ -12,8 +11,7 @@ import javax.lang.model.type.TypeMirror;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor;
-import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
-import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
+import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 
 /**
  * An annotation that should be used in conjuction with {@link ExtendApplicationDomain} to register additional domain entity types.
@@ -32,18 +30,18 @@ public @interface RegisterEntity {
      * A helper class that represents instances of {@link RegisterEntity} on the level of {@link TypeMirror}.
      */
     static class Mirror {
-        private final EntityElement value;
+        private final TypeMirror value;
 
-        private Mirror(final EntityElement value) {
+        private Mirror(final TypeMirror value) {
             this.value = value;
         }
 
-        public static Mirror from(final RegisterEntity annot, final EntityFinder finder) {
+        public static Mirror from(final RegisterEntity annot, final ElementFinder finder) {
             final TypeMirror entityType = finder.getAnnotationElementValueOfClassType(annot, RegisterEntity::value);
-            return new Mirror(finder.newEntityElement(asTypeElementOfTypeMirror(entityType)));
+            return new Mirror(entityType);
         }
 
-        public EntityElement value() {
+        public TypeMirror value() {
             return value;
         }
     }

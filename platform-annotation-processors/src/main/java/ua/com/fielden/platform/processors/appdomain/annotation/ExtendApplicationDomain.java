@@ -14,7 +14,7 @@ import java.util.stream.Stream;
 import javax.lang.model.type.TypeMirror;
 
 import ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor;
-import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
+import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 
 /**
  * Should be used to annotate a type (<i>extension point</i>) that provides additional information for the generation of {@code ApplicationDomain}.
@@ -45,7 +45,7 @@ public @interface ExtendApplicationDomain {
             this.entities = new ArrayList<>(entities);
         }
 
-        public static Mirror from(final ExtendApplicationDomain annot, final EntityFinder finder) {
+        public static Mirror from(final ExtendApplicationDomain annot, final ElementFinder finder) {
             final List<RegisterEntity.Mirror> atRegisterEntityMirrors = Stream.of(annot.entities())
                     .map(atRegisterEntity -> RegisterEntity.Mirror.from(atRegisterEntity, finder))
                     .toList();
