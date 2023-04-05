@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.processors.generate;
+package ua.com.fielden.platform.processors.appdomain;
 
 import static java.util.Optional.ofNullable;
 import static javax.lang.model.element.Modifier.FINAL;
@@ -45,11 +45,11 @@ import ua.com.fielden.platform.basic.config.IApplicationDomainProvider;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
+import ua.com.fielden.platform.processors.appdomain.annotation.ExtendApplicationDomain;
+import ua.com.fielden.platform.processors.appdomain.annotation.RegisterEntity;
+import ua.com.fielden.platform.processors.appdomain.annotation.RegisteredEntity;
+import ua.com.fielden.platform.processors.appdomain.annotation.SkipEntityRegistration;
 import ua.com.fielden.platform.processors.exceptions.ProcessorInitializationException;
-import ua.com.fielden.platform.processors.generate.annotation.ExtendApplicationDomain;
-import ua.com.fielden.platform.processors.generate.annotation.RegisterEntity;
-import ua.com.fielden.platform.processors.generate.annotation.RegisteredEntity;
-import ua.com.fielden.platform.processors.generate.annotation.SkipEntityRegistration;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;

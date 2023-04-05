@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.processors.generate.annotation;
+package ua.com.fielden.platform.processors.appdomain.annotation;
 
 import static java.lang.annotation.ElementType.TYPE;
 import static java.lang.annotation.RetentionPolicy.CLASS;
@@ -14,7 +14,7 @@ import javax.lang.model.AnnotatedConstruct;
 import javax.lang.model.type.TypeMirror;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.processors.generate.ApplicationDomainProcessor;
+import ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 
 /**

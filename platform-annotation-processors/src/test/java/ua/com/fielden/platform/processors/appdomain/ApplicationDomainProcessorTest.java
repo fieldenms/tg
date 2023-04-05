@@ -1,10 +1,10 @@
-package ua.com.fielden.platform.processors.generate;
+package ua.com.fielden.platform.processors.appdomain;
 
 import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static ua.com.fielden.platform.processors.generate.ApplicationDomainProcessor.PACKAGE_OPTION;
+import static ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor.PACKAGE_OPTION;
 import static ua.com.fielden.platform.processors.test_utils.CollectionTestUtils.assertEqualByContents;
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
 import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccess;
@@ -41,9 +41,11 @@ import com.squareup.javapoet.TypeSpec;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.processors.generate.annotation.ExtendApplicationDomain;
-import ua.com.fielden.platform.processors.generate.annotation.RegisterEntity;
-import ua.com.fielden.platform.processors.generate.annotation.SkipEntityRegistration;
+import ua.com.fielden.platform.processors.appdomain.ApplicationDomainElement;
+import ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor;
+import ua.com.fielden.platform.processors.appdomain.annotation.ExtendApplicationDomain;
+import ua.com.fielden.platform.processors.appdomain.annotation.RegisterEntity;
+import ua.com.fielden.platform.processors.appdomain.annotation.SkipEntityRegistration;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
 import ua.com.fielden.platform.processors.test_entities.PersistentEntity;
@@ -742,6 +744,10 @@ public class ApplicationDomainProcessorTest {
         return pkgPrefix + javaFile.typeSpec.name;
     }
 
+//    private static List<String> getQualifiedNames(final JavaFile... javaFiles) {
+//        return Stream.of(javaFiles).map(jf -> getQualifiedName(jf)).toList();
+//    }
+//
     private static List<String> getQualifiedNames(final Collection<? extends TypeElement> elements) {
         return elements.stream().map(elt -> elt.getQualifiedName().toString()).toList();
     }

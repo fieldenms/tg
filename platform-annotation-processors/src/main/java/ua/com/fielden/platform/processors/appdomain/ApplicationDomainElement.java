@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.processors.generate;
+package ua.com.fielden.platform.processors.appdomain;
 
 import java.util.Collections;
 import java.util.LinkedList;
@@ -10,7 +10,7 @@ import javax.lang.model.type.ErrorType;
 import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
-import ua.com.fielden.platform.processors.generate.annotation.RegisteredEntity;
+import ua.com.fielden.platform.processors.appdomain.annotation.RegisteredEntity;
 import ua.com.fielden.platform.processors.metamodel.elements.AbstractForwardingTypeElement;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
