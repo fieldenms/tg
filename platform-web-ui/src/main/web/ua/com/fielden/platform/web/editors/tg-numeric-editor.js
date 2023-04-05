@@ -16,9 +16,12 @@ export class TgNumericEditor extends TgEditor {
     }
 
     _copyTap () {
-        if (navigator.clipboard) {
+        // copy to clipboard should happen only if there is something to copy
+        if (navigator.clipboard && this.$.inputLayer.innerText) {
             navigator.clipboard.writeText(this.$.inputLayer.innerText);
             this._showCheckIconAndToast(this.$.inputLayer.innerText);
+        } else if (this.toaster) {
+            this.toaster.openToastWithoutEntity("Nothing to copy", true, "There was nothing to copy.", false);
         }
     }
     
