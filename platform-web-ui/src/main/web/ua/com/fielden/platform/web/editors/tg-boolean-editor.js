@@ -7,6 +7,9 @@ import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import {TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js'
 
+const customLableTemplate = html`
+    <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]" slot="label">[[propTitle]]</label>`;
+
 const additionalTemplate = html`
     <style>
         /* Styles for boolean property editors. */
@@ -77,7 +80,7 @@ const propertyActionTemplate = html`<slot name="property-action"></slot>`;
 export class TgBooleanEditor extends TgEditor {
 
     static get template() { 
-        return createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate);
+        return createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate, customLableTemplate);
     }
 
     static get properties() {
@@ -108,6 +111,15 @@ export class TgBooleanEditor extends TgEditor {
         this._isBooleanChecked = (function (editingValue) {
             return editingValue === 'true';
         }).bind(this);
+    }
+
+    /**
+     * This function returns the tooltip for this editor.
+     */
+    _getTooltip (value) {
+        let tooltip = this._formatTooltipText(value);
+        tooltip += this.propDesc && (tooltip ? '<br><br>' : '') + this.propDesc;
+        return tooltip;
     }
     
     /**
