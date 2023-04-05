@@ -838,9 +838,12 @@ export class TgEditor extends PolymerElement {
     }
 
     _copyTap () {
-        if (navigator.clipboard) {
+        // copy to clipboard should happen only if there is something to copy
+        if (navigator.clipboard && this._editingValue) {
             navigator.clipboard.writeText(this._editingValue);
             this._showCheckIconAndToast(this._editingValue);
+        } else if (this.toaster) {
+            this.toaster.openToastWithoutEntity("Nothing to copy", true, "There was nothing to copy.", false);
         }
     }
 
