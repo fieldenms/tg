@@ -439,9 +439,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         }
 
         return extensions.stream()
-                .map(elt -> ExtendApplicationDomain.Mirror.fromAnnotated(elt, entityFinder))
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+                .map(elt -> ExtendApplicationDomain.Mirror.from(elt.getAnnotation(ExtendApplicationDomain.class), entityFinder))
                 .findFirst();
     }
 

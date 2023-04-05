@@ -5,13 +5,12 @@ import static java.lang.annotation.RetentionPolicy.SOURCE;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.Target;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Stream;
 
-import javax.lang.model.AnnotatedConstruct;
 import javax.lang.model.type.TypeMirror;
 
 import ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor;
@@ -40,23 +39,18 @@ public @interface ExtendApplicationDomain {
      * A helper class that represents instances of {@link ExtendApplicationDomain} on the level of {@link TypeMirror}.
      */
     static class Mirror {
-        private final List<RegisterEntity.Mirror> entities = new LinkedList<>();
+        private final List<RegisterEntity.Mirror> entities;
 
-        private Mirror() {}
+        private Mirror(final Collection<RegisterEntity.Mirror> entities) {
+            this.entities = new ArrayList<>(entities);
+        }
 
-        public static Optional<Mirror> fromAnnotated(final AnnotatedConstruct annotated, final EntityFinder finder) {
-            final ExtendApplicationDomain annot = annotated.getAnnotation(ExtendApplicationDomain.class);
-            if (annot == null) {
-                return Optional.empty();
-            }
+        public static Mirror from(final ExtendApplicationDomain annot, final EntityFinder finder) {
+            final List<RegisterEntity.Mirror> atRegisterEntityMirrors = Stream.of(annot.entities())
+                    .map(atRegisterEntity -> RegisterEntity.Mirror.from(atRegisterEntity, finder))
+                    .toList();
 
-            final Mirror mirror = new Mirror();
-
-            Stream.of(annot.entities())
-                .map(atRegisterEntity -> RegisterEntity.Mirror.from(atRegisterEntity, finder))
-                .forEach(atRegisterEntityMirror -> mirror.entities.add(atRegisterEntityMirror));
-
-            return Optional.of(mirror);
+            return new Mirror(atRegisterEntityMirrors);
         }
 
         public List<RegisterEntity.Mirror> entities() {
