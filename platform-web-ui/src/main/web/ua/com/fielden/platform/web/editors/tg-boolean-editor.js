@@ -96,7 +96,7 @@ export class TgBooleanEditor extends TgEditor {
      * This function returns the tooltip for this editor.
      */
     _getTooltip (value) {
-        var tooltip = this._formatTooltipText(value);
+        let tooltip = this._formatTooltipText(value);
         tooltip += this.propDesc && (tooltip ? '<br><br>' : '') + this.propDesc;
         return tooltip;
     }
