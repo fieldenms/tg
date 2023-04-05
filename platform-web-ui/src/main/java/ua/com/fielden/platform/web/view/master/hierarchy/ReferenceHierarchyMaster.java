@@ -62,7 +62,8 @@ public class ReferenceHierarchyMaster implements IMaster<ReferenceHierarchy> {
                 .attr("validation-callback", "[[doNotValidate]]")
                 .attr("prop-title", "Type to filter reference hierarchy")
                 .attr("prop-desc", "Display types or instances those matched entered text")
-                .attr("current-state", "[[currentState]]");
+                .attr("current-state", "[[currentState]]")
+                .attr("toaster", "[[toaster]]");
 
         final DomElement referenceHierarchyDom = new DomElement("tg-reference-hierarchy")
                 .attr("id", "refrenceHierarchy")
