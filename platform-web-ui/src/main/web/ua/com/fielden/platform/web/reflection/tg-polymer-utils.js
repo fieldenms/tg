@@ -339,7 +339,8 @@ export const elementFromPoint = function (documentOrShadowRoot, x, y) {
             // in some cases, there is no suitable children in a Shadow DOM to return as elementFromPoint ('element' variable);
             // in these cases, element === documentOrShadowRoot.host and element.shadowRoot === documentOrShadowRoot;
             // we need to stop here and return that web component;
-            // please note, however, that there can be non-element (e.g. textual) node under the point
+            // please note, however, that there can be non-element (e.g. textual) node under the point;
+            // or even other element or element tree with 'pointer-events: none', with possible non-element children
             return element;
         } else {
             // traverse in its internal DOM further

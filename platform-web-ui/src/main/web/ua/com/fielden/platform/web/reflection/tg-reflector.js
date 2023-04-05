@@ -1548,7 +1548,7 @@ export const TgReflector = Polymer({
      */
     stackTrace: function (ex) {
         // collects error cause by traversing the stack into an ordered list
-        var causeCollector = function (ex, causes) {
+        const causeCollector = function (ex, causes) {
             if (ex) {
                 causes = causes + "<li>" + resultMessages(ex).extended + "</li>";
                 printStackTrace(ex);
@@ -1557,33 +1557,32 @@ export const TgReflector = Polymer({
                 }
             }
             return causes + "</ol>";
-        }.bind(this);
+        };
 
-        // ouputs the exception stack trace into the console as warning
-        var printStackTrace = function (ex) {
-            var msg = "No cause and stack trace.";
+        // outputs the exception stack trace into the console as warning
+        const printStackTrace = function (ex) {
+            let msg = "No cause and stack trace.";
             if (ex) {
                 msg = resultMessages(ex).short + '\n';
                 if (Array.isArray(ex.stackTrace)) {
-                    for (var i = 0; i < ex.stackTrace.length; i += 1) {
-                        var st = ex.stackTrace[i];
+                    for (let i = 0; i < ex.stackTrace.length; i += 1) {
+                        const st = ex.stackTrace[i];
                         msg = msg + st.className + '.java:' + st.lineNumber + ':' + st.methodName + ';\n';
                     }
                 }
             }
             console.warn(msg);
-        }.bind(this);
+        };
 
         if (ex) {
-            var causes = "<b>" + resultMessages(ex).extended + "</b>";
+            let causes = "<b>" + resultMessages(ex).extended + "</b>";
             printStackTrace(ex);
             if (ex.cause !== null) {
                 causes = causeCollector(ex.cause, causes + "<br><br>Cause(s):<br><ol>")
             }
-
             return causes;
         }
-
+        return '';
     },
 
     //////////////////// SERVER EXCEPTIONS UTILS [END] //////////////
