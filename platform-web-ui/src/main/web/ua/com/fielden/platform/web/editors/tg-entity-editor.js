@@ -655,7 +655,7 @@ export class TgEntityEditor extends TgEditor {
             const startOfText = text.substring(0, caretPos);
             const fromIndex = startOfText.lastIndexOf(this.separator) < 0 ? -1 : startOfText.lastIndexOf(this.separator); // just to make sure that it is -1
 
-            this._replaceFromIndex = fromIndex < 0 ? 0 : fromIndex; //  negative index is not suitable for text selection that happens after insertion of selected values
+            this._replaceFromIndex = fromIndex; // can be negative, which requires special treatment in _done() for selecting the correction portion of the input text
             this._replaceToIndex = toIndex;
 
             // assign the actual search string
@@ -905,7 +905,7 @@ export class TgEntityEditor extends TgEditor {
                 this._editingValue = newEditingValue;
 
                 // let's highlight the inserted values
-                input.selectionStart = this._replaceFromIndex;
+                input.selectionStart = this._replaceFromIndex < 0 ? 0 : this._replaceFromIndex; // negative index is not suitable for selection start, zero needs to be used instead
                 input.selectionEnd = input.selectionStart + selectedValuesAsStr.length + 1;
 
             }
