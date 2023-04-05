@@ -41,8 +41,6 @@ import com.squareup.javapoet.TypeSpec;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
-import ua.com.fielden.platform.processors.appdomain.ApplicationDomainElement;
-import ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor;
 import ua.com.fielden.platform.processors.appdomain.annotation.ExtendApplicationDomain;
 import ua.com.fielden.platform.processors.appdomain.annotation.RegisterEntity;
 import ua.com.fielden.platform.processors.appdomain.annotation.SkipEntityRegistration;
@@ -83,7 +81,7 @@ public class ApplicationDomainProcessorTest {
                                 processor.findApplicationDomainInRound(roundEnv));
 
                         assertEqualByContents(
-                                Stream.of(ExampleEntity.class, PersistentEntity.class).map(Class::getCanonicalName).toList(),
+                                getQualifiedNames(ExampleEntity.class, PersistentEntity.class),
                                 getQualifiedNames(allRegisteredEntities(appDomainElt)));
                     }
                 });
@@ -168,7 +166,8 @@ public class ApplicationDomainProcessorTest {
                         final ApplicationDomainElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
                                 processor.findApplicationDomainInRound(roundEnv));
 
-                        assertEqualByContents(List.of(getQualifiedName(firstEntity)),
+                        assertEqualByContents(
+                                getQualifiedNames(firstEntity),
                                 getQualifiedNames(allRegisteredEntities(appDomainElt)));
                     }
                 });
@@ -241,7 +240,8 @@ public class ApplicationDomainProcessorTest {
                             final ApplicationDomainElement appDomainElt = assertPresent("ApplicationDomain is missing.",
                                     processor.findApplicationDomain());
 
-                            assertEqualByContents(Stream.of(entity1, entity2_v1).map(jf -> getQualifiedName(jf)).toList(),
+                            assertEqualByContents(
+                                    getQualifiedNames(entity1, entity2_v1),
                                     getQualifiedNames(allRegisteredEntities(appDomainElt)));
                         }
 
@@ -252,7 +252,8 @@ public class ApplicationDomainProcessorTest {
                                     processor.findApplicationDomainInRound(roundEnv));
 
                             // entity2 should have been excluded
-                            assertEqualByContents(Stream.of(entity1).map(jf -> getQualifiedName(jf)).toList(),
+                            assertEqualByContents(
+                                    getQualifiedNames(entity1),
                                     getQualifiedNames(allRegisteredEntities(appDomainElt)));
                         }
                     });
@@ -268,14 +269,16 @@ public class ApplicationDomainProcessorTest {
 
     @Test
     public void abstract_entity_types_are_not_registered() {
-        final List<TypeSpec> typeSpecs = List.of(
-                TypeSpec.classBuilder("AbstractExampleEntity").addModifiers(PUBLIC, ABSTRACT)
-                .superclass(ParameterizedTypeName.get(AbstractEntity.class, String.class))
-                .build(),
+        final var domainEntity = JavaFile.builder("test",
                 TypeSpec.classBuilder("ExampleEntity").addModifiers(PUBLIC)
                 .superclass(ParameterizedTypeName.get(AbstractEntity.class, String.class))
-                .build());
-        final List<JavaFileObject> javaFileObjects = typeSpecs.stream().map(ts -> JavaFile.builder("test", ts).build().toJavaFileObject()).toList();
+                .build())
+            .build();
+        final var abstractEntity = JavaFile.builder("test",
+                TypeSpec.classBuilder("AbstractExampleEntity").addModifiers(PUBLIC, ABSTRACT)
+                .superclass(ParameterizedTypeName.get(AbstractEntity.class, String.class))
+                .build())
+            .build();
 
         final Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
                 .setRoundListener(new RoundListener() {
@@ -285,12 +288,13 @@ public class ApplicationDomainProcessorTest {
                         final ApplicationDomainElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
                                 processor.findApplicationDomainInRound(roundEnv));
 
-                        assertEqualByContents(List.of("test.ExampleEntity"),
+                        assertEqualByContents(
+                                getQualifiedNames(domainEntity),
                                 getQualifiedNames(allRegisteredEntities(appDomainElt)));
                     }
                 });
 
-        assertSuccess(Compilation.newInMemory(javaFileObjects)
+        assertSuccess(Compilation.newInMemory(Stream.of(domainEntity, abstractEntity).map(JavaFile::toJavaFileObject).toList())
                 .setProcessor(processor).addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
                 .compile());
     }
@@ -349,7 +353,8 @@ public class ApplicationDomainProcessorTest {
                                     processor.findApplicationDomain());
 
                             // assert that exactly one entity is currently registered
-                            assertEqualByContents(List.of(getQualifiedName(entity1)),
+                            assertEqualByContents(
+                                    getQualifiedNames(entity1),
                                     getQualifiedNames(allRegisteredEntities(appDomainElt)));
                         }
 
@@ -360,7 +365,8 @@ public class ApplicationDomainProcessorTest {
                                     processor.findApplicationDomainInRound(roundEnv));
 
                             // assert that exactly two entities were registered
-                            assertEqualByContents(List.of(getQualifiedName(entity1), getQualifiedName(entity2)),
+                            assertEqualByContents(
+                                    getQualifiedNames(entity1, entity2),
                                     getQualifiedNames(allRegisteredEntities(appDomainElt)));
                         }
                     });
@@ -444,7 +450,8 @@ public class ApplicationDomainProcessorTest {
                             final ApplicationDomainElement appDomainElt = assertPresent("ApplicationDomain is missing.",
                                     processor.findApplicationDomain());
 
-                            assertEqualByContents(List.of(getQualifiedName(inputEntity), ExampleEntity.class.getCanonicalName()),
+                            assertEqualByContents(
+                                    List.of(getQualifiedName(inputEntity), ExampleEntity.class.getCanonicalName()),
                                     getQualifiedNames(allRegisteredEntities(appDomainElt)));
                         }
 
@@ -454,7 +461,8 @@ public class ApplicationDomainProcessorTest {
                             final ApplicationDomainElement appDomainElt = assertPresent("Generated ApplicationDomain is missing.",
                                     processor.findApplicationDomainInRound(roundEnv));
 
-                            assertEqualByContents(List.of(getQualifiedName(inputEntity), ExampleEntity.class.getCanonicalName(), PersistentEntity.class.getCanonicalName()),
+                            assertEqualByContents(
+                                    List.of(getQualifiedName(inputEntity), ExampleEntity.class.getCanonicalName(), PersistentEntity.class.getCanonicalName()),
                                     getQualifiedNames(allRegisteredEntities(appDomainElt)));
                         }
                     });
@@ -528,8 +536,8 @@ public class ApplicationDomainProcessorTest {
                             final ApplicationDomainElement appDomainElt = assertPresent("ApplicationDomain is missing.",
                                     processor.findApplicationDomain());
 
-                            // assert that exactly 2 entities are currently registered
-                            assertEqualByContents(List.of("test.First"),
+                            // entity First will be represented as usual
+                            assertEqualByContents(getQualifiedNames(entity1),
                                     getQualifiedNames(allRegisteredEntities(appDomainElt)));
                             // entity Second will be represented as an ErrorType, since it couldn't be located
                             assertEquals("Incorrect number of error types", 1, appDomainElt.errorTypes().size());
@@ -542,7 +550,7 @@ public class ApplicationDomainProcessorTest {
                                     processor.findApplicationDomainInRound(roundEnv));
 
                             // assert that only entity "First" was registered
-                            assertEqualByContents(List.of("test.First"),
+                            assertEqualByContents(getQualifiedNames(entity1),
                                     getQualifiedNames(allRegisteredEntities(appDomainElt)));
                         }
                     });
@@ -624,7 +632,8 @@ public class ApplicationDomainProcessorTest {
                                     processor.findApplicationDomain());
 
                             // assert that exactly 2 entities are currently registered
-                            assertEqualByContents(List.of("test.First", "test.Second"),
+                            assertEqualByContents(
+                                    getQualifiedNames(entity1, entity2),
                                     getQualifiedNames(allRegisteredEntities(appDomainElt)));
                         }
 
@@ -635,7 +644,8 @@ public class ApplicationDomainProcessorTest {
                                     processor.findApplicationDomainInRound(roundEnv));
 
                             // assert that only entity "First" was registered
-                            assertEqualByContents(List.of("test.First"),
+                            assertEqualByContents(
+                                    getQualifiedNames(entity1),
                                     getQualifiedNames(allRegisteredEntities(appDomainElt)));
                         }
                     });
@@ -713,7 +723,8 @@ public class ApplicationDomainProcessorTest {
                             final ApplicationDomainElement appDomainElt = assertPresent("ApplicationDomain is missing.",
                                     processor.findApplicationDomain());
 
-                            assertEqualByContents(Stream.of(ExampleEntity.class, PersistentEntity.class).map(Class::getCanonicalName).toList(),
+                            assertEqualByContents(
+                                    getQualifiedNames(ExampleEntity.class, PersistentEntity.class),
                                     getQualifiedNames(allRegisteredEntities(appDomainElt)));
                         }
 
@@ -723,7 +734,8 @@ public class ApplicationDomainProcessorTest {
                             final ApplicationDomainElement appDomainElt = assertPresent("Regenerated ApplicationDomain is missing.",
                                     processor.findApplicationDomainInRound(roundEnv));
 
-                            assertEqualByContents(Stream.of(ExampleEntity.class).map(Class::getCanonicalName).toList(),
+                            assertEqualByContents(
+                                    getQualifiedNames(ExampleEntity.class),
                                     getQualifiedNames(allRegisteredEntities(appDomainElt)));
                         }
                     });
@@ -744,10 +756,14 @@ public class ApplicationDomainProcessorTest {
         return pkgPrefix + javaFile.typeSpec.name;
     }
 
-//    private static List<String> getQualifiedNames(final JavaFile... javaFiles) {
-//        return Stream.of(javaFiles).map(jf -> getQualifiedName(jf)).toList();
-//    }
-//
+    private static List<String> getQualifiedNames(final JavaFile... javaFiles) {
+        return Stream.of(javaFiles).map(jf -> getQualifiedName(jf)).toList();
+    }
+
+    private static List<String> getQualifiedNames(final Class<?>... classes) {
+        return Stream.of(classes).map(Class::getCanonicalName).toList();
+    }
+
     private static List<String> getQualifiedNames(final Collection<? extends TypeElement> elements) {
         return elements.stream().map(elt -> elt.getQualifiedName().toString()).toList();
     }
