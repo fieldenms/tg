@@ -46,7 +46,6 @@ import ua.com.fielden.platform.processors.generate.annotation.RegisterEntity;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
 import ua.com.fielden.platform.processors.test_entities.PersistentEntity;
-import ua.com.fielden.platform.processors.test_entities.SuperEntity;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.test_utils.ProcessorListener;
 import ua.com.fielden.platform.processors.test_utils.ProcessorListener.AbstractRoundListener;
@@ -61,23 +60,13 @@ public class ApplicationDomainProcessorTest {
     private static final String GENERATED_PKG = "test.generated.config"; // to prevent conflicts with the real processor
 
     @Test
-    public void entities_specified_by_extensions_are_registered() {
+    public void external_entities_can_be_registered() {
         final JavaFile firstExtension = JavaFile.builder("test",
                 TypeSpec.classBuilder("FirstExtension")
                 .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
                         .addMember("entities", "{ $L, $L }",
                                 AnnotationSpec.get(RegisterEntity.Builder.builder(ExampleEntity.class).build()),
                                 AnnotationSpec.get(RegisterEntity.Builder.builder(PersistentEntity.class).build()))
-                        .build())
-                .build())
-            .build();
-        final JavaFile secondExtension = JavaFile.builder("test",
-                TypeSpec.classBuilder("SecondExtension")
-                .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
-                        // include ExampleEntity twice, but it should be registered once
-                        .addMember("entities", "{ $L, $L }",
-                                AnnotationSpec.get(RegisterEntity.Builder.builder(ExampleEntity.class).build()),
-                                AnnotationSpec.get(RegisterEntity.Builder.builder(SuperEntity.class).build()))
                         .build())
                 .build())
             .build();
@@ -91,12 +80,12 @@ public class ApplicationDomainProcessorTest {
                                 processor.findApplicationDomainInRound(roundEnv));
 
                         assertEqualByContents(
-                                Stream.of(ExampleEntity.class, PersistentEntity.class, SuperEntity.class).map(Class::getCanonicalName).toList(),
+                                Stream.of(ExampleEntity.class, PersistentEntity.class).map(Class::getCanonicalName).toList(),
                                 getQualifiedNames(allRegisteredEntities(appDomainElt)));
                     }
                 });
 
-        assertSuccess(Compilation.newInMemory(List.of(firstExtension.toJavaFileObject(), secondExtension.toJavaFileObject()))
+        assertSuccess(Compilation.newInMemory(List.of(firstExtension.toJavaFileObject()))
                 .setProcessor(processor).addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
                 .compile());
     }
@@ -623,6 +612,7 @@ public class ApplicationDomainProcessorTest {
             FileUtils.deleteQuietly(rootTmpDir.toFile());
         }
     }
+
     // -------------------- UTILITIES --------------------
 
     private static String getQualifiedName(final JavaFile javaFile) {

@@ -18,7 +18,10 @@ import ua.com.fielden.platform.processors.generate.ApplicationDomainProcessor;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
 
 /**
- * Should be used to annotate a type that provides additional information for the generation of {@code ApplicationDomain}.
+ * Should be used to annotate a type (<i>extension point</i>) that provides additional information for the generation of {@code ApplicationDomain}.
+ * <p>
+ * <b>At most one extension point is allowed.</b>
+ *
  *
  * @see ApplicationDomainProcessor
  *

@@ -24,9 +24,11 @@ import javax.annotation.processing.Generated;
 import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.lang.model.element.Element;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.ErrorType;
+import javax.tools.Diagnostic.Kind;
 
 import org.apache.commons.lang3.exception.ExceptionUtils;
 
@@ -394,7 +396,15 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
      * @return
      */
     protected List<ExtendApplicationDomain.Mirror> findApplicationDomainExtensionsInRound(final RoundEnvironment roundEnv) {
-        return roundEnv.getRootElements().stream()
+        final List<? extends Element> extensions = roundEnv.getRootElements().stream()
+                .filter(elt -> elt.getAnnotation(ExtendApplicationDomain.class) != null)
+                .toList();
+
+        if (extensions.size() > 1) {
+            extensions.forEach(elt -> messager.printMessage(Kind.ERROR, "At most one extension point is allowed.", elt));
+        }
+
+        return extensions.stream()
                 .map(elt -> ExtendApplicationDomain.Mirror.fromAnnotated(elt, entityFinder))
                 .filter(Optional::isPresent)
                 .map(Optional::get)
