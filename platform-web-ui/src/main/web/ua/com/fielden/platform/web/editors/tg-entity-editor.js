@@ -238,13 +238,24 @@ export class TgEntityEditor extends TgEditor {
                value: null
            },
 
+           /**
+            * Captures the state of a search query as it was used during the last invocation of _search.
+            */
            _searchQuery: {
                type: String,
                value: ''
            },
    
+           /**
+            * Captures the state for ignoring or not ignoring the input text during search, as it was specified during the last invocation of _search.
+            */
+           _ignoreInputText: {
+                type: Boolean,
+                value: false
+           },
+
            /*
-            * A string with comma separated property names that shoould be displayed in addition to key.
+            * A string with comma separated property names that should be displayed in addition to key.
             */
            additionalProperties: {
                type: String,
@@ -644,12 +655,11 @@ export class TgEntityEditor extends TgEditor {
         return str;
     }
 
-    /* Invokes _search with '*' as the default search value, so than when nothing was typed, but
-        * the search button has been pressed then the search happens as if wildcard has been typed. */
+    /* 
+     * Invokes _search with '*' and ignores the input text, which forces to search for values as if wildcard was typed.
+     */
     _searchOnTap (e) {
-        // need to execute the tap action on async to ensure committing of any uncommitted
-        // values in other property editors that might influence the matching logic at the server side
-        microTask.run(() => this._search('*'));
+        this._search('*', null, true);
     }
 
     /** Loads more matching values. */
@@ -659,19 +669,18 @@ export class TgEntityEditor extends TgEditor {
                 this._loadMoreButtonPressed = true;
             }
             this._dataPage = this._dataPage + 1;
-            this._search(this._searchQuery, this._dataPage);
+            this._search(this._searchQuery, this._dataPage, this._ignoreInputText);
         }
     }
 
-    _search (defaultSearchQuery, dataPage) {
+    _search (defaultSearchQuery, dataPage, ignoreInputText) {
         // cancel any other search
         this._cancelSearchByOtherEditor();
-
         // What is the query string?
         let inputText = ''; // default value
         if (this.multi === false) {
             // assign the actual search string
-            inputText = this._prepInput(this.decoratedInput().value) || defaultSearchQuery;
+            inputText = ignoreInputText === true ? defaultSearchQuery : this._prepInput(this.decoratedInput().value) || defaultSearchQuery;
         } else {
             // The following manipulations with indexes are required in case of multi selection
             // in order to determine what part of the input text should be used for search and
@@ -681,13 +690,13 @@ export class TgEntityEditor extends TgEditor {
             const caretPos = this.decoratedInput().selectionStart;
             const toIndex = text.indexOf(this.separator, caretPos) < 0 ? text.length : text.indexOf(this.separator, caretPos);
             const startOfText = text.substring(0, caretPos);
-            const fromIndex = startOfText.lastIndexOf(this.separator) < 0? -1 : startOfText.lastIndexOf(this.separator); // just to make sure that it is -1
+            const fromIndex = startOfText.lastIndexOf(this.separator) < 0 ? -1 : startOfText.lastIndexOf(this.separator); // just to make sure that it is -1
 
-            this._replaceFromIndex = fromIndex;
+            this._replaceFromIndex = fromIndex; // can be negative, which requires special treatment in _done() for selecting the correction portion of the input text
             this._replaceToIndex = toIndex;
 
             // assign the actual search string
-            inputText = this._prepInput(text.substring(fromIndex + 1, toIndex).trim()) || defaultSearchQuery;
+            inputText = ignoreInputText === true ? defaultSearchQuery : this._prepInput(text.substring(fromIndex + 1, toIndex).trim()) || defaultSearchQuery;
         }
 
         // prep this.searchQuery for highlighting of the matching parts in the search result
@@ -704,6 +713,7 @@ export class TgEntityEditor extends TgEditor {
             }
             // prepare the AJAX request based on the raw search string
             const serialisedSearchQuery = this.$.serialiser.serialise(this.createContextHolder(this._searchQuery, dataPage));
+            this._ignoreInputText = ignoreInputText === true; // capture ignoreInputText for its use in _loadMore
             this.$.ajaxSearcher.body = JSON.stringify(serialisedSearchQuery);
             this.$.ajaxSearcher.generateRequest();
         } else if (this.result && this.result.opened) { // make sure overlay is closed if no search is performed
@@ -913,7 +923,7 @@ export class TgEntityEditor extends TgEditor {
         this.opened = false;
         this.result.close();
 
-        // value accpetance logic...
+        // value acceptance logic...
         if (hasValuesToProcess) {
             // compose a string value, which would be a comma separated string in case of multi
             const selectedValuesAsStr = Object.values(this.result.selectedValues).map(obj => obj.key).join(this.separator);// 'key' field contains converted representation of the entity
@@ -931,8 +941,8 @@ export class TgEntityEditor extends TgEditor {
 
                 this._editingValue = newEditingValue;
 
-                // let's highlight the inseted values
-                input.selectionStart = this._replaceFromIndex;
+                // let's highlight the inserted values
+                input.selectionStart = this._replaceFromIndex < 0 ? 0 : this._replaceFromIndex; // negative index is not suitable for selection start, zero needs to be used instead
                 input.selectionEnd = input.selectionStart + selectedValuesAsStr.length + 1;
 
             }
@@ -1068,7 +1078,9 @@ export class TgEntityEditor extends TgEditor {
             console.log('select next');
             this.result.selectNext();
         } else {
-            this._searchOnTap();
+            // unlike the search action, key down should perform the search with the input text in mind
+            // need to execute the tap action on async to ensure committing of any uncommitted values in other property editors that might influence the matching logic at the server side
+            microTask.run(() => this._search('*', null, false));
         }
     }
 
