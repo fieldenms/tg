@@ -16,7 +16,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
@@ -50,6 +49,7 @@ import ua.com.fielden.platform.processors.exceptions.ProcessorInitializationExce
 import ua.com.fielden.platform.processors.generate.annotation.ExtendApplicationDomain;
 import ua.com.fielden.platform.processors.generate.annotation.RegisterEntity;
 import ua.com.fielden.platform.processors.generate.annotation.RegisteredEntity;
+import ua.com.fielden.platform.processors.generate.annotation.SkipEntityRegistration;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
@@ -77,6 +77,7 @@ import ua.com.fielden.platform.utils.CollectionUtil;
  * Renaming of java sources by means of the IDE refactoring capabilites should automatically lead to the respective renaming in the generated
  * {@code ApplicationDomain}.
  * <p>
+ * To exclude application-level entity types from registration, annotation {@link SkipEntityRegistration} should be used.
  *
  * <h3>Registration of 3rd-party entities</h3>
  * 3rd-party entities are those that come from dependencies. Their registration requires a designated application-level class that
@@ -174,21 +175,27 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         return !ElementFinder.isAbstract(entity.element());
     }
 
+    private boolean shouldSkipRegistration(final EntityElement entity) {
+        return entity.getAnnotation(SkipEntityRegistration.class) != null;
+    }
+
     private void generate(final Collection<EntityElement> inputEntities, final Optional<ExtendApplicationDomain.Mirror> inputExtension) {
         printNote("Generating %s from scratch", APPLICATION_DOMAIN_SIMPLE_NAME);
 
-        final List<EntityElement> inputDomainEntities = inputEntities.stream().filter(this::isDomainEntity).toList();
+        final List<EntityElement> toRegister = inputEntities.stream()
+                .filter(ent -> isDomainEntity(ent) && !shouldSkipRegistration(ent))
+                .toList();
 
-        final Set<EntityElement> extensionEntities = inputExtension.map(mirr -> mirr.entities().stream()
+        final Set<EntityElement> externalEntities = inputExtension.map(mirr -> mirr.entities().stream()
                 // stream of Mirror instances of @RegisterEntity
                 .map(RegisterEntity.Mirror::value)  // map to EntityElement
                 .collect(Collectors.toSet()))
                 .orElseGet(() -> Set.of());
 
-        if (!extensionEntities.isEmpty()) {
-            printNote("Found %s entities from extensions.".formatted(extensionEntities.size()));
+        if (!externalEntities.isEmpty()) {
+            printNote("Found %s entities from extensions.".formatted(externalEntities.size()));
         }
-        writeApplicationDomain(inputDomainEntities, extensionEntities);
+        writeApplicationDomain(toRegister, externalEntities);
     }
 
     private void regenerate(
@@ -204,9 +211,9 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
                 .filter(this::isDomainEntity)
                 .filter(ent -> !appDomainElt.entities().contains(ent))
                 .toList());
-        // * non-domain entities -- were any of them registered? (we need to unregister them)
+        // * non-domain entities OR skipped ones -- were any of them registered? (we need to unregister them)
         toUnregister.addAll(inputEntities.stream()
-                .filter(Predicate.not(this::isDomainEntity))
+                .filter(ent -> !isDomainEntity(ent) || shouldSkipRegistration(ent))
                 .filter(ent -> appDomainElt.entities().contains(ent))
                 .toList());
 
