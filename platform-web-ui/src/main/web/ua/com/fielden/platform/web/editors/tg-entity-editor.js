@@ -85,6 +85,7 @@ const customLabelTemplate = html`
            tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]">
         <span on-tap="_labelTap">[[_editorPropTitle]]</span>
         <iron-icon id="actionAvailability" icon="[[_actionIcon(actionAvailable, entity, propertyName)]]" action-available$="[[actionAvailable]]" on-tap="_labelTap"></iron-icon>
+        <iron-icon id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
     </label>`;
 const customInputTemplate = html`
     <iron-input bind-value="{{_editingValue}}" class="custom-input-wrapper">
@@ -104,11 +105,11 @@ const customInputTemplate = html`
             autocomplete="off"/>
     </iron-input>`;
 const inputLayerTemplate = html`
-    <div class="input-layer" tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]">
+    <div id="inputLayer" class="input-layer" tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]">
         <template is="dom-repeat" items="[[_customPropTitle]]">
-            <span hidden$="[[!item.title]]" style="color:#737373; font-size:0.8rem; padding-right:2px;"><span>[[item.title]]</span>:  </span>
-            <span style$="[[_valueStyle(item, index)]]">[[item.value]]</span>
-            <span hidden$="[[!item.separator]]" style="white-space: pre;">[[item.separator]]</span>
+            <span hidden$="[[!item.title]]" style="color:#737373; font-size:0.8rem; white-space: pre;"><span>[[item.title]]</span>: </span>
+            <span>[[item.value]]</span>
+            <span style="white-space: pre;">[[_itemSeparator(item, index)]]</span>
         </template>
         <span style="color:#737373" hidden$="[[!_hasDesc(entity, propertyName)]]">&nbsp;&ndash;&nbsp;<i>[[_formatDesc(entity, propertyName)]]</i></span>
     </div>`;
@@ -157,6 +158,19 @@ function setKeyFields(entity, embeddedMaster) {
             embeddedMaster.setEditorValue4PropertyFromConcreteValue(keyProp, entity.get(keyProp));
         }
     })
+}
+
+/**
+ * Copies specified text into clipboard if it is supported with client's navigator.
+ * 
+ * @param {String} text - text to copy into clipboard.
+ */
+function copyToClipboard(inputLayer, showCheckIconAndToast) {
+    if (navigator.clipboard) {
+        const text = [...inputLayer.childNodes].filter(node => node.style && getComputedStyle(node).display !== 'none').map(node => node.innerText).join("");
+        navigator.clipboard.writeText(text);
+        showCheckIconAndToast(text);
+    }
 }
 
 export class TgEntityEditor extends TgEditor {
@@ -446,6 +460,9 @@ export class TgEntityEditor extends TgEditor {
                             this._done();
                             //Should use stopPropagation method instead of tearDownEvent from polymer utils because tearDownEvent for some unknown reasons prevents next onChangeEvent. 
                             event.stopPropagation();
+                       } else if (event.keyCode === 67 && event.altKey && (event.ctrlKey || event.metaKey)) { //(CTRL/Meta) + ALT + C
+                           this.commitIfChanged();
+                           this._copyTap();
                         } else if ((event.keyCode === 38 /*up*/ || event.keyCode === 40 /*down*/) && !event.ctrlKey) { // up/down arrow keys
                             // By default up/down arrow keys work like home/end for and input field
                             // That's why this event should be suppressed.
@@ -551,6 +568,26 @@ export class TgEntityEditor extends TgEditor {
             });
         } else {
             this._openEntityMaster();
+        }
+    }
+
+    _copyTap () {
+        if (this.multi) {
+            super._copyTap();
+        } else if (this.lastValidationAttemptPromise) {
+            this.lastValidationAttemptPromise.then(res => {
+                this._copyFromLayerIfPresent(super._copyTap.bind(this));
+            });
+        } else {
+            this._copyFromLayerIfPresent(super._copyTap.bind(this));
+        }
+    }
+
+    _copyFromLayerIfPresent(superCopy) {
+        if (this._hasLayer) {
+            copyToClipboard(this.$.inputLayer, this._showCheckIconAndToast.bind(this));
+        } else {
+            superCopy();
         }
     }
 
@@ -1150,7 +1187,7 @@ export class TgEntityEditor extends TgEditor {
     _generateTooltip (value, actionAvailable) {
         let tooltip = this._formatTooltipText(value);
         tooltip += this.propDesc ? (tooltip ? '<br><br>' : '') + this.propDesc : '';
-        tooltip += actionAvailable ? ((tooltip ? '<br><br>' : '') + this._getActionTooltip()) : '';
+        tooltip += (tooltip ? '<br><br>' : '') + this._getActionTooltip(actionAvailable);
         return tooltip;
     }
 
@@ -1172,20 +1209,25 @@ export class TgEntityEditor extends TgEditor {
     /**
      * Calculates title action tooltip.
      */
-    _getActionTooltip () {
-        const entityMaster = this._valueToEdit(this.entity, this.propertyName) ? this.entityMaster : this.newEntityMaster;
-        const shortDesc = entityMaster.shortDesc ? "<b>" + entityMaster.shortDesc + "</b>" : "";
-        let longDesc;
-        if (shortDesc) {
-            longDesc = entityMaster.longDesc ? "<br>" + entityMaster.longDesc : "";
-        } else {
-            longDesc = entityMaster.longDesc ? "<b>" + entityMaster.longDesc + "</b>" : "";
+    _getActionTooltip (actionAvailable) {
+        let editActionShortDesc = "", editActionLongDesc = "";
+        if (actionAvailable) {
+            const entityMaster = this._valueToEdit(this.entity, this.propertyName) ? this.entityMaster : this.newEntityMaster;
+            editActionShortDesc = entityMaster.shortDesc ? `<b>${entityMaster.shortDesc}</b>` : "";
+            if (editActionShortDesc) {
+                editActionLongDesc = entityMaster.longDesc ? `<br>${entityMaster.longDesc}` : "";
+            } else {
+                editActionLongDesc = entityMaster.longDesc ? `<b>${entityMaster.longDesc}</b>` : "";
+            }
         }
-        const tooltip = shortDesc + longDesc;
-        return tooltip && "<div style='display:flex;'>" +
-            "<div style='margin-right:10px;'>With action: </div>" +
-            "<div style='flex-grow:1;'>" + tooltip + "</div>" +
-            "</div>"
+        const editNewActionTooltip = editActionShortDesc + editActionLongDesc;
+        const copyActionTooltip = "<b>Copy</b><br>Copy content";
+        const withActionTitle = editNewActionTooltip ? "With actions: " : "With action: ";
+        const actionsTooltip = (editNewActionTooltip ? `${editNewActionTooltip}<br><br>` : "") + copyActionTooltip
+        return `<div style='display:flex;'>
+            <div style='margin-right:10px;'>${withActionTitle}</div>
+            <div style='flex-grow:1;'>${actionsTooltip}</div>
+            </div>`
     }
 
     _createEntityTooltip (entity) {
@@ -1259,15 +1301,6 @@ export class TgEntityEditor extends TgEditor {
         return "";
     }
 
-    _valueStyle (item, index) {
-        if (this._customPropTitle && this._customPropTitle.length > 1) {
-            if (index < this._customPropTitle.length - 1 && item.title && !item.separator) {
-                return "padding-right: 5px";
-            }
-        }
-        return "";
-    }
-
     _createTitleObject (entity) {
         if (entity !== null) {
             const entityValue = this.reflector().tg_getFullValue(entity, this.propertyName);
@@ -1324,6 +1357,15 @@ export class TgEntityEditor extends TgEditor {
             }
         }
         return '';
+    }
+
+    _itemSeparator (item, index) {
+        if (this._customPropTitle && this._customPropTitle.length > 1) {
+            if (index < this._customPropTitle.length - 1 && item.title) {
+                return item.separator || " ";
+            }
+        }
+        return "";
     }
 
     _changeLayerExistance (_editingValue, entity, propertyName) {

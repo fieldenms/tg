@@ -49,6 +49,7 @@ public class DomainExplorerInsertionPointMaster implements IMaster<DomainExplore
                 .attr("prop-title", "Type to find domain type or property by title")
                 .attr("prop-desc", "Finds domain types or properties that match the search text")
                 .attr("current-state", "[[currentState]]")
+                .attr("toaster", "[[toaster]]")
                 .add(searchItemsText, prevButton, nextButton);
 
         final DomElement domainExplorerDom = new DomElement("tg-domain-explorer")
