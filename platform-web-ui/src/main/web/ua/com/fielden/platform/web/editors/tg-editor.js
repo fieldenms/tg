@@ -982,32 +982,32 @@ export class TgEditor extends PolymerElement {
         this.updateStyles();
     }
 
-    _bindError (msg) {
+    _bindError (messages) {
         this._resetMessages();
         this.decorator().classList.remove("required");
         this._invalid = true;
-        this._error = "" + msg.short;
-        this._extendedError = "" + msg.extended;
+        this._error = "" + messages.short;
+        this._extendedError = "" + messages.extended;
         this.updateStyles();
     }
     
-    _bindWarning (msg) {
+    _bindWarning (messages) {
         this._resetMessages();
         this.decorator().classList.remove("required");
         this.decorator().classList.add("warning");
         this._invalid = true;
-        this._error = "" + msg.short;
-        this._extendedError = "" + msg.extended;
+        this._error = "" + messages.short;
+        this._extendedError = "" + messages.extended;
         this.updateStyles();
     }
 
-    _bindInformative (msg) {
+    _bindInformative (messages) {
         this._resetMessages();
         this.decorator().classList.remove("required");
         this.decorator().classList.add("informative");
         this._invalid = true;
-        this._error = "" + msg.short;
-        this._extendedError = "" + msg.extended;
+        this._error = "" + messages.short;
+        this._extendedError = "" + messages.extended;
         this.updateStyles();
     }
 
