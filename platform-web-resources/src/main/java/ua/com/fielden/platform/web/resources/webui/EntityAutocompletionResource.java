@@ -120,9 +120,10 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
      */
     public static T2<String, Integer> prepSearchString(final CentreContextHolder centreContextHolder, final boolean shouldUpperCase) {
         final String searchStringVal = (String) centreContextHolder.getCustomObject().get("@@searchString"); // custom property inside paramsHolder
-        final Optional<String> maybeSearchString = ofNullable(prepare(searchStringVal.contains("*") || searchStringVal.contains("%") ? searchStringVal : searchStringVal + "*"));
+        final Optional<String> maybeSearchString = ofNullable(prepare(searchStringVal.contains("*") || searchStringVal.contains("%") ? searchStringVal : "*" + searchStringVal + "*"));
         final String searchString = maybeSearchString.map(str -> shouldUpperCase ? str.toUpperCase() : str).orElse("%");
-        final int dataPageNo = centreContextHolder.getCustomObject().containsKey("@@dataPage") ? (Integer) centreContextHolder.getCustomObject().get("@@dataPage") : 1;
+        final Optional<Integer> maybeDataPage = ofNullable((Integer) centreContextHolder.getCustomObject().get("@@dataPage"));
+        final int dataPageNo =  maybeDataPage.orElse(1);
         return t2(searchString, dataPageNo);
     }
 

@@ -232,7 +232,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
             },
     
             /**
-             * A function that perorms acceptance of selected values. It is assigned in tg-entity-editor. 
+             * A function that performs acceptance of selected values. It is assigned in tg-entity-editor. 
              */
             acceptValues: {
                 type: Function

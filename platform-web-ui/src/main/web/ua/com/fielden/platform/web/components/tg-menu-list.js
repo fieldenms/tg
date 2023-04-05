@@ -10,7 +10,7 @@ import {html} from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 import {IronOverlayBehavior} from '/resources/polymer/@polymer/iron-overlay-behavior/iron-overlay-behavior.js';
 
 import {TgTooltipBehavior} from '/resources/components/tg-tooltip-behavior.js';
-import { matchedParts } from '/resources/editors/tg-highlighter.js';
+import { searchRegExp, matchedParts } from '/resources/editors/tg-highlighter.js';
 
 const template = html`
    <style>
@@ -102,7 +102,7 @@ function createMenuEntry (menuItem, parent) {
     return res;
 };
 function isHighlighted (menuItem, phraseToSearch) {
-    return (menuItem.title.toLowerCase()).search(phraseToSearch.toLowerCase()) >= 0;
+    return (menuItem.title.toLowerCase()).search(searchRegExp(phraseToSearch.toLowerCase())) >= 0;
 };
 function hasHighlightedParent (menuItem, phraseToHighlight) {
     while (menuItem.parent) {
