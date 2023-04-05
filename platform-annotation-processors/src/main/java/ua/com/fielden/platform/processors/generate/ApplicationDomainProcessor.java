@@ -157,15 +157,15 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         final Optional<ApplicationDomainElement> maybeAppDomainElt = maybeAppDomainRootElt.isEmpty() ?
                 findApplicationDomain() : maybeAppDomainRootElt.map(elt -> new ApplicationDomainElement(elt, entityFinder));
 
-        if (maybeAppDomainElt.isPresent()) {
+        maybeAppDomainElt.ifPresentOrElse(elt -> {
             // incremental build <=> regenerate
-            printNote("Found existing %s", maybeAppDomainElt.get().getSimpleName());
-        } else {
+            printNote("Found existing %s (%s registered entities)", elt.getSimpleName(), elt.entities().size() + elt.externalEntities().size());
             regenerate(elt, inputEntities, inputExtension);
+        }, /*else*/ () -> {
             // generate from scratch
             printNote("%s hasn't been generated yet.", APPLICATION_DOMAIN_SIMPLE_NAME);
-        }
             generate(inputEntities, inputExtension);
+        });
 
         return false;
     }
@@ -230,6 +230,29 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
         // analyse ApplicationDomain
         // are there any missing entity types (e.g., due to removal)?
         final List<ErrorType> missingRegisteredTypes = appDomainElt.errorTypes();
+
+        if (!toRegister.isEmpty()) {
+            printNote("Registering (%s): [%s]".formatted(
+                    toRegister.size(),
+                    CollectionUtil.toString(toRegister.stream().map(EntityElement::getSimpleName).toList(), ", ")));
+        }
+        if (!externalToRegister.isEmpty()) {
+            printNote("Registering external (%s): [%s]".formatted(
+                    externalToRegister.size(),
+                    CollectionUtil.toString(externalToRegister.stream().map(EntityElement::getSimpleName).toList(), ", ")));
+        }
+        if (!toUnregister.isEmpty()) {
+            printNote("Unregistering (%s): [%s]".formatted(
+                    toUnregister.size(), CollectionUtil.toString(toUnregister.stream().map(EntityElement::getSimpleName).toList(), ", ")));
+        }
+        if (!externalToUnregister.isEmpty()) {
+            printNote("Unregistering external (%s): [%s]".formatted(
+                    externalToUnregister.size(),
+                    CollectionUtil.toString(externalToUnregister.stream().map(EntityElement::getSimpleName).toList(), ", ")));
+        }
+        if (!missingRegisteredTypes.isEmpty()) {
+            printNote("Missing (%s): [%s]".formatted(missingRegisteredTypes.size(), CollectionUtil.toString(missingRegisteredTypes, ", ")));
+        }
 
         // consider if we actually need to regenerate
         if (!missingRegisteredTypes.isEmpty() || !toUnregister.isEmpty() || !externalToUnregister.isEmpty() // anything to exclude?
