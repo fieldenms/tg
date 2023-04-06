@@ -94,7 +94,9 @@ public class ApplicationDomainProcessorTest {
                 });
 
         assertSuccess(Compilation.newInMemory(List.of(firstExtension.toJavaFileObject()))
-                .setProcessor(processor).addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
+                .setProcessor(processor)
+                .addOptions(OPTION_PROC_ONLY)
+                .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
                 .compile());
     }
 
@@ -111,7 +113,9 @@ public class ApplicationDomainProcessorTest {
                 });
 
         assertSuccess(Compilation.newInMemory(List.of(PLACEHOLDER))
-                .setProcessor(processor).addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
+                .setProcessor(processor)
+                .addOptions(OPTION_PROC_ONLY)
+                .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
                 .compile());
     }
 
@@ -146,7 +150,9 @@ public class ApplicationDomainProcessorTest {
 
         final List<JavaFileObject> javaFileObjects = javaFiles.stream().map(file -> file.toJavaFileObject()).toList();
         assertSuccess(Compilation.newInMemory(javaFileObjects)
-                .setProcessor(processor).addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
+                .setProcessor(processor)
+                .addOptions(OPTION_PROC_ONLY)
+                .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
                 .compile());
     }
 
@@ -180,7 +186,9 @@ public class ApplicationDomainProcessorTest {
                 });
 
         assertSuccess(Compilation.newInMemory(List.of(firstEntity.toJavaFileObject(), skippedEntity.toJavaFileObject()))
-                .setProcessor(processor).addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
+                .setProcessor(processor)
+                .addOptions(OPTION_PROC_ONLY)
+                .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
                 .compile());
     }
 
@@ -281,7 +289,9 @@ public class ApplicationDomainProcessorTest {
                 });
 
         assertSuccess(Compilation.newInMemory(Stream.of(domainEntity, abstractEntity).map(JavaFile::toJavaFileObject).toList())
-                .setProcessor(processor).addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
+                .setProcessor(processor)
+                .addOptions(OPTION_PROC_ONLY)
+                .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
                 .compile());
     }
 
@@ -301,7 +311,11 @@ public class ApplicationDomainProcessorTest {
             // write the first entity to file, so we can look it up during the 2nd compilation
             javaFileWriter.accept(entity1);
 
-            compilation.setJavaSources(List.of(entity1.toJavaFileObject())).setProcessor(new ApplicationDomainProcessor());
+            compilation
+                .setJavaSources(List.of(entity1.toJavaFileObject()))
+                .setProcessor(new ApplicationDomainProcessor())
+                .addOptions(OPTION_PROC_ONLY)
+                .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG);
             assertSuccess(compilation.compile());
 
             // 2
@@ -645,6 +659,7 @@ public class ApplicationDomainProcessorTest {
 
         final CompilationResult result = Compilation.newInMemory(Stream.of(extension1, extension2).map(JavaFile::toJavaFileObject).toList())
                 .setProcessor(new ApplicationDomainProcessor())
+                .addOptions(OPTION_PROC_ONLY)
                 .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
                 .compile();
         assertTrue(result.failure());
@@ -720,7 +735,6 @@ public class ApplicationDomainProcessorTest {
         final Compilation compilation = new Compilation(List.of(PLACEHOLDER))
                 .setCompiler(compiler)
                 .setFileManager(fileManager)
-                .addOptions(OPTION_PROC_ONLY)
                 .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG);
 
         final Consumer<JavaFile> javaFileWriter = javaFile -> {
