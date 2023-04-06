@@ -9,7 +9,7 @@ import static ua.com.fielden.platform.processors.appdomain.ApplicationDomainProc
 import static ua.com.fielden.platform.processors.test_utils.CollectionTestUtils.assertEqualByContents;
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
 import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertMessages;
-import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccess;
+import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccessWithoutProcessingErrors;
 import static ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileObjects.createJavaSource;
 import static ua.com.fielden.platform.processors.test_utils.TestUtils.assertPresent;
 
@@ -93,7 +93,7 @@ public class ApplicationDomainProcessorTest {
                     }
                 });
 
-        assertSuccess(Compilation.newInMemory(List.of(firstExtension.toJavaFileObject()))
+        assertSuccessWithoutProcessingErrors(Compilation.newInMemory(List.of(firstExtension.toJavaFileObject()))
                 .setProcessor(processor)
                 .addOptions(OPTION_PROC_ONLY)
                 .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
@@ -112,7 +112,7 @@ public class ApplicationDomainProcessorTest {
                     }
                 });
 
-        assertSuccess(Compilation.newInMemory(List.of(PLACEHOLDER))
+        assertSuccessWithoutProcessingErrors(Compilation.newInMemory(List.of(PLACEHOLDER))
                 .setProcessor(processor)
                 .addOptions(OPTION_PROC_ONLY)
                 .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
@@ -149,7 +149,7 @@ public class ApplicationDomainProcessorTest {
                 });
 
         final List<JavaFileObject> javaFileObjects = javaFiles.stream().map(file -> file.toJavaFileObject()).toList();
-        assertSuccess(Compilation.newInMemory(javaFileObjects)
+        assertSuccessWithoutProcessingErrors(Compilation.newInMemory(javaFileObjects)
                 .setProcessor(processor)
                 .addOptions(OPTION_PROC_ONLY)
                 .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
@@ -185,7 +185,7 @@ public class ApplicationDomainProcessorTest {
                     }
                 });
 
-        assertSuccess(Compilation.newInMemory(List.of(firstEntity.toJavaFileObject(), skippedEntity.toJavaFileObject()))
+        assertSuccessWithoutProcessingErrors(Compilation.newInMemory(List.of(firstEntity.toJavaFileObject(), skippedEntity.toJavaFileObject()))
                 .setProcessor(processor)
                 .addOptions(OPTION_PROC_ONLY)
                 .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
@@ -215,10 +215,11 @@ public class ApplicationDomainProcessorTest {
                         .build())
                 .build();
 
-            compilation
-                .setJavaSources(List.of(entity1.toJavaFileObject(), entity2_v1.toJavaFileObject()))
-                .setProcessor(new ApplicationDomainProcessor());
-            assertSuccess(compilation.compile());
+            assertSuccessWithoutProcessingErrors(
+                    compilation
+                    .setJavaSources(List.of(entity1.toJavaFileObject(), entity2_v1.toJavaFileObject()))
+                    .setProcessor(new ApplicationDomainProcessor())
+                    .compile());
 
             // 2
             final JavaFile entity2_v2 = JavaFile.builder(entity2_v1.packageName,
@@ -254,10 +255,10 @@ public class ApplicationDomainProcessorTest {
                         }
                     });
 
-            compilation
-                .setJavaSources(List.of(entity2_v2.toJavaFileObject()))
-                .setProcessor(processor);
-            assertSuccess(compilation.compile());
+            assertSuccessWithoutProcessingErrors(compilation
+                    .setJavaSources(List.of(entity2_v2.toJavaFileObject()))
+                    .setProcessor(processor)
+                    .compile());
         });
     }
 
@@ -288,7 +289,8 @@ public class ApplicationDomainProcessorTest {
                     }
                 });
 
-        assertSuccess(Compilation.newInMemory(Stream.of(domainEntity, abstractEntity).map(JavaFile::toJavaFileObject).toList())
+        assertSuccessWithoutProcessingErrors(
+                Compilation.newInMemory(Stream.of(domainEntity, abstractEntity).map(JavaFile::toJavaFileObject).toList())
                 .setProcessor(processor)
                 .addOptions(OPTION_PROC_ONLY)
                 .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
@@ -311,12 +313,11 @@ public class ApplicationDomainProcessorTest {
             // write the first entity to file, so we can look it up during the 2nd compilation
             javaFileWriter.accept(entity1);
 
-            compilation
-                .setJavaSources(List.of(entity1.toJavaFileObject()))
-                .setProcessor(new ApplicationDomainProcessor())
-                .addOptions(OPTION_PROC_ONLY)
-                .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG);
-            assertSuccess(compilation.compile());
+            assertSuccessWithoutProcessingErrors(
+                    compilation
+                    .setJavaSources(List.of(entity1.toJavaFileObject()))
+                    .setProcessor(new ApplicationDomainProcessor())
+                    .compile());
 
             // 2
             final JavaFile entity2 = JavaFile.builder("test",
@@ -352,8 +353,10 @@ public class ApplicationDomainProcessorTest {
                         }
                     });
 
-            compilation.setJavaSources(List.of(entity2.toJavaFileObject())).setProcessor(processor);
-            assertSuccess(compilation.compile());
+            assertSuccessWithoutProcessingErrors(
+                    compilation.setJavaSources(List.of(entity2.toJavaFileObject()))
+                    .setProcessor(processor)
+                    .compile());
         });
     }
 
@@ -383,10 +386,11 @@ public class ApplicationDomainProcessorTest {
                     .build())
                 .build();
 
-            compilation
-                .setJavaSources(List.of(inputEntity.toJavaFileObject(), extensionV1.toJavaFileObject()))
-                .setProcessor(new ApplicationDomainProcessor());
-            assertSuccess(compilation.compile());
+            assertSuccessWithoutProcessingErrors(
+                    compilation
+                    .setJavaSources(List.of(inputEntity.toJavaFileObject(), extensionV1.toJavaFileObject()))
+                    .setProcessor(new ApplicationDomainProcessor())
+                    .compile());
 
             // 2
             // simulate modification of the same source file test.extension.FirstExtension
@@ -427,10 +431,11 @@ public class ApplicationDomainProcessorTest {
                         }
                     });
 
-            compilation
-                .setJavaSources(List.of(extensionV2.toJavaFileObject()))
-                .setProcessor(processor);
-            assertSuccess(compilation.compile());
+            assertSuccessWithoutProcessingErrors(
+                    compilation
+                    .setJavaSources(List.of(extensionV2.toJavaFileObject()))
+                    .setProcessor(processor)
+                    .compile());
         });
     }
 
@@ -460,10 +465,11 @@ public class ApplicationDomainProcessorTest {
                 .build();
             // do NOT write this entity to file, so it cannot be found during the 2nd compilation (as if it was removed)
 
-            compilation
-                .setJavaSources(List.of(entity1.toJavaFileObject(), entity2.toJavaFileObject()))
-                .setProcessor(new ApplicationDomainProcessor());
-            assertSuccess(compilation.compile());
+            assertSuccessWithoutProcessingErrors(
+                    compilation
+                    .setJavaSources(List.of(entity1.toJavaFileObject(), entity2.toJavaFileObject()))
+                    .setProcessor(new ApplicationDomainProcessor())
+                    .compile());
 
             // 2
             final Processor processor = ProcessorListener.of(new ApplicationDomainProcessor())
@@ -496,8 +502,11 @@ public class ApplicationDomainProcessorTest {
 
             // in reality, removal of a registered entity would cause recompilation of ApplicationDomain, but we simulate it by passing in
             // the first entity for simplicity's sake
-            compilation.setJavaSources(List.of(entity1.toJavaFileObject())).setProcessor(processor);
-            assertSuccess(compilation.compile());
+            assertSuccessWithoutProcessingErrors(
+                    compilation
+                    .setJavaSources(List.of(entity1.toJavaFileObject()))
+                    .setProcessor(processor)
+                    .compile());
         });
     }
 
@@ -528,10 +537,11 @@ public class ApplicationDomainProcessorTest {
                         .build())
                 .build();
 
-            compilation
-                .setJavaSources(List.of(entity1.toJavaFileObject(), entity2.toJavaFileObject()))
-                .setProcessor(new ApplicationDomainProcessor());
-            assertSuccess(compilation.compile());
+            assertSuccessWithoutProcessingErrors(
+                    compilation
+                    .setJavaSources(List.of(entity1.toJavaFileObject(), entity2.toJavaFileObject()))
+                    .setProcessor(new ApplicationDomainProcessor())
+                    .compile());
 
             // 2
             final JavaFile abstractEntity2 = JavaFile.builder(entity2.packageName,
@@ -568,8 +578,11 @@ public class ApplicationDomainProcessorTest {
                         }
                     });
 
-            compilation.setJavaSources(List.of(abstractEntity2.toJavaFileObject())).setProcessor(processor);
-            assertSuccess(compilation.compile());
+            assertSuccessWithoutProcessingErrors(
+                    compilation
+                    .setJavaSources(List.of(abstractEntity2.toJavaFileObject()))
+                    .setProcessor(processor)
+                    .compile());
         });
     }
 
@@ -591,10 +604,11 @@ public class ApplicationDomainProcessorTest {
                     .build())
                 .build();
 
-            compilation
-                .setJavaSources(List.of(extensionV1.toJavaFileObject()))
-                .setProcessor(new ApplicationDomainProcessor());
-            assertSuccess(compilation.compile());
+            assertSuccessWithoutProcessingErrors(
+                    compilation
+                    .setJavaSources(List.of(extensionV1.toJavaFileObject()))
+                    .setProcessor(new ApplicationDomainProcessor())
+                    .compile());
 
             // 2
             final JavaFile extensionV2 = JavaFile.builder("test.extension",
@@ -633,10 +647,11 @@ public class ApplicationDomainProcessorTest {
                         }
                     });
 
-            compilation
-                .setJavaSources(List.of(extensionV2.toJavaFileObject()))
-                .setProcessor(processor);
-            assertSuccess(compilation.compile());
+            assertSuccessWithoutProcessingErrors(
+                    compilation
+                    .setJavaSources(List.of(extensionV2.toJavaFileObject()))
+                    .setProcessor(processor)
+                    .compile());
         });
     }
 
