@@ -733,14 +733,16 @@ public class ApplicationDomainProcessorTest {
         final JavaCompiler compiler;
         final StandardJavaFileManager fileManager ;
         try {
-            srcTmpDir = Files.createDirectory(Path.of(rootTmpDir.toString(), "src"));
-            final Path generatedTmpDir = Files.createDirectory(Path.of(rootTmpDir.toString(), "generated-sources"));
+            srcTmpDir = Files.createDirectories(Path.of(rootTmpDir.toString(), "src/main/java"));
+            final Path targetTmpDir = Files.createDirectories(Path.of(rootTmpDir.toString(), "target/classes"));
+            final Path generatedTmpDir = Files.createDirectories(Path.of(rootTmpDir.toString(), "target/generated-sources"));
 
             // configure compilation settings
             compiler = ToolProvider.getSystemJavaCompiler();
             fileManager = compiler.getStandardFileManager(null, Locale.getDefault(), StandardCharsets.UTF_8);
             fileManager.setLocationFromPaths(StandardLocation.SOURCE_OUTPUT, List.of(generatedTmpDir));
             fileManager.setLocationFromPaths(StandardLocation.SOURCE_PATH, List.of(srcTmpDir, generatedTmpDir));
+            fileManager.setLocationFromPaths(StandardLocation.CLASS_OUTPUT, List.of(targetTmpDir));
         } catch (final IOException ex) {
             FileUtils.deleteQuietly(rootTmpDir.toFile());
             throw new TestCaseConfigException("Failed to configure compilation with temporary storage.", ex);
