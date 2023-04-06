@@ -4,13 +4,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.EntityContainer;
 import ua.com.fielden.platform.entity.query.IUserTypeInstantiate;
 import ua.com.fielden.platform.entity.query.ValueContainer;
+import ua.com.fielden.platform.eql.retrieval.records.EntityTree;
+import ua.com.fielden.platform.eql.retrieval.records.QueryResultLeaf;
+import ua.com.fielden.platform.eql.retrieval.records.ValueTree;
 
 public class EntityRawResultConverter<E extends AbstractEntity<?>> {
     private final EntityFactory entityFactory;
@@ -47,34 +49,31 @@ public class EntityRawResultConverter<E extends AbstractEntity<?>> {
      */
     private <ET extends AbstractEntity<?>> EntityContainer<ET> transformTupleIntoEntityContainer(final Object[] data, final EntityTree<ET> resultTree) {
 
-        final EntityContainer<ET> entCont = new EntityContainer<>(resultTree.resultType);
+        final EntityContainer<ET> entCont = new EntityContainer<>(resultTree.resultType());
 
-        for (final Entry<Integer, YieldDetails> primEntry : resultTree.getSingles().entrySet()) {
-            entCont.getPrimitives().put(primEntry.getValue().name, convertValue(data[(primEntry.getKey())], primEntry.getValue().getHibTypeAsUserType()));
+        for (final QueryResultLeaf leaf : resultTree.leaves()) {
+            entCont.getPrimitives().put(leaf.name(), convertValue(data[(leaf.position())], leaf.hibUserType()));
         }
 
-        for (final Map.Entry<String, ValueTree> compositeEntry : resultTree.getCompositeValues().entrySet()) {
-            entCont.getComposites().put(compositeEntry.getKey(), transformTuple(data, compositeEntry.getValue()));
+        for (final Map.Entry<String, ValueTree> valueTreeEntry : resultTree.valueTrees().entrySet()) {
+            entCont.getComposites().put(valueTreeEntry.getKey(), transformTupleIntoValueContainer(data, valueTreeEntry.getValue()));
         }
 
-        for (final Map.Entry<String, EntityTree<? extends AbstractEntity<?>>> entityEntry : resultTree.getComposites().entrySet()) {
-            final EntityContainer<? extends AbstractEntity<?>> entContainer = transformTupleIntoEntityContainer(data, entityEntry.getValue());
-            entCont.getEntities().put(entityEntry.getKey(), entContainer);
+        for (final Map.Entry<String, EntityTree<? extends AbstractEntity<?>>> entityTreeEntry : resultTree.entityTrees().entrySet()) {
+            final EntityContainer<? extends AbstractEntity<?>> entContainer = transformTupleIntoEntityContainer(data, entityTreeEntry.getValue());
+            entCont.getEntities().put(entityTreeEntry.getKey(), entContainer);
         }
 
         return entCont;
     }
 
-    private Map<String, Object> convertValuesForPrimitives (final Object[] data, final ValueTree resultTree) {
-        final Map<String, Object> primitives = new HashMap<String, Object>();
-        for (final Entry<Integer, YieldDetails> primEntry : resultTree.getSingles().entrySet()) {
-            primitives.put(primEntry.getValue().name, convertValue(data[(primEntry.getKey())], primEntry.getValue().getHibTypeAsUserType()));
+    private ValueContainer transformTupleIntoValueContainer(final Object[] data, final ValueTree valueTree) {
+        final Map<String, Object> converted = new HashMap<String, Object>();
+        for (final QueryResultLeaf leaf : valueTree.leaves()) {
+            converted.put(leaf.name(), convertValue(data[(leaf.position())], leaf.hibUserType()));
         }
-        return primitives;
-    }
-    
-    private ValueContainer transformTuple(final Object[] data, final ValueTree resultTree) {
-        return new ValueContainer(resultTree.hibType, convertValuesForPrimitives(data, resultTree));
+
+        return new ValueContainer(valueTree.hibCompositeType(), converted);
     }
 
     private Object convertValue(final Object rawValue, final IUserTypeInstantiate userType) {

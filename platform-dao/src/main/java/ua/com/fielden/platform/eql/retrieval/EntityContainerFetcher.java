@@ -2,16 +2,19 @@ package ua.com.fielden.platform.eql.retrieval;
 
 import static java.lang.String.format;
 import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.eql.retrieval.EntityHibernateRetrievalQueryProducer.produceQueryWithPagination;
 import static ua.com.fielden.platform.eql.retrieval.EntityHibernateRetrievalQueryProducer.produceQueryWithoutPagination;
 import static ua.com.fielden.platform.eql.retrieval.EntityResultTreeBuilder.build;
+import static ua.com.fielden.platform.eql.retrieval.HibernateScalarsExtractor.getSortedScalars;
 import static ua.com.fielden.platform.eql.stage3.EqlQueryTransformer.transform;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.stream.Stream;
 
 import org.apache.logging.log4j.Logger;
@@ -30,6 +33,9 @@ import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.entity.query.stream.ScrollableResultStream;
+import ua.com.fielden.platform.eql.retrieval.records.EntityTree;
+import ua.com.fielden.platform.eql.retrieval.records.QueryModelResult;
+import ua.com.fielden.platform.eql.retrieval.records.YieldedColumn;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage3.etc.Yield3;
 import ua.com.fielden.platform.eql.stage3.etc.Yields3;
@@ -48,21 +54,21 @@ public class EntityContainerFetcher {
         final DomainMetadataAnalyser domainMetadataAnalyser = new DomainMetadataAnalyser(executionContext.getDomainMetadata());
         final QueryModelResult<E> modelResult = getModelResult(queryModel, domainMetadataAnalyser.getDbVersion(), executionContext.getFilter(), executionContext.getUsername());
 
-        if (modelResult.idOnlyQuery()) {
-            return listContainersForIdOnlyQuery(queryModel, modelResult.resultType, pageNumber, pageCapacity);
+        if (idOnlyQuery(modelResult)) {
+            return listContainersForIdOnlyQuery(queryModel, modelResult.resultType(), pageNumber, pageCapacity);
         }
 
         final List<EntityContainer<E>> result = listContainersAsIs(modelResult, pageNumber, pageCapacity);
         // logger.debug("Fetch model:\n" + modelResult.getFetchModel());
-        return new EntityContainerEnhancer<E>(this, domainMetadataAnalyser, executionContext.getIdOnlyProxiedEntityTypeCache()).enhance(result, modelResult.fetchModel, queryModel.getParamValues());
+        return new EntityContainerEnhancer<E>(this, domainMetadataAnalyser, executionContext.getIdOnlyProxiedEntityTypeCache()).enhance(result, modelResult.fetchModel(), queryModel.getParamValues());
     }
 
     public <E extends AbstractEntity<?>> Stream<List<EntityContainer<E>>> streamAndEnhanceContainers(final QueryProcessingModel<E, ?> queryModel, final Optional<Integer> fetchSize) {
         final DomainMetadataAnalyser domainMetadataAnalyser = new DomainMetadataAnalyser(executionContext.getDomainMetadata());
         final QueryModelResult<E> modelResult = getModelResult(queryModel, domainMetadataAnalyser.getDbVersion(), executionContext.getFilter(), executionContext.getUsername());
 
-        if (modelResult.idOnlyQuery()) {
-            return streamContainersForIdOnlyQuery(queryModel, modelResult.resultType, fetchSize);
+        if (idOnlyQuery(modelResult)) {
+            return streamContainersForIdOnlyQuery(queryModel, modelResult.resultType(), fetchSize);
         }
 
         final Stream<List<EntityContainer<E>>> stream = streamContainersAsIs(modelResult, fetchSize);
@@ -70,11 +76,11 @@ public class EntityContainerFetcher {
 
         final EntityContainerEnhancer<E> entityContainerEnhancer = new EntityContainerEnhancer<>(this, domainMetadataAnalyser, executionContext.getIdOnlyProxiedEntityTypeCache());
 
-        return stream.map(container -> entityContainerEnhancer.enhance(container, modelResult.fetchModel, queryModel.getParamValues()));
+        return stream.map(container -> entityContainerEnhancer.enhance(container, modelResult.fetchModel(), queryModel.getParamValues()));
     }
 
     private <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainersForIdOnlyQuery(final QueryProcessingModel<E, ?> queryModel, final Class<E> resultType, final Integer pageNumber, final Integer pageCapacity) {
-        final EntityResultQueryModel<E> idOnlyModel = select(resultType).where().prop("id").in().model((SingleResultQueryModel<?>) queryModel.queryModel).model();
+        final EntityResultQueryModel<E> idOnlyModel = select(resultType).where().prop(ID).in().model((SingleResultQueryModel<?>) queryModel.queryModel).model();
 
         final QueryProcessingModel<E, EntityResultQueryModel<E>> idOnlyQpm = new QueryProcessingModel<>(idOnlyModel, queryModel.orderModel, queryModel.fetchModel, queryModel.getParamValues(), queryModel.lightweight);
 
@@ -82,9 +88,9 @@ public class EntityContainerFetcher {
     }
 
     private <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainersAsIs(final QueryModelResult<E> modelResult, final Integer pageNumber, final Integer pageCapacity) {
-        final EntityTree<E> resultTree = build(modelResult.resultType, modelResult.getSortedYieldedPropsInfo(), executionContext.getDomainMetadata().eqlDomainMetadata);
+        final EntityTree<E> resultTree = build(modelResult.resultType(), modelResult.yieldedColumns(), executionContext.getDomainMetadata().eqlDomainMetadata);
 
-        final Query query = produceQueryWithPagination(executionContext.getSession(), modelResult.sql, resultTree.getSortedScalars(), modelResult.getParamValues(), pageNumber, pageCapacity);
+        final Query query = produceQueryWithPagination(executionContext.getSession(), modelResult.sql(), getSortedScalars(resultTree), modelResult.paramValues(), pageNumber, pageCapacity);
 
         final EntityRawResultConverter<E> entityRawResultConverter = new EntityRawResultConverter<>(executionContext.getEntityFactory());
 
@@ -92,13 +98,13 @@ public class EntityContainerFetcher {
         final DateTime st = new DateTime();
         final List<?> res = query.list();
         final Period pd = new Period(st, new DateTime());
-        logger.debug(format("Query exec duration: %s m %s s %s ms for type [%s].", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), modelResult.resultType.getSimpleName()));
+        logger.debug(format("Query exec duration: %s m %s s %s ms for type [%s].", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), modelResult.resultType().getSimpleName()));
         
         return entityRawResultConverter.transformFromNativeResult(resultTree, res);
     }
 
     private <E extends AbstractEntity<?>> Stream<List<EntityContainer<E>>> streamContainersForIdOnlyQuery(final QueryProcessingModel<E, ?> queryModel, final Class<E> resultType, final Optional<Integer> fetchSize) {
-        final EntityResultQueryModel<E> idOnlyModel = select(resultType).where().prop("id").in().model((SingleResultQueryModel<?>) queryModel.queryModel).model();
+        final EntityResultQueryModel<E> idOnlyModel = select(resultType).where().prop(ID).in().model((SingleResultQueryModel<?>) queryModel.queryModel).model();
 
         final QueryProcessingModel<E, EntityResultQueryModel<E>> idOnlyQpm = new QueryProcessingModel<>(idOnlyModel, queryModel.orderModel, queryModel.fetchModel, queryModel.getParamValues(), queryModel.lightweight);
 
@@ -106,9 +112,9 @@ public class EntityContainerFetcher {
     }
 
     private <E extends AbstractEntity<?>> Stream<List<EntityContainer<E>>> streamContainersAsIs(final QueryModelResult<E> modelResult, final Optional<Integer> fetchSize) {
-        final EntityTree<E> resultTree = build(modelResult.resultType, modelResult.getSortedYieldedPropsInfo(), executionContext.getDomainMetadata().eqlDomainMetadata);
+        final EntityTree<E> resultTree = build(modelResult.resultType(), modelResult.yieldedColumns(), executionContext.getDomainMetadata().eqlDomainMetadata);
         final int batchSize = fetchSize.orElse(100);
-        final Query query = produceQueryWithoutPagination(executionContext.getSession(), modelResult.sql, resultTree.getSortedScalars(), modelResult.getParamValues())
+        final Query query = produceQueryWithoutPagination(executionContext.getSession(), modelResult.sql(), getSortedScalars(resultTree), modelResult.paramValues())
                 .setFetchSize(batchSize);
         final Stream<Object[]> stream = ScrollableResultStream.streamOf(query.scroll(ScrollMode.FORWARD_ONLY));
 
@@ -122,15 +128,19 @@ public class EntityContainerFetcher {
         final TransformationResult2<ResultQuery3> tr = transform(qem, filter, username, executionContext.dates(), executionContext.getDomainMetadata().eqlDomainMetadata);
         final ResultQuery3 entQuery3 = tr.item;
         final String sql = entQuery3.sql(dbVersion);
-        return new QueryModelResult<>((Class<E>) entQuery3.resultType, sql, getResultPropsInfos(entQuery3.yields), tr.updatedContext.getParamValues(), qem.fetchModel);
+        return new QueryModelResult<E>((Class<E>) entQuery3.resultType, sql, getYieldedColumns(entQuery3.yields), tr.updatedContext.getParamValues(), qem.fetchModel);
     }
 
-    public static SortedSet<ResultQueryYieldDetails> getResultPropsInfos(final Yields3 model) {
-        final SortedSet<ResultQueryYieldDetails> result = new TreeSet<>();
+    public static List<YieldedColumn> getYieldedColumns(final Yields3 model) {
+        final List<YieldedColumn> result = new ArrayList<>();
         for (final Yield3 yield : model.getYields()) {
             final Class<?> yieldType = yield.type != null ? yield.type : yield.operand.type();
-            result.add(new ResultQueryYieldDetails(yield.alias, yieldType, yield.column));
+            result.add(new YieldedColumn(yield.alias, yieldType, yield.column));
         }
-        return result;
+        return Collections.unmodifiableList(result);
+    }
+    
+    private static boolean idOnlyQuery(final QueryModelResult<?> queryModelResult) {
+        return isPersistedEntityType(queryModelResult.resultType()) && queryModelResult.yieldedColumns().size() == 1 && ID.equals(queryModelResult.yieldedColumns().get(0).name());
     }
 }
