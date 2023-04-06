@@ -13,7 +13,7 @@ import {TgReflector} from '/app/tg-reflector.js';
 
 import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
-import { tearDownEvent, allDefined, resultMessages, nodeFromPoint } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, allDefined, resultMessages } from '/resources/reflection/tg-polymer-utils.js';
 
 let checkIconTimer = null;
 
@@ -154,10 +154,13 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 --paper-input-container-focus-color: #03A9F4;
             }
 
-            /* style informative, warning and error */
-            #decorator[is-invalid].hover-error-text {
+            /* style visible paper-input-error */
+            #decorator[is-invalid] {
                 --paper-input-error: {
-                    cursor: pointer;
+                    cursor: pointer; /* cursor to indicate action presence */
+                    z-index: 1; /* always above other editors (selection crit) to be able to tap */
+                    max-width: 100%; /* ensure paper-input-error width as in its content */
+                    right: auto !important; /* ensure paper-input-error width as in its content */
                 }
             }
 
@@ -196,7 +199,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 ${propertyAction}
             </div>
             <!-- 'autoValidate' attribute for paper-input-container is 'false' -- all validation is performed manually and is bound to paper-input-error, which could be hidden in case of empty '_error' property -->
-            <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]" tooltip-text$="[[_extendedError]]" slot="add-on" on-tap="_inputErrorTapHandler" on-mousemove="_inputErrorMousemoveHandler">[[_error]]</paper-input-error>
+            <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]" tooltip-text$="[[_extendedError]]" slot="add-on" on-tap="_inputErrorTapHandler">[[_error]]</paper-input-error>
             <!-- paper-input-char-counter addon is updated whenever 'bindValue' property of child '#input' element is changed -->
             <paper-input-char-counter id="inputCounter" class="footer" hidden$="[[!_isMultilineText(_editorKind)]]" disabled$="[[_disabled]]" slot="add-on"></paper-input-char-counter>
         </paper-input-container>
@@ -1152,33 +1155,11 @@ export class TgEditor extends PolymerElement {
     }
 
     /**
-     * Checks whether there is a Text node under [x, y] coordinates.
-     */
-    _textNodeUnderPointPresent(x, y) {
-        return nodeFromPoint(document, x, y, node => node.nodeType === Node.TEXT_NODE);
-    }
-
-    /**
      * Opens confirmation dialog for extended error / warning / informative message on tap.
-     * If the message text is shorter than editor, tapping only works for textual non-empty part of <paper-input-error>.
-     * This is to be consistent with title action for entity editors.
      */
     _inputErrorTapHandler (event) {
-        if (this._extendedError && this._textNodeUnderPointPresent(event.detail.x, event.detail.y)) {
+        if (this._extendedError) {
             this.$.confirmationDialog.showConfirmationDialog(this._extendedError, [{name:'Close', confirm:true, autofocus:true}]);
-        }
-    }
-
-    /**
-     * Changes cursor for extended error / warning / informative message on hovering.
-     * If the message text is shorter than editor, cursor:pointer only shows for textual non-empty part of <paper-input-error>.
-     * This is to be consistent with title action for entity editors.
-     */
-    _inputErrorMousemoveHandler (event) {
-        if (this._textNodeUnderPointPresent(event.x, event.y)) {
-            this.decorator().classList.add('hover-error-text');
-        } else {
-            this.decorator().classList.remove('hover-error-text');
         }
     }
 
