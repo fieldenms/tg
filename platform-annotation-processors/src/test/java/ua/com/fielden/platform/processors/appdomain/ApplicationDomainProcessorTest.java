@@ -4,9 +4,11 @@ import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor.ERR_AT_MOST_ONE_EXTENSION_POINT_IS_ALLOWED;
 import static ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor.PACKAGE_OPTION;
 import static ua.com.fielden.platform.processors.test_utils.CollectionTestUtils.assertEqualByContents;
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
+import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertMessages;
 import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertSuccess;
 import static ua.com.fielden.platform.processors.test_utils.InMemoryJavaFileObjects.createJavaSource;
 import static ua.com.fielden.platform.processors.test_utils.TestUtils.assertPresent;
@@ -27,6 +29,7 @@ import java.util.stream.Stream;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.TypeElement;
+import javax.tools.Diagnostic.Kind;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
@@ -50,6 +53,7 @@ import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.test_entities.ExampleEntity;
 import ua.com.fielden.platform.processors.test_entities.PersistentEntity;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
+import ua.com.fielden.platform.processors.test_utils.CompilationResult;
 import ua.com.fielden.platform.processors.test_utils.ProcessorListener;
 import ua.com.fielden.platform.processors.test_utils.ProcessorListener.AbstractRoundListener;
 import ua.com.fielden.platform.processors.test_utils.exceptions.TestCaseConfigException;
@@ -620,6 +624,31 @@ public class ApplicationDomainProcessorTest {
                 .setProcessor(processor);
             assertSuccess(compilation.compile());
         });
+    }
+
+    @Test
+    public void errors_are_reported_when_there_are_multiple_ApplicationDomain_extensions() {
+        final JavaFile extension1 = JavaFile.builder("test",
+                TypeSpec.classBuilder("FirstExtension")
+                .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
+                        .addMember("entities", "{ $L }", AnnotationSpec.get(RegisterEntity.Builder.builder(ExampleEntity.class).build()))
+                        .build())
+                .build())
+            .build();
+        final JavaFile extension2 = JavaFile.builder("test",
+                TypeSpec.classBuilder("SecondExtension")
+                .addAnnotation(AnnotationSpec.builder(ExtendApplicationDomain.class)
+                        .addMember("entities", "{ $L }", AnnotationSpec.get(RegisterEntity.Builder.builder(ExampleEntity.class).build()))
+                        .build())
+                .build())
+            .build();
+
+        final CompilationResult result = Compilation.newInMemory(Stream.of(extension1, extension2).map(JavaFile::toJavaFileObject).toList())
+                .setProcessor(new ApplicationDomainProcessor())
+                .addProcessorOption(PACKAGE_OPTION, GENERATED_PKG)
+                .compile();
+        assertTrue(result.failure());
+        assertMessages(result, Kind.ERROR, ERR_AT_MOST_ONE_EXTENSION_POINT_IS_ALLOWED);
     }
 
     // -------------------- UTILITIES --------------------

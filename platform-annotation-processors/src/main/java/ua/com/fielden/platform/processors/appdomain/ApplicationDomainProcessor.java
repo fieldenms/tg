@@ -92,6 +92,8 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
 
     public static final String APPLICATION_DOMAIN_SIMPLE_NAME = "ApplicationDomain";
 
+    public static final String ERR_AT_MOST_ONE_EXTENSION_POINT_IS_ALLOWED = "At most one extension point is allowed.";
+
     public static final String PACKAGE_OPTION = "packageName";
     private String packageName = "generated.config";
 
@@ -432,7 +434,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
                 .toList();
 
         if (extensions.size() > 1) {
-            extensions.forEach(elt -> messager.printMessage(Kind.ERROR, "At most one extension point is allowed.", elt));
+            extensions.forEach(elt -> messager.printMessage(Kind.ERROR, ERR_AT_MOST_ONE_EXTENSION_POINT_IS_ALLOWED, elt));
         }
 
         return extensions.stream()
