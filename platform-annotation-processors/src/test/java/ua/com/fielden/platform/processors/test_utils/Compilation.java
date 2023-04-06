@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.processors.test_utils;
 
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
@@ -18,8 +19,6 @@ import javax.tools.JavaCompiler.CompilationTask;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
-
-import org.junit.runners.model.Statement;
 
 import ua.com.fielden.platform.processors.test_utils.exceptions.CompilationException;
 import ua.com.fielden.platform.types.try_wrapper.ThrowableConsumer;
@@ -39,11 +38,11 @@ public final class Compilation {
     /** Java compiler option to perform only annotation processing (without subsequent compilation) */
     public static final String OPTION_PROC_ONLY = "-proc:only";
 
-    private Collection<? extends JavaFileObject> javaSources;
+    private final Set<JavaFileObject> javaSources;
     private Processor processor;
     private JavaCompiler compiler;
-    public StandardJavaFileManager fileManager;
-    private List<String> options = new LinkedList<>();
+    private StandardJavaFileManager fileManager;
+    private final List<String> options = new LinkedList<>();
     private DiagnosticCollector<JavaFileObject> diagnosticListener = new DiagnosticCollector<>();
 
     /**
@@ -69,13 +68,14 @@ public final class Compilation {
      * @param options
      */
     public Compilation(final Collection<? extends JavaFileObject> javaSources) {
-        this.javaSources = javaSources;
+        this.javaSources = new HashSet<>(javaSources);
         this.compiler = ToolProvider.getSystemJavaCompiler();
         this.fileManager = compiler.getStandardFileManager(null, null, null);
     }
 
     public Compilation setJavaSources(final Collection<? extends JavaFileObject> javaSources) {
-        this.javaSources = javaSources;
+        this.javaSources.clear();
+        this.javaSources.addAll(javaSources);
         return this;
     }
 
@@ -121,12 +121,12 @@ public final class Compilation {
      *
      * @param evaluator
      * @return result of the compilation
-     * @throws Throwable
+     * @throws Throwable    an exception that might be thrown by {@code evaluator}
      */
     public CompilationResult compileAndEvaluatef(final ThrowableConsumer<ProcessingEnvironment> evaluator) {
         final EvaluatingProcessor evaluatingProcessor = new EvaluatingProcessor(evaluator);
         final CompilationResult result = doCompile(evaluatingProcessor);
-        evaluatingProcessor.throwIfStatementThrew();
+        evaluatingProcessor.throwIfEvaluatorThrew();
         return result;
     }
 
@@ -135,7 +135,7 @@ public final class Compilation {
      *
      * @param evaluator
      * @return result of the compilation
-     * @throws Throwable
+     * @throws Throwable    an exception that might be thrown by {@code evaluator}
      */
     public CompilationResult compileAndEvaluate(final Consumer<ProcessingEnvironment> evaluator) {
         return compileAndEvaluatef((procEnv) -> evaluator.accept(procEnv));
@@ -166,7 +166,7 @@ public final class Compilation {
     private final class EvaluatingProcessor extends AbstractProcessor {
 
         private final ThrowableConsumer<ProcessingEnvironment> evaluator;
-        private CompilationException thrown;
+        private CompilationException evaluatorError;
         private final List<Throwable> processingErrors = new LinkedList<>();
 
         public EvaluatingProcessor(final ThrowableConsumer<ProcessingEnvironment> evaluator) {
@@ -209,18 +209,18 @@ public final class Compilation {
                 try {
                     evaluator.accept(processingEnv);
                 } catch (final Throwable ex) {
-                    thrown = new CompilationException(ex);
+                    evaluatorError = new CompilationException(ex);
                 }
             }
             return false;
         }
 
         /**
-         * Throws what {@code base} {@link Statement} threw, if anything.
+         * Throws what {@link #evaluator} threw, if anything.
          */
-        void throwIfStatementThrew() {
-            if (thrown != null) {
-                throw thrown;
+        void throwIfEvaluatorThrew() {
+            if (evaluatorError != null) {
+                throw evaluatorError;
             }
         }
     }

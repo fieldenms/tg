@@ -34,7 +34,7 @@ public class CompilationTestUtils {
                 () -> result.printDiagnostics());
     }
 
-    public static void assertTrueOrFailWith(final String message, boolean condition, final Runnable failAction) {
+    public static void assertTrueOrFailWith(final String message, final boolean condition, final Runnable failAction) {
         if (!condition) {
             failAction.run();
             fail(message);
