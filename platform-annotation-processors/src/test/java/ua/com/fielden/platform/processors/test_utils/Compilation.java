@@ -156,7 +156,7 @@ public final class Compilation {
         task.setProcessors(List.of(processor));
         final boolean success = task.call();
 
-        return new CompilationResult(success, diagnosticListener.getDiagnostics());
+        return new CompilationResult(success, diagnosticListener.getDiagnostics(), processor.processingErrors);
     }
 
     /**
