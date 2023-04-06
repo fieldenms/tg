@@ -167,6 +167,7 @@ public final class Compilation {
 
         private final ThrowableConsumer<ProcessingEnvironment> evaluator;
         private CompilationException thrown;
+        private final List<Throwable> processingErrors = new LinkedList<>();
 
         public EvaluatingProcessor(final ThrowableConsumer<ProcessingEnvironment> evaluator) {
             this.evaluator = evaluator;
@@ -174,16 +175,21 @@ public final class Compilation {
 
         @Override
         public SourceVersion getSupportedSourceVersion() {
-            return SourceVersion.latest();
+            return processor != null ? processor.getSupportedSourceVersion() : SourceVersion.latestSupported();
         }
 
         @Override
         public Set<String> getSupportedAnnotationTypes() {
-            return Set.of("*");
+            return processor != null ? processor.getSupportedAnnotationTypes() : Set.of("*");
         }
 
         @Override
-        public synchronized void init(ProcessingEnvironment processingEnv) {
+        public Set<String> getSupportedOptions() {
+            return processor != null ? processor.getSupportedOptions() : super.getSupportedOptions();
+        }
+
+        @Override
+        public synchronized void init(final ProcessingEnvironment processingEnv) {
             super.init(processingEnv);
             if (processor != null) {
                 processor.init(processingEnv);
@@ -191,9 +197,13 @@ public final class Compilation {
         }
 
         @Override
-        public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
+        public boolean process(final Set<? extends TypeElement> annotations, final RoundEnvironment roundEnv) {
             if (processor != null) {
-                processor.process(annotations, roundEnv);
+                try {
+                    processor.process(annotations, roundEnv);
+                } catch (final Throwable ex) {
+                    processingErrors.add(ex);
+                }
             }
             if (roundEnv.processingOver()) {
                 try {
