@@ -113,6 +113,9 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         // also, if the meta-models entry point already exists, we should use it to identify existing meta-models to avoid excessive meta-model generation 
         final var generatedMetaModels = collectEntitiesForMetaModelGeneration(roundEnv, maybeMetaModelsElement)
                                         .filter(mmc -> writeMetaModel(mmc)).collect(Collectors.toSet());
+        if (!generatedMetaModels.isEmpty()) {
+            printNote("Generated %s entity meta-models.", generatedMetaModels.size());
+        }
         allGeneratedMetaModels.addAll(generatedMetaModels);
 
         // generation or re-generation of the meta-models entry point class should occur only during the first round of processing
@@ -600,7 +603,8 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
             return false;
         }
 
-        printNote("Generated %s for entity %s.", metaModelSpec.name, entityElement.getSimpleName());
+        // TODO enable for "verbose" mode
+//        printNote("Generated %s for entity %s.", metaModelSpec.name, entityElement.getSimpleName());
         return true;
     }
     
@@ -773,11 +777,16 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         // generate static fields and methods for new meta-models
         for (final MetaModelConcept mmc: metaModelConcepts) {
             final String fieldName = nameFieldForMetaModel(mmc.getEntityElement().getSimpleName().toString());
-            printNote("New/Updated meta-model, generating field: %s", fieldName);
+             // TODO enable for "verbose" mode
+//            printNote("New/Updated meta-model, generating field: %s", fieldName);
             fieldSpecs.add(specFieldForMetaModel(mmc.getMetaModelClassName(), fieldName));
-            
-            printNote("New/Updated aliased meta-model, generating method: %s", fieldName);
+             // TODO enable for "verbose" mode
+//            printNote("New/Updated aliased meta-model, generating method: %s", fieldName);
             methodSpecs.add(aliasMethodForMetaModel(mmc.getMetaModelAliasedClassName(), fieldName));
+        }
+        if (!metaModelConcepts.isEmpty()) {
+            printNote("Found %s new/updated meta-models: [%s]",
+                    metaModelConcepts.size(), metaModelConcepts.stream().map(MetaModelConcept::getSimpleName).collect(joining(",")));
         }
 
         // if MetaModels class exists, then collect its members for the active *unchanged* meta-models 
@@ -790,25 +799,36 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
                     .filter(mme -> metaModelConcepts.stream().noneMatch(mmc -> metaModelFinder.isSameMetaModel(mmc, mme)))
                     .toList();
 
-            printNote("Inactive meta-models: [%s]", inactiveMetaModelElements.stream()
-                    .map(mm -> mm.getSimpleName().toString())
-                    .sorted().collect(joining(", ")));
-            
-            for (final MetaModelElement mme: activeUnchangedMetaModels) {
-                // active meta-model must have a coresponding entity
-                final EntityElement entity = entityFinder.findEntityForMetaModel(mme)
-                        .orElseThrow(() -> new MetaModelProcessorException("Missing entity for active meta-model [%s]".formatted(mme.getSimpleName())));
-                final String fieldName = nameFieldForMetaModel(entity.getSimpleName().toString());
-                // add a method for an aliased meta-model
-                if (metaModelFinder.isMetaModelAliased(mme)) {
-                    printNote("Old aliased meta-model, generating method: %s", fieldName);
-                    methodSpecs.add(aliasMethodForMetaModel(mme.getMetaModelClassName(), fieldName));
+            if (!inactiveMetaModelElements.isEmpty()) {
+                printNote("Found %s inactive meta-models: [%s]",
+                        inactiveMetaModelElements.size(),
+                        inactiveMetaModelElements.stream() .map(mm -> mm.getSimpleName().toString()) .sorted().collect(joining(", ")));
+            }
+
+            {
+                int oldMetaModelCount = 0;
+                int oldAliasedMetaModelCount = 0;
+                for (final MetaModelElement mme: activeUnchangedMetaModels) {
+                    // active meta-model must have a coresponding entity
+                    final EntityElement entity = entityFinder.findEntityForMetaModel(mme)
+                            .orElseThrow(() -> new MetaModelProcessorException("Missing entity for active meta-model [%s]".formatted(mme.getSimpleName())));
+                    final String fieldName = nameFieldForMetaModel(entity.getSimpleName().toString());
+                    // add a method for an aliased meta-model
+                    if (metaModelFinder.isMetaModelAliased(mme)) {
+                        // TODO enable for "verbose" mode
+                        //                    printNote("Old aliased meta-model, generating method: %s", fieldName);
+                        methodSpecs.add(aliasMethodForMetaModel(mme.getMetaModelClassName(), fieldName));
+                        oldMetaModelCount++;
+                    }
+                    // add a field for a regular meta-model
+                    else {
+                        // TODO enable for "verbose" mode
+                        //                    printNote("Old meta-model, generating field: %s", fieldName);
+                        fieldSpecs.add(specFieldForMetaModel(mme.getMetaModelClassName(), fieldName));
+                        oldAliasedMetaModelCount++;
+                    }
                 }
-                // add a field for a regular meta-model
-                else {
-                    printNote("Old meta-model, generating field: %s", fieldName);
-                    fieldSpecs.add(specFieldForMetaModel(mme.getMetaModelClassName(), fieldName));
-                }
+                printNote("Unchanged meta-models: %s regular, %s aliased.".formatted(oldMetaModelCount, oldAliasedMetaModelCount));
             }
         }
 
