@@ -13,7 +13,6 @@ import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -98,16 +97,11 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
     private String applicationDomainPackage;
 
     @Override
-    protected void parseOptions(final Map<String, String> options) {
-        super.parseOptions(options);
-        applicationDomainPackage = "%s.config".formatted(packageName);
-    }
-
-    @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
         this.elementFinder = new ElementFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
         this.entityFinder = new EntityFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
+        this.applicationDomainPackage = "%s.config".formatted(this.packageName);
     }
 
     @Override
