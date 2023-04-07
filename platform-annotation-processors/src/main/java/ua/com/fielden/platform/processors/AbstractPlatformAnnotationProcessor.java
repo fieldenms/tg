@@ -6,7 +6,9 @@ import static java.util.stream.Collectors.joining;
 import static javax.tools.Diagnostic.Kind.NOTE;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Filer;
@@ -25,6 +27,7 @@ import org.joda.time.DateTime;
 
 import com.google.common.base.Stopwatch;
 
+import ua.com.fielden.platform.processors.exceptions.ProcessorInitializationException;
 import ua.com.fielden.platform.processors.metamodel.elements.utils.TypeElementCache;
 
 /**
@@ -36,7 +39,8 @@ import ua.com.fielden.platform.processors.metamodel.elements.utils.TypeElementCa
  * <p>
  * Supported options by this base type:
  * <ul>
- *   <li>cacheStats -- if set to {@code true} enables recording of type element cache statistics (see {@link TypeElementCache#getStats()}). </li>
+ *   <li>{@code cacheStats} -- if set to {@code true} enables recording of type element cache statistics (see {@link TypeElementCache#getStats()}). </li>
+ *   <li>{@code package} -- the name of the top project package; might be useful in determining the location of specific sources.</li>
  * </ul>
  *
  * @author TG Team
@@ -61,8 +65,12 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
     /** Indicates whether the last round of processing initial inputs has already been passed. Makes sense during incremental compilation. */
     private boolean pastLastRound;
 
-    private static final String CACHE_STATS_OPTION = "cacheStats";
+    // supported options
+    public static final String CACHE_STATS_OPTION = "cacheStats";
     private boolean reportCacheStats = false;
+
+    public static final String PACKAGE_OPTION = "package";
+    protected String packageName = "fielden";
 
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
@@ -90,7 +98,7 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
 
     @Override
     public Set<String> getSupportedOptions() {
-        return Set.of(CACHE_STATS_OPTION);
+        return Set.of(CACHE_STATS_OPTION, PACKAGE_OPTION);
     }
 
     /**
@@ -99,11 +107,17 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
      *
      * @param options
      */
-    protected void parseOptions(final Map<String, String> options) { 
+    protected void parseOptions(final Map<String, String> options) {
         if (parseBoolean(options.get(CACHE_STATS_OPTION))) {
             reportCacheStats = true;
             TypeElementCache.recordStats();
         }
+        Optional.ofNullable(options.get(PACKAGE_OPTION)).ifPresent(pkg -> {
+            if (!Pattern.matches("([a-zA-Z]\\w*\\.)*[a-zA-Z]\\w*", pkg)) {
+                throw new ProcessorInitializationException("Option [%s] specifies an illegal package name.".formatted(PACKAGE_OPTION));
+            }
+            this.packageName = pkg;
+        });
     }
 
     @Override

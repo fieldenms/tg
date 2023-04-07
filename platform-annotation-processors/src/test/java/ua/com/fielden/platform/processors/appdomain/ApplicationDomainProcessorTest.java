@@ -4,8 +4,8 @@ import static javax.lang.model.element.Modifier.ABSTRACT;
 import static javax.lang.model.element.Modifier.PUBLIC;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor.PACKAGE_OPTION;
 import static ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor.ERR_AT_MOST_ONE_EXTENSION_POINT_IS_ALLOWED;
-import static ua.com.fielden.platform.processors.appdomain.ApplicationDomainProcessor.PACKAGE_OPTION;
 import static ua.com.fielden.platform.processors.test_utils.CollectionTestUtils.assertEqualByContents;
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
 import static ua.com.fielden.platform.processors.test_utils.CompilationTestUtils.assertMessages;
@@ -65,7 +65,7 @@ import ua.com.fielden.platform.processors.test_utils.exceptions.TestCaseConfigEx
  */
 public class ApplicationDomainProcessorTest {
     private static final JavaFileObject PLACEHOLDER = createJavaSource("Placeholder", "final class Placeholder {}");
-    private static final String GENERATED_PKG = "test.generated.config"; // to prevent conflicts with the real processor
+    private static final String GENERATED_PKG = "test.generated"; // to prevent conflicts with the real processor
 
     @Test
     public void external_entities_can_be_registered() {

@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.processors.appdomain;
 
-import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toSet;
 import static javax.lang.model.element.Modifier.FINAL;
 import static javax.lang.model.element.Modifier.PRIVATE;
@@ -18,7 +17,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -51,7 +49,6 @@ import ua.com.fielden.platform.processors.AbstractPlatformAnnotationProcessor;
 import ua.com.fielden.platform.processors.appdomain.annotation.ExtendApplicationDomain;
 import ua.com.fielden.platform.processors.appdomain.annotation.RegisteredEntity;
 import ua.com.fielden.platform.processors.appdomain.annotation.SkipEntityRegistration;
-import ua.com.fielden.platform.processors.exceptions.ProcessorInitializationException;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.utils.ElementFinder;
 import ua.com.fielden.platform.processors.metamodel.utils.EntityFinder;
@@ -94,36 +91,23 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
 
     public static final String ERR_AT_MOST_ONE_EXTENSION_POINT_IS_ALLOWED = "At most one extension point is allowed.";
 
-    public static final String PACKAGE_OPTION = "appDomainPkg";
-    private String packageName = "generated.config";
-
     private ElementFinder elementFinder;
     private EntityFinder entityFinder;
+
+    // initialised after parsing options
+    private String applicationDomainPackage;
+
+    @Override
+    protected void parseOptions(final Map<String, String> options) {
+        super.parseOptions(options);
+        applicationDomainPackage = "%s.config".formatted(packageName);
+    }
 
     @Override
     public synchronized void init(final ProcessingEnvironment processingEnv) {
         super.init(processingEnv);
         this.elementFinder = new ElementFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
         this.entityFinder = new EntityFinder(processingEnv.getElementUtils(), processingEnv.getTypeUtils());
-    }
-
-    @Override
-    public Set<String> getSupportedOptions() {
-        final Set<String> options = new HashSet<>(super.getSupportedOptions());
-        options.add(PACKAGE_OPTION);
-        return options;
-    }
-
-    @Override
-    protected void parseOptions(final Map<String, String> options) {
-        super.parseOptions(options);
-
-        ofNullable(options.get(PACKAGE_OPTION)).ifPresent(pkg -> {
-            if (!Pattern.matches("([a-zA-Z]\\w*\\.)*[a-zA-Z]\\w*", pkg)) {
-                throw new ProcessorInitializationException("Option [%s] specifies an illegal package name.".formatted(PACKAGE_OPTION));
-            }
-            this.packageName = pkg;
-        });
     }
 
     @Override
@@ -394,7 +378,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
                     .build())
             .build();
 
-        final JavaFile javaFile = JavaFile.builder(packageName, typeSpec).indent("    ").build();
+        final JavaFile javaFile = JavaFile.builder(applicationDomainPackage, typeSpec).indent("    ").build();
         try {
             javaFile.writeTo(filer);
         } catch (final IOException ex) {
@@ -407,7 +391,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
     }
 
     protected String getApplicationDomainQualifiedName() {
-        return "%s.%s".formatted(packageName, APPLICATION_DOMAIN_SIMPLE_NAME);
+        return "%s.%s".formatted(applicationDomainPackage, APPLICATION_DOMAIN_SIMPLE_NAME);
     }
 
     protected Optional<ApplicationDomainElement> findApplicationDomain() {
