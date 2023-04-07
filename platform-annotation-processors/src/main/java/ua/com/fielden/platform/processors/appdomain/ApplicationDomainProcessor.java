@@ -94,7 +94,7 @@ public class ApplicationDomainProcessor extends AbstractPlatformAnnotationProces
 
     public static final String ERR_AT_MOST_ONE_EXTENSION_POINT_IS_ALLOWED = "At most one extension point is allowed.";
 
-    public static final String PACKAGE_OPTION = "packageName";
+    public static final String PACKAGE_OPTION = "appDomainPkg";
     private String packageName = "generated.config";
 
     private ElementFinder elementFinder;
