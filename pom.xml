@@ -210,7 +210,7 @@
                                     <message>The value for property "fork.count" is required. You can set it as "-Pfork.count=2".</message>
                                 </requireProperty>
                             </rules>
-                            <fail>false</fail>
+                            <fail>true</fail>
                         </configuration>
                     </execution>
                 </executions>
