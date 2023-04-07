@@ -114,7 +114,7 @@ abstract public class AbstractPlatformAnnotationProcessor extends AbstractProces
         }
         Optional.ofNullable(options.get(PACKAGE_OPTION)).ifPresent(pkg -> {
             if (!Pattern.matches("([a-zA-Z]\\w*\\.)*[a-zA-Z]\\w*", pkg)) {
-                throw new ProcessorInitializationException("Option [%s] specifies an illegal package name.".formatted(PACKAGE_OPTION));
+                throw new ProcessorInitializationException("Option \"%s\" specifies an illegal package name \"%s\".".formatted(PACKAGE_OPTION, pkg));
             }
             this.packageName = pkg;
         });
