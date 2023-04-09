@@ -338,6 +338,15 @@ export class TgEditor extends PolymerElement {
                 value: null
             },
 
+            /**
+             * Defines standard invalid message for built-in validation of 'input'.
+             * Should be empty in case if such validation is not supported.
+             */
+            builtInValidationMessage: {
+                type: String,
+                value: null
+            },
+
             /////////////////////////////////////////////////////////////////////////////////////////////////////////
             //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
             /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -501,6 +510,7 @@ export class TgEditor extends PolymerElement {
                 value: function () {
                     return (function (event) {
                         this._setFocused(false);
+                        this._checkBuiltInValidation();
                     }).bind(this);
                 }
             },
@@ -536,6 +546,7 @@ export class TgEditor extends PolymerElement {
                     return (function (event) {
                         // console.debug("_onKeydown:", event);
                         if (event.keyCode === 13) { // 'Enter' has been pressed
+                            this._checkBuiltInValidation();
                             this.commitIfChanged();
                         } else if (event.keyCode === 67 && event.altKey && (event.ctrlKey || event.metaKey)) { //(CTRL/Meta) + ALT + C
                             this.commitIfChanged();
@@ -908,8 +919,13 @@ export class TgEditor extends PolymerElement {
     _commValueChanged (newValue, oldValue) {
         // console.log("_commValueChanged", oldValue, newValue, "_refreshCycleStarted ==", this._refreshCycleStarted);
         try {
+            const _refreshCycleStarted = this._refreshCycleStarted;
             this._acceptedValue = this.convertFromString(newValue);
-            this._editorValidationMsg = null;
+            // if built-in 'input' validation is not supported, clear _editorValidationMsg on successful value conversion;
+            // if built-in 'input' validation not supported, clear for the case if Refresh button pressed or in the case where the editor validation message not equals to built-in one
+            if (!this.builtInValidationMessage || _refreshCycleStarted === true || this._editorValidationMsg !== this.builtInValidationMessage) {
+                this._editorValidationMsg = null;
+            }
         } catch (error) {
             console.log("_commValueChanged catched", error, this);
             this._editorValidationMsg = error;
@@ -1160,6 +1176,21 @@ export class TgEditor extends PolymerElement {
     _inputErrorTapHandler (event) {
         if (this._extendedError) {
             this.$.confirmationDialog.showConfirmationDialog(this._extendedError, [{name:'Close', confirm:true, autofocus:true}]);
+        }
+    }
+
+    /**
+     * Checks built-in validation of the 'input' element.
+     * 
+     * This is applicable e.g. for <input type="number"> elements, where characters like 'e', '.' and '-' are applicable but invalid combinations of those are possible.
+     * 
+     * In all cases such invalid input will lead to _editingValue === ''.
+     * This complicates things, as _onChange may not be invoked at all.
+     * So we use _outFocus (on-blur) and _onKeyDown (on-keydown) on-Enter callbacks to cover majority of cases.
+     */
+    _checkBuiltInValidation () {
+        if (this.builtInValidationMessage && this.$ && this.$.input && this.$.input.checkValidity) {
+            this._editorValidationMsg = this._editingValue === '' && !this.$.input.checkValidity() ? this.builtInValidationMessage : null;
         }
     }
 

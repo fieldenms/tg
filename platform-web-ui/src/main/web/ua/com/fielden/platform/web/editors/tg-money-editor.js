@@ -34,6 +34,7 @@ const customInputTemplate = html`
             id="input"
             class="custom-input"
             type="number"
+            title=""
             step="any"
             on-change="_onChange"
             on-input="_onInput"
@@ -55,6 +56,11 @@ export class TgMoneyEditor extends TgNumericEditor {
         return createEditorTemplate(additionalTemplate, html``, customInputTemplate, inputLayerTemplate, html``, propertyActionTemplate);
     }
 
+    constructor () {
+        super();
+        this.builtInValidationMessage = 'The entered amount is not a valid number.';
+    }
+
     /**
      * Converts the value from string representation (which is used in editing / comm values) into concrete type of this editor component (Number).
      */
@@ -62,9 +68,8 @@ export class TgMoneyEditor extends TgNumericEditor {
         if (strValue === '') {
             return null;
         }
-        // var convertedNumber = (+strValue);
         if (isNaN(strValue)) {
-            throw "The entered amount is not a valid number.";
+            throw this.builtInValidationMessage;
         }
         
         // TODO currency and tax are ignored at this stage, but their support should most likely be implemented at some
