@@ -2,6 +2,8 @@ package ua.com.fielden.platform.error;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.regex.Pattern.quote;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -22,7 +24,9 @@ import java.util.function.Supplier;
 public class Result extends RuntimeException {
     private static final long serialVersionUID = 1L;
     private static final String SUCCESSFUL = "Successful";
+    private static final String NULL_POINTER_EXCEPTION = "Null pointer exception";
     private static final String EXT_SEPARATOR = "<extended/>";
+    private static final String EXT_SEPARATOR_PATTERN = quote(EXT_SEPARATOR);
     private final Exception ex;
     private final String message;
     private final Object instance;
@@ -418,4 +422,44 @@ public class Result extends RuntimeException {
                Objects.equals(this.message, that.message) &&
                Objects.equals(this.instance, that.instance);
     }
+
+    /**
+     * Returns a pair of { shortMessage: ..., extendedMessage: ... } messages, associated with the {@code result}.
+     * The {@code result} may be of type {@link Result}, {@link Warning} or {@link Informative}.
+     * 
+     * {@code result} message should never be {@code null} (see {@link Result#getMessage()}), except the case where NPE was causing failure {@link Result} -- in this case we return 'Null pointer exception' for both short and extended messages.
+     * If {@link Result} was constructed with single message, it will be used for both short and extended messages.
+     * Otherwise we do splitting by <extended/> part (and try to be smart if there are missing parts before or after <extended/>).
+     */
+    public static ResultMessages resultMessages(final Result result) {
+        final String message = result.getMessage();
+        if (message == null) {
+            return new ResultMessages(NULL_POINTER_EXCEPTION, NULL_POINTER_EXCEPTION);
+        } else if (!isEmpty(message)) {
+            final String[] messages = message.split(EXT_SEPARATOR_PATTERN);
+            final String firstMatch = messages.length > 0 ? messages[0] : "";
+            final String secondMatch = messages.length > 1 ? messages[1] : "";
+            final String shortMessage = !isEmpty(firstMatch) ? firstMatch : secondMatch;
+            final String extendedMessage = !isEmpty(secondMatch) ? secondMatch : shortMessage;
+            return new ResultMessages(shortMessage, extendedMessage);
+        } else {
+            return new ResultMessages(message, message);
+        }
+    }
+
+    /**
+     * A pair of { shortMessage: ..., extendedMessage: ... } messages, associated with the {@link Result}.
+     * 
+     * @author TG Team
+     */
+    public static class ResultMessages {
+        public final String shortMessage;
+        public final String extendedMessage;
+
+        private ResultMessages(final String shortMessage, final String extendedMessage) {
+            this.shortMessage = shortMessage;
+            this.extendedMessage = extendedMessage;
+        }
+    }
+
 }
