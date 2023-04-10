@@ -24,6 +24,7 @@ import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.entity.EntityMasterHelp;
 import ua.com.fielden.platform.entity.EntityNewAction;
+import ua.com.fielden.platform.entity.OpenEntityMasterHelpAction;
 import ua.com.fielden.platform.entity.SecurityMatrixInsertionPoint;
 import ua.com.fielden.platform.entity.SecurityMatrixSaveAction;
 import ua.com.fielden.platform.entity.SecurityTokenTreeNodeEntity;
@@ -173,6 +174,7 @@ public class PlatformDomainTypes {
         types.add(UserMaster_OpenMain_MenuItem.class);
         types.add(UserMaster_OpenUserAndRoleAssociation_MenuItem.class);
         types.add(EntityMasterHelp.class);
+        types.add(OpenEntityMasterHelpAction.class);
 
         typesDependentOnWebUI.add(EntityExportAction.class);
         typesDependentOnWebUI.add(CentreConfigUpdater.class);
