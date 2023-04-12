@@ -2,8 +2,6 @@ package ua.com.fielden.platform.entity;
 
 import static ua.com.fielden.platform.entity.NoKey.NO_KEY;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.NoKey;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyType;
@@ -19,42 +17,34 @@ import ua.com.fielden.platform.types.Hyperlink;
  */
 @KeyType(NoKey.class)
 @CompanionObject(OpenEntityMasterHelpActionCo.class)
-public class OpenEntityMasterHelpAction extends AbstractEntity<NoKey> {
+public class OpenEntityMasterHelpAction extends AbstractFunctionalEntityWithCentreContext<NoKey> {
 
     @IsProperty
     @Title(value = "Entity Type", desc = "Entity Type Name")
     private String entityType;
 
     @IsProperty
-    @Title(value = "Entity Title")
-    private String entityTitle;
+    @Title(value = "Help Link", desc = "Hyperlink on help document")
+    private Hyperlink help;
 
+    /**
+     * Property <code>skipUi</code> controls visibility of Help entity master.
+     */
     @IsProperty
-    @Title("Hyperlink")
-    private Hyperlink link;
-
-    @Observable
-    public OpenEntityMasterHelpAction setLink(final Hyperlink link) {
-        this.link = link;
-        return this;
-    }
-
-    public Hyperlink getLink() {
-        return link;
-    }
+    private boolean skipUi = false;
 
     protected OpenEntityMasterHelpAction() {
         setKey(NO_KEY);
     }
 
     @Observable
-    public OpenEntityMasterHelpAction setEntityTitle(final String entityTitle) {
-        this.entityTitle = entityTitle;
+    public OpenEntityMasterHelpAction setSkipUi(final boolean skipUi) {
+        this.skipUi = skipUi;
         return this;
     }
 
-    public String getEntityTitle() {
-        return entityTitle;
+    public boolean isSkipUi() {
+        return skipUi;
     }
 
     @Observable
@@ -65,5 +55,15 @@ public class OpenEntityMasterHelpAction extends AbstractEntity<NoKey> {
 
     public String getEntityType() {
         return entityType;
+    }
+
+    @Observable
+    public OpenEntityMasterHelpAction setHelp(final Hyperlink help) {
+        this.help = help;
+        return this;
+    }
+
+    public Hyperlink getHelp() {
+        return help;
     }
 }

@@ -35,6 +35,7 @@ import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityDeleteActionProducer;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityExportAction;
+import ua.com.fielden.platform.entity.EntityMasterHelp;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.OpenEntityMasterHelpAction;
 import ua.com.fielden.platform.menu.Menu;
@@ -163,7 +164,8 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         final EntityMaster<MenuSaveAction> genericMenuSaveMaster = EntityMaster.noUiFunctionalMaster(MenuSaveAction.class, injector());
         final UserMenuVisibilityAssociatorWebUiConfig userMenuAssociatorWebUiConfig = new UserMenuVisibilityAssociatorWebUiConfig(injector);
         final CentreConfigurationWebUiConfig centreConfigurationWebUiConfig = new CentreConfigurationWebUiConfig(injector());
-        final EntityMaster<OpenEntityMasterHelpAction> entityMasterForHelp = StandardMastersWebUiConfig.createHelpEntityMaster(injector());
+        final EntityMaster<EntityMasterHelp> entityMasterForHelp = StandardMastersWebUiConfig.createHelpEntityMaster(injector());
+        final EntityMaster<OpenEntityMasterHelpAction> openHelpEntityMaster = StandardMastersWebUiConfig.createOpenHelpEntityMaster(injector(), entityMasterForHelp);
 
         AcknowledgeWarningsWebUiConfig.register(injector(), configApp()); // generic TG functionality for warnings acknowledgement
 
@@ -179,6 +181,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         .addMaster(new MenuWebUiConfig(injector(), desktopMainMenuConfig, mobileMainMenuConfig).master)
         .addMaster(userMenuAssociatorWebUiConfig.master)
         .addMaster(entityMasterForHelp)
+        .addMaster(openHelpEntityMaster)
         // centre configuration management
         .addMaster(centreConfigurationWebUiConfig.centreConfigUpdaterMaster)
         .addMaster(centreConfigurationWebUiConfig.centreColumnWidthConfigUpdaterMaster)

@@ -8,6 +8,7 @@ import '/resources/master/tg-entity-master-styles.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { getKeyEventTarget, generateUUID } from '/resources/reflection/tg-polymer-utils.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
+import { TgReflector } from '/app/tg-reflector.js';
 
 const TgEntityMasterTemplateBehaviorImpl = {
 
@@ -19,11 +20,24 @@ const TgEntityMasterTemplateBehaviorImpl = {
             type: Object,
             value: null
         },
+
+        /**
+         * Represents the action that opens help entity master for the entity type of this master.
+         */
+        tgOpenHelpMasterAction: {
+            type: Object,
+            value: null
+        },
         
         /**
          * Attributes for the action that allows to open entity master for specified entity-typed property.
          */
-        _tgOpenMasterActionAttrs: Object
+        _tgOpenMasterActionAttrs: Object,
+
+        /**
+         * Attributes for the action that opens help entity master for the entity type of this master.
+         */
+        _tgOpenHelpMasterActionAttrs: Object
     },
 
     ready: function () {
@@ -43,6 +57,67 @@ const TgEntityMasterTemplateBehaviorImpl = {
             centreUuid: self.uuid
         };
         self.tgOpenMasterAction = self.$.tgOpenMasterAction;
+
+        //Initialise tgOpenHelpMasterAction properties
+        self._tgOpenHelpMasterActionAttrs = {
+            entityType: "ua.com.fielden.platform.entity.OpenEntityMasterHelpAction",
+            currentState: 'EDIT',
+            centreUuid: self.uuid
+        }
+        self.tgOpenHelpMasterAction = self.$.tgOpenHelpMasterAction
+
+        self._currentEntityForHelp = function() {
+            return () => self._currEntity;
+        };
+
+        self._initiateHelpAction = function (e) {
+            self._longPress = false;
+            self._helpActionTimer = setTimeout(() => {
+                self._longPress = true;
+            }, 2000);
+        };
+
+        self._runHelpAction = function (e) {
+            //Clear timer to to remain the mouse key press as short.
+            if (self._helpActionTimer) {
+                clearTimeout(self._helpActionTimer);
+            }
+            //Init action props.
+            self.tgOpenHelpMasterAction._openLinkInAnotherWindow = false;
+            self.tgOpenHelpMasterAction.chosenProperty = null;
+            //Config action props according to key pressed and type of action (e.a. long or short).
+            if (self._longPress || e.altKey){
+                self.tgOpenHelpMasterAction.chosenProperty = "showMaster";
+            } else {
+                if (e.ctrlKey || e.metaKey) {
+                    self.tgOpenHelpMasterAction._openLinkInAnotherWindow = true;
+                }
+            }
+            //Reset action type and timer;
+            self._longPress = false;
+            self._helpActionTimer = null;
+            //Run action
+            self.tgOpenHelpMasterAction._run(); 
+        };
+
+        self._postOpenHelpMasterAction = function (potentiallySavedOrNewEntity, action, master) {
+            if (!action.chosenProperty) {
+                if (self.tgOpenHelpMasterAction._openLinkInAnotherWindow) {
+                    window.open(potentiallySavedOrNewEntity.get("help").value, "", "fullscreen=yes,scrollbars=yes,location=yes,resizable=yes");
+                } else {
+                    window.open(potentiallySavedOrNewEntity.get("help").value);
+                }
+            }
+        }
+
+        self._preOpenHelpMasterAction = function (action) {
+            const reflector = new TgReflector();
+            if (action.requireSelectedEntities === 'ONE') {
+                action.shortDesc = reflector.getType(action.currentEntity().type().notEnhancedFullClassName()).entityTitle();
+            } else if (action.requireSelectedEntities === 'ALL' && self.$.egi.getSelectedEntities().length > 0) {
+                action.shortDesc = reflector.getType(self.$.egi.getSelectedEntities()[0].type().notEnhancedFullClassName()).entityTitle();
+            }
+        };
     },
 
     attached: function () {

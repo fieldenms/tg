@@ -5,6 +5,7 @@ import static ua.com.fielden.platform.entity.EntityExportAction.PROP_EXPORT_ALL;
 import static ua.com.fielden.platform.entity.EntityExportAction.PROP_EXPORT_SELECTED;
 import static ua.com.fielden.platform.entity.EntityExportAction.PROP_EXPORT_TOP;
 import static ua.com.fielden.platform.entity.EntityExportAction.PROP_NUMBER;
+import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.MOBILE;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.TABLET;
@@ -26,11 +27,14 @@ import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityEditActionProducer;
 import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.entity.EntityExportActionProducer;
+import ua.com.fielden.platform.entity.EntityMasterHelp;
+import ua.com.fielden.platform.entity.EntityMasterHelpProducer;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.EntityNewActionProducer;
 import ua.com.fielden.platform.entity.OpenEntityMasterHelpAction;
 import ua.com.fielden.platform.entity.OpenEntityMasterHelpActionProducer;
 import ua.com.fielden.platform.web.PrefDim;
+import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
@@ -39,6 +43,7 @@ import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_master.impl.EntityEditMaster;
 import ua.com.fielden.platform.web.view.master.api.with_master.impl.EntityManipulationMasterBuilder;
+import ua.com.fielden.platform.web.view.master.api.with_master.impl.MasterWithMasterBuilder;
 import ua.com.fielden.platform.web.view.master.attachments.AttachmentPreviewEntityMaster;
 import ua.com.fielden.platform.web.view.master.attachments.AttachmentsUploadActionMaster;
 
@@ -113,12 +118,12 @@ public class StandardMastersWebUiConfig {
         return new EntityMaster<>(EntityExportAction.class, EntityExportActionProducer.class, masterConfig, injector);
     }
 
-    public static EntityMaster<OpenEntityMasterHelpAction> createHelpEntityMaster(final Injector injector) {
+    public static EntityMaster<EntityMasterHelp> createHelpEntityMaster(final Injector injector) {
         final String layout = cell(cell(CELL_LAYOUT),layout().withStyle("padding", MARGIN_PIX).end()).toString();
 
-        final IMaster<OpenEntityMasterHelpAction> masterConfig = new SimpleMasterBuilder<OpenEntityMasterHelpAction>()
-                .forEntity(OpenEntityMasterHelpAction.class)
-                .addProp("link").asHyperlink()
+        final IMaster<EntityMasterHelp> masterConfig = new SimpleMasterBuilder<EntityMasterHelp>()
+                .forEntity(EntityMasterHelp.class)
+                .addProp("help").asHyperlink()
                 .also()
                 .addAction(MasterActions.REFRESH)
                 /*      */.shortDesc("CANCEL")
@@ -128,9 +133,21 @@ public class StandardMastersWebUiConfig {
                 .setLayoutFor(DESKTOP, Optional.empty(), layout)
                 .setLayoutFor(TABLET, Optional.empty(), layout)
                 .setLayoutFor(MOBILE, Optional.empty(), layout)
+                .withDimensions(mkDim(640, 180, Unit.PX))
                 .done();
 
-        return new EntityMaster<>(OpenEntityMasterHelpAction.class, OpenEntityMasterHelpActionProducer.class, masterConfig, injector);
+        return new EntityMaster<>(EntityMasterHelp.class, EntityMasterHelpProducer.class, masterConfig, injector);
+    }
+
+    public static EntityMaster<OpenEntityMasterHelpAction> createOpenHelpEntityMaster(final Injector injector, final EntityMaster<EntityMasterHelp> helpEntityMaster) {
+
+        return new EntityMaster<>(OpenEntityMasterHelpAction.class,
+                OpenEntityMasterHelpActionProducer.class,
+                new MasterWithMasterBuilder<OpenEntityMasterHelpAction>()
+                /*  */.forEntityWithSaveOnActivate(OpenEntityMasterHelpAction.class)
+                /*  */.withMasterAndWithNoParentCentreRefresh(helpEntityMaster)
+                /*  */.done(),
+                injector);
     }
 
     public static EntityMaster<AttachmentsUploadAction> createAttachmentsUploadMaster(
