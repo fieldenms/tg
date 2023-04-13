@@ -1,7 +1,5 @@
 package ua.com.fielden.platform.entity;
 
-import static java.lang.String.format;
-import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
 
 import com.google.inject.Inject;
@@ -17,6 +15,8 @@ import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
  *
  */
 public class OpenEntityMasterHelpActionProducer extends DefaultEntityProducerWithContext<OpenEntityMasterHelpAction> {
+
+    public static final String HELP_MISSING_ERR = "The help doesn't exists";
 
     @Inject
     public OpenEntityMasterHelpActionProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
@@ -36,7 +36,7 @@ public class OpenEntityMasterHelpActionProducer extends DefaultEntityProducerWit
                     if (persistedEntity != null) {
                         entity.setHelp(persistedEntity.getHelp());
                     } else {
-                        throw new EntityException(format("The help doesn't exists for %s entity", getEntityTitleAndDesc(entityType).getKey()));
+                        throw new EntityException(HELP_MISSING_ERR);
                     }
                 }
             }
