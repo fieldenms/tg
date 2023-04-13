@@ -74,6 +74,8 @@ const TgEntityMasterTemplateBehaviorImpl = {
             self._longPress = false;
             self._helpActionTimer = setTimeout(() => {
                 self._longPress = true;
+                self.tgOpenHelpMasterAction.chosenProperty = "showMaster";
+                self.tgOpenHelpMasterAction._run();
             }, 2000);
         };
 
@@ -82,22 +84,25 @@ const TgEntityMasterTemplateBehaviorImpl = {
             if (self._helpActionTimer) {
                 clearTimeout(self._helpActionTimer);
             }
-            //Init action props.
-            self.tgOpenHelpMasterAction._openLinkInAnotherWindow = false;
-            self.tgOpenHelpMasterAction.chosenProperty = null;
-            //Config action props according to key pressed and type of action (e.a. long or short).
-            if (self._longPress || e.altKey){
-                self.tgOpenHelpMasterAction.chosenProperty = "showMaster";
-            } else {
-                if (e.ctrlKey || e.metaKey) {
-                    self.tgOpenHelpMasterAction._openLinkInAnotherWindow = true;
+            //If there was long touch or long mouse button press then skip it otherwise decide what to do 
+            if (!self._longPress) {
+                //Init action props.
+                self.tgOpenHelpMasterAction._openLinkInAnotherWindow = false;
+                self.tgOpenHelpMasterAction.chosenProperty = null;
+                //Config action props according to key pressed and type of action (e.a. long or short).
+                if (e.altKey) {
+                    self.tgOpenHelpMasterAction.chosenProperty = "showMaster";
+                } else {
+                    if (e.ctrlKey || e.metaKey) {
+                        self.tgOpenHelpMasterAction._openLinkInAnotherWindow = true;
+                    }
                 }
+                //Run action
+                self.tgOpenHelpMasterAction._run(); 
             }
             //Reset action type and timer;
             self._longPress = false;
             self._helpActionTimer = null;
-            //Run action
-            self.tgOpenHelpMasterAction._run(); 
         };
 
         self._postOpenHelpMasterAction = function (potentiallySavedOrNewEntity, action, master) {
