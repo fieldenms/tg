@@ -80,15 +80,17 @@ const TgEntityMasterTemplateBehaviorImpl = {
         };
 
         self._initiateHelpAction = function (e) {
+            e.preventDefault();
             self._longPress = false;
             self._helpActionTimer = setTimeout(() => {
                 self._longPress = true;
                 self.tgOpenHelpMasterAction.chosenProperty = "showMaster";
                 self.tgOpenHelpMasterAction._run();
-            }, 2000);
+            }, 1000);
         };
 
         self._runHelpAction = function (e) {
+            e.preventDefault();
             //Clear timer to to remain the mouse key press as short.
             if (self._helpActionTimer) {
                 clearTimeout(self._helpActionTimer);
@@ -96,14 +98,14 @@ const TgEntityMasterTemplateBehaviorImpl = {
             //If there was long touch or long mouse button press then skip it otherwise decide what to do 
             if (!self._longPress) {
                 //Init action props.
-                self.tgOpenHelpMasterAction._openLinkInAnotherWindow = false;
+                self.tgOpenHelpMasterAction._openLinkInAnotherWindow = true;
                 self.tgOpenHelpMasterAction.chosenProperty = null;
                 //Config action props according to key pressed and type of action (e.a. long or short).
                 if (e.altKey) {
                     self.tgOpenHelpMasterAction.chosenProperty = "showMaster";
                 } else {
                     if (e.ctrlKey || e.metaKey) {
-                        self.tgOpenHelpMasterAction._openLinkInAnotherWindow = true;
+                        self.tgOpenHelpMasterAction._openLinkInAnotherWindow = false;
                     }
                 }
                 //Run action
