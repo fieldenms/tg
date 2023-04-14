@@ -7,7 +7,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 /**
  * Companion object for entity {@link EntityMasterHelp}.
  *
- * @author Developers
+ * @author TG Team
  *
  */
 public interface EntityMasterHelpCo extends IEntityDao<EntityMasterHelp> {

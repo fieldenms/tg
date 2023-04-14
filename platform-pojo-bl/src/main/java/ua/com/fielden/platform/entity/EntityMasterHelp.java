@@ -15,7 +15,7 @@ import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
- * Entity that represents configuration for entity master help. It maps entity type and help document vi the hyperlink.
+ * Entity that represents configuration for entity master help. It maps entity type and help document via the hyperlink.
  *
  * @author TG Team
  *

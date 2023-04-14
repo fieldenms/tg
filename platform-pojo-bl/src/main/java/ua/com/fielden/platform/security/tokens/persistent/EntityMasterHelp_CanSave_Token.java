@@ -9,7 +9,7 @@ import ua.com.fielden.platform.security.tokens.Template;
 /**
  * A security token for entity {@link EntityMasterHelp} to guard Save.
  *
- * @author Developers
+ * @author TG Team
  *
  */
 public class EntityMasterHelp_CanSave_Token implements ISecurityToken {

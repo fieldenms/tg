@@ -13,7 +13,7 @@ import ua.com.fielden.platform.security.tokens.persistent.EntityMasterHelp_CanSa
 /**
  * DAO implementation for companion object {@link EntityMasterHelpCo}.
  *
- * @author Developers
+ * @author TG Team
  *
  */
 @EntityType(EntityMasterHelp.class)

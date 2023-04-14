@@ -5,6 +5,12 @@ import com.google.inject.Inject;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 
+/**
+ * Producer for {@link EntityMasterHelp} entity
+ *
+ * @author TG Team
+ *
+ */
 public class EntityMasterHelpProducer extends DefaultEntityProducerWithContext<EntityMasterHelp> {
 
     @Inject
@@ -17,7 +23,7 @@ public class EntityMasterHelpProducer extends DefaultEntityProducerWithContext<E
         if (masterEntityInstanceOf(OpenEntityMasterHelpAction.class)) {
             final OpenEntityMasterHelpAction masterEntity = masterEntity(OpenEntityMasterHelpAction.class);
 
-            final EntityMasterHelpCo entityMasterHelpCo = co$(EntityMasterHelp.class);
+            final EntityMasterHelpCo entityMasterHelpCo = co(EntityMasterHelp.class);
             final EntityMasterHelp persistedEntity = entityMasterHelpCo.findByKeyAndFetch(entityMasterHelpCo.getFetchProvider().fetchModel(), masterEntity.getEntityType());
 
             if (persistedEntity != null) {
