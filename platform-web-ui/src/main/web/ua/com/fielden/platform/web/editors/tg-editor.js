@@ -126,6 +126,10 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 --paper-input-container-input: {
                     font-weight: 500;
                 }
+                --paper-input-char-counter: {
+                    position: absolute; /* to not extend the height of editor when paper-input-char-counter is present; similarly to paper-input-error default behaviour */
+                    right: 0; /* push it to the end */
+                }
             }
             
             #decorator[disabled] {
