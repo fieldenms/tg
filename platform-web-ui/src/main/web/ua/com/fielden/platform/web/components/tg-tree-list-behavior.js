@@ -523,7 +523,7 @@ export const TgTreeListBehavior = {
         if (parentItem) {
             const numOfItemsToDelete = calculateNumberOfOpenedItems(parentItem);
             parentItem.children = generateChildrenModel(change.value, parentItem, this.additionalInfoCb);
-            this._lastFilterText && this._filterSubTree(this._lastFilterText, !!this._lastFilterText, parentItem.children, false);
+            this._lastFilterText && this._filterSubTree(searchRegExp(this._lastFilterText), !!this._lastFilterText, parentItem.children, false);
             this.fire("tg-tree-model-changed", parentItem);
             this.splice("_entities", modelIdx + 1 + parentItem.additionalInfoNodes.length, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true, false));
             this.resizeTree();
@@ -538,7 +538,7 @@ export const TgTreeListBehavior = {
                 const indexForSplice = this._entities.indexOf(parentItem.children[splice.index]);
                 const numOfItemsToDelete = calculateNumberOfOpenedItems(parentItem, splice.index, splice.removed.length);
                 parentItem.children.splice(splice.index, splice.removed.length, ...generateChildrenModel(splice.object.slice(splice.index, splice.index + splice.addedCount), parentItem, this.additionalInfoCb));
-                this._lastFilterText && this._filterSubTree(this._lastFilterText, !!this._lastFilterText, parentItem.children.slice(splice.index, splice.index + splice.addedCount), false);
+                this._lastFilterText && this._filterSubTree(searchRegExp(this._lastFilterText), !!this._lastFilterText, parentItem.children.slice(splice.index, splice.index + splice.addedCount), false);
                 this.fire("tg-tree-model-changed", parentItem);
                 this.splice("_entities", indexForSplice, numOfItemsToDelete, ...getChildrenToAdd.bind(this)(parentItem, true, false, splice.index, splice.addedCount));
                 this.resizeTree();

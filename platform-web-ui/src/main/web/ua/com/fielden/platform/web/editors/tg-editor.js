@@ -13,8 +13,53 @@ import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-
 
 import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js';
 
+let checkIconTimer = null;
+
+let lastEditor = null;
+
+const timeoutCheckIcon = function (editor) {
+    if (checkIconTimer) {
+        clearTimeout(checkIconTimer);
+        if(editor !== lastEditor) {
+            hideCheckIcon();
+            showCheckIcon(editor);
+        }
+    } else {
+        showCheckIcon(editor);
+    }
+    checkIconTimer = setTimeout(function() {
+        hideCheckIcon();
+    }, 1000);
+}
+
+const showCheckIcon = function (editor) {
+    lastEditor = editor;
+    lastEditor.$.copyIcon.icon = "icons:check";
+    lastEditor.addEventListener("mouseleave", hideCheckIconOnMouseLeave);
+}
+
+const hideCheckIcon = function () {
+    lastEditor.$.copyIcon.icon = "icons:content-copy";
+    lastEditor.removeEventListener("mouseleave", hideCheckIconOnMouseLeave);
+    checkIconTimer = null;
+    lastEditor = null;
+}
+
+const hideCheckIconOnMouseLeave = function () {
+    if (!lastEditor.focused) {
+        if (checkIconTimer) {
+            clearTimeout(checkIconTimer);
+            checkIconTimer = null;
+        }
+        hideCheckIcon();
+    }
+}
+
 const defaultLabelTemplate = html`
-    <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]" slot="label">[[propTitle]]</label>`;
+    <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]" slot="label">
+        <span>[[propTitle]]</span>
+        <iron-icon id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
+    </label>`;
 
 export function createEditorTemplate (additionalTemplate, customPrefixAttribute, customInput, inputLayer, customIconButtons, propertyAction, customLabelTemplate) {
     return html`
@@ -33,7 +78,24 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 font-weight: 500;
                 text-align: left;
             }
-
+            label {
+                cursor: default;
+                @apply --layout-horizontal;
+                @apply --layout-center;
+            }
+            #copyIcon {
+                display: none;
+                width: 18px;
+                height: 18px;
+                margin-left: 4px;
+            }
+            label #copyIcon {
+                cursor: pointer;
+            }
+            :host(:hover) #copyIcon,
+            #decorator[focused]  #copyIcon {
+                display: unset;
+            }
             .input-layer {
                 font-size: 16px;
                 line-height: 24px;
@@ -254,6 +316,14 @@ export class TgEditor extends PolymerElement {
                 type: Object
             },
 
+            /**
+             * The object that holds callbacks for showing toast.
+             */
+            toaster: {
+                type: Object,
+                value: null
+            },
+
             /////////////////////////////////////////////////////////////////////////////////////////////////////////
             //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
             /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -445,6 +515,9 @@ export class TgEditor extends PolymerElement {
                         // console.debug("_onKeydown:", event);
                         if (event.keyCode === 13) { // 'Enter' has been pressed
                             this.commitIfChanged();
+                        } else if (event.keyCode === 67 && event.altKey && (event.ctrlKey || event.metaKey)) { //(CTRL/Meta) + ALT + C
+                            this.commitIfChanged();
+                            this._copyTap();
                         } else if ((event.keyCode === 38 || event.keyCode === 40) 
                                     && (event.altKey || event.ctlKey || event.metaKey || event.shiftKey)) {
                             tearDownEvent(event);
@@ -620,7 +693,18 @@ export class TgEditor extends PolymerElement {
     _getTooltip (value) {
         var tooltip = this._formatTooltipText(value);
         tooltip += this.propDesc && (tooltip ? '<br><br>' : '') + this.propDesc;
+        tooltip += (tooltip ? '<br><br>' : '') + this._getActionTooltip();
         return tooltip;
+    }
+
+    /**
+     * Returns tooltip for action
+     */
+    _getActionTooltip () {
+        return `<div style='display:flex;'>
+            <div style='margin-right:10px;'>With action: </div>
+            <div style='flex-grow:1;'><b>Copy</b><br>Copy content</div>
+            </div>`
     }
     
     /**
@@ -751,6 +835,23 @@ export class TgEditor extends PolymerElement {
             this.commit();
         }
         this._tryFireErrorMsg(this._error);
+    }
+
+    _copyTap () {
+        // copy to clipboard should happen only if there is something to copy
+        if (navigator.clipboard && this._editingValue) {
+            navigator.clipboard.writeText(this._editingValue);
+            this._showCheckIconAndToast(this._editingValue);
+        } else if (this.toaster) {
+            this.toaster.openToastWithoutEntity("Nothing to copy", true, "There was nothing to copy.", false);
+        }
+    }
+
+    _showCheckIconAndToast (text) {
+        if (this.toaster) {
+            this.toaster.openToastWithoutEntity("Copied!", true, text, false);
+        }
+        timeoutCheckIcon(this);
     }
     
     _updateMessagesForEntity (newEntity) {

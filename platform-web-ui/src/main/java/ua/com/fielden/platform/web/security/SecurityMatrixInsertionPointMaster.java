@@ -46,7 +46,8 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
                 .attr("validation-callback", "[[doNotValidate]]")
                 .attr("prop-title", "Type to filter security tokens")
                 .attr("prop-desc", "Display tokens those matched entered text")
-                .attr("current-state", "[[currentState]]");
+                .attr("current-state", "[[currentState]]")
+                .attr("toaster", "[[toaster]]");
 
         final DomElement roleFilter = new DomElement("tg-singleline-text-editor")
                 .attr("id", "roleFilter")
@@ -59,7 +60,8 @@ public class SecurityMatrixInsertionPointMaster implements IMaster<SecurityMatri
                 .attr("validation-callback", "[[doNotValidate]]")
                 .attr("prop-title", "Type to filter user roles")
                 .attr("prop-desc", "Display user roles those matched entered text")
-                .attr("current-state", "[[currentState]]");
+                .attr("current-state", "[[currentState]]")
+                .attr("toaster", "[[toaster]]");
 
         realodActionConfig = new DefaultEntityAction(SAVE.name(), getPostAction(SAVE), getPostActionError(SAVE));
         realodActionConfig.setShortDesc("Reload");
