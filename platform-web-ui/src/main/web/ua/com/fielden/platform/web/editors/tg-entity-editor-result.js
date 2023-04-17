@@ -46,6 +46,10 @@ const template = html`
             min-height: 24px;
         }
 
+        .tg-item.inactive {
+            background: var(--paper-grey-200);
+        }
+
         .tg-item:hover {
             cursor: pointer;
             background: var(--paper-blue-50);
@@ -125,7 +129,7 @@ const template = html`
         <iron-selector id="selector" class="tg-snatchback" multi$="[[multi]]" attr-for-selected="value" on-iron-deselect="_itemDeselected" on-iron-select="_itemSelected">
             <!-- begin of dom-repeat -->
             <template is="dom-repeat" items="[[_values]]" as="v">
-                <paper-item id$="[[_makeId(index)]]" value$="[[v.key]]" tabindex="-1" noink class="tg-item vertical-layout"> <!-- please note that union entities are not supported in autocompletion results and, most likely, will never be. Otherwise consider finding .key places here and adjust accordingly using property getter. -->
+                <paper-item id$="[[_makeId(index)]]" value$="[[v.key]]" tabindex="-1" noink class$="[[_calcItemClass(v)]]"> <!-- please note that union entities are not supported in autocompletion results and, most likely, will never be. Otherwise consider finding .key places here and adjust accordingly using property getter. -->
                 </paper-item>
             </template>
             <!-- end of dom-repeat -->
@@ -596,6 +600,17 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         const visibleHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
         const itemHeight = 24 + 2 * 6 + 1; // see tg-item styles with min-height, top / bottom padding and top border
         return visibleHeight - top - 10 < 3 * itemHeight; // three items do not fit, so visible height is small for showing items
+    }
+
+    /**
+     * Calculates classes for autocompleter list item.
+     */
+    _calcItemClass (item) {
+        let klass = 'tg-item vertical-layout';
+        if (typeof item.active !== 'undefined' && item.get('active') === false) {
+            klass += ' inactive';
+        }
+        return klass;
     }
 }
 
