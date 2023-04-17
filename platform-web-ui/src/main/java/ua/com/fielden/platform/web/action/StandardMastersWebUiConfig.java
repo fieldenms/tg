@@ -27,12 +27,10 @@ import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityEditActionProducer;
 import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.entity.EntityExportActionProducer;
-import ua.com.fielden.platform.entity.UserDefinableHelp;
-import ua.com.fielden.platform.entity.UserDefinableHelpProducer;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.EntityNewActionProducer;
-import ua.com.fielden.platform.entity.OpenEntityMasterHelpAction;
-import ua.com.fielden.platform.entity.OpenEntityMasterHelpActionProducer;
+import ua.com.fielden.platform.entity.UserDefinableHelp;
+import ua.com.fielden.platform.entity.UserDefinableHelpProducer;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
@@ -43,7 +41,6 @@ import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
 import ua.com.fielden.platform.web.view.master.api.impl.SimpleMasterBuilder;
 import ua.com.fielden.platform.web.view.master.api.with_master.impl.EntityEditMaster;
 import ua.com.fielden.platform.web.view.master.api.with_master.impl.EntityManipulationMasterBuilder;
-import ua.com.fielden.platform.web.view.master.api.with_master.impl.MasterWithMasterBuilder;
 import ua.com.fielden.platform.web.view.master.attachments.AttachmentPreviewEntityMaster;
 import ua.com.fielden.platform.web.view.master.attachments.AttachmentsUploadActionMaster;
 
@@ -118,7 +115,7 @@ public class StandardMastersWebUiConfig {
         return new EntityMaster<>(EntityExportAction.class, EntityExportActionProducer.class, masterConfig, injector);
     }
 
-    public static EntityMaster<UserDefinableHelp> createHelpEntityMaster(final Injector injector) {
+    public static EntityMaster<UserDefinableHelp> createUserDefinableHelpMaster(final Injector injector) {
         final String layout = cell(cell(CELL_LAYOUT),layout().withStyle("padding", MARGIN_PIX).end()).toString();
 
         final IMaster<UserDefinableHelp> masterConfig = new SimpleMasterBuilder<UserDefinableHelp>()
@@ -137,17 +134,6 @@ public class StandardMastersWebUiConfig {
                 .done();
 
         return new EntityMaster<>(UserDefinableHelp.class, UserDefinableHelpProducer.class, masterConfig, injector);
-    }
-
-    public static EntityMaster<OpenEntityMasterHelpAction> createOpenHelpEntityMaster(final Injector injector, final EntityMaster<UserDefinableHelp> helpEntityMaster) {
-
-        return new EntityMaster<>(OpenEntityMasterHelpAction.class,
-                OpenEntityMasterHelpActionProducer.class,
-                new MasterWithMasterBuilder<OpenEntityMasterHelpAction>()
-                /*  */.forEntityWithSaveOnActivate(OpenEntityMasterHelpAction.class)
-                /*  */.withMasterAndWithNoParentCentreRefresh(helpEntityMaster)
-                /*  */.done(),
-                injector);
     }
 
     public static EntityMaster<AttachmentsUploadAction> createAttachmentsUploadMaster(

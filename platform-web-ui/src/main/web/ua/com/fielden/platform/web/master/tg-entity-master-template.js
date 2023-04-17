@@ -27,8 +27,8 @@ const template = html`<!-- TODO layout vertical -->
     <tg-ui-action
         id="tgOpenHelpMasterAction"
         ui-role='ICON'
-        component-uri = '/master_ui/ua.com.fielden.platform.entity.OpenEntityMasterHelpAction'
-        element-name = 'tg-OpenEntityMasterHelpAction-master'
+        component-uri = '/master_ui/ua.com.fielden.platform.entity.UserDefinableHelp'
+        element-name = 'tg-UserDefinableHelp-master'
         show-dialog='[[_showHelpDialog]]'
         toaster='[[toaster]]'
         create-context-holder='[[_createContextHolder]]'

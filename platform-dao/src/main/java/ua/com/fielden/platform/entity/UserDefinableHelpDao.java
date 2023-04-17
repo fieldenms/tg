@@ -28,7 +28,10 @@ public class UserDefinableHelpDao extends CommonEntityDao<UserDefinableHelp> imp
     @SessionRequired
     @Authorise(UserDefinableHelp_CanSave_Token.class)
     public UserDefinableHelp save(final UserDefinableHelp entity) {
-        return super.save(entity);
+        if (!entity.isSkipUi()) {
+            return super.save(entity);
+        }
+        return entity;
     }
 
     @Override

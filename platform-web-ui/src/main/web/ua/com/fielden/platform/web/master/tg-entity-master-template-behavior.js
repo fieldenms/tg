@@ -69,7 +69,7 @@ const TgEntityMasterTemplateBehaviorImpl = {
 
         //Initialise tgOpenHelpMasterAction properties
         self._tgOpenHelpMasterActionAttrs = {
-            entityType: "ua.com.fielden.platform.entity.OpenEntityMasterHelpAction",
+            entityType: "ua.com.fielden.platform.entity.UserDefinableHelp",
             currentState: 'EDIT',
             centreUuid: self.uuid
         }

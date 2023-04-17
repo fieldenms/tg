@@ -21,10 +21,10 @@ import ua.com.fielden.platform.utils.Pair;
  *
  */
 @KeyType(DynamicEntityKey.class)
-@KeyTitle("Entity Type")
+@KeyTitle("Reference Element Type")
 @CompanionObject(UserDefinableHelpCo.class)
 @MapEntityTo
-public class UserDefinableHelp extends AbstractPersistentEntity<DynamicEntityKey> {
+public class UserDefinableHelp extends AbstractFunctionalEntityWithCentreContext<DynamicEntityKey> {
 
     private static final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(UserDefinableHelp.class);
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
@@ -41,6 +41,22 @@ public class UserDefinableHelp extends AbstractPersistentEntity<DynamicEntityKey
     @Title(value = "Help Link", desc = "Hyperlink on help document")
     @Required
     private Hyperlink help;
+
+    /**
+     * Property <code>skipUi</code> controls visibility of Help entity master.
+     */
+    @IsProperty
+    private boolean skipUi = false;
+
+    @Observable
+    public UserDefinableHelp setSkipUi(final boolean skipUi) {
+        this.skipUi = skipUi;
+        return this;
+    }
+
+    public boolean isSkipUi() {
+        return skipUi;
+    }
 
     @Observable
     public UserDefinableHelp setHelp(final Hyperlink help) {

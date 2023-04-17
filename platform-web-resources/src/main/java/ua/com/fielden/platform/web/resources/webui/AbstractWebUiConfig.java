@@ -35,9 +35,8 @@ import ua.com.fielden.platform.entity.EntityDeleteAction;
 import ua.com.fielden.platform.entity.EntityDeleteActionProducer;
 import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityExportAction;
-import ua.com.fielden.platform.entity.UserDefinableHelp;
 import ua.com.fielden.platform.entity.EntityNewAction;
-import ua.com.fielden.platform.entity.OpenEntityMasterHelpAction;
+import ua.com.fielden.platform.entity.UserDefinableHelp;
 import ua.com.fielden.platform.menu.Menu;
 import ua.com.fielden.platform.menu.MenuSaveAction;
 import ua.com.fielden.platform.ref_hierarchy.ReferenceHierarchy;
@@ -164,8 +163,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         final EntityMaster<MenuSaveAction> genericMenuSaveMaster = EntityMaster.noUiFunctionalMaster(MenuSaveAction.class, injector());
         final UserMenuVisibilityAssociatorWebUiConfig userMenuAssociatorWebUiConfig = new UserMenuVisibilityAssociatorWebUiConfig(injector);
         final CentreConfigurationWebUiConfig centreConfigurationWebUiConfig = new CentreConfigurationWebUiConfig(injector());
-        final EntityMaster<UserDefinableHelp> entityMasterForHelp = StandardMastersWebUiConfig.createHelpEntityMaster(injector());
-        final EntityMaster<OpenEntityMasterHelpAction> openHelpEntityMaster = StandardMastersWebUiConfig.createOpenHelpEntityMaster(injector(), entityMasterForHelp);
+        final EntityMaster<UserDefinableHelp> userDefinableHelpMaster = StandardMastersWebUiConfig.createUserDefinableHelpMaster(injector());
 
         AcknowledgeWarningsWebUiConfig.register(injector(), configApp()); // generic TG functionality for warnings acknowledgement
 
@@ -180,8 +178,7 @@ public abstract class AbstractWebUiConfig implements IWebUiConfig {
         .addMaster(genericMenuSaveMaster)
         .addMaster(new MenuWebUiConfig(injector(), desktopMainMenuConfig, mobileMainMenuConfig).master)
         .addMaster(userMenuAssociatorWebUiConfig.master)
-        .addMaster(entityMasterForHelp)
-        .addMaster(openHelpEntityMaster)
+        .addMaster(userDefinableHelpMaster)
         // centre configuration management
         .addMaster(centreConfigurationWebUiConfig.centreConfigUpdaterMaster)
         .addMaster(centreConfigurationWebUiConfig.centreColumnWidthConfigUpdaterMaster)
