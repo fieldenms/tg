@@ -8,31 +8,31 @@ import ua.com.fielden.platform.entity.annotation.EntityType;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.security.Authorise;
-import ua.com.fielden.platform.security.tokens.persistent.EntityMasterHelp_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.persistent.UserDefinableHelp_CanSave_Token;
 
 /**
- * DAO implementation for companion object {@link EntityMasterHelpCo}.
+ * DAO implementation for companion object {@link UserDefinableHelpCo}.
  *
  * @author TG Team
  *
  */
-@EntityType(EntityMasterHelp.class)
-public class EntityMasterHelpDao extends CommonEntityDao<EntityMasterHelp> implements EntityMasterHelpCo {
+@EntityType(UserDefinableHelp.class)
+public class UserDefinableHelpDao extends CommonEntityDao<UserDefinableHelp> implements UserDefinableHelpCo {
 
     @Inject
-    public EntityMasterHelpDao(final IFilter filter) {
+    public UserDefinableHelpDao(final IFilter filter) {
         super(filter);
     }
 
     @Override
     @SessionRequired
-    @Authorise(EntityMasterHelp_CanSave_Token.class)
-    public EntityMasterHelp save(final EntityMasterHelp entity) {
+    @Authorise(UserDefinableHelp_CanSave_Token.class)
+    public UserDefinableHelp save(final UserDefinableHelp entity) {
         return super.save(entity);
     }
 
     @Override
-    protected IFetchProvider<EntityMasterHelp> createFetchProvider() {
+    protected IFetchProvider<UserDefinableHelp> createFetchProvider() {
         return FETCH_PROVIDER;
     }
 }

@@ -22,19 +22,19 @@ import ua.com.fielden.platform.utils.Pair;
  */
 @KeyType(DynamicEntityKey.class)
 @KeyTitle("Entity Type")
-@CompanionObject(EntityMasterHelpCo.class)
+@CompanionObject(UserDefinableHelpCo.class)
 @MapEntityTo
-public class EntityMasterHelp extends AbstractPersistentEntity<DynamicEntityKey> {
+public class UserDefinableHelp extends AbstractPersistentEntity<DynamicEntityKey> {
 
-    private static final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(EntityMasterHelp.class);
+    private static final Pair<String, String> entityTitleAndDesc = TitlesDescsGetter.getEntityTitleAndDesc(UserDefinableHelp.class);
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
     public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
 
     @IsProperty
     @MapTo
-    @Title(value = "Entity Type", desc = "Entity Type Name")
+    @Title(value = "Reference Element Type", desc = "The type of element that associates the view with help")
     @CompositeKeyMember(1)
-    private String entityType;
+    private String referenceElement;
 
     @IsProperty
     @MapTo
@@ -43,7 +43,7 @@ public class EntityMasterHelp extends AbstractPersistentEntity<DynamicEntityKey>
     private Hyperlink help;
 
     @Observable
-    public EntityMasterHelp setHelp(final Hyperlink help) {
+    public UserDefinableHelp setHelp(final Hyperlink help) {
         this.help = help;
         return this;
     }
@@ -53,12 +53,12 @@ public class EntityMasterHelp extends AbstractPersistentEntity<DynamicEntityKey>
     }
 
     @Observable
-    public EntityMasterHelp setEntityType(final String entityType) {
-        this.entityType = entityType;
+    public UserDefinableHelp setReferenceElement(final String entityType) {
+        this.referenceElement = entityType;
         return this;
     }
 
-    public String getEntityType() {
-        return entityType;
+    public String getReferenceElement() {
+        return referenceElement;
     }
 }

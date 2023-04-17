@@ -31,8 +31,8 @@ public class OpenEntityMasterHelpActionProducer extends DefaultEntityProducerWit
                 entity.setEntityType(entityType.getName());
                 entity.setSkipUi(this.chosenPropertyEmpty());
                 if (entity.isSkipUi()) {
-                    final EntityMasterHelpCo entityMasterHelpCo = co(EntityMasterHelp.class);
-                    final EntityMasterHelp persistedEntity = entityMasterHelpCo.findByKeyAndFetch(entityMasterHelpCo.getFetchProvider().fetchModel(), entity.getEntityType());
+                    final UserDefinableHelpCo entityMasterHelpCo = co(UserDefinableHelp.class);
+                    final UserDefinableHelp persistedEntity = entityMasterHelpCo.findByKeyAndFetch(entityMasterHelpCo.getFetchProvider().fetchModel(), entity.getEntityType());
                     if (persistedEntity != null) {
                         entity.setHelp(persistedEntity.getHelp());
                     } else {

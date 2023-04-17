@@ -35,7 +35,7 @@ import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFreque
 import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanSave_Token;
-import ua.com.fielden.platform.security.tokens.persistent.EntityMasterHelp_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.persistent.UserDefinableHelp_CanSave_Token;
 import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanReadModel_Token;
@@ -138,7 +138,7 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
                 KeyNumber_CanRead_Token.class,
                 KeyNumber_CanReadModel_Token.class,
                 GraphiQL_CanExecute_Token.class,
-                EntityMasterHelp_CanSave_Token.class);
+                UserDefinableHelp_CanSave_Token.class);
         final Set<Class<? extends ISecurityToken>> allTokens = new HashSet<>(ClassesRetriever.getAllClassesInPackageDerivedFrom(path, packageName, ISecurityToken.class));
         allTokens.addAll(platformLevelTokens);
         allTokens.addAll(extraTokens);

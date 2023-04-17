@@ -52,7 +52,7 @@ import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFreque
 import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanSave_Token;
-import ua.com.fielden.platform.security.tokens.persistent.EntityMasterHelp_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.persistent.UserDefinableHelp_CanSave_Token;
 import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntityChild_CanDelete_Token;
@@ -330,7 +330,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         final SecurityTokenInfo domainExplorer_CanRead = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(DomainExplorer_CanRead_Token.class.getName());
         final SecurityTokenInfo domainExplorer_CanReadModel = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(DomainExplorer_CanReadModel_Token.class.getName());
         final SecurityTokenInfo graphiQL_CanExecute = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(GraphiQL_CanExecute_Token.class.getName());
-        final SecurityTokenInfo entityMasterHelp_CanSave = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(EntityMasterHelp_CanSave_Token.class.getName());
+        final SecurityTokenInfo entityMasterHelp_CanSave = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(UserDefinableHelp_CanSave_Token.class.getName());
         final SecurityTokenInfo keyNumber_CanRead = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(KeyNumber_CanRead_Token.class.getName());
         final SecurityTokenInfo keyNumber_CanReadModel = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(KeyNumber_CanReadModel_Token.class.getName());
 

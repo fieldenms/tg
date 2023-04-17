@@ -27,8 +27,8 @@ import ua.com.fielden.platform.entity.EntityEditAction;
 import ua.com.fielden.platform.entity.EntityEditActionProducer;
 import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.entity.EntityExportActionProducer;
-import ua.com.fielden.platform.entity.EntityMasterHelp;
-import ua.com.fielden.platform.entity.EntityMasterHelpProducer;
+import ua.com.fielden.platform.entity.UserDefinableHelp;
+import ua.com.fielden.platform.entity.UserDefinableHelpProducer;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.EntityNewActionProducer;
 import ua.com.fielden.platform.entity.OpenEntityMasterHelpAction;
@@ -118,11 +118,11 @@ public class StandardMastersWebUiConfig {
         return new EntityMaster<>(EntityExportAction.class, EntityExportActionProducer.class, masterConfig, injector);
     }
 
-    public static EntityMaster<EntityMasterHelp> createHelpEntityMaster(final Injector injector) {
+    public static EntityMaster<UserDefinableHelp> createHelpEntityMaster(final Injector injector) {
         final String layout = cell(cell(CELL_LAYOUT),layout().withStyle("padding", MARGIN_PIX).end()).toString();
 
-        final IMaster<EntityMasterHelp> masterConfig = new SimpleMasterBuilder<EntityMasterHelp>()
-                .forEntity(EntityMasterHelp.class)
+        final IMaster<UserDefinableHelp> masterConfig = new SimpleMasterBuilder<UserDefinableHelp>()
+                .forEntity(UserDefinableHelp.class)
                 .addProp("help").asHyperlink()
                 .also()
                 .addAction(MasterActions.REFRESH)
@@ -136,10 +136,10 @@ public class StandardMastersWebUiConfig {
                 .withDimensions(mkDim(640, 180, Unit.PX))
                 .done();
 
-        return new EntityMaster<>(EntityMasterHelp.class, EntityMasterHelpProducer.class, masterConfig, injector);
+        return new EntityMaster<>(UserDefinableHelp.class, UserDefinableHelpProducer.class, masterConfig, injector);
     }
 
-    public static EntityMaster<OpenEntityMasterHelpAction> createOpenHelpEntityMaster(final Injector injector, final EntityMaster<EntityMasterHelp> helpEntityMaster) {
+    public static EntityMaster<OpenEntityMasterHelpAction> createOpenHelpEntityMaster(final Injector injector, final EntityMaster<UserDefinableHelp> helpEntityMaster) {
 
         return new EntityMaster<>(OpenEntityMasterHelpAction.class,
                 OpenEntityMasterHelpActionProducer.class,
