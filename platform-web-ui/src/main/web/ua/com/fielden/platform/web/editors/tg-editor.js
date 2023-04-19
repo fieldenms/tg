@@ -7,11 +7,13 @@ import '/resources/polymer/@polymer/paper-input/paper-input-container.js';
 import '/resources/polymer/@polymer/paper-input/paper-input-error.js';
 import '/resources/polymer/@polymer/paper-input/paper-input-char-counter.js';
 
+import '/resources/components/tg-confirmation-dialog.js';
+
 import {TgReflector} from '/app/tg-reflector.js';
 
 import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
-import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, allDefined, resultMessages } from '/resources/reflection/tg-polymer-utils.js';
 
 let checkIconTimer = null;
 
@@ -124,6 +126,10 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 --paper-input-container-input: {
                     font-weight: 500;
                 }
+                --paper-input-char-counter: {
+                    position: absolute; /* to not extend the height of editor when paper-input-char-counter is present; similarly to paper-input-error default behaviour */
+                    right: 0; /* push it to the end */
+                }
             }
             
             #decorator[disabled] {
@@ -152,7 +158,17 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 --paper-input-container-focus-color: #03A9F4;
             }
 
-            /* style requiredness */
+            /* style visible paper-input-error */
+            #decorator[is-invalid] {
+                --paper-input-error: {
+                    cursor: pointer; /* cursor to indicate action presence */
+                    z-index: 1; /* always above other editors (selection crit) to be able to tap */
+                    max-width: 100%; /* ensure paper-input-error width as in its content */
+                    right: auto !important; /* ensure paper-input-error width as in its content */
+                }
+            }
+
+            /* style informative */
             #decorator[is-invalid].informative {
                 --paper-input-container-color: #8E24AA;
                 --paper-input-container-invalid-color: #8E24AA;
@@ -164,11 +180,13 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 --paper-input-container-invalid-color: #FFA000;
             }
 
+            /* style error */
             #decorator[is-invalid]:not(.warning):not(.informative) {
                 --paper-input-container-color: var(--google-red-500);
             }
         </style>
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+        <tg-confirmation-dialog id="confirmationDialog"></tg-confirmation-dialog>
         ${additionalTemplate}
         <paper-input-container id="decorator" always-float-label no-label-float="[[noLabelFloat]]" has-layer$="[[_hasLayer]]" invalid="[[_invalid]]" is-invalid$="[[_invalid]]" disabled$="[[_disabled]]" focused$="[[focused]]">
             <!-- flex auto  for textarea! -->
@@ -185,7 +203,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 ${propertyAction}
             </div>
             <!-- 'autoValidate' attribute for paper-input-container is 'false' -- all validation is performed manually and is bound to paper-input-error, which could be hidden in case of empty '_error' property -->
-            <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]" tooltip-text$="[[_error]]" slot="add-on">[[_error]]</paper-input-error>
+            <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]" tooltip-text$="[[_extendedError]]" slot="add-on" on-tap="_inputErrorTapHandler">[[_error]]</paper-input-error>
             <!-- paper-input-char-counter addon is updated whenever 'bindValue' property of child '#input' element is changed -->
             <paper-input-char-counter id="inputCounter" class="footer" hidden$="[[!_isMultilineText(_editorKind)]]" disabled$="[[_disabled]]" slot="add-on"></paper-input-char-counter>
         </paper-input-container>
@@ -324,6 +342,15 @@ export class TgEditor extends PolymerElement {
                 value: null
             },
 
+            /**
+             * Defines standard invalid message for built-in validation of 'input'.
+             * Should be empty in case if such validation is not supported.
+             */
+            builtInValidationMessage: {
+                type: String,
+                value: null
+            },
+
             /////////////////////////////////////////////////////////////////////////////////////////////////////////
             //////////////////////////////////////////// INNER PROPERTIES ///////////////////////////////////////////
             /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -384,6 +411,14 @@ export class TgEditor extends PolymerElement {
              * The validation error message.
              */
             _error: {
+                type: String,
+                value: null
+            },
+
+            /**
+             * The extended validation error message.
+             */
+            _extendedError: {
                 type: String,
                 value: null
             },
@@ -479,6 +514,7 @@ export class TgEditor extends PolymerElement {
                 value: function () {
                     return (function (event) {
                         this._setFocused(false);
+                        this._checkBuiltInValidation();
                     }).bind(this);
                 }
             },
@@ -514,6 +550,7 @@ export class TgEditor extends PolymerElement {
                     return (function (event) {
                         // console.debug("_onKeydown:", event);
                         if (event.keyCode === 13) { // 'Enter' has been pressed
+                            this._checkBuiltInValidation();
                             this.commitIfChanged();
                         } else if (event.keyCode === 67 && event.altKey && (event.ctrlKey || event.metaKey)) { //(CTRL/Meta) + ALT + C
                             this.commitIfChanged();
@@ -886,8 +923,13 @@ export class TgEditor extends PolymerElement {
     _commValueChanged (newValue, oldValue) {
         // console.log("_commValueChanged", oldValue, newValue, "_refreshCycleStarted ==", this._refreshCycleStarted);
         try {
+            const _refreshCycleStarted = this._refreshCycleStarted;
             this._acceptedValue = this.convertFromString(newValue);
-            this._editorValidationMsg = null;
+            // if built-in 'input' validation is not supported, clear _editorValidationMsg on successful value conversion;
+            // if built-in 'input' validation not supported, clear for the case if Refresh button pressed or in the case where the editor validation message not equals to built-in one
+            if (!this.builtInValidationMessage || _refreshCycleStarted === true || this._editorValidationMsg !== this.builtInValidationMessage) {
+                this._editorValidationMsg = null;
+            }
         } catch (error) {
             console.log("_commValueChanged catched", error, this);
             this._editorValidationMsg = error;
@@ -1003,17 +1045,17 @@ export class TgEditor extends PolymerElement {
     _bindMessages (entity, propertyName, _editorValidationMsg) {
         // console.log("_bindMessages: ", entity, propertyName, _editorValidationMsg);
         if (_editorValidationMsg !== null) {
-            this._bindError(_editorValidationMsg);
+            this._bindError(resultMessages({ message: _editorValidationMsg }));
         } else if (this.reflector().isEntity(entity)) {
             // please, note that dot-notated property will not have any errors / warnings / requiredness
             //     - for these props it does not make sense to propagate such meta-information from
             //     parent property -- the parent prop (if added in master) will show that errors concisely
             if (typeof entity["@" + propertyName + "_error"] !== 'undefined') {
-                this._bindError(entity["@" + propertyName + "_error"].message);
+                this._bindError(resultMessages(entity["@" + propertyName + "_error"]));
             } else if (typeof entity["@" + propertyName + "_warning"] !== 'undefined') {
-                this._bindWarning(entity["@" + propertyName + "_warning"].message);
+                this._bindWarning(resultMessages(entity["@" + propertyName + "_warning"]));
             } else if (typeof entity["@" + propertyName + "_informative"] !== 'undefined') {
-                this._bindInformative(entity["@" + propertyName + "_informative"].message);
+                this._bindInformative(resultMessages(entity["@" + propertyName + "_informative"]));
             } else if (typeof entity["@" + propertyName + "_required"] !== 'undefined') {
                 this._bindRequired(entity["@" + propertyName + "_required"]);
             } else {
@@ -1058,34 +1100,38 @@ export class TgEditor extends PolymerElement {
     _resetMessages () {
         this._invalid = false;
         this._error = null;
+        this._extendedError = null;
         this.decorator().classList.remove("warning");
         this.decorator().classList.remove("informative");
         this.updateStyles();
     }
 
-    _bindError (msg) {
+    _bindError (messages) {
         this._resetMessages();
         this.decorator().classList.remove("required");
         this._invalid = true;
-        this._error = "" + msg;
+        this._error = "" + messages.short;
+        this._extendedError = "" + messages.extended;
         this.updateStyles();
     }
     
-    _bindWarning (msg) {
+    _bindWarning (messages) {
         this._resetMessages();
         this.decorator().classList.remove("required");
         this.decorator().classList.add("warning");
         this._invalid = true;
-        this._error = "" + msg;
+        this._error = "" + messages.short;
+        this._extendedError = "" + messages.extended;
         this.updateStyles();
     }
 
-    _bindInformative (msg) {
+    _bindInformative (messages) {
         this._resetMessages();
         this.decorator().classList.remove("required");
         this.decorator().classList.add("informative");
         this._invalid = true;
-        this._error = "" + msg;
+        this._error = "" + messages.short;
+        this._extendedError = "" + messages.extended;
         this.updateStyles();
     }
 
@@ -1127,4 +1173,29 @@ export class TgEditor extends PolymerElement {
         this.reflector().setCustomProperty(contextHolder, "@@searchString", inputText);
         return contextHolder;
     }
+
+    /**
+     * Opens confirmation dialog for extended error / warning / informative message on tap.
+     */
+    _inputErrorTapHandler (event) {
+        if (this._extendedError) {
+            this.$.confirmationDialog.showConfirmationDialog(this._extendedError, [{name:'Close', confirm:true, autofocus:true}]);
+        }
+    }
+
+    /**
+     * Checks built-in validation of the 'input' element.
+     * 
+     * This is applicable e.g. for <input type="number"> elements, where characters like 'e', '.' and '-' are applicable but invalid combinations of those are possible.
+     * 
+     * In all cases such invalid input will lead to _editingValue === ''.
+     * This complicates things, as _onChange may not be invoked at all.
+     * So we use _outFocus (on-blur) and _onKeyDown (on-keydown) on-Enter callbacks to cover majority of cases.
+     */
+    _checkBuiltInValidation () {
+        if (this.builtInValidationMessage && this.$ && this.$.input && this.$.input.checkValidity) {
+            this._editorValidationMsg = this._editingValue === '' && !this.$.input.checkValidity() ? this.builtInValidationMessage : null;
+        }
+    }
+
 }
