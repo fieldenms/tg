@@ -1,6 +1,7 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { TgEntityCentreBehavior } from '/resources/centre/tg-entity-centre-behavior.js';
 import '/resources/images/tg-icons.js'; // this is for common tg-icons:share icon
+import { TgViewWithHelpBehavior } from '/resources/components/tg-view-with-help-behavior.js';
 
 const TgEntityCentreTemplateBehaviorImpl = {
 
@@ -134,6 +135,25 @@ const TgEntityCentreTemplateBehaviorImpl = {
             }
         });
         /////////////////////////////////////////////////////////////////////////////////
+
+        //////////////////Initialise tgOpenHelpMasterAction properties///////////////////
+
+        this._showHelpDialog = (function (action) {
+            if (action.chosenProperty) {
+                this._showDialog(action);
+            } else {
+                this._showCentreConfigDialog(action);
+            }
+        }).bind(this);
+
+        /////////////////////////////////////////////////////////////////////////////////
+    },
+
+    /**
+     * Should return the action that opens help master
+     */
+    getOpenHelpMasterAction: function () {
+        return this.$.tgOpenHelpMasterAction;
     },
 
     ////////////// Template related method are here in order to reduce the template size ///////////////
@@ -343,5 +363,6 @@ const TgEntityCentreTemplateBehaviorImpl = {
 
 export const TgEntityCentreTemplateBehavior = [
     TgEntityCentreBehavior,
+    TgViewWithHelpBehavior,
     TgEntityCentreTemplateBehaviorImpl
 ];

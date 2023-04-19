@@ -10,6 +10,7 @@ import { getKeyEventTarget, generateUUID } from '/resources/reflection/tg-polyme
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import {createDialog} from '/resources/egi/tg-dialog-util.js';
+import { TgViewWithHelpBehavior } from '/resources/components/tg-view-with-help-behavior.js';
 
 const TgEntityMasterTemplateBehaviorImpl = {
 
@@ -23,22 +24,9 @@ const TgEntityMasterTemplateBehaviorImpl = {
         },
 
         /**
-         * Represents the action that opens help entity master for the entity type of this master.
-         */
-        tgOpenHelpMasterAction: {
-            type: Object,
-            value: null
-        },
-        
-        /**
          * Attributes for the action that allows to open entity master for specified entity-typed property.
          */
         _tgOpenMasterActionAttrs: Object,
-
-        /**
-         * Attributes for the action that opens help entity master for the entity type of this master.
-         */
-        _tgOpenHelpMasterActionAttrs: Object,
 
         /**
          * A separate dialog used for openHelpMasterAction.
@@ -67,65 +55,10 @@ const TgEntityMasterTemplateBehaviorImpl = {
         };
         self.tgOpenMasterAction = self.$.tgOpenMasterAction;
 
-        //Initialise tgOpenHelpMasterAction properties
-        self._tgOpenHelpMasterActionAttrs = {
-            entityType: "ua.com.fielden.platform.entity.UserDefinableHelp",
-            currentState: 'EDIT',
-            centreUuid: self.uuid
-        }
-        self.tgOpenHelpMasterAction = self.$.tgOpenHelpMasterAction
-
         self._currentEntityForHelp = function() {
             return () => self._currEntity;
         };
-
-        self._initiateHelpAction = function (e) {
-            e.preventDefault();
-            self._longPress = false;
-            self._helpActionTimer = setTimeout(() => {
-                self._longPress = true;
-                self.tgOpenHelpMasterAction.chosenProperty = "showMaster";
-                self.tgOpenHelpMasterAction._run();
-            }, 1000);
-        };
-
-        self._runHelpAction = function (e) {
-            e.preventDefault();
-            //Clear timer to to remain the mouse key press as short.
-            if (self._helpActionTimer) {
-                clearTimeout(self._helpActionTimer);
-            }
-            //If there was long touch or long mouse button press then skip it otherwise decide what to do 
-            if (!self._longPress) {
-                //Init action props.
-                self.tgOpenHelpMasterAction._openLinkInAnotherWindow = true;
-                self.tgOpenHelpMasterAction.chosenProperty = null;
-                //Config action props according to key pressed and type of action (e.a. long or short).
-                if (e.altKey) {
-                    self.tgOpenHelpMasterAction.chosenProperty = "showMaster";
-                } else {
-                    if (e.ctrlKey || e.metaKey) {
-                        self.tgOpenHelpMasterAction._openLinkInAnotherWindow = false;
-                    }
-                }
-                //Run action
-                self.tgOpenHelpMasterAction._run(); 
-            }
-            //Reset action type and timer;
-            self._longPress = false;
-            self._helpActionTimer = null;
-        };
-
-        self._postOpenHelpMasterAction = function (potentiallySavedOrNewEntity, action, master) {
-            if (!action.chosenProperty) {
-                if (self.tgOpenHelpMasterAction._openLinkInAnotherWindow) {
-                    window.open(potentiallySavedOrNewEntity.get("help").value, "", "fullscreen=yes,scrollbars=yes,location=yes,resizable=yes");
-                } else {
-                    window.open(potentiallySavedOrNewEntity.get("help").value);
-                }
-            }
-        }
-
+        
         self._preOpenHelpMasterAction = function (action) {
             const reflector = new TgReflector();
             if (action.requireSelectedEntities === 'ONE') {
@@ -154,6 +87,13 @@ const TgEntityMasterTemplateBehaviorImpl = {
         } else {
             self._masterDom().removeAttribute('with-dimensions');
         }
+    },
+
+    /**
+     * Should return the action that opens help master
+     */
+    getOpenHelpMasterAction: function () {
+        return this.$.tgOpenHelpMasterAction;
     },
 
     /**
@@ -303,6 +243,7 @@ export const TgEntityMasterTemplateBehavior = [
     IronA11yKeysBehavior,
     TgShortcutProcessingBehavior,
     TgEntityMasterBehavior,
-    TgEntityMasterTemplateBehaviorImpl
+    TgViewWithHelpBehavior,
+    TgEntityMasterTemplateBehaviorImpl,
 ];
 export { Polymer, html };

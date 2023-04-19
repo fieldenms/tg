@@ -53,8 +53,8 @@ const template = html`<!-- TODO layout vertical -->
         _process-retriever-error="[[_processRetrieverError]]"
         _process-saver-response="[[_processSaverResponse]]"
         _process-saver-error="[[_processSaverError]]"
-        _initiate-help-action="[[_initiateHelpAction]]"
-        _run-help-action="[[_runHelpAction]]"
+        _initiate-help-action="[[_helpMouseDownEventHandler]]"
+        _run-help-action="[[_helpMouseUpEventHandler]]"
         _has-embeded-view="[[_hasEmbededView]]"
         _saver-loading="{{_saverLoading}}">
         <!--START OF GENERATED TG-ENTITY-MASTER DOM CONTENT-->

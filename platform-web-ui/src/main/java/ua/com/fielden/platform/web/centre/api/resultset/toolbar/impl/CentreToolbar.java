@@ -53,7 +53,7 @@ public class CentreToolbar implements IToolbarConfig {
     }
 
     protected DomElement createToolbarElement() {
-        return new DomContainer().add(topLevelPlacement, switchViewPlacement, configButton(), pagination("standart-action"), refreshButton());
+        return new DomContainer().add(topLevelPlacement, switchViewPlacement, configButton(), pagination("standart-action"), refreshButton(), helpButton());
     }
 
     @Override
@@ -74,7 +74,8 @@ public class CentreToolbar implements IToolbarConfig {
     @Override
     public CssStyles styles() {
         return new CssStyles()
-                .add(new CssElement("paper-icon-button.orange").setStyle("color", "var(--paper-orange-500)").setStyle("border-color", "var(--paper-orange-500)"));
+                .add(new CssElement("paper-icon-button.orange").setStyle("color", "var(--paper-orange-500)").setStyle("border-color", "var(--paper-orange-500)"))
+                .add(new CssElement("paper-icon-button.grey").setStyle("color", "var(--paper-input-container-color, var(--secondary-text-color))"));
     }
 
     @Override
@@ -92,6 +93,18 @@ public class CentreToolbar implements IToolbarConfig {
                 .attr("disabled$", "[[isRunning]]")
                 .attr("hidden$", "[[isSelectionCriteriaEmpty]]")
                 .attr("tooltip-text$", "[[computeConfigButtonTooltip(staleCriteriaMessage)]]");
+    }
+
+    public static DomElement helpButton() {
+        return new DomElement("paper-icon-button")
+                .clazz("grey", "standart-action")
+                .attr("slot", "standart-action")
+                .attr("icon", "icons:help-outline")
+                .attr("on-mousedown", "_helpMouseDownEventHandler")
+                .attr("on-touchstart", "_helpMouseDownEventHandler")
+                .attr("on-mouseup", "_helpMouseUpEventHandler")
+                .attr("on-touchend", "_helpMouseUpEventHandler")
+                .attr("tooltip-text", "Tap to load help in another window or tap with Ctrl/Cmd to load help in another tab. Alt&nbsp+&nbspClick or long touch to edit help link.");
     }
 
     public static DomElement selectView(final int viewIndex, final int width) {

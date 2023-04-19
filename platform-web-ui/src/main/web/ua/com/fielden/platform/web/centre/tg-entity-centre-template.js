@@ -63,7 +63,21 @@ const entityCentreTemplate = html`
         <!--@custom-front-actions-->
         
         <!--@custom-share-actions-->
-        
+        <tg-ui-action
+            id="tgOpenHelpMasterAction"
+            ui-role='ICON'
+            component-uri = '/master_ui/ua.com.fielden.platform.entity.UserDefinableHelp'
+            element-name = 'tg-UserDefinableHelp-master'
+            show-dialog='[[_showHelpDialog]]'
+            toaster='[[toaster]]'
+            create-context-holder='[[_createContextHolder]]'
+            attrs='[[_tgOpenHelpMasterActionAttrs]]'
+            require-selection-criteria='true'
+            require-selected-entities='NONE'
+            require-master-entity='false'
+            post-action-success = '[[_postOpenHelpMasterAction]]'
+            hidden>
+        </tg-ui-action>
         <tg-entity-grid-inspector id="egi" slot="custom-egi" class="entity-grid-inspector" centre-selection="[[centreSelection]]" column-properties-mapper="{{columnPropertiesMapper}}" icon="@egiViewIcon" icon-style="@egiViewStyle" custom-shortcuts="@customShortcuts" constant-height="@egiHeight" row-height="@egiRowHeight" @hidden @fitToHeight @canDragFrom @toolbarVisible @checkboxVisible @dragAnchorFixed @checkboxesFixed @checkboxesWithPrimaryActionsFixed num-of-fixed-cols="@numOfFixedCols" @secondaryActionsFixed @headerFixed @summaryFixed @gridLayout>
             <!-- EGI COLUMNS DOM (GENERATED) -->
             
