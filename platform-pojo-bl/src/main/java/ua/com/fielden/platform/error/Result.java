@@ -2,6 +2,8 @@ package ua.com.fielden.platform.error;
 
 import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
+import static java.util.regex.Pattern.quote;
+import static org.apache.commons.lang.StringUtils.isEmpty;
 
 import java.util.Objects;
 import java.util.Optional;
@@ -21,6 +23,10 @@ import java.util.function.Supplier;
  */
 public class Result extends RuntimeException {
     private static final long serialVersionUID = 1L;
+    private static final String SUCCESSFUL = "Successful";
+    private static final String NULL_POINTER_EXCEPTION = "Null pointer exception";
+    private static final String EXT_SEPARATOR = "<extended/>";
+    private static final String EXT_SEPARATOR_PATTERN = quote(EXT_SEPARATOR);
     private final Exception ex;
     private final String message;
     private final Object instance;
@@ -40,111 +46,183 @@ public class Result extends RuntimeException {
         this.ex = exception;
     }
 
+    ///////////////////////////////////////////// Successful /////////////////////////////////////////////
+
     /**
-     * Convenient factory method for creating a successful result.
-     *
-     * @param instance
-     * @return
+     * Convenient factory method for creating a successful {@link Result}.
+     */
+    public static Result successful() {
+        return successful(null);
+    }
+
+    /**
+     * Convenient factory method for creating a successful {@link Result} with specified {@code instance}.
      */
     public static Result successful(final Object instance) {
-        return new Result(instance, "Successful");
+        return new Result(instance, SUCCESSFUL);
     }
 
+    ///////////////////////////////////////////// Informative /////////////////////////////////////////////
+
     /**
-     * A factory method for creating informative result.
-     *
-     * @param info
-     * @return
+     * Convenient factory method for creating {@link Informative} with specified {@code message}.
      */
-    public static Informative informative(final String info) {
-        return new Informative(info);
+    public static Informative informative(final String message) {
+        return informative(null, message);
     }
 
     /**
-     * A factory method for creating informative result related to specified instances.
-     *
-     * @param info
-     * @return
+     * Convenient factory method for creating {@link Informative} with specified {@code message}, formatted with {@code args} using {@link String#format(String, Object...)}.
      */
-    public static Informative informative(final Object instance, final String info) {
-        return new Informative(instance, info);
+    public static Informative informativef(final String message, final Object... args) {
+        return informative(format(message, args));
     }
 
     /**
-     * Convenient factory method for creating informative result with formatting capabilities.
-     *
-     * @param info
-     * @return
+     * Convenient factory method for creating {@link Informative} with specified {@code shortMessage} and {@code extendedMessage}.
+     * <p>
+     * Use {@code shortMessage} parameter to define concise message, that would nicely fit to short areas.
+     * Use {@code extendedMessage} parameter to define more detailed and longer version of {@code shortMessage}. It may have multiple lines and HTML formatting.
      */
-    public static Informative informativef(final String info, final Object... data) {
-        return new Informative(format(info, data));
-    }
-
-    public static Warning warning(final String msg) {
-        return new Warning(msg);
-    }
-
-    public static Warning warning(final Object instance, final String msg) {
-        return new Warning(instance, msg);
+    public static Informative informativeEx(final String shortMessage, final String extendedMessage) {
+        return informative(shortMessage + EXT_SEPARATOR + extendedMessage);
     }
 
     /**
-     * Convenient factory method for creating a failure result.
-     *
-     * @param instance
-     *            -- instance that is in error
-     * @param ex
-     *            -- associated exception that caused failure
-     * @return
+     * Convenient factory method for creating {@link Informative} with specified {@code instance} and {@code message}.
      */
-    public static Result failure(final Object instance, final Exception ex) {
-        return new Result(instance, ex);
+    public static Informative informative(final Object instance, final String message) {
+        return new Informative(instance, message);
     }
 
     /**
-     * Convenient factory method for creating a failure result. Should be used when no particular exception is at fault.
-     *
-     * @param instance
-     *            -- instance that is in error
-     * @param reason
-     *            -- reason for failure.
-     * @return
+     * Convenient factory method for creating {@link Informative} with specified {@code instance}, {@code shortMessage} and {@code extendedMessage}.
+     * <p>
+     * Use {@code shortMessage} parameter to define concise message, that would nicely fit to short areas.
+     * Use {@code extendedMessage} parameter to define more detailed and longer version of {@code shortMessage}. It may have multiple lines and HTML formatting.
      */
-    public static Result failure(final Object instance, final String reason) {
-        return new Result(instance, new Exception(reason));
+    public static Informative informativeEx(final Object instance, final String shortMessage, final String extendedMessage) {
+        return informative(instance, shortMessage + EXT_SEPARATOR + extendedMessage);
     }
 
+    ///////////////////////////////////////////// Warning /////////////////////////////////////////////
+
     /**
-     * Convenient factory method for creating a failure result. In some cases there is no need to pass in an instance that is in error -- just an error itself.
-     *
-     * @param ex
-     *            -- exception that caused the failure.
-     * @return
+     * Convenient factory method for creating {@link Warning} with specified {@code message}.
      */
-    public static Result failure(final Exception ex) {
-        return new Result(null, ex);
+    public static Warning warning(final String message) {
+        return warning(null, message);
     }
 
     /**
-     * Convenient factory method for creating a failure result. Should be used when neither an object in error nor the actual exception type are important.
-     *
-     * @param reason
-     *            -- should describe the failure.
-     * @return
+     * Convenient factory method for creating {@link Warning} with specified {@code message}, formatted with {@code args} using {@link String#format(String, Object...)}.
+     */
+    public static Warning warningf(final String message, final Object... args) {
+        return warning(format(message, args));
+    }
+
+    /**
+     * Convenient factory method for creating {@link Warning} with specified {@code shortMessage} and {@code extendedMessage}.
+     * <p>
+     * Use {@code shortMessage} parameter to define concise message, that would nicely fit to short areas.
+     * Use {@code extendedMessage} parameter to define more detailed and longer version of {@code shortMessage}. It may have multiple lines and HTML formatting.
+     */
+    public static Warning warningEx(final String shortMessage, final String extendedMessage) {
+        return warning(shortMessage + EXT_SEPARATOR + extendedMessage);
+    }
+
+    /**
+     * Convenient factory method for creating {@link Warning} with specified {@code instance} and {@code message}.
+     */
+    public static Warning warning(final Object instance, final String message) {
+        return new Warning(instance, message);
+    }
+
+    /**
+     * Convenient factory method for creating {@link Warning} with specified {@code instance}, {@code shortMessage} and {@code extendedMessage}.
+     * <p>
+     * Use {@code shortMessage} parameter to define concise message, that would nicely fit to short areas.
+     * Use {@code extendedMessage} parameter to define more detailed and longer version of {@code shortMessage}. It may have multiple lines and HTML formatting.
+     */
+    public static Warning warningEx(final Object instance, final String shortMessage, final String extendedMessage) {
+        return warning(instance, shortMessage + EXT_SEPARATOR + extendedMessage);
+    }
+
+    ///////////////////////////////////////////// Failure /////////////////////////////////////////////
+
+    /**
+     * Convenient factory method for creating a failure {@link Result} with specified {@code reason}.
+     * Should be used when neither an object in error nor the actual exception type are important.
+     * 
+     * @param reason -- reason for failure
      */
     public static Result failure(final String reason) {
-        return new Result(null, new Exception(reason));
+        return failure(null, reason);
     }
 
     /**
-     * The same as {@link #failure(String)} with with the semantics of {@link String#format(String, Object...)} for interpolating of the {@code reason} string.
-     *
-     * @param reason
-     * @param args
-     * @return
+     * Convenient factory method for creating a failure {@link Result} with specified {@code reason}, formatted with {@code args} using {@link String#format(String, Object...)}.
+     * Should be used when neither an object in error nor the actual exception type are important.
+     * 
+     * @param reason -- reason for failure
      */
-    public static Result failuref(final String reason, final Object...args) {
-        return new Result(null, new Exception(format(reason, args)));
+    public static Result failuref(final String reason, final Object... args) {
+        return failure(format(reason, args));
+    }
+
+    /**
+     * Convenient factory method for creating a failure {@link Result} with specified {@code shortReason} and {@code extendedReason}.
+     * Should be used when neither an object in error nor the actual exception type are important.
+     * <p>
+     * Use {@code shortReason} parameter to define concise reason, that would nicely fit to short areas.
+     * Use {@code extendedReason} parameter to define more detailed and longer version of {@code shortReason}. It may have multiple lines and HTML formatting.
+     */
+    public static Result failureEx(final String shortReason, final String extendedReason) {
+        return failure(shortReason + EXT_SEPARATOR + extendedReason);
+    }
+
+    /**
+     * Convenient factory method for creating a failure {@link Result} with specified {@code exception}.
+     * In some cases there is no need to pass in an instance that is in error -- just an error itself.
+     * 
+     * @param exception -- associated exception that caused failure
+     */
+    public static Result failure(final Exception exception) {
+        return failure(null, exception);
+    }
+
+    /**
+     * Convenient factory method for creating a failure {@link Result} with specified {@code instance} and {@code reason}.
+     * Should be used when no particular exception is at fault.
+     * 
+     * @param instance -- instance that is in error
+     * @param reason -- reason for failure
+     */
+    public static Result failure(final Object instance, final String reason) {
+        return failure(instance, new Exception(reason));
+    }
+
+    /**
+     * Convenient factory method for creating a failure {@link Result} with specified {@code instance}, {@code shortReason} and {@code extendedReason}.
+     * Should be used when no particular exception is at fault.
+     * <p>
+     * Use {@code shortReason} parameter to define concise reason, that would nicely fit to short areas.
+     * Use {@code extendedReason} parameter to define more detailed and longer version of {@code shortReason}. It may have multiple lines and HTML formatting.
+     * 
+     * @param instance -- instance that is in error
+     */
+    public static Result failureEx(final Object instance, final String shortReason, final String extendedReason) {
+        return failure(instance, shortReason + EXT_SEPARATOR + extendedReason);
+    }
+
+    /**
+     * Convenient factory method for creating a failure {@link Result} with specified {@code instance} and {@code exception}.
+     * 
+     * @param instance -- instance that is in error
+     * @param exception -- associated exception that caused failure
+     */
+    public static Result failure(final Object instance, final Exception exception) {
+        return new Result(instance, exception);
     }
 
     ///////////////////////////////////////////////
@@ -170,7 +248,6 @@ public class Result extends RuntimeException {
         this.instance = instance;
         this.message = ex.getMessage();
         this.ex = ex;
-
     }
 
     /** Creates failed result. */
@@ -345,4 +422,44 @@ public class Result extends RuntimeException {
                Objects.equals(this.message, that.message) &&
                Objects.equals(this.instance, that.instance);
     }
+
+    /**
+     * Returns a pair of { shortMessage: ..., extendedMessage: ... } messages, associated with the {@code result}.
+     * The {@code result} may be of type {@link Result}, {@link Warning} or {@link Informative}.
+     * 
+     * {@code result} message should never be {@code null} (see {@link Result#getMessage()}), except the case where NPE was causing failure {@link Result} -- in this case we return 'Null pointer exception' for both short and extended messages.
+     * If {@link Result} was constructed with single message, it will be used for both short and extended messages.
+     * Otherwise we do splitting by <extended/> part (and try to be smart if there are missing parts before or after <extended/>).
+     */
+    public static ResultMessages resultMessages(final Result result) {
+        final String message = result.getMessage();
+        if (message == null) {
+            return new ResultMessages(NULL_POINTER_EXCEPTION, NULL_POINTER_EXCEPTION);
+        } else if (!isEmpty(message)) {
+            final String[] messages = message.split(EXT_SEPARATOR_PATTERN);
+            final String firstMatch = messages.length > 0 ? messages[0] : "";
+            final String secondMatch = messages.length > 1 ? messages[1] : "";
+            final String shortMessage = !isEmpty(firstMatch) ? firstMatch : secondMatch;
+            final String extendedMessage = !isEmpty(secondMatch) ? secondMatch : shortMessage;
+            return new ResultMessages(shortMessage, extendedMessage);
+        } else {
+            return new ResultMessages(message, message);
+        }
+    }
+
+    /**
+     * A pair of { shortMessage: ..., extendedMessage: ... } messages, associated with the {@link Result}.
+     * 
+     * @author TG Team
+     */
+    public static class ResultMessages {
+        public final String shortMessage;
+        public final String extendedMessage;
+
+        private ResultMessages(final String shortMessage, final String extendedMessage) {
+            this.shortMessage = shortMessage;
+            this.extendedMessage = extendedMessage;
+        }
+    }
+
 }

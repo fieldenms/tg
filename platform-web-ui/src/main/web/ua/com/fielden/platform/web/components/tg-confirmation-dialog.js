@@ -1,11 +1,14 @@
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
+import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/paper-button/paper-button.js';
 import '/resources/polymer/@polymer/paper-dialog/paper-dialog.js';
+import '/resources/polymer/@polymer/paper-dialog-scrollable/paper-dialog-scrollable.js';
 import '/resources/polymer/@polymer/polymer/lib/elements/dom-bind.js';
 import '/resources/polymer/@polymer/polymer/lib/elements/dom-repeat.js';
 
+import { containsRestrictedTags } from '/resources/reflection/tg-polymer-utils.js';
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
 import { ExpectedError } from '/resources/components/tg-global-error-handler.js';
 
@@ -25,14 +28,27 @@ confirmationDialogStyle.setAttribute('style', 'display: none;');
 document.head.appendChild(confirmationDialogStyle.content);
 
 const dialogModel = document.createElement('dom-bind');
-dialogModel.innerHTML = '<template><paper-dialog id="confirmDialog" class="confirm-dialog layout vertical" modal always-on-top entry-animation="scale-up-animation" exit-animation="fade-out-animation" on-iron-overlay-canceled="dialogCanceled" on-iron-overlay-opened="dialogOpened" on-iron-overlay-closed="dialogClosed">' +
-    '<div style="padding: 20px;" inner-h-t-m-l="[[message]]"></div>' +
-    '<div class="buttons">' +
-    '<template is="dom-repeat" items="[[buttons]]">' +
-    '<paper-button dialog-confirm$="[[item.confirm]]" dialog-dismiss$="[[!item.confirm]]" autofocus$="[[item.autofocus]]" on-tap="_action">[[item.name]]</paper-button>' +
-    '</template>' +
-    '</div>' +
-    '</paper-dialog></template>';
+dialogModel.innerHTML = `
+    <template>
+        <paper-dialog id="confirmDialog" class="confirm-dialog layout vertical"
+            modal
+            always-on-top
+            entry-animation="scale-up-animation"
+            exit-animation="fade-out-animation"
+            on-iron-overlay-canceled="rejectDialog"
+            on-iron-overlay-opened="dialogOpened"
+            on-iron-overlay-closed="dialogClosed">
+            <paper-dialog-scrollable>
+                <p id="msgPar" style="padding: 10px;white-space: break-spaces;"></p>
+            </paper-dialog-scrollable>
+            <div class="buttons">
+                <template is="dom-repeat" items="[[buttons]]">
+                    <paper-button dialog-confirm$="[[item.confirm]]" dialog-dismiss$="[[!item.confirm]]" autofocus$="[[item.autofocus]]" on-tap="_action">[[item.name]]</paper-button>
+                </template>
+            </div>
+        </paper-dialog>
+    </template>
+`;
 
 dialogModel.showDialog = function () {
     const dialog = dialogModel.$.confirmDialog;
@@ -83,21 +99,33 @@ Polymer({
         return new Promise(function (resolve, reject) {
 
             dialogModel._onCaptureKeyDown = function (e) {
-                var dialog = dialogModel.$.confirmDialog;
+                // ensures on-Enter closing even if no button is focused, i.e. tapped on dialog somewhere or even outside dialog
                 if (e.keyCode === 13) {
-                    dialog.close();
+                    dialogModel.$.confirmDialog.close();
                     resolve("ENTER");
                     restoreActiveElement();
                 }
             }
 
-            dialogModel.dialogCanceled = function (e) {
+            /**
+             * Rejects confirmation dialog promise and restores previously active element.
+             */
+            dialogModel.rejectDialog = function (e) {
                 reject(new ExpectedError("ESC"));
                 restoreActiveElement();
             };
-            dialogModel.closeDialog = function () {
-                reject(new ExpectedError("ESC"));
-                restoreActiveElement();
+
+            /**
+             * Custom method for confirmation dialog closing.
+             * It closes corresponding <paper-dialog>, but also rejects confirmation dialog promise and restores previously active element,
+             *  as if ESC or non-confirming button was pressed.
+             * 
+             * This custom logic is necessary in tg-app-template _closeDialog logic, where BACK button must reject confirmation dialog (mobile profile only).
+             * Otherwise, _lastPromise will be forever pending and all other confirmation dialogs would never open.
+             */
+            dialogModel.$.confirmDialog.closeDialog = function () {
+                this.close();
+                dialogModel.rejectDialog();
             };
 
             dialogModel._action = function (e) {
@@ -110,7 +138,11 @@ Polymer({
                 restoreActiveElement();
             };
 
-            dialogModel.message = message;
+            if (containsRestrictedTags(message) === true) {
+                dialogModel.$.msgPar.textContent = message;
+            } else {
+                dialogModel.$.msgPar.innerHTML = message;
+            }
             dialogModel.buttons = buttons;
             dialogModel.showDialog();
         });
