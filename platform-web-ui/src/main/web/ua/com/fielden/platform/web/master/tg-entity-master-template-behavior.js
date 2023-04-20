@@ -29,6 +29,11 @@ const TgEntityMasterTemplateBehaviorImpl = {
         _tgOpenMasterActionAttrs: Object,
 
         /**
+         * Attributes for the action that opens help entity master for this entity master.
+         */
+        _tgOpenHelpMasterActionAttrs: Object,
+
+        /**
          * A separate dialog used for openHelpMasterAction.
          */
         _helpDialog: {
@@ -55,6 +60,12 @@ const TgEntityMasterTemplateBehaviorImpl = {
         };
         self.tgOpenMasterAction = self.$.tgOpenMasterAction;
 
+        self._tgOpenHelpMasterActionAttrs = {
+            entityType: "ua.com.fielden.platform.entity.UserDefinableHelp",
+            currentState: 'EDIT',
+            centreUuid: self.uuid
+        }
+
         self._currentEntityForHelp = function() {
             return () => self._currEntity;
         };
@@ -62,9 +73,9 @@ const TgEntityMasterTemplateBehaviorImpl = {
         self._preOpenHelpMasterAction = function (action) {
             const reflector = new TgReflector();
             if (action.requireSelectedEntities === 'ONE') {
-                action.shortDesc = reflector.getType(action.currentEntity().type().notEnhancedFullClassName()).entityTitle();
+                action.shortDesc = reflector.getType(action.currentEntity().type().notEnhancedFullClassName()).entityTitle() + " Master Help";
             } else if (action.requireSelectedEntities === 'ALL' && self.$.egi.getSelectedEntities().length > 0) {
-                action.shortDesc = reflector.getType(self.$.egi.getSelectedEntities()[0].type().notEnhancedFullClassName()).entityTitle();
+                action.shortDesc = reflector.getType(self.$.egi.getSelectedEntities()[0].type().notEnhancedFullClassName()).entityTitle() + " Master Help";
             }
         };
 

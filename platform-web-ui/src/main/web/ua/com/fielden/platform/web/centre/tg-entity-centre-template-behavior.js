@@ -29,7 +29,11 @@ const TgEntityCentreTemplateBehaviorImpl = {
         _isEgiEditing : {
             type: Boolean,
             value : false
-        }
+        },
+        /**
+         * Attributes for the action that opens help entity master for this entity centre.
+         */
+        _tgOpenHelpMasterActionAttrs: Object,
     },
 
     created: function () {
@@ -137,6 +141,16 @@ const TgEntityCentreTemplateBehaviorImpl = {
         /////////////////////////////////////////////////////////////////////////////////
 
         //////////////////Initialise tgOpenHelpMasterAction properties///////////////////
+
+        this._tgOpenHelpMasterActionAttrs = {
+            entityType: "ua.com.fielden.platform.entity.UserDefinableHelp",
+            currentState: 'EDIT',
+            centreUuid: this.uuid
+        }
+
+        this._preOpenHelpMasterAction = function (action) {
+            action.shortDesc = this._reflector.getType(this.entityType).entityTitle() + " Centre Help";
+        }.bind(this);
 
         this._showHelpDialog = (function (action) {
             if (action.chosenProperty) {

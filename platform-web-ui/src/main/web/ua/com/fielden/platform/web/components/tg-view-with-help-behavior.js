@@ -2,22 +2,7 @@ import { TgReflector } from '/app/tg-reflector.js';
 
 export const TgViewWithHelpBehavior = {
 
-    properties: {
-
-        /**
-         * Attributes for the action that opens help entity master for the view that mixes in this behavior.
-         */
-        _tgOpenHelpMasterActionAttrs: Object,
-    },
-
     ready: function () {
-        
-        this._tgOpenHelpMasterActionAttrs = {
-            entityType: "ua.com.fielden.platform.entity.UserDefinableHelp",
-            currentState: 'EDIT',
-            centreUuid: self.uuid
-        }
-
         this._helpMouseDownEventHandler = this._helpMouseDownEventHandler.bind(this);
         this._helpMouseUpEventHandler = this._helpMouseUpEventHandler.bind(this);
         this._postOpenHelpMasterAction = this._postOpenHelpMasterAction.bind(this);

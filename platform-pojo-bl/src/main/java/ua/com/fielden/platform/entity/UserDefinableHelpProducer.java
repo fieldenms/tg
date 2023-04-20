@@ -25,29 +25,34 @@ public class UserDefinableHelpProducer extends DefaultEntityProducerWithContext<
 
     @Override
     protected UserDefinableHelp provideDefaultValues(final UserDefinableHelp entity) {
-        if (currentEntityInstanceOf(AbstractEntity.class)) {
-            final AbstractEntity<?> currEntity = currentEntity(AbstractEntity.class);
-            final Class<AbstractEntity<?>> entityType = getOriginalType(currEntity.getType());
-            final UserDefinableHelpCo entityMasterHelpCo = co$(UserDefinableHelp.class);
-            final UserDefinableHelp persistedEntity = entityMasterHelpCo.findByKeyAndFetch(entityMasterHelpCo.getFetchProvider().fetchModel(), entityType.getName());
-            final boolean skipUi = this.chosenPropertyEmpty();
-            if (persistedEntity != null) {
-                if (skipUi) {
-                    entity.setReferenceElement(persistedEntity.getReferenceElement());
-                    entity.setHelp(persistedEntity.getHelp());
-                    entity.setSkipUi(true);
-                    return entity;
-                }
-                return persistedEntity;
+        final String refElement = getReferenceElement();
+        final UserDefinableHelpCo entityMasterHelpCo = co$(UserDefinableHelp.class);
+        final UserDefinableHelp persistedEntity = entityMasterHelpCo.findByKeyAndFetch(entityMasterHelpCo.getFetchProvider().fetchModel(), refElement);
+        final boolean skipUi = this.chosenPropertyEmpty();
+        if (persistedEntity != null) {
+            if (skipUi) {
+                entity.setReferenceElement(persistedEntity.getReferenceElement());
+                entity.setHelp(persistedEntity.getHelp());
+                entity.setSkipUi(true);
+                return entity;
+            }
+            return persistedEntity;
+        } else {
+            if (skipUi) {
+                throw new EntityException(ERR_HELP_MISSING);
             } else {
-                if (skipUi) {
-                    throw new EntityException(ERR_HELP_MISSING);
-                } else {
-                    entity.setReferenceElement(entityType.getName());
-                    return entity;
-                }
+                entity.setReferenceElement(refElement);
+                return entity;
             }
         }
-        return entity;
+    }
+
+    private String getReferenceElement() {
+        if (currentEntityInstanceOf(AbstractEntity.class)) {
+            final Class<AbstractEntity<?>> entityType = getOriginalType(currentEntity(AbstractEntity.class).getType());
+            return entityType.getName();
+        } else {
+            return getContext().getCustomObject().get("@@miType").toString();
+        }
     }
 }
