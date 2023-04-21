@@ -63,6 +63,7 @@ const entityCentreTemplate = html`
         <!--@custom-front-actions-->
         
         <!--@custom-share-actions-->
+        <paper-icon-button id="helpButton" slot="help-button" style="color:#727272" icon="icons:help-outline" on-mousedown="_helpMouseDownEventHandler" on-touchstart="_helpMouseDownEventHandler" on-mouseup="_helpMouseUpEventHandler" on-touchend="_helpMouseUpEventHandler" tooltip-text="Tap to load help in another window or tap with Ctrl/Cmd to load help in another tab. Alt&nbsp+&nbspClick or long touch to edit help link."></paper-icon-button>
         <tg-ui-action
             id="tgOpenHelpMasterAction"
             ui-role='ICON'

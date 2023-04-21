@@ -1,6 +1,10 @@
 package ua.com.fielden.platform.entity;
 
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
+
+import java.util.Optional;
 
 import com.google.inject.Inject;
 
@@ -25,34 +29,36 @@ public class UserDefinableHelpProducer extends DefaultEntityProducerWithContext<
 
     @Override
     protected UserDefinableHelp provideDefaultValues(final UserDefinableHelp entity) {
-        final String refElement = getReferenceElement();
-        final UserDefinableHelpCo entityMasterHelpCo = co$(UserDefinableHelp.class);
-        final UserDefinableHelp persistedEntity = entityMasterHelpCo.findByKeyAndFetch(entityMasterHelpCo.getFetchProvider().fetchModel(), refElement);
-        final boolean skipUi = this.chosenPropertyEmpty();
-        if (persistedEntity != null) {
-            if (skipUi) {
-                entity.setReferenceElement(persistedEntity.getReferenceElement());
-                entity.setHelp(persistedEntity.getHelp());
-                entity.setSkipUi(true);
-                return entity;
-            }
-            return persistedEntity;
-        } else {
-            if (skipUi) {
-                throw new EntityException(ERR_HELP_MISSING);
-            } else {
-                entity.setReferenceElement(refElement);
-                return entity;
-            }
-        }
+       return getReferenceElement().map(refElement -> {
+           final UserDefinableHelpCo entityMasterHelpCo = co$(UserDefinableHelp.class);
+           final UserDefinableHelp persistedEntity = entityMasterHelpCo.findByKeyAndFetch(entityMasterHelpCo.getFetchProvider().fetchModel(), refElement);
+           final boolean skipUi = this.chosenPropertyEmpty();
+           if (persistedEntity != null) {
+               if (skipUi) {
+                   entity.setReferenceElement(persistedEntity.getReferenceElement());
+                   entity.setHelp(persistedEntity.getHelp());
+                   entity.setSkipUi(true);
+                   return entity;
+               }
+               return persistedEntity;
+           } else {
+               if (skipUi) {
+                   throw new EntityException(ERR_HELP_MISSING);
+               } else {
+                   entity.setReferenceElement(refElement);
+                   return entity;
+               }
+           }
+       }).orElse(entity);
     }
 
-    private String getReferenceElement() {
+    private Optional<String> getReferenceElement() {
         if (currentEntityInstanceOf(AbstractEntity.class)) {
             final Class<AbstractEntity<?>> entityType = getOriginalType(currentEntity(AbstractEntity.class).getType());
-            return entityType.getName();
-        } else {
-            return getContext().getCustomObject().get("@@miType").toString();
+            return of(entityType.getName());
+        } else if (getContext() != null){
+            return of(getContext().getCustomObject().get("@@miType").toString());
         }
+        return empty();
     }
 }

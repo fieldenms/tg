@@ -74,8 +74,7 @@ public class CentreToolbar implements IToolbarConfig {
     @Override
     public CssStyles styles() {
         return new CssStyles()
-                .add(new CssElement("paper-icon-button.orange").setStyle("color", "var(--paper-orange-500)").setStyle("border-color", "var(--paper-orange-500)"))
-                .add(new CssElement("paper-icon-button.grey").setStyle("color", "var(--paper-input-container-color, var(--secondary-text-color))"));
+                .add(new CssElement("paper-icon-button.orange").setStyle("color", "var(--paper-orange-500)").setStyle("border-color", "var(--paper-orange-500)"));
     }
 
     @Override
@@ -97,7 +96,7 @@ public class CentreToolbar implements IToolbarConfig {
 
     public static DomElement helpButton() {
         return new DomElement("paper-icon-button")
-                .clazz("grey", "standart-action")
+                .style("color:#727272")
                 .attr("slot", "standart-action")
                 .attr("icon", "icons:help-outline")
                 .attr("on-mousedown", "_helpMouseDownEventHandler")

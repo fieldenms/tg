@@ -20,7 +20,7 @@ public class InsertionPointToolbar extends CentreToolbar {
 
     @Override
     protected DomElement createToolbarElement() {
-        return new DomContainer().add(pagination("standart-action"), refreshButton());
+        return new DomContainer().add(pagination("standart-action"), refreshButton(), helpButton());
     }
 
     @Override
