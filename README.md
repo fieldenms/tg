@@ -1,7 +1,7 @@
 TG
 ==
 
-Trident Genesis (TG) is a software development technology, which has been developed by a bunch of dedicated individuals from Ukraine and Australia with a financial support of Fielden Management Services Pty. Ltd.
+Trident Genesis (TG) is a software development technology that implements the RESTful Objects architectural pattern. This is an ongoing effort to develop a software technology for constructing reliable and evolvable information systems, led by a bunch of dedicated individuals from Ukraine and Australia with a financial support of an Australian ISV Fielden Management Services Pty Ltd. Fielden specialises in highly customisable domain-specific Enterprise Asset Managemen systems and uses TG as the foundation for developing several software product lines.
 
 In essenсe, TG incapsulates **accidental complexity** in order to enable application developers to better harness the **essential complexity** that stems from the target business domain.
 
