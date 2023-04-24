@@ -1,9 +1,9 @@
 \documentclass[a4paper,12pt,oneside,openright,final]{memoir} %twocolumn,
 
-\let\footruleskip\undefined
+
+%\let\footruleskip\undefined
 \usepackage[utf8]{inputenc}
 \usepackage[russian, ukrainian, english]{babel}
-\usepackage{etex}
 \usepackage{times}
 \DisemulatePackage{setspace}
 \usepackage{setspace}
@@ -11,9 +11,6 @@
 \usepackage{amsfonts}
 
 \usepackage{graphicx}
-\usepackage[printwatermark]{xwatermark}
-\newwatermark[allpages,color=red!10,angle=45,scale=5,xpos=-15,ypos=30]{DRAFT}
-
 \usepackage{alltt}
 \usepackage{moreverb}
 %for more info on hyperref package see http://en.wikibooks.org/wiki/LaTeX/Packages/Hyperref
@@ -43,15 +40,15 @@
 \usepackage{geometry}
 \geometry{hmargin={15mm,15mm},vmargin={15mm,20mm}}
 
-\usepackage[pages=some]{background}
-
-\backgroundsetup{
-  scale=1.2,
-  angle=0,
-  opacity=0.4,
-  contents={
-    \includegraphics[width=1.1\paperwidth,height=1.1\paperheight, keepaspectratio]{images/00-background.png}} 
-}
+\usepackage{background}
+\backgroundsetup{contents = Draft, opacity=0.1, scale=16, color=blue}
+% \backgroundsetup{
+%  scale=1.2,
+%  angle=0,
+%  opacity=0.4,
+%  contents={
+%    \includegraphics[width=1.1\paperwidth,height=1.1\paperheight, keepaspectratio]{images/00-background.png}} 
+% }
 
 
 %%%%%%%%%%%%% copyright %%%%%%%%%%%%%%
@@ -63,13 +60,13 @@
     pdftitle={Trident Genesis Platform},
     pdfauthor={Fielden Management Services Pty. Ltd.},
     pdfsubject={A hight level overview of key principles and advantages.},
-    pdfcopyright={Copyright (C) 2016 by Fielden Management Services Pty. Ltd.  All rights reserved.}
+    pdfcopyright={Copyright (C) 2023 by Fielden Management Services Pty. Ltd.  All rights reserved.}
 }
 
 \usepackage{xcolor}
 \makeevenhead{headings}%
     {\thepage}{}{\slshape\bookname~\thebook\qquad\partname~\thepart\qquad\leftmark}
-    \makeoddfoot{headings}{\slshape\rightmark}{\color{gray}Copyright (C) 2016 by Fielden Management Services Pty. Ltd.  All rights reserved.}{\thepage}
+    \makeoddfoot{headings}{\slshape\rightmark}{\color{gray}Copyright (C) 2023 by Fielden Management Services Pty. Ltd.  All rights reserved.}{\thepage}
 	\makeoddhead{headings}{\slshape\rightmark}{}{}
 
 
@@ -197,14 +194,14 @@
 	Therefore, if the complexity of the Internet could be uniformly expressed as a multitude of web resources that have only four or so verbs for interaction, wouldn't the same or similar constraint at the level of objects result in a functionally rich and uniform object-oriented system design?
 	This is the hypothesis that underpins the approach to object orientation that is taken in TG.
 	Essentially, the application of the REST style to an object-oriented design of an information system in terms of its \texttt{Memory}, \texttt{Informative} and \texttt{Active} functions, resulted in the development of an architectural pattern that became the foundation of TG.
-	This pattern is titled \emph{Fractal Objects} as it explicitly articulates that complex system behaviour is achieved by combining structurally identical building blocks -- the fractal object.
-	A \emph{fractal object} is a construct consisting of two objects -- an \emph{entity} and its \emph{companion}.
+	This pattern is titled \emph{RESTful Objects} as it explicitly articulates that complex system behaviour is achieved by combining structurally identical building blocks that follow a uniform interface for interaction.
+	A \emph{RESTful object} is a construct consisting of two objects -- an \emph{entity} and its \emph{companion}.
 	It is the basic conceptual building block for both designing and constructing information systems based on TG.
 	
 	\paragraph{Entity Object.} 	
   	An \emph{entity object} models the structure of a business entity, including its associations with other entities.
-	Unlike the anemic domain model~\cite{fowler2003}, an entity has the responsibility to ensure the correctness of its state.
-	Any value that is being assigned to its properties is validated in accordance with a specified business rule.
+	Unlike the anemic domain model~\cite{fowler2003}, an entity has the responsibility to ensure the correctness of its state\footnote{This is not unlike ``design by contract'', introduced Bertrand Meyer~\cite{bm1997}}, which is expressed through integrity constraints.
+	Any value that is being assigned to its properties is validated in accordance with specified business rules – integrity constraints.
 	This includes a mechanism of inter property dependency with automatic revalidation of invalid dependent properties.
 	
 	\begin{tcolorbox}[title=Example: dependent properties]
@@ -349,7 +346,9 @@ private Technician technician;
   	\end{figure}
 	
 	
-	So far, we've discussed only the in-memory state modification and how the \emph{entity} part of a \emph{fractal object} is used to model and ensure correctness of a business entity.
+	So far, we've discussed only the in-memory state modification and how the \emph{entity} part of a \emph{RESTful object} is used to model and ensure correctness of a business entity.
+	In terms of Conceptual Modelling of Information Systems, this represents the Structural Schema and the Integrity Constraints~\cite{oli2007}.
+	
 	The examples above illustrate that in-memory changes require the ability to execute potentially complex validation rules, including communication with the application database.
 	Changes to some properties may result in changes to some other properties.
 	This shows that changing entity properties encompasses rich domain behaviour, which is captured at the entity model level declaratively and is transparently integrated with an application UI.
@@ -362,17 +361,19 @@ private Technician technician;
 	Only by means of a companion object could an entity be \emph{created}, \emph{saved}, \emph{deleted}, and \emph{retrieved}\footnote{One could think of these operations as simple CRUD, but this analogy is misleading for reasons that will become evident further into the discussion.}.
 	
 	The power of having a limited number of operations has been demonstrated by the REST style~\cite{Fielding2000} of architecture for web applications.
-	We argue that similar benefits are gained at the level of domain modelling.
-  	There is a lot of semantic similarities between the REST style of web resources (macro level) and the objects modelling of a business domain (micro level).
+	Our initial hypothesis was that similar benefits can be gained at the level of domain modelling.
+	Now, having multiple core systems developed and supported for complex domains such as Airspace Navigation Service Providers, Rolling stock, Emergency Services, this hypothesis holds very well, including when it comes to continuous modification of the systems to meet new and changing operational business requirements.
+  	
+	There is a lot of semantic similarities between the REST style of web resources (macro level) and the object-oriented modelling of a business domain (micro level).
   	For example, the use of URI paths to navigate between web resources is analogous to paths in object graphs for association traversal.
   	This resonates with the original view of object-oriented systems by Alan Key, who emphasised similarity between objects and networked computers.
-  	Although, web is a delivery mechanism and a software system may or may not run on the web, its intrinsic nature of interconnected resources with uniform interaction mechanism seems to be very appropriate for an object-oriented modelling.
+  	Although, web is a delivery mechanism and a software system may or may not run on the web, its intrinsic nature of interconnected resources with uniform interaction mechanism seems to be very appropriate for object-oriented modelling.
 
 	The operations that are defined for companion objects are reminiscent of the \texttt{HTTP} verbs \texttt{PUT}, \texttt{POST}, \texttt{DELETE} and \texttt{GET}.
 	As is the case with REST web resources, they may or may not be applicable to a specific entity object in question.
 	For example, not all persistent entity objects that can be \texttt{saved} and \texttt{retrieved} from a database should necessarily support \texttt{deletion}.
 	Another example could be of an entity that models a business process, such as purchase order authorisation.
-	\texttt{Saving} such entity triggers the execution of a rich transactional business logic that affects multiple related entities, including changes to their persistent state.
+	\texttt{Saving} such entity triggers an execution of a rich transactional business logic that affects multiple related entities, including changes to their persistent state.
 	However, in itself, that entity could be transient and its properties serve only as parameters of the business process in question.
 	
 	As mentioned before, the conventional OOP thinking views a class as a basic building block or a module when applied to the modelling of a business domain.
@@ -410,7 +411,7 @@ private Technician technician;
 	Three of those are read-only from UI perspective and can only be changed programmatically, the remaining two are required\footnote{This nature of properties is automatically taken into account in the UI layer by reusing the definitions that are captured at the domain model.}.
 	Buttons \texttt{CANCEL} and \texttt{SAVE} are directly mapped to the two of four companion object operations -- \texttt{retrieve}\footnote{Cancelling changes is equivalent to refreshing an entity from a database by means of re-retrieving it.} and \texttt{save}.
 
-	The code listing below illustrates a part of the implementation for companion object \texttt{IWork\-Activity\-Detail} of entity \texttt{WorkActivityDetail}.
+	The code listing below illustrates a part of the implementation for companion object \texttt{Work\-Activity\-DetailCo} of entity \texttt{WorkActivityDetail}.
 	It extends a generic base class \texttt{CommonEntityCo} with a type parameter that is specified as the type of a corresponding entity object.
 	This makes every concrete companion specialised to handle a single entity object.
 	The base class is provided by the TG platform and encapsulates all the essential logic of saving persistent entities, which includes the construction of appropriate insert/update statements, optimistic locking mechanism, conflict resolution logic etc.
@@ -425,10 +426,10 @@ private Technician technician;
 @EntityType(WorkActivityDetail.class)
 public class WorkActivityDetailCo 
     extends CommonEntityCo<WorkActivityDetail> 
-    implements IWorkActivityDetail {
+    implements WorkActivityDetailCo {
     ...
     @Override
-    @TransactionRequired
+    @SessionRequired
     public WorkActivityDetail save(
         final WorkActivityDetail detail) {
     
@@ -447,7 +448,7 @@ public class WorkActivityDetailCo
 	\end{lstlisting}
 	\tcblower
 		\tiny
-		 Annotation \texttt{@TransactionRequired} represents a declarative transaction demarcation~-- all data changes in method \texttt{save} are wrapped into a single transaction.
+		 Annotation \texttt{@SessionRequired} represents a declarative transaction demarcation~-- all data changes in method \texttt{save} are wrapped into a single transaction.
 
 		 \medskip
 		 Method \texttt{save} expects a single argument, which is a new or modified entity instance of type \texttt{WorkActivityDetail}.
@@ -482,7 +483,7 @@ public class WorkActivityDetailCo
 	Property \texttt{date} is assigned the value, which is computed by expression \texttt{universalConstants().now()}\footnote{This expression encapsulates the notion of a \emph{model time} that provides a way to control time for testing purposes.}.
 	Property \texttt{person} is assigned the \emph{current person} by obtaining an instance of a companion object for entity \texttt{Person} (i.e. \texttt{co(Person.class)}) and then calling its method \texttt{currentPerson()}.
 	
-	Method \texttt{IPerson.currentPerson()} is an example of operation \texttt{retrieve} that is expressed in more domain specific terms.
+	Method \texttt{PersonCo.currentPerson()} is an example of operation \texttt{retrieve} that is expressed in more domain specific terms.
 	The TG platform provides a necessary abstraction to identify the currently logged in application user.
 	This abstraction has its implementations for testing and deployment purposes that get injected depending on the execution context.
 	Entity \texttt{User} with its companion \texttt{IUser} are present at the platform level and can be accessed by the application specific domain logic.
@@ -495,7 +496,7 @@ public class WorkActivityDetailCo
 	Having both entity properties and the operations of companion objects directly mapped to UI controls, guides the thought process when designing and using the system.
 	It is always clear what changes need to be implemented at the code level whenever an application user refers to some functionality in terms of UI constructs.
 	
-	The next section delves more into the application of the Fractal Objects pattern to model the three essential information system functions (\texttt{Memory}, \texttt{Informative} and \texttt{Active}).
+	The next section delves more into the application of the RESTful Objects pattern to model the three essential information system functions (\texttt{Memory}, \texttt{Informative} and \texttt{Active}).
 	It shows how approaching the design of an information system from the perspective of just these three functions by applying the FO pattern leads to a significant reduction of the architectural complexity.
 	We also introduce Entity Query Language (EQL) as an essential part for communicating with an application database and constructing sophisticated queries that capture the information across multiple persistent (memory) entities to produce synthetic entities for reporting (informative) purposes.
 
@@ -561,19 +562,17 @@ public class WorkActivityDetailCo
   The goal of the second requirement is to take away low technical details away from software system developers, so that they could concentrate on the immediate business value -- modelling of the domain.
   The last item emphasises the fact that the computing platform should specifically address the way users interact with the system in order to facilitate semantic transparency from user experience perspective.
 
-  Therefore, the means to describes the domain model and the computing platform that can execute such models are the two essential parts of Fractal Objects.
-  The developed prototype of the Fractal Object approach has been done in the Java programming language, but any other object-oriented language could be used.
+  Therefore, the means to describes the domain model and the computing platform that can execute such models are the two essential parts of a technology that implements the RESTful Objects pattern.
+  We have developed and used extensively such technology, called Trident Genesis (TG), which has been done in the Java programming language.
+  However, any other object-oriented language could be used, provided it supports a way to enhance the compilation process with custom semantic analysis and a way to perform runtime type introspection (reflection).
+  
   Java is still one of the most widely used programming languages and proved to be well suited for the implementation of transactional business systems.
-  However, our decision to use Java was also influenced by its rich reflection capabilities that allow runtime introspection in order to gather metadata, and its use of interfaces to support polymorphism that could be effectively used by the platform for inversion of control to enable loose coupling with domain models.
-
-
-
-
+  However, our decision to use Java was also influenced by its support for annotation processing at compile time, rich reflection capabilities that allow runtime introspection, and its use of interfaces to support polymorphism that is effectively used by TG for inversion of control to enable loose coupling between platform-level functionality (e.g., declarative security and transaction management) and domain-specific models.
 
 \section*{The problem statement}
 
-	It puts the modelling of a business domain in the centre of software requirement management, design and construction by following a very specific architectural pattern called \emph{Fractal Objects}.
-	The unique trait of the \emph{Fractal Objects} pattern is in establishing a uniform approach for designing and implementing the three core functions of any information system~-- memory, informative, active~\cite{oli2007}.
+	It puts the modelling of a business domain in the centre of software requirement management, design and construction by following a very specific architectural pattern called \emph{RESTful Objects}.
+	The unique trait of the \emph{RESTful Objects} pattern is in establishing a uniform approach for designing and implementing the three core functions of any information system~-- memory, informative, active~\cite{oli2007}.
 	This results in a holistic system design and implementation that is maintainable and of high fidelity with the target business domain.
 
 	The current definition and functions of an information system was defined back in 1970s.
@@ -865,8 +864,9 @@ Shneiderman, B. Direct manipulation: A step beyond programming languages. Comput
 \bibitem{CQRS} CQRS design pattern, 
 \href{https://cqrs.files.wordpress.com/2010/11/cqrs_documents.pdf}{Online}
 
+\bibitem{bm1997} Meyer, B. Object-Oriented Software Construction, Second Edition, ISE Inc, 1997, \href{https://web.uettaxila.edu.pk/CMS/AUT2011/seSCbs/tutorial/Object%20Oriented%20Software%20Construction.pdf}{Online}
+
 \end{thebibliography}
 %
 
 \end{document}
-
