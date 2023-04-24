@@ -19,8 +19,6 @@ import ua.com.fielden.platform.utils.EntityUtils;
  */
 public class UserDefinableHelpProducer extends DefaultEntityProducerWithContext<UserDefinableHelp> {
 
-    public static final String ERR_HELP_MISSING = "There is no help to open.";
-
     @Inject
     public UserDefinableHelpProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
         super(factory, UserDefinableHelp.class, companionFinder);
@@ -50,7 +48,7 @@ public class UserDefinableHelpProducer extends DefaultEntityProducerWithContext<
                 return persistedEntity;
             } else {
                 if (skipUi) {
-                    throw new EntityException(ERR_HELP_MISSING);
+                    throw failureEx("There is no help to open.", "Users with the right privileges can add a help hyperlink.<br>Alt+Tap or long press the help action to invoke Help Master.");
                 } else {
                     entity.setReferenceElement(entityType.getName());
                     return entity;
