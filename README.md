@@ -21,7 +21,7 @@ Documentation and Demo applications
 -----------------------------------
 One of the very important aspect of any technology is the documentation and demo applications that could be used for learning. Currently, all our applications are propriatery and their source cannot be shared.
 
-The documentation forms part of this repository (LaTeX documents in `platform-doc`such as https://github.com/fieldenms/tg/blob/develop/platform-doc/doc/tg-overview/tg-overview.tex and Wiki pages). However, these are mainly the overview-type documents and design sketches. A more training-oriented documentation is in the works and will be inlined with a demo business domain for building a smaller-size demo application.
+The documentation forms part of this repository (LaTeX documents in `platform-doc`such as [TG Overview](https://fieldenmgmt.sharepoint.com/:b:/g/EWSGJEW5Do5EpYi_PmuOuB4B6AbTpBa-6EaN5gW3rWndlQ?e=TEtd37) and Wiki pages). However, these are mainly the overview-type documents and design sketches. A more training-oriented documentation is in the works and will be inlined with a demo business domain for building a smaller-size demo application.
 
 Looking into the future
 -----------------------
