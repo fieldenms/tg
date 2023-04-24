@@ -10,12 +10,15 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Required;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.annotation.mutator.Handler;
+import ua.com.fielden.platform.entity.validation.MaxLengthValidator;
 import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.utils.Pair;
 
 /**
- * Entity that represents configuration for entity master help. It maps entity type and help document via the hyperlink.
+ * A persistent entity-action that represents configuration for a user-definable help, which can be associated with either an Entity Master and an Entity Centre.
  *
  * @author TG Team
  *
@@ -30,20 +33,22 @@ public class UserDefinableHelp extends AbstractFunctionalEntityWithCentreContext
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
     public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
 
-    @IsProperty
+    @IsProperty(length = 255)
     @MapTo
     @Title(value = "Reference Element Type", desc = "The type of element that associates the view with help")
     @CompositeKeyMember(1)
+    @BeforeChange(@Handler(MaxLengthValidator.class))
     private String referenceElement;
 
-    @IsProperty
+    @IsProperty(length = 2048)
     @MapTo
-    @Title(value = "Help Link", desc = "Hyperlink on help document")
+    @Title(value = "Help Link", desc = "A hyperlink to a help document (e.g., a wiki page)")
     @Required
+    @BeforeChange(@Handler(MaxLengthValidator.class))
     private Hyperlink help;
 
     /**
-     * Property <code>skipUi</code> controls visibility of Help entity master.
+     * Property <code>skipUi</code> controls visibility of the Help entity master, which depends on the way this entity-action is invoked.
      */
     @IsProperty
     private boolean skipUi = false;
@@ -77,4 +82,5 @@ public class UserDefinableHelp extends AbstractFunctionalEntityWithCentreContext
     public String getReferenceElement() {
         return referenceElement;
     }
+
 }

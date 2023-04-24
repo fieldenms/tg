@@ -9,40 +9,44 @@ export const TgViewWithHelpBehavior = {
     },
 
     _helpMouseDownEventHandler: function (e) {
-        e.preventDefault();
-        this._longPress = false;
-        this._helpActionTimer = setTimeout(() => {
-            this._longPress = true;
-            this.getOpenHelpMasterAction().chosenProperty = "showMaster";
-            this.getOpenHelpMasterAction()._run();
-        }, 1000);
+        if (e.button == 0 || e.type.startsWith("touch")) {
+            e.preventDefault();
+            this._helpActionLongPress = false;
+            this._helpActionTimer = setTimeout(() => {
+                this._helpActionLongPress = true;
+                this.getOpenHelpMasterAction().chosenProperty = "showMaster";
+                this.getOpenHelpMasterAction()._run();
+            }, 1000);
+        }
     },
 
     _helpMouseUpEventHandler: function (e) {
-        e.preventDefault();
-        //Clear timer to to remain the mouse key press as short.
-        if (this._helpActionTimer) {
-            clearTimeout(this._helpActionTimer);
-        }
-        //If there was long touch or long mouse button press then skip it otherwise decide what to do 
-        if (!this._longPress) {
-            //Init action props.
-            this.getOpenHelpMasterAction()._openLinkInAnotherWindow = true;
-            this.getOpenHelpMasterAction().chosenProperty = null;
-            //Config action props according to key pressed and type of action (e.a. long or short).
-            if (e.altKey) {
-                this.getOpenHelpMasterAction().chosenProperty = "showMaster";
-            } else {
-                if (e.ctrlKey || e.metaKey) {
-                    this.getOpenHelpMasterAction()._openLinkInAnotherWindow = false;
-                }
+        if (e.button == 0 || e.type.startsWith("touch")) {
+            e.preventDefault();
+            //Clear timer to to remain the mouse key press as short.
+            if (this._helpActionTimer) {
+                clearTimeout(this._helpActionTimer);
             }
-            //Run action
-            this.getOpenHelpMasterAction()._run(); 
+            //If there was long touch or long mouse button press then skip it otherwise decide what to do 
+            if (!this._helpActionLongPress) {
+                //Init action props.
+                this.getOpenHelpMasterAction()._openLinkInAnotherWindow = true;
+                this.getOpenHelpMasterAction().chosenProperty = null;
+                //Config action props according to key pressed and type of action (e.a. long or short).
+                if (e.altKey) {
+                    this.getOpenHelpMasterAction().chosenProperty = "showMaster";
+                } else {
+                    if (e.ctrlKey || e.metaKey) {
+                        this.getOpenHelpMasterAction()._openLinkInAnotherWindow = false;
+                    }
+                }
+                //Run action
+                this.getOpenHelpMasterAction()._run(); 
+            }
+            //Reset action type and timer;
+            this._helpActionLongPress = false;
+            this._helpActionTimer = null;
         }
-        //Reset action type and timer;
-        this._longPress = false;
-        this._helpActionTimer = null;
     },
 
     _postOpenHelpMasterAction: function (potentiallySavedOrNewEntity, action, master) {

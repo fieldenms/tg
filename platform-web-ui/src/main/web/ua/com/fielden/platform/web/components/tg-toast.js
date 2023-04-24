@@ -1,6 +1,6 @@
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
-import '/resources/polymer/@polymer/paper-dialog/paper-dialog.js'
-import '/resources/polymer/@polymer/paper-dialog-scrollable/paper-dialog-scrollable.js'
+import '/resources/polymer/@polymer/paper-dialog/paper-dialog.js';
+import '/resources/polymer/@polymer/paper-dialog-scrollable/paper-dialog-scrollable.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/polymer/@polymer/paper-button/paper-button.js';
 import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';
@@ -8,7 +8,7 @@ import '/resources/polymer/@polymer/polymer/lib/elements/dom-bind.js';
 
 import '/resources/components/tg-paper-toast.js';
 
-import { tearDownEvent, containsRestictedTags } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, containsRestrictedTags } from '/resources/reflection/tg-polymer-utils.js';
 import { TgToastBehavior } from '/resources/components/tg-toast-behavior.js';
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
@@ -129,7 +129,12 @@ Polymer({
 
             domBind.innerHTML = `
                 <template>
-                    <paper-dialog id="msgDialog" class="toast-dialog" on-iron-overlay-closed="_dialogClosed" always-on-top with-backdrop entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+                    <paper-dialog id="msgDialog" class="toast-dialog"
+                        with-backdrop
+                        always-on-top
+                        entry-animation="scale-up-animation"
+                        exit-animation="fade-out-animation"
+                        on-iron-overlay-closed="_dialogClosed">
                         <paper-dialog-scrollable>
                             <p id="msgPar" style="padding: 10px;white-space: break-spaces;"></p>
                         </paper-dialog-scrollable>
@@ -145,11 +150,17 @@ Polymer({
 
             this.async(function () {
                 // please note that domBind.$.msgPar is rendered after body.appendChild(domBind), but has been put here (into async(100)) to provide stronger guarantees along with msgDialog.open()
-                if (containsRestictedTags(_msgText) === true) {
+                if (containsRestrictedTags(_msgText) === true) {
                     domBind.$.msgPar.textContent = _msgText;
                 } else {
                     domBind.$.msgPar.innerHTML = _msgText;
                 }
+                domBind.$.msgDialog.addEventListener('keydown', e => { // will be removed along with domBind in _dialogClosed
+                    // ensures on-Enter closing even if Close button is not focused, i.e. tapped on dialog somewhere
+                    if (e.keyCode === 13) {
+                       domBind.$.msgDialog.close();
+                    }
+                }, true);
                 // actual msgDialog opening
                 domBind.$.msgDialog.open();
                 self.$.toast.close(); // must close paper-toast after msgDialog is opened; this is because other fast toast messages can interfere -- paper-toast should still be opened to prevent other messages early opening (see '... && previousToast.opened && ...' condition in 'show' method)
