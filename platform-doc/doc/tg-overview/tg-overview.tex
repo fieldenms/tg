@@ -421,7 +421,7 @@ private Technician technician;
 	
 	\medskip
 	
-	\begin{tcolorbox}[sidebyside, righthand width=0.3\textwidth, title=Example: simple \texttt{save} operation]
+	\begin{tcolorbox}[sidebyside, righthand width=0.25\textwidth, title=Example: simple \texttt{save} operation]
     \begin{lstlisting}[numbersep=2pt]
 @EntityType(WorkActivityDetail.class)
 public class WorkActivityDetailCo 
@@ -434,7 +434,8 @@ public class WorkActivityDetailCo
         final WorkActivityDetail detail) {
     
         if (detail.getTimesheet() == null && 
-            detail.getProperty("comment").isDirty()) {
+            detail.getProperty(WorkActivityDetail_.comment()))
+			      .isDirty()) {
            detail
            .setDate(universalConstants().now())
            .setPerson(co(Person.class).currentPerson());
@@ -497,7 +498,7 @@ public class WorkActivityDetailCo
 	It is always clear what changes need to be implemented at the code level whenever an application user refers to some functionality in terms of UI constructs.
 	
 	The next section delves more into the application of the RESTful Objects pattern to model the three essential information system functions (\texttt{Memory}, \texttt{Informative} and \texttt{Active}).
-	It shows how approaching the design of an information system from the perspective of just these three functions by applying the FO pattern leads to a significant reduction of the architectural complexity.
+	It shows how approaching the design of an information system from the perspective of just these three functions by applying the RESTful Objects pattern leads to a significant reduction of the architectural complexity.
 	We also introduce Entity Query Language (EQL) as an essential part for communicating with an application database and constructing sophisticated queries that capture the information across multiple persistent (memory) entities to produce synthetic entities for reporting (informative) purposes.
 
 
@@ -523,7 +524,7 @@ public class WorkActivityDetailCo
 	
 	
 	Design pattern \emph{Command} is a very good analogy for understanding \emph{Functional Entities}.
-	The added value of using FO for modelling functional entities has to do with the behaviour that is provided by an entity object such as property validation, dependency handling etc.
+	The added value of using RESTful Objects for modelling functional entities has to do with the behaviour that is provided by an entity object such as property validation, dependency handling etc.
 
 
 	Unlike the anemic domain model~\cite{fowler2003}, an entity has the responsibility to ensure the correctness of its state.
