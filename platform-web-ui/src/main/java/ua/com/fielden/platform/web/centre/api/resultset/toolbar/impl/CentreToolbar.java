@@ -103,7 +103,7 @@ public class CentreToolbar implements IToolbarConfig {
                 .attr("on-touchstart", "_helpMouseDownEventHandler")
                 .attr("on-mouseup", "_helpMouseUpEventHandler")
                 .attr("on-touchend", "_helpMouseUpEventHandler")
-                .attr("tooltip-text", "Tap to load help in another window or tap with Ctrl/Cmd to load help in another tab. Alt&nbsp+&nbspClick or long touch to edit help link.");
+                .attr("tooltip-text", "Tap to open help in a window or tap with Ctrl/Cmd to open help in a tab.<br>Alt&nbsp+&nbspTap or long touch to edit the help link.");
     }
 
     public static DomElement selectView(final int viewIndex, final int width) {
