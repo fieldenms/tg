@@ -80,40 +80,44 @@ const TgEntityMasterTemplateBehaviorImpl = {
         };
 
         self._initiateHelpAction = function (e) {
-            e.preventDefault();
-            self._longPress = false;
-            self._helpActionTimer = setTimeout(() => {
-                self._longPress = true;
-                self.tgOpenHelpMasterAction.chosenProperty = "showMaster";
-                self.tgOpenHelpMasterAction._run();
-            }, 1000);
+            if (e.button == 0 || e.type.startsWith("touch")) {
+                e.preventDefault();
+                self._longPress = false;
+                self._helpActionTimer = setTimeout(() => {
+                    self._longPress = true;
+                    self.tgOpenHelpMasterAction.chosenProperty = "showMaster";
+                    self.tgOpenHelpMasterAction._run();
+                }, 1000);
+            }
         };
 
         self._runHelpAction = function (e) {
-            e.preventDefault();
-            //Clear timer to to remain the mouse key press as short.
-            if (self._helpActionTimer) {
-                clearTimeout(self._helpActionTimer);
-            }
-            //If there was long touch or long mouse button press then skip it otherwise decide what to do 
-            if (!self._longPress) {
-                //Init action props.
-                self.tgOpenHelpMasterAction._openLinkInAnotherWindow = true;
-                self.tgOpenHelpMasterAction.chosenProperty = null;
-                //Config action props according to key pressed and type of action (e.a. long or short).
-                if (e.altKey) {
-                    self.tgOpenHelpMasterAction.chosenProperty = "showMaster";
-                } else {
-                    if (e.ctrlKey || e.metaKey) {
-                        self.tgOpenHelpMasterAction._openLinkInAnotherWindow = false;
-                    }
+            if (e.button == 0 || e.type.startsWith("touch")) {
+                e.preventDefault();
+                //Clear timer to to remain the mouse key press as short.
+                if (self._helpActionTimer) {
+                    clearTimeout(self._helpActionTimer);
                 }
-                //Run action
-                self.tgOpenHelpMasterAction._run(); 
+                //If there was long touch or long mouse button press then skip it otherwise decide what to do 
+                if (!self._longPress) {
+                    //Init action props.
+                    self.tgOpenHelpMasterAction._openLinkInAnotherWindow = true;
+                    self.tgOpenHelpMasterAction.chosenProperty = null;
+                    //Config action props according to key pressed and type of action (e.a. long or short).
+                    if (e.altKey) {
+                        self.tgOpenHelpMasterAction.chosenProperty = "showMaster";
+                    } else {
+                        if (e.ctrlKey || e.metaKey) {
+                            self.tgOpenHelpMasterAction._openLinkInAnotherWindow = false;
+                        }
+                    }
+                    //Run action
+                    self.tgOpenHelpMasterAction._run(); 
+                }
+                //Reset action type and timer;
+                self._longPress = false;
+                self._helpActionTimer = null;
             }
-            //Reset action type and timer;
-            self._longPress = false;
-            self._helpActionTimer = null;
         };
 
         self._postOpenHelpMasterAction = function (potentiallySavedOrNewEntity, action, master) {
