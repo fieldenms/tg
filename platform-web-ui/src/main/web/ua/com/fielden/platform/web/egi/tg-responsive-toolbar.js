@@ -92,6 +92,19 @@ class ToolbarElement {
     }
 }
 
+/**
+ * The elements added to this responsive toolbar might have different level of slotted nodes.
+ * In order to make responsive toolbar work correctly one should make sure that only top most slot should be used to determine whether element belongs to this toolbar or not.
+ * This function helps to find top most slot used to add element to this toolbar.
+ */
+const findTopMostSlot = function (node, parent) {
+    let slot = node;
+    while(slot.assignedSlot && slot.assignedSlot !== parent) {
+        slot = slot.assignedSlot;
+    }
+    return slot;
+};
+
 export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior], PolymerElement) {
 
     static get template() { 
@@ -114,7 +127,7 @@ export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior],
         let groupIndex = 0;
         this.$.top_action_selctor.assignedNodes({ flatten: true }).forEach(node => {
             const specificActionSelector = ".entity-specific-action:not(.group):not(.first-group)";
-            if (node.matches(specificActionSelector)) {
+            if (findTopMostSlot(node, this.$.top_action_selctor).matches(specificActionSelector)) {
                 //that is not a group just an action.
                 this._addToolbarAction(node, false);
             } else {
@@ -128,7 +141,7 @@ export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior],
         //This actions shouldn't be group so add them as separate items.
         this.$.standard_action_selector.assignedNodes({ flatten: true }).forEach(node => {
             const standartActionSelector = "[slot=standart-action]";
-            if (node.matches(standartActionSelector)) {
+            if (findTopMostSlot(node, this.$.standard_action_selector).matches(standartActionSelector)) {
                 this._addToolbarStandartAction(node);
             }
         });
@@ -152,7 +165,8 @@ export class TgResponsiveToolbar extends mixinBehaviors([IronResizableBehavior],
         return observer;
     }
 
-    _showMoreActions () {
+    _showMoreActions (e) {
+        e.preventDefault();
         this.$.dropdown.open();
     }
 

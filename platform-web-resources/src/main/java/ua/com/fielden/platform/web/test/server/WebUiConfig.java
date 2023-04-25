@@ -23,7 +23,6 @@ import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.con
 import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.mkProp;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.subheaderOpen;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.CELL_LAYOUT;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN;
@@ -482,8 +481,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final FlexLayoutConfig layoutConfig = layout().withStyle("height", "100%").withStyle("box-sizing", "border-box")
                 .withStyle("min-height", "fit-content").withStyle("padding", MARGIN_PIX).end();
         final String desktopLayout = cell(
-                subheaderOpen("Other components")
-                .cell(cell(CELL_LAYOUT).repeat(5).withGapBetweenCells(MARGIN))
+                cell(cell(CELL_LAYOUT).repeat(5).withGapBetweenCells(MARGIN))
                 .subheaderOpen("Other components 1")
                 .cell(cell(CELL_LAYOUT), layout().flexAuto().end())
                 .cell(cell(CELL_LAYOUT).repeat(4).withGapBetweenCells(MARGIN))
