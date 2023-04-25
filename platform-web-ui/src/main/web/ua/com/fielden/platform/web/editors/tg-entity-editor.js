@@ -1284,7 +1284,7 @@ export class TgEntityEditor extends TgEditor {
 
     _itemSeparator (item, index) {
         if (this._customPropTitle && this._customPropTitle.length > 1) {
-            if (index < this._customPropTitle.length - 1 && item.title) {
+            if (index < this._customPropTitle.length - 1) {
                 return item.separator || " ";
             }
         }
