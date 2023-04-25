@@ -1,11 +1,33 @@
-import { TgReflector } from '/app/tg-reflector.js';
+import {createDialog} from '/resources/egi/tg-dialog-util.js';
 
 export const TgViewWithHelpBehavior = {
+
+    properties: {
+        /**
+         * A separate dialog used for openHelpMasterAction.
+         */
+        _helpDialog: {
+            type: Object,
+            value: null
+        },
+    },
 
     ready: function () {
         this._helpMouseDownEventHandler = this._helpMouseDownEventHandler.bind(this);
         this._helpMouseUpEventHandler = this._helpMouseUpEventHandler.bind(this);
         this._postOpenHelpMasterAction = this._postOpenHelpMasterAction.bind(this);
+        this._showHelpDialog = this._showHelpDialog.bind(this);
+    },
+
+    _showHelpDialog: function (action) {
+        const closeEventChannel = this.uuid;
+        const closeEventTopics = ['save.post.success', 'refresh.post.success'];
+        this.async(function () {
+            if (this._helpDialog === null) {
+                this._helpDialog = createDialog(this.uuid + "_help");
+            }
+            this._helpDialog.showDialog(action, closeEventChannel, closeEventTopics);
+        }, 1);
     },
 
     _helpMouseDownEventHandler: function (e) {

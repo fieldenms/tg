@@ -151,15 +151,6 @@ const TgEntityCentreTemplateBehaviorImpl = {
         this._preOpenHelpMasterAction = function (action) {
             action.shortDesc = this._reflector.getType(this.entityType).entityTitle() + " Centre Help";
         }.bind(this);
-
-        this._showHelpDialog = (function (action) {
-            if (action.chosenProperty) {
-                this._showDialog(action);
-            } else {
-                this._showCentreConfigDialog(action);
-            }
-        }).bind(this);
-
         /////////////////////////////////////////////////////////////////////////////////
     },
 

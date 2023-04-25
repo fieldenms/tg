@@ -9,7 +9,6 @@ import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-pro
 import { getKeyEventTarget, generateUUID } from '/resources/reflection/tg-polymer-utils.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import { TgReflector } from '/app/tg-reflector.js';
-import {createDialog} from '/resources/egi/tg-dialog-util.js';
 import { TgViewWithHelpBehavior } from '/resources/components/tg-view-with-help-behavior.js';
 
 const TgEntityMasterTemplateBehaviorImpl = {
@@ -31,15 +30,7 @@ const TgEntityMasterTemplateBehaviorImpl = {
         /**
          * Attributes for the action that opens help entity master for this entity master.
          */
-        _tgOpenHelpMasterActionAttrs: Object,
-
-        /**
-         * A separate dialog used for openHelpMasterAction.
-         */
-        _helpDialog: {
-            type: Object,
-            value: null
-        },
+        _tgOpenHelpMasterActionAttrs: Object
     },
 
     ready: function () {
@@ -78,17 +69,6 @@ const TgEntityMasterTemplateBehaviorImpl = {
                 action.shortDesc = reflector.getType(self.$.egi.getSelectedEntities()[0].type().notEnhancedFullClassName()).entityTitle() + " Master Help";
             }
         };
-
-        self._showHelpDialog = (function (action) {
-            const closeEventChannel = self.uuid;
-            const closeEventTopics = ['save.post.success', 'refresh.post.success'];
-            self.async(function () {
-                if (self._helpDialog === null) {
-                    self._helpDialog = createDialog(self.uuid + "_help");
-                }
-                self._helpDialog.showDialog(action, closeEventChannel, closeEventTopics);
-            }, 1);
-        });
     },
 
     attached: function () {
