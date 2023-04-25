@@ -7,6 +7,7 @@ import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
+import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 
 import { TgReflector } from '/app/tg-reflector.js';
 import '/resources/components/tg-scrollable-component.js';
@@ -63,7 +64,7 @@ const template = html`
         <tg-ui-action slot="standart-action" ui-role='ICON' short-desc='Edit' long-desc='Edit title, description and dashboard settings...' icon='tg-document-related-icons:square-edit-outline' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigEditAction' element-name='tg-CentreConfigEditAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigEditAction-master_3_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.3.attrs]]' pre-action='[[topLevelActions.3.preAction]]' post-action-success='[[topLevelActions.3.postActionSuccess]]' post-action-error='[[topLevelActions.3.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' disabled='[[_buttonDisabled]]' style='[[_computeButtonStyle(_buttonDisabled)]]'></tg-ui-action>
         <tg-ui-action slot="standart-action" ui-role='ICON' short-desc='Delete configuration' long-desc='Delete current configuration' icon='tg-document-related-icons:delete-outline' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigDeleteAction' element-name='tg-CentreConfigDeleteAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigDeleteAction-master_4_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.4.attrs]]' pre-action='[[topLevelActions.4.preAction]]' post-action-success='[[topLevelActions.4.postActionSuccess]]' post-action-error='[[topLevelActions.4.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' disabled='[[_buttonDisabled]]' style='[[_computeButtonStyle(_buttonDisabled)]]'></tg-ui-action>
         <tg-ui-action slot="standart-action" ui-role='ICON' short-desc='Configure' long-desc='Configure running automatically...' icon='icons:settings' icon-style='' component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigConfigureAction' element-name='tg-CentreConfigConfigureAction-master' action-kind='TOP_LEVEL' element-alias='tg-CentreConfigConfigureAction-master_5_TOP_LEVEL' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]' attrs='[[topLevelActions.5.attrs]]' pre-action='[[topLevelActions.5.preAction]]' post-action-success='[[topLevelActions.5.postActionSuccess]]' post-action-error='[[topLevelActions.5.postActionError]]' require-selection-criteria='true' require-selected-entities='NONE' require-master-entity='false' hidden="[[embedded]]" disabled='[[_configureButtonDisabled]]' style='[[_computeButtonStyle(_configureButtonDisabled)]]'></tg-ui-action>
-        <slot slot="standart-action" name="help-button"></slot>
+        <paper-icon-button id="helpAction" slot="standart-action" style="color:#727272" icon="icons:help-outline" on-mousedown="_helpMouseDownEventHandler" on-touchstart="_helpMouseDownEventHandler" on-mouseup="_helpMouseUpEventHandler" on-touchend="_helpMouseUpEventHandler" tooltip-text="Tap to open help in a window or tap with Ctrl/Cmd to open help in a tab.<br>Alt&nbsp+&nbspTap or long touch to edit the help link."></paper-icon-button>
     </tg-responsive-toolbar>
     <tg-scrollable-component class="relative">
         <slot name="custom-selection-criteria"></slot>
@@ -113,7 +114,10 @@ Polymer({
             computed: '_computeConfigureButtonDisabled(_buttonDisabled, embedded)'
         },
         embedded: Boolean,
-        initiateAutoRun: Function
+        initiateAutoRun: Function,
+        _helpMouseDownEventHandler: Function,
+        _helpMouseUpEventHandler: Function
+
     },
 
     created: function () {

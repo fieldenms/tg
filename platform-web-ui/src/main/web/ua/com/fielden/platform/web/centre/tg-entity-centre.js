@@ -278,10 +278,9 @@ const template = html`
     <iron-pages id="views" selected="[[_selectedView]]">
         <div class="fit layout vertical">
             <div class="paper-material selection-material layout vertical" elevation="1">
-                <tg-selection-view id="selectionView" initiate-auto-run="[[initiateAutoRun]]" _show-dialog="[[_showDialog]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _create-action-object="[[_createActionObject]]" _button-disabled="[[_buttonDisabled]]" embedded="[[embedded]]">
+                <tg-selection-view id="selectionView" initiate-auto-run="[[initiateAutoRun]]" _show-dialog="[[_showDialog]]" _help-mouse-down-event-handler="[[_helpMouseDownEventHandler]]" _help-mouse-up-event-handler="[[_helpMouseUpEventHandler]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _create-action-object="[[_createActionObject]]" _button-disabled="[[_buttonDisabled]]" embedded="[[embedded]]">
                     <slot name="custom-front-action" slot="custom-front-action"></slot>
                     <slot name="custom-share-action" slot="custom-share-action"></slot>
-                    <slot name="help-button" slot="help-button"></slot>
                     <slot id="customCriteria" name="custom-selection-criteria" slot="custom-selection-criteria"></slot>
                     <tg-ui-action slot="left-selection-criteria-button" id="saveAction" shortcut="ctrl+s meta+s" ui-role='BUTTON' short-desc='Save' long-desc='Save configuration, Ctrl&nbsp+&nbsps'
                                     component-uri='/master_ui/ua.com.fielden.platform.web.centre.CentreConfigSaveAction' element-name='tg-CentreConfigSaveAction-master' show-dialog='[[_showDialog]]' create-context-holder='[[_createContextHolder]]'
@@ -419,7 +418,9 @@ Polymer({
             type: Boolean,
             value: false,
             notify: true
-        }
+        },
+        _helpMouseDownEventHandler: Function,
+        _helpMouseUpEventHandler: Function
     },
 
     behaviors: [ IronResizableBehavior, TgFocusRestorationBehavior, TgElementSelectorBehavior ],
