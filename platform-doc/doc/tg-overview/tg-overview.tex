@@ -200,7 +200,7 @@
 	
 	\paragraph{Entity Object.} 	
   	An \emph{entity object} models the structure of a business entity, including its associations with other entities.
-	Unlike the anemic domain model~\cite{fowler2003}, an entity has the responsibility to ensure the correctness of its state\footnote{This is not unlike ``design by contract'', introduced Bertrand Meyer~\cite{bm1997}}, which is expressed through integrity constraints.
+	Unlike the anemic domain model~\cite{fowler2003}, an entity has the responsibility to ensure the correctness of its state\footnote{This is not unlike ``design by contract'', introduced by Bertrand Meyer~\cite{bm1997}, where integrity constraints are \emph{pre-conditions}.}, which is expressed through integrity constraints.
 	Any value that is being assigned to its properties is validated in accordance with specified business rules – integrity constraints.
 	This includes a mechanism of inter property dependency with automatic revalidation of invalid dependent properties.
 	
@@ -220,13 +220,13 @@
 	The validation process stops at the first failed validator or if all validators succeed.
 	A value gets assigned only if all validators succeed.
 	The ability to declare multiple sequential validators fosters good separation between different validation rules and provides a convenient way for reusing the same validation rules in application to properties of the same type, even if they belong to different entities.
-	Without going any further into details, it is important to emphasise that in real world systems, the validation process rarely operates only on the in-memory state and often requires an access to a database.
-	The developed entity validation mechanism is specifically designed with this requirement in mind and does not follow an approach that is frequently used in simpler problem domains where property setters are used to place the validation logic.
-	Instead, validators are represented by separate classes that are implement as a property \emph{before change} contract and are executed by the \texttt{TG} runtime before setter invocations.
+	Without going any further into details, it is important to emphasise that in real world systems, the validation process rarely operates only on the in-memory state and often requires access to a database.
+	The developed entity validation mechanism is specifically designed with this requirement in mind\footnote{Constraint to data retrieval only and offering no data mutation capability.} and does not follow an approach that is frequently used in simpler problem domains where property setters are used to place the validation logic.
+	Instead, validators are represented by separate classes\footnote{Validators can be represented by interfaces, which concrete implementations resolved at runtime through IoC.} that are implemented as a property \emph{before change} contract and are executed by the \texttt{TG} runtime before setter invocations.
 
 	Attempts to assign invalid values do not raise any exceptions.
 	Validation errors are treated as an entity meta-data and TG provides an API to work with that meta-data.
-	The meta-data is not limited only to identifying erroneous entity properties and their causes, but also captures and maintains in-memory mutations such as the aforementioned attempted values.
+	The meta-data is not limited only to identifying erroneous entity properties and their causes, but it also captures and maintains in-memory mutations such as the aforementioned attempted values, previous and original values.
 	This information is very useful when implementing intricate business logic, including the validation logic, which may require the knowledge of the original\footnote{A property value becomes \emph{original} if it gets persisted into the database. It is used to differentiate between in-memory mutations and persistent state of an entity.} or previous property values.
 	The same information is used by TG itself, for example, to automate UI creation and to facilitate user interaction with the system by automatically validating their input and reporting errors.	
 	The example below illustrates how a property declaration can incorporate the knowledge about its validators, persistent nature and the dependent properties at the Java code level.
@@ -257,7 +257,7 @@ private Service service;
 	
 	\begin{figure}[!h]
   		\centering
-        \includegraphics[width=1.0\textwidth]{images/01-wa-master.png}  
+        \includegraphics[width=0.8\textwidth]{images/01-wa-master.png}  
         \caption{Work Activity}
         \label{fig:wa}
 		%\vspace{-30pt} 
@@ -283,25 +283,25 @@ private Service service;
 	Figure~\ref{fig:dependent-validation} illustrates the situation where invalid value \texttt{AA05IL} is corrected by entering service \texttt{AA05ILS}.
 	In this case, a single instance of type \texttt{Service} with key \texttt{AA05ILS} was successfully found in the database.
 	That instance was passed to all subsequent property validators and eventually got assigned to property \texttt{service}.
-	Due to this successful assignment and the declared dependency, property \texttt{locationSubsystem} in the same entity had to be revalidated as it could be have become invalid.
+	Due to this successful assignment and the declared dependency, property \texttt{locationSubsystem} in the same entity had to be revalidated as it could have become invalid.
 	However, the revalidation process did not fail~-- it resulted in a warning.
-	This shows that the validation result does not have to be binary~-- success or failure -- there are many situation where value is acceptable, but users need to be informed of some consequential information.
+	This shows that the validation result does not have to be binary~-- success or failure -- there are many situation where a value is acceptable, but users need to be informed of some consequential information.
 	In this particular example, the user is informed that there are already open work activities for this location/subsystem.	
 	
 	\begin{figure}[!h]
   		\centering
-      	\includegraphics[width=1.0\textwidth]{images/03-wa-dependent-props.png}  
+      	\includegraphics[width=1.0\textwidth]{images/03-wa-dependent-props-warning.png}  
    	  	\caption{Manifestation of validation in UI: dependent property validation with warning.}
    		\label{fig:dependent-validation}
   	\end{figure}
 
 	The example above is a very trivial and ubiquitous use case.
 	It it important that all of the UI interaction gets automatically derived from the entity declaration without any ``intervention'' from the application developers.
-	If a user reports a bug, for example, stating that some value should have been excepted, but wouldn't due to some validation error, the developers know exactly where to look for a potential error.
+	If a user reports a defect, for example, stating that some value should have been excepted, but wouldn't due to some validation error, the developers know exactly where to look for a potential cause of an error\footnote{This is the direct manipulation principle in action, significantly enhancing the capability for informal reasoning about a system.}.
 	It is very straightforward to setup a unit test that would try to reproduce the problem, and this is possible specifically because changing an entity state via UI and programmatically is equivalent.
 	
 	\vspace{8pt}
-	In addition to property \emph{validators}, there is also support for, what we call, property \emph{definers}.
+	In addition to property \emph{validators}, there is also support for, what we call, property \emph{definers}\footnote{Not to be confused with \emph{post-conditions}, which in TG-based systems is usually expressed as domain unit tests.}.
 	Property definers get executed immediately after a successful property value assignment.
 	This mechanism is very useful for complex business domains were a successful assignment of a property value should result in the assignment of the derived values to some other properties in the same entity or in a change to their meta-data such as their requiredness.
 	Please consider the following example in application to an entry of \texttt{WorkActivity} where property \texttt{techinician} is assigned a new value.
@@ -317,18 +317,18 @@ private Technician technician;
 	
 	\tcblower
 		\tiny
-		Property \texttt{technician} of type \texttt{Technician} in entity \texttt{WorkActivity} is declared as persistent and requried, which means it cannot be empty and gets saved into a database.
+		Property \texttt{technician} of type \texttt{Technician} in entity \texttt{WorkActivity} is declared as persistent and required, which means it cannot be empty and gets saved into a database.
 		There is only one intrinsic validator for checking value existence and does not require explicit declaration.
 		This property has a definer, which is declared by using annotation \texttt{@AfterChange} and is executed upon each successful value change.
  	\end{tcolorbox}
 
 	
-	Figure~\ref{fig:tech} illustrates an entry of value \texttt{CRS} into property \texttt{technician}.
+	Figure~\ref{fig:tech} illustrates an entry of value \texttt{TJW} into property \texttt{technician}.
 	This value is present in the application database as can be seen from the screenshot -- editors for properties of an entity type have the capability to autocomplete matching values\footnote{TG provides the default autocompletion logic, which can be enhanced at the application level, for example, to be context sensitive.}.
 	
 	\begin{figure}[!h]
   		\centering
-      	\includegraphics[width=1.0\textwidth]{images/04-wa-technician-entry.png}  
+      	\includegraphics[width=0.6\textwidth]{images/04-wa-technician-entry.png}  
    	  	\caption{Selection of a value for property \texttt{technician}.}
    		\label{fig:tech}
   	\end{figure}
@@ -336,11 +336,11 @@ private Technician technician;
 	Once the value is assigned, definer \texttt{WorkActivityTechnicianDefiner} is executed.
 	This definer identifies if the entered technician has a manager.
 	The manager of the entered technician gets assigned to property \texttt{manager} of the same work activity.
-	Figure~\ref{fig:derived-manager} depicts the result of a successful assignment of value \texttt{CRS} to property \texttt{technician}, which resulted in an auto-assignment of a derived value \texttt{POM} to property \texttt{manager}.  
+	Figure~\ref{fig:derived-manager} depicts the result of a successful assignment of value \texttt{TJW} to property \texttt{technician}, which resulted in an auto-assignment of a derived value \texttt{MPC} to property \texttt{manager}.  
 
 	\begin{figure}[!h]
   		\centering
-      	\includegraphics[width=1.0\textwidth]{images/05-wa-technician-entered.png}  
+      	\includegraphics[width=0.6\textwidth]{images/05-wa-technician-entered.png}  
    	  	\caption{Auto-assignment of the derived value for property \texttt{manager}.}
    		\label{fig:derived-manager}
   	\end{figure}
@@ -357,7 +357,7 @@ private Technician technician;
 	
 	\paragraph{Companion Object.}	
 	A \emph{companion object} models the four basic operations that can be performed on a corresponding \emph{entity object}.
-	It represents a RESTful interface to its counterpart entity object.
+	It represents a RESTful interface to its counterpart -- \emph{entity object}.
 	Only by means of a companion object could an entity be \emph{created}, \emph{saved}, \emph{deleted}, and \emph{retrieved}\footnote{One could think of these operations as simple CRUD, but this analogy is misleading for reasons that will become evident further into the discussion.}.
 	
 	The power of having a limited number of operations has been demonstrated by the REST style~\cite{Fielding2000} of architecture for web applications.
@@ -379,44 +379,46 @@ private Technician technician;
 	As mentioned before, the conventional OOP thinking views a class as a basic building block or a module when applied to the modelling of a business domain.
 	This leads to an ``understanding'' that an object should encapsulate and express its behaviour as methods of a class when modelling a business entity. 
 	Thus, any object may have many, often unrelated, methods that try to capture different behavioural aspects of the same business entity.
-	For example, with such approach entity purchase order could be modelled as class \texttt{PurchaseOrder} with separate methods to print purchase order, export purchase order, add purchase order line, authorise purchase order etc.
+	For example, with such approach entity purchase order could be modelled as class \texttt{PurchaseOrder} with separate methods to print a purchase order, export a purchase order, add a purchase order line, authorise a purchase order, etc.
 	This clearly violates at least the single responsibility principle~\cite{SOLID} and raises the question of adequate separation of concerns as class \texttt{PurchaseOrder} would need to be modified for multiple unrelated reasons such as changes in the export format requirements or the structure of a purchase order line object.
-	In order to resolve these problems many software architectural styles introduce the notion of \emph{services} (e.g. domain services in Domain-Drive Design).
-	Such approach does not solve the problem per se as it only represents an \emph{escape route} to move some ``unfitting'' (whatever the criteria for that is) behaviour from a class that represent a domain entity to another class, which is thought of as a ``service''.
-	Also, this introduces an additional design concept that has the same set of problems -- what behaviour should it encapsulate, what methods should it expose etc.
 	
-	The use of a complementary pair of objects -- an entity and its companion -- as the basic system module, provides a well-defined contract to model an information system: entity objects are responsible for ensuring the correctness of their own state and there are only four clearly identified as part of their companion object operations to affect the overall state of an information system (e.g. save or delete data represented by entity objects).
+	In order to resolve these problems many software architectural styles introduce the notion of \emph{services} (e.g., domain services in Domain-Drive Design).
+	Such approach does not solve the problem per se as it only represents an \emph{escape route} to move some ``unfitting'' (whatever the criteria for that is) behaviour from a class that represent a domain entity to another class, which is thought of as a ``service''.
+	Also, this introduces an additional design concept that has the same set of problems -- what behaviour should it encapsulate, what methods should it expose, etc.
+	
+	The use of a complementary pair of objects -- an entity and its companion -- as the basic system module, provides a well-defined contract to model an information system: entity objects are responsible for ensuring the correctness of their own state and there are only four clearly identified as part of their companion object operations to affect the overall state of an information system (e.g., save or delete the data represented by entity objects).
+	
 	If an entity object represents a persistent domain entity then the only way for its instances to be persisted is by executing method \texttt{save} of a corresponding companion object -- the same business logic that is implemented as part of method \texttt{save} gets executed regardless of where in the system the method is invoked.
 	Only valid entity instances can be saved and the only way to change an entity instance is by modifying its properties that enforce the validation rules.
-	There is no way to bypass the validation logic when changing an entity and there is no other way than to use a correponding companion object to save new or modified entity instances.
-	This achieves a uniform approach to the domain modelling where the business entities (e.g. purchase order), processes (e.g. purchase order authorisation) and complex data querying that may involve joining of multiple persistent entities (e.g. reporting the whole-life cost for an asset that encompasses repair, fuel and servicing cost components) is modelled with the same modelling primitives -- pairs of entity and companion objects.
+	There is no way to bypass the validation logic when changing an entity and there is no other way than to use a corresponding companion object to save new or modified entity instances.
+	This achieves a uniform approach to the domain modelling where the business entities (e.g., purchase order), processes (e.g., purchase order authorisation) and complex data querying that may involve joining of multiple persistent entities (e.g., reporting the whole-life cost for an asset that encompasses repair, fuel and servicing cost components) is modelled with the same modelling primitives -- pairs of entity and companion objects.
 
-	Such uniformity contributes significantly to the comprehension of an information system by both the original and new developers that just need to follow the established pattern to identify how different parts of the system interact with each other and what are the rules for that interaction.
-	So, unlike in the case of more traditional approaches, there is no need to "think" what various behavioural methods that are defined as part of "domain objects" or "services" mean and what is their effect on the system.
-	One only needs to "think" what does some entity object models -- the ways for it to effect the system are defined uniformly as four operations on a corresponding companion object.
+	Such uniformity contributes significantly to the comprehension of an information system by both the original and new developers that just need to follow the established pattern to identify how different parts of the system are composed, interact with each other and what are the rules for that interaction.
+	So, unlike in the case of more traditional approaches, there is no need to "think" what various behavioural methods that are defined as part of ``domain objects'' or ``services'' mean and what is their effect on the system.
+	One only needs to ``think'' what does some entity object models -- the ways for it to effect the system are defined uniformly as four operations on a corresponding companion object.
 	Combining this uniform approach with the direct manipulation principle for building UI, yields a very transparent system where users and developers can clearly identify problem areas that need bug fixes, improvement or enhancements.
 	
 	As an example, figure~\ref{fig:wa-detail} depicts an \emph{entity master} for a persistent entity \texttt{WorkActivityDetail} that models a domain entity for capturing details of some work being performed.
-	There can be multiple entity instance of this type associated with the same work activity and any existing details can be edited under some conditions.
+	There can be multiple entity instance of this type associated with the same work activity and any existing detail can be edited under some conditions.
 		
 	\begin{figure}[!h]
   		\centering
-        \includegraphics[width=.55\textwidth]{images/06-wa-detail-master.png}  
+        \includegraphics[width=0.7\textwidth]{images/06-wa-detail-master.png}  
         \caption{Work Activity Detail}
         \label{fig:wa-detail}
 		%\vspace{-30pt} 
   	\end{figure}
 
-	Entity \texttt{WorkActivityDetail} has five properties.
-	Three of those are read-only from UI perspective and can only be changed programmatically, the remaining two are required\footnote{This nature of properties is automatically taken into account in the UI layer by reusing the definitions that are captured at the domain model.}.
-	Buttons \texttt{CANCEL} and \texttt{SAVE} are directly mapped to the two of four companion object operations -- \texttt{retrieve}\footnote{Cancelling changes is equivalent to refreshing an entity from a database by means of re-retrieving it.} and \texttt{save}.
+	Entity \texttt{WorkActivityDetail} has four properties.
+	Three of those are read-only from UI perspective and can only be changed programmatically, the remaining one is required\footnote{This nature of properties is automatically taken into account in the UI layer by reusing the definitions that are captured at the domain model.}.
+	Buttons \texttt{CANCEL} and \texttt{SAVE} are directly mapped to the two of four companion object operations -- \texttt{retrieve}\footnote{Cancelling changes for a persistent entity is equivalent to refreshing an entity from a database by means of re-retrieving it.} and \texttt{save}.
 
 	The code listing below illustrates a part of the implementation for companion object \texttt{Work\-Activity\-DetailCo} of entity \texttt{WorkActivityDetail}.
 	It extends a generic base class \texttt{CommonEntityCo} with a type parameter that is specified as the type of a corresponding entity object.
 	This makes every concrete companion specialised to handle a single entity object.
-	The base class is provided by the TG platform and encapsulates all the essential logic of saving persistent entities, which includes the construction of appropriate insert/update statements, optimistic locking mechanism, conflict resolution logic etc.
+	The base class is provided by the TG platform and encapsulates all the essential logic of saving persistent entities, which includes the construction of appropriate insert/update statements, optimistic locking mechanism, conflict resolution logic, etc.
 
-	Entity retrieval in this example is quite trivial and its only concern is to use an appropriate fetch model to obtain an object subgraph that would be sufficient for editing purposes.
+	Entity retrieval in this example is quite trivial and its only concern is to use an appropriate \emph{fetch model} to obtain an object subgraph that is required for editing purposes.
 	The \texttt{save} operation is represented by method of the same name and illustrates some of the important aspects that deserve a more detailed discussion.
 	
 	\medskip
@@ -459,60 +461,62 @@ public class WorkActivityDetailCo
 
 		 \medskip		 
 		 The business logic in method \texttt{save} can be very rich, affect other entities and depend on the changed properties.
-		 
+
 		 \medskip		 
 		 A successfully saved entity is returned as the result of method \texttt{save}.
-		 
+
  	\end{tcolorbox}	
 
 	First of all, method \texttt{save} extends the inherited method \texttt{save}.
 	The call to \texttt{super.save} is the only way to initiate the actual entity saving.
 	This \texttt{super} call can appear anywhere in the body of the overridden method \texttt{save} as all the database changes in this method are atomic (belong to the same transaction).
 	However, often such a decision is governed by the actual business logic that should be executed as part entity saving.
-	In this case, it makes sense to call \texttt{super.save} as the last method instruction (line 18) in order to persist preceding entity changes -- lines 14 and 15.
+	In this case, it makes sense to call \texttt{super.save} as the last method instruction (line 19) in order to persist preceding entity changes (lines 15 and 16).
 	The returned instance represents a re-fetched entity.
 	The re-fetching logic is based on an automatically reconstructed fetch model using an entity instance being saved (\texttt{detail} in this case).
 	This guaranties that the returned instance contains the most fresh data in its object sub-graph.
 	
 	Method \texttt{save} expects a single argument -- a new or modified entity object that needs to be persisted.
-	Lines 11--16 correspond to a business logic, which dictates that under certain condition properties \texttt{date} and \texttt{person} of \texttt{detail} (the entity being saved) should be updated with the current date/time and the currently logged-in person, who actions the change.
-	The condition (lines 11 and 12) to update values for these properties checks if \texttt{detail} has a timesheet associated with it and if its property \texttt{comment} is dirty.
+	Lines 11-17 correspond to a business logic, which dictates that under certain condition properties \texttt{date} and \texttt{person} of \texttt{detail} (the entity being saved) should be updated with the current date/time and the currently logged-in person, who actions the change.
+	The condition (lines 11 and 13) to update values for these properties checks if \texttt{detail} has a timesheet associated with it and if its property \texttt{comment} is dirty.
 	The latter is an example of using meta-data API to identify if some property was changed, but not yet persisted.
 
-	Entity properties are updated by invoking property setters (lines 13--15).
+	Entity properties are updated by invoking property setters (lines 15-16).
 	Definitions of entity objects follow the idea of fluent API, which enables convenient chaining of setter calls.
 	Property \texttt{date} is assigned the value, which is computed by expression \texttt{universalConstants().now()}\footnote{This expression encapsulates the notion of a \emph{model time} that provides a way to control time for testing purposes.}.
-	Property \texttt{person} is assigned the \emph{current person} by obtaining an instance of a companion object for entity \texttt{Person} (i.e. \texttt{co(Person.class)}) and then calling its method \texttt{currentPerson()}.
+	Property \texttt{person} is assigned the value of \emph{current person} by obtaining an instance of a companion object for entity \texttt{Person} (i.e., \texttt{co(Person.class)}) and then calling its method \texttt{currentPerson()}.
 	
 	Method \texttt{PersonCo.currentPerson()} is an example of operation \texttt{retrieve} that is expressed in more domain specific terms.
 	The TG platform provides a necessary abstraction to identify the currently logged in application user.
 	This abstraction has its implementations for testing and deployment purposes that get injected depending on the execution context.
-	Entity \texttt{User} with its companion \texttt{IUser} are present at the platform level and can be accessed by the application specific domain logic.
+	Entity \texttt{User} with its companion \texttt{UserCo} are present at the platform level and can be accessed by the application specific domain logic.
 	Entity \texttt{Person} is a domain entity, implemented at an application level.
-	In the domain, which is used for this example, entity \texttt{Person} has many domain specific properties such as payment rates, normal and overtime hours, a supervisor etc.
+	In the domain, which is used for this example, entity \texttt{Person} has many domain specific properties such as payment rates, normal and overtime hours, a supervisor, etc.
 	At the same time, each \texttt{Person} instance is in a unique one-to-one association with a corresponding instance of \texttt{User}.
-	That is why it is possible and more natural to express the notion of a currently logged in user in terms of domain entity \texttt{Person}.
+	That is why it is possible and more natural from the domain perspective to express the notion of a currently logged-in user in terms of domain entity \texttt{Person}.
 	
 	The above example is very simple, but it should be sufficient to see that a companion operation \texttt{save} is capable of containing rich transactional business logic, which could affect a persistent state of an information system across multiple entity objects of different types.
 	Having both entity properties and the operations of companion objects directly mapped to UI controls, guides the thought process when designing and using the system.
-	It is always clear what changes need to be implemented at the code level whenever an application user refers to some functionality in terms of UI constructs.
+	It is always clear what changes need to be implemented at the domain model level whenever an application user refers to some functionality in terms of UI artifacts.
 	
-	The next section delves more into the application of the RESTful Objects pattern to model the three essential information system functions (\texttt{Memory}, \texttt{Informative} and \texttt{Active}).
+	So far we have only touched on how the the RESTful Objects pattern can be used to model persistent entities (i.e., those that correspond to the \texttt{Memory} function of an information system).
+	The next section delves more into the application of the RESTful Objects pattern to model the \texttt{Informative} and \texttt{Active} functions.
 	It shows how approaching the design of an information system from the perspective of just these three functions by applying the RESTful Objects pattern leads to a significant reduction of the architectural complexity.
-	We also introduce Entity Query Language (EQL) as an essential part for communicating with an application database and constructing sophisticated queries that capture the information across multiple persistent (memory) entities to produce synthetic entities for reporting (informative) purposes.
+	We also introduce Entity Query Language (EQL) as an essential part for expressing database queries in a reliable model-driven way.
+	EQL is used to construct \emph{Synthetic Entities} based on sophisticated queries that capture the information across multiple \emph {Persistent Entities}, while following the same RESTful Objects pattern.
+	
+	Last, but not least, we will discuss declarative domain security and how RESTful Objects deliver GraphQL-based Web API by following the direct manipulation principle in the same way as with UI.
 
 
 \iffalse
 
 
-	Surprisingly, I don't see in the other answers what i consider the real difference between REST and CRUD: what does each one manages.
+	Surprisingly, I don't see in the other answers what I consider the real difference between REST and CRUD: what does each one manages.
 
 	CRUD means the basic operations to be done in a data repository. You directly handle records or data objects; apart from these operations, the records are passive entities. Typically it's just database tables and records.
 
-	REST, on the other hand, operates on resource representations, each one identified by an URL. These are typically not data objects, but complex objects abstractions.
+	REST, on the other hand, operates on resource representations, each one identified by an URL. These are typically not data structures, but complex object abstractions.
 
-
-	
 	A service encapsulates entities and it protects consistency through the business logic. 
 	If the original business request affects multiple entities, a service can only provide complete service if it gets enough information about the original request.
 	Then it can execute the business logic, apply that business logic even across multiple entities, and maintain both information consistency and transactional consistency.
