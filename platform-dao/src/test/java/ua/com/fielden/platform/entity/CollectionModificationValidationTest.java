@@ -52,6 +52,7 @@ import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFreque
 import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.persistent.UserDefinableHelp_CanSave_Token;
 import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.persistent.TgCompoundEntityChild_CanDelete_Token;
@@ -95,13 +96,13 @@ import ua.com.fielden.platform.web.centre.CentreContext;
 /**
  * This test case is intended to check correctness of existing collection modification validation logic.
  * <p>
- * This includes validations of 1) master entity disappearance 2) available entity disappearance 
+ * This includes validations of 1) master entity disappearance 2) available entity disappearance
  * 3) collection modification conflict detection.
  * <p>
  * These conflicts are most likely taken place after the user has been opened the dialog for collection modification, but hasn't finished collection modification by clicking on SAVE button.
- * 
+ *
  * Also 4) order of available entities (user roles, userRole tokens) are checked, by-key order is required.
- * 
+ *
  * @author TG Team
  *
  */
@@ -162,7 +163,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
     @Test
     public void collection_modification_is_not_applicable_to_new_entity() {
         final User user = new_(User.class, newUsername);
-        
+
         try {
             createUpdater(user);
             fail("Collection modification should fail.");
@@ -329,6 +330,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         final SecurityTokenInfo domainExplorer_CanRead = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(DomainExplorer_CanRead_Token.class.getName());
         final SecurityTokenInfo domainExplorer_CanReadModel = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(DomainExplorer_CanReadModel_Token.class.getName());
         final SecurityTokenInfo graphiQL_CanExecute = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(GraphiQL_CanExecute_Token.class.getName());
+        final SecurityTokenInfo entityMasterHelp_CanSave = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(UserDefinableHelp_CanSave_Token.class.getName());
         final SecurityTokenInfo keyNumber_CanRead = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(KeyNumber_CanRead_Token.class.getName());
         final SecurityTokenInfo keyNumber_CanReadModel = EntityFactory.newPlainEntity(SecurityTokenInfo.class, null).setKey(KeyNumber_CanReadModel_Token.class.getName());
 
@@ -373,12 +375,12 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
         final HashSet<SecurityTokenInfo> expectedTokens = setOf(
             alwaysAccessible,
             domainExplorer_CanRead, domainExplorer_CanReadModel,
-            graphiQL_CanExecute,
+            graphiQL_CanExecute, entityMasterHelp_CanSave,
             keyNumber_CanRead, keyNumber_CanReadModel,
             user_CanDelete, user_CanSave, user_CanRead, user_CanReadModel,
             reUser_CanRead, reUser_CanReadModel,
             createTokenInfo.apply(UserMaster_CanOpen_Token.class),
-            userRole_CanDelete, userRole_CanSave, userRole_CanRead, userRole_CanReadModel, 
+            userRole_CanDelete, userRole_CanSave, userRole_CanRead, userRole_CanReadModel,
             createTokenInfo.apply(UserRoleMaster_CanOpen_Token.class),
             userRoleAssociation_CanRead, userRoleAssociation_CanReadModel, createTokenInfo.apply(UserAndRoleAssociation_CanSave_Token.class), createTokenInfo.apply(UserAndRoleAssociation_CanDelete_Token.class),
             userRolesUpdater_CanExecute, userRoleTokensUpdater_CanExecute,
@@ -406,7 +408,7 @@ public class CollectionModificationValidationTest extends AbstractDaoTestCase {
             createTokenInfo.apply(TgPersistentCompositeEntityMaster_CanOpen_Token.class),
             createTokenInfo.apply(TgPersistentEntityWithPropertiesMaster_CanOpen_Token.class),
 
-            compoundModule, tgComoundEntity_CanDelete, tgCompoundEntity_CanSave, tgCompoundEntityChild_CanDelete, tgCompoundEntityChild_CanSave, tgCompoundEntityDetail_CanSave, openTgCompoundEntityMasterAction_CanOpen, 
+            compoundModule, tgComoundEntity_CanDelete, tgCompoundEntity_CanSave, tgCompoundEntityChild_CanDelete, tgCompoundEntityChild_CanSave, tgCompoundEntityDetail_CanSave, openTgCompoundEntityMasterAction_CanOpen,
             tgCompoundEntityMaster_OpenMain_MenuItem_CanAccess, tgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem_CanAccess, tgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem_CanAccess
         );
         assertEquals(expectedTokens, updater.getTokens());
