@@ -47,7 +47,7 @@ const template = html`
         }
 
         .tg-item.inactive {
-            background: var(--paper-grey-200);
+            background: #ECEFF1;
         }
 
         .tg-item:hover {
@@ -57,12 +57,16 @@ const template = html`
         }
 
         .tg-item.iron-selected {
-            background: var(--paper-blue-500);
+            background: var(--paper-blue-300);
             color: var(--paper-blue-50);
         }
 
         paper-item:not(.iron-selected) span.value-highlighted {
             background-color: #ffff46;
+        }
+
+        paper-item:focus {
+            background-color: #E1F5FE;
         }
 
         paper-button {
