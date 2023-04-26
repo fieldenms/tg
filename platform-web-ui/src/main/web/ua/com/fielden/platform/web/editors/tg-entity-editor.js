@@ -163,13 +163,12 @@ function setKeyFields(entity, embeddedMaster) {
 /**
  * Copies specified text into clipboard if it is supported with client's navigator.
  * 
- * @param {String} text - text to copy into clipboard.
+ * @param {String} inputLayerText - text to copy into clipboard.
  */
-function copyToClipboard(inputLayer, showCheckIconAndToast) {
+function copyToClipboard(inputLayerText, showCheckIconAndToast) {
     if (navigator.clipboard) {
-        const text = [...inputLayer.childNodes].filter(node => node.style && getComputedStyle(node).display !== 'none').map(node => node.innerText).join("");
-        navigator.clipboard.writeText(text);
-        showCheckIconAndToast(text);
+        navigator.clipboard.writeText(inputLayerText);
+        showCheckIconAndToast(inputLayerText);
     }
 }
 
@@ -585,10 +584,14 @@ export class TgEntityEditor extends TgEditor {
 
     _copyFromLayerIfPresent(superCopy) {
         if (this._hasLayer) {
-            copyToClipboard(this.$.inputLayer, this._showCheckIconAndToast.bind(this));
+            copyToClipboard(this.getInputLayerText(), this._showCheckIconAndToast.bind(this));
         } else {
             superCopy();
         }
+    }
+
+    getInputLayerText () {
+        return [...this.$.inputLayer.childNodes].filter(node => node.style && getComputedStyle(node).display !== 'none').map(node => node.innerText).join("");
     }
 
     /**
@@ -1361,7 +1364,7 @@ export class TgEntityEditor extends TgEditor {
 
     _itemSeparator (item, index) {
         if (this._customPropTitle && this._customPropTitle.length > 1) {
-            if (index < this._customPropTitle.length - 1 && item.title) {
+            if (index < this._customPropTitle.length - 1) {
                 return item.separator || " ";
             }
         }
