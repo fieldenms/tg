@@ -52,14 +52,29 @@
 
 
 %%%%%%%%%%%%% copyright %%%%%%%%%%%%%%
-\title{Trident Genesis Platform}
-\author{Fielden Management Services Pty. Ltd.}
-\date{}
+% \title{Trident Genesis Platform}
+% \author{Fielden Management Services Pty. Ltd.}
+% \date{}
+
+\newcommand*{\titleTH}{\begingroup% T&H Typography
+\raggedleft
+\vspace*{\baselineskip}
+{\Large ~}\\[0.167\textheight]
+{\bfseries Trident Genesis}\\[\baselineskip]
+{\textcolor{basiccolor}{\Huge A framework for RESTful Objects}}\\[\baselineskip]
+{\small a software engineering perspective}\par
+\vfill
+{\Large Fielden Management Services Pty Ltd}\par
+\vspace*{1\baselineskip}
+{April, 2023}\par
+\endgroup}
+
+
 \usepackage{hyperxmp}
 \hypersetup{
-    pdftitle={Trident Genesis Platform},
+    pdftitle={Trident Genesis Platform: a framework for RESTful Objects},
     pdfauthor={Fielden Management Services Pty. Ltd.},
-    pdfsubject={A hight level overview of key principles and advantages.},
+    pdfsubject={A hight level overview of key principles and advantages of the RESTful Objects architectural pattern and a framework that implements it.},
     pdfcopyright={Copyright (C) 2023 by Fielden Management Services Pty. Ltd.  All rights reserved.}
 }
 
@@ -75,7 +90,9 @@
 
 
 \begin{document}
-\maketitle
+\begin{titlingpage}
+	\titleTH
+\end{titlingpage}
 \counterwithout{figure}{chapter}
 
 \lstset{language=Java,
@@ -328,7 +345,7 @@ private Technician technician;
 	
 	\begin{figure}[!h]
   		\centering
-      	\includegraphics[width=0.6\textwidth]{images/04-wa-technician-entry.png}  
+      	\includegraphics[width=0.6\textwidth]{images/04-wa-technician-entry.png}
    	  	\caption{Selection of a value for property \texttt{technician}.}
    		\label{fig:tech}
   	\end{figure}
@@ -403,7 +420,7 @@ private Technician technician;
 		
 	\begin{figure}[!h]
   		\centering
-        \includegraphics[width=0.7\textwidth]{images/06-wa-detail-master.png}  
+        \includegraphics[width=0.6\textwidth]{images/06-wa-detail-master.png}  
         \caption{Work Activity Detail}
         \label{fig:wa-detail}
 		%\vspace{-30pt} 
@@ -505,8 +522,10 @@ public class WorkActivityDetailCo
 	We also introduce Entity Query Language (EQL) as an essential part for expressing database queries in a reliable model-driven way.
 	EQL is used to construct \emph{Synthetic Entities} based on sophisticated queries that capture the information across multiple \emph {Persistent Entities}, while following the same RESTful Objects pattern.
 	
-	Last, but not least, we will discuss declarative domain security and how RESTful Objects deliver GraphQL-based Web API by following the direct manipulation principle in the same way as with UI.
+	Last, but not least, we will discuss declarative domain security and how RESTful Objects deliver GraphQL-based Web API by following the direct manipulation principle in the same way as with UI.\\[100pt]
 
+
+	{\noindent\HUGE Work in progress\ldots}
 
 \iffalse
 
@@ -577,7 +596,7 @@ public class WorkActivityDetailCo
 \section*{The problem statement}
 
 	It puts the modelling of a business domain in the centre of software requirement management, design and construction by following a very specific architectural pattern called \emph{RESTful Objects}.
-	The unique trait of the \emph{RESTful Objects} pattern is in establishing a uniform approach for designing and implementing the three core functions of any information system~-- memory, informative, active~\cite{oli2007}.
+	The unique trait of the \emph{RESTful Objects} pattern is in establishing a uniform approach for designing and implementing the three core functions of any information system~-- \emph{memory}, \emph{informative}, \emph{active}~\cite{oli2007}~-- by directly expressing Structural Schema, Integrity Constraints and Behavioural Schema at the level of objects.
 	This results in a holistic system design and implementation that is maintainable and of high fidelity with the target business domain.
 
 	The current definition and functions of an information system was defined back in 1970s.
@@ -610,7 +629,7 @@ public class WorkActivityDetailCo
   Capturing the business domain model in a form of a functional software system that facilitates business operations represents the core value for customers.
   
   \vspace{3 mm}
-  \noindent The TG platform incorporates over 30 years of experience in delivering Enterprise grade software solutions at a software architecture level.
+  \noindent The TG platform incorporates over 30 years of experience in delivering Enterprise grade software products at a software architecture level.
   It encapsulates the complexity of the low technical details for efficient database communication, concurrent data processing, HTML5 client construction enabling software developers to concentrate on the business domain architecture.
 
 \begin{figure}[!h]
