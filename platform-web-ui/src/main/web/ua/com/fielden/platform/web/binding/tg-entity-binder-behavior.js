@@ -1,6 +1,7 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
-import {processResponseError, toastMsgForError} from '/resources/reflection/tg-ajax-utils.js';
+import { processResponseError } from '/resources/reflection/tg-ajax-utils.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
+import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
 
 export const TgEntityBinderBehavior = {
 
@@ -468,7 +469,7 @@ export const TgEntityBinderBehavior = {
                             reader.onload = function () {
                                 const resultAsObj = JSON.parse(reader.result);
                                 const result = self._serialiser().deserialise(resultAsObj);
-                                self._openToastForError(result.message, toastMsgForError(self._reflector(), result), true);
+                                self._openToastForErrorResult(result, true);
                             }
                             reader.readAsText(xhr.response);
                         }
@@ -523,10 +524,7 @@ export const TgEntityBinderBehavior = {
                 e.detail.successful = true;
                 const deserialisedResult = this._serialiser().deserialise(e.detail.response);
                 
-                if (this._reflector().isWarning(deserialisedResult)) {
-                    console.warn(toastMsgForError(this._reflector(), deserialisedResult));
-                    //this._openToastForError('Warning.', toastMsgForError(this._reflector(), deserialisedResult), false);
-                } else {
+                if (!this._reflector().isWarning(deserialisedResult)) {
                     // continue with normal handling of the result's instance
                     const deserialisedInstance = deserialisedResult.instance;
                     deserialisedResult.instance = null;
@@ -535,7 +533,7 @@ export const TgEntityBinderBehavior = {
                     // The current logic of tg-toast will discard all other messages after this message, until this message disappears.
                     if (this._reflector().isError(deserialisedResult)) {
                         console.log('deserialisedResult: ', deserialisedResult);
-                        this._openToastForError(deserialisedResult.message, toastMsgForError(this._reflector(), deserialisedResult), !this._reflector().isContinuationError(deserialisedResult) || this.showContinuationsAsErrors);
+                        this._openToastForErrorResult(deserialisedResult, !this._reflector().isContinuationError(deserialisedResult) || this.showContinuationsAsErrors);
                     }
                     e.detail.successful = customHandlerFor(deserialisedInstance, this._reflector().isError(deserialisedResult) ? deserialisedResult : null);
                     if (this._reflector().isError(deserialisedResult)) {
@@ -651,13 +649,13 @@ export const TgEntityBinderBehavior = {
         // 				retrieval:
         self._postRetrievedDefault = (function (entityAndCustomObject) {
             // console.timeEnd('actual-retrieval');
-            var entity = this.preRetrieved(entityAndCustomObject[0]);
-            var customObject = this._reflector().customObject(entityAndCustomObject);
+            const entity = this.preRetrieved(entityAndCustomObject[0]);
+            const customObject = this._reflector().customObject(entityAndCustomObject);
 
-            var msg = this._toastMsg("Refreshing", entity);
-            this._openToast(entity, msg, !entity.isValid() || entity.isValidWithWarning(), msg, false);
+            const messages = this._toastMessages("Refreshing", entity);
+            this._openToast(entity, messages.short, !entity.isValid() || entity.isValidWithWarning(), messages.extended, false);
 
-            var newBindingEntity = this._postEntityReceived(entity, true);
+            const newBindingEntity = this._postEntityReceived(entity, true);
 
             this._postRetrievedDefaultForDescendants(entity, newBindingEntity, customObject);
             // custom external action
@@ -703,8 +701,8 @@ export const TgEntityBinderBehavior = {
             }
             console.log('validate received (', customObject['@validationCounter'], ')');
             if (!validatedEntity.isValid()) {
-                const msg = this._toastMsg("Validation", validatedEntity);
-                this._openToast(validatedEntity, msg, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), msg, false);
+                const messages = this._toastMessages("Validation", validatedEntity);
+                this._openToast(validatedEntity, messages.short, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), messages.extended, false);
             }
             // in case where _continuations property exists (only in tg-entity-master) there is a need to reset continuations (they become stale after any change in initiating entity)
             if (typeof this._continuations === 'object') {
@@ -742,7 +740,8 @@ export const TgEntityBinderBehavior = {
 
         //Toaster object Can be used in other components on binder to show toasts.
         self.toaster = {
-            openToastForError : self._openToastForError.bind(self),
+            openToastForError: self._openToastForError.bind(self),
+            openToastForErrorResult: self._openToastForErrorResult.bind(self),
             openToast: self._openToast.bind(self),
             openToastWithoutEntity: self._openToastWithoutEntity.bind(self)
         };
@@ -797,6 +796,13 @@ export const TgEntityBinderBehavior = {
     },
 
     /**
+     * Opens the toast for erroneous Result.
+     */
+    _openToastForErrorResult: function (result, isCritical) {
+        this._openToastForError(resultMessages(result).short, this._reflector().stackTrace(result.ex), isCritical);
+    },
+
+    /**
      * Opens the toast with some error message including full 'moreInfo' message.
      */
     _openToastForError: function (toastMsg, moreInfo, isCritical) {
@@ -817,18 +823,22 @@ export const TgEntityBinderBehavior = {
         this._toastGreeting().show();
     },
 
-    _toastMsgForErrorObject: function (errorObject) {
-        var stack = errorObject.stack;
-        return this._reflector().stackTraceForErrorObjectStack(stack);
-    },
-
-    _toastMsg: function (actionName, entity) {
+    /**
+     * Returns a pair of short and extended messages for toast.
+     * 
+     * Takes them from entity if it is invalid or in warning.
+     * Otherwise, returns 'ACTION completed successfully' as both short and extended.
+     */
+    _toastMessages: function (actionName, entity) {
         if (!entity.isValid()) {
-            return entity.firstFailure().message;
+            return resultMessages(entity.firstFailure());
         } else if (entity.isValidWithWarning()) {
-            return entity.firstWarning().message;
+            return resultMessages(entity.firstWarning());
         } else {
-            return actionName + " completed successfully.";
+            return {
+                short: actionName + " completed successfully.",
+                extended: actionName + " completed successfully."
+            };
         }
     },
     //////////////////////////////////////////////

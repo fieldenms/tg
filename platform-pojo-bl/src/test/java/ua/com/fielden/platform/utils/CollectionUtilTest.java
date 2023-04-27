@@ -5,11 +5,13 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertThrows;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
+import static ua.com.fielden.platform.utils.CollectionUtil.removeFirst;
 import static ua.com.fielden.platform.utils.CollectionUtil.tail;
 
 import java.util.LinkedHashMap;
@@ -17,6 +19,8 @@ import java.util.List;
 import java.util.Map;
 
 import org.junit.Test;
+
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 
 public class CollectionUtilTest {
 
@@ -50,20 +54,20 @@ public class CollectionUtilTest {
         assertNotNull(mapOf());
         assertTrue(mapOf().isEmpty());
     }
-    
+
     @Test
     public void mapOf_produces_map_with_all_key_value_pairs_matching_arguments() {
         final Map<String, Integer> map = mapOf(t2("key1", 42), t2("key2", 12));
-        
+
         assertEquals(2, map.size());
         assertEquals(Integer.valueOf(42), map.get("key1"));
         assertEquals(Integer.valueOf(12), map.get("key2"));
     }
-    
+
     @Test
     public void linkedMapOf_produces_linked_map_with_all_key_value_pairs_matching_arguments() {
         final Map<String, Integer> map = linkedMapOf(t2("key1", 42), t2("key2", 12));
-        
+
         assertTrue(map instanceof LinkedHashMap);
         assertEquals(2, map.size());
         assertEquals(Integer.valueOf(42), map.get("key1"));
@@ -80,6 +84,38 @@ public class CollectionUtilTest {
         assertArrayEquals(new Integer[] {}, tail(new Integer[] {1}).get());
         assertArrayEquals(new Integer[] {2}, tail(new Integer[] {1, 2}).get());
         assertArrayEquals(new Integer[] {2, 3}, tail(new Integer[] {1, 2, 3}).get());
+    }
+
+    @Test
+    public void removeFirst_removes_only_the_first_element_matching_the_predicate() {
+        final List<Integer> xs = listOf(1, 2, 3);
+        assertEquals(Integer.valueOf(2), removeFirst(xs, x -> x >=2).get());
+        assertEquals(listOf(1, 3), xs);
+    }
+
+    @Test
+    public void removeFirst_removes_nothing_and_returns_empty_Optional_if_no_elements_match_the_predicate() {
+        final List<Integer> xs = listOf(1, 2, 3);
+        assertFalse(removeFirst(xs, x -> x < 0).isPresent());
+        assertEquals(listOf(1, 2, 3), xs);
+    }
+
+    @Test
+    public void removeFirst_passing_null_collection_throws_InvalidArgumentException() {
+        final List<Integer> xs = null;
+        assertThrows(InvalidArgumentException.class, () -> removeFirst(xs, x -> x >=2));
+    }
+
+    @Test
+    public void removeFirst_passing_null_predicate_throws_InvalidArgumentException() {
+        final List<Integer> xs = listOf(1, 2, 3);
+        assertThrows(InvalidArgumentException.class, () -> removeFirst(xs, null));
+    }
+
+    @Test
+    public void removeFirst_does_not_permit_null_elements_throwing_InvalidArgumentException() {
+        final List<Integer> xs = listOf(1, null, 3);
+        assertThrows(InvalidArgumentException.class, () -> removeFirst(xs, x -> x >=2));
     }
 
 }

@@ -70,6 +70,25 @@
                     }.bind(autocompleter);
                     
                     autocompleter._editingValue = 'FILTERED';
+                    autocompleter._selectNextOnKeyDown();
+                };
+
+                centre.retrieve();
+            });
+
+            test('autocompleter filtering is ignored for domain-driven data filter invoked via search tap', function (done) {
+                centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                    const autocompleter = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_;
+
+                    const oldOnFound = autocompleter._onFound;
+                    autocompleter._onFound = function (entities) {
+                        console.log("onFound: ", entities);
+                        assert.strictEqual(entities.length, 10, 'searchOnTap ignores the input text.');
+
+                        done();
+                    }.bind(autocompleter);
+                    
+                    autocompleter._editingValue = 'FILTERED';
                     autocompleter._searchOnTap();
                 };
 
@@ -106,7 +125,7 @@
                                 }.bind(autocompleter);
                                 
                                 autocompleter._editingValue = 'FILTERED';
-                                autocompleter._searchOnTap();
+                                autocompleter._selectNextOnKeyDown();
                             };
                         });
                     }

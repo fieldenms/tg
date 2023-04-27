@@ -53,7 +53,7 @@ public class CentreToolbar implements IToolbarConfig {
     }
 
     protected DomElement createToolbarElement() {
-        return new DomContainer().add(topLevelPlacement, switchViewPlacement, configButton(), pagination("standart-action"), refreshButton());
+        return new DomContainer().add(topLevelPlacement, switchViewPlacement, configButton(), pagination("standart-action"), refreshButton(), helpButton());
     }
 
     @Override
@@ -92,6 +92,18 @@ public class CentreToolbar implements IToolbarConfig {
                 .attr("disabled$", "[[isRunning]]")
                 .attr("hidden$", "[[isSelectionCriteriaEmpty]]")
                 .attr("tooltip-text$", "[[computeConfigButtonTooltip(staleCriteriaMessage)]]");
+    }
+
+    public static DomElement helpButton() {
+        return new DomElement("paper-icon-button")
+                .style("color:#727272")
+                .attr("slot", "standart-action")
+                .attr("icon", "icons:help-outline")
+                .attr("on-mousedown", "_helpMouseDownEventHandler")
+                .attr("on-touchstart", "_helpMouseDownEventHandler")
+                .attr("on-mouseup", "_helpMouseUpEventHandler")
+                .attr("on-touchend", "_helpMouseUpEventHandler")
+                .attr("tooltip-text", "Tap to open help in a window or tap with Ctrl/Cmd to open help in a tab.<br>Alt&nbsp+&nbspTap or long touch to edit the help link.");
     }
 
     public static DomElement selectView(final int viewIndex, final int width) {

@@ -57,13 +57,28 @@ const entityCentreTemplate = html`
     <style>
         /*toolbarStyles*/
     </style>
-    <tg-entity-centre id="dom" _selected-view="[[_selectedView]]" _previous-view="[[_previousView]]" _url="[[_url]]" _centre-dirty-or-edited="[[_centreDirtyOrEdited]]" _action-in-progress="{{_actionInProgress}}" _bind-centre-info="[[_bindCentreInfo]]" _process-discarder-response="[[_processDiscarderResponse]]" _process-discarder-error="[[_processDiscarderError]]" _button-disabled="[[_buttonDisabled]]" _viewer-disabled="[[_viewerDisabled]]" save="[[save]]" discard="[[discard]]" run="[[run]]" _activate-result-set-view="[[_activateResultSetView]]" stale-criteria-message="[[staleCriteriaMessage]]" _show-dialog="[[_showDialog]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" initiate-auto-run="[[initiateAutoRun]]" embedded="[[embedded]]" mi-type="[[miType]]" user-name="[[userName]]" refresh-centre="[[sseRefresh]]" cancel-centre-refresh="[[cancelSseRefresh]]" @centreScroll @leftSplitterPositionPlacehoder @rightSplitterPositionPlacehoder>
+    <tg-entity-centre id="dom" _selected-view="[[_selectedView]]" _previous-view="[[_previousView]]" _url="[[_url]]" _centre-dirty-or-edited="[[_centreDirtyOrEdited]]" _action-in-progress="{{_actionInProgress}}" _bind-centre-info="[[_bindCentreInfo]]" _process-discarder-response="[[_processDiscarderResponse]]" _process-discarder-error="[[_processDiscarderError]]" _button-disabled="[[_buttonDisabled]]" _viewer-disabled="[[_viewerDisabled]]" save="[[save]]" discard="[[discard]]" run="[[run]]" _activate-result-set-view="[[_activateResultSetView]]" stale-criteria-message="[[staleCriteriaMessage]]" _show-dialog="[[_showDialog]]" _help-mouse-down-event-handler="[[_helpMouseDownEventHandler]]" _help-mouse-up-event-handler="[[_helpMouseUpEventHandler]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" initiate-auto-run="[[initiateAutoRun]]" embedded="[[embedded]]" mi-type="[[miType]]" user-name="[[userName]]" refresh-centre="[[sseRefresh]]" cancel-centre-refresh="[[cancelSseRefresh]]" @centreScroll @leftSplitterPositionPlacehoder @rightSplitterPositionPlacehoder>
         <tg-@mi_type-selection-criteria id="selection_criteria" slot="custom-selection-criteria" auto-run="{{autoRun}}" _centre-dirty-or-edited="{{_centreDirtyOrEdited}}" _was-run="{{_wasRun}}" _criteria-loaded="{{_criteriaLoaded}}" uuid="[[uuid]]" mi-type="[[miType]]" user-name="{{userName}}" save-as-name="{{saveAsName}}" config-uuid="{{configUuid}}" preferred-view="{{preferredView}}" query-part="[[queryPart]]" post-run="[[_postRun]]" retrieve-all="[[retrieveAll]]" get-selected-entities="[[_getSelectedEntities]]" get-master-entity="[[getMasterEntity]]" post-retrieved="[[postRetrieved]]" page-number="{{pageNumber}}" page-count="{{pageCount}}" page-number-updated="{{pageNumberUpdated}}" page-count-updated="{{pageCountUpdated}}" data-change-reason="{{dataChangeReason}}" is-running="{{isRunning}}" stale-criteria-message="{{staleCriteriaMessage}}" @queryEnhancerContextConfig></tg-@mi_type-selection-criteria>
         
         <!--@custom-front-actions-->
         
         <!--@custom-share-actions-->
-        
+        <tg-ui-action
+            id="tgOpenHelpMasterAction"
+            ui-role='ICON'
+            component-uri = '/master_ui/ua.com.fielden.platform.entity.UserDefinableHelp'
+            element-name = 'tg-UserDefinableHelp-master'
+            show-dialog='[[_showHelpDialog]]'
+            toaster='[[toaster]]'
+            create-context-holder='[[_createContextHolder]]'
+            attrs='[[_tgOpenHelpMasterActionAttrs]]'
+            require-selection-criteria='true'
+            require-selected-entities='NONE'
+            require-master-entity='false'
+            pre-action = '[[_preOpenHelpMasterAction]]'
+            post-action-success = '[[_postOpenHelpMasterAction]]'
+            hidden>
+        </tg-ui-action>
         <tg-entity-grid-inspector id="egi" slot="custom-egi" class="entity-grid-inspector" centre-selection="[[centreSelection]]" column-properties-mapper="{{columnPropertiesMapper}}" icon="@egiViewIcon" icon-style="@egiViewStyle" custom-shortcuts="@customShortcuts" constant-height="@egiHeight" row-height="@egiRowHeight" @hidden @fitToHeight @canDragFrom @toolbarVisible @checkboxVisible @dragAnchorFixed @checkboxesFixed @checkboxesWithPrimaryActionsFixed num-of-fixed-cols="@numOfFixedCols" @secondaryActionsFixed @headerFixed @summaryFixed @gridLayout>
             <!-- EGI COLUMNS DOM (GENERATED) -->
             

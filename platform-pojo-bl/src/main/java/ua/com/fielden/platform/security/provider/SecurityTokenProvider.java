@@ -35,6 +35,7 @@ import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFreque
 import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.persistent.DashboardRefreshFrequency_CanSave_Token;
+import ua.com.fielden.platform.security.tokens.persistent.UserDefinableHelp_CanSave_Token;
 import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanReadModel_Token;
 import ua.com.fielden.platform.security.tokens.persistent.KeyNumber_CanRead_Token;
 import ua.com.fielden.platform.security.tokens.synthetic.DomainExplorer_CanReadModel_Token;
@@ -136,7 +137,8 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
                 DomainExplorer_CanReadModel_Token.class,
                 KeyNumber_CanRead_Token.class,
                 KeyNumber_CanReadModel_Token.class,
-                GraphiQL_CanExecute_Token.class);
+                GraphiQL_CanExecute_Token.class,
+                UserDefinableHelp_CanSave_Token.class);
         final Set<Class<? extends ISecurityToken>> allTokens = new HashSet<>(ClassesRetriever.getAllClassesInPackageDerivedFrom(path, packageName, ISecurityToken.class));
         allTokens.addAll(platformLevelTokens);
         allTokens.addAll(extraTokens);
@@ -170,7 +172,7 @@ public class SecurityTokenProvider implements ISecurityTokenProvider {
      * <p>
      * The result is a forest of trees (i.e., multiple trees), ordered according to the comparator, implemented by {@link SecurityTokenNode}.
      * Roots for each trees represent one of the top most security tokens.
-     * 
+     *
      * @param allTokens
      * @return
      */
