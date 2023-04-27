@@ -8,10 +8,11 @@ import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoad
 import java.util.Optional;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 
-import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
+import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
@@ -22,9 +23,12 @@ import ua.com.fielden.platform.utils.EntityUtils;
  */
 public class UserDefinableHelpProducer extends DefaultEntityProducerWithContext<UserDefinableHelp> {
 
+    private final String defaultHelpUri;
+
     @Inject
-    public UserDefinableHelpProducer(final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
+    public UserDefinableHelpProducer(final @Named("help.defaultUri") String defaultHelpUri, final EntityFactory factory, final ICompanionObjectFinder companionFinder) {
         super(factory, UserDefinableHelp.class, companionFinder);
+        this.defaultHelpUri = defaultHelpUri;
     }
 
     @Override
@@ -48,12 +52,10 @@ public class UserDefinableHelpProducer extends DefaultEntityProducerWithContext<
                }
                return persistedEntity;
            } else {
-               if (skipUi) {
-                    throw failureEx("There is no help to open.", "Users with the right privileges can add a help hyperlink.<br>Alt+Tap or long press the help action to invoke Help Master.");
-               } else {
-                   entity.setReferenceElement(refElement);
-                   return entity;
-               }
+               entity.setHelp(new Hyperlink(defaultHelpUri));
+               entity.setReferenceElement(refElement);
+               entity.setSkipUi(skipUi);
+               return entityMasterHelpCo.save(entity);
            }
        }).orElse(entity);
     }
