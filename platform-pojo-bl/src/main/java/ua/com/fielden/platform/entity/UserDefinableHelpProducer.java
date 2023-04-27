@@ -2,6 +2,8 @@ package ua.com.fielden.platform.entity;
 
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.commons.lang.StringUtils.isNotEmpty;
 import static ua.com.fielden.platform.error.Result.failureEx;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
 
@@ -52,10 +54,16 @@ public class UserDefinableHelpProducer extends DefaultEntityProducerWithContext<
                }
                return persistedEntity;
            } else {
-               entity.setHelp(new Hyperlink(defaultHelpUri));
-               entity.setReferenceElement(refElement);
-               entity.setSkipUi(skipUi);
-               return entityMasterHelpCo.save(entity);
+               if (skipUi && isEmpty(defaultHelpUri)) {
+                  throw failureEx("There is no help to open.", "Users with the right privileges can add a help hyperlink.<br>Alt+Tap or long press the help action to invoke Help Master.");
+               } else {
+                   if (isNotEmpty(defaultHelpUri)) {
+                       entity.setHelp(new Hyperlink(defaultHelpUri));
+                   }
+                   entity.setReferenceElement(refElement);
+                   entity.setSkipUi(skipUi);
+                   return isNotEmpty(defaultHelpUri) ? entityMasterHelpCo.save(entity) : entity;
+               }
            }
        }).orElse(entity);
     }
