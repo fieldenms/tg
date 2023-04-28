@@ -1208,7 +1208,7 @@ export class TgEntityEditor extends TgEditor {
             return false;
         }
         return currentState === 'EDIT' // currentState is not 'EDIT' e.g. where refresh / saving process is in progress
-            && (!_disabled || this._valueToEdit(entity, this.propertyName));
+            && (!_disabled || !!this._valueToEdit(entity, this.propertyName));
     }
 
     _actionIcon (actionAvailable, entity) {
