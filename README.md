@@ -1,7 +1,7 @@
 TG
 ==
 
-Trident Genesis (TG) is a software development technology, which has been developed by a bunch of dedicated individuals from Ukraine and Australia with a financial support of Fielden Management Services Pty. Ltd.
+Trident Genesis (TG) is a software development technology that implements the RESTful Objects architectural pattern. This is an ongoing effort to develop a software technology for constructing reliable and evolvable information systems, led by a bunch of dedicated individuals from Ukraine and Australia with a financial support of an Australian ISV [Fielden Management Services Pty Ltd](https://www.fielden.com.au). Fielden specialises in highly customisable domain-specific Enterprise Asset Managemen systems and uses TG as the foundation for developing several software product lines.
 
 In essenсe, TG incapsulates **accidental complexity** in order to enable application developers to better harness the **essential complexity** that stems from the target business domain.
 
@@ -21,7 +21,7 @@ Documentation and Demo applications
 -----------------------------------
 One of the very important aspect of any technology is the documentation and demo applications that could be used for learning. Currently, all our applications are propriatery and their source cannot be shared.
 
-The documentation forms part of this repository (LaTeX documents in `platform-doc`such as https://github.com/fieldenms/tg/blob/develop/platform-doc/doc/tg-overview/tg-overview.tex and Wiki pages). However, these are mainly the overview-type documents and design sketches. A more training-oriented documentation is in the works and will be inlined with a demo business domain for building a smaller-size demo application.
+The documentation forms part of this repository (LaTeX documents in `platform-doc`such as [TG Overview](https://fieldenmgmt.sharepoint.com/:b:/g/EWSGJEW5Do5EpYi_PmuOuB4B6AbTpBa-6EaN5gW3rWndlQ?e=TEtd37) and Wiki pages). However, these are mainly the overview-type documents and design sketches. A more training-oriented documentation is in the works and will be inlined with a demo business domain for building a smaller-size demo application.
 
 Looking into the future
 -----------------------

@@ -8,6 +8,8 @@ import '/resources/master/tg-entity-master-styles.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { getKeyEventTarget, generateUUID } from '/resources/reflection/tg-polymer-utils.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
+import { TgReflector } from '/app/tg-reflector.js';
+import { TgViewWithHelpBehavior } from '/resources/components/tg-view-with-help-behavior.js';
 
 const TgEntityMasterTemplateBehaviorImpl = {
 
@@ -19,11 +21,16 @@ const TgEntityMasterTemplateBehaviorImpl = {
             type: Object,
             value: null
         },
-        
+
         /**
          * Attributes for the action that allows to open entity master for specified entity-typed property.
          */
-        _tgOpenMasterActionAttrs: Object
+        _tgOpenMasterActionAttrs: Object,
+
+        /**
+         * Attributes for the action that opens help entity master for this entity master.
+         */
+        _tgOpenHelpMasterActionAttrs: Object
     },
 
     ready: function () {
@@ -43,6 +50,25 @@ const TgEntityMasterTemplateBehaviorImpl = {
             centreUuid: self.uuid
         };
         self.tgOpenMasterAction = self.$.tgOpenMasterAction;
+
+        self._tgOpenHelpMasterActionAttrs = {
+            entityType: "ua.com.fielden.platform.entity.UserDefinableHelp",
+            currentState: 'EDIT',
+            centreUuid: self.uuid
+        }
+
+        self._currentEntityForHelp = function() {
+            return () => self._currEntity;
+        };
+        
+        self._preOpenHelpMasterAction = function (action) {
+            const reflector = new TgReflector();
+            if (action.requireSelectedEntities === 'ONE') {
+                action.shortDesc = reflector.getType(action.currentEntity().type().notEnhancedFullClassName()).entityTitle() + " Master Help";
+            } else if (action.requireSelectedEntities === 'ALL' && self.$.egi.getSelectedEntities().length > 0) {
+                action.shortDesc = reflector.getType(self.$.egi.getSelectedEntities()[0].type().notEnhancedFullClassName()).entityTitle() + " Master Help";
+            }
+        };
     },
 
     attached: function () {
@@ -52,6 +78,13 @@ const TgEntityMasterTemplateBehaviorImpl = {
         } else {
             self._masterDom().removeAttribute('with-dimensions');
         }
+    },
+
+    /**
+     * Should return the action that opens help master
+     */
+    getOpenHelpMasterAction: function () {
+        return this.$.tgOpenHelpMasterAction;
     },
 
     /**
@@ -201,6 +234,7 @@ export const TgEntityMasterTemplateBehavior = [
     IronA11yKeysBehavior,
     TgShortcutProcessingBehavior,
     TgEntityMasterBehavior,
-    TgEntityMasterTemplateBehaviorImpl
+    TgViewWithHelpBehavior,
+    TgEntityMasterTemplateBehaviorImpl,
 ];
 export { Polymer, html };

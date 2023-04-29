@@ -55,6 +55,10 @@ const template = html`
             min-height: 24px;
         }
 
+        .tg-item.inactive {
+            background: #ECEFF1;
+        }
+
         .tg-item:hover {
             cursor: pointer;
             background: var(--paper-blue-50);
@@ -62,12 +66,16 @@ const template = html`
         }
 
         .tg-item.iron-selected {
-            background: var(--paper-blue-500);
+            background: var(--paper-blue-300);
             color: var(--paper-blue-50);
         }
 
         paper-item:not(.iron-selected) span.value-highlighted {
             background-color: #ffff46;
+        }
+
+        paper-item:focus {
+            background-color: #E1F5FE;
         }
 
         paper-button {
@@ -144,7 +152,7 @@ const template = html`
         <iron-selector id="selector" class="tg-snatchback" multi$="[[multi]]" attr-for-selected="value" on-iron-deselect="_itemDeselected" on-iron-select="_itemSelected">
             <!-- begin of dom-repeat -->
             <template is="dom-repeat" items="[[_values]]" as="v">
-                <paper-item id$="[[_makeId(index)]]" value$="[[_getKeyFor(v)]]" tabindex="-1" noink class="tg-item vertical-layout"></paper-item>
+                <paper-item id$="[[_makeId(index)]]" value$="[[_getKeyFor(v)]]" tabindex="-1" noink class$="[[_calcItemClass(v)]]"></paper-item>
             </template>
             <!-- end of dom-repeat -->
         </iron-selector>
@@ -250,7 +258,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
             },
     
             /**
-             * A function that perorms acceptance of selected values. It is assigned in tg-entity-editor. 
+             * A function that performs acceptance of selected values. It is assigned in tg-entity-editor. 
              */
             acceptValues: {
                 type: Function
@@ -629,6 +637,17 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         const visibleHeight = Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
         const itemHeight = 24 + 2 * 6 + 1; // see tg-item styles with min-height, top / bottom padding and top border
         return visibleHeight - top - 10 < 3 * itemHeight; // three items do not fit, so visible height is small for showing items
+    }
+
+    /**
+     * Calculates classes for autocompleter list item.
+     */
+    _calcItemClass (item) {
+        let klass = 'tg-item vertical-layout';
+        if (typeof item.active !== 'undefined' && item.get('active') === false) {
+            klass += ' inactive';
+        }
+        return klass;
     }
 }
 

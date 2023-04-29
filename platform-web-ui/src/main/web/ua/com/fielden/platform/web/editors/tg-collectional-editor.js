@@ -10,7 +10,7 @@ import '/resources/images/tg-icons.js';
 
 import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
-import { matchedParts } from '/resources/editors/tg-highlighter.js';
+import { searchRegExp, matchedParts } from '/resources/editors/tg-highlighter.js';
 import { TgEditor, createEditorTemplate } from '/resources/editors/tg-editor.js';
 import {GestureEventListeners} from '/resources/polymer/@polymer/polymer/lib/mixins/gesture-event-listeners.js';
 import { tearDownEvent} from '/resources/reflection/tg-polymer-utils.js';
@@ -713,10 +713,11 @@ export class TgCollectionalEditor extends GestureEventListeners(TgEditor) {
     }
     
     searchForPhrase (entities, phrase) {
-        for (var entityIndex = 0; entityIndex < entities.length; entityIndex++) {
-            var currentEntity = entities[entityIndex];
-            var positionInHeader = (this._calcItemText(currentEntity, this.headerPropertyName).toLowerCase()).search(phrase.toLowerCase());
-            var positionInDesc = (this._calcItemText(currentEntity, this.descriptionPropertyName).toLowerCase()).search(phrase.toLowerCase());
+        for (let entityIndex = 0; entityIndex < entities.length; entityIndex++) {
+            const currentEntity = entities[entityIndex];
+            const regex = searchRegExp(phrase.toLowerCase());
+            const positionInHeader = (this._calcItemText(currentEntity, this.headerPropertyName).toLowerCase()).search(regex);
+            const positionInDesc = (this._calcItemText(currentEntity, this.descriptionPropertyName).toLowerCase()).search(regex);
             if (positionInHeader >= 0 || positionInDesc >= 0){
                 return entityIndex; 
             }

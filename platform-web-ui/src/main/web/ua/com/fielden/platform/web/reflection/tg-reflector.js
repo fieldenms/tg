@@ -2,6 +2,7 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 
 import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
+import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
 
 /**
  * Used for decimal and money formatting. If the scale value for formatting wasn't specified then the default one is used.
@@ -1558,70 +1559,47 @@ export const TgReflector = Polymer({
     },
 
     //////////////////// SERVER EXCEPTIONS UTILS ////////////////////
-    /**
-     * Returns a meaninful representation for exception message (including user-friendly version for NPE, not just 'null').
-     */
-    exceptionMessage: function (exception) {
-        return exception.message === null ? "Null pointer exception" : exception.message;
-    },
-
-    /**
-     * Returns a meaninful representation for errorObject message.
-     */
-    exceptionMessageForErrorObject: function (errorObject) {
-        return errorObject.message;
-    },
 
     /**
      * Returns html representation for the specified exception trace (including 'cause' expanded, if any).
      */
     stackTrace: function (ex) {
         // collects error cause by traversing the stack into an ordered list
-        var causeCollector = function (ex, causes) {
+        const causeCollector = function (ex, causes) {
             if (ex) {
-                causes = causes + "<li>" + this.exceptionMessage(ex) + "</li>";
+                causes = causes + "<li>" + resultMessages(ex).extended + "</li>";
                 printStackTrace(ex);
                 if (ex.cause !== null) {
                     causes = causeCollector(ex.cause, causes);
                 }
             }
             return causes + "</ol>";
-        }.bind(this);
+        };
 
-        // ouputs the exception stack trace into the console as warning
-        var printStackTrace = function (ex) {
-            var msg = "No cause and stack trace.";
+        // outputs the exception stack trace into the console as warning
+        const printStackTrace = function (ex) {
+            let msg = "No cause and stack trace.";
             if (ex) {
-                msg = this.exceptionMessage(ex) + '\n';
+                msg = resultMessages(ex).short + '\n';
                 if (Array.isArray(ex.stackTrace)) {
-                    for (var i = 0; i < ex.stackTrace.length; i += 1) {
-                        var st = ex.stackTrace[i];
+                    for (let i = 0; i < ex.stackTrace.length; i += 1) {
+                        const st = ex.stackTrace[i];
                         msg = msg + st.className + '.java:' + st.lineNumber + ':' + st.methodName + ';\n';
                     }
                 }
             }
             console.warn(msg);
-        }.bind(this);
+        };
 
         if (ex) {
-            var causes = "<b>" + this.exceptionMessage(ex) + "</b>";
+            let causes = "<b>" + resultMessages(ex).extended + "</b>";
             printStackTrace(ex);
             if (ex.cause !== null) {
                 causes = causeCollector(ex.cause, causes + "<br><br>Cause(s):<br><ol>")
             }
-
             return causes;
         }
-
-    },
-
-    /**
-     * Returns html representation for the specified errorObject stack.
-     */
-    stackTraceForErrorObjectStack: function (stack) {
-        console.log("STACK", stack);
-        // TODO still "NOT IMPLEMENTED!";
-        return stack.toString();
+        return '';
     },
 
     //////////////////// SERVER EXCEPTIONS UTILS [END] //////////////
