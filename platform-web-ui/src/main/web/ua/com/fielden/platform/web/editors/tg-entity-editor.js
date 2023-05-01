@@ -15,7 +15,7 @@ import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import {microTask} from '/resources/polymer/@polymer/polymer/lib/utils/async.js';
 
 import { TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js';
-import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js'
+import { tearDownEvent, allDefined, isMobileApp } from '/resources/reflection/tg-polymer-utils.js'
 import { composeEntityValue, composeDefaultEntityValue } from '/resources/editors/tg-entity-formatter.js'; 
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
@@ -957,7 +957,9 @@ export class TgEntityEditor extends TgEditor {
         this._onChange();
 
         // at the end let's focus...
-        this._focusInput();
+        if (!isMobileApp()) {
+            this._focusInput();
+        }
     }
 
     /**
