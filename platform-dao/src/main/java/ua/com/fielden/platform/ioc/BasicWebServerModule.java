@@ -106,6 +106,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         super.configure();
         // bind application specific constants
         bindConstant().annotatedWith(Names.named("app.name")).to(props.getProperty("app.name"));
+        bindConstant().annotatedWith(Names.named("help.defaultUri")).to(props.getProperty("help.defaultUri", ""));
         bindConstant().annotatedWith(Names.named("reports.path")).to("");
         bindConstant().annotatedWith(Names.named("domain.path")).to(props.getProperty("domain.path"));
         bindConstant().annotatedWith(Names.named("domain.package")).to(props.getProperty("domain.package"));

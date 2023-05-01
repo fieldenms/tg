@@ -9,7 +9,6 @@ import java.util.Optional;
 
 import com.google.inject.Inject;
 
-import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.utils.EntityUtils;
@@ -30,31 +29,19 @@ public class UserDefinableHelpProducer extends DefaultEntityProducerWithContext<
     @Override
     protected UserDefinableHelp provideDefaultValues(final UserDefinableHelp entity) {
        return getReferenceElement().map(refElement -> {
-
             // let's restrict nested calls to UserDefinableHelp Master invocations related to UserDefinableHelp itself
             if (currentEntityNotEmpty() && UserDefinableHelp.class.isAssignableFrom(getOriginalType(currentEntity(AbstractEntity.class).getType())) && EntityUtils.equalsEx(currentEntity(UserDefinableHelp.class).getReferenceElement(), UserDefinableHelp.class.getName())) {
                 throw failureEx("Nested help links are not supported.", "You are currently attempting to add a help link to a master, which represents a help link for a Help Master (i.e., this is a nested call).<br>Simply finish your changes to a help link, if any, and close the curent Help Master dialog.");
             }
 
-           final UserDefinableHelpCo entityMasterHelpCo = co$(UserDefinableHelp.class);
-           final UserDefinableHelp persistedEntity = entityMasterHelpCo.findByKeyAndFetch(entityMasterHelpCo.getFetchProvider().fetchModel(), refElement);
+           final UserDefinableHelpCo coUserDefinableHelp = co$(UserDefinableHelp.class);
+           final UserDefinableHelp help = coUserDefinableHelp.findOrNewWithDefaultHelp(refElement);
            final boolean skipUi = this.chosenPropertyEmpty();
-           if (persistedEntity != null) {
-               if (skipUi) {
-                   entity.setReferenceElement(persistedEntity.getReferenceElement());
-                   entity.setHelp(persistedEntity.getHelp());
-                   entity.setSkipUi(true);
-                   return entity;
+               if (skipUi && help.getHelp() == null) {
+                   throw failureEx("There is no help to open.", "Users with the right privileges can add a help hyperlink.<br>Alt+Tap or long press the help action to invoke Help Master.");
                }
-               return persistedEntity;
-           } else {
-               if (skipUi) {
-                    throw failureEx("There is no help to open.", "Users with the right privileges can add a help hyperlink.<br>Alt+Tap or long press the help action to invoke Help Master.");
-               } else {
-                   entity.setReferenceElement(refElement);
-                   return entity;
-               }
-           }
+               help.setSkipUi(skipUi);
+               return help;
        }).orElse(entity);
     }
 
