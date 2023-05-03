@@ -24,7 +24,7 @@ import ua.com.fielden.platform.utils.Pair;
 @EntityType(EntityWithMoney.class)
 public class EntityWithMoneyDao extends CommonEntityDao<EntityWithMoney> implements IEntityWithMoney {
     public static final String ERR_PURPOSEFUL_EXCEPTION = "Purposeful exception.";
-
+    
     @Inject
     protected EntityWithMoneyDao(final IFilter filter) {
         super(filter);
