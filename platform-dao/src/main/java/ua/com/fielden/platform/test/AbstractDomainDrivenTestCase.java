@@ -31,6 +31,8 @@ import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.DbUtils;
 
 /**
@@ -231,6 +233,12 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     @Override
     public void setTransactionGuid(final String guid) {
         this.transactionGuid = guid;
+    }
+
+    @Override
+    public User getUser() {
+        final IUserProvider up = getInstance(IUserProvider.class);
+        return up.getUser();
     }
 
 }
