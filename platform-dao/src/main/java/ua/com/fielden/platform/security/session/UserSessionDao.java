@@ -361,11 +361,11 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
         final boolean sessionExpired = session.getExpiryTime().before(now().toDate());
         final boolean sessionRso = session.getSid() == null;
         if (sessionExpired && sessionRso) {
-                logger.warn(format("Session for user [%s] has expired at [%s], access denied (skip regeneration == %s).", user, formatter.print(session.getExpiryTime().getTime()), skipRegeneration));
-                // if authenticator has expired then use this opportunity to clear all expired sessions for the current
-                clearExpired(user);
-                ssoSessionController.invalidate(session.getSid());
-                return empty();
+            logger.warn(format("Session for user [%s] has expired at [%s], access denied (skip regeneration == %s).", user, formatter.print(session.getExpiryTime().getTime()), skipRegeneration));
+            // if authenticator has expired then use this opportunity to clear all expired sessions for the current
+            clearExpired(user);
+            ssoSessionController.invalidate(session.getSid());
+            return empty();
         }
 
         // if this point is reached then the identified session is considered valid (almost, as it may still be an expired SSO session)
