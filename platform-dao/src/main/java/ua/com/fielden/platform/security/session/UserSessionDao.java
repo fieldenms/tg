@@ -354,13 +354,13 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             }
         }
 
-        // only after we have a high probability for legitimate user request, the identified session needs to be check for expiry
-        // for this either the authenticator's time portion or the time from the retrieved session could be used
-        // but to provide one additional level of session verification, let's make sure that both times are identical
-        // if they are not.... then most likely the database was tempered with... just log the problem, but proceed with further session validation
-        // the thing is that the only way to reach this point of validation for an authenticator, it would need to be either valid or an adversary would needed to either steal it and no legitimate user yet used it, or forge it, which would
-        // require an access to the server... in this unfortunate case there is no way to identify the actually stolen session...
-        if (session.getExpiryTime().before(now().toDate())) {
+        // only after we have a high probability for legitimate user request, the identified session needs to be check for expiration
+        // for the time from the retrieved session should be used
+        // in case of RSO, expired sessions should be invalidated and the request denied
+        // in case of SSO (SID is present), expired sessions can still be re-validated by attempting to refresh the associated SID 
+        final boolean sessionExpired = session.getExpiryTime().before(now().toDate());
+        final boolean sessionRso = session.getSid() == null;
+        if (sessionExpired && sessionRso) {
             logger.warn(format("Session for user [%s] has expired at [%s], access denied (skip regeneration == %s).", user, formatter.print(session.getExpiryTime().getTime()), skipRegeneration));
             // if authenticator has expired then use this opportunity to clear all expired sessions for the current
             clearExpired(user);
@@ -368,9 +368,9 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             return empty();
         }
 
-        // if this point is reached then the identified session is considered valid
-        // now need to decide whether a new session needs to be generated
-        // if not then simply return the identified session back
+        // if this point is reached then the identified session is considered valid (almost, as it may still be an expired SSO session)
+        // need to decide whether a new session should to be generated
+        // if not then simply return the identified session back, even if it has expired
         // in practice this is limited to SSE requests that never return a response and thus would not be able to return a new security token back to the client
         if (skipRegeneration) {
             return of(session);
@@ -382,7 +382,11 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             // in this case, we may need to implement a re-try...
             // but let's first see if that is a problem by logging warning to this effect.
             final UserSession newSession = newSessionToReplaceOld(user, session.isTrusted(), of(authenticator), session.getSid());
-            forceUpdateExpiryTimeForSession(session.getId(), user, constants.now().plusMinutes(untrustedDurationMins));
+            try {
+                forceUpdateExpiryTimeForSession(session.getId(), user, now().plusMinutes(untrustedDurationMins));
+            } catch (final Exception ex) {
+                logger.info(format("Old session for user [%s] was not prolonged due to [%s].", ex.getMessage()));
+            }
 
             final Result ssoRefreshed = ssoSessionController.refresh(session.getSid());
             if (!ssoRefreshed.isSuccessful()) {
@@ -393,8 +397,8 @@ public class UserSessionDao extends CommonEntityDao<UserSession> implements IUse
             
             return of(newSession);
         } catch (final Exception ex) {
-            logger.warn(format("Saving of a new session for user [%s] did not succeed. Using previously verified session instead...", user), ex);
-            return of(session);
+            logger.warn(format("Saving of a new session for user [%s] did not succeed. Using previously verified session if not expired: [%s].", user, !sessionExpired), ex);
+            return sessionExpired ? empty() : of(session);
         }
     }
     
