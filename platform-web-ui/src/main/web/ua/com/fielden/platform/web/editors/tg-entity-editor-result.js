@@ -47,12 +47,15 @@ const template = html`
         }
 
         .tg-item.inactive {
-            background: #ECEFF1;
+            color: color-mix(in srgb, black 33%, white);
         }
 
-        .tg-item:hover {
+        .tg-item:hover{
             cursor: pointer;
             background: var(--paper-blue-50);
+        }
+
+        .tg-item:hover:not(.inactive) {
             color: var(--paper-blue-500);
         }
 
@@ -377,7 +380,8 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                     '',
                     v.key,
                     () => this._propValueByName(v, 'desc'),
-                    withDesc === true
+                    withDesc === true,
+                    typeof v.active === 'undefined' || v.get("active")
                 );
 
                 // add values for additional properties with highlighting of matching parts if required
@@ -393,7 +397,8 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                             '<span class="prop-name"><span>' + this._propTitleByName(v, propName) + '</span>:</span>',
                             this._propValueByName(v, propName),
                             () => this._propValueByName(v, propName + '.desc'),
-                            this.reflector.isEntity(v.get(propName)) && typeof v.get(propName)['desc'] !== 'undefined'
+                            this.reflector.isEntity(v.get(propName)) && typeof v.get(propName)['desc'] !== 'undefined',
+                            typeof v.active === 'undefined' || v.get("active")
                         );
                     }
                 }
@@ -419,16 +424,14 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
      * @param secondaryStringValue - function to compute value of desc in 'key - desc' part of representation
      * @param secondaryStringValueRequired - parameter indicating whether desc in 'key - desc' part of representation is required
      */
-    _addHighlightedProp (highlight, searchQuery, wrappingDivAttrs, prependingDom, mainStringValue, secondaryStringValue, secondaryStringValueRequired) {
+    _addHighlightedProp (highlight, searchQuery, wrappingDivAttrs, prependingDom, mainStringValue, secondaryStringValue, secondaryStringValueRequired, active) {
         let html = '<div ' + wrappingDivAttrs + 'style="white-space: nowrap;">' +
             prependingDom +
             this._highlightedValue(highlight, mainStringValue, searchQuery);
         if (secondaryStringValueRequired) {
             const propDesc = secondaryStringValue();
             if (propDesc && propDesc !== 'null' && propDesc !== '') {
-                html = html + '<span style="color:#737373"> &ndash; <i>' +
-                    this._highlightedValue(highlight, propDesc, searchQuery) +
-                    '</i></span>';
+                html = html + `<span style="color:${active ? "#737373" : "currentcolor"}"> &ndash; <i>${this._highlightedValue(highlight, propDesc, searchQuery)}</i></span>`;
             }
         }
         return html + '</div>';

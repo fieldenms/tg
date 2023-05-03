@@ -1216,7 +1216,7 @@
                 master.retrieve();
             });
             
-            test('avoids for existing valid non-dirty entity with Already Saved exception thrown', function (done) {
+            test('of an existing valid non-dirty entity simply returns the same entity back', function (done) {
                 let firstValidation = true;
                 let thirdValidation = false;
                 master.postValidated = function (validatedEntity, bindingEntity, customObject) {
@@ -1244,12 +1244,11 @@
                 
                 master.postSavedForExisting = function (potentiallySavedOrNewEntity, bindingEntity) {
                     assert.isNotNull(potentiallySavedOrNewEntity.get('id'), 'Entity id should be not null.');
-                    
-                    assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), 'Entity\'s exceptionOccured should exist.');
-                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'There are no changes to save.', 'Entity\'s exceptionOccured should exist.');
-                    
+
+                    assert.isNull(potentiallySavedOrNewEntity.exceptionOccured(), 'No exception was expected when attempting to save not changed entity.');
+
                     const arrivedValue = _millis('01/02/2003 00:00:00.000');
-                    
+
                     // value ok?
                     assert.ok(potentiallySavedOrNewEntity.get('dateProp'), 'Property value should be initialised.');
                     assert.strictEqual(potentiallySavedOrNewEntity.get('dateProp'), arrivedValue, 'Property value should be correct.');
