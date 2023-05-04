@@ -86,6 +86,19 @@ public class TgVehicle extends AbstractEntity<String> {
     @MapTo
     @Title("Last meter reading")
     private BigDecimal lastMeterReading;
+    
+    @IsProperty
+    private TgReMaxVehicleReading maxReading;
+
+    @Observable
+    public TgVehicle setMaxReading(final TgReMaxVehicleReading maxReading) {
+        this.maxReading = maxReading;
+        return this;
+    }
+
+    public TgReMaxVehicleReading getMaxReading() {
+        return maxReading;
+    }
 
     @IsProperty(linkProperty = "vehicle")
     @Calculated
