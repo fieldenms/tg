@@ -17,6 +17,9 @@ import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.EntityUtils.hasDescProperty;
 import static ua.com.fielden.platform.utils.EntityUtils.isCompositeEntity;
+import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
 import java.lang.annotation.Annotation;
@@ -55,6 +58,9 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
+import ua.com.fielden.platform.sample.domain.TgReVehicleWithHighPrice;
+import ua.com.fielden.platform.sample.domain.TgVehicle;
+import ua.com.fielden.platform.sample.domain.TgVehicleModel;
 import ua.com.fielden.platform.types.either.Either;
 import ua.com.fielden.platform.types.either.Right;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -99,8 +105,7 @@ public class Finder {
     }
 
     /**
-     * The same as {@link #getPropertyDescriptors(Class)}, but with ability to skip some properties.
-     * This is convenient at times where some properties need to be skipped.
+     * The same as {@link #getPropertyDescriptors(Class)}, but with ability to skip some properties. This is convenient at times where some properties need to be skipped.
      *
      * @param <T>
      * @param entityType
@@ -283,9 +288,8 @@ public class Finder {
         final boolean hasDesc = hasDescProperty(entityType);
         final boolean hasCompositeKey = isCompositeEntity(entityType);
         final boolean isUnion = isUnionEntityType(entityType);
-        return getFieldsAnnotatedWith(entityType, false, IsProperty.class, annotations)
-               .filter(f -> (hasDesc          && !isUnion || !DESC.equals(f.getName()))  // if not hasDesc     or isUnion then exclude DESC
-                         && (!hasCompositeKey && !isUnion || !KEY.equals(f.getName()))); // if hasCompositeKey or isUnion then exclude KEY
+        return getFieldsAnnotatedWith(entityType, false, IsProperty.class, annotations).filter(f -> (hasDesc && !isUnion || !DESC.equals(f.getName())) // if not hasDesc     or isUnion then exclude DESC
+                && (!hasCompositeKey && !isUnion || !KEY.equals(f.getName()))); // if hasCompositeKey or isUnion then exclude KEY
     }
 
     /**
@@ -396,9 +400,7 @@ public class Finder {
             final CompositeKeyMember annotation = AnnotationReflector.getAnnotation(field, CompositeKeyMember.class);
             final int order = annotation.value();
             if (properties.containsKey(order)) {
-                throw new ReflectionException(
-                        format("Annotation [%s] in class [%s] for property [%s] has a duplicate order value of [%s], which is already present in property [%s].",
-                        CompositeKeyMember.class.getName(), type.getName(), field.getName(), order, properties.get(order)));
+                throw new ReflectionException(format("Annotation [%s] in class [%s] for property [%s] has a duplicate order value of [%s], which is already present in property [%s].", CompositeKeyMember.class.getName(), type.getName(), field.getName(), order, properties.get(order)));
             }
             properties.put(order, field);
         }
@@ -485,8 +487,8 @@ public class Finder {
     }
 
     /**
-     * The same as {@link #findFieldByName(Class, String)}, but the returned tuple includes the type, where the last property or method in the {@code dotNotationExp} belongs.
-     * This could a declaring type, but also the last type reached during the path traversal.
+     * The same as {@link #findFieldByName(Class, String)}, but the returned tuple includes the type, where the last property or method in the {@code dotNotationExp} belongs. This
+     * could a declaring type, but also the last type reached during the path traversal.
      *
      * @param type
      * @param dotNotationExpr
@@ -710,6 +712,7 @@ public class Finder {
      * @throws IllegalAccessException
      */
     private static final Set<String> KEY_DESC_ID = setOf(KEY, DESC, ID);
+
     private static Object getAbstractUnionEntityFieldValue(final AbstractUnionEntity value, final String property) {
         final Optional<Field> field;
         final Object valueToRetrieveFrom;
@@ -869,20 +872,25 @@ public class Finder {
     }
 
     /**
-     * Returns {@code true} if the {@code field} is present in the list of specified properties, which is determined by matching field names and types.
-     * In case of property with name "key", special care is taken to determine its type.
+     * Returns {@code true} if the {@code field} is present in the list of specified properties, which is determined by matching field names and types. In case of property with
+     * name "key", special care is taken to determine its type.
      *
-     * @param field -- the field to check.
-     * @param fieldOwner -- the type where {@code field} is declared; this is required to overcome the problem with the absence of type reification in case of generic inherited properties.
-     * @param properties -- a list of fields to check the {@code field} against.
-     * @param propertyOwner -- the type on which the check is happening; this is the owner type for {@code properties}.
+     * @param field
+     *            -- the field to check.
+     * @param fieldOwner
+     *            -- the type where {@code field} is declared; this is required to overcome the problem with the absence of type reification in case of generic inherited
+     *            properties.
+     * @param properties
+     *            -- a list of fields to check the {@code field} against.
+     * @param propertyOwner
+     *            -- the type on which the check is happening; this is the owner type for {@code properties}.
      * @return
      */
     private static boolean isPropertyPresent(final Field field, final Class<? extends AbstractEntity<?>> fieldOwner, final List<Field> properties, final Class<? extends AbstractEntity<?>> propertyOwner) {
         for (final Field property : properties) {
             if (field.getName().equals(property.getName())) {
                 final boolean isKey = KEY.equals(field.getName()); // need special handling for property key
-                final Class<?> fieldType    = isKey ? getKeyType(fieldOwner)    : field.getType();
+                final Class<?> fieldType = isKey ? getKeyType(fieldOwner) : field.getType();
                 final Class<?> propertyType = isKey ? getKeyType(propertyOwner) : property.getType();
                 if (fieldType != null && propertyType != null && fieldType.equals(propertyType)) {
                     return true;
@@ -1033,7 +1041,7 @@ public class Finder {
         // non-collectional properties must have their linkProperty specified explicitly, otherwise they're considered to be Many-to-One
         if (!collectionalProp && !isOne2One_association(type, dotNotationExp)) {
             throw new IllegalStateException("Non-collectional property " + dotNotationExp + " in type " + type.getName() + //
-            " represents a Many-to-One association.");
+                    " represents a Many-to-One association.");
         }
 
         // first check for a link property amongst key members
@@ -1094,7 +1102,7 @@ public class Finder {
     /**
      * Determines whether specified property is one2one association.
      * <p>
-     * The rule is following : if the type of property contains the "key" of the type of property parent then return <code>true</code>, otherwise <code>false</code>.
+     * The rule is following : if the type of property contains the "key" of the type of property parent or the "key" that is assignable from property parent and property parent has "id" property then return <code>true</code>, otherwise <code>false</code>.
      *
      * @param type
      * @param dotNotationExp
@@ -1102,9 +1110,17 @@ public class Finder {
      */
     public static boolean isOne2One_association(final Class<?> type, final String dotNotationExp) {
         final Class<?> propertyType = PropertyTypeDeterminator.determinePropertyType(type, dotNotationExp);
-        final Class<?> masterType = DynamicEntityClassLoader.getOriginalType(PropertyTypeDeterminator.transform(type, dotNotationExp).getKey());
-        return EntityUtils.isEntityType(propertyType)
-                && DynamicEntityClassLoader.getOriginalType(PropertyTypeDeterminator.determinePropertyType(propertyType, KEY)).equals(masterType);
-    }
+        if (isEntityType(propertyType)) {
+            final Class<?> masterType = DynamicEntityClassLoader.getOriginalType(PropertyTypeDeterminator.transform(type, dotNotationExp).getKey());
+            final Class<?> propertyTypeKeyType = DynamicEntityClassLoader.getOriginalType(PropertyTypeDeterminator.determinePropertyType(propertyType, KEY));
 
+            if (propertyTypeKeyType.equals(masterType) ||
+                    propertyTypeKeyType.isAssignableFrom(masterType) // covers the case when there are synthetic entities derived from persistent (or synthetic with ID) entities with 1-2-1 property
+                            && isEntityType(propertyTypeKeyType)
+                            && (isPersistedEntityType(propertyTypeKeyType) || isSyntheticBasedOnPersistentEntityType((Class<? extends AbstractEntity<?>>) propertyTypeKeyType))) {
+                return true;
+            }
+        }
+        return false;
+    }
 }
