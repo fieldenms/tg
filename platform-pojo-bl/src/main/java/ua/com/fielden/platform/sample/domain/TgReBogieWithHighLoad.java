@@ -5,7 +5,7 @@ import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.selec
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 
-@CompanionObject(ITgBogie.class)
+@CompanionObject(TgReBogieWithHighLoadCo.class)
 public class TgReBogieWithHighLoad extends TgBogie {
     protected static final EntityResultQueryModel<TgReBogieWithHighLoad> model_ = select(TgBogie.class)
             .where().prop("bogieClass.tonnage").ge().val(20)
