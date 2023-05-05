@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
@@ -128,7 +129,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     protected Optional<String> tooltipProp = Optional.empty();
     protected Optional<PropDef<?>> propDef = Optional.empty();
     protected Optional<AbstractWidget> widget = Optional.empty();
-    private Supplier<Optional<EntityActionConfig>> entityActionConfig;
+    private Supplier<Optional<EntityMultiActionConfig>> entityActionConfig;
     private Integer orderSeq;
     private int width = 80;
     private boolean isFlexible = true;
@@ -289,9 +290,15 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             throw new IllegalArgumentException("Property action configuration should not be null.");
         }
 
-        this.entityActionConfig = () -> Optional.of(actionConfig);
+        this.entityActionConfig = () -> Optional.of(new EntityMultiActionConfig(SingleActionSelector.class, asList(() -> of(actionConfig))));
         completePropIfNeeded();
         return this;
+    }
+
+    @Override
+    public IAlsoProp<T> withAction(final EntityMultiActionConfig multiActionConfig) {
+        // TODO Auto-generated method stub
+        return null;
     }
 
     @Override
@@ -300,7 +307,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             throw new IllegalArgumentException("Property action configuration supplier should not be null.");
         }
 
-        this.entityActionConfig = actionConfigSupplier;
+        this.entityActionConfig = () -> of(new EntityMultiActionConfig(SingleActionSelector.class, asList(actionConfigSupplier)));
         completePropIfNeeded();
         return this;
     }
@@ -338,7 +345,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             throw new IllegalArgumentException("Primary action configuration should not be null.");
         }
 
-        return addPrimaryAction(new EntityMultiActionConfig(SingleActionSelector.class, Arrays.asList(actionConfig)));
+        return addPrimaryAction(new EntityMultiActionConfig(SingleActionSelector.class, Arrays.asList(() -> of(actionConfig))));
     }
 
     @Override
@@ -358,7 +365,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             throw new IllegalArgumentException("Secondary action configuration should not be null.");
         }
 
-        return addSecondaryAction(new EntityMultiActionConfig(SingleActionSelector.class, Arrays.asList(actionConfig)));
+        return addSecondaryAction(new EntityMultiActionConfig(SingleActionSelector.class, Arrays.asList(() -> of(actionConfig))));
     }
 
     @Override

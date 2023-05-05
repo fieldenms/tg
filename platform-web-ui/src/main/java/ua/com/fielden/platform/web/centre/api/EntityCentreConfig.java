@@ -17,6 +17,7 @@ import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalAc
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -262,13 +263,13 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         public final int width;
         public final boolean isFlexible;
 
-        private Supplier<Optional<EntityActionConfig>> propAction = Optional::empty;
+        private Supplier<Optional<EntityMultiActionConfig>> propAction = Optional::empty;
 
-         public static <T extends AbstractEntity<?>> ResultSetProp<T> propByName(final String propName, final int width, final boolean isFlexible, final Optional<AbstractWidget> widget, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
+         public static <T extends AbstractEntity<?>> ResultSetProp<T> propByName(final String propName, final int width, final boolean isFlexible, final Optional<AbstractWidget> widget, final String tooltipProp, final Supplier<Optional<EntityMultiActionConfig>> propAction) {
             return new ResultSetProp<>(propName, empty(), empty(), empty(), width, isFlexible, widget, tooltipProp, null, propAction);
         }
 
-        public static <T extends AbstractEntity<?>> ResultSetProp<T> propByDef(final PropDef<?> propDef, final int width, final boolean isFlexible, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
+        public static <T extends AbstractEntity<?>> ResultSetProp<T> propByDef(final PropDef<?> propDef, final int width, final boolean isFlexible, final String tooltipProp, final Supplier<Optional<EntityMultiActionConfig>> propAction) {
             return new ResultSetProp<>(null, empty(), empty(), empty(), width, isFlexible, Optional.empty(), tooltipProp, propDef, propAction);
         }
 
@@ -286,7 +287,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
                 final Optional<AbstractWidget> widget,
                 final String tooltipProp,
                 final PropDef<?> propDef,
-                final Supplier<Optional<EntityActionConfig>> propAction) {
+                final Supplier<Optional<EntityMultiActionConfig>> propAction) {
 
             if (propName != null && propDef != null) {
                 throw new WebUiBuilderException("Only one of property name or property definition should be provided.");
@@ -312,11 +313,11 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             this.entityPreProcessor = entityPreProcessor;
         }
 
-        public void setPropAction(final Supplier<Optional<EntityActionConfig>> propAction) {
+        public void setPropAction(final Supplier<Optional<EntityMultiActionConfig>> propAction) {
             this.propAction = propAction;
         }
 
-        public Supplier<Optional<EntityActionConfig>> getPropAction() {
+        public Supplier<Optional<EntityMultiActionConfig>> getPropAction() {
             return propAction;
         }
 
@@ -871,7 +872,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             }
             return getResultSetProperties().get().stream()
                     .filter(resultSetProp -> resultSetProp.propAction.get().isPresent())
-                    .map(resultSetProp -> resultSetProp.propAction.get().get())
+                    .map(resultSetProp -> resultSetProp.propAction.get().get().actions())
+                    .flatMap(Collection::stream)
                     .collect(Collectors.toList())
                     .get(actionNumber);
         } else if (INSERTION_POINT == actionKind) {
