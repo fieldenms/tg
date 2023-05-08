@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
@@ -263,18 +262,18 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         public final int width;
         public final boolean isFlexible;
 
-        private Supplier<Optional<EntityMultiActionConfig>> propAction = Optional::empty;
+        private Optional<EntityMultiActionConfig> propAction = Optional.empty();
 
-         public static <T extends AbstractEntity<?>> ResultSetProp<T> propByName(final String propName, final int width, final boolean isFlexible, final Optional<AbstractWidget> widget, final String tooltipProp, final Supplier<Optional<EntityMultiActionConfig>> propAction) {
+         public static <T extends AbstractEntity<?>> ResultSetProp<T> propByName(final String propName, final int width, final boolean isFlexible, final Optional<AbstractWidget> widget, final String tooltipProp, final Optional<EntityMultiActionConfig> propAction) {
             return new ResultSetProp<>(propName, empty(), empty(), empty(), width, isFlexible, widget, tooltipProp, null, propAction);
         }
 
-        public static <T extends AbstractEntity<?>> ResultSetProp<T> propByDef(final PropDef<?> propDef, final int width, final boolean isFlexible, final String tooltipProp, final Supplier<Optional<EntityMultiActionConfig>> propAction) {
+        public static <T extends AbstractEntity<?>> ResultSetProp<T> propByDef(final PropDef<?> propDef, final int width, final boolean isFlexible, final String tooltipProp, final Optional<EntityMultiActionConfig> propAction) {
             return new ResultSetProp<>(null, empty(), empty(), empty(), width, isFlexible, Optional.empty(), tooltipProp, propDef, propAction);
         }
 
         public static <T extends AbstractEntity<?>> ResultSetProp<T> dynamicProps(final String collectionalPropertyName, final Class<? extends IDynamicColumnBuilder<T>> dynamicPropDefinerClass, final BiConsumer<? extends AbstractEntity<?>, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
-            return new ResultSetProp<>(collectionalPropertyName, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), 0, false, Optional.empty(), null, null, () -> Optional.empty());
+            return new ResultSetProp<>(collectionalPropertyName, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), 0, false, Optional.empty(), null, null, Optional.empty());
         }
 
         private ResultSetProp(
@@ -287,14 +286,14 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
                 final Optional<AbstractWidget> widget,
                 final String tooltipProp,
                 final PropDef<?> propDef,
-                final Supplier<Optional<EntityMultiActionConfig>> propAction) {
+                final Optional<EntityMultiActionConfig> propAction) {
 
             if (propName != null && propDef != null) {
                 throw new WebUiBuilderException("Only one of property name or property definition should be provided.");
             }
 
             if (propAction == null) {
-                throw new WebUiBuilderException("Property action suppplier cannot be null.");
+                throw new WebUiBuilderException("Property action cannot be null.");
             }
 
             if (StringUtils.isEmpty(propName) && propDef == null) {
@@ -313,11 +312,11 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             this.entityPreProcessor = entityPreProcessor;
         }
 
-        public void setPropAction(final Supplier<Optional<EntityMultiActionConfig>> propAction) {
+        public void setPropAction(final Optional<EntityMultiActionConfig> propAction) {
             this.propAction = propAction;
         }
 
-        public Supplier<Optional<EntityMultiActionConfig>> getPropAction() {
+        public Optional<EntityMultiActionConfig> getPropAction() {
             return propAction;
         }
 
@@ -871,8 +870,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
                 throw new IllegalArgumentException("No result-set property exists.");
             }
             return getResultSetProperties().get().stream()
-                    .filter(resultSetProp -> resultSetProp.propAction.get().isPresent())
-                    .map(resultSetProp -> resultSetProp.propAction.get().get().actions())
+                    .filter(resultSetProp -> resultSetProp.propAction.isPresent())
+                    .map(resultSetProp -> resultSetProp.propAction.get().actions())
                     .flatMap(Collection::stream)
                     .collect(Collectors.toList())
                     .get(actionNumber);

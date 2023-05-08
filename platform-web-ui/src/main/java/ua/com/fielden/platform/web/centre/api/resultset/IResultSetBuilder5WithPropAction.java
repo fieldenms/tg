@@ -42,7 +42,7 @@ public interface IResultSetBuilder5WithPropAction<T extends AbstractEntity<?>> e
      * @param multiActionConfig
      * @return
      */
-    IAlsoProp<T> withAction(final EntityMultiActionConfig multiActionConfig);
+    IAlsoProp<T> withMultiAction(final EntityMultiActionConfig multiActionConfig);
 
     /**
      * A variation of {@link #withAction(EntityActionConfig)} with delayed instantiation of the action configuration until the moment it is used for Web UI rendering.

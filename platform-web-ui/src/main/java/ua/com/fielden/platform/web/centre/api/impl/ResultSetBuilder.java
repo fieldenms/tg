@@ -129,7 +129,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     protected Optional<String> tooltipProp = Optional.empty();
     protected Optional<PropDef<?>> propDef = Optional.empty();
     protected Optional<AbstractWidget> widget = Optional.empty();
-    private Supplier<Optional<EntityMultiActionConfig>> entityActionConfig;
+    private Optional<EntityMultiActionConfig> entityActionConfig = Optional.empty();
     private Integer orderSeq;
     private int width = 80;
     private boolean isFlexible = true;
@@ -152,7 +152,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.tooltipProp = Optional.empty();
         this.propDef = Optional.empty();
         this.orderSeq = null;
-        this.entityActionConfig = Optional::empty;
+        this.entityActionConfig = Optional.empty();
         return this;
     }
 
@@ -252,7 +252,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.tooltipProp = Optional.empty();
         this.propDef = Optional.of(propDef);
         this.orderSeq = null;
-        this.entityActionConfig = Optional::empty;
+        this.entityActionConfig = Optional.empty();
         return this;
     }
 
@@ -290,15 +290,20 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             throw new IllegalArgumentException("Property action configuration should not be null.");
         }
 
-        this.entityActionConfig = () -> Optional.of(new EntityMultiActionConfig(SingleActionSelector.class, asList(() -> of(actionConfig))));
+        this.entityActionConfig = of(new EntityMultiActionConfig(SingleActionSelector.class, asList(() -> of(actionConfig))));
         completePropIfNeeded();
         return this;
     }
 
     @Override
-    public IAlsoProp<T> withAction(final EntityMultiActionConfig multiActionConfig) {
-        // TODO Auto-generated method stub
-        return null;
+    public IAlsoProp<T> withMultiAction(final EntityMultiActionConfig multiActionConfig) {
+        if (multiActionConfig == null) {
+            throw new IllegalArgumentException("Property action configuration should not be null.");
+        }
+
+        this.entityActionConfig = of(multiActionConfig);
+        completePropIfNeeded();
+        return this;
     }
 
     @Override
@@ -307,7 +312,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             throw new IllegalArgumentException("Property action configuration supplier should not be null.");
         }
 
-        this.entityActionConfig = () -> of(new EntityMultiActionConfig(SingleActionSelector.class, asList(actionConfigSupplier)));
+        this.entityActionConfig = of(new EntityMultiActionConfig(SingleActionSelector.class, asList(actionConfigSupplier)));
         completePropIfNeeded();
         return this;
     }
@@ -465,7 +470,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         this.tooltipProp = Optional.empty();
         this.propDef = Optional.empty();
         this.orderSeq = null;
-        this.entityActionConfig = Optional::empty;
+        this.entityActionConfig = Optional.empty();
         this.widget = Optional.empty();
     }
 
