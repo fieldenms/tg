@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang.StringUtils.join;
 import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
@@ -66,6 +67,7 @@ import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
+import org.apache.commons.collections4.map.HashedMap;
 import org.apache.log4j.Logger;
 
 import com.google.common.collect.ListMultimap;
@@ -907,6 +909,19 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return dslDefaultConfig
             .getResultSetPrimaryEntityAction()
             .map(multiActionConfig -> injector.getInstance(multiActionConfig.actionSelectorClass()));
+    }
+
+    /**
+     * Creates and returns instance of multi-action selector in case of property multi-action specified in Centre DSL.
+     * Returns map between property names and property action selector.
+     */
+    public Map<String, ? extends IEntityMultiActionSelector> createPropertyActionSelector() {
+        return dslDefaultConfig.getResultSetProperties().map(resultProps -> {
+            return resultProps.stream()
+                    .filter(resultProp -> resultProp.getPropAction().isPresent() && (resultProp.getPropAction().get().actions().size() > 0))
+                    .map(resultProp -> t2(derivePropName(resultProp), injector.getInstance(resultProp.getPropAction().get().actionSelectorClass())))
+                    .collect(toMap(tt -> tt._1, tt -> tt._2));
+        }).orElse(new HashedMap<>());
     }
 
     /**

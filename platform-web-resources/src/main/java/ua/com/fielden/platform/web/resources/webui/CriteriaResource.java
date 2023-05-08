@@ -686,6 +686,7 @@ public class CriteriaResource extends AbstractWebResource {
             // Apply primary and secondary action selectors
             pair.getKey().put("primaryActionIndices", createPrimaryActionIndices(pair.getValue()));
             pair.getKey().put("secondaryActionIndices", createSecondaryActionIndices(pair.getValue()));
+            pair.getKey().put("propertyActionIndices", createPropertyActionIndices(pair.getValue()));
 
             // Build dynamic properties object
             final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext = getDynamicResultProperties(
@@ -756,6 +757,21 @@ public class CriteriaResource extends AbstractWebResource {
         return centre.createPrimaryActionSelector().map(selector -> {
             return entities.stream().map(entity -> selector.getActionFor((AbstractEntity<?>) entity)).collect(toList());
         }).orElse(emptyList());
+    }
+
+    /**
+     * Calculates indices of property action for each entity in result set.
+     *
+     * @param entities
+     * @return
+     */
+    private List<Map<String, Integer>> createPropertyActionIndices(final List<?> entities) {
+        final Map<String, ? extends IEntityMultiActionSelector> actionSelectors = centre.createPropertyActionSelector();
+        return entities.stream().map(entity -> {
+            return actionSelectors.entrySet().stream()
+                .map(entry -> t2(entry.getKey(), new Integer(entry.getValue().getActionFor((AbstractEntity<?>) entity))))
+                .collect(Collectors.toMap(tt -> tt._1, tt -> tt._2));
+        }).collect(toList());
     }
 
     /**
