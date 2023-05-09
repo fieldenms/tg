@@ -514,7 +514,7 @@ const template = html`
                                 <tg-egi-multi-action class="action" actions="[[primaryAction.actions]]" current-entity="[[_currentEntity(egiEntity.entity)]]" current-index="[[egiEntity.primaryActionIndex]]"></tg-egi-multi-action>
                             </div>
                             <template is="dom-repeat" items="[[fixedColumns]]" as="column">
-                                <tg-egi-cell column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'true')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapFixedAction"></tg-egi-cell>
+                                <tg-egi-cell column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'true')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customActions)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapFixedAction"></tg-egi-cell>
                             </template>
                         </div>
                     </template>
@@ -543,7 +543,7 @@ const template = html`
                                 <tg-egi-multi-action class="action" actions="[[primaryAction.actions]]" current-entity="[[_currentEntity(egiEntity.entity)]]" current-index="[[egiEntity.primaryActionIndex]]"></tg-egi-multi-action>
                             </div>
                             <template is="dom-repeat" items="[[columns]]" as="column">
-                                <tg-egi-cell column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
+                                <tg-egi-cell column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customActions)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
                             </template>
                         </div>
                     </template>
@@ -1126,8 +1126,10 @@ Polymer({
     },
 
     hasAction: function (entity, column) {
+        const entityIdx = this.findEntityIndex(entity);
+        const actionIdx = this.propertyActionIndices && this.propertyActionIndices[entityIdx] && this.propertyActionIndices[entityIdx][column.property];
         return entity && (
-            column.customAction
+            (column.customActions && column.customActions.length > 0 && column.customActions[actionIdx])
             || this.isHyperlinkProp(entity, column) === true
             || this.getAttachmentIfPossible(entity, column)
             || this.hasDefaultAction(entity, column)
@@ -2100,11 +2102,13 @@ Polymer({
         };
     },
 
-    _getTooltip: function (entity, column, action) {
+    _getTooltip: function (entity, column, actions) {
         try {
             let tooltip = this.getValueTooltip(entity, column);
+            const entityIdx = this.findEntityIndex(entity);
+            const actionIdx = this.propertyActionIndices && this.propertyActionIndices[entityIdx] && this.propertyActionIndices[entityIdx][column.property];
             const columnDescPart = this.getDescTooltip(entity, column);
-            const actionDescPart = this.getActionTooltip(entity, column, action);
+            const actionDescPart = this.getActionTooltip(entity, column, actions[actionIdx]);
             tooltip += (columnDescPart && tooltip && "<br><br>") + columnDescPart;
             tooltip += (actionDescPart && tooltip && "<br><br>") + actionDescPart;
             return tooltip;
@@ -2169,18 +2173,20 @@ Polymer({
     },
 
     _generateActionTooltip: function (action) {
-        var shortDesc = "<b>" + action.shortDesc + "</b>";
-        var longDesc;
+
+        const shortDesc = "<b>" + action.shortDesc + "</b>";
+        let longDesc;
         if (shortDesc) {
             longDesc = action.longDesc ? "<br>" + action.longDesc : "";
         } else {
             longDesc = action.longDesc ? "<b>" + action.longDesc + "</b>" : "";
         }
-        var tooltip = shortDesc + longDesc;
-        return tooltip && "<div style='display:flex;'>" +
-            "<div style='margin-right:10px;'>With action: </div>" +
-            "<div style='flex-grow:1;'>" + tooltip + "</div>" +
-            "</div>"
+        const tooltip  = shortDesc + longDesc;
+        
+        return tooltip && `<div style='display:flex;'>
+            <div style='margin-right:10px;'>With action: </div> 
+            <div style='flex-grow:1;'> ${tooltip} </div> 
+            </div>`
     },
 
     _getTotalTooltip: function (summary) {
