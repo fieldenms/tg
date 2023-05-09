@@ -765,6 +765,9 @@ Polymer({
             type: Array,
             observer: "_secondaryActionIndicesChanged"
         },
+        propertyActionIndices: {
+            type: Array,
+        },
         selectedAll: {
             type: Boolean,
             value: false
@@ -1360,7 +1363,9 @@ Polymer({
         // This closure returns either 'entity' or the entity navigated to (EntityEditAction with EntityNavigationPreAction).
         // Each tapping overrides this function to provide proper context of execution.
         // This override should occur on every 'run' of the action so it is mandatory to use 'tg-property-column.runAction' public API.
-        if (!column.runAction(this._currentEntity(entity))) {
+        const entityIndex = this.findEntityIndex(entity);
+        const actionIndex = this.propertyActionIndices[entityIndex] && this.propertyActionIndices[entityIndex][column.property]
+        if (!column.runAction(this._currentEntity(entity), actionIndex)) {
             // if the clicked property is a hyperlink and there was no custom action associted with it
             // then let's open the linked resources
             if (this.isHyperlinkProp(entity, column) === true) {

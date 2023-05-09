@@ -301,7 +301,8 @@ const TgSelectionCriteriaBehaviorImpl = {
                     columnWidths: customObject.columnWidths,
                     resultConfig: customObject.resultConfig,
                     primaryActionIndices: customObject.primaryActionIndices,
-                    secondaryActionIndices: customObject.secondaryActionIndices
+                    secondaryActionIndices: customObject.secondaryActionIndices,
+                    propertyActionIndices: customObject.propertyActionIndices
                 };
 
                 self._postRunDefault(criteriaEntity, result);
