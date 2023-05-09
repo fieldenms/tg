@@ -47,7 +47,7 @@ Polymer({
      * the passed in currentEntity is a function that returns choosen entity. 
      */
     runAction: function (currentEntity, actionIndex) {
-        const actionToRun = this.customActions.length > 1 && actionIndex >= 0 ? this.customActions[actionIndex] : this.customActions[0]; 
+        const actionToRun = this.customActions[actionIndex]; 
         if (actionToRun) {
             actionToRun.currentEntity = currentEntity;
             actionToRun._run();

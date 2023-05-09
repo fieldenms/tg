@@ -1366,7 +1366,7 @@ Polymer({
         // Each tapping overrides this function to provide proper context of execution.
         // This override should occur on every 'run' of the action so it is mandatory to use 'tg-property-column.runAction' public API.
         const entityIndex = this.findEntityIndex(entity);
-        const actionIndex = this.propertyActionIndices[entityIndex] && this.propertyActionIndices[entityIndex][column.property]
+        const actionIndex = this.propertyActionIndices && this.propertyActionIndices[entityIndex] && this.propertyActionIndices[entityIndex][column.property]
         if (!column.runAction(this._currentEntity(entity), actionIndex)) {
             // if the clicked property is a hyperlink and there was no custom action associted with it
             // then let's open the linked resources
