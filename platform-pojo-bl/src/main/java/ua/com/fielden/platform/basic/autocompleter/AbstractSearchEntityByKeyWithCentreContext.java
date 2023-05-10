@@ -6,7 +6,10 @@ package ua.com.fielden.platform.basic.autocompleter;
 import static java.util.Collections.emptyMap;
 import static ua.com.fielden.platform.basic.ValueMatcherUtils.createCommonQueryBuilderForFindMatches;
 import static ua.com.fielden.platform.basic.ValueMatcherUtils.createRelaxedSearchByKeyCriteriaModel;
+import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
+import static ua.com.fielden.platform.entity.IContextDecomposer.autocompleteActiveOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
@@ -56,14 +59,27 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
      * @return
      */
     protected ConditionModel makeSearchCriteriaModel(final CentreContext<T, ?> context, final String searchString) {
-        if ("%".equals(searchString)) {
-            return cond().val(1).eq().val(1).model();
+        final boolean wideSearch = "%".equals(searchString);
+        if (autocompleteActiveOnly(context)) {
+            return (
+                wideSearch ? cond() : cond().condition(keyAndDescConditionFrom(searchString)).and()
+            ).prop(ACTIVE).eq().val(true).model();
+        } else {
+            return wideSearch ? cond().val(1).eq().val(1).model() : keyAndDescConditionFrom(searchString);
         }
+    }
 
+    /**
+     * Creates {@link ConditionModel} based on {@code searchString} using key / desc querying.
+     * 
+     * @param searchString
+     * @return
+     */
+    protected ConditionModel keyAndDescConditionFrom(final String searchString) {
         final ConditionModel keyCriteria = createRelaxedSearchByKeyCriteriaModel(searchString);
         final Class<T> entityType = maybeCompanion.orElseThrow(CO_MISSING_EXCEPTION_SUPPLIER).getEntityType();
 
-        return hasDescProperty(entityType) ? cond().condition(keyCriteria).or().prop(AbstractEntity.DESC).iLike().val(searchString).model() : keyCriteria;
+        return hasDescProperty(entityType) ? cond().condition(keyCriteria).or().prop(DESC).iLike().val(searchString).model() : keyCriteria;
     }
 
     /**
