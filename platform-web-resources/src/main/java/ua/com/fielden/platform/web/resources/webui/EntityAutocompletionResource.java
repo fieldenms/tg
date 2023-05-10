@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.util.Optional.empty;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
@@ -107,7 +108,7 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
             final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchStringAndDataPageNo._1, searchStringAndDataPageNo._2);
 
             // logger.debug("ENTITY_AUTOCOMPLETION_RESOURCE: search finished.");
-            return restUtil.listJsonRepresentationWithoutIdAndVersion(entities);
+            return restUtil.listJsonRepresentationWithoutIdAndVersion(entities, empty());
         }, restUtil);
     }
 

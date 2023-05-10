@@ -1,14 +1,20 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.util.Optional.empty;
+import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.entity.IContextDecomposer.AUTOCOMPLETE_ACTIVE_ONLY_KEY;
+import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCentreContext;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityWithoutConflicts;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaValidationPrototype;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalPropertyName;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -55,6 +61,8 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  *
  */
 public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> extends AbstractWebResource {
+    private static final String AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY = "@@flagChanged";
+    
     private final Class<? extends MiWithConfigurationSupport<?>> miType;
     private final Optional<String> saveAsName;
     private final String criterionPropertyName;
@@ -123,12 +131,13 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             final IUser userCompanion = companionFinder.find(User.class);
 
             final M criteriaEntity;
+            final M enhancedCentreEntityQueryCriteria;
             final Class<M> criteriaType;
             final Map<String, Object> modifHolder = !centreContextHolder.proxiedPropertyNames().contains("modifHolder") ? centreContextHolder.getModifHolder() : new HashMap<>();
             if (CentreResourceUtils.isEmpty(modifHolder)) {
                 // this branch is used for criteria entity generation to get the type of that entity later -- the modifiedPropsHolder is empty (no 'selection criteria' is needed in the context).
                 criteriaEntity = null;
-                final M enhancedCentreEntityQueryCriteria = createCriteriaValidationPrototype(
+                enhancedCentreEntityQueryCriteria = createCriteriaValidationPrototype(
                     miType, saveAsName,
                     updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder),
                     companionFinder, critGenerator, 0L,
@@ -139,6 +148,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 criteriaType = (Class<M>) enhancedCentreEntityQueryCriteria.getClass();
             } else {
                 criteriaEntity = (M) createCriteriaEntityWithoutConflicts(modifHolder, companionFinder, critGenerator, miType, saveAsName, user, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+                enhancedCentreEntityQueryCriteria = criteriaEntity;
                 criteriaType = (Class<M>) criteriaEntity.getClass();
             }
 
@@ -184,12 +194,35 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 valueMatcher.setContext(new CentreContext<>());
             }
 
+            final Optional<Boolean> activeOnlyOpt;
+            final Boolean activeOnlyFromClient = (Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_KEY);
+            if (valueMatcher.getFetch() != null && isActivatableEntityType(valueMatcher.getFetch().getEntityType())) { // fetch is not defined only for property descriptors, see createValueMatcherAndContextConfig
+                final Class<T> entityType = valueMatcher.getFetch().getEntityType();
+                final String origPropName = getOriginalPropertyName(criteriaType, criterionPropertyName);
+                ofNullable(activeOnlyFromClient).ifPresent(activeOnly -> {
+                    enhancedCentreEntityQueryCriteria.adjustCentre(centreManager -> {
+                        centreManager.getFirstTick().setAutocompleteActiveOnly(entityType, origPropName, activeOnly);
+                    });
+                });
+                activeOnlyOpt = ofNullable(activeOnlyFromClient != null && activeOnlyFromClient);
+                // TODO activeOnlyOpt = ofNullable(enhancedCentreEntityQueryCriteria.freshCentre().getFirstTick().getAutocompleteActiveOnly(entityType, origPropName));
+                final Map<String, Object> customObject = new LinkedHashMap<>(valueMatcher.getContext().getCustomObject());
+                customObject.put(AUTOCOMPLETE_ACTIVE_ONLY_KEY, activeOnlyOpt.get());
+                valueMatcher.getContext().setCustomObject(customObject);
+            } else {
+                activeOnlyOpt = empty();
+            }
+
             // prepare the search string and perform value matching
             final T2<String, Integer> searchStringAndDataPageNo = EntityAutocompletionResource.prepSearchString(centreContextHolder, false);
             final List<? extends AbstractEntity<?>> entities =  valueMatcher.findMatchesWithModel(searchStringAndDataPageNo._1, searchStringAndDataPageNo._2);
 
             // logger.debug("CRITERIA_ENTITY_AUTOCOMPLETION_RESOURCE: search finished.");
-            return restUtil.listJsonRepresentationWithoutIdAndVersion(entities);
+            return restUtil.listJsonRepresentationWithoutIdAndVersion(entities,
+                activeOnlyOpt.map(
+                    activeOnly -> AUTOCOMPLETE_ACTIVE_ONLY_KEY + ":" + activeOnly
+                    + "," + AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY + ":" + (activeOnlyFromClient != null)
+                ));
         }, restUtil);
     }
 
