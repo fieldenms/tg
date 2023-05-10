@@ -608,6 +608,31 @@ public interface ICentreDomainTreeManager extends IDomainTreeManager {
         IAddToCriteriaTickManager setNot(final Class<?> root, final String property, final Boolean not);
 
         /**
+         * Gets an "autocomplete active only" flag of an activatable entity-typed criteria property.
+         * <p>
+         * Throws {@link DomainTreeException} for non-applicable property (e.g. "non-activatable entity"-typed or "non entity"-typed).
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+         *
+         * @param root -- a root type that contains property.
+         * @param property -- a dot-notation expression that defines a property.
+         * @return
+         */
+        default Boolean getAutocompleteActiveOnly(final Class<?> root, final String property) {return true;} // TODO
+
+        /**
+         * Sets an "autocomplete active only" flag of an activatable entity-typed criteria property.
+         * <p>
+         * Throws {@link DomainTreeException} for non-applicable property (e.g. "non-activatable entity"-typed or "non entity"-typed).
+         * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).
+         *
+         * @param root -- a root type that contains property.
+         * @param property -- a dot-notation expression that defines a property.
+         * @param autocompleteActiveOnly
+         * @return -- a criteria tick manager
+         */
+        default IAddToCriteriaTickManager setAutocompleteActiveOnly(final Class<?> root, final String property, final Boolean autocompleteActiveOnly) {return this;} // TODO
+
+        /**
          * Gets an "or group" number of a criteria property.
          * <p>
          * Throws {@link DomainTreeException} when the property is not checked (see {@link #isChecked(Class, String)} method).
