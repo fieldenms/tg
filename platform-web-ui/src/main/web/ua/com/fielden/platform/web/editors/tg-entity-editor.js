@@ -19,6 +19,9 @@ import { tearDownEvent, allDefined, isMobileApp } from '/resources/reflection/tg
 import { composeEntityValue, composeDefaultEntityValue } from '/resources/editors/tg-entity-formatter.js'; 
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
+const AUTOCOMPLETE_ACTIVE_ONLY_KEY = '@@activeOnly';
+const AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY = '@@flagChanged';
+
 const additionalTemplate = html`
     <style>
         label {
@@ -405,6 +408,11 @@ export class TgEntityEditor extends TgEditor {
            _blurEventHandler: {
                type: Function
            },
+
+           _activeOnly: {
+               type: Object,
+               value: null // 'null' for non-activatable or for autocompleter on entity master, or otherwise true / false
+           },
    
            /**
             * Overridden from TgEditor: this specific event is invoked after some key has been pressed.
@@ -676,7 +684,18 @@ export class TgEntityEditor extends TgEditor {
         }
     }
 
-    _search (defaultSearchQuery, dataPage, ignoreInputText) {
+    /** Toggles activeOnly and fedjhbfjhfrejhkk. */
+    _changeActiveOnly (newActiveOnly) {
+        this._activeOnly = newActiveOnly;
+        if (this.result) {
+            this.result._activeOnly = this._activeOnly;
+        }
+        if (!this.searching) {
+            this._search(this._searchQuery, null /* dataPage */, this._ignoreInputText, newActiveOnly);
+        }
+    }
+
+    _search (defaultSearchQuery, dataPage, ignoreInputText, _activeOnly) {
         // cancel any other search
         this._cancelSearchByOtherEditor();
         // What is the query string?
@@ -710,12 +729,18 @@ export class TgEntityEditor extends TgEditor {
         }
 
         if (this._searchQuery) {
+            const activeOnlyChanged = _activeOnly === true || _activeOnly === false;
             // if this is not a request to load more data then let's clear the current result, if any
-            if (this.result && !dataPage) {
+            if (this.result && !dataPage && !activeOnlyChanged) {
                 this.result.clearSelection();
+                while (this.result.pop('_values')) {}
             }
             // prepare the AJAX request based on the raw search string
-            const serialisedSearchQuery = this.$.serialiser.serialise(this.createContextHolder(this._searchQuery, dataPage));
+            const contextHolder = this.createContextHolder(this._searchQuery, dataPage);
+            if (activeOnlyChanged) {
+                contextHolder.customObject[AUTOCOMPLETE_ACTIVE_ONLY_KEY] = _activeOnly;
+            }
+            const serialisedSearchQuery = this.$.serialiser.serialise(contextHolder);
             this._ignoreInputText = ignoreInputText === true; // capture ignoreInputText for its use in _loadMore
             this.$.ajaxSearcher.body = JSON.stringify(serialisedSearchQuery);
             this.$.ajaxSearcher.generateRequest();
@@ -728,7 +753,11 @@ export class TgEntityEditor extends TgEditor {
     /*
      * Displays the search result.
      */
-    _onFound (entities) {
+    _onFound (entities, resultMessage) {
+        const activeOnlyPart = resultMessage.split(AUTOCOMPLETE_ACTIVE_ONLY_KEY + ':')[1];
+        this._activeOnly = typeof activeOnlyPart === 'undefined' ? null : activeOnlyPart.startsWith('true');
+        const activeOnlyChangedPart = resultMessage.split(AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY + ':')[1];
+        const activeOnlyChanged = typeof activeOnlyChangedPart === 'undefined' ? null : activeOnlyChangedPart.startsWith('true');
         if (!this.result) {
             this.result = this._createResultDialog();
         }
@@ -738,6 +767,9 @@ export class TgEntityEditor extends TgEditor {
 
         let wasNewValueObserved = false;
         let indexOfFirstNewValue = -1;
+        if (activeOnlyChanged) {
+            while (this.result.pop('_values')) {}
+        }
         for (let index = 0; index < entities.length; index++) {
             // Entity is converted to a string representation of itself that is the same as string representation of its key or [key is not assigned] string if there is no key.
             // This includes correct conversion of simple and composite entities. Top-level union entities are not supported -- only as part of other entities as a property values.
@@ -952,6 +984,7 @@ export class TgEntityEditor extends TgEditor {
         }
 
         this.result.clearSelection();
+        while (this.result.pop('_values')) {}
         // The input value could have been changed manually or as a result of selection (the above logic).
         // Therefore, need to fire the change event.
         this._onChange();
@@ -1062,8 +1095,8 @@ export class TgEntityEditor extends TgEditor {
 
     _processSearcherResponse (e) {
         const self = this;
-        self.processResponse(e, "search", function (foundEntities) {
-            self._onFound(foundEntities);
+        self.processResponse(e, "search", function (foundEntities, exceptionOccured, resultMessage) {
+            self._onFound(foundEntities, resultMessage);
         });
     }
 
@@ -1324,6 +1357,8 @@ export class TgEntityEditor extends TgEditor {
         dialog.noAutoFocus = true;
         dialog.acceptValues = this._done.bind(this);
         dialog.loadMore = this._loadMore.bind(this);
+        dialog.changeActiveOnly = this._changeActiveOnly.bind(this);
+        dialog._activeOnly = this._activeOnly;
         dialog.multi = this.multi;
         if (this.additionalProperties) {
             dialog.additionalProperties = JSON.parse(this.additionalProperties);

@@ -3,7 +3,9 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import '/resources/polymer/@polymer/iron-selector/iron-selector.js';
 
-import '/resources/polymer/@polymer/paper-button/paper-button.js';
+import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
+import '/resources/images/tg-icons.js';
+import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/paper-item/paper-item.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
 
@@ -72,19 +74,6 @@ const template = html`
             background-color: #E1F5FE;
         }
 
-        paper-button {
-            color: var(--paper-light-blue-500);
-            --paper-button-flat-focus-color: var(--paper-light-blue-50);
-        }
-        paper-button:hover {
-            background: var(--paper-light-blue-50);
-        }
-
-        paper-button[disabled] {
-            color: var(--paper-blue-grey-500);
-            background: var(--paper-blue-grey-50);
-        }
-
         .additional-prop {
             font-size: x-small;
             min-width: 150px;
@@ -120,7 +109,7 @@ const template = html`
         }
 
         .toolbar {
-            padding: 0 10px 10px;
+            padding: 0 3px 3px;
             height: auto;
             position: relative;
             overflow: hidden;
@@ -128,7 +117,14 @@ const template = html`
             flex-shrink: 0;
         }
         .toolbar-content > * {
-            margin-top: 8px;
+            margin-top: 3px;
+        }
+        paper-icon-button {
+            border-radius: 50%;
+        }
+        paper-icon-button[active-button] {
+            border-style: solid;
+            border-width: 2px;
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
@@ -149,11 +145,12 @@ const template = html`
     </div>
     <div class="toolbar layout horizontal wrap">
         <div class="toolbar-content layout horizontal center">
-            <paper-button tooltip-text="Load more matching values, if any" on-tap="_loadMore" id="loadMoreButton" disabled$="[[!enableLoadMore]]">More</paper-button>
+            <paper-icon-button tooltip-text="Load more matching values, if any" on-tap="_loadMore" id="loadMoreButton" disabled$="[[!enableLoadMore]]" icon="tg-icons:expand-all"></paper-icon-button>
+            <paper-icon-button tooltip-text="Exclude inactive values" on-tap="_changeActiveOnly" hidden$="[[_isHiddenActiveOnlyButton(_activeOnly)]]" icon="tg-icons:playlist-remove" active-button$="[[_activeOnly]]"></paper-icon-button>
         </div>
         <div class="toolbar-content layout horizontal center" style="margin-left:auto">
-            <paper-button tooltip-text="Discard and close" on-tap="_close">Cancel</paper-button>
-            <paper-button tooltip-text="Accept selected" on-tap="_acceptValues">Ok</paper-button>
+            <paper-icon-button tooltip-text="Discard and close" on-tap="_close" icon="icons:cancel"></paper-icon-button>
+            <paper-icon-button tooltip-text="Accept selected" on-tap="_acceptValues" icon="icons:check-circle"></paper-icon-button>
         </div>
     </div>`;
 
@@ -255,7 +252,18 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
             loadMore: {
                 type: Function
             },
-    
+
+            _activeOnly: {
+                type: Object
+            },
+
+            /**
+             * A function to change activeOnly. It is assigned in tg-entity-editor.
+             */
+            changeActiveOnly: {
+                type: Function
+            },
+
             /**
              * Controls if buton MORE is enabled.
              */
@@ -292,6 +300,16 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         tearDownEvent(e);
     }
 
+    _changeActiveOnly (e) {
+        const newActiveOnly = !this._activeOnly;
+        this.changeActiveOnly(newActiveOnly);
+        tearDownEvent(e);
+    }
+
+    _isHiddenActiveOnlyButton(_activeOnly) {
+        return _activeOnly === null;
+    }
+
     _close (e) {
         this.close();
         tearDownEvent(e);
@@ -308,7 +326,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         this.$.selector.selectedItem = null;
         this.selectedValues = {};
 
-        while (this.pop('_values')) {}
+        // TODO while (this.pop('_values')) {}
 
         if (this.multi === true) {
             this.$.selector.selectedValues = [];
