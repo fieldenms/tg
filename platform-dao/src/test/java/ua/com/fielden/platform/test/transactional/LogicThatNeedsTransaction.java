@@ -11,6 +11,7 @@ import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.persistence.types.EntityWithMoney;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.types.Money;
 
 /**
@@ -114,4 +115,10 @@ public class LogicThatNeedsTransaction implements ISessionEnabled {
     public void cannotBeInvokeWithinExistingTransaction() {
         singleTransactionInvocaion("20.00", "30.00");
     }
+
+    @Override
+    public User getUser() {
+        return dao.getUser();
+    }
+
 }
