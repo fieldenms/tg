@@ -263,7 +263,15 @@ const TgSelectionCriteriaBehaviorImpl = {
         /** A promise pointing to the last (resolved or otherwise) entities refresh call. */
         _refreshPromiseInProgress: {
             type: Object
+        },
+
+        /**
+         * Callback for updating _centreDirty with new value. Can be bound to child elements, e.g. activatable autocompleters that update 'autocomplete active only' option.
+         */
+        _updateCentreDirty: {
+            type: Function
         }
+
     },
 
     /**
@@ -282,6 +290,10 @@ const TgSelectionCriteriaBehaviorImpl = {
         this.currentState = "EDIT";
 
         this.staleCriteriaMessage = null;
+
+        self._updateCentreDirty = newCentreDirty => {
+            this._centreDirty = newCentreDirty;
+        };
 
         self._processRunnerResponse = function (e) {
             self._processResponse(e, "run", function (entityAndCustomObject, exceptionOccured) {

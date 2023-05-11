@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.centre.widgets;
 
+import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
+
 import java.util.Map;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -28,8 +30,11 @@ public class EntityMultiCritAutocompletionWidget extends AbstractEntityCritAutoc
         attrs.put("autocompletion-type", "[[_computeCentreIdentifier(miType, saveAsName)]]");
 
         attrs.put("multi", "true");
+        if (isActivatableEntityType(propType)) {
+            attrs.put("update-centre-dirty", "[[_updateCentreDirty]]");
+        }
         addCentreContextBindings(attrs, centreContextConfig);
         return attrs;
-    };
+    }
 
 }

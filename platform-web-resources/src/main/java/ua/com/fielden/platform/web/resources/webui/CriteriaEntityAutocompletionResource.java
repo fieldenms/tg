@@ -64,6 +64,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  */
 public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> extends AbstractWebResource {
     private static final String AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY = "@@flagChanged";
+    private static final String CENTRE_DIRTY_KEY = "@@centreDirty";
     
     private final Class<? extends MiWithConfigurationSupport<?>> miType;
     private final Optional<String> saveAsName;
@@ -197,6 +198,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             }
 
             final Optional<Boolean> activeOnlyOpt;
+            final Optional<Boolean> centreDirtyOpt;
             final Boolean activeOnlyFromClient = (Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_KEY);
             if (valueMatcher.getFetch() != null && isActivatableEntityType(valueMatcher.getFetch().getEntityType())) { // fetch is not defined only for property descriptors, see createValueMatcherAndContextConfig
                 final Class<T> entityType = getEntityType(miType);
@@ -210,8 +212,10 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 final Map<String, Object> customObject = new LinkedHashMap<>(valueMatcher.getContext().getCustomObject());
                 customObject.put(AUTOCOMPLETE_ACTIVE_ONLY_KEY, activeOnlyOpt.get());
                 valueMatcher.getContext().setCustomObject(customObject);
+                centreDirtyOpt = activeOnlyFromClient != null ? of(enhancedCentreEntityQueryCriteria.isCentreDirty()) : empty();
             } else {
                 activeOnlyOpt = empty();
+                centreDirtyOpt = empty();
             }
 
             // prepare the search string and perform value matching
@@ -223,6 +227,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 activeOnlyOpt.map(
                     activeOnly -> AUTOCOMPLETE_ACTIVE_ONLY_KEY + ":" + activeOnly
                     + "," + AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY + ":" + (activeOnlyFromClient != null)
+                    + centreDirtyOpt.map(centreDirty -> "," + CENTRE_DIRTY_KEY + ":" + centreDirty).orElse("")
                 ));
         }, restUtil);
     }

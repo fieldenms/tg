@@ -21,6 +21,7 @@ import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 const AUTOCOMPLETE_ACTIVE_ONLY_KEY = '@@activeOnly';
 const AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY = '@@flagChanged';
+const CENTRE_DIRTY_KEY = '@@centreDirty';
 
 const additionalTemplate = html`
     <style>
@@ -508,6 +509,13 @@ export class TgEntityEditor extends TgEditor {
             _headers: {
                 type: String,
                 value: _timeZoneHeader
+            },
+
+            /**
+             * Callback for updating parent's _centreDirty with new value. Needed in activatable autocompleters that update 'autocomplete active only' option and thus may change centre dirtiness.
+             */
+            updateCentreDirty: {
+                type: Function
             }
        };
     }
@@ -758,6 +766,8 @@ export class TgEntityEditor extends TgEditor {
         this._activeOnly = typeof activeOnlyPart === 'undefined' ? null : activeOnlyPart.startsWith('true');
         const activeOnlyChangedPart = resultMessage.split(AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY + ':')[1];
         const activeOnlyChanged = typeof activeOnlyChangedPart === 'undefined' ? null : activeOnlyChangedPart.startsWith('true');
+        const centreDirtyPart = resultMessage.split(CENTRE_DIRTY_KEY + ':')[1];
+        const centreDirty = typeof centreDirtyPart === 'undefined' ? null : centreDirtyPart.startsWith('true');
         if (!this.result) {
             this.result = this._createResultDialog();
         }
@@ -768,6 +778,9 @@ export class TgEntityEditor extends TgEditor {
         let wasNewValueObserved = false;
         let indexOfFirstNewValue = -1;
         if (activeOnlyChanged) {
+            if (centreDirty !== null) {
+                this.updateCentreDirty(centreDirty);
+            }
             while (this.result.pop('_values')) {}
         }
         for (let index = 0; index < entities.length; index++) {
