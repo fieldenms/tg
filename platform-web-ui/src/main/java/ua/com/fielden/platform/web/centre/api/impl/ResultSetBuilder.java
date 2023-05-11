@@ -5,6 +5,7 @@ import static java.util.Arrays.asList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 import static ua.com.fielden.platform.utils.EntityUtils.isCollectional;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
@@ -350,7 +351,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             throw new IllegalArgumentException("Primary action configuration should not be null.");
         }
 
-        return addPrimaryAction(new EntityMultiActionConfig(SingleActionSelector.class, Arrays.asList(() -> of(actionConfig))));
+        return addPrimaryAction(new EntityMultiActionConfig(SingleActionSelector.class, listOf(() -> of(actionConfig))));
     }
 
     @Override

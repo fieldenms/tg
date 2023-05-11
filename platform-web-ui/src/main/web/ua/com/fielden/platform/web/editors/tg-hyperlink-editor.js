@@ -34,7 +34,7 @@ const customInputTemplate = html`
             autocomplete="off"/>
     </iron-input>`;
 const customIconButtonsTemplate = html`<paper-icon-button on-tap="_openLink" icon="open-in-browser" class="open-button custom-icon-buttons" tabIndex="-1" tooltip-text="Open link"></paper-icon-button>`;
-const propertyActionTemplate = html`<slot name="property-action"></slot>`;
+const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
 
 export class TgHyperlinkEditor extends TgEditor {
 
