@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.entity.IContextDecomposer.AUTOCOMPLETE_ACTIVE_ONLY_KEY;
 import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
@@ -9,6 +10,7 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCentreContext;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityWithoutConflicts;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaValidationPrototype;
+import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalPropertyName;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
@@ -197,15 +199,14 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             final Optional<Boolean> activeOnlyOpt;
             final Boolean activeOnlyFromClient = (Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_KEY);
             if (valueMatcher.getFetch() != null && isActivatableEntityType(valueMatcher.getFetch().getEntityType())) { // fetch is not defined only for property descriptors, see createValueMatcherAndContextConfig
-                final Class<T> entityType = valueMatcher.getFetch().getEntityType();
+                final Class<T> entityType = getEntityType(miType);
                 final String origPropName = getOriginalPropertyName(criteriaType, criterionPropertyName);
                 ofNullable(activeOnlyFromClient).ifPresent(activeOnly -> {
                     enhancedCentreEntityQueryCriteria.adjustCentre(centreManager -> {
                         centreManager.getFirstTick().setAutocompleteActiveOnly(entityType, origPropName, activeOnly);
                     });
                 });
-                activeOnlyOpt = ofNullable(activeOnlyFromClient != null && activeOnlyFromClient);
-                // TODO activeOnlyOpt = ofNullable(enhancedCentreEntityQueryCriteria.freshCentre().getFirstTick().getAutocompleteActiveOnly(entityType, origPropName));
+                activeOnlyOpt = of(enhancedCentreEntityQueryCriteria.freshCentre().getFirstTick().getAutocompleteActiveOnly(entityType, origPropName));
                 final Map<String, Object> customObject = new LinkedHashMap<>(valueMatcher.getContext().getCustomObject());
                 customObject.put(AUTOCOMPLETE_ACTIVE_ONLY_KEY, activeOnlyOpt.get());
                 valueMatcher.getContext().setCustomObject(customObject);
