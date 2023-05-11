@@ -146,7 +146,7 @@ const template = html`
     <div class="toolbar layout horizontal wrap">
         <div class="toolbar-content layout horizontal center">
             <paper-icon-button tooltip-text="Load more matching values, if any" on-tap="_loadMore" id="loadMoreButton" disabled$="[[!enableLoadMore]]" icon="tg-icons:expand-all"></paper-icon-button>
-            <paper-icon-button tooltip-text="Exclude inactive values" on-tap="_changeActiveOnly" hidden$="[[_isHiddenActiveOnlyButton(_activeOnly)]]" icon="tg-icons:playlist-remove" active-button$="[[_activeOnly]]"></paper-icon-button>
+            <paper-icon-button tooltip-text$="[[_tooltipForActiveOnlyButton(_activeOnly)]]" on-tap="_changeActiveOnly" hidden$="[[_isHiddenActiveOnlyButton(_activeOnly)]]" icon="tg-icons:playlist-remove" active-button$="[[_activeOnly]]"></paper-icon-button>
         </div>
         <div class="toolbar-content layout horizontal center" style="margin-left:auto">
             <paper-icon-button tooltip-text="Discard and close" on-tap="_close" icon="icons:cancel"></paper-icon-button>
@@ -306,8 +306,20 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         tearDownEvent(e);
     }
 
-    _isHiddenActiveOnlyButton(_activeOnly) {
+    /**
+     * Calculates invisibility of 'active only' toggle button (i.e. invisible on masters and for non-activatable values).
+     */
+    _isHiddenActiveOnlyButton (_activeOnly) {
         return _activeOnly === null;
+    }
+
+    /**
+     * Calculates corresponding tooltip based on an action, that will be performed on tap of 'active only' toggle button.
+     */
+    _tooltipForActiveOnlyButton (_activeOnly) {
+        return _activeOnly === null ? '' // button is invisible
+             : _activeOnly === true ? 'Include inactive values'
+             : 'Exclude inactive values';
     }
 
     _close (e) {
