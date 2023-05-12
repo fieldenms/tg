@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.web.resources.webui;
 
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
+import static ua.com.fielden.platform.web.resources.webui.EntityResource.getPropertyActionIndices;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.restoreEntityFrom;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreSavingInfoHolder;
@@ -24,8 +26,8 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
-import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
+import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
@@ -69,7 +71,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
             final Request request,
             final Response response) {
         super(context, request, response, deviceProvider, dates);
-        
+
         this.entityType = entityType;
         this.entityFactory = entityFactory;
         this.restUtil = restUtil;
@@ -91,16 +93,16 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
             // NOTE: the following line can be the example how 'entity validation' server errors manifest to the client application
             // throw new IllegalStateException("Illegal state during entity validation.");
             final SavingInfoHolder savingInfoHolder = restoreSavingInfoHolder(envelope, restUtil);
-            
+
             final User user = userProvider.getUser();
             final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
             final MainMenuItemCo mmiCompanion = companionFinder.find(MainMenuItem.class);
             final IUser userCompanion = companionFinder.find(User.class);
-            
+
             final T applied = restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, user, critGenerator, 0, device(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel);
-            
+
             logger.debug("ENTITY_VALIDATION_RESOURCE: validate finished.");
-            return restUtil.rawListJsonRepresentation(applied, linkedMapOf(t2(VALIDATION_COUNTER, savingInfoHolder.getModifHolder().get(VALIDATION_COUNTER)))); // savingInfoHolder and its modifHolder are never empty
+            return restUtil.rawListJsonRepresentation(applied, linkedMapOf(t2(VALIDATION_COUNTER, savingInfoHolder.getModifHolder().get(VALIDATION_COUNTER)), t2("propertyActionIndices", getPropertyActionIndices(applied, webUiConfig, of(savingInfoHolder.getCentreContextHolder()))))); // savingInfoHolder and its modifHolder are never empty
         }, restUtil);
     }
 }

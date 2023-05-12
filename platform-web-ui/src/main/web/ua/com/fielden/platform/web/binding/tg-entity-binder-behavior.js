@@ -543,12 +543,10 @@ export const TgEntityBinderBehavior = {
                     // in case of customHandlerFor not returning any result need to assign true to recognise event handling as successful by default
                     if (e.detail.successful !== false) {
                         e.detail.successful = true;
-                        if (typeof deserialisedInstance.id !== 'undefined') {
-                            e.detail.entityId = deserialisedInstance.get('id');
-                            e.detail.entityPersistent = deserialisedInstance.type().isPersistent();
-                            e.detail.entityContinuation = deserialisedInstance.type().isContinuation();
-                        } else if (Array.isArray(deserialisedInstance) && this._reflector().isEntity(deserialisedInstance[0]) && typeof deserialisedInstance[0]['id'] !== 'undefined') {
+                        if (Array.isArray(deserialisedInstance) && this._reflector().isEntity(deserialisedInstance[0]) && typeof deserialisedInstance[0]['id'] !== 'undefined') {
                             e.detail.entityId = deserialisedInstance[0].get('id');
+                            e.detail.entityPersistent = deserialisedInstance[0].type().isPersistent();
+                            e.detail.entityContinuation = deserialisedInstance[0].type().isContinuation();
                         }
                     }
                 }

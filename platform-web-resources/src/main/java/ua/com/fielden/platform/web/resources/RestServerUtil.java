@@ -6,6 +6,9 @@ import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.JACKSON;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -287,7 +290,7 @@ public class RestServerUtil {
         // logger.debug("SIZE: " + bytes.length);
         return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON);
     }
-    
+
     /**
      * Composes representation of {@link IWebApi} execution results.
      */
@@ -396,7 +399,7 @@ public class RestServerUtil {
      * @return
      * @throws JsonProcessingException
      */
-    public <T extends AbstractEntity<?>> Representation singleJsonRepresentation(final T entity, final Optional<Exception> savingException) {
+    public <T extends AbstractEntity<?>> Representation singleJsonRepresentation(final T entity, final Map<String, Integer> actionIndices, final Optional<Exception> savingException) {
         if (entity != null && savingException.isPresent()) {
             final Exception ex = savingException.get();
             final Result result;
@@ -427,10 +430,17 @@ public class RestServerUtil {
                 logger.error(ex.getMessage(), ex);
                 result = failure(entity, ex);
             }
-            final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
-            return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON /* TODO , bytes.length*/);
+            return resultJSONRepresentation(result.copyWith(listOf(result.getInstance(), linkedMapOf(t2("propertyActionIndices", actionIndices)))));
         } else {
-            return singleJsonRepresentation(entity);
+            final Result result;
+            if (entity != null) {
+                // valid and invalid entities: both kinds are represented using successful result. Use client-side isValid() method
+                //   in 'tg-reflector' to differentiate them
+                result = new Result(listOf(entity, linkedMapOf(t2("propertyActionIndices", actionIndices))), "OK");
+            } else {
+                result = new Result(listOf(null, linkedMapOf(t2("propertyActionIndices", actionIndices))), new Exception("Could not find entity."));
+            }
+            return resultJSONRepresentation(result);
         }
     }
 

@@ -406,9 +406,9 @@ const TgEntityMasterBehaviorImpl = {
         self.focusViewBound = self.focusView.bind(self);
 
         self._processSaverResponse = function (e) {
-            self._processResponse(e, "save", function (potentiallySavedOrNewEntity, exceptionOccured) {
-                self._provideExceptionOccured(potentiallySavedOrNewEntity, exceptionOccured);
-                return self._postSavedDefault(potentiallySavedOrNewEntity);
+            self._processResponse(e, "save", function (potentiallySavedOrNewEntityAndCustomObject, exceptionOccured) {
+                self._provideExceptionOccured(potentiallySavedOrNewEntityAndCustomObject[0], exceptionOccured);
+                return self._postSavedDefault(potentiallySavedOrNewEntityAndCustomObject);
             });
         };
 
@@ -446,7 +446,9 @@ const TgEntityMasterBehaviorImpl = {
         }).bind(self);
 
         // calbacks, that will potentially be augmented by tg-action child elements:
-        self._postSavedDefault = (function (potentiallySavedOrNewEntity) {
+        self._postSavedDefault = (function (potentiallySavedOrNewEntityAndCustomObject) {
+            const potentiallySavedOrNewEntity = potentiallySavedOrNewEntityAndCustomObject[0];
+            const customObject = potentiallySavedOrNewEntityAndCustomObject[1]; // TODO use in postReceived
             // 'potentiallySavedOrNewEntity' can have two natures:
             //  1) fully fresh new entity from 'continuous creation' process (DAO object returns fully new entity after successful save of previous entity)
             //    a) it has no id defined (id === null)

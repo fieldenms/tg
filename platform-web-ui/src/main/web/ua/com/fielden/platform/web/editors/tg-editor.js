@@ -332,7 +332,8 @@ export class TgEditor extends PolymerElement {
              * The property actions embedded into this editor. Only one of these action will be visible that corresponds to propertyActionIndex property 
              */
             propertyActions: {
-                type: Array
+                type: Array,
+                value: () => []
             },
     
             ////////////////////////////////////// SUBSECTION: NOT MANDATORY PROPERTIES //////////////////////////////////////
