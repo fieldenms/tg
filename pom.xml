@@ -89,13 +89,15 @@
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <junit.version>4.13.2</junit.version>
     </properties>
 
     <dependencies>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
-            <version>4.13.1</version>
+            <version>${junit.version}</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
@@ -109,7 +111,6 @@
                     <configuration>
                         <release>17</release>
                         <encoding>UTF-8</encoding>
-                        <optimize>true</optimize>
                     </configuration>
                 </plugin>
                 <plugin>
