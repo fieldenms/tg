@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.view.master.api.impl;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 import static ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.setRole;
@@ -17,6 +18,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomContainer;
@@ -27,6 +29,7 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig.UI_ROLE;
 import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
+import ua.com.fielden.platform.web.centre.api.actions.multi.IEntityMultiActionSelector;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionElement;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IExecutable;
@@ -412,6 +415,13 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                 throw new IllegalStateException("No master action has been found.");
             } // TODO implement other types
             throw new UnsupportedOperationException(actionKind + " is not supported yet.");
+        }
+
+        @Override
+        public Map<String, Class<? extends IEntityMultiActionSelector>> propertyActionSelectors() {
+            return widgets.stream().filter(widget -> widget.widget().action().isPresent()).map(widget -> {
+                return t2(widget.widget().propertyName(), widget.widget().action().get().actionSelectorClass());
+            }).collect(Collectors.toMap(tt -> tt._1, tt -> tt._2));
         }
     }
 
