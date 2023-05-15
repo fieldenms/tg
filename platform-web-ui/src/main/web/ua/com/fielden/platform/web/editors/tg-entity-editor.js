@@ -781,7 +781,10 @@ export class TgEntityEditor extends TgEditor {
             if (centreDirty !== null) {
                 this.updateCentreDirty(centreDirty);
             }
+            const selectedValues = this.result.selectedValues; // restore selected items only on tapping of 'active only' toggle button
             while (this.result.pop('_values')) {}
+            this.result.clearSelection();
+            this.result.selectedValues = selectedValues;
         }
         for (let index = 0; index < entities.length; index++) {
             // Entity is converted to a string representation of itself that is the same as string representation of its key or [key is not assigned] string if there is no key.
@@ -789,6 +792,13 @@ export class TgEntityEditor extends TgEditor {
             const key = entities[index].toString();
             entities[index].key = key;
             const isNew = this.result.pushValue(entities[index]);
+            if (activeOnlyChanged && this.result.selectedValues[key]) { // restore selected item only on tapping of 'active only' toggle button
+                setTimeout(() => { // do it after new paper-item gets distributed
+                    const newSelectedValues = this.result.$.selector.selectedValues.slice();
+                    newSelectedValues.push(key);
+                    this.result.$.selector.selectedValues = newSelectedValues;
+                }, 0);
+            }
             // if a new value was observed for the first time then capture its index
             // so that later this new item could be focused
             if (!wasNewValueObserved && isNew) {
