@@ -338,7 +338,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         this.$.selector.selectedItem = null;
         this.selectedValues = {};
 
-        // TODO while (this.pop('_values')) {}
+        while (this.pop('_values')) {}
 
         if (this.multi === true) {
             this.$.selector.selectedValues = [];

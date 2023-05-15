@@ -741,7 +741,6 @@ export class TgEntityEditor extends TgEditor {
             // if this is not a request to load more data then let's clear the current result, if any
             if (this.result && !dataPage && !activeOnlyChanged) {
                 this.result.clearSelection();
-                while (this.result.pop('_values')) {}
             }
             // prepare the AJAX request based on the raw search string
             const contextHolder = this.createContextHolder(this._searchQuery, dataPage);
@@ -782,7 +781,6 @@ export class TgEntityEditor extends TgEditor {
                 this.updateCentreDirty(centreDirty);
             }
             const selectedValues = this.result.selectedValues; // restore selected items only on tapping of 'active only' toggle button
-            while (this.result.pop('_values')) {}
             this.result.clearSelection();
             this.result.selectedValues = selectedValues;
         }
@@ -1007,7 +1005,6 @@ export class TgEntityEditor extends TgEditor {
         }
 
         this.result.clearSelection();
-        while (this.result.pop('_values')) {}
         // The input value could have been changed manually or as a result of selection (the above logic).
         // Therefore, need to fire the change event.
         this._onChange();
