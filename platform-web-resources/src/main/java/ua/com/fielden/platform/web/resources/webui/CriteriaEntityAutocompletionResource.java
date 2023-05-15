@@ -65,6 +65,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
 public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> extends AbstractWebResource {
     private static final String AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY = "@@flagChanged";
     private static final String CENTRE_DIRTY_KEY = "@@centreDirty";
+    public static final String LOAD_MORE_DATA_KEY = "@@loadMoreData";
     
     private final Class<? extends MiWithConfigurationSupport<?>> miType;
     private final Optional<String> saveAsName;
@@ -224,11 +225,15 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
 
             // logger.debug("CRITERIA_ENTITY_AUTOCOMPLETION_RESOURCE: search finished.");
             return restUtil.listJsonRepresentationWithoutIdAndVersion(entities,
-                activeOnlyOpt.map(
-                    activeOnly -> AUTOCOMPLETE_ACTIVE_ONLY_KEY + ":" + activeOnly
-                    + "," + AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY + ":" + (activeOnlyFromClient != null)
-                    + centreDirtyOpt.map(centreDirty -> "," + CENTRE_DIRTY_KEY + ":" + centreDirty).orElse("")
-                ));
+                of(
+                    LOAD_MORE_DATA_KEY + ":" + (searchStringAndDataPageNo._2 > 1)
+                    + activeOnlyOpt.map(
+                        activeOnly -> "," + AUTOCOMPLETE_ACTIVE_ONLY_KEY + ":" + activeOnly
+                        + "," + AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY + ":" + (activeOnlyFromClient != null)
+                        + centreDirtyOpt.map(centreDirty -> "," + CENTRE_DIRTY_KEY + ":" + centreDirty).orElse("")
+                    ).orElse("")
+                )
+            );
         }, restUtil);
     }
 

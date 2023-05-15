@@ -22,6 +22,7 @@ import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 const AUTOCOMPLETE_ACTIVE_ONLY_KEY = '@@activeOnly';
 const AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY = '@@flagChanged';
 const CENTRE_DIRTY_KEY = '@@centreDirty';
+const LOAD_MORE_DATA_KEY = '@@loadMoreData';
 
 const additionalTemplate = html`
     <style>
@@ -738,10 +739,6 @@ export class TgEntityEditor extends TgEditor {
 
         if (this._searchQuery) {
             const activeOnlyChanged = _activeOnly === true || _activeOnly === false;
-            // if this is not a request to load more data then let's clear the current result, if any
-            if (this.result && !dataPage && !activeOnlyChanged) {
-                this.result.clearSelection();
-            }
             // prepare the AJAX request based on the raw search string
             const contextHolder = this.createContextHolder(this._searchQuery, dataPage);
             if (activeOnlyChanged) {
@@ -767,6 +764,8 @@ export class TgEntityEditor extends TgEditor {
         const activeOnlyChanged = typeof activeOnlyChangedPart === 'undefined' ? null : activeOnlyChangedPart.startsWith('true');
         const centreDirtyPart = resultMessage.split(CENTRE_DIRTY_KEY + ':')[1];
         const centreDirty = typeof centreDirtyPart === 'undefined' ? null : centreDirtyPart.startsWith('true');
+        const loadMoreDataPart = resultMessage.split(LOAD_MORE_DATA_KEY + ':')[1];
+        const loadMoreData = typeof loadMoreDataPart === 'undefined' ? false : loadMoreDataPart.startsWith('true');
         if (!this.result) {
             this.result = this._createResultDialog();
         }
@@ -783,6 +782,8 @@ export class TgEntityEditor extends TgEditor {
             const selectedValues = this.result.selectedValues; // restore selected items only on tapping of 'active only' toggle button
             this.result.clearSelection();
             this.result.selectedValues = selectedValues;
+        } else if (!loadMoreData) { // if this is not a request to load more data then let's clear the current result, if any
+            this.result.clearSelection();
         }
         for (let index = 0; index < entities.length; index++) {
             // Entity is converted to a string representation of itself that is the same as string representation of its key or [key is not assigned] string if there is no key.

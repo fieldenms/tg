@@ -335,15 +335,19 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
     clearSelection () {
         this._selectedIndex = 0;
         this._keyBoardNavigationReady = false;
-        this.$.selector.selectedItem = null;
+        if (this.$) {
+            this.$.selector.selectedItem = null;
+        }
         this.selectedValues = {};
 
         while (this.pop('_values')) {}
 
-        if (this.multi === true) {
-            this.$.selector.selectedValues = [];
-        } else {
-            this.$.selector.selected = '';
+        if (this.$) {
+            if (this.multi === true) {
+                this.$.selector.selectedValues = [];
+            } else {
+                this.$.selector.selected = '';
+            }
         }
     }
 
