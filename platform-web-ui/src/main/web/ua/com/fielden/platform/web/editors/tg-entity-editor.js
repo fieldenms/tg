@@ -805,6 +805,7 @@ export class TgEntityEditor extends TgEditor {
             }
             wasNewValueObserved = isNew || wasNewValueObserved;
         }
+        setTimeout(() => this.result.notifyResize(), 0); // re-calculate shadow inside tg-scrollable-component; do it after new paper-items get distributed
 
         // if no new values were observed then there is no more to load
         // let's disable the load more action in this case
