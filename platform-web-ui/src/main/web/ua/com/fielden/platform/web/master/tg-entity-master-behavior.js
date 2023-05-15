@@ -448,7 +448,7 @@ const TgEntityMasterBehaviorImpl = {
         // calbacks, that will potentially be augmented by tg-action child elements:
         self._postSavedDefault = (function (potentiallySavedOrNewEntityAndCustomObject) {
             const potentiallySavedOrNewEntity = potentiallySavedOrNewEntityAndCustomObject[0];
-            const customObject = potentiallySavedOrNewEntityAndCustomObject[1]; // TODO use in postReceived
+            const customObject = potentiallySavedOrNewEntityAndCustomObject[1];
             // 'potentiallySavedOrNewEntity' can have two natures:
             //  1) fully fresh new entity from 'continuous creation' process (DAO object returns fully new entity after successful save of previous entity)
             //    a) it has no id defined (id === null)
@@ -482,7 +482,7 @@ const TgEntityMasterBehaviorImpl = {
             this._openToast(potentiallySavedOrNewEntity, messages.short, !potentiallySavedOrNewEntity.isValid() || potentiallySavedOrNewEntity.isValidWithWarning(), messages.extended, false);
 
             // isRefreshingProcess should be 'true' to reset old binding information in case where 'continuously created' entity arrive
-            const newBindingEntity = this._postEntityReceived(potentiallySavedOrNewEntity, isContinuouslyCreated);
+            const newBindingEntity = this._postEntityReceived(potentiallySavedOrNewEntity, isContinuouslyCreated, customObject);
 
             if (potentiallySavedOrNewEntity.isValidWithoutException()) {
                 // in case where successful save occured we need to reset @@touchedProps that are transported with bindingEntity

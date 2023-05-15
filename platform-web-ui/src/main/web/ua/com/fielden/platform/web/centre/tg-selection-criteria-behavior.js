@@ -378,7 +378,7 @@ const TgSelectionCriteriaBehaviorImpl = {
                 this._openToast(potentiallySavedEntity, messages.short, !potentiallySavedEntity.isValid() || potentiallySavedEntity.isValidWithWarning(), messages.extended, false);
             }
 
-            const newBindingEntity = this._postEntityReceived(potentiallySavedEntity, true);
+            const newBindingEntity = this._postEntityReceived(potentiallySavedEntity, true, customObject);
 
             if (potentiallySavedEntity.isValidWithoutException()) {
                 // in case where successful save occured we need to reset @@touchedProps that are transported with bindingEntity

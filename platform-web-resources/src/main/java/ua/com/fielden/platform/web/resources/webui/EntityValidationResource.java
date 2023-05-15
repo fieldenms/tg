@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static java.util.Optional.of;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.getPropertyActionIndices;
@@ -102,7 +101,7 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
             final T applied = restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, user, critGenerator, 0, device(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel);
 
             logger.debug("ENTITY_VALIDATION_RESOURCE: validate finished.");
-            return restUtil.rawListJsonRepresentation(applied, linkedMapOf(t2(VALIDATION_COUNTER, savingInfoHolder.getModifHolder().get(VALIDATION_COUNTER)), t2("propertyActionIndices", getPropertyActionIndices(applied, webUiConfig, of(savingInfoHolder.getCentreContextHolder()))))); // savingInfoHolder and its modifHolder are never empty
+            return restUtil.rawListJsonRepresentation(applied, linkedMapOf(t2(VALIDATION_COUNTER, savingInfoHolder.getModifHolder().get(VALIDATION_COUNTER)), t2("propertyActionIndices", getPropertyActionIndices(applied, webUiConfig)))); // savingInfoHolder and its modifHolder are never empty
         }, restUtil);
     }
 }

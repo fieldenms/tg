@@ -653,7 +653,7 @@ export const TgEntityBinderBehavior = {
             const messages = this._toastMessages("Refreshing", entity);
             this._openToast(entity, messages.short, !entity.isValid() || entity.isValidWithWarning(), messages.extended, false);
 
-            const newBindingEntity = this._postEntityReceived(entity, true);
+            const newBindingEntity = this._postEntityReceived(entity, true, customObject);
 
             this._postRetrievedDefaultForDescendants(entity, newBindingEntity, customObject);
             // custom external action
@@ -706,7 +706,7 @@ export const TgEntityBinderBehavior = {
             if (typeof this._continuations === 'object') {
                 this._continuations = {};
             }
-            const newBindingEntity = this._postEntityReceived(validatedEntity, false);
+            const newBindingEntity = this._postEntityReceived(validatedEntity, false, customObject);
             // custom external action
             if (this.postValidated) {
                 this.postValidated(validatedEntity, newBindingEntity, customObject);
@@ -962,7 +962,7 @@ export const TgEntityBinderBehavior = {
      * @param isRefreshingProcess -- value true indicates that the call happens as part of refresh lifecycle, which requires resetting the state.
      *                               In all other cases (validate, save, run) value false should be provided.
      */
-    _postEntityReceived: function (entity, isRefreshingProcess) {
+    _postEntityReceived: function (entity, isRefreshingProcess, customObject) {
         var self = this;
         // in case entity is being retrieved need to reset the state, so that the master would behave as if it was created for the first time
         if (isRefreshingProcess) {
@@ -985,6 +985,8 @@ export const TgEntityBinderBehavior = {
             // version of entity should be taken from previous entity to correctly restore stale entity at the client-side
             entity.version = self._extractPreviousEntityVersion(previousEntity, entity.version, self._originalBindingEntity);
         }
+        //Set the property action indices
+        this._propertyActionIndices = customObject && customObject.propertyActionIndices;
         // New entity should be promoted to the local cache:
         self._currEntity = entity;
         self.fire('tg-entity-received', self._currEntity);

@@ -562,30 +562,23 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .build())
                 .also()
                 .addProp("bigDecimalProp").asDecimal()
-                    .withAction(
-                        action(TgDummyAction.class)
-                        .withContext(context().withMasterEntity().build())
-                        .postActionSuccess(new PostActionSuccess(""
-                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
-                                ))
-                        .icon("accessibility")
-                        .withStyle("color: green")
-                        .shortDesc("Dummy")
-                        .longDesc("Dummy action, simply prints its result into console.")
-                        .build())
+                    .withMultiAction(multiAction(BigDecimalPropActionSelecetor.class)
+                            .addAction(dummyAction("color: green"))
+                            .addAction(dummyAction("color: yellow"))
+                            .addAction(dummyAction("color: red")).build())
                 .also()
-                .addProp("stringProp").asSinglelineText().skipValidation()
-                    .withAction(
-                        action(TgDummyAction.class)
-                        .withContext(context().withMasterEntity().build())
-                        .postActionSuccess(new PostActionSuccess(""
-                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
-                                ))
-                        .icon("accessibility")
-                        .shortDesc("Dummy")
-                        .longDesc("Dummy action, simply prints its result into console.")
-                        .build())
-                .also()
+//                .addProp("stringProp").asSinglelineText().skipValidation()
+//                    .withAction(
+//                        action(TgDummyAction.class)
+//                        .withContext(context().withMasterEntity().build())
+//                        .postActionSuccess(new PostActionSuccess(""
+//                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+//                                ))
+//                        .icon("accessibility")
+//                        .shortDesc("Dummy")
+//                        .longDesc("Dummy action, simply prints its result into console.")
+//                        .build())
+//                .also()
                 .addProp("stringProp").asMultilineText()
                     .withAction(
                         action(TgDummyAction.class)
@@ -2135,5 +2128,18 @@ public class WebUiConfig extends AbstractWebUiConfig {
     @Override
     public int getPort() {
         return port;
+    }
+
+    EntityActionConfig dummyAction (final String style) {
+        return action(TgDummyAction.class)
+        .withContext(context().withMasterEntity().build())
+        .postActionSuccess(new PostActionSuccess(""
+                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                ))
+        .icon("accessibility")
+        .withStyle(style)
+        .shortDesc("Dummy")
+        .longDesc("Dummy action, simply prints its result into console.")
+        .build();
     }
 }

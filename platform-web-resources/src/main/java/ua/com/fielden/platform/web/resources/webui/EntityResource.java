@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.resources.webui;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.valueOf;
@@ -170,14 +171,13 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
         LOGGER.debug("ENTITY_RESOURCE: save started.");
         final Representation result = handleUndesiredExceptions(getResponse(), () -> {
             final SavingInfoHolder savingInfoHolder = restoreSavingInfoHolder(envelope, restUtil);
-            final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
             final User user = userProvider.getUser();
             final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
             final MainMenuItemCo mmiCompanion = companionFinder.find(MainMenuItem.class);
             final IUser userCompanion = companionFinder.find(User.class);
 
             final Pair<T, Optional<Exception>> potentiallySavedWithException = tryToSave(savingInfoHolder, entityType, factory, companionFinder, critGenerator, webUiConfig, user, companion, device(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel);
-            return restUtil.singleJsonRepresentation(potentiallySavedWithException.getKey(), getPropertyActionIndices(potentiallySavedWithException.getKey(), webUiConfig, of(savingInfoHolder.getCentreContextHolder())), potentiallySavedWithException.getValue());
+            return restUtil.singleJsonRepresentation(potentiallySavedWithException.getKey(), getPropertyActionIndices(potentiallySavedWithException.getKey(), webUiConfig), potentiallySavedWithException.getValue());
         }, restUtil);
         LOGGER.debug("ENTITY_RESOURCE: save finished.");
         return result;
@@ -224,7 +224,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                             producer
                             );
                     LOGGER.debug("ENTITY_RESOURCE: retrieve finished.");
-                    return createRepresentation(entity, of(savingInfoHolder.getCentreContextHolder()));
+                    return createRepresentation(entity);
                 } else {
                     final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
 
@@ -246,17 +246,17 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                             producer
                             );
                     LOGGER.debug("ENTITY_RESOURCE: retrieve finished.");
-                    return createRepresentation(entity, of(centreContextHolder));
+                    return createRepresentation(entity);
                 }
             } else {
                 LOGGER.debug("ENTITY_RESOURCE: retrieve finished.");
-                return createRepresentation(EntityRestorationUtils.createValidationPrototype(entityId, emptyOriginallyProducedEntity, companion, producer), Optional.empty());
+                return createRepresentation(EntityRestorationUtils.createValidationPrototype(entityId, emptyOriginallyProducedEntity, companion, producer));
             }
         }, restUtil);
     }
 
-    private Representation createRepresentation(final T entity, final Optional<CentreContextHolder> optionalCentreContextHolder) {
-        return restUtil.rawListJsonRepresentation(entity, linkedMapOf(t2("propertyActionIndices", getPropertyActionIndices(entity, webUiConfig, optionalCentreContextHolder)))); // TODO calculate action indices
+    private Representation createRepresentation(final T entity) {
+        return restUtil.rawListJsonRepresentation(entity, linkedMapOf(t2("propertyActionIndices", getPropertyActionIndices(entity, webUiConfig)))); // TODO calculate action indices
     }
 
     @Delete
@@ -509,22 +509,14 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
         return actionConfig;
     }
 
-    public static <T extends AbstractEntity<?>> Map<String, Integer> getPropertyActionIndices(final T entity, final IWebUiConfig webUiConfig, final Optional<CentreContextHolder> optionalCentreContextHolder) {
-        return optionalCentreContextHolder.map(centreContextHolder -> {
-            if (centreContextHolder.getCustomObject().get("@@masterEntityType") != null && centreContextHolder.getCustomObject().get("@@actionNumber") != null && centreContextHolder.getCustomObject().get("@@actionKind") != null) {
-                final Class<?> entityType;
-                try {
-                    entityType = Class.forName((String) centreContextHolder.getCustomObject().get("@@masterEntityType"));
-                } catch (final ClassNotFoundException e) {
-                    throw new IllegalStateException(e);
-                }
-                final EntityMaster<T> master = (EntityMaster<T>) webUiConfig.getMasters().get(entityType);
-                if (master != null) {
-                    return master.getPropertyActionSelectors().entrySet().stream().map(entry -> t2(entry.getKey(), entry.getValue().getActionFor(entity))).collect(Collectors.toMap(tt -> tt._1, tt -> tt._2));
-                }
-            }
-            return new HashMap<String, Integer>();
-        }).orElse(new HashMap<>());
+    public static <T extends AbstractEntity<?>> Map<String, Integer> getPropertyActionIndices(final T entity, final IWebUiConfig webUiConfig) {
+        final Class<T> entityType = getOriginalType(entity.getType());
+
+        final EntityMaster<T> master = (EntityMaster<T>) webUiConfig.getMasters().get(entityType);
+        if (master != null) {
+            return master.getPropertyActionSelectors().entrySet().stream().map(entry -> t2(entry.getKey(), entry.getValue().getActionFor(entity))).collect(Collectors.toMap(tt -> tt._1, tt -> tt._2));
+        }
+        return new HashMap<String, Integer>();
     }
 
     /**

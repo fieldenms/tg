@@ -231,8 +231,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
                         shortcuts.append(actionConfig.shortcut.get() + " ");
                     }
                     importPaths.add(el.importPath());
-                    editorContainer.add(widgetElement
-                            .add(el.render().attr("slot", "property-action").clazz("property-action-icon")));
+                    widgetElement.add(el.render().attr("slot", "property-action").clazz("property-action-icon"));
                     primaryActionObjects.append(prefix + el.createActionObject());
                 });
                 editorContainer.add(widgetElement);

@@ -13,7 +13,7 @@ import {TgReflector} from '/app/tg-reflector.js';
 
 import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
-import { tearDownEvent, allDefined, resultMessages } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, allDefined, resultMessages, deepestActiveElement, isInHierarchy } from '/resources/reflection/tg-polymer-utils.js';
 
 let checkIconTimer = null;
 
@@ -638,6 +638,9 @@ export class TgEditor extends PolymerElement {
         }
         //Initialising multi actions
         this.propertyActions = (this.$.actionSlot && [...this.$.actionSlot.assignedNodes({flatten: true})]) || [];
+        this.propertyActions.forEach(action => {
+            action.setAttribute('hidden', '');
+        });
     }
 
     isInWarning () {
@@ -1218,13 +1221,23 @@ export class TgEditor extends PolymerElement {
     }
 
     _propertyActionIndexChanged (newIndex, oldIndex) {
-        this.propertyActions.forEach((action, idx) => {
-            if (idx === newIndex) {
-                action.removeAttribute('hidden');
-            } else {
-                action.setAttribute('hidden', '');
+        let shouldBeFocused = false;
+        if (oldIndex >= 0) {
+            const oldAction = this.propertyActions[oldIndex];
+            if (oldAction) {
+                shouldBeFocused = isInHierarchy(oldAction, deepestActiveElement());
+                oldAction.setAttribute('hidden', '');
             }
-        });
+        }
+        if (newIndex >= 0) {
+            const newAction = this.propertyActions[newIndex];
+            if (newAction) {
+                newAction.removeAttribute('hidden');
+                if (shouldBeFocused) {
+                    newAction.$.iActionButton.focus();
+                }
+            }
+        }
     }
 
 }
