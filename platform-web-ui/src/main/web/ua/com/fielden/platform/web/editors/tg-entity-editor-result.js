@@ -126,6 +126,16 @@ const template = html`
             border-style: solid;
             border-width: 2px;
         }
+        .counter {
+            width: 24px;
+            height: 24px;
+            padding: 8px;
+            text-align: center;
+            font-size: 20px;
+            font-weight: bold;
+            line-height: 24px;
+            color: var(--paper-blue-600);
+        }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
     <tg-scrollable-component class="relative" end-of-scroll="[[_tryToLoadMore]]" on-tap="selectionListTap" on-keydown="selectionListKeyDown">
@@ -149,6 +159,7 @@ const template = html`
             <paper-icon-button tooltip-text$="[[_tooltipForActiveOnlyButton(_activeOnly)]]" on-tap="_changeActiveOnly" hidden$="[[_isHiddenActiveOnlyButton(_activeOnly)]]" icon="tg-icons:playlist-remove" active-button$="[[_activeOnly]]"></paper-icon-button>
         </div>
         <div class="toolbar-content layout horizontal center" style="margin-left:auto">
+            <div class="counter" hidden$="[[!multi]]" tooltip-text$="[[_tooltipForSelectedValuesCounter(selectedValues)]]">[[_calcSelectedValuesCounter(selectedValues)]]</div>
             <paper-icon-button tooltip-text="Discard and close" on-tap="_close" icon="icons:cancel"></paper-icon-button>
             <paper-icon-button tooltip-text="Accept selected" on-tap="_acceptValues" icon="icons:check-circle"></paper-icon-button>
         </div>
@@ -496,6 +507,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
 
         const value = event.detail.item.getAttribute("value");
         this.selectedValues[value] = this._values.find(obj => obj.key === value);
+        this.selectedValues = { ...this.selectedValues }; // reset a shallow copy to trigger Polymer events
     }
 
     _itemDeselected (event) {
@@ -504,6 +516,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
 
         const value = event.detail.item.getAttribute("value");
         delete this.selectedValues[value];
+        this.selectedValues = { ...this.selectedValues }; // reset a shallow copy to trigger Polymer events
     }
 
     /**
@@ -653,6 +666,17 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         }
         return klass;
     }
+
+    _calcSelectedValuesCounter (selectedValues) {
+        const size = Object.keys(selectedValues).length;
+        return size > 0 ? size : '';
+    }
+
+    _tooltipForSelectedValuesCounter (selectedValues) {
+        const tooltipText = Object.keys(selectedValues).join(', ');
+        return tooltipText ? '<b>' + tooltipText + '</b>' : '';
+    }
+
 }
 
 customElements.define('tg-entity-editor-result', TgEntityEditorResult);
