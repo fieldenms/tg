@@ -789,9 +789,17 @@ export class TgEntityEditor extends TgEditor {
             if (centreDirty !== null) {
                 this.updateCentreDirty(centreDirty);
             }
-            const selectedValues = this.result.selectedValues; // restore selected items only on tapping of 'active only' toggle button
+            const _selectedIndex = this.result._selectedIndex;
+            const selectedValues = this.result.selectedValues;
+            const _keyBoardNavigationReady = this.result._keyBoardNavigationReady;
+
             this.result.clearSelection();
-            this.result.selectedValues = selectedValues;
+
+            this.result._keyBoardNavigationReady = _keyBoardNavigationReady; // restore ability to navigate through keyboard on tapping of 'active only' toggle button
+            this.result.selectedValues = selectedValues; // restore selected items on tapping of 'active only' toggle button
+            if (_selectedIndex >= 0) {
+                setTimeout (() => this.result.focusItemWithIndex(_selectedIndex), 100); // restore focused item (if possible) on tapping of 'active only' toggle button
+            }
         } else if (!loadMoreData) { // if this is not a request to load more data then let's clear the current result, if any
             this.result.clearSelection();
         }
