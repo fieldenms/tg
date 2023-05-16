@@ -429,7 +429,10 @@ export class TgEntityEditor extends TgEditor {
                        this._cancelSearch();
                        // and perform new search only if input has some text in it
                        if (this.decoratedInput().value) {
-                           this._asyncSearchHandle = setTimeout(() => this._search("*"), 700);
+                           this._asyncSearchHandle = setTimeout(() => {
+                               this._dataPage = 1;
+                               this._search("*");
+                           }, 700);
                        } else { // otherwise, close the result dialog
                            this.result && this.result.close();
                        }
@@ -700,6 +703,7 @@ export class TgEntityEditor extends TgEditor {
             this.result._activeOnly = this._activeOnly;
         }
         if (!this.searching) {
+            this._dataPage = 1;
             this._search(this._searchQuery, null /* dataPage */, this._ignoreInputText, newActiveOnly);
         }
     }
