@@ -795,7 +795,7 @@ export class TgEntityEditor extends TgEditor {
             const key = entities[index].toString();
             entities[index].key = key;
             const isNew = this.result.pushValue(entities[index]);
-            if (activeOnlyChanged && this.result.selectedValues[key]) { // restore selected item only on tapping of 'active only' toggle button
+            if (isNew && (activeOnlyChanged || loadMoreData) && this.result.selectedValues[key]) { // restore selected item on tapping of 'active only' toggle button and on 'load more' (either from scrolling or from 'more' button)
                 setTimeout(() => { // do it after new paper-item gets distributed
                     const newSelectedValues = this.result.$.selector.selectedValues.slice();
                     newSelectedValues.push(key);
