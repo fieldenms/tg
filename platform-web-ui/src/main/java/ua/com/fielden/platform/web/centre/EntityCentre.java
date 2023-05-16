@@ -55,6 +55,7 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -67,7 +68,6 @@ import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
-import org.apache.commons.collections4.map.HashedMap;
 import org.apache.log4j.Logger;
 
 import com.google.common.collect.ListMultimap;
@@ -921,7 +921,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                     .filter(resultProp -> resultProp.getPropAction().isPresent() && (resultProp.getPropAction().get().actions().size() > 0))
                     .map(resultProp -> t2(derivePropName(resultProp), injector.getInstance(resultProp.getPropAction().get().actionSelectorClass())))
                     .collect(toMap(tt -> tt._1, tt -> tt._2));
-        }).orElse(new HashedMap<>());
+        }).orElse(new HashMap<>());
     }
 
     /**
