@@ -685,7 +685,10 @@ export class TgEntityEditor extends TgEditor {
         this._search('*', null, true);
     }
 
-    /** Loads more matching values. */
+    /**
+     * Loads more matching values.
+     * Skips this action if previous searching is still in progress.
+     */
     _loadMore (moreButtonPressed) {
         if (!this.searching) {
             if (moreButtonPressed) {
@@ -696,13 +699,16 @@ export class TgEntityEditor extends TgEditor {
         }
     }
 
-    /** Toggles activeOnly and fedjhbfjhfrejhkk. */
+    /**
+     * Changes activeOnly to new value and starts searching with new option applied.
+     * Skips this action if previous searching is still in progress.
+     */
     _changeActiveOnly (newActiveOnly) {
-        this._activeOnly = newActiveOnly;
-        if (this.result) {
-            this.result._activeOnly = this._activeOnly;
-        }
         if (!this.searching) {
+            this._activeOnly = newActiveOnly;
+            if (this.result) {
+                this.result._activeOnly = this._activeOnly;
+            }
             this._dataPage = 1;
             this._search(this._searchQuery, null /* dataPage */, this._ignoreInputText, newActiveOnly);
         }
