@@ -131,7 +131,7 @@ const template = html`
             height: 24px;
             padding: 8px;
             text-align: center;
-            font-size: 20px;
+            font-size: 16px;
             font-weight: bold;
             line-height: 24px;
             color: var(--paper-blue-600);
@@ -159,7 +159,7 @@ const template = html`
             <paper-icon-button tooltip-text$="[[_tooltipForActiveOnlyButton(_activeOnly)]]" on-tap="_changeActiveOnly" hidden$="[[_isHiddenActiveOnlyButton(_activeOnly)]]" icon="tg-icons:playlist-remove" active-button$="[[_activeOnly]]"></paper-icon-button>
         </div>
         <div class="toolbar-content layout horizontal center" style="margin-left:auto">
-            <div class="counter" hidden$="[[!multi]]" tooltip-text$="[[_tooltipForSelectedValuesCounter(selectedValues)]]">[[_calcSelectedValuesCounter(selectedValues)]]</div>
+            <div class="counter" hidden$="[[_isHiddenSelectedValuesCounter(multi, selectedValues)]]" tooltip-text$="[[_tooltipForSelectedValuesCounter(selectedValues)]]">[[_calcSelectedValuesCounter(selectedValues)]]</div>
             <paper-icon-button tooltip-text="Discard and close" on-tap="_close" icon="icons:cancel"></paper-icon-button>
             <paper-icon-button tooltip-text="Accept selected" on-tap="_acceptValues" icon="icons:check-circle"></paper-icon-button>
         </div>
@@ -668,13 +668,16 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
     }
 
     _calcSelectedValuesCounter (selectedValues) {
-        const size = Object.keys(selectedValues).length;
-        return size > 0 ? size : '';
+        return Object.keys(selectedValues).length;
     }
 
     _tooltipForSelectedValuesCounter (selectedValues) {
         const tooltipText = Object.keys(selectedValues).join(', ');
         return tooltipText ? '<b>' + tooltipText + '</b>' : '';
+    }
+
+    _isHiddenSelectedValuesCounter (multi, selectedValues) {
+        return !multi || Object.keys(selectedValues).length === 0;
     }
 
 }
