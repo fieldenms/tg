@@ -413,7 +413,7 @@ export class TgEntityEditor extends TgEditor {
 
            _activeOnly: {
                type: Object,
-               value: null // 'null' for non-activatable or for autocompleter on entity master, or otherwise true / false
+               value: null // 'null' for non-activatable or for autocompleter on entity master, or otherwise true / false; also it is 'null' in the beginning where 'active only' parameter was not yet retrieved
            },
    
            /**
@@ -710,11 +710,11 @@ export class TgEntityEditor extends TgEditor {
                 this.result._activeOnly = this._activeOnly;
             }
             this._dataPage = 1;
-            this._search(this._searchQuery, null /* dataPage */, this._ignoreInputText, newActiveOnly);
+            this._search(this._searchQuery, null /* dataPage */, this._ignoreInputText, true /* 'active only' changed */);
         }
     }
 
-    _search (defaultSearchQuery, dataPage, ignoreInputText, _activeOnly) {
+    _search (defaultSearchQuery, dataPage, ignoreInputText, activeOnlyChanged) {
         // cancel any other search
         this._cancelSearchByOtherEditor();
         // What is the query string?
@@ -748,11 +748,13 @@ export class TgEntityEditor extends TgEditor {
         }
 
         if (this._searchQuery) {
-            const activeOnlyChanged = _activeOnly === true || _activeOnly === false;
             // prepare the AJAX request based on the raw search string
             const contextHolder = this.createContextHolder(this._searchQuery, dataPage);
-            if (activeOnlyChanged) {
-                contextHolder.customObject[AUTOCOMPLETE_ACTIVE_ONLY_KEY] = _activeOnly;
+            if (this._activeOnly !== null) {
+                contextHolder.customObject[AUTOCOMPLETE_ACTIVE_ONLY_KEY] = this._activeOnly;
+                if (activeOnlyChanged) {
+                    contextHolder.customObject[AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY] = activeOnlyChanged;
+                }
             }
             const serialisedSearchQuery = this.$.serialiser.serialise(contextHolder);
             this._ignoreInputText = ignoreInputText === true; // capture ignoreInputText for its use in _loadMore
@@ -779,16 +781,17 @@ export class TgEntityEditor extends TgEditor {
         if (!this.result) {
             this.result = this._createResultDialog();
         }
+        this.result._activeOnly = this._activeOnly;
 
         // make sure to assign reflector to the result object
         this.result.reflector = this.reflector();
 
         let wasNewValueObserved = false;
         let indexOfFirstNewValue = -1;
+        if (centreDirty !== null) {
+            this.updateCentreDirty(centreDirty);
+        }
         if (activeOnlyChanged) {
-            if (centreDirty !== null) {
-                this.updateCentreDirty(centreDirty);
-            }
             const _selectedIndex = this.result._selectedIndex;
             const selectedValues = this.result.selectedValues;
             const _keyBoardNavigationReady = this.result._keyBoardNavigationReady;
