@@ -55,10 +55,11 @@ import ua.com.fielden.platform.web.view.master.api.helpers.impl.WidgetSelector;
 import ua.com.fielden.platform.web.view.master.api.widgets.IDividerConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.IHtmlTextConfig;
 import ua.com.fielden.platform.web.view.master.api.widgets.autocompleter.impl.AbstractEntityAutocompletionWidget;
+import ua.com.fielden.platform.web.view.master.exceptions.EntityMasterConfigurationException;
 
 public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimpleMasterBuilder<T>, IPropertySelector<T>, ILayoutConfig<T>, ILayoutConfigWithDimensionsAndDone<T>, IEntityActionConfig5<T>, IActionBarLayoutConfig1<T> {
 
-    private static final String ERR_WIDGET_IS_ALREADY_PRESENT = "The widget with [%s] property name already present in entity master for [%s] entity type";
+    private static final String ERR_WIDGET_IS_ALREADY_PRESENT = "A widget with property [%s] is already present in the entity master for [%s].";
 
     private final List<WidgetSelector<T>> widgets = new ArrayList<>();
     private final List<Object> entityActions = new ArrayList<>();
@@ -172,7 +173,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
     @Override
     public IWidgetSelector<T> addProp(final String propName) {
         widgets.stream().filter(widget -> widget.propertyName.equals(propName)).findFirst().ifPresent(widget -> {
-            throw new IllegalArgumentException(format(ERR_WIDGET_IS_ALREADY_PRESENT, propName, this.entityType.getSimpleName()));
+            throw new EntityMasterConfigurationException(format(ERR_WIDGET_IS_ALREADY_PRESENT, propName, this.entityType.getSimpleName()));
         });
         final WidgetSelector<T> widget = new WidgetSelector<>(this, propName, new WithMatcherCallback());
         widgets.add(widget);
