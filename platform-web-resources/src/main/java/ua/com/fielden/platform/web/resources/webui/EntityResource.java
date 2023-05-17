@@ -256,7 +256,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
     }
 
     private Representation createRepresentation(final T entity) {
-        return restUtil.rawListJsonRepresentation(entity, linkedMapOf(t2("propertyActionIndices", getPropertyActionIndices(entity, webUiConfig)))); // TODO calculate action indices
+        return restUtil.rawListJsonRepresentation(entity, linkedMapOf(t2("propertyActionIndices", getPropertyActionIndices(entity, webUiConfig))));
     }
 
     @Delete
@@ -509,12 +509,22 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
         return actionConfig;
     }
 
+    /**
+     * Return indices of property actions on the entity master for specified entity.
+     *
+     * @param <T>
+     * @param entity
+     * @param webUiConfig
+     * @return
+     */
     public static <T extends AbstractEntity<?>> Map<String, Integer> getPropertyActionIndices(final T entity, final IWebUiConfig webUiConfig) {
-        final Class<T> entityType = getOriginalType(entity.getType());
+        if (entity != null) {
+            final Class<T> entityType = getOriginalType(entity.getType());
 
-        final EntityMaster<T> master = (EntityMaster<T>) webUiConfig.getMasters().get(entityType);
-        if (master != null) {
-            return master.getPropertyActionSelectors().entrySet().stream().map(entry -> t2(entry.getKey(), entry.getValue().getActionFor(entity))).collect(Collectors.toMap(tt -> tt._1, tt -> tt._2));
+            final EntityMaster<T> master = (EntityMaster<T>) webUiConfig.getMasters().get(entityType);
+            if (master != null) {
+                return master.getPropertyActionSelectors().entrySet().stream().map(entry -> t2(entry.getKey(), entry.getValue().getActionFor(entity))).collect(Collectors.toMap(tt -> tt._1, tt -> tt._2));
+            }
         }
         return new HashMap<String, Integer>();
     }

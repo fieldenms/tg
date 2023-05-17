@@ -7,6 +7,12 @@ import java.math.BigDecimal;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.web.centre.api.actions.multi.IEntityMultiActionSelector;
 
+/**
+ * Action selector bigDecimalProp on the entity master of test application.
+ *
+ * @author TG Team
+ *
+ */
 public class BigDecimalPropActionSelecetor implements IEntityMultiActionSelector {
 
     @Override

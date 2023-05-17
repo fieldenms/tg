@@ -1022,7 +1022,6 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                         .map(multiAction -> multiAction.actions()).orElse(new ArrayList<>()).stream()
                         .map(actionConfig -> new FunctionalActionElement(actionConfig, actionIndex.getAndIncrement(), resultPropName))
                         .collect(Collectors.toList());
-                final Optional<EntityMultiActionConfig> actionConfig = resultProp.getPropAction();
 
                 final PropertyColumnElement el = new PropertyColumnElement(resultPropName,
                         resultProp.widget,

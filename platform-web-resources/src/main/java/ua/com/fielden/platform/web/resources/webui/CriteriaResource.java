@@ -760,9 +760,9 @@ public class CriteriaResource extends AbstractWebResource {
     }
 
     /**
-     * Calculates indices of property action for each entity in result set.
+     * Calculates indices of property actions for each entity in result set.
      *
-     * @param entities
+     * @param entities - result set entities
      * @return
      */
     private List<Map<String, Integer>> createPropertyActionIndices(final List<?> entities) {

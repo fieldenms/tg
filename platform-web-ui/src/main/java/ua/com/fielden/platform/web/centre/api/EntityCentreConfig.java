@@ -293,7 +293,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             }
 
             if (propAction == null) {
-                throw new WebUiBuilderException("Property action cannot be null.");
+                throw new WebUiBuilderException("Multiple Property Action cannot be null.");
             }
 
             if (StringUtils.isEmpty(propName) && propDef == null) {

@@ -37,7 +37,7 @@ public interface IResultSetBuilder5WithPropAction<T extends AbstractEntity<?>> e
      * Adds an instance of {@link EntityMultiActionConfig} to the result set definition.
      * <p>
      * Please note that a multi action configuration can be conveniently built by using {@link EntityMultiActionConfigBuilder}, which is designed specifically for fluent construction of such
-     * configurations. This contract includes support for adding new {@link EntityActionConfig} and for {@link IEntityMultiActionSelector} type definition.
+     * configurations. This contract includes support for adding new {@link EntityActionConfig} and specifying {@link IEntityMultiActionSelector}.
      *
      * @param multiActionConfig
      * @return
