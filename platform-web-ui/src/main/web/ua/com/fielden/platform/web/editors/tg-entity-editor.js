@@ -868,7 +868,10 @@ export class TgEntityEditor extends TgEditor {
             // focus the first new item if new ones were found, but only if search was due to pressing button MORE
             if (this._loadMoreButtonPressed && indexOfFirstNewValue >= 0) {
                 // timeout is required to allow the iron-list to load new items before they can be focused
-                setTimeout (() => this.result.focusItemWithIndex(indexOfFirstNewValue), 100);
+                setTimeout (() => {
+                    this.result._keyBoardNavigationReady = true; // before focusing newly loaded item, keyboard navigation should be turned on (otherwise, up/down keys will lead to jumping on first item)
+                    this.result.focusItemWithIndex(indexOfFirstNewValue);
+                }, 100);
             }
         }
 
