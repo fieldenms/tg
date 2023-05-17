@@ -40,6 +40,7 @@ import ua.com.fielden.platform.processors.metamodel.elements.AbstractForwardingE
 import ua.com.fielden.platform.processors.metamodel.elements.utils.TypeElementCache;
 import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderException;
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelException;
+import ua.com.fielden.platform.utils.StreamUtils;
 
 /**
  * A collection of utility methods for operating on elements and types, an extension of {@link Elements} and {@link Types}. 
@@ -579,9 +580,8 @@ public class ElementFinder {
         }
 
         @Override
-        public Boolean visitDeclared(DeclaredType t, Void p) {
-            final TypeMirror rawType = types.erasure(t);
-            return types.isSameType(rawType, asType(clazz));
+        public Boolean visitDeclared(final DeclaredType t, final Void p) {
+            return isSameType(asTypeElement(t), clazz);
         }
     }
 
@@ -629,10 +629,26 @@ public class ElementFinder {
         }
 
         @Override
-        public Boolean visitDeclared(DeclaredType t, Void p) {
-            final TypeMirror rawType = types.erasure(t);
-            return types.isSubtype(rawType, asType(clazz));
+        public Boolean visitDeclared(final DeclaredType t, final Void p) {
+            final TypeElement elt = asTypeElement(t);
+            return isSameType(elt, clazz)
+                    || streamAllSupertypes(elt).anyMatch(sup -> isSameType(sup, clazz));
         }
+    }
+
+    public Stream<TypeElement> streamAllSupertypes(final TypeElement element) {
+        return doStreamAllSupertypes(element).skip(1); // skip the initial element
+    }
+
+    private Stream<TypeElement> doStreamAllSupertypes(final TypeElement element) {
+        // FIXME traverses the whole hierarchy upon the first .next()
+        return StreamUtils.distinct(
+                Stream.concat(Stream.of(element),
+                        types.directSupertypes(element.asType()).stream()
+                            .map(t -> asTypeElementOfTypeMirror(t))
+                            .flatMap(this::doStreamAllSupertypes)),
+                // using Name rather than String should be faster, since Name-s are interned
+                elt -> elt.getQualifiedName());
     }
 
     public static boolean isTopLevelClass(final Element element) {
