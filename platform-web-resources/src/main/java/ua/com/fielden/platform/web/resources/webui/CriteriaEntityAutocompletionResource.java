@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.resources.webui;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.domaintree.impl.AbstractDomainTree.isCritOnlySingle;
 import static ua.com.fielden.platform.entity.IContextDecomposer.AUTOCOMPLETE_ACTIVE_ONLY_KEY;
 import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
@@ -10,7 +11,6 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCentreContext;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityWithoutConflicts;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaValidationPrototype;
-import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getOriginalPropertyName;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
@@ -200,9 +200,9 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             }
 
             final Optional<String> activeOnlyMessageOpt;
-            if (valueMatcher.getFetch() != null && isActivatableEntityType(valueMatcher.getFetch().getEntityType())) { // fetch is not defined only for property descriptors, see createValueMatcherAndContextConfig
-                final Class<T> entityType = getEntityType(miType);
-                final String origPropName = getOriginalPropertyName(criteriaType, criterionPropertyName);
+            final Class<T> entityType = centre.getEntityType();
+            final String origPropName = getOriginalPropertyName(criteriaType, criterionPropertyName);
+            if (valueMatcher.getFetch() != null && isActivatableEntityType(valueMatcher.getFetch().getEntityType()) && !isCritOnlySingle(entityType, origPropName)) { // fetch is not defined only for property descriptors, see createValueMatcherAndContextConfig
                 final Optional<Boolean> activeOnlyFromClientOpt = ofNullable((Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_KEY)); // empty only for first time loading (or for non-activatables; or for non-"multi selection-crit" autocompleters)
                 final Optional<Boolean> activeOnlyChangedFromClientOpt = ofNullable((Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY)); // non-empty only for 'active only' button tap (always with 'true' value inside)
                 final Optional<Boolean> centreDirtyOpt = activeOnlyFromClientOpt.map(activeOnly -> {
