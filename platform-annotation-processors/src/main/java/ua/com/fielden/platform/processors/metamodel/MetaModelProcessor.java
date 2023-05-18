@@ -754,10 +754,22 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
      * @param maybeMetaModelsElement optionally provides an existing meta-models class, contents of which should be copied
      * @param inactiveMetaModelElements inactive meta-models that should be excluded
      */
-    private void writeMetaModelsClass(final Collection<MetaModelConcept> metaModelConcepts, final Optional<MetaModelsElement> maybeMetaModelsElement, final Collection<MetaModelElement> inactiveMetaModelElements) {
+    private void writeMetaModelsClass(
+            final Collection<MetaModelConcept> metaModelConcepts,
+            final Optional<MetaModelsElement> maybeMetaModelsElement,
+            final Collection<MetaModelElement> inactiveMetaModelElements)
+    {
         printNote("Started generating the meta-models entry point...");
-        if (metaModelConcepts.isEmpty() && inactiveMetaModelElements.isEmpty()) {
-            printNote("Aborted generating the meta-models entry point as there are no meta-models to include.");
+
+        final Set<MetaModelConcept> newMetaModelConcepts = maybeMetaModelsElement.map(elt -> {
+            final Set<Name> declaredMetaModelNames = elt.getMetaModels().stream().map(MetaModelElement::getQualifiedName).collect(toSet());
+            return metaModelConcepts.stream()
+                    .filter(mmc -> !declaredMetaModelNames.contains(elementUtils.getName(mmc.getQualifiedName())))
+                    .collect(toSet());
+        }).orElseGet(() -> new HashSet<>(metaModelConcepts));
+
+        if (newMetaModelConcepts.isEmpty() && inactiveMetaModelElements.isEmpty()) {
+            printNote("Aborted meta-models entry point generation as there is nothing to change.");
             return;
         }
         /*
@@ -774,7 +786,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         final SortedSet<MethodSpec> methodSpecs = new TreeSet<>((m1, m2) -> m1.name.compareTo(m2.name));
         
         // generate static fields and methods for new meta-models
-        for (final MetaModelConcept mmc: metaModelConcepts) {
+        for (final MetaModelConcept mmc: newMetaModelConcepts) {
             final String fieldName = nameFieldForMetaModel(mmc.getEntityElement().getSimpleName().toString());
             printNote("New/Updated meta-model, generating field: %s", fieldName);
             fieldSpecs.add(specFieldForMetaModel(mmc.getMetaModelClassName(), fieldName));
@@ -790,7 +802,7 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
                     // skip inactive
                     .filter(mme -> !inactiveMetaModelElements.contains(mme))
                     // skip updated active
-                    .filter(mme -> metaModelConcepts.stream().noneMatch(mmc -> metaModelFinder.isSameMetaModel(mmc, mme)))
+                    .filter(mme -> newMetaModelConcepts.stream().noneMatch(mmc -> metaModelFinder.isSameMetaModel(mmc, mme)))
                     .toList();
 
             printNote("Inactive meta-models: [%s]", inactiveMetaModelElements.stream()
