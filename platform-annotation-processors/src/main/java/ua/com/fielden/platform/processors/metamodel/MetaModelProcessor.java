@@ -306,15 +306,19 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
      *
      * @param mmc
      * @param propertyTypeMetamodeledTest
-     * @return
+     * @return {@code true} if the meta-model was successfully generated, {@code false} otherwise
      */
     private boolean writeMetaModel(final MetaModelConcept mmc, final Predicate<PropertyElement> propertyTypeMetamodeledTest) {
         final String thisMetaModelName = mmc.getSimpleName();
         final String thisMetaModelPkgName = mmc.getPackageName();
 
         final EntityElement entityElement = mmc.getEntityElement();
-        // can safely unpack optional, since entityElement is guaranteed to extend something
-        final EntityElement entitySupertype =  entityFinder.getParent(entityElement).orElseThrow();
+        final EntityElement entitySupertype = entityFinder.getParent(entityElement).orElse(null);
+        // entityElement must extend something, but this has already been a bug source once
+        if (entitySupertype == null) {
+            printError("Parent entity type not found for %s, skipping meta-model generation", entityElement.getQualifiedName());
+            return false;
+        }
         final Optional<EntityElement> maybeMetaModelledSupertype = Optional.ofNullable(entityFinder.isEntityThatNeedsMetaModel(entitySupertype) ? entitySupertype : null);
 
         final Collection<PropertyElement> properties;
