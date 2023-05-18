@@ -115,6 +115,7 @@ Polymer({
         },
         embedded: Boolean,
         initiateAutoRun: Function,
+        _resetAutocompleterState: Function,
         _helpMouseDownEventHandler: Function,
         _helpMouseUpEventHandler: Function
 
@@ -141,11 +142,20 @@ Polymer({
             self.keyEventTarget = getKeyEventTarget(this, this.parentElement.parentElement);
 
             self.topLevelActions = [
-                self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigNewAction'),
+                self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigNewAction',
+                    null,
+                    self._resetAutocompleterState
+                ),
                 self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigDuplicateAction'),
-                self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigLoadAction', null, self.initiateAutoRun),
+                self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigLoadAction',
+                    null,
+                    () => { self._resetAutocompleterState(); self.initiateAutoRun(); }
+                ),
                 self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigEditAction'),
-                self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigDeleteAction', () => self._confirm('Should this configuration be deleted?', [{ name: 'NO' }, { name: 'YES', confirm: true, autofocus: true }])),
+                self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigDeleteAction',
+                    () => self._confirm('Should this configuration be deleted?', [{ name: 'NO' }, { name: 'YES', confirm: true, autofocus: true }]),
+                    self._resetAutocompleterState
+                ),
                 self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigConfigureAction')
             ];
         }, 1);

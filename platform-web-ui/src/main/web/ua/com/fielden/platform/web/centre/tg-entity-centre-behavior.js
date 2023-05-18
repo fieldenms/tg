@@ -562,7 +562,8 @@ const TgEntityCentreBehaviorImpl = {
             value: 'EDIT'
         },
         
-        initiateAutoRun: Function
+        initiateAutoRun: Function,
+        _resetAutocompleterState: Function
     },
 
     listeners: {
@@ -749,6 +750,7 @@ const TgEntityCentreBehaviorImpl = {
                 centre.run(true); // identify autoRunning situation only in case where centre has autoRun as true but does not represent 'link' centre (has no URI criteria values)
             }
         };
+        this._resetAutocompleterState = () => this.$.selection_criteria._resetAutocompleterState();
         
         self._postRun = (function (criteriaEntity, newBindingEntity, result) {
             if (criteriaEntity === null || criteriaEntity.isValidWithoutException()) {
@@ -812,6 +814,7 @@ const TgEntityCentreBehaviorImpl = {
                 console.log("CENTRE DISCARDED", entityAndCustomObject);
                 self.$.selection_criteria._provideExceptionOccured(entityAndCustomObject[0], exceptionOccured);
                 self.$.selection_criteria._postRetrievedDefault(entityAndCustomObject);
+                self.$.selection_criteria._resetAutocompleterState();
             });
         };
         self._processDiscarderError = function (e) {

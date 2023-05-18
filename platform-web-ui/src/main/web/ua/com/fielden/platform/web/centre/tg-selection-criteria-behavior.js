@@ -448,11 +448,26 @@ const TgSelectionCriteriaBehaviorImpl = {
             this.fire('tg-config-uuid-before-change', { newConfigUuid: newConfigUuid, configUuid: configUuid });
             delete this.loadCentreFreezed;
             this.configUuid = customObject.configUuid;
+            if (newConfigUuid !== configUuid) {
+                this._resetAutocompleterState();
+            }
         }
         if (typeof customObject.preferredView !== 'undefined') {
             this.preferredView = customObject.preferredView;
         }
         this.userName = customObject.userName;
+    },
+
+    /**
+     * Clears '_activeOnly' autocompleter state for all autocompleters in this selection criteria.
+     */
+    _resetAutocompleterState: function () {
+        Array.from(this.shadowRoot.querySelectorAll('tg-entity-editor')).forEach(autocompleter => {
+            autocompleter._activeOnly = null;
+            if (autocompleter.result) {
+                autocompleter.result._activeOnly = null;
+            }
+        });
     },
 
     _configUuidChanged: function (newConfigUuid, oldConfigUuid) {
