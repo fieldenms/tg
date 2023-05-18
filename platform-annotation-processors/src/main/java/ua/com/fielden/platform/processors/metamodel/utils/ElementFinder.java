@@ -570,8 +570,8 @@ public class ElementFinder {
 
         // handle void type
         @Override
-        public Boolean visitNoType(NoType t, Void p) {
-            return t.getKind().equals(TypeKind.VOID) && clazz.equals(void.class);
+        public Boolean visitNoType(final NoType t, final Void p) {
+            return t.getKind() == TypeKind.VOID && clazz == void.class;
         }
 
         @Override
@@ -619,8 +619,8 @@ public class ElementFinder {
 
         // handle void type
         @Override
-        public Boolean visitNoType(NoType t, Void p) {
-            return t.getKind().equals(TypeKind.VOID) && clazz.equals(void.class);
+        public Boolean visitNoType(final NoType t, final Void p) {
+            return t.getKind() == TypeKind.VOID && clazz == void.class;
         }
 
         @Override
@@ -683,7 +683,7 @@ public class ElementFinder {
     }
 
     public static boolean isRawType(final TypeMirror type) {
-        return TypeKind.DECLARED.equals(type.getKind()) && ((DeclaredType) type).getTypeArguments().isEmpty();
+        return TypeKind.DECLARED == type.getKind() && ((DeclaredType) type).getTypeArguments().isEmpty();
     }
 
     /**
