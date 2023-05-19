@@ -14,8 +14,12 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.SkipDefaultStringKeyMemberValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
+import ua.com.fielden.platform.entity.validation.RestrictCommasValidator;
+import ua.com.fielden.platform.entity.validation.RestrictExtraWhitespaceValidator;
+import ua.com.fielden.platform.entity.validation.RestrictNonPrintableCharactersValidator;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.definers.EntityCentreConfigDashboardableDefiner;
 
@@ -60,6 +64,7 @@ public class EntityCentreConfig extends AbstractConfiguration<DynamicEntityKey> 
     @CompositeKeyMember(2)
     @Title(value = "Title", desc = "Entity configuration title.")
     @MapTo("TITLE")
+    @SkipDefaultStringKeyMemberValidation({RestrictNonPrintableCharactersValidator.class, RestrictExtraWhitespaceValidator.class, RestrictCommasValidator.class})
     private String title;
 
     @IsProperty

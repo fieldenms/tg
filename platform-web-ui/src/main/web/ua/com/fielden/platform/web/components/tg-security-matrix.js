@@ -20,7 +20,8 @@ const template = html`
         :host {
             min-height: 0;
             @apply --layout-vertical;
-
+            width: 100%;
+            height: 100%;
         }
         tg-entity-master {
             min-height: 0;

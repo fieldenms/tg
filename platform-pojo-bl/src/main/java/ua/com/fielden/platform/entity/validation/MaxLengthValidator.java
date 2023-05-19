@@ -14,8 +14,10 @@ import java.util.Optional;
 import java.util.Set;
 
 import ua.com.fielden.platform.entity.annotation.IsProperty;
+import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.error.Result;
+import ua.com.fielden.platform.types.Hyperlink;
 
 /**
  * This validator implements a check for the length of a string property.
@@ -43,9 +45,10 @@ import ua.com.fielden.platform.error.Result;
  * @author TG Air
  *
  */
-public class MaxLengthValidator implements IBeforeChangeEventHandler<String> {
+public class MaxLengthValidator implements IBeforeChangeEventHandler<Object> {
     public static final String ERR_MISSING_MAX_LENGTH = "No max length was specified.";
     public static final String ERR_VALUE_SHOULD_NOT_EXCEED_MAX_LENGTH = "Value should not be longer than %s characters.";
+    public static final String ERR_UNSUPPORTED_PROPERTY_TYPE = "Validator [%s] is not applicable to properties of type [%s].";
 
     private Integer limit;
 
@@ -56,15 +59,16 @@ public class MaxLengthValidator implements IBeforeChangeEventHandler<String> {
     }
 
     @Override
-    public Result handle(final MetaProperty<String> property, final String newValue, final Set<Annotation> mutatorAnnotations) {
-        final String value = newValue;
-        if (isEmpty(value)) { // no violation
+    public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
+        if (newValue == null) {
             return successful("Value is empty.");
         }
-
+        if (!(newValue instanceof String) && !(newValue instanceof Hyperlink)) {
+            throw new EntityDefinitionException(format(ERR_UNSUPPORTED_PROPERTY_TYPE, MaxLengthValidator.class.getSimpleName(), newValue.getClass().getSimpleName()));
+        }
         return determineMaxLength(property).map(maxLength
                 -> 
-                    value.length() > maxLength
+                    length(newValue) > maxLength
                     ? failure(property.getEntity(), format(ERR_VALUE_SHOULD_NOT_EXCEED_MAX_LENGTH, maxLength))
                     : successful(property.getEntity()))
                 .orElse(failure(ERR_MISSING_MAX_LENGTH));
@@ -79,7 +83,7 @@ public class MaxLengthValidator implements IBeforeChangeEventHandler<String> {
      * @param limit
      * @return
      */
-    private Optional<Integer> determineMaxLength(final MetaProperty<String> property) {
+    private Optional<Integer> determineMaxLength(final MetaProperty<Object> property) {
         // the highest preference is for the explicitly specified limit parameter
         final Optional<Integer> maybeLimit = ofNullable(limit);
         // alternatively try to determine the limit from the property definition
@@ -89,4 +93,17 @@ public class MaxLengthValidator implements IBeforeChangeEventHandler<String> {
         return maybeLimit.map( limit -> of(maybeLength.map(length -> min(limit, length)).orElse(limit)) ).orElse(maybeLength);
     }
 
+    private static int length(Object value) {
+        if (value == null) {
+            return 0;
+        }
+        if (value instanceof String) {
+            return ((String) value).length();
+        }
+        
+        if (value instanceof Hyperlink) {
+            return ((Hyperlink) value).value.length();
+        }
+        throw new EntityDefinitionException(format(ERR_UNSUPPORTED_PROPERTY_TYPE, MaxLengthValidator.class.getSimpleName(), value.getClass().getSimpleName()));
+    }
 }

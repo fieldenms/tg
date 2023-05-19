@@ -6,7 +6,10 @@ import static java.util.stream.Stream.iterate;
 import static ua.com.fielden.platform.utils.StreamUtils.stopAfter;
 
 import java.lang.annotation.Annotation;
+import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
@@ -40,6 +43,7 @@ import ua.com.fielden.platform.processors.metamodel.elements.AbstractForwardingE
 import ua.com.fielden.platform.processors.metamodel.elements.utils.TypeElementCache;
 import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderException;
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelException;
+import ua.com.fielden.platform.utils.StreamUtils;
 
 /**
  * A collection of utility methods for operating on elements and types, an extension of {@link Elements} and {@link Types}. 
@@ -145,7 +149,7 @@ public class ElementFinder {
         }
         return stopAfter(
                 iterate(Optional.of(typeElement), Optional::isPresent, elt -> elt.flatMap(ElementFinder::findSuperclass)).map(Optional::get),
-                elt -> isSameType(elt.asType(), rootType))
+                elt -> isSameType(elt, rootType))
                 .skip(1); // drop the typeElement itself
     }
 
@@ -187,7 +191,7 @@ public class ElementFinder {
         }
         return iterate(Optional.of(typeElement), Optional::isPresent, elt -> elt.flatMap(ElementFinder::findSuperclass))
                 .map(Optional::get)
-                .takeWhile(elt -> !isSameType(elt.asType(), rootType))
+                .takeWhile(elt -> !isSameType(elt, rootType))
                 // drop the typeElement itself
                 .skip(1);
     }
@@ -506,32 +510,30 @@ public class ElementFinder {
      * @throws ElementFinderException if no coresponding type element was found
      */
     public TypeMirror asType(final Class<?> clazz) {
-        if (clazz.isPrimitive()) {
-            if (clazz.equals(void.class)) {
-                return types.getNoType(TypeKind.VOID);
-            } else if (clazz.equals(int.class)) {
-                return types.getPrimitiveType(TypeKind.INT);
-            } else if (clazz.equals(boolean.class)) {
-                return types.getPrimitiveType(TypeKind.BOOLEAN);
-            } else if (clazz.equals(double.class)) {
-                return types.getPrimitiveType(TypeKind.DOUBLE);
-            } else if (clazz.equals(long.class)) {
-                return types.getPrimitiveType(TypeKind.LONG);
-            } else if (clazz.equals(short.class)) {
-                return types.getPrimitiveType(TypeKind.SHORT);
-            } else if (clazz.equals(byte.class)) {
-                return types.getPrimitiveType(TypeKind.BYTE);
-            } else if (clazz.equals(float.class)) {
-                return types.getPrimitiveType(TypeKind.FLOAT);
-            } else if (clazz.equals(char.class)) {
-                return types.getPrimitiveType(TypeKind.CHAR);
-            }
+        if (clazz == void.class) {
+            return types.getNoType(TypeKind.VOID);
+        }
+        else if (clazz.isPrimitive()) {
+            return types.getPrimitiveType(PRIMITIVE_CLASS_MAP.get(clazz));
         }
         else if (clazz.isArray()) {
             return types.getArrayType(asType(clazz.getComponentType()));
         }
         // clazz is class or interface, so return a raw type mirror
         return types.getDeclaredType(getTypeElement(clazz));
+    }
+    // void.class is not included in this map, so handle it separately
+    private static final Map<Class<?>, TypeKind> PRIMITIVE_CLASS_MAP;
+    static {
+        PRIMITIVE_CLASS_MAP = new HashMap<>();
+        PRIMITIVE_CLASS_MAP.put(int.class,     TypeKind.INT);
+        PRIMITIVE_CLASS_MAP.put(boolean.class, TypeKind.BOOLEAN);
+        PRIMITIVE_CLASS_MAP.put(double.class,  TypeKind.DOUBLE);
+        PRIMITIVE_CLASS_MAP.put(long.class,    TypeKind.LONG);
+        PRIMITIVE_CLASS_MAP.put(short.class,   TypeKind.SHORT);
+        PRIMITIVE_CLASS_MAP.put(byte.class,    TypeKind.BYTE);
+        PRIMITIVE_CLASS_MAP.put(float.class,   TypeKind.FLOAT);
+        PRIMITIVE_CLASS_MAP.put(char.class,    TypeKind.CHAR);
     }
 
     /**
@@ -576,14 +578,27 @@ public class ElementFinder {
         }
 
         @Override
-        public Boolean visitPrimitive(PrimitiveType t, Void p) {
-            return types.isSameType(t, asType(clazz));
+        public Boolean visitPrimitive(final PrimitiveType t, final Void p) {
+            return PRIMITIVE_TYPE_MAP.get(t.getKind()) == clazz;
+        }
+
+        private static final Map<TypeKind, Class<?>> PRIMITIVE_TYPE_MAP;
+        static {
+            PRIMITIVE_TYPE_MAP = new EnumMap<>(TypeKind.class);
+            PRIMITIVE_TYPE_MAP.put(TypeKind.BOOLEAN, boolean.class);
+            PRIMITIVE_TYPE_MAP.put(TypeKind.BYTE,    byte.class);
+            PRIMITIVE_TYPE_MAP.put(TypeKind.SHORT,   short.class);
+            PRIMITIVE_TYPE_MAP.put(TypeKind.INT,     int.class);
+            PRIMITIVE_TYPE_MAP.put(TypeKind.LONG,    long.class);
+            PRIMITIVE_TYPE_MAP.put(TypeKind.CHAR,    char.class);
+            PRIMITIVE_TYPE_MAP.put(TypeKind.FLOAT,   float.class);
+            PRIMITIVE_TYPE_MAP.put(TypeKind.DOUBLE,  double.class);
         }
 
         // handle void type
         @Override
-        public Boolean visitNoType(NoType t, Void p) {
-            return t.getKind().equals(TypeKind.VOID) && clazz.equals(void.class);
+        public Boolean visitNoType(final NoType t, final Void p) {
+            return t.getKind() == TypeKind.VOID && clazz == void.class;
         }
 
         @Override
@@ -592,9 +607,8 @@ public class ElementFinder {
         }
 
         @Override
-        public Boolean visitDeclared(DeclaredType t, Void p) {
-            final TypeMirror rawType = types.erasure(t);
-            return types.isSameType(rawType, asType(clazz));
+        public Boolean visitDeclared(final DeclaredType t, final Void p) {
+            return isSameType(asTypeElement(t), clazz);
         }
     }
 
@@ -626,14 +640,30 @@ public class ElementFinder {
         }
 
         @Override
-        public Boolean visitPrimitive(PrimitiveType t, Void p) {
-            return types.isSubtype(t, asType(clazz));
+        public Boolean visitPrimitive(final PrimitiveType t, final Void p) {
+            if (!clazz.isPrimitive()) {
+                return false;
+            }
+            final Set<Class<?>> set = PRIMITIVE_SUPERTYPES_MAP.get(t.getKind());
+            return set != null && set.contains(clazz);
+        }
+
+        // from type to the set of itself and its supertypes
+        private static final Map<TypeKind, Set<Class<?>>> PRIMITIVE_SUPERTYPES_MAP;
+        static {
+            PRIMITIVE_SUPERTYPES_MAP = new EnumMap<>(TypeKind.class);
+            PRIMITIVE_SUPERTYPES_MAP.put(TypeKind.INT,   Set.of(int.class, long.class, float.class, double.class));
+            PRIMITIVE_SUPERTYPES_MAP.put(TypeKind.LONG,  Set.of(long.class, float.class, double.class));
+            PRIMITIVE_SUPERTYPES_MAP.put(TypeKind.SHORT, Set.of(short.class, int.class, long.class, float.class, double.class));
+            PRIMITIVE_SUPERTYPES_MAP.put(TypeKind.BYTE,  Set.of(byte.class, short.class, int.class, long.class, float.class, double.class));
+            PRIMITIVE_SUPERTYPES_MAP.put(TypeKind.FLOAT, Set.of(float.class, double.class));
+            PRIMITIVE_SUPERTYPES_MAP.put(TypeKind.CHAR,  Set.of(char.class, int.class, long.class, float.class, double.class));
         }
 
         // handle void type
         @Override
-        public Boolean visitNoType(NoType t, Void p) {
-            return t.getKind().equals(TypeKind.VOID) && clazz.equals(void.class);
+        public Boolean visitNoType(final NoType t, final Void p) {
+            return t.getKind() == TypeKind.VOID && clazz == void.class;
         }
 
         @Override
@@ -642,10 +672,26 @@ public class ElementFinder {
         }
 
         @Override
-        public Boolean visitDeclared(DeclaredType t, Void p) {
-            final TypeMirror rawType = types.erasure(t);
-            return types.isSubtype(rawType, asType(clazz));
+        public Boolean visitDeclared(final DeclaredType t, final Void p) {
+            final TypeElement elt = asTypeElement(t);
+            return isSameType(elt, clazz)
+                    || streamAllSupertypes(elt).anyMatch(sup -> isSameType(sup, clazz));
         }
+    }
+
+    public Stream<TypeElement> streamAllSupertypes(final TypeElement element) {
+        return doStreamAllSupertypes(element).skip(1); // skip the initial element
+    }
+
+    private Stream<TypeElement> doStreamAllSupertypes(final TypeElement element) {
+        // TODO optimise: traverse the hierarchy lazily 
+        return StreamUtils.distinct(
+                Stream.concat(Stream.of(element),
+                        types.directSupertypes(element.asType()).stream()
+                            .map(t -> asTypeElementOfTypeMirror(t))
+                            .flatMap(this::doStreamAllSupertypes)),
+                // using Name rather than String should be faster, since Name-s are interned
+                elt -> elt.getQualifiedName());
     }
 
     public static boolean isTopLevelClass(final Element element) {
@@ -680,7 +726,7 @@ public class ElementFinder {
     }
 
     public static boolean isRawType(final TypeMirror type) {
-        return TypeKind.DECLARED.equals(type.getKind()) && ((DeclaredType) type).getTypeArguments().isEmpty();
+        return TypeKind.DECLARED == type.getKind() && ((DeclaredType) type).getTypeArguments().isEmpty();
     }
 
     /**

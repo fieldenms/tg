@@ -15,6 +15,7 @@ import ua.com.fielden.platform.entity.validation.test_entities.EntityWithMaxLeng
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
+import ua.com.fielden.platform.types.Hyperlink;
 
 /**
  * A test case for validation with {@link MaxLengthValidator}.
@@ -129,7 +130,7 @@ public class MaxLengthValidatorTest {
     }
 
     @Test
-    public void string_property_accepts_empty_values_regardless_of_max_length_validator_parameters() {
+    public void string_property_accepts_empty_values_regardless_of_max_length_validator_parameters_except_invalid_definitions() {
         final EntityWithMaxLengthValidation entity = factory.newEntity(EntityWithMaxLengthValidation.class);
 
         final MetaProperty<String> mpPropWithLimit = entity.getProperty("propWithLimit");
@@ -150,6 +151,58 @@ public class MaxLengthValidatorTest {
 
         final MetaProperty<String> mpPropWithInvalidDeclaration = entity.getProperty("propWithInvalidDeclaration");
         entity.setPropWithInvalidDeclaration("");
+        assertFalse(mpPropWithInvalidDeclaration.isValid());
+        assertEquals(MaxLengthValidator.ERR_MISSING_MAX_LENGTH, mpPropWithInvalidDeclaration.getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void string_property_accepts_nulls_regardless_of_max_length_validator_parameters() {
+        final EntityWithMaxLengthValidation entity = factory.newEntity(EntityWithMaxLengthValidation.class);
+
+        final MetaProperty<String> mpPropWithLimit = entity.getProperty("propWithLimit");
+        entity.setPropWithLimit("");
+        entity.setPropWithLimit(null);
+        assertTrue(mpPropWithLimit.isValid());
+
+        final MetaProperty<String> mpPropWithLength = entity.getProperty("propWithLength");
+        entity.setPropWithLength("");
+        entity.setPropWithLength(null);
+        assertTrue(mpPropWithLength.isValid());
+
+        final MetaProperty<String> mpPropWithGreaterLengthAndSmallerLimit = entity.getProperty("propWithGreaterLengthAndSmallerLimit");
+        entity.setPropWithGreaterLengthAndSmallerLimit("");
+        entity.setPropWithGreaterLengthAndSmallerLimit(null);
+        assertTrue(mpPropWithGreaterLengthAndSmallerLimit.isValid());
+
+        final MetaProperty<String> mpPropWithSmallerLengthAndGreaterLimit = entity.getProperty("propWithSmallerLengthAndGreaterLimit");
+        entity.setPropWithSmallerLengthAndGreaterLimit("");
+        entity.setPropWithSmallerLengthAndGreaterLimit(null);
+        assertTrue(mpPropWithSmallerLengthAndGreaterLimit.isValid());
+
+        final MetaProperty<String> mpPropHyperlink = entity.getProperty("propHyperlink");
+        entity.setPropHyperlink(new Hyperlink("https://www.google.com"));
+        entity.setPropHyperlink(null);
+        assertTrue(mpPropHyperlink.isValid());
+
+        final MetaProperty<String> mpPropWithInvalidDeclaration = entity.getProperty("propWithInvalidDeclaration");
+        entity.setPropWithInvalidDeclaration("");
+        entity.setPropWithInvalidDeclaration(null);
         assertTrue(mpPropWithInvalidDeclaration.isValid());
     }
+
+    @Test
+    public void hyperlink_properties_can_have_their_value_validated_for_length() {
+        final EntityWithMaxLengthValidation entity = factory.newEntity(EntityWithMaxLengthValidation.class);
+        final MetaProperty<String> mpPropHyperlink = entity.getProperty("propHyperlink");
+        final String tooLongUri = "https://www.gooooooooooooooooooooooooooooooooooooooogle.com";
+        assertTrue(tooLongUri.length() > 30);
+        entity.setPropHyperlink(new Hyperlink(tooLongUri));
+        assertFalse(mpPropHyperlink.isValid());
+        assertEquals(format(MaxLengthValidator.ERR_VALUE_SHOULD_NOT_EXCEED_MAX_LENGTH, 30), mpPropHyperlink.getFirstFailure().getMessage());
+
+        final String uri = "https://www.google.com";
+        entity.setPropHyperlink(new Hyperlink(uri));
+        assertTrue(mpPropHyperlink.isValid());
+    }
+
 }

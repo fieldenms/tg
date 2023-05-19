@@ -28,9 +28,9 @@ import ua.com.fielden.platform.types.Money;
 public class TransactionalTest extends AbstractDaoTestCase {
     private LogicThatNeedsTransaction logic;
     private EntityWithMoneyDao dao;
-    
+
     @Before
-    public void setUp()  {
+    public void setUp() {
         dao = co$(EntityWithMoney.class);
         logic = getInstance(LogicThatNeedsTransaction.class);
     }
@@ -43,7 +43,7 @@ public class TransactionalTest extends AbstractDaoTestCase {
         final EntityWithMoney one = dao.findByKey("one");
         assertNotNull("It is expected that transaction was committed, saving a new entity.", one);
         assertEquals(new Money("20.00"), one.getMoney());
-        
+
         final EntityWithMoney two = dao.findByKey("two");
         assertNotNull("It is expected that transaction was committed, saving a new entity.", two);
         assertEquals(new Money("30.00"), two.getMoney());
@@ -53,11 +53,11 @@ public class TransactionalTest extends AbstractDaoTestCase {
     public void netsted_transactions_are_supported_and_all_data_is_saved_upon_commit() {
         logic.nestedTransactionInvocaion("20.00", "30.00");
         assertFalse("Current session is expected to be closed.", logic.getSession().isOpen());
-        
+
         final EntityWithMoney one = dao.findByKey("one");
         assertNotNull("It is expected that transaction was committed, saving a new entity.", one);
         assertEquals(new Money("20.00"), one.getMoney());
-        
+
         final EntityWithMoney two = dao.findByKey("two");
         assertNotNull("It is expected that transaction was committed, saving a new entity.", two);
         assertEquals(new Money("30.00"), two.getMoney());
@@ -68,13 +68,13 @@ public class TransactionalTest extends AbstractDaoTestCase {
         assertNull(dao.findByKey("one"));
         assertNull(dao.findByKey("two"));
         assertNull(dao.findByKey("three"));
-        
+
         try {
             logic.transactionalInvocaionWithException("20.00", "30.00");
             fail("should have thrown an exception");
         } catch (final Exception e) {
         }
-        
+
         assertFalse("Current session is expected to be closed.", logic.getSession().isOpen());
         assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("one"));
         assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("two"));
@@ -86,13 +86,13 @@ public class TransactionalTest extends AbstractDaoTestCase {
         assertNull(dao.findByKey("one"));
         assertNull(dao.findByKey("two"));
         assertNull(dao.findByKey("three"));
-        
+
         try {
             logic.transactionalInvocaionWithError("20.00", "30.00");
             fail("should have thrown an exception");
         } catch (final TransactionRollbackDueToThrowable e) {
         }
-        
+
         assertFalse("Current session is expected to be closed.", logic.getSession().isOpen());
         assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("one"));
         assertNull("It is expected that transaction was rollbacked, and thus no data was committed.", dao.findByKey("two"));
@@ -142,7 +142,7 @@ public class TransactionalTest extends AbstractDaoTestCase {
         final EntityWithMoney one = dao.findByKey("one");
         assertNotNull("It is expected that transaction was committed, saving a new entity.", one);
         assertEquals(new Money("20.00"), one.getMoney());
-        
+
         final EntityWithMoney two = dao.findByKey("two");
         assertNotNull("It is expected that transaction was committed, saving a new entity.", two);
         assertEquals(new Money("30.00"), two.getMoney());
@@ -155,6 +155,24 @@ public class TransactionalTest extends AbstractDaoTestCase {
             logic.cannotBeInvokeWithinExistingTransaction();
         } catch (final SessionScopingException ex) {
             assertEquals(format(ERR_NESTED_SCOPE_INVOCATION_IS_DISALLOWED, LogicThatNeedsTransaction.class.getName(), "cannotBeInvokeWithinExistingTransaction"), ex.getMessage());
+        }
+    }
+
+    @Override
+    public boolean saveDataPopulationScriptToFile() {
+        return false;
+    }
+
+    @Override
+    public boolean useSavedDataPopulationScript() {
+        return false;
+    }
+
+    @Override
+    protected void populateDomain() {
+        super.populateDomain();
+        if (useSavedDataPopulationScript()) {
+            return;
         }
     }
 
