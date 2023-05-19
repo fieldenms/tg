@@ -797,21 +797,17 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
             methodSpecs.add(aliasMethodForMetaModel(mmc.getMetaModelAliasedClassName(), fieldName));
         }
 
-        // if MetaModels class exists, then collect its members for the active *unchanged* meta-models
+        // if MetaModels class exists, then generate static fields and methods for old meta-models, excluding inactive ones
         if (maybeMetaModelsElement.isPresent()) {
             final MetaModelsElement metaModelsElement = maybeMetaModelsElement.get();
-            final List<MetaModelElement> activeUnchangedMetaModels = metaModelsElement.getMetaModels().stream()
-                    // skip inactive
-                    .filter(mme -> !inactiveMetaModelElements.contains(mme))
-                    // skip updated active
-                    .filter(mme -> newMetaModelConcepts.stream().noneMatch(mmc -> metaModelFinder.isSameMetaModel(mmc, mme)))
-                    .toList();
+            final Set<MetaModelElement> declaredMetaModels = new HashSet<>(metaModelsElement.getMetaModels());
+            declaredMetaModels.removeAll(inactiveMetaModelElements);
 
             printNote("Inactive meta-models: [%s]", inactiveMetaModelElements.stream()
                     .map(mm -> mm.getSimpleName().toString())
                     .sorted().collect(joining(", ")));
 
-            for (final MetaModelElement mme: activeUnchangedMetaModels) {
+            for (final MetaModelElement mme: declaredMetaModels) {
                 // active meta-model must have a coresponding entity
                 final EntityElement entity = entityFinder.findEntityForMetaModel(mme)
                         .orElseThrow(() -> new MetaModelProcessorException("Missing entity for active meta-model [%s]".formatted(mme.getSimpleName())));
