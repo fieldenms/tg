@@ -13,7 +13,7 @@ import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
  *
  * @param <T>
  */
-public interface ISingleValueAutocompleterBuilder<T extends AbstractEntity<?>, V extends AbstractEntity<?>> extends ISingleValueAutocompleterBuilder1<T, V> {
-    ISingleValueAutocompleterBuilder1<T, V> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType);
-    ISingleValueAutocompleterBuilder1<T, V> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType, final CentreContextConfig context);
+public interface ISingleValueAutocompleterBuilder<T extends AbstractEntity<?>, V extends AbstractEntity<?>> extends ISingleValueAutocompleterBuilder0<T, V> {
+    ISingleValueAutocompleterBuilder0<T, V> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType);
+    ISingleValueAutocompleterBuilder0<T, V> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType, final CentreContextConfig context);
 }

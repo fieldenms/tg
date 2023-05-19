@@ -186,6 +186,11 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     private final Map<String, List<Pair<String, Boolean>>> additionalPropsForAutocompleter = new HashMap<>();
 
     /**
+     * A map between selection criteria properties that are associated with multi- or single-value autocompleter and the indication whether 'active only' option should be turned off.
+     */
+    private final Map<String, Boolean> withoutActiveOnlyOptionForAutocompleter = new HashMap<>();
+
+    /**
      * A map between selection criteria properties that are associated with multi- or -sinle-valued autocompleter and entity types that were provided in calls to <code>.autocompleter(type)</code>.
      */
     private final Map<String, Class<? extends AbstractEntity<?>>> providedTypesForAutocompletedSelectionCriteria = new HashMap<>();
@@ -467,6 +472,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
             final Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>> valueMatchersForSelectionCriteria,
             final Map<String, List<Pair<String, Boolean>>> additionalPropsForAutocompleter,
+            final Map<String, Boolean> withoutActiveOnlyOptionForAutocompleter,
             final Map<String, Class<? extends AbstractEntity<?>>> providedTypesForAutocompletedSelectionCriteria,
 
             final boolean runAutomatically,
@@ -545,6 +551,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
         this.valueMatchersForSelectionCriteria.putAll(valueMatchersForSelectionCriteria);
         this.additionalPropsForAutocompleter.putAll(additionalPropsForAutocompleter);
+        this.withoutActiveOnlyOptionForAutocompleter.putAll(withoutActiveOnlyOptionForAutocompleter);
         this.providedTypesForAutocompletedSelectionCriteria.putAll(providedTypesForAutocompletedSelectionCriteria);
 
         this.selectionCriteriaLayout = selectionCriteriaLayout;
@@ -1001,4 +1008,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     public String getRowHeight() {
         return rowHeight;
     }
+
+    public boolean withoutActiveOnlyOption(final String property) {
+        final Boolean option = withoutActiveOnlyOptionForAutocompleter.get(property);
+        return option != null ? option : false;
+    }
+
 }

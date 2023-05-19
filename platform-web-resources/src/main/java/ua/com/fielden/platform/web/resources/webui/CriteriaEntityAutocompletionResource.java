@@ -199,9 +199,9 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             }
 
             final Optional<String> activeOnlyMessageOpt;
-            if (valueMatcher.getFetch() != null && isActivatableEntityType(valueMatcher.getFetch().getEntityType())) { // fetch is not defined only for property descriptors, see createValueMatcherAndContextConfig
+            final String origPropName = getOriginalPropertyName(criteriaType, criterionPropertyName);
+            if (valueMatcher.getFetch() != null && isActivatableEntityType(valueMatcher.getFetch().getEntityType()) && !centre.withoutActiveOnlyOption(origPropName)) { // fetch is not defined only for property descriptors, see createValueMatcherAndContextConfig
                 final Class<T> entityType = centre.getEntityType();
-                final String origPropName = getOriginalPropertyName(criteriaType, criterionPropertyName);
                 final Optional<Boolean> activeOnlyFromClientOpt = ofNullable((Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_KEY)); // empty only for first time loading (or for non-activatables; or for non-"multi selection-crit" autocompleters)
                 final Optional<Boolean> activeOnlyChangedFromClientOpt = ofNullable((Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY)); // non-empty only for 'active only' button tap (always with 'true' value inside)
                 final Optional<Boolean> centreDirtyOpt = activeOnlyFromClientOpt.map(activeOnly -> {

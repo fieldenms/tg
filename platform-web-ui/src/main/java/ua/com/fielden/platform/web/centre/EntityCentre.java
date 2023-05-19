@@ -1670,4 +1670,8 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return this;
     }
 
+    public boolean withoutActiveOnlyOption(final String property) {
+        return dslDefaultConfig.withoutActiveOnlyOption(property);
+    }
+
 }

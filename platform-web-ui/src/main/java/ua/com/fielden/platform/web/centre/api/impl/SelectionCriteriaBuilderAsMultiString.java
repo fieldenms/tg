@@ -11,6 +11,7 @@ import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.IAlsoCrit;
 import ua.com.fielden.platform.web.centre.api.crit.IMutliValueAutocompleterBuilder;
+import ua.com.fielden.platform.web.centre.api.crit.IMultiValueAutocompleterBuilder0;
 import ua.com.fielden.platform.web.centre.api.crit.IMutliValueAutocompleterBuilder1;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCriteriaBuilder;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.IMultiStringDefaultValueAssigner;
@@ -64,7 +65,7 @@ class SelectionCriteriaBuilderAsMultiString<T extends AbstractEntity<?>, V exten
     }
 
     @Override
-    public IMutliValueAutocompleterBuilder1<T> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType) {
+    public IMultiValueAutocompleterBuilder0<T> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType) {
         if (!builder.currSelectionCrit.isPresent()) {
             throw new IllegalArgumentException("The current selection criterion should have been associated with some property at this stage.");
         }
@@ -79,7 +80,7 @@ class SelectionCriteriaBuilderAsMultiString<T extends AbstractEntity<?>, V exten
     }
 
     @Override
-    public IMutliValueAutocompleterBuilder1<T> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType, final CentreContextConfig context) {
+    public IMultiValueAutocompleterBuilder0<T> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType, final CentreContextConfig context) {
         if (!builder.currSelectionCrit.isPresent()) {
             throw new IllegalArgumentException("The current selection criterion should have been associated with some property at this stage.");
         }
@@ -105,6 +106,12 @@ class SelectionCriteriaBuilderAsMultiString<T extends AbstractEntity<?>, V exten
         props.add(propNameAndLightOption);
         props.addAll(Arrays.asList(morePropNameAndLightOption));
         this.builder.additionalPropsForAutocompleter.put(builder.currSelectionCrit.get(), props);
+        return this;
+    }
+
+    @Override
+    public IMutliValueAutocompleterBuilder1<T> withoutActiveOnlyOption() {
+        this.builder.withoutActiveOnlyOptionForAutocompleter.put(builder.currSelectionCrit.get(), true);
         return this;
     }
 
