@@ -6,8 +6,14 @@ import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.KeyTitle;
 import ua.com.fielden.platform.entity.annotation.KeyType;
+import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
+import ua.com.fielden.platform.entity.annotation.Required;
+import ua.com.fielden.platform.entity.annotation.SkipDefaultStringKeyMemberValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
+import ua.com.fielden.platform.entity.validation.RestrictCommasValidator;
+import ua.com.fielden.platform.entity.validation.RestrictExtraWhitespaceValidator;
+import ua.com.fielden.platform.entity.validation.RestrictNonPrintableCharactersValidator;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 
@@ -22,6 +28,13 @@ import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 @CompanionObject(LoadableCentreConfigCo.class)
 @DescTitle(value = "Description", desc = "Description of loadable centre configuration.")
 public class LoadableCentreConfig extends AbstractEntity<String> {
+
+    @IsProperty
+    @MapTo
+    @Required
+    @Title(value = "Save As Name", desc = "Save As Name of loadable centre configuration.")
+    @SkipDefaultStringKeyMemberValidation({RestrictNonPrintableCharactersValidator.class, RestrictExtraWhitespaceValidator.class, RestrictCommasValidator.class})
+    private String key;
 
     @IsProperty
     @Title(value = "Inherited", desc = "Indicates whether this centre configuration is connected with some base user's configuration of the same name.")
@@ -123,6 +136,16 @@ public class LoadableCentreConfig extends AbstractEntity<String> {
      */
     public boolean isBase() {
         return !isShared();
+    }
+
+    @Observable
+    public LoadableCentreConfig setKey(final String key) {
+        this.key = key;
+        return this;
+    }
+
+    public String getKey() {
+        return key;
     }
 
 }
