@@ -671,7 +671,7 @@ public class ElementFinder {
     }
 
     private Stream<TypeElement> doStreamAllSupertypes(final TypeElement element) {
-        // FIXME traverses the whole hierarchy upon the first .next()
+        // TODO optimise: traverse the hierarchy lazily 
         return StreamUtils.distinct(
                 Stream.concat(Stream.of(element),
                         types.directSupertypes(element.asType()).stream()
