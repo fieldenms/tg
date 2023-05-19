@@ -338,8 +338,8 @@ const TgSelectionCriteriaBehaviorImpl = {
                 this._setPropertyModel(result.metaValues);
                 this._centreDirty = result.centreDirty;
 
-                const msg = this._toastMsg("Running", criteriaEntity);
-                this._openToast(criteriaEntity, msg, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), msg, false);
+                const messages = this._toastMessages("Running", criteriaEntity);
+                this._openToast(criteriaEntity, messages.short, !criteriaEntity.isValid() || criteriaEntity.isValidWithWarning(), messages.extended, false);
 
                 const newBindingEntity = this._postEntityReceived(criteriaEntity, false);
                 this.postRun(criteriaEntity, newBindingEntity, result);
@@ -372,9 +372,9 @@ const TgSelectionCriteriaBehaviorImpl = {
             const potentiallySavedEntity = entityAndCustomObject[0];
             const customObject = this._reflector().customObject(entityAndCustomObject);
 
-            const msg = this._toastMsg("Operation", potentiallySavedEntity);
+            const messages = this._toastMessages("Operation", potentiallySavedEntity);
             if (!potentiallySavedEntity.isValid()) {
-                this._openToast(potentiallySavedEntity, msg, !potentiallySavedEntity.isValid() || potentiallySavedEntity.isValidWithWarning(), msg, false);
+                this._openToast(potentiallySavedEntity, messages.short, !potentiallySavedEntity.isValid() || potentiallySavedEntity.isValidWithWarning(), messages.extended, false);
             }
 
             const newBindingEntity = this._postEntityReceived(potentiallySavedEntity, true);

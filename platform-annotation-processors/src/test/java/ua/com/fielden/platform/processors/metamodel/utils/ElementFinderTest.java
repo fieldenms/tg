@@ -9,12 +9,19 @@ import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.processors.test_utils.Compilation.OPTION_PROC_ONLY;
 import static ua.com.fielden.platform.utils.CollectionUtil.areEqualByContents;
 
+import java.io.Serializable;
+import java.util.AbstractCollection;
+import java.util.AbstractSet;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import javax.lang.model.element.AnnotationMirror;
@@ -46,6 +53,7 @@ import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import com.squareup.javapoet.TypeVariableName;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderException;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
 import ua.com.fielden.platform.processors.test_utils.CompilationResult;
@@ -171,6 +179,22 @@ public class ElementFinderTest {
     private static interface FindSuperclasses_IFace {}
     private static class FindSuperclasses_Sup implements FindSuperclasses_IFace {}
     private static class FindSuperclasses_Sub extends FindSuperclasses_Sup {}
+
+    @Test
+    public void streamAllSupertypes_returns_a_stream_of_all_supertypes() {
+        processAndEvaluate(finder -> {
+            final BiConsumer<Class<?>, Collection<Class<?>>> assertor = (type, expectedSupertypes) -> {
+                assertEquals(expectedSupertypes.stream().map(finder::getTypeElement).collect(Collectors.toSet()),
+                        finder.streamAllSupertypes(finder.getTypeElement(type)).collect(Collectors.toSet()));
+            };
+
+            assertor.accept(HashSet.class,
+                    List.of(AbstractSet.class, Set.class, Cloneable.class, Serializable.class, AbstractCollection.class, Collection.class,
+                            Iterable.class, Object.class));
+            assertor.accept(Object.class, List.of());
+            assertor.accept(AbstractEntity.class, List.of(Comparable.class, Object.class));
+        });
+    }
 
     @Test
     public void findDeclaredFields_returns_only_declared_fields() {

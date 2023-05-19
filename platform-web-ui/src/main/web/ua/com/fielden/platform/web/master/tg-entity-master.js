@@ -2,6 +2,7 @@ import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
+import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 
@@ -12,10 +13,26 @@ import '/resources/validation/tg-entity-validator.js';
 import '/resources/binding/tg-entity-binder.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
+import '/resources/polymer/@polymer/paper-styles/color.js';
+import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
+
 const template = html`
     <style>
         :host::slotted(tg-flex-layout) {
             background-color: white;
+        }
+        .master-util-toolbar {
+            position: absolute;
+            margin: 8px 16px 0 8px;
+            right: 0;
+            top: 0;
+            left: 0;
+        }
+        .help-button {
+            width: 22px;
+            height: 22px;
+            padding: 0px;
+            color: var(--paper-input-container-color, var(--secondary-text-color));
         }
         #masterContainer {
             @apply --master-with-dimensions-mixin;
@@ -60,6 +77,9 @@ const template = html`
     </iron-ajax>
     <div id="masterContainer" class="layout vertical">
         <tg-scrollable-component id="scrollableContainer" class="layout vertical flex-auto relative">
+            <div class="layout horizontal end-justified master-util-toolbar">
+                <paper-icon-button id="helpButton" class="help-button" icon="icons:help-outline" on-mousedown="_initiateHelpAction" on-touchstart="_initiateHelpAction" on-mouseup="_runHelpAction" on-touchend="_runHelpAction" tooltip-text="Tap to open help in a window or tap with Ctrl/Cmd to open help in a tab.<br>Alt&nbsp+&nbspTap or long touch to edit the help link." hidden$="[[_hasEmbededView()]]"></paper-icon-button>
+            </div>
             <slot name="property-editors"></slot>
         </tg-scrollable-component>
         <div id="actionContainer">
@@ -94,6 +114,10 @@ Polymer({
         _processRetrieverError: Function,
         _processSaverResponse: Function,
         _processSaverError: Function,
+
+        _initiateHelpAction: Function,
+        _runHelpAction: Function,
+        _hasEmbededView: Function,
 
         _saverLoading: {
             type: Boolean,

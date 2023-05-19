@@ -5,11 +5,15 @@ import static ua.com.fielden.platform.entity.EntityExportAction.PROP_EXPORT_ALL;
 import static ua.com.fielden.platform.entity.EntityExportAction.PROP_EXPORT_SELECTED;
 import static ua.com.fielden.platform.entity.EntityExportAction.PROP_EXPORT_TOP;
 import static ua.com.fielden.platform.entity.EntityExportAction.PROP_NUMBER;
+import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.MOBILE;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.TABLET;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.CELL_LAYOUT;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN_PIX;
+import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.mkActionLayoutForMaster;
 
 import java.util.Optional;
 
@@ -25,7 +29,10 @@ import ua.com.fielden.platform.entity.EntityExportAction;
 import ua.com.fielden.platform.entity.EntityExportActionProducer;
 import ua.com.fielden.platform.entity.EntityNewAction;
 import ua.com.fielden.platform.entity.EntityNewActionProducer;
+import ua.com.fielden.platform.entity.UserDefinableHelp;
+import ua.com.fielden.platform.entity.UserDefinableHelpProducer;
 import ua.com.fielden.platform.web.PrefDim;
+import ua.com.fielden.platform.web.PrefDim.Unit;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
@@ -91,7 +98,7 @@ public class StandardMastersWebUiConfig {
                 .addProp(PROP_EXPORT_ALL).asCheckbox().also()
                 .addProp(PROP_EXPORT_SELECTED).asCheckbox().also()
                 .addProp(PROP_EXPORT_TOP).asCheckbox().also()
-                .addProp(PROP_NUMBER).asSpinner()
+                .addProp(PROP_NUMBER).asInteger()
                 .also()
                 .addAction(MasterActions.REFRESH)
                 /*      */.shortDesc("CANCEL")
@@ -106,6 +113,27 @@ public class StandardMastersWebUiConfig {
                 .done();
 
         return new EntityMaster<>(EntityExportAction.class, EntityExportActionProducer.class, masterConfig, injector);
+    }
+
+    public static EntityMaster<UserDefinableHelp> createUserDefinableHelpMaster(final Injector injector) {
+        final String layout = cell(cell(CELL_LAYOUT),layout().withStyle("padding", MARGIN_PIX).end()).toString();
+
+        final IMaster<UserDefinableHelp> masterConfig = new SimpleMasterBuilder<UserDefinableHelp>()
+                .forEntity(UserDefinableHelp.class)
+                .addProp("help").asHyperlink()
+                .also()
+                .addAction(MasterActions.REFRESH)
+                /*      */.shortDesc("CANCEL").longDesc("Cancel changes or refresh.")
+                .addAction(MasterActions.SAVE)
+                /*      */.shortDesc("SAVE").longDesc("Save changes.")
+                .setActionBarLayoutFor(Device.DESKTOP, Optional.empty(), mkActionLayoutForMaster())
+                .setLayoutFor(DESKTOP, Optional.empty(), layout)
+                .setLayoutFor(TABLET, Optional.empty(), layout)
+                .setLayoutFor(MOBILE, Optional.empty(), layout)
+                .withDimensions(mkDim(640, 180, Unit.PX))
+                .done();
+
+        return new EntityMaster<>(UserDefinableHelp.class, UserDefinableHelpProducer.class, masterConfig, injector);
     }
 
     public static EntityMaster<AttachmentsUploadAction> createAttachmentsUploadMaster(

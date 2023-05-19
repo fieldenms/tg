@@ -34,6 +34,7 @@ const customInputTemplate = html`
             id="input"
             class="custom-input decimal-input"
             type="number"
+            title=""
             step="any"
             bind-value="{{_editingValue}}"
             on-change="_onChange"
@@ -47,13 +48,18 @@ const customInputTemplate = html`
             tooltip-text$="[[_getTooltip(_editingValue)]]"
             autocomplete="off"/>
     </iron-input>`;
-const inputLayerTemplate = html`<div class="input-layer" tooltip-text$="[[_getTooltip(_editingValue)]]">[[_formatText(_editingValue)]]</div>`;
+const inputLayerTemplate = html`<div id="inputLayer" class="input-layer" tooltip-text$="[[_getTooltip(_editingValue)]]">[[_formatText(_editingValue)]]</div>`;
 const propertyActionTemplate = html`<slot name="property-action"></slot>`;
 
 export class TgDecimalEditor extends TgNumericEditor {
 
     static get template() { 
         return createEditorTemplate(additionalTemplate, html``, customInputTemplate, inputLayerTemplate, html``, propertyActionTemplate);
+    }
+
+    constructor () {
+        super();
+        this.builtInValidationMessage = 'The entered number is incorrect.';
     }
 
     /**
@@ -63,9 +69,8 @@ export class TgDecimalEditor extends TgNumericEditor {
         if (strValue === '') {
             return null;
         }
-        // var convertedNumber = (+strValue);
         if (isNaN(strValue)) {
-            throw "The entered number is incorrect.";
+            throw this.builtInValidationMessage;
         }
         return (+strValue);
     }

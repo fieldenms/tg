@@ -1,7 +1,7 @@
 import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
-import { containsRestictedTags } from '/resources/reflection/tg-polymer-utils.js';
+import { containsRestrictedTags } from '/resources/reflection/tg-polymer-utils.js';
 
 import '/resources/polymer/@polymer/iron-ajax/iron-ajax.js';
 
@@ -53,7 +53,7 @@ export function enhanceStateRestoration (error, restoreStateFunction) {
  */
 function replaceNewline (input) {
     const newline = "\r\n";
-    return input.replace(/\n/gi, containsRestictedTags(input) ? newline : '<br>');
+    return input.replace(/\n/gi, containsRestrictedTags(input) ? newline : '<br>');
 }
 
 const template = html`

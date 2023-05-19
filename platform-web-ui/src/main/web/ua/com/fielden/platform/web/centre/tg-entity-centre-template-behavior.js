@@ -1,6 +1,7 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { TgEntityCentreBehavior } from '/resources/centre/tg-entity-centre-behavior.js';
 import '/resources/images/tg-icons.js'; // this is for common tg-icons:share icon
+import { TgViewWithHelpBehavior } from '/resources/components/tg-view-with-help-behavior.js';
 
 const TgEntityCentreTemplateBehaviorImpl = {
 
@@ -28,7 +29,11 @@ const TgEntityCentreTemplateBehaviorImpl = {
         _isEgiEditing : {
             type: Boolean,
             value : false
-        }
+        },
+        /**
+         * Attributes for the action that opens help entity master for this entity centre.
+         */
+        _tgOpenHelpMasterActionAttrs: Object,
     },
 
     created: function () {
@@ -134,6 +139,26 @@ const TgEntityCentreTemplateBehaviorImpl = {
             }
         });
         /////////////////////////////////////////////////////////////////////////////////
+
+        //////////////////Initialise tgOpenHelpMasterAction properties///////////////////
+
+        this._tgOpenHelpMasterActionAttrs = {
+            entityType: "ua.com.fielden.platform.entity.UserDefinableHelp",
+            currentState: 'EDIT',
+            centreUuid: this.uuid
+        }
+
+        this._preOpenHelpMasterAction = function (action) {
+            action.shortDesc = this._reflector.getType(this.entityType).entityTitle() + " Centre Help";
+        }.bind(this);
+        /////////////////////////////////////////////////////////////////////////////////
+    },
+
+    /**
+     * Should return the action that opens help master
+     */
+    getOpenHelpMasterAction: function () {
+        return this.$.tgOpenHelpMasterAction;
     },
 
     ////////////// Template related method are here in order to reduce the template size ///////////////
@@ -343,5 +368,6 @@ const TgEntityCentreTemplateBehaviorImpl = {
 
 export const TgEntityCentreTemplateBehavior = [
     TgEntityCentreBehavior,
+    TgViewWithHelpBehavior,
     TgEntityCentreTemplateBehaviorImpl
 ];
