@@ -1,12 +1,12 @@
 package ua.com.fielden.platform.processors.metamodel.utils;
 
+import static java.util.stream.Collectors.toCollection;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.METAMODELS_CLASS_QUAL_NAME;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_ALIASED_NAME_SUFFIX;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_NAME_SUFFIX;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_SUPERCLASS;
 
 import java.util.Collection;
-import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
@@ -226,23 +226,19 @@ public class MetaModelFinder extends ElementFinder {
     }
 
     /**
-     * Finds all meta-model elements declared by the element representing the {@code MetaModels} class.
-     * The returned list is unmodifiable.
+     * Returns a stream of all meta-model elements declared by the element representing the {@code MetaModels} class.
      */
-    public List<MetaModelElement> findMetaModels(final TypeElement typeElement) {
-        final List<MetaModelElement> metaModels = new LinkedList<>();
+    public Stream<MetaModelElement> streamMetaModels(final TypeElement typeElement) {
         // find regular meta-models that are declared as fields
-        streamDeclaredFields(typeElement)
+        final Stream<MetaModelElement> metaModels = streamDeclaredFields(typeElement)
             .filter(field -> isMetaModel(field.asType()))
-            .map(field -> newMetaModelElement(asTypeElementOfTypeMirror(field.asType())))
-            .forEach(mme -> metaModels.add(mme));
+            .map(field -> newMetaModelElement(asTypeElementOfTypeMirror(field.asType())));
         // find aliased meta-models that are declared as methods
-        streamDeclaredMethods(typeElement)
+        final Stream<MetaModelElement> aliasedMetaModels = streamDeclaredMethods(typeElement)
             .filter(method -> isMetaModel(method.getReturnType()))
-            .map(method -> newMetaModelElement(asTypeElementOfTypeMirror(method.getReturnType())))
-            .forEach(mme -> metaModels.add(mme));
+            .map(method -> newMetaModelElement(asTypeElementOfTypeMirror(method.getReturnType())));
 
-        return Collections.unmodifiableList(metaModels);
+        return Stream.concat(metaModels, aliasedMetaModels);
     }
 
     /**
@@ -260,7 +256,7 @@ public class MetaModelFinder extends ElementFinder {
      */
     public Optional<MetaModelsElement> findMetaModelsElement() {
         return Optional.ofNullable(elements.getTypeElement(METAMODELS_CLASS_QUAL_NAME))
-                .map(te -> new MetaModelsElement(te, findMetaModels(te)));
+                .map(te -> new MetaModelsElement(te, streamMetaModels(te).toList()));
     }
 
     /**
