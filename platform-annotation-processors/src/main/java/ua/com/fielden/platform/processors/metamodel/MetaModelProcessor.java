@@ -5,6 +5,7 @@ import static java.lang.String.join;
 import static java.util.Collections.emptyList;
 import static java.util.Optional.empty;
 import static java.util.stream.Collectors.joining;
+import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.ANNOTATIONS_THAT_TRIGGER_META_MODEL_GENERATION;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.METAMODELS_CLASS_PKG_NAME;
@@ -762,10 +763,10 @@ public class MetaModelProcessor extends AbstractPlatformAnnotationProcessor {
         printNote("Started generating the meta-models entry point...");
 
         final Set<MetaModelConcept> newMetaModelConcepts = maybeMetaModelsElement.map(elt -> {
-            final Set<Name> declaredMetaModelNames = elt.getMetaModels().stream().map(MetaModelElement::getQualifiedName).collect(toSet());
+            final Set<MetaModelElement> declaredMetaModels = elt.getMetaModels();
             return metaModelConcepts.stream()
-                    .filter(mmc -> !declaredMetaModelNames.contains(elementUtils.getName(mmc.getQualifiedName())))
-                    .collect(toSet());
+                    .filter(mmc -> !declaredMetaModels.contains(MetaModelElement.asEqual(mmc, elementUtils::getName)))
+                    .collect(toCollection(HashSet::new));
         }).orElseGet(() -> new HashSet<>(metaModelConcepts));
 
         if (newMetaModelConcepts.isEmpty() && inactiveMetaModelElements.isEmpty()) {
