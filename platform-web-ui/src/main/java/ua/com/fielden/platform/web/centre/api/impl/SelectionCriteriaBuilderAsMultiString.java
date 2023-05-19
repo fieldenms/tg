@@ -10,9 +10,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.IAlsoCrit;
-import ua.com.fielden.platform.web.centre.api.crit.IMutliValueAutocompleterBuilder;
+import ua.com.fielden.platform.web.centre.api.crit.IMultiValueAutocompleterBuilder;
 import ua.com.fielden.platform.web.centre.api.crit.IMultiValueAutocompleterBuilder0;
-import ua.com.fielden.platform.web.centre.api.crit.IMutliValueAutocompleterBuilder1;
+import ua.com.fielden.platform.web.centre.api.crit.IMultiValueAutocompleterBuilder1;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCriteriaBuilder;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.IMultiStringDefaultValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
@@ -25,7 +25,7 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritS
  *
  * @param <T>
  */
-class SelectionCriteriaBuilderAsMultiString<T extends AbstractEntity<?>, V extends AbstractEntity<?>> extends SelectionCriteriaBuilderAlsoCrit<T> implements IMutliValueAutocompleterBuilder<T, V>, IMultiStringDefaultValueAssigner<T> {
+class SelectionCriteriaBuilderAsMultiString<T extends AbstractEntity<?>, V extends AbstractEntity<?>> extends SelectionCriteriaBuilderAlsoCrit<T> implements IMultiValueAutocompleterBuilder<T, V>, IMultiStringDefaultValueAssigner<T> {
 
     private final EntityCentreBuilder<T> builder;
 
@@ -110,7 +110,7 @@ class SelectionCriteriaBuilderAsMultiString<T extends AbstractEntity<?>, V exten
     }
 
     @Override
-    public IMutliValueAutocompleterBuilder1<T> withoutActiveOnlyOption() {
+    public IMultiValueAutocompleterBuilder1<T> withoutActiveOnlyOption() {
         this.builder.withoutActiveOnlyOptionForAutocompleter.put(builder.currSelectionCrit.get(), true);
         return this;
     }

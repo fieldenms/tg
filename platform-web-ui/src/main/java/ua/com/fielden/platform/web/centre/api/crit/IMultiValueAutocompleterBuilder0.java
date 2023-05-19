@@ -9,12 +9,12 @@ import ua.com.fielden.platform.entity.AbstractEntity;
  *
  * @param <T>
  */
-public interface IMultiValueAutocompleterBuilder0<T extends AbstractEntity<?>> extends IMutliValueAutocompleterBuilder1<T> {
+public interface IMultiValueAutocompleterBuilder0<T extends AbstractEntity<?>> extends IMultiValueAutocompleterBuilder1<T> {
 
     /**
      * Turns off ability to filter values by 'active only' toggle button in autocompleter result dialog.
      * May be useful for autocompleters with custom matcher, that already filters out inactive values.
      */
-    IMutliValueAutocompleterBuilder1<T> withoutActiveOnlyOption();
+    IMultiValueAutocompleterBuilder1<T> withoutActiveOnlyOption();
 
 }
