@@ -256,7 +256,7 @@ public class MetaModelFinder extends ElementFinder {
      */
     public Optional<MetaModelsElement> findMetaModelsElement() {
         return Optional.ofNullable(elements.getTypeElement(METAMODELS_CLASS_QUAL_NAME))
-                .map(te -> new MetaModelsElement(te, streamMetaModels(te).toList()));
+                .map(te -> new MetaModelsElement(te, streamMetaModels(te).iterator()));
     }
 
     /**
