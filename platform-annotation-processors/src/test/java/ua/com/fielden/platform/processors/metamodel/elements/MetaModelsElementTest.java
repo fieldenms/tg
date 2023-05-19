@@ -43,22 +43,14 @@ public class MetaModelsElementTest {
         assertEquals(Set.of(AttachmentMetaModel.class.getSimpleName(), UserMetaModel.class.getSimpleName()), metaModelsElement.getMetaModels().stream().map(mme -> mme.getSimpleName().toString()).collect(toSet()));
     }
 
-    // in practice this should never occur  
-    @Test
-    public void MetaModels_can_contain_duplicate_meta_models() {
-        assertEquals(3, metaModelsElement.getMetaModels().size());
-    }
-
     /**
      * A type for testing purposes. Represents entry point for meta-models.
      */
     public static final class MetaModels {
         public static final AttachmentMetaModel Attachment_ = new AttachmentMetaModel();
-        public static final AttachmentMetaModel Attachment_duplicate = new AttachmentMetaModel();
         public static final UserMetaModel User_ = new UserMetaModel();
         public static final String someStringField = "";
         public static final int someIntField = 0;
-
     }
 
     /**
