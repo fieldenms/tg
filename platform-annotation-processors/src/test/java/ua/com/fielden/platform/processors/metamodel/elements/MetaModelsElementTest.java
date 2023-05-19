@@ -35,7 +35,7 @@ public class MetaModelsElementTest {
     public static void setupOnce() {
         metaModelFinder = new MetaModelFinder(rule.getElements(), rule.getTypes());
         final TypeElement typeElement = rule.getElements().getTypeElement(MetaModels.class.getCanonicalName());
-        metaModelsElement = new MetaModelsElement(typeElement, metaModelFinder.findMetaModels(typeElement));
+        metaModelsElement = new MetaModelsElement(typeElement, metaModelFinder.streamMetaModels(typeElement).iterator());
     }
 
     @Test

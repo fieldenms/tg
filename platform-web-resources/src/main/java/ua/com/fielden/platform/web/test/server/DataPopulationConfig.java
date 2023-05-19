@@ -9,7 +9,6 @@ import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
-import ua.com.fielden.platform.test.DbDrivenTestCase;
 import ua.com.fielden.platform.test.IDomainDrivenTestCaseConfiguration;
 import ua.com.fielden.platform.utils.DefaultDates;
 import ua.com.fielden.platform.utils.DefaultUniversalConstants;
@@ -28,7 +27,7 @@ public final class DataPopulationConfig implements IDomainDrivenTestCaseConfigur
     private final TgTestApplicationServerModule module;
 
     /**
-     * Default constructor is required for dynamic instantiation by {@link DbDrivenTestCase}.
+     * Default constructor is required for dynamic instantiation by {@code DbDrivenTestCase}.
      */
     public DataPopulationConfig(final Properties props) {
         // instantiate all the factories and Hibernate utility

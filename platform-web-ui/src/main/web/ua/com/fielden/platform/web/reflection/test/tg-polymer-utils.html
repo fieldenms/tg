@@ -1,0 +1,70 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>tg-polymer-utils tests</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
+</head>
+
+<body>
+    <script type="module">
+
+        import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
+
+        suite('polymer utils', function() {
+
+            test('resultMessages: result or exception with null message returns javas NPE description in short and extended messages', function (done) {
+                assert.deepEqual(resultMessages({ message: null }), { short: 'Null pointer exception', extended: 'Null pointer exception' });
+                done();
+            });
+
+            test('resultMessages: result or exception with undefined message returns undefined in short and extended messages', function (done) {
+                assert.deepEqual(resultMessages({ message: undefined }), { short: undefined, extended: undefined });
+                done();
+            });
+
+            test('resultMessages: result or exception with non-existent message returns undefined in short and extended messages', function (done) {
+                assert.deepEqual(resultMessages({}), { short: undefined, extended: undefined });
+                done();
+            });
+
+            test('resultMessages: result or exception with empty message returns empty short and extended messages', function (done) {
+                assert.deepEqual(resultMessages({ message: '' }), { short: '', extended: '' });
+                done();
+            });
+
+            test('resultMessages: result or exception with message without <extended/> returns the same message in short and extended counterparts', function (done) {
+                assert.deepEqual(resultMessages({ message: 'msg' }), { short: 'msg', extended: 'msg' });
+                done();
+            });
+
+            test('resultMessages: result or exception with <extended/> message returns empty short and extended messages', function (done) {
+                assert.deepEqual(resultMessages({ message: '<extended/>' }), { short: '', extended: '' });
+                done();
+            });
+
+            test('resultMessages: result or exception with short<extended/> message returns short message in both short and extended counterparts', function (done) {
+                assert.deepEqual(resultMessages({ message: 'short<extended/>' }), { short: 'short', extended: 'short' });
+                done();
+            });
+
+            test('resultMessages: result or exception with <extended/>ext message returns ext message in both short and extended counterparts', function (done) {
+                assert.deepEqual(resultMessages({ message: '<extended/>ext' }), { short: 'ext', extended: 'ext' });
+                done();
+            });
+
+            test('resultMessages: result or exception with short<extended/>ext message returns short and ext messages in short and extended counterparts respectively', function (done) {
+                assert.deepEqual(resultMessages({ message: 'short<extended/>ext' }), { short: 'short', extended: 'ext' });
+                done();
+            });
+
+        });
+    </script>
+</body>
+
+</html>

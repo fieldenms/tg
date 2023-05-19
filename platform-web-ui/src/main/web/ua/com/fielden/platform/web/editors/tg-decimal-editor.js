@@ -34,6 +34,7 @@ const customInputTemplate = html`
             id="input"
             class="custom-input decimal-input"
             type="number"
+            title=""
             step="any"
             bind-value="{{_editingValue}}"
             on-change="_onChange"
@@ -56,6 +57,11 @@ export class TgDecimalEditor extends TgNumericEditor {
         return createEditorTemplate(additionalTemplate, html``, customInputTemplate, inputLayerTemplate, html``, propertyActionTemplate);
     }
 
+    constructor () {
+        super();
+        this.builtInValidationMessage = 'The entered number is incorrect.';
+    }
+
     /**
      * Converts the value from string representation (which is used in editing / comm values) into concrete type of this editor component (Number).
      */
@@ -63,9 +69,8 @@ export class TgDecimalEditor extends TgNumericEditor {
         if (strValue === '') {
             return null;
         }
-        // var convertedNumber = (+strValue);
         if (isNaN(strValue)) {
-            throw "The entered number is incorrect.";
+            throw this.builtInValidationMessage;
         }
         return (+strValue);
     }

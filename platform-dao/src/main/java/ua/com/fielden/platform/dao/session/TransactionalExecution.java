@@ -4,7 +4,11 @@ import java.sql.Connection;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import com.google.inject.Inject;
+
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
+import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
 
 /**
  * A convenient transactional wrapper for executing instances of {@code Consumer<Connection>} or {@code Supplier}.
@@ -17,6 +21,13 @@ import ua.com.fielden.platform.dao.annotations.SessionRequired;
  *
  */
 public class TransactionalExecution extends WithTransaction {
+    
+    private final IUserProvider up;
+    
+    @Inject
+    public TransactionalExecution(final IUserProvider up) {
+        this.up = up;
+    }
 
     /**
      * A method for transactional execution of {@code action}, which requires a database connection as its argument.
@@ -36,6 +47,11 @@ public class TransactionalExecution extends WithTransaction {
     @SessionRequired
     public <R> R exec(final Supplier<R> action) {
         return action.get();
+    }
+
+    @Override
+    public User getUser() {
+        return up.getUser();
     }
 
 }

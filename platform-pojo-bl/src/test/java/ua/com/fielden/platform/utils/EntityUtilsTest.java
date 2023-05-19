@@ -57,6 +57,7 @@ import ua.com.fielden.platform.entity.ChildEntity;
 import ua.com.fielden.platform.entity.Entity;
 import ua.com.fielden.platform.entity.EntityExt;
 import ua.com.fielden.platform.entity.annotation.Calculated;
+import ua.com.fielden.platform.entity.UserDefinableHelp;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.entity.annotation.factory.CalculatedAnnotation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -676,7 +677,7 @@ public class EntityUtilsTest {
 
     @Test
     public void only_a_specific_subset_of_platform_level_entities_have_introspection_allowed() {
-        final LinkedHashSet<Class<? extends AbstractEntity<?>>> expected = linkedSetOf(Attachment.class, DomainExplorer.class, DashboardRefreshFrequency.class, DashboardRefreshFrequencyUnit.class, KeyNumber.class, User.class, ReUser.class, UserRole.class, UserAndRoleAssociation.class, SecurityRoleAssociation.class);
+        final LinkedHashSet<Class<? extends AbstractEntity<?>>> expected = linkedSetOf(Attachment.class, DomainExplorer.class, DashboardRefreshFrequency.class, DashboardRefreshFrequencyUnit.class, KeyNumber.class, User.class, ReUser.class, UserRole.class, UserAndRoleAssociation.class, SecurityRoleAssociation.class, UserDefinableHelp.class);
         final LinkedHashSet<Class<? extends AbstractEntity<?>>> filtered = PlatformDomainTypes.types.stream().filter(EntityUtils::isIntrospectionAllowed).collect(toCollection(LinkedHashSet::new));
         assertEquals(expected, filtered);
     }
