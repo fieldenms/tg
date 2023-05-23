@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -26,7 +27,7 @@ import ua.com.fielden.platform.entity.annotation.Title;
 @KeyTitle(value = "Key", desc = "Some key description")
 @CompanionObject(ICentreContextHolder.class)
 public class CentreContextHolder extends AbstractEntity<String> {
-    
+
     @IsProperty(Object.class)
     @Title(value = "Custom object", desc = "Custom object")
     private final Map<String, Object> customObject = new HashMap<>();
@@ -34,7 +35,7 @@ public class CentreContextHolder extends AbstractEntity<String> {
     @IsProperty(Object.class)
     @Title(value = "Modified properties holder", desc = "Modified properties holder")
     private final Map<String, Object> modifHolder = new HashMap<>();
-    
+
     @IsProperty
     @Title(value = "Originally Produced Entity", desc = "The entity (new only) that was produced during master's contextual retrieval and then reused during validation, saving and autocompletion processes as a validation prototype")
     private AbstractEntity<?> originallyProducedEntity;
@@ -50,6 +51,21 @@ public class CentreContextHolder extends AbstractEntity<String> {
     @IsProperty
     @Title(value = "Chosen Property", desc = "The property that was clicked during activation result-set functional action")
     private String chosenProperty;
+
+    @IsProperty(CentreContextHolder.class)
+    @Title(value = "Related contexts", desc = "Contexts relate to this one")
+    private List<CentreContextHolder> relatedContexts = new ArrayList<>();
+
+    @Observable
+    protected CentreContextHolder setRelatedContexts(final Set<CentreContextHolder> relatedContexts) {
+        this.relatedContexts.clear();
+        this.relatedContexts.addAll(relatedContexts);
+        return this;
+    }
+
+    public List<CentreContextHolder> getRelatedContexts() {
+        return Collections.unmodifiableList(relatedContexts);
+    }
 
     @Observable
     public CentreContextHolder setChosenProperty(final String chosenProperty) {

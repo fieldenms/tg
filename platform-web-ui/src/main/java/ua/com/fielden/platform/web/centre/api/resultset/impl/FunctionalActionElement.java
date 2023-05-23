@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.centre.api.resultset.impl;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.join;
 
@@ -11,7 +12,9 @@ import java.util.Map;
 import java.util.Optional;
 
 import ua.com.fielden.platform.dom.DomElement;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.impl.AbstractCriterionWidget;
 import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
@@ -174,6 +177,9 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             attrs.put("require-selection-criteria", conf().context.get().withSelectionCrit ? "true" : "false");
             attrs.put("require-selected-entities", conf().context.get().withCurrentEtity ? "ONE" : (conf().context.get().withAllSelectedEntities ? "ALL" : "NONE"));
             attrs.put("require-master-entity", conf().context.get().withMasterEntity ? "true" : "false");
+            if (conf().context.get().extensions.size() > 0) {
+                attrs.put("context-extensions", "[[" + actionsHolderName + "." + numberOfAction + ".contextExtensions]]");
+            }
         } else {
             attrs.put("require-selection-criteria", "null");
             attrs.put("require-selected-entities", "null");
@@ -254,8 +260,29 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.append("preAction: ").append(createPreAction()).append(",\n");
         attrs.append("postActionSuccess: ").append(createPostActionSuccess()).append(",\n");
         attrs.append("attrs: ").append(createElementAttributes(false)).append(",\n");
-        attrs.append("postActionError: ").append(createPostActionError()).append("\n");
+        attrs.append("postActionError: ").append(createPostActionError()).append(conf().context.isPresent() && conf().context.get().extensions.size() > 0 ? ",\n" : "\n");
+        if (conf().context.isPresent() && conf().context.get().extensions.size() > 0) {
+            attrs.append("contextExtensions: ").append(createContextExtensions(conf().context.get().extensions)).append("\n");
+        }
         return attrs.append("}\n").toString();
+    }
+
+    private String createContextExtensions(final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContextConfig> extensions) {
+        final StringBuilder extensionList = new StringBuilder("[\n");
+        extensionList.append(extensions.entrySet().stream().map(extension -> createExtension(extension.getKey(), extension.getValue())).collect(joining(",")));
+        return extensionList.append("]").toString();
+    }
+
+    private String createExtension(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> funcType, final CentreContextConfig context) {
+        final StringBuilder attrs = new StringBuilder("{\n");
+        attrs.append("functionalType: ").append("'" + funcType.getName() + "'").append(",\n");
+        attrs.append("requireSelectionCriteria: ").append(context.withSelectionCrit ? "true" : "false").append(",\n");
+        attrs.append("requireSelectedEntities: ").append(context.withCurrentEtity ? "'ONE'" : (context.withAllSelectedEntities ? "'ALL'" : "'NONE'")).append(",\n");
+        attrs.append("requireMasterEntity: ").append(context.withMasterEntity ? "true" : "false").append(context.extensions.size() > 0 ? ",\n" : "\n");
+        if (context.extensions.size() > 0) {
+            attrs.append("contextExtensions: ").append(createContextExtensions(context.extensions)).append("\n");
+        }
+        return attrs.append("}").toString();
     }
 
     private String createExcludeInsertionPoints() {

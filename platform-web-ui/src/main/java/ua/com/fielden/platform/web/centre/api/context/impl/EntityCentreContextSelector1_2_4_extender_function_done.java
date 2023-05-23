@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.web.centre.api.context.impl;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
 
@@ -28,7 +28,7 @@ class EntityCentreContextSelector1_2_4_extender_function_done<T extends Abstract
     private final boolean withAllSelectedEntities;
     private final boolean withSelectionCrit;
     private final boolean withMasterEntity;
-    private final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContextConfig> extensions = new HashMap<>();
+    private final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContextConfig> extensions = new LinkedHashMap<>();
     private final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation;
 
     public EntityCentreContextSelector1_2_4_extender_function_done(
@@ -51,7 +51,8 @@ class EntityCentreContextSelector1_2_4_extender_function_done<T extends Abstract
                 withAllSelectedEntities,
                 withSelectionCrit,
                 withMasterEntity,
-                computation
+                computation,
+                extensions
                );
     }
 

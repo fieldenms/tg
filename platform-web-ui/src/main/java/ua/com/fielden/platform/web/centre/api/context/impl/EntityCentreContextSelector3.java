@@ -42,7 +42,8 @@ class EntityCentreContextSelector3<T extends AbstractEntity<?>> implements IEnti
                 false,
                 withSelectionCrit,
                 withMasterEntity,
-                null
+                null,
+                new LinkedHashMap<>()
                );
     }
 
