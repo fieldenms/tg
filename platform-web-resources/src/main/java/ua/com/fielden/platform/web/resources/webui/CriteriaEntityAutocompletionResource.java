@@ -15,7 +15,6 @@ import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesir
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
 
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -212,9 +211,7 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                         .apply(() -> updatedFreshCentre); // do it efficiently without the need to retrieve fresh centre again
                 });
                 final boolean activeOnly = activeOnlyFromClientOpt.orElseGet(() -> enhancedCentreEntityQueryCriteria.freshCentre().getFirstTick().getAutocompleteActiveOnly(entityType, origPropName));
-                final Map<String, Object> customObject = new LinkedHashMap<>(valueMatcher.getContext().getCustomObject());
-                customObject.put(AUTOCOMPLETE_ACTIVE_ONLY_KEY, activeOnly);
-                valueMatcher.getContext().setCustomObject(customObject);
+                valueMatcher.getContext().setCustomProperty(AUTOCOMPLETE_ACTIVE_ONLY_KEY, activeOnly);
                 activeOnlyMessageOpt = of(
                     "," + AUTOCOMPLETE_ACTIVE_ONLY_KEY + ":" + activeOnly
                     + activeOnlyChangedFromClientOpt.map(activeOnlyChanged -> "," + AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY + ":" + activeOnlyChanged).orElse("")
