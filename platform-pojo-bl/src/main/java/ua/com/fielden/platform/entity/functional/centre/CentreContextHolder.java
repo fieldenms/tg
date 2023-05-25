@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
@@ -57,7 +56,7 @@ public class CentreContextHolder extends AbstractEntity<String> {
     private List<CentreContextHolder> relatedContexts = new ArrayList<>();
 
     @Observable
-    protected CentreContextHolder setRelatedContexts(final Set<CentreContextHolder> relatedContexts) {
+    protected CentreContextHolder setRelatedContexts(final List<CentreContextHolder> relatedContexts) {
         this.relatedContexts.clear();
         this.relatedContexts.addAll(relatedContexts);
         return this;
