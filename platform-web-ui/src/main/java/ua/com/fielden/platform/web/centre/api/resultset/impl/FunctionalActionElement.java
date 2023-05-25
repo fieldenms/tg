@@ -177,7 +177,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             attrs.put("require-selection-criteria", conf().context.get().withSelectionCrit ? "true" : "false");
             attrs.put("require-selected-entities", conf().context.get().withCurrentEtity ? "ONE" : (conf().context.get().withAllSelectedEntities ? "ALL" : "NONE"));
             attrs.put("require-master-entity", conf().context.get().withMasterEntity ? "true" : "false");
-            if (conf().context.get().extensions.size() > 0) {
+            if (!conf().context.get().extensions.isEmpty()) {
                 attrs.put("context-extensions", "[[" + actionsHolderName + "." + numberOfAction + ".contextExtensions]]");
             }
         } else {
@@ -260,8 +260,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.append("preAction: ").append(createPreAction()).append(",\n");
         attrs.append("postActionSuccess: ").append(createPostActionSuccess()).append(",\n");
         attrs.append("attrs: ").append(createElementAttributes(false)).append(",\n");
-        attrs.append("postActionError: ").append(createPostActionError()).append(conf().context.isPresent() && conf().context.get().extensions.size() > 0 ? ",\n" : "\n");
-        if (conf().context.isPresent() && conf().context.get().extensions.size() > 0) {
+        attrs.append("postActionError: ").append(createPostActionError()).append(conf().context.isPresent() && !conf().context.get().extensions.isEmpty() ? ",\n" : "\n");
+        if (conf().context.isPresent() && !conf().context.get().extensions.isEmpty()) {
             attrs.append("contextExtensions: ").append(createContextExtensions(conf().context.get().extensions)).append("\n");
         }
         return attrs.append("}\n").toString();
@@ -278,8 +278,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.append("functionalType: ").append("'" + funcType.getName() + "'").append(",\n");
         attrs.append("requireSelectionCriteria: ").append(context.withSelectionCrit ? "true" : "false").append(",\n");
         attrs.append("requireSelectedEntities: ").append(context.withCurrentEtity ? "'ONE'" : (context.withAllSelectedEntities ? "'ALL'" : "'NONE'")).append(",\n");
-        attrs.append("requireMasterEntity: ").append(context.withMasterEntity ? "true" : "false").append(context.extensions.size() > 0 ? ",\n" : "\n");
-        if (context.extensions.size() > 0) {
+        attrs.append("requireMasterEntity: ").append(context.withMasterEntity ? "true" : "false").append(!context.extensions.isEmpty() ? ",\n" : "\n");
+        if (!context.extensions.isEmpty()) {
             attrs.append("contextExtensions: ").append(createContextExtensions(context.extensions)).append("\n");
         }
         return attrs.append("}").toString();
