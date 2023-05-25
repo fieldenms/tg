@@ -468,6 +468,20 @@ public interface IContextDecomposer {
         return getContext() == null ? Optional.empty() : getContext().getComputation();
     }
     
+    // CUSTOM OBJECT:
+    
+    /**
+     * Checks whether the {@code context} represents {@link IValueMatcherWithCentreContext} context with indication that only active entities should be used for autocompletion.
+     * 
+     * @return
+     */
+    default boolean autocompleteActiveOnly() {
+        return getContext() != null
+                && getContext().getCustomObject() != null
+                && getContext().getCustomObject().containsKey(AUTOCOMPLETE_ACTIVE_ONLY_KEY)
+                && (boolean) getContext().getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_KEY);
+    }
+    
     ////////////////////////////////// CONTEXT DECOMPOSITION API [SECOND LEVEL] //////////////////////////////////
     
     default ContextOfMasterEntity ofMasterEntity() {
@@ -690,19 +704,6 @@ public interface IContextDecomposer {
         public Optional<BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object>> computation() {
             return decompose(context()).computation();
         }
-    }
-
-    /**
-     * Checks whether the {@code context} represents {@link IValueMatcherWithCentreContext} context with indication that only active entities should be used for autocompletion.
-     * 
-     * @param context
-     * @return
-     */
-    public static <T extends AbstractEntity<?>> boolean autocompleteActiveOnly(final CentreContext<T, ?> context) {
-        return context != null
-            && context.getCustomObject() != null
-            && context.getCustomObject().containsKey(AUTOCOMPLETE_ACTIVE_ONLY_KEY)
-            && (boolean) context.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_KEY);
     }
 
 }

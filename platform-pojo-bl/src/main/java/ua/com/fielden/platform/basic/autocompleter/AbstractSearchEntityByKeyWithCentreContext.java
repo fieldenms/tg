@@ -9,7 +9,7 @@ import static ua.com.fielden.platform.basic.ValueMatcherUtils.createRelaxedSearc
 import static ua.com.fielden.platform.entity.AbstractEntity.DESC;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.ActivatableAbstractEntity.ACTIVE;
-import static ua.com.fielden.platform.entity.IContextDecomposer.autocompleteActiveOnly;
+import static ua.com.fielden.platform.entity.IContextDecomposer.decompose;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.cond;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.orderBy;
@@ -60,7 +60,7 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
      */
     protected ConditionModel makeSearchCriteriaModel(final CentreContext<T, ?> context, final String searchString) {
         final boolean wideSearch = "%".equals(searchString);
-        if (autocompleteActiveOnly(context)) {
+        if (decompose(context).autocompleteActiveOnly()) {
             return (
                 wideSearch ? cond() : cond().condition(keyAndDescConditionFrom(searchString)).and()
             ).prop(ACTIVE).eq().val(true).model();
