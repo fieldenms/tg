@@ -113,6 +113,7 @@ import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.app.IWebUiConfig;
 import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
+import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.MatcherOptions;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.OrderDirection;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.SummaryPropDef;
@@ -1506,7 +1507,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
     private CentreContextConfig getCentreContextConfigFor(final String critProp) {
         final String dslProp = dslName(critProp);
-        return dslDefaultConfig.getValueMatchersForSelectionCriteria().map(m -> m.get(dslProp)).flatMap(Pair::getValue).orElse(defaultCentreContextConfig);
+        return dslDefaultConfig.getValueMatchersForSelectionCriteria().map(m -> m.get(dslProp)).flatMap(t3 -> t3._2).orElse(defaultCentreContextConfig);
     }
 
     /**
@@ -1526,7 +1527,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final Pair<IValueMatcherWithCentreContext<V>, Optional<CentreContextConfig>> matcherAndConfig =
             dslDefaultConfig.getValueMatchersForSelectionCriteria() // take all matchers
             .map(matchers -> matchers.get(dslName(originalPropertyName))) // choose single matcher with concrete property name
-            .map(customMatcherAndConfig -> pair((IValueMatcherWithCentreContext<V>) injector.getInstance(customMatcherAndConfig.getKey()), customMatcherAndConfig.getValue())) // instantiate the matcher: [matcherType; config] => [matcherInstance; config]
+            .map(customMatcherAndConfig -> pair((IValueMatcherWithCentreContext<V>) injector.getInstance(customMatcherAndConfig._1), customMatcherAndConfig._2)) // instantiate the matcher: [matcherType; config] => [matcherInstance; config]
             .orElseGet(() -> pair( // if no custom matcher was created then create default matcher
                 isPropDescriptor
                     ? (IValueMatcherWithCentreContext<V>) new FallbackPropertyDescriptorMatcherWithCentreContext<>((Class<AbstractEntity<?>>) getPropertyAnnotation(IsProperty.class, getOriginalType(criteriaType), originalPropertyName).value())
@@ -1670,8 +1671,14 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         return this;
     }
 
-    public boolean withoutActiveOnlyOption(final String property) {
-        return dslDefaultConfig.withoutActiveOnlyOption(property);
+    /**
+     * Indicates whether 'active only' action was deliberately hidden by specifying {@link MatcherOptions#HIDE_ACTIVE_ONLY_ACTION} option in 'withMatcher(...)' method.
+     * 
+     * @param property
+     * @return
+     */
+    public boolean isActiveOnlyActionHidden(final String property) {
+        return dslDefaultConfig.isActiveOnlyActionHidden(property);
     }
 
 }

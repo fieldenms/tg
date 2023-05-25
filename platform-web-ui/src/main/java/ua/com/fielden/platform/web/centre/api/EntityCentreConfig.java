@@ -7,6 +7,7 @@ import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
+import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.MatcherOptions.HIDE_ACTIVE_ONLY_ACTION;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.FRONT;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.INSERTION_POINT;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.PRIMARY_RESULT_SET;
@@ -38,6 +39,7 @@ import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentr
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -174,21 +176,27 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     private final Map<String, SingleCritDateValueMnemonic> defaultSingleValuesForDateSelectionCriteria = new HashMap<>();
 
     /**
-     * A map between selection criteria properties and their custom value matchers. If a matcher for some criterion is not provided then a default instance of type
+     * Enumeration that contains options for specifying custom value matcher in selection criteria autocompleters.
+     */
+    public enum MatcherOptions {
+        /**
+         * Hides 'active only' toggle button in selection criteria autocompleter result dialogs for activatable properties.
+         * May be useful for autocompleters with custom matcher, that already filters out inactive values.
+         */
+        HIDE_ACTIVE_ONLY_ACTION;
+    }
+
+    /**
+     * A map between selection criteria properties and their custom value matchers with context configuration and MatcherOptions. If a matcher for some criterion is not provided then a default instance of type
      * {@link FallbackValueMatcherWithCentreContext} should be used.
      */
-    private final Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>> valueMatchersForSelectionCriteria = new HashMap<>();
+    private final Map<String, T3<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>, List<MatcherOptions>>> valueMatchersForSelectionCriteria = new HashMap<>();
 
     /**
      * A map between selection criteria properties that are associated with multi- or single-value autocompleter and the additional properties that should be set up for those
      * autocompleters to be displayed as part of the autocompletion result list.
      */
     private final Map<String, List<Pair<String, Boolean>>> additionalPropsForAutocompleter = new HashMap<>();
-
-    /**
-     * A map between selection criteria properties that are associated with multi- or single-value autocompleter and the indication whether 'active only' option should be turned off.
-     */
-    private final Map<String, Boolean> withoutActiveOnlyOptionForAutocompleter = new HashMap<>();
 
     /**
      * A map between selection criteria properties that are associated with multi- or -sinle-valued autocompleter and entity types that were provided in calls to <code>.autocompleter(type)</code>.
@@ -470,9 +478,8 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Map<String, SingleCritOtherValueMnemonic<BigDecimal>> defaultSingleValuesForBigDecimalAndMoneySelectionCriteria,
             final Map<String, SingleCritDateValueMnemonic> defaultSingleValuesForDateSelectionCriteria,
 
-            final Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>> valueMatchersForSelectionCriteria,
+            final Map<String, T3<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>, List<MatcherOptions>>> valueMatchersForSelectionCriteria,
             final Map<String, List<Pair<String, Boolean>>> additionalPropsForAutocompleter,
-            final Map<String, Boolean> withoutActiveOnlyOptionForAutocompleter,
             final Map<String, Class<? extends AbstractEntity<?>>> providedTypesForAutocompletedSelectionCriteria,
 
             final boolean runAutomatically,
@@ -551,7 +558,6 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
         this.valueMatchersForSelectionCriteria.putAll(valueMatchersForSelectionCriteria);
         this.additionalPropsForAutocompleter.putAll(additionalPropsForAutocompleter);
-        this.withoutActiveOnlyOptionForAutocompleter.putAll(withoutActiveOnlyOptionForAutocompleter);
         this.providedTypesForAutocompletedSelectionCriteria.putAll(providedTypesForAutocompletedSelectionCriteria);
 
         this.selectionCriteriaLayout = selectionCriteriaLayout;
@@ -660,7 +666,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return ImmutableListMultimap.copyOf(summaryExpressions);
     }
 
-    public Optional<Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>>> getValueMatchersForSelectionCriteria() {
+    public Optional<Map<String, T3<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>, List<MatcherOptions>>>> getValueMatchersForSelectionCriteria() {
         if (valueMatchersForSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
@@ -1009,9 +1015,17 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return rowHeight;
     }
 
-    public boolean withoutActiveOnlyOption(final String property) {
-        final Boolean option = withoutActiveOnlyOptionForAutocompleter.get(property);
-        return option != null ? option : false;
+    /**
+     * Indicates whether 'active only' action was deliberately hidden by specifying {@link MatcherOptions#HIDE_ACTIVE_ONLY_ACTION} option in 'withMatcher(...)' method.
+     * 
+     * @param property
+     * @return
+     */
+    public boolean isActiveOnlyActionHidden(final String property) {
+        return getValueMatchersForSelectionCriteria()
+            .map(matchersInfo -> matchersInfo.get(property))
+            .map(matcherInfo -> matcherInfo._3.contains(HIDE_ACTIVE_ONLY_ACTION))
+            .orElse(false);
     }
 
 }

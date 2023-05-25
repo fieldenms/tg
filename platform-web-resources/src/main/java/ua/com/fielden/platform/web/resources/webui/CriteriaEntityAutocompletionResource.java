@@ -194,13 +194,12 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 // logger.debug("context for prop [" + criterionPropertyName + "] = " + context);
                 valueMatcher.setContext(context.get());
             } else {
-                // TODO check whether such setting is needed (need to test autocompletion in centres without that setting) or can be removed:
-                valueMatcher.setContext(new CentreContext<>());
+                valueMatcher.setContext(new CentreContext<>()); // even for empty context config, the resultant CentreContext will be present; this context may contain information about activatable autocompleter i.e. whether 'active only' (or all) values should be considered
             }
 
             final Optional<String> activeOnlyMessageOpt;
             final String origPropName = getOriginalPropertyName(criteriaType, criterionPropertyName);
-            if (valueMatcher.getFetch() != null && isActivatableEntityType(valueMatcher.getFetch().getEntityType()) && !centre.withoutActiveOnlyOption(origPropName)) { // fetch is not defined only for property descriptors, see createValueMatcherAndContextConfig
+            if (valueMatcher.getFetch() != null && isActivatableEntityType(valueMatcher.getFetch().getEntityType()) && !centre.isActiveOnlyActionHidden(origPropName)) { // fetch is not defined only for property descriptors, see createValueMatcherAndContextConfig
                 final Class<T> entityType = centre.getEntityType();
                 final Optional<Boolean> activeOnlyFromClientOpt = ofNullable((Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_KEY)); // empty only for first time loading (or for non-activatables; or for non-"multi selection-crit" autocompleters)
                 final Optional<Boolean> activeOnlyChangedFromClientOpt = ofNullable((Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY)); // non-empty only for 'active only' button tap (always with 'true' value inside)
