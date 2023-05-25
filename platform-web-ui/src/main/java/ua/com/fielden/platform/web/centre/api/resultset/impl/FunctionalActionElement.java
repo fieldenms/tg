@@ -275,10 +275,10 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
     private String createExtension(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> funcType, final CentreContextConfig context) {
         final StringBuilder attrs = new StringBuilder("{\n");
-        attrs.append("functionalType: ").append("'" + funcType.getName() + "'").append(",\n");
-        attrs.append("requireSelectionCriteria: ").append(context.withSelectionCrit ? "true" : "false").append(",\n");
+        attrs.append("elementName: ").append("'" + format("tg-%s-master", funcType.getSimpleName()) + "'").append(",\n");
+        attrs.append("requireSelectionCriteria: ").append(context.withSelectionCrit ? "'true'" : "'false'").append(",\n");
         attrs.append("requireSelectedEntities: ").append(context.withCurrentEtity ? "'ONE'" : (context.withAllSelectedEntities ? "'ALL'" : "'NONE'")).append(",\n");
-        attrs.append("requireMasterEntity: ").append(context.withMasterEntity ? "true" : "false").append(!context.extensions.isEmpty() ? ",\n" : "\n");
+        attrs.append("requireMasterEntity: ").append(context.withMasterEntity ? "'true'" : "'false'").append(!context.extensions.isEmpty() ? ",\n" : "\n");
         if (!context.extensions.isEmpty()) {
             attrs.append("contextExtensions: ").append(createContextExtensions(context.extensions)).append("\n");
         }

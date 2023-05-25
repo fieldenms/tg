@@ -842,8 +842,20 @@ const TgEntityCentreBehaviorImpl = {
             }
         }).bind(self);
 
-        self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber) {
-            return this.$.selection_criteria.createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber);
+        self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, contextExtensions, actionKind, actionNumber) {
+            const context = this.$.selection_criteria.createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber);
+            if (contextExtensions) {
+                const insertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point:not([alternative-view])');
+                contextExtensions.forEach(extension => {
+                    const insPoint = [...insertionPoints].find(iPoint => iPoint._element && iPoint._element.tagName === extension.elementName.toUpperCase());
+                    const loadedView = insPoint && insPoint._element.wasLoaded() && insPoint._element.$.loader.loadedElement; 
+                    if (loadedView && loadedView._createContextHolder) {
+                        context['relatedContexts'] = context['relatedContexts'] || [];
+                        context['relatedContexts'].push(loadedView._createContextHolder(extension.requireSelectionCriteria, extension.requireSelectedEntities, extension.requireMasterEntity, extension.contextExtensions));
+                    }
+                });
+            }
+            return context;
         }).bind(self);
 
         self._createDiscardPromise = function (customObject) { // very similar to tg-entity-binder-behavior._createRetrievalPromise
