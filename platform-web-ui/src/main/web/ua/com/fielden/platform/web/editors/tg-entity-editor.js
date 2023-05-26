@@ -411,9 +411,13 @@ export class TgEntityEditor extends TgEditor {
                type: Function
            },
 
+           /**
+            * Indicates whether 'active only' values should be found in this autocompleter.
+            */
            _activeOnly: {
                type: Object,
-               value: null // 'null' for non-activatable or for autocompleter on entity master, or otherwise true / false; also it is 'null' in the beginning where 'active only' parameter was not yet retrieved
+               value: null, // 'null' for non-activatable or for autocompleter on entity master, or otherwise true / false; also it is 'null' in the beginning where 'active only' parameter was not yet retrieved
+               observer: '_activeOnlyChanged'
            },
    
            /**
@@ -518,7 +522,7 @@ export class TgEntityEditor extends TgEditor {
             /**
              * Callback for updating parent's _centreDirty with new value. Needed in activatable autocompleters that update 'autocomplete active only' option and thus may change centre dirtiness.
              */
-            updateCentreDirty: {
+            _updateCentreDirty: {
                 type: Function
             }
        };
@@ -700,15 +704,12 @@ export class TgEntityEditor extends TgEditor {
     }
 
     /**
-     * Changes activeOnly to new value and starts searching with new option applied.
+     * Changes _activeOnly to new value and starts searching with new option applied.
      * Skips this action if previous searching is still in progress.
      */
-    _changeActiveOnly (newActiveOnly) {
+    _changeActiveOnly (new_activeOnly) {
         if (!this.searching) {
-            this._activeOnly = newActiveOnly;
-            if (this.result) {
-                this.result._activeOnly = this._activeOnly;
-            }
+            this._activeOnly = new_activeOnly;
             this._dataPage = 1;
             this._search(this._searchQuery, null /* dataPage */, this._ignoreInputText, true /* 'active only' changed */);
         }
@@ -773,15 +774,14 @@ export class TgEntityEditor extends TgEditor {
         const entities = entitiesAndCustomObject.slice(0, -1); // -1 means cutting of last element
         const customObject = entitiesAndCustomObject.at(-1); // -1 means index of last element
 
+        if (!this.result) {
+            this.result = this._createResultDialog();
+        }
+
         this._activeOnly = typeof customObject[AUTOCOMPLETE_ACTIVE_ONLY_KEY] === 'undefined' ? null : customObject[AUTOCOMPLETE_ACTIVE_ONLY_KEY];
         const activeOnlyChanged = typeof customObject[AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY] === 'undefined' ? null : customObject[AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY];
         const centreDirty = typeof customObject[CENTRE_DIRTY_KEY] === 'undefined' ? null : customObject[CENTRE_DIRTY_KEY];
         const loadMoreData = typeof customObject[LOAD_MORE_DATA_KEY] === 'undefined' ? false : customObject[LOAD_MORE_DATA_KEY];
-
-        if (!this.result) {
-            this.result = this._createResultDialog();
-        }
-        this.result._activeOnly = this._activeOnly;
 
         // make sure to assign reflector to the result object
         this.result.reflector = this.reflector();
@@ -789,7 +789,7 @@ export class TgEntityEditor extends TgEditor {
         let wasNewValueObserved = false;
         let indexOfFirstNewValue = -1;
         if (centreDirty !== null) {
-            this.updateCentreDirty(centreDirty);
+            this._updateCentreDirty(centreDirty);
         }
         if (activeOnlyChanged) {
             const _selectedIndex = this.result._selectedIndex;
@@ -829,7 +829,7 @@ export class TgEntityEditor extends TgEditor {
             }
             wasNewValueObserved = isNew || wasNewValueObserved;
         }
-        setTimeout(() => this.result.notifyResize(), 0); // re-calculate shadow inside tg-scrollable-component; do it after new paper-items get distributed
+        setTimeout(() => this.result && this.result.notifyResize(), 0); // re-calculate shadow inside tg-scrollable-component; do it after new paper-items get distributed
 
         // if no new values were observed then there is no more to load
         // let's disable the load more action in this case
@@ -1395,6 +1395,15 @@ export class TgEntityEditor extends TgEditor {
     }
 
     /**
+     * Observer for _activeOnly property. Synchronises value in entity editor result, if it is present.
+     */
+    _activeOnlyChanged (newValue) {
+        if (this.result) {
+            this.result._activeOnly = newValue;
+        }
+    }
+
+    /**
      * Creates 'tg-entity-editor-result' element dynamically.
      */
     _createResultDialog () {
@@ -1411,7 +1420,7 @@ export class TgEntityEditor extends TgEditor {
         dialog.acceptValues = this._done.bind(this);
         dialog.loadMore = this._loadMore.bind(this);
         dialog.changeActiveOnly = this._changeActiveOnly.bind(this);
-        dialog._activeOnly = this._activeOnly;
+        dialog._activeOnly = this._activeOnly; // synchronises value in entity editor result
         dialog.multi = this.multi;
         if (this.additionalProperties) {
             dialog.additionalProperties = JSON.parse(this.additionalProperties);

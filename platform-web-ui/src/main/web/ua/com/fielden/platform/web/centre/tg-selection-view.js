@@ -144,17 +144,17 @@ Polymer({
             self.topLevelActions = [
                 self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigNewAction',
                     null,
-                    self._resetAutocompleterState
+                    self._resetAutocompleterState // need to reset autocompleter states when clearing default configuration or moving from save-as to default
                 ),
                 self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigDuplicateAction'),
                 self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigLoadAction',
                     null,
-                    () => { self._resetAutocompleterState(); self.initiateAutoRun(); }
+                    () => { self._resetAutocompleterState(); self.initiateAutoRun(); } // need to reset autocompleter states when explicitly loading other (or the same) configuration
                 ),
                 self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigEditAction'),
                 self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigDeleteAction',
                     () => self._confirm('Should this configuration be deleted?', [{ name: 'NO' }, { name: 'YES', confirm: true, autofocus: true }]),
-                    self._resetAutocompleterState
+                    self._resetAutocompleterState // need to reset autocompleter states when deleting save-as configuration and moving to clean default one
                 ),
                 self._createActionObject('ua.com.fielden.platform.web.centre.CentreConfigConfigureAction')
             ];

@@ -31,7 +31,7 @@ public abstract class AbstractEntityCritAutocompletionWidget extends AbstractEnt
     protected Map<String, Object> createCustomAttributes() {
         final Map<String, Object> attrs = super.createCustomAttributes();
         if (isActivatableEntityType(propType)) {
-            attrs.put("update-centre-dirty", "[[_updateCentreDirty]]");
+            attrs.put("_update-centre-dirty", "[[_updateCentreDirty]]");
         }
         return attrs;
     }

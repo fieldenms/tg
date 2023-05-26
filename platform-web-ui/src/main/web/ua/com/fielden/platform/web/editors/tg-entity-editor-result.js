@@ -264,12 +264,15 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                 type: Function
             },
 
+            /**
+             * Indicates whether 'active only' values should be found in this autocompleter.
+             */
             _activeOnly: {
-                type: Object
+                type: Object // 'null' for non-activatable or for autocompleter on entity master, or otherwise true / false; also it is 'null' in the beginning where 'active only' parameter was not yet retrieved
             },
 
             /**
-             * A function to change activeOnly. It is assigned in tg-entity-editor.
+             * A function to change _activeOnly. It is assigned in tg-entity-editor.
              */
             changeActiveOnly: {
                 type: Function
@@ -312,8 +315,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
     }
 
     _changeActiveOnly (e) {
-        const newActiveOnly = !this._activeOnly;
-        this.changeActiveOnly(newActiveOnly);
+        this.changeActiveOnly(!this._activeOnly);
         tearDownEvent(e);
     }
 

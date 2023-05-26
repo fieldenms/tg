@@ -449,7 +449,7 @@ const TgSelectionCriteriaBehaviorImpl = {
             delete this.loadCentreFreezed;
             this.configUuid = customObject.configUuid;
             if (newConfigUuid !== configUuid) {
-                this._resetAutocompleterState();
+                this._resetAutocompleterState(); // need to reset autocompleter states when moving from one configuration to another
             }
         }
         if (typeof customObject.preferredView !== 'undefined') {
@@ -464,9 +464,6 @@ const TgSelectionCriteriaBehaviorImpl = {
     _resetAutocompleterState: function () {
         Array.from(this.shadowRoot.querySelectorAll('tg-entity-editor')).forEach(autocompleter => {
             autocompleter._activeOnly = null;
-            if (autocompleter.result) {
-                autocompleter.result._activeOnly = null;
-            }
         });
     },
 

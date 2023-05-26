@@ -561,8 +561,19 @@ const TgEntityCentreBehaviorImpl = {
             type: String,
             value: 'EDIT'
         },
-        
+
+        /**
+         * Initiates auto run for this centre. This function is intended to be bound to child elements.
+         */
         initiateAutoRun: Function,
+
+        /**
+         * Resets the state of centre autocompleters, specifically 'active only' state.
+         * This is necessary in actions like DISCARD / NEW / etc. because we prefer client-side state over persisted one and always overwrite persisted state.
+         * If we go from one configuration to another or use DISCARD / NEW / etc. actions, we must clear current autocompleter state.
+         * 
+         * This function is intended to be bound to child elements.
+         */
         _resetAutocompleterState: Function
     },
 
@@ -814,7 +825,7 @@ const TgEntityCentreBehaviorImpl = {
                 console.log("CENTRE DISCARDED", entityAndCustomObject);
                 self.$.selection_criteria._provideExceptionOccured(entityAndCustomObject[0], exceptionOccured);
                 self.$.selection_criteria._postRetrievedDefault(entityAndCustomObject);
-                self.$.selection_criteria._resetAutocompleterState();
+                self._resetAutocompleterState();
             });
         };
         self._processDiscarderError = function (e) {
