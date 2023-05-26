@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.web.resources.webui;
 
-import static java.util.Optional.empty;
-import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.entity.IContextDecomposer.AUTOCOMPLETE_ACTIVE_ONLY_KEY;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.updateCentre;
@@ -196,11 +196,11 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 valueMatcher.setContext(new CentreContext<>()); // even for empty context config, the resultant CentreContext will be present; this context may contain information about activatable autocompleter i.e. whether 'active only' (or all) values should be considered
             }
 
-            final Optional<String> activeOnlyMessageOpt;
+            final Map<String, Object> activeOnlyCustomObject;
             final String origPropName = getOriginalPropertyName(criteriaType, criterionPropertyName);
             if (valueMatcher.getFetch() != null && isActivatableEntityType(valueMatcher.getFetch().getEntityType()) && !centre.isActiveOnlyActionHidden(origPropName)) { // fetch is not defined only for property descriptors, see createValueMatcherAndContextConfig
                 final Class<T> entityType = centre.getEntityType();
-                final Optional<Boolean> activeOnlyFromClientOpt = ofNullable((Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_KEY)); // empty only for first time loading (or for non-activatables; or for non-"multi selection-crit" autocompleters)
+                final Optional<Boolean> activeOnlyFromClientOpt = ofNullable((Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_KEY)); // empty only for first time loading (or for non-activatables)
                 final Optional<Boolean> activeOnlyChangedFromClientOpt = ofNullable((Boolean) centreContextHolder.getCustomObject().get(AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY)); // non-empty only for 'active only' button tap (always with 'true' value inside)
                 final Optional<Boolean> centreDirtyOpt = activeOnlyFromClientOpt.map(activeOnly -> {
                     final ICentreDomainTreeManagerAndEnhancer updatedFreshCentre = enhancedCentreEntityQueryCriteria.adjustCentre(centreManager -> { // always apply 'activeOnly' that arrived from client; i.e. override saved value with client-side one -- no interference with possibly opened same centre configuration in other browser's tab
@@ -212,13 +212,11 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
                 });
                 final boolean activeOnly = activeOnlyFromClientOpt.orElseGet(() -> enhancedCentreEntityQueryCriteria.freshCentre().getFirstTick().getAutocompleteActiveOnly(entityType, origPropName));
                 valueMatcher.getContext().setCustomProperty(AUTOCOMPLETE_ACTIVE_ONLY_KEY, activeOnly);
-                activeOnlyMessageOpt = of(
-                    "," + AUTOCOMPLETE_ACTIVE_ONLY_KEY + ":" + activeOnly
-                    + activeOnlyChangedFromClientOpt.map(activeOnlyChanged -> "," + AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY + ":" + activeOnlyChanged).orElse("")
-                    + centreDirtyOpt.map(centreDirty -> "," + CENTRE_DIRTY_KEY + ":" + centreDirty).orElse("")
-                );
+                activeOnlyCustomObject = linkedMapOf(t2(AUTOCOMPLETE_ACTIVE_ONLY_KEY, activeOnly));
+                activeOnlyChangedFromClientOpt.ifPresent(activeOnlyChanged -> activeOnlyCustomObject.put(AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY, activeOnlyChanged));
+                centreDirtyOpt.ifPresent(centreDirty -> activeOnlyCustomObject.put(CENTRE_DIRTY_KEY, centreDirty));
             } else {
-                activeOnlyMessageOpt = empty();
+                activeOnlyCustomObject = linkedMapOf();
             }
 
             // prepare the search string and perform value matching
@@ -226,7 +224,9 @@ public class CriteriaEntityAutocompletionResource<T extends AbstractEntity<?>, M
             final List<? extends AbstractEntity<?>> entities =  valueMatcher.findMatchesWithModel(searchStringAndDataPageNo._1, searchStringAndDataPageNo._2);
 
             // logger.debug("CRITERIA_ENTITY_AUTOCOMPLETION_RESOURCE: search finished.");
-            return restUtil.listJsonRepresentationWithoutIdAndVersion(entities, of(LOAD_MORE_DATA_KEY + ":" + (searchStringAndDataPageNo._2 > 1) + activeOnlyMessageOpt.orElse("")));
+            final Map<String, Object> customObject = linkedMapOf(t2(LOAD_MORE_DATA_KEY, searchStringAndDataPageNo._2 > 1));
+            customObject.putAll(activeOnlyCustomObject);
+            return restUtil.listJsonRepresentationWithoutIdAndVersion(entities, customObject);
         }, restUtil);
     }
 

@@ -769,15 +769,15 @@ export class TgEntityEditor extends TgEditor {
     /*
      * Displays the search result.
      */
-    _onFound (entities, resultMessage) {
-        const activeOnlyPart = resultMessage.split(AUTOCOMPLETE_ACTIVE_ONLY_KEY + ':')[1];
-        this._activeOnly = typeof activeOnlyPart === 'undefined' ? null : activeOnlyPart.startsWith('true');
-        const activeOnlyChangedPart = resultMessage.split(AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY + ':')[1];
-        const activeOnlyChanged = typeof activeOnlyChangedPart === 'undefined' ? null : activeOnlyChangedPart.startsWith('true');
-        const centreDirtyPart = resultMessage.split(CENTRE_DIRTY_KEY + ':')[1];
-        const centreDirty = typeof centreDirtyPart === 'undefined' ? null : centreDirtyPart.startsWith('true');
-        const loadMoreDataPart = resultMessage.split(LOAD_MORE_DATA_KEY + ':')[1];
-        const loadMoreData = typeof loadMoreDataPart === 'undefined' ? false : loadMoreDataPart.startsWith('true');
+    _onFound (entitiesAndCustomObject) { // always at least one element in this array
+        const entities = entitiesAndCustomObject.slice(0, -1); // -1 means cutting of last element
+        const customObject = entitiesAndCustomObject.at(-1); // -1 means index of last element
+
+        this._activeOnly = typeof customObject[AUTOCOMPLETE_ACTIVE_ONLY_KEY] === 'undefined' ? null : customObject[AUTOCOMPLETE_ACTIVE_ONLY_KEY];
+        const activeOnlyChanged = typeof customObject[AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY] === 'undefined' ? null : customObject[AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY];
+        const centreDirty = typeof customObject[CENTRE_DIRTY_KEY] === 'undefined' ? null : customObject[CENTRE_DIRTY_KEY];
+        const loadMoreData = typeof customObject[LOAD_MORE_DATA_KEY] === 'undefined' ? false : customObject[LOAD_MORE_DATA_KEY];
+
         if (!this.result) {
             this.result = this._createResultDialog();
         }
@@ -1144,12 +1144,12 @@ export class TgEntityEditor extends TgEditor {
 
     _processSearcherResponse (e) {
         const self = this;
-        self.processResponse(e, "search", function (foundEntities, exceptionOccured, resultMessage) {
+        self.processResponse(e, "search", function (entitiesAndCustomObject, exceptionOccured) {
             // at this stage exceptionOccured is always null and don't need to be processed in any specific way;
             // this is because [Criteria]EntityAutocompletionResource wraps found entities only into successful result;
             // in case of unexpected exception, resultant representation is processed in _processSearcherError;
             // please see tg-entity-binder-behavior._processResponse for more details
-            self._onFound(foundEntities, resultMessage);
+            self._onFound(entitiesAndCustomObject);
         });
     }
 

@@ -535,7 +535,7 @@ export const TgEntityBinderBehavior = {
                         console.log('deserialisedResult: ', deserialisedResult);
                         this._openToastForErrorResult(deserialisedResult, !this._reflector().isContinuationError(deserialisedResult) || this.showContinuationsAsErrors);
                     }
-                    e.detail.successful = customHandlerFor(deserialisedInstance, this._reflector().isError(deserialisedResult) ? deserialisedResult : null, deserialisedResult && deserialisedResult.message);
+                    e.detail.successful = customHandlerFor(deserialisedInstance, this._reflector().isError(deserialisedResult) ? deserialisedResult : null);
                     if (this._reflector().isError(deserialisedResult)) {
                         e.detail.successful = false;
                     }
