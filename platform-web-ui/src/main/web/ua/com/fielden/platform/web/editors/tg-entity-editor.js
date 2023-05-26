@@ -434,7 +434,7 @@ export class TgEntityEditor extends TgEditor {
                        // and perform new search only if input has some text in it
                        if (this.decoratedInput().value) {
                            this._asyncSearchHandle = setTimeout(() => {
-                               this._dataPage = 1;
+                               this._dataPage = 1; // autocompleter result stays open on typing; need to reset dataPage to prevent loading of many scrolled pages if scrolling was in place previously
                                this._search("*");
                            }, 700);
                        } else { // otherwise, close the result dialog
@@ -715,6 +715,14 @@ export class TgEntityEditor extends TgEditor {
         }
     }
 
+    /**
+     * Starts searching of values in autocompleter.
+     * 
+     * @param defaultSearchQuery -- search query in case where 'ignoreInputText' === true or in case if input text is empty
+     * @param dataPage -- null or undefined for searching the first and single page of data; number loadMore action -- loads > 1 pages of data
+     * @param ignoreInputText -- indicates whether to ignore the text in input; if true, uses 'defaultSearchQuery' parameter
+     * @param activeOnlyChanged -- 'true' only for the case where 'active only' button tapped, falsy value (e.g. undefined) otherwise
+     */
     _search (defaultSearchQuery, dataPage, ignoreInputText, activeOnlyChanged) {
         // cancel any other search
         this._cancelSearchByOtherEditor();
@@ -788,10 +796,10 @@ export class TgEntityEditor extends TgEditor {
 
         let wasNewValueObserved = false;
         let indexOfFirstNewValue = -1;
-        if (centreDirty !== null) {
+        if (centreDirty !== null) { // only update if received from server
             this._updateCentreDirty(centreDirty);
         }
-        if (activeOnlyChanged) {
+        if (activeOnlyChanged === true) {
             const _selectedIndex = this.result._selectedIndex;
             const selectedValues = this.result.selectedValues;
             const _keyBoardNavigationReady = this.result._keyBoardNavigationReady;
@@ -803,7 +811,8 @@ export class TgEntityEditor extends TgEditor {
             if (_selectedIndex >= 0) {
                 this.result._selectedIndex = _selectedIndex; // ensure restoration of selected index regardless of whether it will be actually focused
                 if (_keyBoardNavigationReady) { // only focus item in case where keyboard navigation was already in place
-                    setTimeout (() => this.result.focusItemWithIndex(_selectedIndex), 100); // restore focused item (if possible) on tapping of 'active only' toggle button
+                    // timeout is required to allow the iron-list to load new items before they can be focused (see _loadMoreButtonPressed condition below)
+                    setTimeout (() => this.result && this.result.focusItemWithIndex(_selectedIndex), 100); // restore focused item (if possible) on tapping of 'active only' toggle button
                 }
             }
         } else if (!loadMoreData) { // if this is not a request to load more data then let's clear the current result, if any
@@ -817,9 +826,11 @@ export class TgEntityEditor extends TgEditor {
             const isNew = this.result.pushValue(entities[index]);
             if (isNew && (activeOnlyChanged || loadMoreData) && this.result.selectedValues[key]) { // restore selected item on tapping of 'active only' toggle button and on 'load more' (either from scrolling or from 'more' button)
                 setTimeout(() => { // do it after new paper-item gets distributed
-                    const newSelectedValues = this.result.$.selector.selectedValues.slice();
-                    newSelectedValues.push(key);
-                    this.result.$.selector.selectedValues = newSelectedValues;
+                    if (this.result && this.result.$) {
+                        const newSelectedValues = this.result.$.selector.selectedValues.slice();
+                        newSelectedValues.push(key);
+                        this.result.$.selector.selectedValues = newSelectedValues;
+                    }
                 }, 0);
             }
             // if a new value was observed for the first time then capture its index
@@ -872,8 +883,10 @@ export class TgEntityEditor extends TgEditor {
             if (this._loadMoreButtonPressed && indexOfFirstNewValue >= 0) {
                 // timeout is required to allow the iron-list to load new items before they can be focused
                 setTimeout (() => {
-                    this.result._keyBoardNavigationReady = true; // before focusing newly loaded item, keyboard navigation should be turned on (otherwise, up/down keys will lead to jumping on first item)
-                    this.result.focusItemWithIndex(indexOfFirstNewValue);
+                    if (this.result) {
+                        this.result._keyBoardNavigationReady = true; // before focusing newly loaded item, keyboard navigation should be turned on (otherwise, up/down keys will lead to jumping on first item)
+                        this.result.focusItemWithIndex(indexOfFirstNewValue);
+                    }
                 }, 100);
             }
         }

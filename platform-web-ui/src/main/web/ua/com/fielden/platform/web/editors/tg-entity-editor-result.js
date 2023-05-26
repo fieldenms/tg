@@ -314,6 +314,9 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         tearDownEvent(e);
     }
 
+    /**
+     * Function, bound to 'active only' toggle button. Starts process of toggling this option through tg-entity-editor's '_changeActiveOnly' function.
+     */
     _changeActiveOnly (e) {
         this.changeActiveOnly(!this._activeOnly);
         tearDownEvent(e);
@@ -348,14 +351,14 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
     clearSelection () {
         this._selectedIndex = 0;
         this._keyBoardNavigationReady = false;
-        if (this.$) {
+        if (this.$) { // in some cases children of this entity editor result may not be built yet
             this.$.selector.selectedItem = null;
         }
         this.selectedValues = {};
 
         while (this.pop('_values')) {}
 
-        if (this.$) {
+        if (this.$) { // in some cases children of this entity editor result may not be built yet
             if (this.multi === true) {
                 this.$.selector.selectedValues = [];
             } else {
@@ -509,7 +512,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
 
         const value = event.detail.item.getAttribute("value");
         this.selectedValues[value] = this._values.find(obj => obj.key === value);
-        this.selectedValues = { ...this.selectedValues }; // reset a shallow copy to trigger Polymer events
+        this.selectedValues = { ...this.selectedValues }; // re-set a shallow copy to trigger Polymer events
     }
 
     _itemDeselected (event) {
@@ -518,7 +521,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
 
         const value = event.detail.item.getAttribute("value");
         delete this.selectedValues[value];
-        this.selectedValues = { ...this.selectedValues }; // reset a shallow copy to trigger Polymer events
+        this.selectedValues = { ...this.selectedValues }; // re-set a shallow copy to trigger Polymer events
     }
 
     /**
@@ -528,7 +531,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
     focusItemWithIndex (index) {
         this._selectedIndex = index;
         const id = this._makeId(index);
-        const paperItem = this.shadowRoot.querySelector("#" + id);
+        const paperItem = this.shadowRoot && this.shadowRoot.querySelector("#" + id);
         if (paperItem) {
             paperItem.scrollIntoView({block: "center", inline: "center", behavior: "smooth"});
             paperItem.focus();
@@ -669,15 +672,24 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         return klass;
     }
 
+    /**
+     * Calculates value for 'selected values counter'.
+     */
     _calcSelectedValuesCounter (selectedValues) {
         return Object.keys(selectedValues).length;
     }
 
+    /**
+     * Calculates tooltip for 'selected values counter', showing comma-separated values.
+     */
     _tooltipForSelectedValuesCounter (selectedValues) {
         const tooltipText = Object.keys(selectedValues).join(', ');
         return tooltipText ? '<b>' + tooltipText + '</b>' : '';
     }
 
+    /**
+     * Calculates invisibility of 'selected values counter'.
+     */
     _isHiddenSelectedValuesCounter (multi, selectedValues) {
         return !multi || Object.keys(selectedValues).length === 0;
     }
