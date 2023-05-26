@@ -22,7 +22,7 @@ public final class CentreContextConfig {
     public final Boolean withSelectionCrit;
     public final Boolean withMasterEntity;
     public final Optional<BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object>> computation;
-    public final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContextConfig> extensions = new LinkedHashMap<>();
+    public final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContextConfig> relatedContexts = new LinkedHashMap<>();
 
     public CentreContextConfig(
             final boolean withCurrentEtity,
@@ -30,14 +30,14 @@ public final class CentreContextConfig {
             final boolean withSelectionCrit,
             final boolean withMasterEntity,
             final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation,
-            final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContextConfig> extensions
+            final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContextConfig> relatedContexts
             ) {
         this.withCurrentEtity = withCurrentEtity;
         this.withAllSelectedEntities = withAllSelectedEntities;
         this.withSelectionCrit = withSelectionCrit;
         this.withMasterEntity = withMasterEntity;
         this.computation = Optional.ofNullable(computation);
-        this.extensions.putAll(extensions);
+        this.relatedContexts.putAll(relatedContexts);
     }
 
     public final boolean withComputation() {
@@ -54,7 +54,7 @@ public final class CentreContextConfig {
         result = prime * result + withSelectionCrit.hashCode();
         // WARN: CentreContextConfig instances with referentially different 'computation' values yield different hash codes.
         result = prime * result + computation.hashCode();
-        result = prime * result + extensions.hashCode();
+        result = prime * result + relatedContexts.hashCode();
         return result;
     }
 
@@ -75,7 +75,7 @@ public final class CentreContextConfig {
                 (this.withMasterEntity == that.withMasterEntity)  &&
                 (this.withSelectionCrit == that.withSelectionCrit) &&
                 computation.equals(that.computation) &&
-                extensions.equals(that.extensions);
+                relatedContexts.equals(that.relatedContexts);
     }
 
 }

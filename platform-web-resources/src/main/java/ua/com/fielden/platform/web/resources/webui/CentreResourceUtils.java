@@ -68,6 +68,7 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentr
 import ua.com.fielden.platform.domaintree.centre.IOrderingRepresentation.Ordering;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.entity.annotation.CritOnly;
 import ua.com.fielden.platform.entity.annotation.CritOnly.Type;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -971,10 +972,30 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             }
             context.setChosenProperty(chosenProperty);
             context.setCustomObject(centreContextHolder != null && !centreContextHolder.proxiedPropertyNames().contains("customObject") ? centreContextHolder.getCustomObject() : new HashMap<>());
+            context.setRelatedContexts(centreContextHolder != null && !centreContextHolder.proxiedPropertyNames().contains("relatedContexts") ?
+                    createdRelatedCentreContexts(disregardOriginallyProducedEntities, webUiConfig, companionFinder, user, critGenerator, entityFactory, centreContextHolder.getRelatedContexts(), config.relatedContexts, device, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel) :
+                        new LinkedHashMap<>());
             return Optional.of(context);
         } else {
             return Optional.empty();
         }
+    }
+
+    private static Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContext<AbstractEntity<?>, ?>> createdRelatedCentreContexts(final boolean disregardOriginallyProducedEntities, final IWebUiConfig webUiConfig, final ICompanionObjectFinder companionFinder, final User user, final ICriteriaGenerator critGenerator, final EntityFactory entityFactory, final Map<String, CentreContextHolder> relatedContexts, final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContextConfig> relatedContextConfigs, final DeviceProfile device, final IDomainTreeEnhancerCache domainTreeEnhancerCache, final EntityCentreConfigCo eccCompanion, final MainMenuItemCo mmiCompanion, final IUser userCompanion, final ICentreConfigSharingModel sharingModel) {
+        final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContext<AbstractEntity<?>, ?>> centreContexts = new LinkedHashMap<>();
+        relatedContextConfigs.entrySet().forEach(configEntry -> {
+            final CentreContextHolder contextHolder = relatedContexts.get("tg-" + configEntry.getKey().getSimpleName() + "-master");
+            if (contextHolder != null) {
+                final Optional<CentreContext<AbstractEntity<?>, ?>> cContext = createCentreContext(disregardOriginallyProducedEntities, webUiConfig, companionFinder, user, critGenerator, entityFactory, contextHolder,
+                        createCriteriaEntityForContext(contextHolder, companionFinder, user, critGenerator, webUiConfig, entityFactory, device, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel),
+                        Optional.ofNullable(configEntry.getValue()), null, device, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel);
+                if (cContext.isPresent()) {
+                    centreContexts.put(configEntry.getKey(), cContext.get());
+                }
+            }
+
+        });
+        return centreContexts;
     }
 
     //////////////////////////////////////////////////// CREATE CENTRE CONTEXT FOR CENTRE-DEPENDENT FUNCTIONAL ENTITIES ////////////////////////////////////////////////////
@@ -997,7 +1018,8 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
             final EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>> criteriaEntity,
             final Optional<EntityActionConfig> config,
             final String chosenProperty,
-            final Map<String, Object> customObject
+            final Map<String, Object> customObject,
+            final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContext<AbstractEntity<?>, ?>> relatedContexts
     ) {
         final CentreContext<T, AbstractEntity<?>> context = new CentreContext<>();
         context.setSelectionCrit(criteriaEntity);
@@ -1008,6 +1030,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         }
         context.setChosenProperty(chosenProperty);
         context.setCustomObject(customObject);
+        context.setRelatedContexts(relatedContexts);
         return context;
     }
 

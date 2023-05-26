@@ -177,8 +177,8 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             attrs.put("require-selection-criteria", conf().context.get().withSelectionCrit ? "true" : "false");
             attrs.put("require-selected-entities", conf().context.get().withCurrentEtity ? "ONE" : (conf().context.get().withAllSelectedEntities ? "ALL" : "NONE"));
             attrs.put("require-master-entity", conf().context.get().withMasterEntity ? "true" : "false");
-            if (!conf().context.get().extensions.isEmpty()) {
-                attrs.put("context-extensions", "[[" + actionsHolderName + "." + numberOfAction + ".contextExtensions]]");
+            if (!conf().context.get().relatedContexts.isEmpty()) {
+                attrs.put("related-contexts", "[[" + actionsHolderName + "." + numberOfAction + ".relatedContexts]]");
             }
         } else {
             attrs.put("require-selection-criteria", "null");
@@ -260,27 +260,27 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.append("preAction: ").append(createPreAction()).append(",\n");
         attrs.append("postActionSuccess: ").append(createPostActionSuccess()).append(",\n");
         attrs.append("attrs: ").append(createElementAttributes(false)).append(",\n");
-        attrs.append("postActionError: ").append(createPostActionError()).append(conf().context.isPresent() && !conf().context.get().extensions.isEmpty() ? ",\n" : "\n");
-        if (conf().context.isPresent() && !conf().context.get().extensions.isEmpty()) {
-            attrs.append("contextExtensions: ").append(createContextExtensions(conf().context.get().extensions)).append("\n");
+        attrs.append("postActionError: ").append(createPostActionError()).append(conf().context.isPresent() && !conf().context.get().relatedContexts.isEmpty() ? ",\n" : "\n");
+        if (conf().context.isPresent() && !conf().context.get().relatedContexts.isEmpty()) {
+            attrs.append("relatedContexts: ").append(createRelatedContexts(conf().context.get().relatedContexts)).append("\n");
         }
         return attrs.append("}\n").toString();
     }
 
-    private String createContextExtensions(final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContextConfig> extensions) {
-        final StringBuilder extensionList = new StringBuilder("[\n");
-        extensionList.append(extensions.entrySet().stream().map(extension -> createExtension(extension.getKey(), extension.getValue())).collect(joining(",")));
-        return extensionList.append("]").toString();
+    private String createRelatedContexts(final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContextConfig> relatedContexts) {
+        final StringBuilder relatedContextsList = new StringBuilder("[\n");
+        relatedContextsList.append(relatedContexts.entrySet().stream().map(relatedContext -> createRelatedContext(relatedContext.getKey(), relatedContext.getValue())).collect(joining(",")));
+        return relatedContextsList.append("]").toString();
     }
 
-    private String createExtension(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> funcType, final CentreContextConfig context) {
+    private String createRelatedContext(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> funcType, final CentreContextConfig context) {
         final StringBuilder attrs = new StringBuilder("{\n");
         attrs.append("elementName: ").append("'" + format("tg-%s-master", funcType.getSimpleName()) + "'").append(",\n");
         attrs.append("requireSelectionCriteria: ").append(context.withSelectionCrit ? "'true'" : "'false'").append(",\n");
         attrs.append("requireSelectedEntities: ").append(context.withCurrentEtity ? "'ONE'" : (context.withAllSelectedEntities ? "'ALL'" : "'NONE'")).append(",\n");
-        attrs.append("requireMasterEntity: ").append(context.withMasterEntity ? "'true'" : "'false'").append(!context.extensions.isEmpty() ? ",\n" : "\n");
-        if (!context.extensions.isEmpty()) {
-            attrs.append("contextExtensions: ").append(createContextExtensions(context.extensions)).append("\n");
+        attrs.append("requireMasterEntity: ").append(context.withMasterEntity ? "'true'" : "'false'").append(!context.relatedContexts.isEmpty() ? ",\n" : "\n");
+        if (!context.relatedContexts.isEmpty()) {
+            attrs.append("relatedContexts: ").append(createRelatedContexts(context.relatedContexts)).append("\n");
         }
         return attrs.append("}").toString();
     }

@@ -1,9 +1,9 @@
 package ua.com.fielden.platform.entity.functional.centre;
 
 import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableMap;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -53,17 +53,17 @@ public class CentreContextHolder extends AbstractEntity<String> {
 
     @IsProperty(CentreContextHolder.class)
     @Title(value = "Related contexts", desc = "Contexts relate to this one")
-    private List<CentreContextHolder> relatedContexts = new ArrayList<>();
+    private Map<String, CentreContextHolder> relatedContexts = new HashMap<>();
 
     @Observable
-    protected CentreContextHolder setRelatedContexts(final List<CentreContextHolder> relatedContexts) {
+    protected CentreContextHolder setRelatedContexts(final Map<String, CentreContextHolder> relatedContexts) {
         this.relatedContexts.clear();
-        this.relatedContexts.addAll(relatedContexts);
+        this.relatedContexts.putAll(relatedContexts);
         return this;
     }
 
-    public List<CentreContextHolder> getRelatedContexts() {
-        return Collections.unmodifiableList(relatedContexts);
+    public Map<String, CentreContextHolder> getRelatedContexts() {
+        return unmodifiableMap(relatedContexts);
     }
 
     @Observable
@@ -115,7 +115,7 @@ public class CentreContextHolder extends AbstractEntity<String> {
     }
 
     public Map<String, Object> getModifHolder() {
-        return Collections.unmodifiableMap(modifHolder);
+        return unmodifiableMap(modifHolder);
     }
 
     @Observable
@@ -126,6 +126,6 @@ public class CentreContextHolder extends AbstractEntity<String> {
     }
 
     public Map<String, Object> getCustomObject() {
-        return Collections.unmodifiableMap(customObject);
+        return unmodifiableMap(customObject);
     }
 }

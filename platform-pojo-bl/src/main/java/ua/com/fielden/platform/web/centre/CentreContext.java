@@ -24,7 +24,7 @@ import ua.com.fielden.platform.reflection.Reflector;
 /**
  * A structure that represents an execution context for functional entities. Not all of its properties should or need to be populated. Depending on specific needs actions may choose
  * what parts of the context do they require. This allows for optimising the amount of data marshaled between between the client and server.
- * 
+ *
  * TODO to be renamed to Context as it also represents the context on master functional actions, not only on centre
  *
  * @author TG Team
@@ -80,6 +80,11 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
      */
     private final Map<String, Object> customObject = new LinkedHashMap<>();
 
+    /**
+     * Contexts related to this one and associated with functional entity types those represents insertion points in centre with this context.
+     */
+    private final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>> relatedContexts = new LinkedHashMap<>();
+
     public T getCurrEntity() {
         if (selectedEntities.size() == 1) {
             return selectedEntities.get(0);
@@ -105,7 +110,7 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
                     .filter(name -> Reflector.isPropertyProxied(el, name) && originalTypeProperties.contains(name))
                     .collect(Collectors.toList())
                     .toArray(new String[] {});
-                    
+
                 // let's be smart about types and try to handle the situation with generated types
                 this.selectedEntities.add((T) el.copy(EntityProxyContainer.proxy(originalType, propsToBeProxied)));
             }
@@ -140,7 +145,8 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
             + "    computation = %s,\n"
             + "    chosenProperty = %s,\n"
             + "    customObject = %s\n"
-            + "]", selectionCrit, selectedEntities, masterEntity, computation, chosenProperty, customObject);
+            + "    relatedContexts = %s\n"
+            + "]", selectionCrit, selectedEntities, masterEntity, computation, chosenProperty, customObject, relatedContexts);
     }
 
     public CentreContext<T, M> setComputation(final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation) {
@@ -173,6 +179,15 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
      */
     public Map<String, Object> getCustomObject() {
         return unmodifiableMap(customObject);
+    }
+
+    public void setRelatedContexts (final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContext<AbstractEntity<?>, ?>> relatedContexts) {
+        this.relatedContexts.clear();
+        this.relatedContexts.putAll(relatedContexts);
+    }
+
+    public Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>> getRelatedContexts() {
+        return unmodifiableMap(relatedContexts);
     }
 
 }

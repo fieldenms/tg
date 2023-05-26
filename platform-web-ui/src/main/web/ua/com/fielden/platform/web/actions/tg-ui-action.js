@@ -178,7 +178,7 @@ Polymer({
         /**
          * Defines hierarchycal structure of contexts realted to this action and view where this action is. This related contexts are contexts for insertion points on entity centre. 
          */
-        contextExtensions: {
+        relatedContexts: {
             type: Array
         },
 
@@ -684,7 +684,7 @@ Polymer({
     _createContextHolderForAction: function () {
         const self = this;
         // creates the context and
-        const context = self.createContextHolder(self.requireSelectionCriteria, self.requireSelectedEntities, self.requireMasterEntity, self.contextExtensions ,self.actionKind, self.numberOfAction);
+        const context = self.createContextHolder(self.requireSelectionCriteria, self.requireSelectedEntities, self.requireMasterEntity, self.relatedContexts ,self.actionKind, self.numberOfAction);
         // enhances it with the information of 'currentEntity()' (primary / secondary actions) and
         if (self.currentEntity()) {
             self._enhanceContextWithCurrentEntity(context, self.currentEntity(), self.requireSelectedEntities);

@@ -28,20 +28,20 @@ class EntityCentreContextSelector1_2_4_extender_function_done<T extends Abstract
     private final boolean withAllSelectedEntities;
     private final boolean withSelectionCrit;
     private final boolean withMasterEntity;
-    private final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContextConfig> extensions = new LinkedHashMap<>();
+    private final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContextConfig> relatedContexts = new LinkedHashMap<>();
     private final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation;
 
     public EntityCentreContextSelector1_2_4_extender_function_done(
             final boolean withCurrentEntity, final boolean withAllSelectedEntities,
             final boolean withSelectionCrit, final boolean withMasterEntity,
             final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation,
-            final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContextConfig> extensions) {
+            final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContextConfig> relatedContexts) {
         this.withCurrentEntity = withCurrentEntity;
         this.withAllSelectedEntities = withAllSelectedEntities;
         this.withSelectionCrit = withSelectionCrit;
         this.withMasterEntity = withMasterEntity;
         this.computation = computation;
-        this.extensions.putAll(extensions);
+        this.relatedContexts.putAll(relatedContexts);
     }
 
     @Override
@@ -52,28 +52,28 @@ class EntityCentreContextSelector1_2_4_extender_function_done<T extends Abstract
                 withSelectionCrit,
                 withMasterEntity,
                 computation,
-                extensions
+                relatedContexts
                );
     }
 
     @Override
     public IExtendedEntityCentreContextWithFunctionSelector<T> withMasterEntity() {
-        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(withCurrentEntity, withAllSelectedEntities, withSelectionCrit, true, computation, extensions);
+        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(withCurrentEntity, withAllSelectedEntities, withSelectionCrit, true, computation, relatedContexts);
     }
 
     @Override
     public IExtendedEntityCentreContextWithFunctionSelector<T> withSelectionCrit() {
-        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(withCurrentEntity, withAllSelectedEntities, true, withMasterEntity, computation, extensions);
+        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(withCurrentEntity, withAllSelectedEntities, true, withMasterEntity, computation, relatedContexts);
     }
 
     @Override
     public IEntityCentreContextSelector1<T> withCurrentEntity() {
-        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(true, withAllSelectedEntities, withSelectionCrit, withMasterEntity, computation, extensions);
+        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(true, withAllSelectedEntities, withSelectionCrit, withMasterEntity, computation, relatedContexts);
     }
 
     @Override
     public IEntityCentreContextSelector1<T> withSelectedEntities() {
-        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(withCurrentEntity, true, withSelectionCrit, withMasterEntity, computation, extensions);
+        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(withCurrentEntity, true, withSelectionCrit, withMasterEntity, computation, relatedContexts);
     }
 
     @Override
@@ -81,12 +81,12 @@ class EntityCentreContextSelector1_2_4_extender_function_done<T extends Abstract
         if (computation == null) {
             throw new CentreContextConfigException("The computational component of the context cannot be set as value null.");
         }
-        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(withCurrentEntity, withAllSelectedEntities, withSelectionCrit, withMasterEntity, computation, extensions);
+        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(withCurrentEntity, withAllSelectedEntities, withSelectionCrit, withMasterEntity, computation, relatedContexts);
     }
 
     @Override
     public IExtendedEntityCentreContextWithFunctionSelector<T> extendWith(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> insertionPointFunctionalType, final CentreContextConfig contextForInsertionPoint) {
-        extensions.put(insertionPointFunctionalType, contextForInsertionPoint);
+        relatedContexts.put(insertionPointFunctionalType, contextForInsertionPoint);
         return this;
     }
 

@@ -842,16 +842,16 @@ const TgEntityCentreBehaviorImpl = {
             }
         }).bind(self);
 
-        self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, contextExtensions, actionKind, actionNumber) {
+        self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, relatedContexts, actionKind, actionNumber) {
             const context = this.$.selection_criteria.createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber);
-            if (contextExtensions) {
+            if (relatedContexts) {
                 const insertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point:not([alternative-view])');
-                contextExtensions.forEach(extension => {
-                    const insPoint = [...insertionPoints].find(iPoint => iPoint._element && iPoint._element.tagName === extension.elementName.toUpperCase());
+                relatedContexts.forEach(relatedContext => {
+                    const insPoint = [...insertionPoints].find(iPoint => iPoint._element && iPoint._element.tagName === relatedContext.elementName.toUpperCase());
                     const loadedView = insPoint && insPoint._element.wasLoaded() && insPoint._element.$.loader.loadedElement; 
                     if (loadedView && loadedView._createContextHolder) {
-                        context['relatedContexts'] = context['relatedContexts'] || [];
-                        context['relatedContexts'].push(loadedView._createContextHolder(extension.requireSelectionCriteria, extension.requireSelectedEntities, extension.requireMasterEntity, extension.contextExtensions));
+                        context['relatedContexts'] = context['relatedContexts'] || {};
+                        context['relatedContexts'][relatedContext.elementName] = loadedView._createContextHolder(relatedContext.requireSelectionCriteria, relatedContext.requireSelectedEntities, relatedContext.requireMasterEntity, relatedContext.relatedContexts);
                     }
                 });
             }
