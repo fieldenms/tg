@@ -20,7 +20,7 @@ import { composeEntityValue, composeDefaultEntityValue } from '/resources/editor
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
 
 const AUTOCOMPLETE_ACTIVE_ONLY_KEY = '@@activeOnly';
-const AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY = '@@flagChanged';
+const AUTOCOMPLETE_ACTIVE_ONLY_CHANGED_KEY = '@@activeOnlyChanged';
 const CENTRE_DIRTY_KEY = '@@centreDirty';
 const LOAD_MORE_DATA_KEY = '@@loadMoreData';
 
