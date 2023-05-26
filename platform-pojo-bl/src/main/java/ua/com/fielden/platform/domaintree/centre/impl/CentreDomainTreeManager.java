@@ -92,6 +92,11 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
      *
      */
     public static class AddToCriteriaTickManager extends TickManager implements IAddToCriteriaTickManager {
+        private static final String AUTOCOMPLETE_ACTIVE_ONLY_ERR = "Could not %s an 'autocomplete active only' indication for '%s' property [%s] in type [%s].";
+        private static final String GET = "get";
+        private static final String SET = "set";
+        private static final String NON_ACTIVATABLE = "non-activatable";
+        private static final String UNCHECKED = "unchecked";
 
         private final transient EntityFactory entityFactory;
         private final EnhancementPropertiesMap<Object> propertiesValues1;
@@ -441,17 +446,27 @@ public class CentreDomainTreeManager extends AbstractDomainTreeManager implement
             return this;
         }
 
+        /**
+         * Validates 'autocomplete active only' getter or setter for concrete property. The property should be checked and of activatable property type.
+         * 
+         * @param root
+         * @param property
+         * @param getOrSet -- "get" or "set" string
+         */
+        private void validateAutocompleteActiveOnlyProperty(final Class<?> root, final String property, final String getOrSet) {
+            illegalUncheckedProperties(this, root, property, format(AUTOCOMPLETE_ACTIVE_ONLY_ERR, getOrSet, UNCHECKED, property, root.getSimpleName()));
+            illegalType(root, property, format(AUTOCOMPLETE_ACTIVE_ONLY_ERR, getOrSet, NON_ACTIVATABLE, property, root.getSimpleName()), ActivatableAbstractEntity.class);
+        }
+
         @Override
         public boolean getAutocompleteActiveOnly(final Class<?> root, final String property) {
-            illegalUncheckedProperties(this, root, property, "Could not get an 'autocomplete active only' for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
-            illegalType(root, property, "Could not get an 'autocomplete active only' for 'non-activatable' property [" + property + "] in type [" + root.getSimpleName() + "].", ActivatableAbstractEntity.class);
+            validateAutocompleteActiveOnlyProperty(root, property, GET);
             return propertiesAutocompleteActiveOnly.contains(key(root, property));
         }
 
         @Override
         public IAddToCriteriaTickManager setAutocompleteActiveOnly(final Class<?> root, final String property, final boolean autocompleteActiveOnly) {
-            illegalUncheckedProperties(this, root, property, "Could not set an 'autocomplete active only' for 'unchecked' property [" + property + "] in type [" + root.getSimpleName() + "].");
-            illegalType(root, property, "Could not set an 'autocomplete active only' for 'non-activatable' property [" + property + "] in type [" + root.getSimpleName() + "].", ActivatableAbstractEntity.class);
+            validateAutocompleteActiveOnlyProperty(root, property, SET);
             if (!autocompleteActiveOnly) {
                 propertiesAutocompleteActiveOnly.remove(key(root, property));
             } else {
