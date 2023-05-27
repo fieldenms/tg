@@ -62,9 +62,8 @@
                 centre.postRetrieved = function (entity, bindingEntity, customObject) {
                     const autocompleter = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_;
 
-                    const oldOnFound = autocompleter._onFound;
-                    autocompleter._onFound = function (entities) {
-                        console.log("onFound: ", entities);
+                    autocompleter._onFound = function (entitiesAndCustomObject) {
+                        const entities = entitiesAndCustomObject.slice(0, -1); // -1 means cutting of last element
                         assert.strictEqual(entities.length, 0, 'The count of resultant entities for the centre"s autocompleter should be 0 -- FILTERED instance should be filtered out.');
 
                         done();
@@ -81,9 +80,8 @@
                 centre.postRetrieved = function (entity, bindingEntity, customObject) {
                     const autocompleter = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_;
 
-                    const oldOnFound = autocompleter._onFound;
-                    autocompleter._onFound = function (entities) {
-                        console.log("onFound: ", entities);
+                    autocompleter._onFound = function (entitiesAndCustomObject) {
+                        const entities = entitiesAndCustomObject.slice(0, -1); // -1 means cutting of last element
                         assert.strictEqual(entities.length, 10, 'searchOnTap ignores the input text.');
 
                         done();
@@ -117,9 +115,8 @@
                             const autocompleter = embeddedMaster.$.editor_4_entityProp;
                             
                             embeddedMaster.postRetrieved = function (entity, bindingEntity, customObject) {
-                                const oldOnFound = autocompleter._onFound;
-                                autocompleter._onFound = function (entities) {
-                                    console.log("onFound: ", entities);
+                                autocompleter._onFound = function (entitiesAndCustomObject) {
+                                    const entities = entitiesAndCustomObject.slice(0, -1); // -1 means cutting of last element
                                     assert.strictEqual(entities.length, 0, 'The count of resultant entities for the centre"s autocompleter should be 0 -- FILTERED instance should be filtered out.');
                                     
                                     done();

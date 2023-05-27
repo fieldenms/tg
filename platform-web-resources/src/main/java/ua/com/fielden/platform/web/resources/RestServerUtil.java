@@ -239,16 +239,20 @@ public class RestServerUtil {
     }
 
     /**
-     * Composes representation of a list of entities, serialising them without id / version properties.
+     * Composes representation of a list of entities with {@code customObject}, serialising them without id / version properties.
      *
+     * @param entities
+     * @param customObject -- a map of custom properties with some additional information
      * @return
      */
-    public <T extends AbstractEntity<?>> Representation listJsonRepresentationWithoutIdAndVersion(final List<T> entities) {
+    public <T extends AbstractEntity<?>> Representation listJsonRepresentationWithoutIdAndVersion(final List<T> entities, final Map<String, Object> customObject) {
         if (entities == null) {
             throw new IllegalArgumentException("The provided list of entities is null.");
         }
-        // create a Result enclosing entity list
-        final Result result = new Result(new ArrayList<>(entities), "All is cool");
+        // create a Result enclosing entity list and customObject
+        final ArrayList<Object> resultantList = new ArrayList<>(entities);
+        resultantList.add(customObject);
+        final Result result = new Result(resultantList, "All is cool");
         EntitySerialiser.getContext().setExcludeIdAndVersion(true);
         try {
             final byte[] bytes = serialiser.serialise(result, JACKSON);
