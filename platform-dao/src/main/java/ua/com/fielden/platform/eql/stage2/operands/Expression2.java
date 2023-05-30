@@ -59,6 +59,11 @@ public class Expression2 extends AbstractSingleOperand2 implements ISingleOperan
     public boolean ignore() {
         return false;
     }
+    
+    @Override
+    public boolean isNotNullableEntity() {
+        return items.isEmpty() ? first.isNotNullableEntity() : false;
+    }
 
     private static Set<Class<?>> extractTypes(final ISingleOperand2<? extends ISingleOperand3> first, final List<CompoundSingleOperand2> items) {
         final Set<Class<?>> types = new HashSet<>();

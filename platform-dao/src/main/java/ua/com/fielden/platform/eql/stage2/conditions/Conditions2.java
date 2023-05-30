@@ -49,15 +49,6 @@ public class Conditions2 extends AbstractCondition2<Conditions3> {
             result.add(transformedAndGroup);
         }
         
-//        final List<List<? extends ICondition2>> transformed = formDnf().stream()
-//                .map(andGroup -> 
-//                                  andGroup.stream().map(cond -> cond.transform(currentContext))
-//                                                   .filter(cond -> !cond.ignore())
-//                                                   .collect(toList())
-//                    )
-//                .filter(andGroup -> !andGroup.isEmpty())
-//                .collect(toList());
-        
         return new TransformationResult2<>(new Conditions3(negated, result), currentContext);
     }
 
@@ -70,6 +61,25 @@ public class Conditions2 extends AbstractCondition2<Conditions3> {
             }
         }
         return result;
+    }
+    
+    public boolean conditionIsSatisfied(final ICondition2<?> condition) {
+        for (final List<? extends ICondition2<?>> conditions : allConditionsAsDnf) {
+                if (!conditionMatchesAnyOf(conditions, condition)) {
+                    return false;
+                }
+        }
+        
+        return allConditionsAsDnf.isEmpty() || negated ? false : true;
+    }
+    
+    private boolean conditionMatchesAnyOf(final List<? extends ICondition2<?>> conditions, final ICondition2<?> conditionToMatch) {
+        for (final ICondition2<?> condition : conditions) {
+            if (condition.equals(conditionToMatch) || (condition instanceof Conditions2 && ((Conditions2) condition).conditionIsSatisfied(conditionToMatch))) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

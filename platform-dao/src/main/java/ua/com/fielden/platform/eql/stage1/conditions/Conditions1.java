@@ -1,19 +1,23 @@
 package ua.com.fielden.platform.eql.stage1.conditions;
 
 import static java.util.Collections.emptyList;
+import static java.util.stream.Collectors.toList;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
+import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.AND;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.operands.Prop1;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
 import ua.com.fielden.platform.eql.stage2.conditions.ICondition2;
 
 public class Conditions1 implements ICondition1<Conditions2> {
     public static final Conditions1 emptyConditions = new Conditions1(false, null, emptyList());
+    private static final ComparisonTest1 idEqualsExtIdCondition = new ComparisonTest1(new Prop1(ID, false), EQ, new Prop1(ID, true));
 
     public final boolean negated;
     public final ICondition1<? extends ICondition2<?>> firstCondition;
@@ -27,6 +31,10 @@ public class Conditions1 implements ICondition1<Conditions2> {
 
     public boolean isEmpty() {
         return firstCondition == null;
+    }
+    
+    public boolean isIdEqualsExtId() {
+        return !negated && otherConditions.isEmpty() && idEqualsExtIdCondition.equals(firstCondition);
     }
 
     private List<List<ICondition1<? extends ICondition2<?>>>> formDnf() {
@@ -67,10 +75,10 @@ public class Conditions1 implements ICondition1<Conditions2> {
                 .map(andGroup -> 
                                   andGroup.stream().map(andGroupCondition -> andGroupCondition.transform(context))
                                                    .filter(andGroupConditionTransformed -> !andGroupConditionTransformed.ignore())
-                                                   .collect(Collectors.toList())
+                                                   .collect(toList())
                     )
                 .filter(transformedAndGroup -> !transformedAndGroup.isEmpty())
-                .collect(Collectors.toList());
+                .collect(toList());
         
         return new Conditions2(negated, transformed);
     }

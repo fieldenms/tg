@@ -9,6 +9,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
+import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
@@ -77,6 +78,21 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
     @Override
     public boolean ignore() {
         return false;
+    }
+    
+    @Override
+    public boolean isNotNullableEntity() {
+        for (final AbstractPropInfo<?> abstractPropInfo : path) {
+            if (!isNotNullableEntity(abstractPropInfo)) {
+                return false;
+            }
+        }
+        
+        return true;
+    }
+    
+    private static boolean isNotNullableEntity(final AbstractPropInfo<?> propInfo) {
+        return propInfo instanceof EntityTypePropInfo ? ((EntityTypePropInfo<?>) propInfo).required : false;
     }
 
     @Override

@@ -44,6 +44,11 @@ public class Value2 implements ISingleOperand2<Value3> {
     }
     
     @Override
+    public boolean isNotNullableEntity() {
+        return value != null; //TODO take into account value type to ensure that value represents entity once original value type is preserved 
+    }
+    
+    @Override
     public TransformationResult2<Value3> transform(final TransformationContext2 context) {
         if (needsParameter()) {
             final T2<String, TransformationContext2> paramTr = context.obtainParamNameAndUpdateContext(value);

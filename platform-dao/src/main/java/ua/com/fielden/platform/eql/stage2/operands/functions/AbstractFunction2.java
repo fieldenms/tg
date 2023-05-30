@@ -20,4 +20,9 @@ public abstract class AbstractFunction2<S3 extends ISingleOperand3> extends Abst
     public boolean ignore() {
         return false;
     }
+    
+    @Override
+    public boolean isNotNullableEntity() {
+        return false;
+    }
 }

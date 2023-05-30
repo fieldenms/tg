@@ -13,9 +13,10 @@ import ua.com.fielden.platform.eql.stage3.operands.queries.SubQuery3;
 import ua.com.fielden.platform.eql.stage3.sources.IJoinNode3;
 
 public class SubQuery2 extends AbstractQuery2 implements ISingleOperand2<SubQuery3> {
-
-    public SubQuery2(final QueryComponents2 queryComponents, final Class<?> resultType) {
+    public final boolean isRefetchOnly;
+    public SubQuery2(final QueryComponents2 queryComponents, final Class<?> resultType, final boolean isRefetchOnly) {
         super(queryComponents, resultType);
+        this.isRefetchOnly = isRefetchOnly;
     }
 
     @Override
@@ -39,6 +40,11 @@ public class SubQuery2 extends AbstractQuery2 implements ISingleOperand2<SubQuer
     @Override
     public boolean ignore() {
         return false;
+    }
+    
+    @Override
+    public boolean isNotNullableEntity() {
+        return isRefetchOnly;
     }
 
     @Override

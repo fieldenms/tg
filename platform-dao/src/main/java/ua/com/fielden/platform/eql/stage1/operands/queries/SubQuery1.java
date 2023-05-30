@@ -33,7 +33,7 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
         
         if (joinRoot == null) {
             final QueryComponents2 qb = transformSourceless(localContext);
-            return new SubQuery2(qb, enhance(null, qb.yields));
+            return new SubQuery2(qb, enhance(null, qb.yields), false);
         }
 
         final TransformationResult1<? extends IJoinNode2<?>> joinRootTr = joinRoot.transform(localContext);
@@ -45,11 +45,15 @@ public class SubQuery1 extends AbstractQuery1 implements ISingleOperand1<SubQuer
         final OrderBys2 orderings2 = enhance(orderings.transform(enhancedContext), yields2, joinRoot2.mainSource());
         final Yields2 enhancedYields2 = enhanceYields(yields2, joinRoot2);
         final QueryComponents2 queryComponents2 = new QueryComponents2(joinRoot2, conditions2, enhancedYields2, groups2, orderings2);
-        return new SubQuery2(queryComponents2, enhance(resultType, enhancedYields2));
+        return new SubQuery2(queryComponents2, enhance(resultType, enhancedYields2), isRefetchOnlyQuery());
     }
 
     private static Class<?> enhance(final Class<?> resultType, final Yields2 yields) {
         return resultType == null ? yields.getYields().iterator().next().javaType() : resultType;
+    }
+    
+    private boolean isRefetchOnlyQuery() {
+        return conditions.isIdEqualsExtId();
     }
     
     private static Yields2 enhanceYields(final Yields2 yields, final IJoinNode2<? extends IJoinNode3> joinRoot2) {
