@@ -83,7 +83,7 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
     /**
      * Contexts related to this one and associated with functional entity types those represents insertion points in centre with this context.
      */
-    private final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>> relatedContexts = new LinkedHashMap<>();
+    private final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContext<AbstractEntity<?>, ?>> relatedContexts = new LinkedHashMap<>();
 
     public T getCurrEntity() {
         if (selectedEntities.size() == 1) {
@@ -186,7 +186,7 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
         this.relatedContexts.putAll(relatedContexts);
     }
 
-    public Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>> getRelatedContexts() {
+    public Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContext<AbstractEntity<?>, ?>> getRelatedContexts() {
         return unmodifiableMap(relatedContexts);
     }
 

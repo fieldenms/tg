@@ -6,6 +6,7 @@ import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.valueOf;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCentreContext;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityForContext;
+import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createdRelatedCentreContexts;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.FIND_OR_NEW;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.ID;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.NEW;
@@ -213,7 +214,8 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                                     null,
                                     Optional.empty(),
                                     null,
-                                    new HashMap<>()
+                                    new HashMap<>(),
+                                    new LinkedHashMap<>()
                             ),
                             companion,
                             producer
@@ -236,7 +238,9 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                                     actionConfig,
                                     !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null,
                                     !centreContextHolder.proxiedPropertyNames().contains("customObject") ? centreContextHolder.getCustomObject() : new HashMap<>(),
-                                    !centreContextHolder.proxiedPropertyNames().contains("relatedContexts") ? centreContextHolder.getRelatedContexts() : new LinkedHashMap<>()
+                                    !centreContextHolder.proxiedPropertyNames().contains("relatedContexts") && actionConfig.isPresent() && actionConfig.get().context.isPresent() ?
+                                            createdRelatedCentreContexts(true, webUiConfig, companionFinder, user, critGenerator, factory, centreContextHolder.getRelatedContexts(), actionConfig.get().context.get().relatedContexts, device(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel)
+                                            : new LinkedHashMap<>()
                             ),
                             companion,
                             producer
@@ -442,7 +446,10 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                     criteriaEntity,
                     actionConfig,
                     !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null,
-                    !centreContextHolder.proxiedPropertyNames().contains("customObject") ? centreContextHolder.getCustomObject() : new HashMap<>()
+                    !centreContextHolder.proxiedPropertyNames().contains("customObject") ? centreContextHolder.getCustomObject() : new HashMap<>(),
+                    !centreContextHolder.proxiedPropertyNames().contains("relatedContexts") && actionConfig.isPresent() && actionConfig.get().context.isPresent() ?
+                            createdRelatedCentreContexts(true, webUiConfig, companionFinder, user, critGenerator, entityFactory, centreContextHolder.getRelatedContexts(), actionConfig.get().context.get().relatedContexts, device, domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel)
+                            : new LinkedHashMap<>()
                     );
             //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder+centreContextHolder started. centreContext.");
 

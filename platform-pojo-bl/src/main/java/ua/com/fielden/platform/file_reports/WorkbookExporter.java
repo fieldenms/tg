@@ -38,6 +38,7 @@ import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.serialisation.GZipOutputStreamEx;
 import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
+import ua.com.fielden.platform.utils.Pair;
 
 /**
  * A set of utility methods for exporting data into MS Excel.
@@ -53,7 +54,17 @@ public class WorkbookExporter {
 
     private WorkbookExporter() {}
 
-    public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles, final List<List<DynamicColumnForExport>> dynamicProperties) {
+    public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final List<Stream<M>> entities, final List<Pair<String[], String[]>> propTitles, final List<List<List<DynamicColumnForExport>>> dynamicProperties) {
+        final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData = new ArrayList<>();
+        if (entities.size() == propTitles.size() && entities.size() == dynamicProperties.size()) {
+            for (int sheetIdx = 0; sheetIdx < entities.size(); sheetIdx++) {
+                sheetsData.add(export(entities.get(sheetIdx), propTitles.get(sheetIdx).getKey(), propTitles.get(sheetIdx).getValue(), dynamicProperties.get(sheetIdx), DEFAULT_SHEET_TITLE + " " + sheetIdx));
+            }
+        }
+        return export(sheetsData);
+    }
+
+    private static <M extends AbstractEntity<?>> DataForWorkbookSheet<M> export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles, final List<List<DynamicColumnForExport>> dynamicProperties, final String sheetTitle) {
         final List<T2<String, String>> propNamesAndTitles = new ArrayList<>();
 
         for (int index = 0; index < propertyNames.length && index < propertyTitles.length; index++) {
@@ -69,10 +80,7 @@ public class WorkbookExporter {
             });
         });
 
-        final DataForWorkbookSheet<M> dataForWorkbookSheet = new DataForWorkbookSheet<>(DEFAULT_SHEET_TITLE, entities, propNamesAndTitles, collectionalProps);
-        final List<DataForWorkbookSheet<? extends AbstractEntity<?>>> sheetsData = new ArrayList<>();
-        sheetsData.add(dataForWorkbookSheet);
-        return export(sheetsData);
+        return new DataForWorkbookSheet<>(sheetTitle, entities, propNamesAndTitles, collectionalProps);
     }
 
     public static <M extends AbstractEntity<?>> SXSSFWorkbook export(final Stream<M> entities, final String[] propertyNames, final String[] propertyTitles) {
