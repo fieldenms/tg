@@ -133,9 +133,9 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
                 final String sha1 = HexString.bufferToHex(digest, 0, digest.length);
 
                 final Attachment newAttachment = new_()
+                                                .setOrigFileName(HYPERLINK) // should be first as it affects validation and processing of title
                                                 .setTitle(potentialUri)
-                                                .setSha1(sha1)
-                                                .setOrigFileName(HYPERLINK);
+                                                .setSha1(sha1);
                 // a new hyperlink attachment may become invalid if the length of potentialUri exceed the declared length
                 // in this case it is better to throw exception in order for that error to bubble up
                 newAttachment.isValid().ifFailure(Result::throwRuntime);

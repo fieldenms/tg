@@ -19,14 +19,15 @@ public class AssignAttachmentTitle implements IAfterChangeEventHandler<String> {
     @Override
     public void handle(final MetaProperty<String> property, final String value) {
         final Attachment attachment = property.getEntity();
-        if (!attachment.isInitialising() && isEmpty(attachment.getTitle())) {
+        final boolean isNotHyperlink = !HYPERLINK.equals(value);
+        if (!attachment.isInitialising() && isNotHyperlink && isEmpty(attachment.getTitle())) {
             final String sanitisedValue = value.replaceAll(",", " ")    // replace commas with a space
                                                .replaceAll("\\s+", " ") // replace sequential whitespace characters with a single space
                                                .trim();                 // finally, remove leading and trailing whitespace characters
             attachment.setTitle(sanitisedValue);
         }
-        
-        attachment.getProperty(pn_TITLE).setEditable(!HYPERLINK.equals(value));
+
+        attachment.getProperty(pn_TITLE).setEditable(isNotHyperlink);
     }
 
 }
