@@ -8,12 +8,16 @@ import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.attachment.Attachment.pn_ORIG_FILE_NAME;
 import static ua.com.fielden.platform.attachment.Attachment.pn_SHA1;
 
+import java.util.Optional;
+
 import org.junit.Test;
 
 import ua.com.fielden.platform.entity.meta.MetaProperty;
+import ua.com.fielden.platform.entity.validation.RestrictCommasValidator;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.test_config.AbstractDaoTestCase;
+import ua.com.fielden.platform.types.Hyperlink;
 
 /**
  * A test case validating basic properties of attachments.
@@ -84,7 +88,7 @@ public class AttachmentBasicPropertiesTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void fileNames_may_contain_leading_trailing_sequential_whitespece_and_commas_resulting_in_titles_that_are_sanitised() {
+    public void file_names_may_contain_leading_trailing_sequential_whitespece_and_commas_resulting_in_titles_that_are_sanitised() {
         final String fileName = "  document  01, 02  .pdf  ";
         final String expectedTitle = "document 01 02 .pdf";
         final Attachment attachment = new_(Attachment.class).setSha1("AD35A51B8C8658E0ACB1DFCF5A11923BE8B05DD4").setOrigFileName(fileName);
@@ -93,6 +97,97 @@ public class AttachmentBasicPropertiesTest extends AbstractDaoTestCase {
         assertEquals(fileName, attachment.getOrigFileName());
         assertEquals(expectedTitle, attachment.getTitle());
         assertEquals(format("%s | SHA1: AD35A51B8C8658E0ACB1DFCF5A11923BE8B05DD4", expectedTitle), attachment.toString());
+    }
+
+    @Test
+    public void hyperlink_attachment_created_with_newAsHyperlink_permits_commas_in_URLs() {
+        final String url = "https://validdomainname.com/assets/Network/NIT/Dev/NT-AO-15-360%20Install%20a%20new%20Access%20Switch%20and%20connect%20to%20AH,BD,CD";
+        final Result result = Hyperlink.validate(url);
+        assertTrue(result.isSuccessful());
+
+        final IAttachment coAttachment = co(Attachment.class);
+        final Optional<Attachment> maybeAttachment = coAttachment.newAsHyperlink(url);
+        assertTrue(maybeAttachment.isPresent());
+
+        final Attachment attachment = maybeAttachment.get();
+        final Result res = attachment.isValid();
+        assertTrue(res.isSuccessful());
+
+        assertEquals(Attachment.HYPERLINK, attachment.getOrigFileName());
+        assertEquals(url, attachment.getTitle());
+    }
+
+    @Test
+    public void hyperlink_attachment_created_manually_permits_commas_in_URLs() {
+        final String url = "https://validdomainname.com/assets/Network/NIT/Dev/NT-AO-15-360%20Install%20a%20new%20Access%20Switch%20and%20connect%20to%20AH,BD,CD";
+        final Result result = Hyperlink.validate(url);
+        assertTrue(result.isSuccessful());
+
+        final Attachment attachment = new_(Attachment.class);
+        attachment.setTitle(url);
+        final MetaProperty<String> mpTitle = attachment.getProperty(Attachment.pn_TITLE);
+        assertFalse(mpTitle.isValid());
+        assertEquals(RestrictCommasValidator.ERR_CONTAINS_COMMAS, mpTitle.getFirstFailure().getMessage());
+        attachment.setOrigFileName(Attachment.HYPERLINK);
+        assertTrue(mpTitle.isValid());
+
+        assertEquals(Attachment.HYPERLINK, attachment.getOrigFileName());
+        assertEquals(url, attachment.getTitle());
+    }
+
+    @Test
+    public void hyperlink_attachment_created_manually_validates_URL() {
+        final String invalidUrl = "https://validdomainname.com/assets/Network/NIT/Dev/NT-AO-15-360 Install a new Access%20Switch%20and%20connect%20to";
+        final Result result = Hyperlink.validate(invalidUrl);
+        assertFalse(result.isSuccessful());
+
+        final Attachment attachment = new_(Attachment.class);
+        attachment.setTitle(invalidUrl);
+        final MetaProperty<String> mpTitle = attachment.getProperty(Attachment.pn_TITLE);
+        assertTrue(mpTitle.isValid()); // not recognised as a hyperlink attachment yet, thus admitting invalidUrl
+        attachment.setOrigFileName(Attachment.HYPERLINK); // now it becomes a hyperlink attachment and should revalidate the title
+        assertFalse(mpTitle.isValid());
+        assertEquals(format("Value [%s] is not a valid hyperlink.", invalidUrl), mpTitle.getFirstFailure().getMessage());
+    }
+
+    @Test
+    public void file_attachments_do_not_permit_leading_trailing_sequential_whitespece_and_commas_in_titles() {
+        final String fileName = "  document  01, 02  .pdf  ";
+        final String expectedTitle = "document 01 02 .pdf";
+        final Attachment attachment = new_(Attachment.class).setSha1("AD35A51B8C8658E0ACB1DFCF5A11923BE8B05DD4").setOrigFileName(fileName);
+        final Result res = attachment.isValid();
+        assertTrue(res.isSuccessful());
+        assertEquals(fileName, attachment.getOrigFileName());
+        assertEquals(expectedTitle, attachment.getTitle());
+
+        final MetaProperty<String> mpTitle = attachment.getProperty(Attachment.pn_TITLE);
+        attachment.setTitle(" Title with leading space");
+        assertFalse(mpTitle.isValid());
+        assertEquals("Leading whitespace characters are not permitted: [{?}Title with leading space]", mpTitle.getFirstFailure().getMessage());
+        attachment.setTitle("Title with trailing space ");
+        assertEquals("Trailing whitespace characters are not permitted: [Title with trailing space{?}]", mpTitle.getFirstFailure().getMessage());
+        attachment.setTitle("Title with consequtive   spaces");
+        assertEquals("Consecutive whitespace characters are not permitted: [Title with consequtive{?}spaces]", mpTitle.getFirstFailure().getMessage());
+        attachment.setTitle("Title with , commas");
+        assertEquals(RestrictCommasValidator.ERR_CONTAINS_COMMAS, mpTitle.getFirstFailure().getMessage());
+    }
+
+    @Override
+    public boolean saveDataPopulationScriptToFile() {
+        return false;
+    }
+
+    @Override
+    public boolean useSavedDataPopulationScript() {
+        return false;
+    }
+
+    @Override
+    protected void populateDomain() {
+        super.populateDomain();
+        if (useSavedDataPopulationScript()) {
+            return;
+        }
     }
 
 }
