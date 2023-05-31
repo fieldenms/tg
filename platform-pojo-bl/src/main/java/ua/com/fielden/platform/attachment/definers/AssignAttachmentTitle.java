@@ -21,7 +21,10 @@ public class AssignAttachmentTitle implements IAfterChangeEventHandler<String> {
     public void handle(final MetaProperty<String> property, final String value) {
         final Attachment attachment = property.getEntity();
         if (!attachment.isInitialising() && StringUtils.isEmpty(attachment.getTitle())) {
-            attachment.setTitle(value);
+            final String sanitizedValue = value.replaceAll(",", " ")    // replace commas with a space
+                                               .replaceAll("\\s+", " ") // replace sequential whitespace characters with a single space
+                                               .trim();                 // finally, remove leading and trailing whitespace characters
+            attachment.setTitle(sanitizedValue);
         }
         
         attachment.getProperty(pn_TITLE).setEditable(!HYPERLINK.equals(value));

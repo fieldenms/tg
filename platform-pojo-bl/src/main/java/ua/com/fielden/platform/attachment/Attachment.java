@@ -25,15 +25,12 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Required;
-import ua.com.fielden.platform.entity.annotation.SkipDefaultStringKeyMemberValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.mutator.AfterChange;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
 import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.entity.validation.MaxLengthValidator;
-import ua.com.fielden.platform.entity.validation.RestrictCommasValidator;
-import ua.com.fielden.platform.entity.validation.RestrictExtraWhitespaceValidator;
 import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -84,7 +81,6 @@ public class Attachment extends AbstractPersistentEntity<DynamicEntityKey> {
     @Title(value = "Title or Link", desc = "A convenient document title or a link to an external resource")
     @CompositeKeyMember(1)
     @BeforeChange(@Handler(MaxLengthValidator.class))
-    @SkipDefaultStringKeyMemberValidation({RestrictExtraWhitespaceValidator.class, RestrictCommasValidator.class})
     private String title;
 
     @IsProperty

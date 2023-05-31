@@ -84,12 +84,15 @@ public class AttachmentBasicPropertiesTest extends AbstractDaoTestCase {
     }
 
     @Test
-    public void fileNames_may_contains_leading_trailing_sequential_whitespece_and_commas() {
+    public void fileNames_may_contains_leading_trailing_sequential_whitespece_and_commas_resulting_in_titles_that_are_sanitised() {
         final String fileName = "  document  01, 02  .pdf  ";
+        final String expectedTitle = "document 01 02 .pdf";
         final Attachment attachment = new_(Attachment.class).setSha1("AD35A51B8C8658E0ACB1DFCF5A11923BE8B05DD4").setOrigFileName(fileName);
-        assertTrue(attachment.isValid().isSuccessful());
-        assertEquals(fileName, attachment.getTitle());
-        assertEquals(format("%s | SHA1: AD35A51B8C8658E0ACB1DFCF5A11923BE8B05DD4", fileName), attachment.toString());
+        final Result res = attachment.isValid();
+        assertTrue(res.isSuccessful());
+        assertEquals(fileName, attachment.getOrigFileName());
+        assertEquals(expectedTitle, attachment.getTitle());
+        assertEquals(format("%s | SHA1: AD35A51B8C8658E0ACB1DFCF5A11923BE8B05DD4", expectedTitle), attachment.toString());
     }
 
 }
