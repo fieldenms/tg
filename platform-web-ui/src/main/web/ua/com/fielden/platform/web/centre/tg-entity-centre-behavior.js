@@ -852,6 +852,7 @@ const TgEntityCentreBehaviorImpl = {
                     if (loadedView && loadedView._createContextHolder) {
                         context['relatedContexts'] = context['relatedContexts'] || {};
                         context['relatedContexts'][relatedContext.elementName] = loadedView._createContextHolder(relatedContext.requireSelectionCriteria, relatedContext.requireSelectedEntities, relatedContext.requireMasterEntity, relatedContext.relatedContexts);
+                        this._reflector.setCustomProperty(context['relatedContexts'][relatedContext.elementName], "@@insertionPointTitle", insPoint.shortDesc);
                     }
                 });
             }
