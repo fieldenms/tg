@@ -354,12 +354,9 @@ public class RestServerUtil {
     }
 
     /**
-     * Composes JACKSON representation of an entity.
-     *
-     * @return
-     * @throws JsonProcessingException
+     * Composes {@link Result} from an {@code entity}.
      */
-    public <T extends AbstractEntity<?>> Representation singleJsonRepresentation(final T entity) {
+    public <T extends AbstractEntity<?>> Result singleEntityResult(final T entity) {
         // create a Result enclosing entity list
         final Result result;
         if (entity != null) {
@@ -369,8 +366,18 @@ public class RestServerUtil {
         } else {
             result = new Result(null, new Exception("Could not find entity."));
         }
-        final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
-        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON);
+        return result;
+    }
+
+    /**
+     * Composes {@link SerialiserEngines#JACKSON} representation of an entity.
+     *
+     * @return
+     * @throws JsonProcessingException
+     */
+    public <T extends AbstractEntity<?>> Representation singleJsonRepresentation(final T entity) {
+        final byte[] bytes = serialiser.serialise(singleEntityResult(entity), JACKSON);
+        return encodedRepresentation(new ByteArrayInputStream(bytes), APPLICATION_JSON);
     }
 
     /**
@@ -400,9 +407,9 @@ public class RestServerUtil {
      * @throws JsonProcessingException
      */
     public <T extends AbstractEntity<?>> Representation singleJsonRepresentation(final T entity, final Map<String, Integer> actionIndices, final Optional<Exception> savingException) {
+        final Result result;
         if (entity != null && savingException.isPresent()) {
             final Exception ex = savingException.get();
-            final Result result;
             if (ex instanceof Result) {
                 final Result thrownResult = (Result) ex;
                 if (thrownResult.isSuccessful()) {
@@ -430,18 +437,10 @@ public class RestServerUtil {
                 logger.error(ex.getMessage(), ex);
                 result = failure(entity, ex);
             }
-            return resultJSONRepresentation(result.copyWith(listOf(result.getInstance(), linkedMapOf(t2("propertyActionIndices", actionIndices)))));
         } else {
-            final Result result;
-            if (entity != null) {
-                // valid and invalid entities: both kinds are represented using successful result. Use client-side isValid() method
-                //   in 'tg-reflector' to differentiate them
-                result = new Result(listOf(entity, linkedMapOf(t2("propertyActionIndices", actionIndices))), "OK");
-            } else {
-                result = new Result(listOf(null, linkedMapOf(t2("propertyActionIndices", actionIndices))), new Exception("Could not find entity."));
-            }
-            return resultJSONRepresentation(result);
+            result = singleEntityResult(entity);
         }
+        return resultJSONRepresentation(result.copyWith(listOf(result.getInstance(), linkedMapOf(t2("propertyActionIndices", actionIndices)))));
     }
 
     /**
