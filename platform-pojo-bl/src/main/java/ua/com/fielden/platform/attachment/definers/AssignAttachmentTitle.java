@@ -21,7 +21,7 @@ public class AssignAttachmentTitle implements IAfterChangeEventHandler<String> {
         final Attachment attachment = property.getEntity();
         final boolean isNotHyperlink = !HYPERLINK.equals(value);
         if (!attachment.isInitialising() && isNotHyperlink && isEmpty(attachment.getTitle())) {
-            final String sanitisedValue = value.replaceAll(",", " ")    // replace commas with a space
+            final String sanitisedValue = value.replace(",", " ")       // replace commas with a space
                                                .replaceAll("\\s+", " ") // replace sequential whitespace characters with a single space
                                                .trim();                 // finally, remove leading and trailing whitespace characters
             attachment.setTitle(sanitisedValue);
