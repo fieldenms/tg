@@ -27,7 +27,7 @@ public class AttachmentBasicPropertiesTest extends AbstractDaoTestCase {
     public void origFileName_can_only_be_assigned_once() {
         final Attachment attachment = new_(Attachment.class).setSha1("AD35A51B8C8658E0ACB1DFCF5A11923BE8B05DD4").setOrigFileName("document_01.pdf");
         assertTrue(attachment.isValid().isSuccessful());
-        
+
         attachment.setOrigFileName("some_other_document_name.pdf");
         assertFalse(attachment.isValid().isSuccessful());
         final MetaProperty<String> origFileNameProp = attachment.getProperty(pn_ORIG_FILE_NAME);
@@ -40,7 +40,7 @@ public class AttachmentBasicPropertiesTest extends AbstractDaoTestCase {
     public void sha1_can_only_be_assigned_once() {
         final Attachment attachment = new_(Attachment.class).setSha1("AD35A51B8C8658E0ACB1DFCF5A11923BE8B05DD4").setOrigFileName("document_01.pdf");
         assertTrue(attachment.isValid().isSuccessful());
-        
+
         attachment.setSha1("CD35A51B8C8658E0ACB1DFCF5A11923BE8B05DD4");
         assertFalse(attachment.isValid().isSuccessful());
         final MetaProperty<String> sha1Prop = attachment.getProperty(pn_SHA1);
@@ -53,7 +53,7 @@ public class AttachmentBasicPropertiesTest extends AbstractDaoTestCase {
     public void title_is_set_to_origFileName_by_default_if_it_is_empty() {
         final String origFileName = "document_01.pdf";
         final String sha1 = "AD35A51B8C8658E0ACB1DFCF5A11923BE8B05DD4";
-        
+
         final Attachment attachment = new_(Attachment.class).setSha1(sha1).setOrigFileName(origFileName);
         assertEquals(origFileName, attachment.getTitle());
         assertEquals(origFileName, attachment.getOrigFileName());
@@ -62,7 +62,7 @@ public class AttachmentBasicPropertiesTest extends AbstractDaoTestCase {
         assertEquals("Document title", anotherAttachment.getTitle());
         assertEquals(origFileName, anotherAttachment.getOrigFileName());
     }
-    
+
     @Test
     public void attachment_string_representation_consists_of_title_and_SHA1_delimited_with_SHA1_keyword() {
         final Attachment attachment = new_(Attachment.class).setSha1("AD35A51B8C8658E0ACB1DFCF5A11923BE8B05DD4").setOrigFileName("document_01.pdf");
@@ -76,11 +76,23 @@ public class AttachmentBasicPropertiesTest extends AbstractDaoTestCase {
         assertEquals(Integer.valueOf(0), attachment.getRevNo());
         assertNull(attachment.getLastRevision());
         assertNull(attachment.getPrevRevision());
-        
+
         final Attachment savedAttachment = save(attachment); 
         assertEquals(Integer.valueOf(0), savedAttachment.getRevNo());
         assertNull(savedAttachment.getLastRevision());
         assertNull(savedAttachment.getPrevRevision());
+    }
+
+    @Test
+    public void fileNames_may_contain_leading_trailing_sequential_whitespece_and_commas_resulting_in_titles_that_are_sanitised() {
+        final String fileName = "  document  01, 02  .pdf  ";
+        final String expectedTitle = "document 01 02 .pdf";
+        final Attachment attachment = new_(Attachment.class).setSha1("AD35A51B8C8658E0ACB1DFCF5A11923BE8B05DD4").setOrigFileName(fileName);
+        final Result res = attachment.isValid();
+        assertTrue(res.isSuccessful());
+        assertEquals(fileName, attachment.getOrigFileName());
+        assertEquals(expectedTitle, attachment.getTitle());
+        assertEquals(format("%s | SHA1: AD35A51B8C8658E0ACB1DFCF5A11923BE8B05DD4", expectedTitle), attachment.toString());
     }
 
 }
