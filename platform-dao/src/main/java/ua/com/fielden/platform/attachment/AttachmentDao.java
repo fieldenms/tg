@@ -34,6 +34,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
@@ -60,7 +61,7 @@ import ua.com.fielden.platform.types.Hyperlink;
 @EntityType(Attachment.class)
 public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttachment {
     private static final Logger LOGGER = Logger.getLogger(AttachmentDao.class);
-    private static final String KEY_MEMBER_SEPARATOR = Reflector.getKeyMemberSeparator(Attachment.class);
+    private static final String KEY_MEMBER_SEPARATOR_FOR_SPLITTING = Pattern.quote(Reflector.getKeyMemberSeparator(Attachment.class));
 
     private final String attachmentsLocation;
 
@@ -71,7 +72,7 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
         super(filter);
         this.attachmentsLocation = attachmentsLocation;
     }
-    
+
     @Override
     @Authorise(AttachmentDownload_CanExecute_Token.class)
     public Optional<File> asFile(final Attachment attachment) {
@@ -107,7 +108,7 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
     public Attachment findByKeyAndFetch(final boolean filtered, final fetch<Attachment> fetchModel, final Object... keyValues) {
         // is this a special case of partial match by title?
         if (keyValues != null && keyValues.length == 1 && keyValues[0] instanceof String) {
-            final String[] keys = ((String) keyValues[0]).split(KEY_MEMBER_SEPARATOR);
+            final String[] keys = ((String) keyValues[0]).split(KEY_MEMBER_SEPARATOR_FOR_SPLITTING);
             final String potentialUri = keys[0].trim();
             return newAsHyperlink(potentialUri).orElse(null);
         }
