@@ -141,6 +141,8 @@ public class EntityContainerFetcher {
     }
     
     private static boolean idOnlyQuery(final QueryModelResult<?> queryModelResult) {
-        return isPersistedEntityType(queryModelResult.resultType()) && queryModelResult.yieldedColumns().size() == 1 && ID.equals(queryModelResult.yieldedColumns().get(0).name());
+        return isPersistedEntityType(queryModelResult.resultType()) && queryModelResult.yieldedColumns().size() == 1 && ID.equals(queryModelResult.yieldedColumns().get(0).name()) 
+                && !(queryModelResult.fetchModel().getPrimProps().size() == 1 && queryModelResult.fetchModel().getPrimProps().contains("id") && 
+                        queryModelResult.fetchModel().getRetrievalModels().isEmpty());
     }
 }
