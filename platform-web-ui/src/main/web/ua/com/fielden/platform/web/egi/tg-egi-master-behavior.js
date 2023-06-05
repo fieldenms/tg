@@ -4,7 +4,7 @@ import { TgEntityMasterBehavior, focusEnabledInputIfAny } from '/resources/maste
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
-import { tearDownEvent, deepestActiveElement, getParentAnd, getActiveParentAnd, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, getParentAnd, getActiveParentAnd, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, generateUUID } from '/resources/reflection/tg-polymer-utils.js';
 
 const TgEgiMasterBehaviorImpl = {
 
@@ -37,6 +37,7 @@ const TgEgiMasterBehaviorImpl = {
     },
 
     ready: function () {
+        this.uuid = this.is + '/' + generateUUID();
         this.editors = [...this._masterDom().querySelectorAll('[tg-editor]')];
         this.saveButton = this._masterDom().querySelector('.master-save-action');
         this.cancelButton = this._masterDom().querySelector('.master-cancel-action');
@@ -68,7 +69,6 @@ const TgEgiMasterBehaviorImpl = {
                     }
                 });
             } else {
-                this._resetEgiMasterState();
                 this.focusView(); // focus invalid editor after save (and select it's contents if it is preferred)
             }
         }
