@@ -359,7 +359,7 @@ public class MetaModelFinderTest {
                 SuperEntityMetaModelAliased.class);
 
         final TypeElement metaModelsElt = finder.getTypeElement(MetaModels.class);
-        final List<MetaModelElement> metaModelElts = metaModelFinder.findMetaModels(metaModelsElt);
+        final List<MetaModelElement> metaModelElts = metaModelFinder.streamMetaModels(metaModelsElt).toList();
 
         // sorting beforehand is important 
         final List<TypeElement> expected = expectedClasses.stream()
