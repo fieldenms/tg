@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.view.master.api.impl;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
@@ -18,7 +19,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.dom.DomContainer;
@@ -426,7 +426,7 @@ public class SimpleMasterBuilder<T extends AbstractEntity<?>> implements ISimple
         public Map<String, Class<? extends IEntityMultiActionSelector>> propertyActionSelectors() {
             return widgets.stream().filter(widget -> widget.widget().action().isPresent()).map(widget -> {
                 return t2(widget.widget().propertyName(), widget.widget().action().get().actionSelectorClass());
-            }).collect(Collectors.toMap(tt -> tt._1, tt -> tt._2));
+            }).collect(toMap(tt -> tt._1, tt -> tt._2));
         }
     }
 

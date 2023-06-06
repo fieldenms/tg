@@ -126,11 +126,11 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
 
-    protected Optional<String> propName = Optional.empty();
-    protected Optional<String> tooltipProp = Optional.empty();
-    protected Optional<PropDef<?>> propDef = Optional.empty();
-    protected Optional<AbstractWidget> widget = Optional.empty();
-    private Optional<EntityMultiActionConfig> entityActionConfig = Optional.empty();
+    protected Optional<String> propName = empty();
+    protected Optional<String> tooltipProp = empty();
+    protected Optional<PropDef<?>> propDef = empty();
+    protected Optional<AbstractWidget> widget = empty();
+    private Optional<EntityMultiActionConfig> entityActionConfig = empty();
     private Integer orderSeq;
     private int width = 80;
     private boolean isFlexible = true;
@@ -149,11 +149,11 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             throw new EntityCentreConfigurationException(format("Provided value [%s] is not a valid property expression for entity [%s]", propName, builder.getEntityType().getSimpleName()));
         }
 
-        this.propName = Optional.of(propName);
-        this.tooltipProp = Optional.empty();
-        this.propDef = Optional.empty();
+        this.propName = of(propName);
+        this.tooltipProp = empty();
+        this.propDef = empty();
         this.orderSeq = null;
-        this.entityActionConfig = Optional.empty();
+        this.entityActionConfig = empty();
         return this;
     }
 
@@ -203,7 +203,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     public <M extends AbstractEntity<?>> IResultSetBuilderDynamicPropsAction<T> addProps(final String propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<M, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
         final ResultSetProp<T> prop = dynamicProps(propName, dynColBuilderType, entityPreProcessor, contextConfig);
         this.builder.addToResultSet(prop);
-        return new ResultSetDynamicPropertyBuilder<T>(this, prop);
+        return new ResultSetDynamicPropertyBuilder<>(this, prop);
     }
 
     @Override
@@ -249,11 +249,11 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             throw new IllegalArgumentException("Custom property should not be null.");
         }
 
-        this.propName = Optional.empty();
-        this.tooltipProp = Optional.empty();
-        this.propDef = Optional.of(propDef);
+        this.propName = empty();
+        this.tooltipProp = empty();
+        this.propDef = of(propDef);
         this.orderSeq = null;
-        this.entityActionConfig = Optional.empty();
+        this.entityActionConfig = empty();
         return this;
     }
 
@@ -318,8 +318,8 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         return this;
     }
 
-    private Optional<Device> lastResultsetLayoutDevice = Optional.empty();
-    private Optional<Orientation> lastResultsetLayoutOrientation = Optional.empty();
+    private Optional<Device> lastResultsetLayoutDevice = empty();
+    private Optional<Orientation> lastResultsetLayoutOrientation = empty();
 
     @Override
     public IExpandedCardLayoutConfig<T> setCollapsedCardLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString) {
@@ -327,7 +327,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             throw new IllegalStateException("Resultset card layout requries device and orientation (optional) to be specified.");
         }
 
-        this.lastResultsetLayoutDevice = Optional.of(device);
+        this.lastResultsetLayoutDevice = of(device);
         this.lastResultsetLayoutOrientation = orientation;
         this.builder.resultsetCollapsedCardLayout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(flexString);
         return this;
@@ -340,8 +340,8 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
         this.builder.resultsetExpansionCardLayout.whenMedia(lastResultsetLayoutDevice.get(), lastResultsetLayoutOrientation.isPresent() ? lastResultsetLayoutOrientation.get()
                 : null).set(flexString);
-        this.lastResultsetLayoutDevice = Optional.empty();
-        this.lastResultsetLayoutOrientation = Optional.empty();
+        this.lastResultsetLayoutDevice = empty();
+        this.lastResultsetLayoutOrientation = empty();
         return this;
     }
 
@@ -467,12 +467,12 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
 
         // clear things up for the next property to be added if any
-        this.propName = Optional.empty();
-        this.tooltipProp = Optional.empty();
-        this.propDef = Optional.empty();
+        this.propName = empty();
+        this.tooltipProp = empty();
+        this.propDef = empty();
         this.orderSeq = null;
-        this.entityActionConfig = Optional.empty();
-        this.widget = Optional.empty();
+        this.entityActionConfig = empty();
+        this.widget = empty();
     }
 
     @Override
@@ -673,7 +673,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         final Class<?> propType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, resultPropName);
         final String widgetPropName = "".equals(resultPropName) ? AbstractEntity.KEY : resultPropName;
         final EntityAutocompletionWidget editor = new EntityAutocompletionWidget(pair("", getTitleAndDesc(widgetPropName, root).getValue()), widgetPropName, (Class<AbstractEntity<?>>)propType);
-        this.widget = Optional.of(editor);
+        this.widget = of(editor);
         return new ResultSetAutocompleterConfig<>(this, editor);
     }
 

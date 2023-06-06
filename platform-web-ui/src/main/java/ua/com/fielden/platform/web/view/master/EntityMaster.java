@@ -6,6 +6,7 @@ import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getPropertyAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.findFieldByName;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 import static ua.com.fielden.platform.web.centre.EntityCentre.IMPORTS;
 import static ua.com.fielden.platform.web.centre.EntityCentre.createFetchModelForAutocompleterFrom;
@@ -33,7 +34,6 @@ import ua.com.fielden.platform.entity.annotation.SkipEntityExistsValidation;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
-import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.ResourceLoader;
 import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
@@ -306,9 +306,9 @@ public class EntityMaster<T extends AbstractEntity<?>> implements IRenderable {
      *
      * @return
      */
-    public Map<String, IEntityMultiActionSelector> getPropertyActionSelectors() {
+    public Map<String, ? extends IEntityMultiActionSelector> getPropertyActionSelectors() {
         return masterConfig.propertyActionSelectors().entrySet().stream()
-                .map(entry -> T2.t2(entry.getKey(), injector.getInstance(entry.getValue())))
+                .map(entry -> t2(entry.getKey(), injector.getInstance(entry.getValue())))
                 .collect(toMap(tt -> tt._1, tt -> tt._2));
     }
 

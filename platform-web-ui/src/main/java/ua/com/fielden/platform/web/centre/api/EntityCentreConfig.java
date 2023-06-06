@@ -5,6 +5,7 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.FRONT;
@@ -25,7 +26,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -262,7 +262,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         public final int width;
         public final boolean isFlexible;
 
-        private Optional<EntityMultiActionConfig> propAction = Optional.empty();
+        private Optional<EntityMultiActionConfig> propAction = empty();
 
          public static <T extends AbstractEntity<?>> ResultSetProp<T> propByName(final String propName, final int width, final boolean isFlexible, final Optional<AbstractWidget> widget, final String tooltipProp, final Optional<EntityMultiActionConfig> propAction) {
             return new ResultSetProp<>(propName, empty(), empty(), empty(), width, isFlexible, widget, tooltipProp, null, propAction);
@@ -273,7 +273,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         }
 
         public static <T extends AbstractEntity<?>> ResultSetProp<T> dynamicProps(final String collectionalPropertyName, final Class<? extends IDynamicColumnBuilder<T>> dynamicPropDefinerClass, final BiConsumer<? extends AbstractEntity<?>, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
-            return new ResultSetProp<>(collectionalPropertyName, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), 0, false, Optional.empty(), null, null, Optional.empty());
+            return new ResultSetProp<>(collectionalPropertyName, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), 0, false, empty(), null, null, empty());
         }
 
         private ResultSetProp(
@@ -873,7 +873,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
                     .filter(resultSetProp -> resultSetProp.propAction.isPresent())
                     .map(resultSetProp -> resultSetProp.propAction.get().actions())
                     .flatMap(Collection::stream)
-                    .collect(Collectors.toList())
+                    .collect(toList())
                     .get(actionNumber);
         } else if (INSERTION_POINT == actionKind) {
             if (getInsertionPointConfigs().isEmpty()) {

@@ -2,6 +2,7 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.getEntityMaster;
@@ -9,7 +10,6 @@ import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.g
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -58,18 +58,26 @@ public class MultiActionUtils {
     }
 
     /**
+     * Returns indices of actions for {@code entity} and list of {@code selectors}.
+     * 
+     * @param entity
+     * @param selectors
+     * @return
+     */
+    private static <T extends AbstractEntity<?>> Map<String, Integer> getIndicesFor(final T entity, final Map<String, ? extends IEntityMultiActionSelector> selectors) {
+        return selectors.entrySet().stream()
+            .map(entry -> t2(entry.getKey(), entry.getValue().getActionFor(entity)))
+            .collect(toMap(tt -> tt._1, tt -> tt._2));
+    }
+
+    /**
      * Calculates indices of property actions for each entity in result set.
      *
      * @param entities - result set entities
      * @return
      */
     static T2<String, List<Map<String, Integer>>> createPropertyActionIndicesForCentre(final List<AbstractEntity<?>> entities, final EntityCentre<AbstractEntity<?>> centre) {
-        final Map<String, ? extends IEntityMultiActionSelector> selectors = centre.createPropertyActionSelectors();
-        return t2(PROPERTY_ACTION_INDICES, entities.stream().map(entity -> {
-            return selectors.entrySet().stream()
-                .map(entry -> t2(entry.getKey(), new Integer(entry.getValue().getActionFor(entity))))
-                .collect(Collectors.toMap(tt -> tt._1, tt -> tt._2));
-        }).collect(toList()));
+        return t2(PROPERTY_ACTION_INDICES, entities.stream().map(entity -> getIndicesFor(entity, centre.createPropertyActionSelectors())).collect(toList()));
     }
 
     /**
@@ -83,10 +91,9 @@ public class MultiActionUtils {
     static <T extends AbstractEntity<?>> T2<String, Object> createPropertyActionIndicesForMaster(final T entity, final IWebUiConfig webUiConfig) {
         if (entity != null) {
             final Class<T> entityType = getOriginalType(entity.getType());
-
             final EntityMaster<T> master = (EntityMaster<T>) getEntityMaster(entityType, webUiConfig);
             if (master != null) {
-                return t2(PROPERTY_ACTION_INDICES, master.getPropertyActionSelectors().entrySet().stream().map(entry -> t2(entry.getKey(), entry.getValue().getActionFor(entity))).collect(Collectors.toMap(tt -> tt._1, tt -> tt._2)));
+                return t2(PROPERTY_ACTION_INDICES, getIndicesFor(entity, master.getPropertyActionSelectors()));
             }
         }
         return t2(PROPERTY_ACTION_INDICES, new HashMap<>());
