@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.operands;
 
+import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
 
@@ -24,9 +25,7 @@ public class Expression1 implements ISingleOperand1<Expression2> {
 
     @Override
     public Expression2 transform(final TransformationContext1 context) {
-        return items.isEmpty() ? //
-                new Expression2(first.transform(context)) : //
-                new Expression2(first.transform(context), items.stream().map(el -> el.transform(context)).collect(toList()));
+        return items.isEmpty() ? new Expression2(first.transform(context), emptyList()) : new Expression2(first.transform(context), items.stream().map(el -> el.transform(context)).collect(toList()));
     }
     
     @Override

@@ -1,6 +1,5 @@
 package ua.com.fielden.platform.eql.stage2.operands;
 
-import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toSet;
 
 import java.util.ArrayList;
@@ -25,12 +24,6 @@ public class Expression2 extends AbstractSingleOperand2 implements ISingleOperan
         super(extractTypes(first, items));
         this.first = first;
         this.items = items;
-    }
-
-    public Expression2(final ISingleOperand2<? extends ISingleOperand3> first) {
-        super(first.type());
-        this.first = first;
-        this.items = emptyList();
     }
     
     @Override
