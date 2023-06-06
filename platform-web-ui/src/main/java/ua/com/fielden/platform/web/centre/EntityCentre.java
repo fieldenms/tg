@@ -915,7 +915,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
      * Creates and returns instance of multi-action selector in case of property multi-action specified in Centre DSL.
      * Returns map between property names and property action selector.
      */
-    public Map<String, ? extends IEntityMultiActionSelector> createPropertyActionSelector() {
+    public Map<String, ? extends IEntityMultiActionSelector> createPropertyActionSelectors() {
         return dslDefaultConfig.getResultSetProperties().map(resultProps -> {
             return resultProps.stream()
                     .filter(resultProp -> resultProp.getPropAction().isPresent() && (resultProp.getPropAction().get().actions().size() > 0))

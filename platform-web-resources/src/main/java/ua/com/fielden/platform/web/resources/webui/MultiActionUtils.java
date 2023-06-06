@@ -63,9 +63,9 @@ public class MultiActionUtils {
      * @return
      */
     static T2<String, List<Map<String, Integer>>> createPropertyActionIndicesForCentre(final List<AbstractEntity<?>> entities, final EntityCentre<AbstractEntity<?>> centre) {
-        final Map<String, ? extends IEntityMultiActionSelector> actionSelectors = centre.createPropertyActionSelector();
+        final Map<String, ? extends IEntityMultiActionSelector> selectors = centre.createPropertyActionSelectors();
         return t2(PROPERTY_ACTION_INDICES, entities.stream().map(entity -> {
-            return actionSelectors.entrySet().stream()
+            return selectors.entrySet().stream()
                 .map(entry -> t2(entry.getKey(), new Integer(entry.getValue().getActionFor(entity))))
                 .collect(Collectors.toMap(tt -> tt._1, tt -> tt._2));
         }).collect(toList()));

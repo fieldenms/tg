@@ -13,7 +13,7 @@ import ua.com.fielden.platform.web.centre.api.actions.multi.IEntityMultiActionSe
  * @author TG Team
  *
  */
-public class BigDecimalPropActionSelecetor implements IEntityMultiActionSelector {
+public class BigDecimalPropActionSelector implements IEntityMultiActionSelector {
 
     @Override
     public int getActionFor(final AbstractEntity<?> entity) {

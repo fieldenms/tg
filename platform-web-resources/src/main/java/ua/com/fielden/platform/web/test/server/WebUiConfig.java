@@ -562,7 +562,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .build())
                 .also()
                 .addProp("bigDecimalProp").asDecimal()
-                    .withMultiAction(multiAction(BigDecimalPropActionSelecetor.class)
+                    .withMultiAction(multiAction(BigDecimalPropActionSelector.class)
                             .addAction(dummyAction("color: green"))
                             .addAction(dummyAction("color: yellow"))
                             .addAction(dummyAction("color: red")).build())
