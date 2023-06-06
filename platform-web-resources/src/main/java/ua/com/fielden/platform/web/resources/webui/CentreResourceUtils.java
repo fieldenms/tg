@@ -316,7 +316,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * @param updatedPreviouslyRunCriteriaEntity -- criteria entity created from PREVIOUSLY_RUN surrogate centre, which was potentially updated from FRESH (in case of "running" action), but not yet actually used for running
      * @return
      */
-    static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Pair<Map<String, Object>, List<?>> createCriteriaMetaValuesCustomObjectWithResult(
+    static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> Pair<Map<String, Object>, List<AbstractEntity<?>>> createCriteriaMetaValuesCustomObjectWithResult(
             final Map<String, Object> customObject,
             final M updatedPreviouslyRunCriteriaEntity) {
         final Map<String, Object> resultantCustomObject = new LinkedHashMap<>();
@@ -374,7 +374,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
         final int pageCount = page != null ? page.numberOfPages() : pageCount(realPageCount(data.size(), secondTick.getPageCapacity()));
         resultantCustomObject.put("pageCount", pageCount);
         resultantCustomObject.put("pageNumber", page != null ? page.no() : pageCount <= pageNumber ? pageCount - 1 : pageNumber);
-        return new Pair<>(resultantCustomObject, data);
+        return new Pair<>(resultantCustomObject, (List<AbstractEntity<?>>) data);
     }
 
     /**
