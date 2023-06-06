@@ -4,6 +4,7 @@ import static java.util.Collections.emptyList;
 import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.getOriginalType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.web.factories.webui.ResourceFactoryUtils.getEntityMaster;
 
 import java.util.HashMap;
 import java.util.List;
@@ -83,7 +84,7 @@ public class MultiActionUtils {
         if (entity != null) {
             final Class<T> entityType = getOriginalType(entity.getType());
 
-            final EntityMaster<T> master = (EntityMaster<T>) webUiConfig.getMasters().get(entityType);
+            final EntityMaster<T> master = (EntityMaster<T>) getEntityMaster(entityType, webUiConfig);
             if (master != null) {
                 return t2(PROPERTY_ACTION_INDICES, master.getPropertyActionSelectors().entrySet().stream().map(entry -> t2(entry.getKey(), entry.getValue().getActionFor(entity))).collect(Collectors.toMap(tt -> tt._1, tt -> tt._2)));
             }
