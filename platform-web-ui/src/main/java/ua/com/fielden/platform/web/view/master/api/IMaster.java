@@ -1,17 +1,16 @@
 package ua.com.fielden.platform.web.view.master.api;
 
-import static java.util.Collections.EMPTY_SET;
-import static java.util.Optional.empty;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
-import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
 import ua.com.fielden.platform.basic.IValueMatcherWithContext;
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.actions.multi.IEntityMultiActionSelector;
 import ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
 
@@ -41,7 +40,7 @@ public interface IMaster<T extends AbstractEntity<?>> {
      */
     IRenderable render();
 
-    
+
     /**
      * Returns action configuration for concrete action kind and its number in that kind's space.
      *
@@ -50,15 +49,24 @@ public interface IMaster<T extends AbstractEntity<?>> {
      * @return
      */
     EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber);
-    
+
     /**
      * Returns <code>additionalProperties</code> for autocompleter configuration for property <code>propertyName</code>.
      * Returns empty set if property is not entity-typed or if the property was not added to master configuration.
-     * 
+     *
      * @param propertyName
      * @return
      */
     default Set<String> additionalAutocompleterPropertiesFor(final String propertyName) {
         return setOf(); // empty by default
+    }
+
+    /**
+     * Returns the map between property names and action selector for properties those have associated action.
+     *
+     * @return
+     */
+    default Map<String, Class<? extends IEntityMultiActionSelector>> propertyActionSelectors() {
+        return new HashMap<>();
     }
 }
