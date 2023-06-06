@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.operands.queries;
 
 import static java.util.Arrays.asList;
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.eql.stage1.operands.Prop1.enhancePath;
 import static ua.com.fielden.platform.eql.stage2.KeyPropertyExtractor.extract;
@@ -10,8 +11,10 @@ import static ua.com.fielden.platform.eql.stage2.etc.GroupBys2.emptyGroupBys;
 import static ua.com.fielden.platform.eql.stage2.etc.OrderBys2.emptyOrderBys;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -63,6 +66,17 @@ public abstract class AbstractQuery1 {
         this.yieldAll = queryComponents.yieldAll;
     }
 
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
+        result.addAll(joinRoot != null ? joinRoot.collectEntityTypes() : emptySet());
+        result.addAll(conditions.collectEntityTypes());
+        result.addAll(yields.collectSyntheticEntities());
+        result.addAll(groups.collectSyntheticEntities());
+        result.addAll(orderings.collectSyntheticEntities());
+        
+        return result;
+    }
+    
     public QueryComponents2 transformSourceless(final TransformationContext1 context) {
         return new QueryComponents2(null, conditions.transform(context), yields.transform(context), groups.transform(context), orderings.transform(context));
     }

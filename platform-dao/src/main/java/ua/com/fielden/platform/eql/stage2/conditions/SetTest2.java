@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
@@ -44,6 +45,14 @@ public class SetTest2 extends AbstractCondition2<SetTest3> {
         return result;
     }
 
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
+        result.addAll(leftOperand.collectEntityTypes());
+        result.addAll(rightOperand.collectEntityTypes());
+        return result;
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;

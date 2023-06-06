@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.conditions;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -8,6 +9,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
@@ -61,6 +63,21 @@ public class Conditions2 extends AbstractCondition2<Conditions3> {
             }
         }
         return result;
+    }
+
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        if (ignore()) {
+            return emptySet();
+        } else {
+            final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
+            for (final List<? extends ICondition2<?>> conditions : allConditionsAsDnf) {
+                for (final ICondition2<?> condition : conditions) {
+                    result.addAll(condition.collectEntityTypes());
+                }
+            }
+            return result;
+        }
     }
     
     public boolean conditionIsSatisfied(final ICondition2<?> condition) {

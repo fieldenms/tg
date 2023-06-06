@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.eql.stage1.conditions;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
@@ -24,6 +27,14 @@ public class ComparisonTest1 implements ICondition1<ComparisonTest2> {
         return new ComparisonTest2(leftOperand.transform(context), operator, rightOperand.transform(context));
     }
 
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
+        result.addAll(leftOperand.collectEntityTypes());
+        result.addAll(rightOperand.collectEntityTypes());
+        return result;
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;

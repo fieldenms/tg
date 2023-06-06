@@ -1,11 +1,14 @@
 package ua.com.fielden.platform.eql.stage2.operands.functions;
 
+import static java.util.stream.Collectors.toSet;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
@@ -41,6 +44,11 @@ public class Concat2 extends AbstractFunction2<Concat3> {
             result.addAll(operand.collectProps());
         }
         return result;
+    }
+    
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        return operands.stream().map(el -> el.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
     }
 
     @Override

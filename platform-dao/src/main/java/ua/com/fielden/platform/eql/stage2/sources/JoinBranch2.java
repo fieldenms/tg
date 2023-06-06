@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
@@ -41,6 +42,15 @@ public class JoinBranch2 implements IJoinNode2<JoinBranch3> {
         result.addAll(leftNode.collectProps());
         result.addAll(rightNode.collectProps());
         result.addAll(joinConditions.collectProps());
+        return result;
+    }
+    
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>(); 
+        result.addAll(leftNode.collectEntityTypes());
+        result.addAll(rightNode.collectEntityTypes());
+        result.addAll(joinConditions.collectEntityTypes());
         return result;
     }
 

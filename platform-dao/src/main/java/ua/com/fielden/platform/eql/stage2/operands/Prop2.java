@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage2.operands;
 
+import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
@@ -8,6 +9,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.EntityTypePropInfo;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
@@ -65,6 +67,11 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
     @Override
     public Set<Prop2> collectProps() {
         return setOf(this);
+    }
+
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        return emptySet(); //TODO explore within calc-prop expressions on the prop path (also add prop result type in case it's SE itself)
     }
     
     public List<AbstractPropInfo<?>> getPath() {

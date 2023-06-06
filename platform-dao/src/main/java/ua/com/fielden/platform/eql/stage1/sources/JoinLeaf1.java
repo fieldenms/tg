@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.eql.stage1.sources;
 
 import java.util.Objects;
+import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.TransformationResult1;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
@@ -23,6 +25,11 @@ public class JoinLeaf1 implements IJoinNode1<JoinLeaf2> {
     @Override
     public ISource1<? extends ISource2<?>> mainSource() {
         return source;
+    }
+    
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        return source.collectEntityTypes();
     }
     
     @Override

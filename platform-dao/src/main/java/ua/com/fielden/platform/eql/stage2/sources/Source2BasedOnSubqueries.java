@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.sources;
 
+import static java.util.stream.Collectors.toSet;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -17,10 +19,12 @@ import ua.com.fielden.platform.eql.stage3.sources.Source3BasedOnSubqueries;
 
 public class Source2BasedOnSubqueries extends AbstractSource2 implements ISource2<Source3BasedOnSubqueries> {
     private final List<SourceQuery2> models = new ArrayList<>();
-
-    public Source2BasedOnSubqueries(final List<SourceQuery2> models, final String alias, final Integer id, final EntityInfo<?> entityInfo) {
+    public final boolean isSyntheticEntity;
+    
+    public Source2BasedOnSubqueries(final List<SourceQuery2> models, final String alias, final Integer id, final EntityInfo<?> entityInfo, final boolean isSyntheticEntity) {
         super(id, alias, entityInfo);
         this.models.addAll(models);
+        this.isSyntheticEntity = isSyntheticEntity;
     }
     
     @Override
@@ -28,6 +32,11 @@ public class Source2BasedOnSubqueries extends AbstractSource2 implements ISource
         return (Class<? extends AbstractEntity<?>>) models.get(0).resultType;
     }
 
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        return isSyntheticEntity ? Set.of(sourceType()) : models.stream().map(el -> el.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;

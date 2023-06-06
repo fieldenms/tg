@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.stage2.operands.functions;
 import java.util.Objects;
 import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
@@ -19,6 +20,11 @@ abstract class SingleOperandFunction2<S3 extends ISingleOperand3> extends Abstra
     @Override
     public Set<Prop2> collectProps() {
         return operand.collectProps();
+    }
+    
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        return operand.collectEntityTypes();
     }
     
     @Override

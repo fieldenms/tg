@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.ITypeCast;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
@@ -76,6 +77,20 @@ public class CaseWhen2 extends AbstractFunction2<CaseWhen3> {
         }
         if (elseOperand != null) {
             result.addAll(elseOperand.collectProps());    
+        }
+        
+        return result;
+    }
+    
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
+        for (final T2<ICondition2<? extends ICondition3>, ISingleOperand2<? extends ISingleOperand3>> pair : whenThenPairs) {
+            result.addAll(pair._1.collectEntityTypes());
+            result.addAll(pair._2.collectEntityTypes());
+        }
+        if (elseOperand != null) {
+            result.addAll(elseOperand.collectEntityTypes());    
         }
         
         return result;

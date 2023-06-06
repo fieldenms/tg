@@ -1,10 +1,13 @@
 package ua.com.fielden.platform.eql.stage1.operands;
 
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
@@ -24,6 +27,13 @@ public class Expression1 implements ISingleOperand1<Expression2> {
         return items.isEmpty() ? //
                 new Expression2(first.transform(context)) : //
                 new Expression2(first.transform(context), items.stream().map(el -> el.transform(context)).collect(toList()));
+    }
+    
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        final Set<Class<? extends AbstractEntity<?>>> result = items.stream().map(el -> el.operand.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
+        result.addAll(first.collectEntityTypes());
+        return result;
     }
 
     @Override

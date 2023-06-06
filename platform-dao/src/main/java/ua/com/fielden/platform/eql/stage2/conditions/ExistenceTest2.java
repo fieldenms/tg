@@ -3,6 +3,7 @@ package ua.com.fielden.platform.eql.stage2.conditions;
 import java.util.Objects;
 import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
@@ -33,6 +34,11 @@ public class ExistenceTest2 extends AbstractCondition2<ExistenceTest3> {
     @Override
     public Set<Prop2> collectProps() {
         return subQuery.collectProps();
+    }
+    
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        return subQuery.collectEntityTypes();
     }
 
     @Override

@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.eql.stage1.sources;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.enums.JoinType;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.TransformationResult1;
@@ -38,6 +41,15 @@ public class JoinBranch1 implements IJoinNode1<JoinBranch2> {
         return leftNode.mainSource();
     }
 
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>(); 
+        result.addAll(leftNode.collectEntityTypes());
+        result.addAll(rightNode.collectEntityTypes());
+        result.addAll(joinConditions.collectEntityTypes());
+        return result;
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;

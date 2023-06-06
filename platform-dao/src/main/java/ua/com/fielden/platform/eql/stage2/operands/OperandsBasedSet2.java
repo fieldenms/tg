@@ -1,11 +1,14 @@
 package ua.com.fielden.platform.eql.stage2.operands;
 
+import static java.util.stream.Collectors.toSet;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
@@ -38,6 +41,11 @@ public class OperandsBasedSet2 implements ISetOperand2<OperandsBasedSet3> {
             result.addAll(operand.collectProps());
         }
         return result;
+    }
+    
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        return operands.stream().map(el -> el.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
     }
     
     @Override

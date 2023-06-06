@@ -35,7 +35,12 @@ public class Source2BasedOnPersistentType extends AbstractSource2 implements ISo
     @Override
     public Set<Prop2> collectProps() {
         return emptySet();
-    } 
+    }
+    
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        return Set.of(sourceType);
+    }
     
     @Override
     public Class<? extends AbstractEntity<?>> sourceType() {

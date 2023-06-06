@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.Y;
 import java.util.Objects;
 import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage3.operands.Value3;
@@ -61,6 +62,11 @@ public class Value2 implements ISingleOperand2<Value3> {
 
     @Override
     public Set<Prop2> collectProps() {
+        return emptySet();
+    }
+    
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
         return emptySet();
     }
 

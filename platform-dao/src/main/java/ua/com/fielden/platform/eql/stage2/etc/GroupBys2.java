@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.eql.stage2.etc;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
+import static java.util.stream.Collectors.toSet;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -9,6 +11,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
@@ -46,7 +49,11 @@ public class GroupBys2 {
         }
         return result;
     }
-
+    
+    public Set<Class<? extends AbstractEntity<?>>> collectSyntheticEntities() {
+        return groups.isEmpty() ? emptySet() : groups.stream().map(el -> el.operand.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
+    }
+    
     public List<GroupBy2> getGroups() {
         return unmodifiableList(groups);
     }

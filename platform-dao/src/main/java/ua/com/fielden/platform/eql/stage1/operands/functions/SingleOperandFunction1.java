@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.eql.stage1.operands.functions;
 
 import java.util.Objects;
+import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 
@@ -13,6 +15,11 @@ abstract class SingleOperandFunction1<S2 extends ISingleOperand2<?>> extends Abs
         this.operand = operand;
     }
 
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        return operand.collectEntityTypes();
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;

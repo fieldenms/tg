@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.sources;
 
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
@@ -11,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Set;
 import java.util.SortedMap;
 
 import org.hibernate.type.LongType;
@@ -45,14 +47,19 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
     public Source2BasedOnSubqueries transform(final TransformationContext1 context) {
         final List<SourceQuery2> transformedQueries = models.stream().map(m -> m.transform(context)).collect(toList());
         validateYields(transformedQueries);
-        return new Source2BasedOnSubqueries(transformedQueries, alias, id, produceEntityInfo(context.domainInfo, transformedQueries, sourceType(), isSyntheticEntity));
+        return new Source2BasedOnSubqueries(transformedQueries, alias, id, produceEntityInfo(context.domainInfo, transformedQueries, sourceType(), isSyntheticEntity), isSyntheticEntity);
     }
     
     @Override
     public Class<? extends AbstractEntity<?>> sourceType() {
         return models.get(0).resultType;
     }
-
+    
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        return isSyntheticEntity ? Set.of(sourceType()) : models.stream().map(el -> el.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;

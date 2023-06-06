@@ -4,6 +4,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator;
 import ua.com.fielden.platform.eql.meta.Quantifier;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
@@ -46,6 +47,14 @@ public class QuantifiedTest2 extends AbstractCondition2<QuantifiedTest3> {
         final Set<Prop2> result = new HashSet<>();
         result.addAll(leftOperand.collectProps());
         result.addAll(rightOperand.collectProps());
+        return result;
+    }
+    
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
+        result.addAll(leftOperand.collectEntityTypes());
+        result.addAll(rightOperand.collectEntityTypes());
         return result;
     }
     

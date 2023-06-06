@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.QueryComponents2;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
@@ -42,6 +43,17 @@ public abstract class AbstractQuery2 {
         result.addAll(yields.collectProps());
         result.addAll(groups.collectProps());
         result.addAll(orderings.collectProps());
+        
+        return result;
+    }
+
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
+        result.addAll(joinRoot != null ? joinRoot.collectEntityTypes() : emptySet());
+        result.addAll(conditions.collectEntityTypes());
+        result.addAll(yields.collectSyntheticEntities());
+        result.addAll(groups.collectSyntheticEntities());
+        result.addAll(orderings.collectSyntheticEntities());
         
         return result;
     }

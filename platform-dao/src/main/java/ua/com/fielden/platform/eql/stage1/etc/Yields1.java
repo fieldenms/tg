@@ -2,15 +2,19 @@ package ua.com.fielden.platform.eql.stage1.etc;
 
 import static java.lang.String.format;
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableCollection;
 import static java.util.Collections.unmodifiableSortedMap;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
@@ -47,6 +51,10 @@ public class Yields1 {
     
     public SortedMap<String, Yield1> getYieldsMap() {
         return unmodifiableSortedMap(yieldsMap);
+    }
+    
+    public Set<Class<? extends AbstractEntity<?>>> collectSyntheticEntities() {
+        return yieldsMap.isEmpty() ? emptySet() : yieldsMap.values().stream().map(el -> el.operand.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
     }
 
     @Override

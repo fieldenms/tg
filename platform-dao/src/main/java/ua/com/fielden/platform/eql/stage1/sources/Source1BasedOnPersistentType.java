@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.sources;
 
 import java.util.Objects;
+import java.util.Set;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
@@ -24,6 +25,11 @@ public class Source1BasedOnPersistentType extends AbstractSource1<Source2BasedOn
         return new Source2BasedOnPersistentType(sourceType(), context.domainInfo.getEntityInfo(sourceType()), alias, id);
     }
 
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        return Set.of(sourceType);
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;

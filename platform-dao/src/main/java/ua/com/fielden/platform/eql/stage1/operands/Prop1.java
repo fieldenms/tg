@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.eql.stage1.operands;
 
 import static java.lang.String.format;
+import static java.util.Collections.emptySet;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
@@ -8,7 +9,9 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.exceptions.EqlStage1ProcessingException;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
@@ -91,6 +94,11 @@ public class Prop1 implements ISingleOperand1<Prop2> {
         return result.size() == 1 ? result.get(0) : null;
     }
 
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        return emptySet();
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;

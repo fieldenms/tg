@@ -10,8 +10,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import org.hibernate.type.LongType;
-
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.TransformationContext2;
 import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
@@ -38,6 +37,11 @@ public class JoinLeaf2 implements IJoinNode2<IJoinNode3> {
         return source.collectProps();
     }
     
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        return source.collectEntityTypes();
+    }
+
     @Override
     public ISource2<? extends ISource3> mainSource() {
         return source;

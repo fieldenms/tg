@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.eql.stage1.conditions;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.query.fluent.enums.ComparisonOperator.EQ;
 import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.AND;
@@ -9,7 +11,9 @@ import static ua.com.fielden.platform.entity.query.fluent.enums.LogicalOperator.
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.Prop1;
 import ua.com.fielden.platform.eql.stage2.conditions.Conditions2;
@@ -83,6 +87,17 @@ public class Conditions1 implements ICondition1<Conditions2> {
         return new Conditions2(negated, transformed);
     }
 
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        if (isEmpty()) {
+            return emptySet();
+        } else {
+            final Set<Class<? extends AbstractEntity<?>>> result = otherConditions.stream().map(el -> el.condition.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
+            result.addAll(firstCondition.collectEntityTypes());
+            return result;
+        }
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;

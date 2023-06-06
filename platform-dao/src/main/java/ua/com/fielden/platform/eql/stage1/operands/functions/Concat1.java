@@ -1,10 +1,13 @@
 package ua.com.fielden.platform.eql.stage1.operands.functions;
 
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
@@ -23,6 +26,11 @@ public class Concat1 extends AbstractFunction1<Concat2> {
         return new Concat2(operands.stream().map(el -> el.transform(context)).collect(toList()));
     }
 
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        return operands.stream().map(el -> el.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;

@@ -1,11 +1,15 @@
 package ua.com.fielden.platform.eql.stage1.etc;
 
 import static java.util.Collections.emptyList;
+import static java.util.Collections.emptySet;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toSet;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage2.etc.OrderBys2;
 
@@ -26,6 +30,10 @@ public class OrderBys1 {
         }
     }
 
+    public Set<Class<? extends AbstractEntity<?>>> collectSyntheticEntities() {
+        return models.isEmpty() ? emptySet() : models.stream().filter(el -> el.operand != null).map(el -> el.operand.collectEntityTypes()).flatMap(Set::stream).collect(toSet());
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;

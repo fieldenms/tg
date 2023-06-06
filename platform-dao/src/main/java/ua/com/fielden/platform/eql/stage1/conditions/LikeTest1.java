@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.eql.stage1.conditions;
 
+import java.util.HashSet;
 import java.util.Objects;
+import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.LikeOptions;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.ISingleOperand1;
@@ -22,6 +25,14 @@ public class LikeTest1 implements ICondition1<LikeTest2> {
     @Override
     public LikeTest2 transform(final TransformationContext1 context) {
         return new LikeTest2(leftOperand.transform(context), rightOperand.transform(context), options);
+    }
+    
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        final Set<Class<? extends AbstractEntity<?>>> result = new HashSet<>();
+        result.addAll(leftOperand.collectEntityTypes());
+        result.addAll(rightOperand.collectEntityTypes());
+        return result;
     }
 
     @Override

@@ -7,7 +7,9 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.UnionTypePropInfo;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
@@ -54,6 +56,11 @@ public class NullTest1 implements ICondition1<ICondition2<?>> {
         return new NullTest2(transformedOperand, negated);
     }
 
+    @Override
+    public Set<Class<? extends AbstractEntity<?>>> collectEntityTypes() {
+        return operand.collectEntityTypes();
+    }
+    
     @Override
     public int hashCode() {
         final int prime = 31;
