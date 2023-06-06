@@ -22,7 +22,7 @@ public interface IExtendedEntityCentreContextWithFunctionSelector<T extends Abst
      * @param contextForInsertionPoint
      * @return
      */
-    IExtendedEntityCentreContextWithFunctionSelector<T> extendWith(Class<? extends AbstractFunctionalEntityWithCentreContext<?>> insertionPointFunctionalType, CentreContextConfig contextForInsertionPoint);
+    IExtendedEntityCentreContextWithFunctionSelector<T> extendWithInsertionPointContext(Class<? extends AbstractFunctionalEntityWithCentreContext<?>> insertionPointFunctionalType, CentreContextConfig contextForInsertionPoint);
 
     /**
      * Sets the computation function for this context.

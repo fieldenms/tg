@@ -71,7 +71,7 @@ class EntityCentreContextSelector5<T extends AbstractEntity<?>> implements IEnti
     }
 
     @Override
-    public IExtendedEntityCentreContextWithFunctionSelector<T> extendWith(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> insertionPointFunctionalType, final CentreContextConfig contextForInsertionPoint) {
+    public IExtendedEntityCentreContextWithFunctionSelector<T> extendWithInsertionPointContext(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> insertionPointFunctionalType, final CentreContextConfig contextForInsertionPoint) {
         if (insertionPointFunctionalType == null) {
             throw new CentreContextConfigException("The insertion point type of the context cannot null.");
         }

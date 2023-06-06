@@ -85,7 +85,7 @@ class EntityCentreContextSelector1_2_4_extender_function_done<T extends Abstract
     }
 
     @Override
-    public IExtendedEntityCentreContextWithFunctionSelector<T> extendWith(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> insertionPointFunctionalType, final CentreContextConfig contextForInsertionPoint) {
+    public IExtendedEntityCentreContextWithFunctionSelector<T> extendWithInsertionPointContext(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> insertionPointFunctionalType, final CentreContextConfig contextForInsertionPoint) {
         relatedContexts.put(insertionPointFunctionalType, contextForInsertionPoint);
         return this;
     }
