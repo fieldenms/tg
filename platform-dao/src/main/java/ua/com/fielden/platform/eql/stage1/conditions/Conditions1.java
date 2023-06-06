@@ -84,7 +84,7 @@ public class Conditions1 implements ICondition1<Conditions2> {
                 .filter(transformedAndGroup -> !transformedAndGroup.isEmpty())
                 .collect(toList());
         
-        return new Conditions2(negated, transformed);
+        return transformed.isEmpty() ? Conditions2.emptyConditions : new Conditions2(negated, transformed);
     }
 
     @Override
