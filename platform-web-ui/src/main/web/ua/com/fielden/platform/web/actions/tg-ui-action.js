@@ -684,7 +684,7 @@ Polymer({
     _createContextHolderForAction: function () {
         const self = this;
         // creates the context and
-        const context = self.createContextHolder(self.requireSelectionCriteria, self.requireSelectedEntities, self.requireMasterEntity, self.relatedContexts ,self.actionKind, self.numberOfAction);
+        const context = self.createContextHolder(self.requireSelectionCriteria, self.requireSelectedEntities, self.requireMasterEntity, self.actionKind, self.numberOfAction, self.relatedContexts);
         // enhances it with the information of 'currentEntity()' (primary / secondary actions) and
         if (self.currentEntity()) {
             self._enhanceContextWithCurrentEntity(context, self.currentEntity(), self.requireSelectedEntities);

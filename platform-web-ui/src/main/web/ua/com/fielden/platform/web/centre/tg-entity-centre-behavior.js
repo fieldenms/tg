@@ -842,7 +842,7 @@ const TgEntityCentreBehaviorImpl = {
             }
         }).bind(self);
 
-        self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, relatedContexts, actionKind, actionNumber) {
+        self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber, relatedContexts) {
             const context = this.$.selection_criteria.createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber);
             if (relatedContexts) {
                 const insertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point:not([alternative-view])');
@@ -851,7 +851,7 @@ const TgEntityCentreBehaviorImpl = {
                     const loadedView = insPoint && insPoint._element.wasLoaded() && insPoint._element.$.loader.loadedElement; 
                     if (loadedView && loadedView._createContextHolder) {
                         context['relatedContexts'] = context['relatedContexts'] || {};
-                        context['relatedContexts'][relatedContext.elementName] = loadedView._createContextHolder(relatedContext.requireSelectionCriteria, relatedContext.requireSelectedEntities, relatedContext.requireMasterEntity, relatedContext.relatedContexts);
+                        context['relatedContexts'][relatedContext.elementName] = loadedView._createContextHolder(relatedContext.requireSelectionCriteria, relatedContext.requireSelectedEntities, relatedContext.requireMasterEntity, null, null, relatedContext.relatedContexts);
                         this._reflector.setCustomProperty(context['relatedContexts'][relatedContext.elementName], "@@insertionPointTitle", insPoint.shortDesc);
                     }
                 });
