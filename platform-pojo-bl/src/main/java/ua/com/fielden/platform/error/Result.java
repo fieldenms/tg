@@ -4,7 +4,10 @@ import static java.lang.String.format;
 import static java.util.Objects.requireNonNull;
 import static java.util.regex.Pattern.quote;
 import static org.apache.commons.lang.StringUtils.isEmpty;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
+import java.util.ArrayList;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Consumer;
@@ -460,6 +463,16 @@ public class Result extends RuntimeException {
             this.shortMessage = shortMessage;
             this.extendedMessage = extendedMessage;
         }
+    }
+
+    /**
+     * Creates a copy of {@code result} with new instance representing properly serialisable {@link ArrayList} of previous instance and {@code customObject} map.
+     * 
+     * @param customObject
+     * @return
+     */
+    public Result extendResultWithCustomObject(final Map<String, Object> customObject) {
+        return copyWith(listOf(getInstance(), customObject));
     }
 
 }

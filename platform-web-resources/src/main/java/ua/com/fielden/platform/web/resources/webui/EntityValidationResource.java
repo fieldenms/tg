@@ -2,10 +2,12 @@ package ua.com.fielden.platform.web.resources.webui;
 
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
-import static ua.com.fielden.platform.web.resources.webui.EntityResource.getPropertyActionIndices;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.restoreEntityFrom;
+import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.createPropertyActionIndicesForMaster;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreSavingInfoHolder;
+
+import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.restlet.Context;
@@ -20,6 +22,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.functional.centre.SavingInfoHolder;
+import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.security.user.IUser;
 import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
@@ -101,7 +104,9 @@ public class EntityValidationResource<T extends AbstractEntity<?>> extends Abstr
             final T applied = restoreEntityFrom(false, savingInfoHolder, entityType, entityFactory, webUiConfig, companionFinder, user, critGenerator, 0, device(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel);
 
             logger.debug("ENTITY_VALIDATION_RESOURCE: validate finished.");
-            return restUtil.rawListJsonRepresentation(applied, linkedMapOf(t2(VALIDATION_COUNTER, savingInfoHolder.getModifHolder().get(VALIDATION_COUNTER)), t2("propertyActionIndices", getPropertyActionIndices(applied, webUiConfig)))); // savingInfoHolder and its modifHolder are never empty
+            final Result result = restUtil.singleEntityResult(applied);
+            final Map<String, Object> customObject = linkedMapOf(t2(VALIDATION_COUNTER, savingInfoHolder.getModifHolder().get(VALIDATION_COUNTER)), createPropertyActionIndicesForMaster(applied, webUiConfig)); // savingInfoHolder and its modifHolder are never empty
+            return restUtil.resultJSONRepresentation(result.extendResultWithCustomObject(customObject));
         }, restUtil);
     }
 }

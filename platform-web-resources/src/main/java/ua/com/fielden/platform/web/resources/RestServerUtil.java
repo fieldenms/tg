@@ -6,9 +6,6 @@ import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.serialisation.api.SerialiserEngines.JACKSON;
-import static ua.com.fielden.platform.types.tuples.T2.t2;
-import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
-import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -354,6 +351,26 @@ public class RestServerUtil {
     }
 
     /**
+     * Composes JACKSON representation of an master information entity.
+     *
+     * @return
+     * @throws JsonProcessingException
+     */
+    public <T extends AbstractEntity<?>> Representation singleJsonMasterRepresentation(final T entity, final String entityType) {
+        // create a Result enclosing entity list
+        final Result result;
+        if (entity != null) {
+            // valid and invalid entities: both kinds are represented using successful result. Use client-side isValid() method
+            //   in 'tg-reflector' to differentiate them
+            result = successful(entity);
+        } else {
+            result = failuref("Could not find master for entity type: %s.", entityType);
+        }
+        final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
+        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON);
+    }
+
+    /**
      * Composes {@link Result} from an {@code entity}.
      */
     public <T extends AbstractEntity<?>> Result singleEntityResult(final T entity) {
@@ -381,32 +398,9 @@ public class RestServerUtil {
     }
 
     /**
-     * Composes JACKSON representation of an master information entity.
-     *
-     * @return
-     * @throws JsonProcessingException
+     * Composes {@link Result} from an entity with exception.
      */
-    public <T extends AbstractEntity<?>> Representation singleJsonMasterRepresentation(final T entity, final String entityType) {
-        // create a Result enclosing entity list
-        final Result result;
-        if (entity != null) {
-            // valid and invalid entities: both kinds are represented using successful result. Use client-side isValid() method
-            //   in 'tg-reflector' to differentiate them
-            result = successful(entity);
-        } else {
-            result = failuref("Could not find master for entity type: %s.", entityType);
-        }
-        final byte[] bytes = serialiser.serialise(result, SerialiserEngines.JACKSON);
-        return encodedRepresentation(new ByteArrayInputStream(bytes), MediaType.APPLICATION_JSON);
-    }
-
-    /**
-     * Composes JACKSON representation of an entity with exception.
-     *
-     * @return
-     * @throws JsonProcessingException
-     */
-    public <T extends AbstractEntity<?>> Representation singleJsonRepresentation(final T entity, final Map<String, Integer> actionIndices, final Optional<Exception> savingException) {
+    public <T extends AbstractEntity<?>> Result singleEntityResult(final T entity, final Optional<Exception> savingException) {
         final Result result;
         if (entity != null && savingException.isPresent()) {
             final Exception ex = savingException.get();
@@ -440,7 +434,7 @@ public class RestServerUtil {
         } else {
             result = singleEntityResult(entity);
         }
-        return resultJSONRepresentation(result.copyWith(listOf(result.getInstance(), linkedMapOf(t2("propertyActionIndices", actionIndices)))));
+        return result;
     }
 
     /**
