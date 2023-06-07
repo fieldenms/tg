@@ -72,20 +72,24 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         // selectionCrit.getDynamicProperties() are used only for EntityExportAction and only in this class;
         //   they are initialised in below selectionCrit.export(...) calls; see selectionCrit.setDynamicProperties method callers for more details;
         //   that's why there is no need to initialise selectionCrit.getDynamicProperties() anywhere outside EntityExportAction, i.e. for other functional actions.
-        final String mainEgiTitle = extractSheetTitle(selectionCrit);
-        titles.add(mainEgiTitle);
-        entities.add(exportEntities(entity, selectionCrit, mainEgiTitle));
-        propAndTitles.add(selectionCrit.generatePropTitlesToExport());
-        dynamicProperties.add(selectionCrit.getDynamicProperties());
-
+        final Object resultSetHidden = selectionCrit.centreContextHolder().getCustomObject().get("@@resultSetHidden");
+        if (resultSetHidden != null && !Boolean.valueOf(resultSetHidden.toString())) {
+            final String mainEgiTitle = extractSheetTitle(selectionCrit);
+            titles.add(mainEgiTitle);
+            entities.add(exportEntities(entity, selectionCrit, mainEgiTitle));
+            propAndTitles.add(selectionCrit.generatePropTitlesToExport());
+            dynamicProperties.add(selectionCrit.getDynamicProperties());
+        }
         entity.getCentreContextHolder().getRelatedContexts().entrySet().forEach(contextEntry -> {
-            final EnhancedCentreEntityQueryCriteria<?, ?> relatedSelectionCrit = criteriaEntityRestorer.restoreCriteriaEntity(contextEntry.getValue());
-            final String sheetTitle = extractSheetTitle(relatedSelectionCrit);
-            titles.add(sheetTitle);
-            entities.add(exportEntities(entity, relatedSelectionCrit, sheetTitle));
-            propAndTitles.add(relatedSelectionCrit.generatePropTitlesToExport());
-            dynamicProperties.add(relatedSelectionCrit.getDynamicProperties());
-
+            final Object insPointResultSetHiden = contextEntry.getValue().getCustomObject().get("@@resultSetHidden");
+            if (insPointResultSetHiden != null && !Boolean.valueOf(insPointResultSetHiden.toString())) {
+                final EnhancedCentreEntityQueryCriteria<?, ?> relatedSelectionCrit = criteriaEntityRestorer.restoreCriteriaEntity(contextEntry.getValue());
+                final String sheetTitle = extractSheetTitle(relatedSelectionCrit);
+                titles.add(sheetTitle);
+                entities.add(exportEntities(entity, relatedSelectionCrit, sheetTitle));
+                propAndTitles.add(relatedSelectionCrit.generatePropTitlesToExport());
+                dynamicProperties.add(relatedSelectionCrit.getDynamicProperties());
+            }
         });
 
         try {

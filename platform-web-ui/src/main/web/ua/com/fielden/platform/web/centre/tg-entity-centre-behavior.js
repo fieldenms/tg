@@ -844,6 +844,8 @@ const TgEntityCentreBehaviorImpl = {
 
         self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber, relatedContexts) {
             const context = this.$.selection_criteria.createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber);
+            this._reflector.setCustomProperty(context, "@@resultSetHidden", !this.$.egi.offsetParent);
+            
             if (relatedContexts) {
                 const insertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point:not([alternative-view])');
                 relatedContexts.forEach(relatedContext => {
@@ -853,6 +855,7 @@ const TgEntityCentreBehaviorImpl = {
                         context['relatedContexts'] = context['relatedContexts'] || {};
                         context['relatedContexts'][relatedContext.elementName] = loadedView._createContextHolder(relatedContext.requireSelectionCriteria, relatedContext.requireSelectedEntities, relatedContext.requireMasterEntity, null, null, relatedContext.relatedContexts);
                         this._reflector.setCustomProperty(context['relatedContexts'][relatedContext.elementName], "@@insertionPointTitle", insPoint.shortDesc);
+                        this._reflector.setCustomProperty(context['relatedContexts'][relatedContext.elementName], "@@resultSetHidden", !!loadedView.$.egi && !loadedView.$.egi.offsetParent);
                     }
                 });
             }
