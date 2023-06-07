@@ -1,7 +1,9 @@
 package ua.com.fielden.platform.entity;
 
+import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.isEmpty;
 import static ua.com.fielden.platform.error.Result.failure;
+import static ua.com.fielden.platform.error.Result.failuref;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 
@@ -70,16 +72,20 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         // selectionCrit.getDynamicProperties() are used only for EntityExportAction and only in this class;
         //   they are initialised in below selectionCrit.export(...) calls; see selectionCrit.setDynamicProperties method callers for more details;
         //   that's why there is no need to initialise selectionCrit.getDynamicProperties() anywhere outside EntityExportAction, i.e. for other functional actions.
-        entities.add(exportEntities(entity, selectionCrit));
+        final String mainEgiTitle = extractSheetTitle(selectionCrit);
+        titles.add(mainEgiTitle);
+        entities.add(exportEntities(entity, selectionCrit, mainEgiTitle));
         propAndTitles.add(selectionCrit.generatePropTitlesToExport());
         dynamicProperties.add(selectionCrit.getDynamicProperties());
-        titles.add(extractSheetTitle(selectionCrit));
+
         entity.getCentreContextHolder().getRelatedContexts().entrySet().forEach(contextEntry -> {
             final EnhancedCentreEntityQueryCriteria<?, ?> relatedSelectionCrit = criteriaEntityRestorer.restoreCriteriaEntity(contextEntry.getValue());
-            entities.add(exportEntities(entity, relatedSelectionCrit));
+            final String sheetTitle = extractSheetTitle(relatedSelectionCrit);
+            titles.add(sheetTitle);
+            entities.add(exportEntities(entity, relatedSelectionCrit, sheetTitle));
             propAndTitles.add(relatedSelectionCrit.generatePropTitlesToExport());
             dynamicProperties.add(relatedSelectionCrit.getDynamicProperties());
-            titles.add(extractSheetTitle(relatedSelectionCrit));
+
         });
 
         try {
@@ -102,18 +108,19 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         return sheetTitle;
     }
 
-    private Stream<AbstractEntity<?>> exportEntities(final EntityExportAction entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
+    private Stream<AbstractEntity<?>> exportEntities(final EntityExportAction entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final String sheetTitle) {
         if (entity.isExportAll()) {
             return selectionCrit.export(new LinkedHashMap<>());
         } else if (entity.isExportTop()) {
             return selectionCrit.export(linkedMapOf(t2("fetchSize", entity.getNumber()))).limit(entity.getNumber());
         } else {
-            if (entity.getSelectedEntityIds().isEmpty()) {
-                throw failure("Please select at least one entry to export.");
-            } else if (entity.getSelectedEntityIds().stream().anyMatch(Objects::isNull)) {
-                throw failure("Export of selected entities is not supported due to missing IDs.");
+            final List<Long> selectedEntitiesIds = selectionCrit.centreContextHolder().getSelectedEntities().stream().map(AbstractEntity::getId).collect(toList());
+            if (selectedEntitiesIds.isEmpty()) {
+                throw failuref("Please select at least one entity to export from %s view.", sheetTitle);
+            } else if (selectedEntitiesIds.stream().anyMatch(Objects::isNull)) {
+                throw failuref("Export of selected entities from %s view is not supported due to missing IDs.", sheetTitle);
             }
-            return selectionCrit.export(linkedMapOf(t2("ids", entity.getSelectedEntityIds().toArray(new Long[0]))));
+            return selectionCrit.export(linkedMapOf(t2("ids", selectedEntitiesIds.toArray(new Long[0]))));
         }
     }
 
