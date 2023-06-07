@@ -486,7 +486,10 @@ const TgEntityMasterBehaviorImpl = {
 
             if (potentiallySavedOrNewEntity.isValidWithoutException()) {
                 // in case where successful save occured we need to reset @@touchedProps that are transported with bindingEntity
-                newBindingEntity["@@touchedProps"] = { names: [], values: [], counts: [] };
+                const isCompoundMasterOpener = isContinuouslyCreated !== true && !potentiallySavedOrNewEntity.type().isPersistent() && potentiallySavedOrNewEntity.type().compoundOpenerType();
+                if (!isCompoundMasterOpener) {
+                    newBindingEntity["@@touchedProps"] = { names: [], values: [], counts: [] };
+                }
 
                 if (isContinuouslyCreated === true) { // continuous creation has occured, which is very much like entity has been produced -- _originallyProducedEntity should be updated by newly returned instance
                     this._originallyProducedEntity = potentiallySavedOrNewEntity;
