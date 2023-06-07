@@ -1742,7 +1742,7 @@ export const TgReflector = Polymer({
 
             const touchedProps = bindingView['@@touchedProps'];
             const touchedPropIndex = touchedProps.names.indexOf(propertyName);
-            if (touchedPropIndex > -1 && !this.equalsEx(bindingView.get(propertyName), touchedProps.values[touchedPropIndex])) {
+            if (touchedPropIndex > -1 && !this.equalsEx(bindingView.get(propertyName), touchedProps.values[touchedPropIndex]) && !entity.type().compoundOpenerType()) {
                 // make the property untouched in case where its value was sucessfully mutated through definer of other property (it means that the value is valid and different from the value originated from user's touch)
                 touchedProps.names.splice(touchedPropIndex, 1);
                 touchedProps.counts.splice(touchedPropIndex, 1);
