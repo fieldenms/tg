@@ -1744,25 +1744,25 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 .replace("mrLast", centreMrLast).replace("mr", centreMr)
                 );
         }
-                //.hideCheckboxes()
-                //.notScrollable()
-                final IWithTooltip<TgPersistentEntityWithProperties> afterMinWidthConf = layoutConfig
-                        .withScrollingConfig(ScrollConfig.configScroll()
-                                .withFixedCheckboxesPrimaryActionsAndFirstProps(2)
-                                .withFixedSecondaryActions()
-                                .withFixedHeader()
-                                .withFixedSummary()
-                                .done())
-                //.lockScrollingForInsertionPoints()
-                //.draggable()
-                //.retrieveAll()
-                .setPageCapacity(20)
-                //.setHeight("100%")
-                //.setVisibleRowsCount(10)
-                //.fitToHeight()
-                .addProp("this")
-                    .order(2).asc()
-                    .width(60);
+        //.hideCheckboxes()
+        //.notScrollable()
+        final IWithTooltip<TgPersistentEntityWithProperties> afterMinWidthConf = layoutConfig
+                .withScrollingConfig(ScrollConfig.configScroll()
+                        .withFixedCheckboxesPrimaryActionsAndFirstProps(2)
+                        .withFixedSecondaryActions()
+                        .withFixedHeader()
+                        .withFixedSummary()
+                        .done())
+        //.lockScrollingForInsertionPoints()
+        //.draggable()
+        //.retrieveAll()
+        .setPageCapacity(20)
+        //.setHeight("100%")
+        //.setVisibleRowsCount(10)
+        //.fitToHeight()
+        .addProp("this")
+            .order(2).asc()
+            .width(60);
 
         final IWithSummary<TgPersistentEntityWithProperties> afterSummary;
         if (withCalculatedAndCustomProperties) {

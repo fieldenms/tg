@@ -5,6 +5,7 @@ import static java.util.Collections.unmodifiableMap;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -53,7 +54,7 @@ public class CentreContextHolder extends AbstractEntity<String> {
 
     @IsProperty(CentreContextHolder.class)
     @Title(value = "Related contexts", desc = "Contexts relate to this one")
-    private Map<String, CentreContextHolder> relatedContexts = new HashMap<>();
+    private Map<String, CentreContextHolder> relatedContexts = new LinkedHashMap<>();
 
     @Observable
     protected CentreContextHolder setRelatedContexts(final Map<String, CentreContextHolder> relatedContexts) {

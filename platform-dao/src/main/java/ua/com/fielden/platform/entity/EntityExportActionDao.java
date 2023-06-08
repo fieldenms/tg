@@ -80,17 +80,23 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
             propAndTitles.add(selectionCrit.generatePropTitlesToExport());
             dynamicProperties.add(selectionCrit.getDynamicProperties());
         }
-        entity.getCentreContextHolder().getRelatedContexts().entrySet().forEach(contextEntry -> {
-            final Object insPointResultSetHiden = contextEntry.getValue().getCustomObject().get("@@resultSetHidden");
-            if (insPointResultSetHiden != null && !Boolean.valueOf(insPointResultSetHiden.toString())) {
-                final EnhancedCentreEntityQueryCriteria<?, ?> relatedSelectionCrit = criteriaEntityRestorer.restoreCriteriaEntity(contextEntry.getValue());
-                final String sheetTitle = extractSheetTitle(relatedSelectionCrit);
-                titles.add(sheetTitle);
-                entities.add(exportEntities(entity, relatedSelectionCrit, sheetTitle));
-                propAndTitles.add(relatedSelectionCrit.generatePropTitlesToExport());
-                dynamicProperties.add(relatedSelectionCrit.getDynamicProperties());
-            }
-        });
+        if (!entity.getCentreContextHolder().proxiedPropertyNames().contains("relatedContexts")) {
+            entity.getCentreContextHolder().getRelatedContexts().entrySet().forEach(contextEntry -> {
+                final Object insPointResultSetHiden = contextEntry.getValue().getCustomObject().get("@@resultSetHidden");
+                if (insPointResultSetHiden != null && !Boolean.valueOf(insPointResultSetHiden.toString())) {
+                    final EnhancedCentreEntityQueryCriteria<?, ?> relatedSelectionCrit = criteriaEntityRestorer.restoreCriteriaEntity(contextEntry.getValue());
+                    final String sheetTitle = extractSheetTitle(relatedSelectionCrit);
+                    titles.add(sheetTitle);
+                    entities.add(exportEntities(entity, relatedSelectionCrit, sheetTitle));
+                    propAndTitles.add(relatedSelectionCrit.generatePropTitlesToExport());
+                    dynamicProperties.add(relatedSelectionCrit.getDynamicProperties());
+                }
+            });
+        }
+
+        if (entities.isEmpty()) {
+            throw failure("There is nothing to export");
+        }
 
         try {
             entity.setData(WorkbookExporter.convertToByteArray(WorkbookExporter.export(entities, propAndTitles, dynamicProperties, titles)));
