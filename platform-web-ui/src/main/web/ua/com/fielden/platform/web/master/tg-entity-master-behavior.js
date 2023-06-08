@@ -692,15 +692,13 @@ const TgEntityMasterBehaviorImpl = {
             });
         }).bind(self);
 
-        self._makeKeyUnmodifiedIfItIsModified = (function () {
-            const value = this._currBindingEntity['key'];
-            const originalValue = this._originalBindingEntity['key'];
-            if (!this._reflector().equalsEx(value, originalValue)) {
-                this._originalBindingEntity['key'] = value;
-                this._originalBindingEntity['@key_id'] = this._currBindingEntity['@key_id'];
-            }
-        }).bind(self);
-
+        /**
+         * In case when main / detail entity has been just saved, there is a need to augment compound master "opener" functional entity to appropriately restore it on server.
+         * If new main entity has been saved for the first time -- savedEntityId is promoted into "opener" functional entity's key (and marked as touched).
+         * Otherwise if main / detail entity has been saved -- "opener" functional entity's key is marked as touched.
+         *
+         * @param savedEntityId -- the id of just saved main / detail entity to be promoted into compound master "opener"
+         */
         self.augmentCompoundMasterOpenerWith = (function (savedEntityId) {
             // Ensure that key property is touched to be able to invoke its definers, which should update sectionTitle accordingly (setAndRegisterPropertyTouch invocation).
             // After that need to provide ID to facilitate server-side reconstruction of entity-typed key using ID-based strategy instead of KEY-based.
@@ -708,7 +706,6 @@ const TgEntityMasterBehaviorImpl = {
             if (typeof this._currBindingEntity['@key_id'] !== 'undefined' && savedEntityId === this._currBindingEntity['@key_id']) { // main or detail entity with the same id (compound master) has been saved
                 this._currBindingEntity.setAndRegisterPropertyTouch('key', this._currBindingEntity.get('key'));
                 this._currBindingEntity['@key_id'] = savedEntityId;
-                this._makeKeyUnmodifiedIfItIsModified(); // this is necessary to enforce mutation for touched property due to the need to invoke key's definer in case of 'new' compound master (with saved instance) is operated on.
             } else if (typeof this._currBindingEntity['@key_id'] !== 'undefined' && savedEntityId !== this._currBindingEntity['@key_id']) { // detail entity (compound master) with different id has been saved
                 // This is a rare scenario but provided for additional safety -- id of detail entity is not equal to id of main entity.
                 // In real life examples all detail entities has key of the type of main entity.
@@ -716,12 +713,13 @@ const TgEntityMasterBehaviorImpl = {
                 const prevCompoundMasterEntityId = this._currBindingEntity['@key_id'];
                 this._currBindingEntity.setAndRegisterPropertyTouch('key', this._currBindingEntity.get('key'));
                 this._currBindingEntity['@key_id'] = prevCompoundMasterEntityId;
-                this._makeKeyUnmodifiedIfItIsModified(); // this is necessary to enforce mutation for touched property due to the need to invoke key's definer in case of 'new' compound master (with saved instance) is operated on.
             } else { // main entity (compound master) has been saved (for the first time)
                 this._currBindingEntity.setAndRegisterPropertyTouch('key', 'IRRELEVANT');
                 this._currBindingEntity['@key_id'] = savedEntityId;
             }
-
+            // please note, that after 'key' was made touched, it will remain touched forever (until compound master closed, opened and re-retrieved); see tg-entity-master-behavior._postSavedDefault/tg-reflector.tg_convertPropertyValue for more details;
+            // #1992 this is necessary because it ensures correct server-side restoration of opener if its produced 'key' (no id) equals to saved version of 'key' (with id);
+            // this can be possible if produced 'key' already has fully defined own 'key' (e.g. 'Rotable' was produced with 'serialNo' = TEST1 and then saved with exactly that 'serialNo' without changes)
             console.debug(':MASTER: augmentCompoundMasterOpenerWith |savedEntityId = ', savedEntityId, '|master.is = ', this.is);
         }).bind(self);
 
