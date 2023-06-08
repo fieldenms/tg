@@ -847,15 +847,15 @@ const TgEntityCentreBehaviorImpl = {
             this._reflector.setCustomProperty(context, "@@resultSetHidden", this.$.egi.hasAttribute("hidden"));
             
             if (relatedContexts) {
-                const insertionPoints = this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point:not([alternative-view])');
+                const insertionPoints = [...this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point:not([alternative-view])')];
                 relatedContexts.forEach(relatedContext => {
-                    const insPoint = [...insertionPoints].find(iPoint => iPoint._element && iPoint._element.tagName === relatedContext.elementName.toUpperCase());
+                    const insPoint = insertionPoints.find(iPoint => iPoint._element && iPoint._element.tagName === relatedContext.elementName.toUpperCase());
                     const loadedView = insPoint && insPoint._element.wasLoaded() && insPoint._element.$.loader.loadedElement; 
                     if (loadedView && loadedView._createContextHolder) {
                         context['relatedContexts'] = context['relatedContexts'] || {};
                         context['relatedContexts'][relatedContext.elementName] = loadedView._createContextHolder(relatedContext.requireSelectionCriteria, relatedContext.requireSelectedEntities, relatedContext.requireMasterEntity, null, null, relatedContext.relatedContexts);
                         this._reflector.setCustomProperty(context['relatedContexts'][relatedContext.elementName], "@@insertionPointTitle", insPoint.shortDesc);
-                        this._reflector.setCustomProperty(context['relatedContexts'][relatedContext.elementName], "@@resultSetHidden", !!loadedView.$.egi && loadedView.$.egi.hasAttribute("hidden"));
+                        this._reflector.setCustomProperty(context['relatedContexts'][relatedContext.elementName], "@@resultSetHidden", loadedView.$.egi ? loadedView.$.egi.hasAttribute("hidden") : false);
                     }
                 });
             }

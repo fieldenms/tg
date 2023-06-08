@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.web.centre.api.context.impl;
 
+import static java.util.Optional.of;
+
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.BiFunction;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -35,13 +38,13 @@ class EntityCentreContextSelector1_2_4_extender_function_done<T extends Abstract
             final boolean withCurrentEntity, final boolean withAllSelectedEntities,
             final boolean withSelectionCrit, final boolean withMasterEntity,
             final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation,
-            final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContextConfig> relatedContexts) {
+            final Optional<Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContextConfig>> optionalRelatedContexts) {
         this.withCurrentEntity = withCurrentEntity;
         this.withAllSelectedEntities = withAllSelectedEntities;
         this.withSelectionCrit = withSelectionCrit;
         this.withMasterEntity = withMasterEntity;
         this.computation = computation;
-        this.relatedContexts.putAll(relatedContexts);
+        optionalRelatedContexts.ifPresent(relatedContexts -> this.relatedContexts.putAll(relatedContexts));
     }
 
     @Override
@@ -52,28 +55,28 @@ class EntityCentreContextSelector1_2_4_extender_function_done<T extends Abstract
                 withSelectionCrit,
                 withMasterEntity,
                 computation,
-                relatedContexts
+                of(relatedContexts)
                );
     }
 
     @Override
     public IExtendedEntityCentreContextWithFunctionSelector<T> withMasterEntity() {
-        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(withCurrentEntity, withAllSelectedEntities, withSelectionCrit, true, computation, relatedContexts);
+        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(withCurrentEntity, withAllSelectedEntities, withSelectionCrit, true, computation, of(relatedContexts));
     }
 
     @Override
     public IExtendedEntityCentreContextWithFunctionSelector<T> withSelectionCrit() {
-        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(withCurrentEntity, withAllSelectedEntities, true, withMasterEntity, computation, relatedContexts);
+        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(withCurrentEntity, withAllSelectedEntities, true, withMasterEntity, computation, of(relatedContexts));
     }
 
     @Override
     public IEntityCentreContextSelector1<T> withCurrentEntity() {
-        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(true, withAllSelectedEntities, withSelectionCrit, withMasterEntity, computation, relatedContexts);
+        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(true, withAllSelectedEntities, withSelectionCrit, withMasterEntity, computation, of(relatedContexts));
     }
 
     @Override
     public IEntityCentreContextSelector1<T> withSelectedEntities() {
-        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(withCurrentEntity, true, withSelectionCrit, withMasterEntity, computation, relatedContexts);
+        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(withCurrentEntity, true, withSelectionCrit, withMasterEntity, computation, of(relatedContexts));
     }
 
     @Override
@@ -81,7 +84,7 @@ class EntityCentreContextSelector1_2_4_extender_function_done<T extends Abstract
         if (computation == null) {
             throw new CentreContextConfigException("The computational component of the context cannot be set as value null.");
         }
-        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(withCurrentEntity, withAllSelectedEntities, withSelectionCrit, withMasterEntity, computation, relatedContexts);
+        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(withCurrentEntity, withAllSelectedEntities, withSelectionCrit, withMasterEntity, computation, of(relatedContexts));
     }
 
     @Override

@@ -268,7 +268,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     }
 
     private String createRelatedContexts(final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContextConfig> relatedContexts) {
-        final StringBuilder relatedContextsList = new StringBuilder("[\n");
+        final StringBuilder relatedContextsList = new StringBuilder("[");
         relatedContextsList.append(relatedContexts.entrySet().stream().map(relatedContext -> createRelatedContext(relatedContext.getKey(), relatedContext.getValue())).collect(joining(",")));
         return relatedContextsList.append("]").toString();
     }

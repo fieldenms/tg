@@ -1,9 +1,10 @@
 package ua.com.fielden.platform.web.centre.api.context.impl;
 
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 
-import java.util.LinkedHashMap;
 import java.util.function.BiFunction;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -43,18 +44,18 @@ class EntityCentreContextSelector0<T extends AbstractEntity<?>> implements IEnti
                 false,
                 false,
                 null,
-                new LinkedHashMap<>()
+                empty()
                );
     }
 
     @Override
     public IEntityCentreContextSelector1<T> withSelectionCrit() {
-        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(withCurrentEntity, withAllSelectedEntities, true, false, null, new LinkedHashMap<>());
+        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(withCurrentEntity, withAllSelectedEntities, true, false, null, empty());
     }
 
     @Override
     public IEntityCentreContextSelector2<T> withMasterEntity() {
-        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(withCurrentEntity, withAllSelectedEntities, false, true, null, new LinkedHashMap<>());
+        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(withCurrentEntity, withAllSelectedEntities, false, true, null, empty());
     }
 
     @Override
@@ -62,7 +63,7 @@ class EntityCentreContextSelector0<T extends AbstractEntity<?>> implements IEnti
         if (computation == null) {
             throw new CentreContextConfigException("The computational component of the context cannot be set as value null.");
         }
-        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(withCurrentEntity, withAllSelectedEntities, false, false, computation, new LinkedHashMap<>());
+        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(withCurrentEntity, withAllSelectedEntities, false, false, computation, empty());
     }
 
     @Override
@@ -70,7 +71,7 @@ class EntityCentreContextSelector0<T extends AbstractEntity<?>> implements IEnti
         if (insertionPointFunctionalType == null) {
             throw new CentreContextConfigException("The insertion point type of the context cannot null.");
         }
-        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(withCurrentEntity, withAllSelectedEntities, false, false, null, linkedMapOf(t2(insertionPointFunctionalType, contextForInsertionPoint)));
+        return new EntityCentreContextSelector1_2_4_extender_function_done<T>(withCurrentEntity, withAllSelectedEntities, false, false, null, of(linkedMapOf(t2(insertionPointFunctionalType, contextForInsertionPoint))));
     }
 
 

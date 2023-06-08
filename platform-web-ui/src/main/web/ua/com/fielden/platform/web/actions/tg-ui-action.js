@@ -176,7 +176,7 @@ Polymer({
         },
 
         /**
-         * Defines hierarchycal structure of contexts realted to this action and view where this action is. This related contexts are contexts for insertion points on entity centre. 
+         * Defines hierarchycal structure of contexts related to the view where this action is. This related contexts are contexts for insertion points on entity centre. 
          */
         relatedContexts: {
             type: Array
