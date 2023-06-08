@@ -486,8 +486,7 @@ const TgEntityMasterBehaviorImpl = {
 
             if (potentiallySavedOrNewEntity.isValidWithoutException()) {
                 // in case where successful save occured we need to reset @@touchedProps that are transported with bindingEntity
-                const isCompoundMasterOpener = isContinuouslyCreated !== true && !potentiallySavedOrNewEntity.type().isPersistent() && potentiallySavedOrNewEntity.type().compoundOpenerType();
-                if (!isCompoundMasterOpener) {
+                if (!potentiallySavedOrNewEntity.type().compoundOpenerType()) { // #1992 reset @@touchedProps only for non-compound-master-opener types, because opener's 'key' property needs to remain touched; this ensures correct server-side restoration of opener if its produced 'key' (no id) equals to saved version of 'key' (with id)
                     newBindingEntity["@@touchedProps"] = { names: [], values: [], counts: [] };
                 }
 
