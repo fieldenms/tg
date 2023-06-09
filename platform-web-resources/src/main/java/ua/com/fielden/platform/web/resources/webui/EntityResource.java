@@ -3,13 +3,16 @@ package ua.com.fielden.platform.web.resources.webui;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.valueOf;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCentreContext;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityForContext;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.FIND_OR_NEW;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.ID;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.NEW;
+import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.createPropertyActionIndicesForMaster;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.tabs;
+import static ua.com.fielden.platform.web.utils.EntityRestorationUtils.createValidationPrototype;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreSavingInfoHolder;
@@ -165,7 +168,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
     @Post
     public Representation save(final Representation envelope) {
         LOGGER.debug("ENTITY_RESOURCE: save started.");
-        final Representation result = handleUndesiredExceptions(getResponse(), () -> {
+        final Representation representation = handleUndesiredExceptions(getResponse(), () -> {
             final SavingInfoHolder savingInfoHolder = restoreSavingInfoHolder(envelope, restUtil);
             final User user = userProvider.getUser();
             final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
@@ -173,10 +176,10 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             final IUser userCompanion = companionFinder.find(User.class);
 
             final Pair<T, Optional<Exception>> potentiallySavedWithException = tryToSave(savingInfoHolder, entityType, factory, companionFinder, critGenerator, webUiConfig, user, companion, device(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel);
-            return restUtil.singleJsonRepresentation(potentiallySavedWithException.getKey(), potentiallySavedWithException.getValue());
+            return createRepresentation(potentiallySavedWithException.getKey(), potentiallySavedWithException.getValue());
         }, restUtil);
         LOGGER.debug("ENTITY_RESOURCE: save finished.");
-        return result;
+        return representation;
     }
 
     /**
@@ -190,6 +193,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
             final MainMenuItemCo mmiCompanion = companionFinder.find(MainMenuItem.class);
             final IUser userCompanion = companionFinder.find(User.class);
+
             // originallyProducedEntity is always empty during retrieval to kick in creation through producer
             final T emptyOriginallyProducedEntity = null;
             if (envelope != null) {
@@ -219,7 +223,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                             producer
                             );
                     LOGGER.debug("ENTITY_RESOURCE: retrieve finished.");
-                    return restUtil.rawListJsonRepresentation(entity);
+                    return createRepresentation(entity);
                 } else {
                     final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
 
@@ -241,13 +245,36 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                             producer
                             );
                     LOGGER.debug("ENTITY_RESOURCE: retrieve finished.");
-                    return restUtil.rawListJsonRepresentation(entity);
+                    return createRepresentation(entity);
                 }
             } else {
                 LOGGER.debug("ENTITY_RESOURCE: retrieve finished.");
-                return restUtil.rawListJsonRepresentation(EntityRestorationUtils.createValidationPrototype(entityId, emptyOriginallyProducedEntity, companion, producer));
+                return createRepresentation(createValidationPrototype(entityId, emptyOriginallyProducedEntity, companion, producer));
             }
         }, restUtil);
+    }
+
+    /**
+     * Creates {@link Representation} for an entity.
+     * 
+     * @param entity
+     * @return
+     */
+    private Representation createRepresentation(final T entity) {
+        return createRepresentation(entity, empty());
+    }
+
+    /**
+     * Creates {@link Representation} for an entity and {@link Optional} {@code exceptionOpt}.
+     * 
+     * @param entity
+     * @param exceptionOpt
+     * @return
+     */
+    private Representation createRepresentation(final T entity, final Optional<Exception> exceptionOpt) {
+        final Result result = restUtil.singleEntityResult(entity, exceptionOpt);
+        final Map<String, Object> customObject = linkedMapOf(createPropertyActionIndicesForMaster(entity, webUiConfig));
+        return restUtil.resultJSONRepresentation(result.extendResultWithCustomObject(customObject));
     }
 
     @Delete

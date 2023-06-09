@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
+import static java.util.Arrays.asList;
+import static java.util.Optional.of;
+
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -12,6 +15,7 @@ import ua.com.fielden.platform.web.centre.api.IEcbCompletion;
 import ua.com.fielden.platform.web.centre.api.IWithRightSplitterPosition;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
+import ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.exceptions.CentreConfigException;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
@@ -117,7 +121,7 @@ public class ResultSetDynamicPropertyBuilder<T extends AbstractEntity<?>> implem
             throw new CentreConfigException("Property action configuration should not be null.");
         }
 
-        resultSetProp.setPropAction(() -> Optional.of(actionConfig));
+        resultSetProp.setPropAction(of(new EntityMultiActionConfig(SingleActionSelector.class, asList(() -> of(actionConfig)))));
         return this;
     }
 
@@ -127,7 +131,7 @@ public class ResultSetDynamicPropertyBuilder<T extends AbstractEntity<?>> implem
             throw new CentreConfigException("Property action configuration supplier should not be null.");
         }
 
-        resultSetProp.setPropAction(actionConfigSupplier);
+        resultSetProp.setPropAction(of(new EntityMultiActionConfig(SingleActionSelector.class, asList(actionConfigSupplier))));
         return this;
     }
 
