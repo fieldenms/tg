@@ -2,8 +2,11 @@ package ua.com.fielden.platform.entity;
 
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.isEmpty;
+import static org.apache.poi.ss.util.WorkbookUtil.validateSheetName;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.failuref;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getDefaultEntityTitleAndDesc;
+import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 
@@ -25,7 +28,6 @@ import ua.com.fielden.platform.entity_centre.review.criteria.DynamicColumnForExp
 import ua.com.fielden.platform.entity_centre.review.criteria.EnhancedCentreEntityQueryCriteria;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.file_reports.WorkbookExporter;
-import ua.com.fielden.platform.reflection.TitlesDescsGetter;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.utils.ICriteriaEntityRestorer;
 
@@ -113,7 +115,13 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         final CentreContextHolder centreContextHolder = selectionCrit.centreContextHolder();
         final String sheetTitle = (String)centreContextHolder.getCustomObject().get("@@insertionPointTitle");
         if (isEmpty(sheetTitle)) {
-            return TitlesDescsGetter.getEntityTitleAndDesc(selectionCrit.getEntityClass()).getKey();
+            final String altSheetTitle = getEntityTitleAndDesc(selectionCrit.getEntityClass()).getKey();
+            try {
+                validateSheetName(altSheetTitle);
+            } catch (final IllegalArgumentException e) {
+                return getDefaultEntityTitleAndDesc(selectionCrit.getEntityClass()).getKey();
+            }
+            return altSheetTitle;
         }
         return sheetTitle;
     }
