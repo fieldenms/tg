@@ -28,6 +28,7 @@ import '/resources/centre/tg-selection-criteria-styles.js';
 import { TgEntityCentreTemplateBehavior } from '/resources/centre/tg-entity-centre-template-behavior.js';
 import '/resources/centre/tg-entity-centre-insertion-point.js';
 import { TgReflector } from '/app/tg-reflector.js';
+import { getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 
 const selectionCritTemplate = html`
     <style include="tg-selection-criteria-styles"></style>
