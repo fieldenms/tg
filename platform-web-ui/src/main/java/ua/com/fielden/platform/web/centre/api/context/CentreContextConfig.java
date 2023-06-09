@@ -1,7 +1,10 @@
 package ua.com.fielden.platform.web.centre.api.context;
 
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiFunction;
+
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -19,19 +22,22 @@ public final class CentreContextConfig {
     public final Boolean withSelectionCrit;
     public final Boolean withMasterEntity;
     public final Optional<BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object>> computation;
+    public final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContextConfig> relatedContexts = new LinkedHashMap<>();
 
     public CentreContextConfig(
             final boolean withCurrentEtity,
             final boolean withAllSelectedEntities,
             final boolean withSelectionCrit,
             final boolean withMasterEntity,
-            final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation
+            final BiFunction<AbstractFunctionalEntityWithCentreContext<?>, CentreContext<AbstractEntity<?>, AbstractEntity<?>>, Object> computation,
+            final Optional<Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContextConfig>> optionalRelatedContexts
             ) {
         this.withCurrentEtity = withCurrentEtity;
         this.withAllSelectedEntities = withAllSelectedEntities;
         this.withSelectionCrit = withSelectionCrit;
         this.withMasterEntity = withMasterEntity;
         this.computation = Optional.ofNullable(computation);
+        optionalRelatedContexts.ifPresent(relatedContexts -> this.relatedContexts.putAll(relatedContexts));
     }
 
     public final boolean withComputation() {
@@ -48,6 +54,7 @@ public final class CentreContextConfig {
         result = prime * result + withSelectionCrit.hashCode();
         // WARN: CentreContextConfig instances with referentially different 'computation' values yield different hash codes.
         result = prime * result + computation.hashCode();
+        result = prime * result + relatedContexts.hashCode();
         return result;
     }
 
@@ -67,7 +74,8 @@ public final class CentreContextConfig {
                 (this.withCurrentEtity == that.withCurrentEtity) &&
                 (this.withMasterEntity == that.withMasterEntity)  &&
                 (this.withSelectionCrit == that.withSelectionCrit) &&
-                computation.equals(that.computation);
+                computation.equals(that.computation) &&
+                relatedContexts.equals(that.relatedContexts);
     }
 
 }
