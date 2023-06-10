@@ -375,8 +375,8 @@ const TgEgiMasterBehaviorImpl = {
      * @param {Object} entity  - the received entity
      * @param {Boolean} isRefreshingProcess was master canceled or not
      */
-    _postEntityReceived: function (entity, isRefreshingProcess) {
-        TgEntityBinderBehavior._postEntityReceived.call(this, entity, isRefreshingProcess);
+    _postEntityReceived: function (entity, isRefreshingProcess, customObject) {
+        TgEntityBinderBehavior._postEntityReceived.call(this, entity, isRefreshingProcess, customObject);
         this._bindingEntityNotPersistentOrNotPersistedOrModified = !this._currBindingEntity.isPersisted() || this._bindingEntityModified;
         return this._currBindingEntity;
     },

@@ -5,6 +5,7 @@ import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static java.util.stream.Collectors.toSet;
 import static org.apache.commons.lang3.StringUtils.join;
 import static org.apache.logging.log4j.LogManager.getLogger;
@@ -56,6 +57,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -913,6 +915,19 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
     }
 
     /**
+     * Creates and returns instance of multi-action selector in case of property multi-action specified in Centre DSL.
+     * Returns map between property names and property action selector.
+     */
+    public Map<String, ? extends IEntityMultiActionSelector> createPropertyActionSelectors() {
+        return dslDefaultConfig.getResultSetProperties().map(resultProps -> {
+            return resultProps.stream()
+                    .filter(resultProp -> resultProp.getPropAction().isPresent() && (resultProp.getPropAction().get().actions().size() > 0))
+                    .map(resultProp -> t2(derivePropName(resultProp), injector.getInstance(resultProp.getPropAction().get().actionSelectorClass())))
+                    .collect(toMap(tt -> tt._1, tt -> tt._2));
+        }).orElse(new HashMap<>());
+    }
+
+    /**
      * Creates instances of multi-action selectors in case of secondary multi-actions (or single actions) specified in Centre DSL.
      * Returns empty {@link List} if there were no secondary multi-actions (or single actions) specified in Centre DSL.
      */
@@ -998,21 +1013,18 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
         final ListMultimap<String, SummaryPropDef> summaryProps = dslDefaultConfig.getSummaryExpressions();
         final Class<?> managedType = centre.getEnhancer().getManagedType(root);
         if (resultProps.isPresent()) {
-            int actionIndex = 0;
+            final AtomicInteger actionIndex = new AtomicInteger(0);
             for (final ResultSetProp<T> resultProp : resultProps.get()) {
                 final String tooltipProp = resultProp.tooltipProp.isPresent() ? resultProp.tooltipProp.get() : null;
                 final String resultPropName = derivePropName(resultProp);
                 final boolean isEntityItself = "".equals(resultPropName); // empty property means "entity itself"
                 final Class<?> propertyType = isEntityItself ? managedType : PropertyTypeDeterminator.determinePropertyType(managedType, resultPropName);
 
-                final Optional<FunctionalActionElement> action;
-                final Optional<EntityActionConfig> actionConfig = resultProp.getPropAction().get();
-                if (actionConfig.isPresent()) {
-                    action = Optional.of(new FunctionalActionElement(actionConfig.get(), actionIndex, resultPropName));
-                    actionIndex += 1;
-                } else {
-                    action = Optional.empty();
-                }
+                final List<FunctionalActionElement> actions =
+                        resultProp.getPropAction()
+                        .map(multiAction -> multiAction.actions()).orElse(new ArrayList<>()).stream()
+                        .map(actionConfig -> new FunctionalActionElement(actionConfig, actionIndex.getAndIncrement(), resultPropName))
+                        .collect(toList());
 
                 final PropertyColumnElement el = new PropertyColumnElement(resultPropName,
                         resultProp.widget,
@@ -1027,7 +1039,7 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
                                 Optional.ofNullable(EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimeZone(managedType, resultPropName) : null),
                                 Optional.ofNullable(EntityUtils.isDate(propertyType) ? DefaultValueContract.getTimePortionToDisplay(managedType, resultPropName) : null)),
                         CriteriaReflector.getCriteriaTitleAndDesc(managedType, resultPropName),
-                        action);
+                        actions);
                 if (summaryProps.containsKey(dslName(resultPropName))) {
                     final List<SummaryPropDef> summaries = summaryProps.get(dslName(resultPropName));
                     summaries.forEach(summary -> el.addSummary(summary.alias, PropertyTypeDeterminator.determinePropertyType(managedType, summary.alias), new Pair<>(summary.title, summary.desc)));
@@ -1047,10 +1059,10 @@ public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
             if (column.hasSummary()) {
                 importPaths.add(column.getSummary(0).importPath());
             }
-            if (column.getAction().isPresent()) {
-                importPaths.add(column.getAction().get().importPath());
-                propActionsObject.append(prefix + createActionObject(column.getAction().get()));
-            }
+            column.getActions().forEach(action -> {
+                importPaths.add(action.importPath());
+                propActionsObject.append(prefix + createActionObject(action));
+            });
             egiColumns.add(column.render());
             column.renderWidget().ifPresent(widget -> egiEditors.add(widget));
         });

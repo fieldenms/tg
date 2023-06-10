@@ -75,7 +75,7 @@ const customInputTemplate = html`
             disabled$="[[_disabled]]"
             on-change="_onChange"
             tooltip-text$="[[_getTooltip(_editingValue)]]"><span class="label truncate">[[propTitle]]</span></paper-checkbox>`;
-const propertyActionTemplate = html`<slot name="property-action"></slot>`;
+const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
 
 export class TgBooleanEditor extends TgEditor {
 
