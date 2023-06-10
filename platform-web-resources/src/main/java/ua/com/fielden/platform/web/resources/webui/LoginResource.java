@@ -12,7 +12,8 @@ import java.io.ByteArrayInputStream;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 import org.restlet.Context;
 import org.restlet.Request;
@@ -61,7 +62,7 @@ public class LoginResource extends AbstractWebResource {
     public static final int BLOCK_TIME_SECONDS = 15;
     public static final int LOCKOUT_THRESHOLD = 6;
     private static final Cache<String, LoginAttempts> LOGIN_ATTEMPTS = CacheBuilder.newBuilder().initialCapacity(100).maximumSize(1000).concurrencyLevel(50).build();
-    private static final Logger LOGGER = Logger.getLogger(LoginResource.class);
+    private static final Logger LOGGER = LogManager.getLogger(LoginResource.class);
 
     private final String domainName;
     private final String path;

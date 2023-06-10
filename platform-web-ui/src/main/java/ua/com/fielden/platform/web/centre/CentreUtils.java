@@ -1,6 +1,8 @@
 package ua.com.fielden.platform.web.centre;
 
-import org.apache.log4j.Logger;
+import static org.apache.logging.log4j.LogManager.getLogger;
+
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.entity.AbstractEntity;
@@ -13,7 +15,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
  *
  */
 public class CentreUtils<T extends AbstractEntity<?>> extends CentreUpdater {
-    private final static Logger logger = Logger.getLogger(CentreUtils.class);
+    private final static Logger logger = getLogger(CentreUtils.class);
     
     /** Protected default constructor to prevent instantiation. */
     protected CentreUtils() {

@@ -2,8 +2,6 @@ package ua.com.fielden.platform.test;
 
 import java.util.Properties;
 
-import org.apache.log4j.xml.DOMConfigurator;
-
 import com.google.inject.Injector;
 
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -32,7 +30,6 @@ public final class PlatformDomainDrivenTestCaseConfiguration implements IDomainD
     public PlatformDomainDrivenTestCaseConfiguration(final Properties hbc) {
         // instantiate all the factories and Hibernate utility
         try {
-            DOMConfigurator.configure("src/test/resources/log4j.xml");
             final Properties props = new Properties(hbc);
             // application properties
             props.setProperty("app.name", "TG Test");

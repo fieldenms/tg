@@ -2,7 +2,6 @@ package ua.com.fielden.platform.types.tuples;
 
 import static java.lang.String.format;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
-import ua.com.fielden.platform.utils.EntityUtils;
 
 /**
  * A data structure to represent a tuple of 2 values.

@@ -1,12 +1,10 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
-import static java.util.Collections.emptyList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static java.util.UUID.randomUUID;
-import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
 import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
 import static ua.com.fielden.platform.error.Result.failure;
@@ -14,6 +12,7 @@ import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.types.either.Either.left;
 import static ua.com.fielden.platform.types.either.Either.right;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.action.CentreConfigShareActionProducer.CONFIG_DOES_NOT_EXIST;
@@ -25,7 +24,6 @@ import static ua.com.fielden.platform.web.centre.CentreUpdater.FRESH_CENTRE_NAME
 import static ua.com.fielden.platform.web.centre.CentreUpdater.NAME_OF;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.PREVIOUSLY_RUN_CENTRE_NAME;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.SAVED_CENTRE_NAME;
-import static ua.com.fielden.platform.web.centre.CentreUpdater.commitCentre;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.commitCentreWithoutConflicts;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.defaultRunAutomatically;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.loadableConfigurations;
@@ -60,6 +58,9 @@ import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.is
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isSorting;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.updateInheritedFromShared;
 import static ua.com.fielden.platform.web.resources.webui.EntityValidationResource.VALIDATION_COUNTER;
+import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.createPrimaryActionIndicesForCentre;
+import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.createPropertyActionIndicesForCentre;
+import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.createSecondaryActionIndicesForCentre;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
@@ -78,7 +79,8 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -120,7 +122,6 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
-import ua.com.fielden.platform.web.centre.api.actions.multi.IEntityMultiActionSelector;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
@@ -139,7 +140,7 @@ import ua.com.fielden.platform.web.resources.RestServerUtil;
  *
  */
 public class CriteriaResource extends AbstractWebResource {
-    private static final Logger logger = Logger.getLogger(CriteriaResource.class);
+    private final static Logger logger = LogManager.getLogger(CriteriaResource.class);
     private static final String CONFIG_COULD_NOT_BE_SHARED_WITH_BASE_USER = "No configuration can be shared with base users (%s).";
     private static final String LINK_CONFIG_COULD_NOT_BE_SHARED = "Link configurations cannot be shared.";
     private static final String CONFLICTING_TITLE_SUFFIX = " (shared%s)";
@@ -220,7 +221,7 @@ public class CriteriaResource extends AbstractWebResource {
                 // empty link config is taken from SAVED surrogate centre (which is always empty);
                 final ICentreDomainTreeManagerAndEnhancer emptyCentre = updateCentre(user, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                 // clear current 'link' surrogate FRESH centre -- this is to make it empty before applying new selection criteria parameters (client-side action after this request's response will be delivered);
-                commitCentre(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), emptyCentre, null /* newDesc */, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                commitCentreWithoutConflicts(user, miType, FRESH_CENTRE_NAME, actualSaveAsName, device(), emptyCentre, null /* newDesc */, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
             } else if (configUuid.isPresent()) {
                 // start loading of configuration defined by concrete uuid;
                 // we look only through [link, own save-as, inherited from base, inherited from shared] set of configurations;
@@ -269,7 +270,7 @@ public class CriteriaResource extends AbstractWebResource {
             return createCriteriaRetrievalEnvelope(updatedFreshCentre, miType, actualSaveAsName, user, restUtil, companionFinder, critGenerator, device(), customDesc, resolvedConfigUuid, domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
         }, restUtil);
     }
-    
+
     /**
      * Validates {@code configUuid} on the subject of configuration existence and general ability to share it with current {@code user}.
      */
@@ -316,7 +317,6 @@ public class CriteriaResource extends AbstractWebResource {
             // need to determine non-conflicting name for current user from preliminarySaveAsName
             actualSaveAsName = of(determineNonConflictingName(preliminarySaveAsName, -1));
             final Function<String, Function<Boolean, Function<String, Consumer<Optional<String>>>>> createInheritedFromShared = surrogateName -> runAutomatically -> newDescription -> uuid -> saveNewEntityCentreManager(
-                true,
                 upstreamConfig.getConfigBody(),
                 miType,
                 user,
@@ -374,7 +374,7 @@ public class CriteriaResource extends AbstractWebResource {
                     }
                     updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                     updateCentre(user, miType, SAVED_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder); // do not leave only FRESH centre out of two (FRESH + SAVED) => update SAVED centre explicitly
-                    
+
                     makePreferred(user, miType, saveAsName, device(), companionFinder, webUiConfig); // inherited from base always gets preferred on loading; must leave it preferred after deletion
                 } else {
                     if (sharingModel.isSharedWith(configUuid, user).isSuccessful()) {
@@ -410,9 +410,9 @@ public class CriteriaResource extends AbstractWebResource {
             updateCentre(user, miType, SAVED_CENTRE_NAME, actualSaveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             // and update both with newly generated config uuid
             final String newConfigUuid = randomUUID().toString();
-            eccCompanion.saveWithConflicts(freshConfigOpt.get().setConfigUuid(newConfigUuid));
+            eccCompanion.saveWithRetry(freshConfigOpt.get().setConfigUuid(newConfigUuid));
             findConfigOpt(miType, user, NAME_OF.apply(SAVED_CENTRE_NAME).apply(actualSaveAsName).apply(device()), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("configUuid"))
-                .ifPresent(savedConfig -> eccCompanion.saveWithConflicts(savedConfig.setConfigUuid(newConfigUuid)));
+                .ifPresent(savedConfig -> eccCompanion.saveWithRetry(savedConfig.setConfigUuid(newConfigUuid)));
             return t2(actualSaveAsName, of(newConfigUuid));
         } else {
             return t2(actualSaveAsName, of(freshConfigOpt.get().getConfigUuid()));
@@ -484,7 +484,8 @@ public class CriteriaResource extends AbstractWebResource {
                 of(appliedCriteriaEntity.centreRunAutomatically(saveAsName)), // in case if configuration is runAutomatically perform client-side auto-running (first time loading, changing browser's URI e.g by tapping Back / Forward buttons)
                 of(ofNullable(saveAsDesc)),
                 empty(),
-                of(updatedFreshCentre.getPreferredView())
+                of(updatedFreshCentre.getPreferredView()),
+                user
             )
         );
     }
@@ -517,7 +518,8 @@ public class CriteriaResource extends AbstractWebResource {
                         of(false), // even though configuration can be runAutomatically, do not perform auto-running on Discard action
                         saveAsDesc,
                         of(ofNullable(staleCriteriaMessage)),
-                        of(updatedFreshCentre.getPreferredView())
+                        of(updatedFreshCentre.getPreferredView()),
+                        user
                 )//
         );
     }
@@ -592,7 +594,7 @@ public class CriteriaResource extends AbstractWebResource {
                     removeCentres(user, miType, device(), saveAsName, eccCompanion, FRESH_CENTRE_NAME, SAVED_CENTRE_NAME, PREVIOUSLY_RUN_CENTRE_NAME);
                     final ICentreDomainTreeManagerAndEnhancer emptyFreshCentre = updateCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
                     findConfigOpt(miType, user, NAME_OF.apply(FRESH_CENTRE_NAME).apply(saveAsName).apply(device()), eccCompanion, FETCH_CONFIG_AND_INSTRUMENT.with("runAutomatically")).ifPresent(config -> {
-                        eccCompanion.saveWithConflicts(config.setRunAutomatically(true)); // auto-running of default configuration is in progress -- restore runAutomatically as true
+                        eccCompanion.saveWithRetry(config.setRunAutomatically(true)); // auto-running of default configuration is in progress -- restore runAutomatically as true
                     });
 
                     // restore previous non-distracting centre changes; at first apply widths and grow factors
@@ -604,7 +606,7 @@ public class CriteriaResource extends AbstractWebResource {
                     emptyFreshCentre.getSecondTick().setVisibleRowsCount(previousVisibleRowsCount);
                     emptyFreshCentre.getSecondTick().setNumberOfHeaderLines(previousNumberOfHeaderLines);
                     // save the centre into the database (configUuid is not applicable here -- this is default configuration)
-                    updatedFreshCentre = commitCentre(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), emptyFreshCentre, null /* newDesc */, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
+                    updatedFreshCentre = commitCentreWithoutConflicts(user, miType, FRESH_CENTRE_NAME, saveAsName, device(), emptyFreshCentre, null /* newDesc */, webUiConfig, eccCompanion, mmiCompanion, userCompanion);
 
                     freshCentreAppliedCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, updatedFreshCentre, companionFinder, critGenerator, -1L, user, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
                 } else {
@@ -659,7 +661,7 @@ public class CriteriaResource extends AbstractWebResource {
 
             final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> previouslyRunCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, previouslyRunCentre, companionFinder, critGenerator, 0L, user, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
-            final Pair<Map<String, Object>, List<?>> pair = createCriteriaMetaValuesCustomObjectWithResult(
+            final Pair<Map<String, Object>, List<AbstractEntity<?>>> pair = createCriteriaMetaValuesCustomObjectWithResult(
                 customObject,
                 complementCriteriaEntityBeforeRunning( // complements previouslyRunCriteriaEntity instance
                     previouslyRunCriteriaEntity,
@@ -684,8 +686,9 @@ public class CriteriaResource extends AbstractWebResource {
             pair.getKey().put("renderingHints", createRenderingHints(pair.getValue()));
 
             // Apply primary and secondary action selectors
-            pair.getKey().put("primaryActionIndices", createPrimaryActionIndices(pair.getValue()));
-            pair.getKey().put("secondaryActionIndices", createSecondaryActionIndices(pair.getValue()));
+            pair.getKey().putAll(linkedMapOf(createPrimaryActionIndicesForCentre(pair.getValue(), centre)));
+            pair.getKey().putAll(linkedMapOf(createSecondaryActionIndicesForCentre(pair.getValue(), centre)));
+            pair.getKey().putAll(linkedMapOf(createPropertyActionIndicesForCentre(pair.getValue(), centre)));
 
             // Build dynamic properties object
             final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext = getDynamicResultProperties(
@@ -710,7 +713,7 @@ public class CriteriaResource extends AbstractWebResource {
                     centre,
                     centre.getCustomPropertiesDefinitions(),
                     centre.getCustomPropertiesAsignmentHandler(),
-                    ((List<AbstractEntity<?>>) pair.getValue()).stream());
+                    pair.getValue().stream());
 
             //Enhance entities with values defined with consumer in each dynamic property.
             processedEntities = enhanceResultEntitiesWithDynamicPropertyValues(processedEntities, resPropsWithContext);
@@ -731,36 +734,8 @@ public class CriteriaResource extends AbstractWebResource {
     }
 
     /**
-     * Calculates indices of active secondary actions for {@code entities}.
-     * 
-     * @param entities
-     * @return
-     */
-    private List<List<Integer>> createSecondaryActionIndices(final List<?> entities) {
-        final List<? extends IEntityMultiActionSelector> selectors = centre.createSecondaryActionSelectors(); // create all selectors before entities streaming (and reuse them for every entity)
-        return entities.stream()
-            .map(entity -> selectors.stream()
-                .map(selector -> selector.getActionFor((AbstractEntity<?>) entity))
-                .collect(toList())
-            )
-            .collect(toList());
-    }
-
-    /**
-     * Calculates indices of active primary action for {@code entities}.
-     * 
-     * @param entities
-     * @return
-     */
-    private List<Integer> createPrimaryActionIndices(final List<?> entities) {
-        return centre.createPrimaryActionSelector().map(selector -> {
-            return entities.stream().map(entity -> selector.getActionFor((AbstractEntity<?>) entity)).collect(toList());
-        }).orElse(emptyList());
-    }
-
-    /**
      * Calculates rendering hints for {@code entities}.
-     * 
+     *
      * @param entities
      * @return
      */

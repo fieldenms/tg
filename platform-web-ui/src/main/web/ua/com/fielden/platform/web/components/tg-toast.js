@@ -1,65 +1,25 @@
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
-import '/resources/polymer/@polymer/paper-dialog/paper-dialog.js'
-import '/resources/polymer/@polymer/paper-dialog-scrollable/paper-dialog-scrollable.js'
+import '/resources/polymer/@polymer/paper-dialog/paper-dialog.js';
+import '/resources/polymer/@polymer/paper-dialog-scrollable/paper-dialog-scrollable.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
 import '/resources/polymer/@polymer/paper-button/paper-button.js';
-import '/resources/polymer/@polymer/paper-toast/paper-toast.js';
 import '/resources/polymer/@polymer/paper-spinner/paper-spinner.js';
 import '/resources/polymer/@polymer/polymer/lib/elements/dom-bind.js';
 
-import { tearDownEvent, containsRestictedTags } from '/resources/reflection/tg-polymer-utils.js';
+import '/resources/components/tg-paper-toast.js';
+
+import { tearDownEvent, containsRestrictedTags } from '/resources/reflection/tg-polymer-utils.js';
+import { TgToastBehavior } from '/resources/components/tg-toast-behavior.js';
 
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
-const paperToastStyle = html`
-    <custom-style>
-        <style>
-            #toast {
-                @apply --layout-horizontal;
-                @apply --layout-center;
-                max-width: 256px;
-                left:0;
-                bottom:0;
-            }
-            .more {
-                padding-left: 8px;
-                color: #03A9F4;
-                font-weight: 800;
-                cursor: pointer;
-            }
-            #toast paper-spinner {
-                width: 1.5em;
-                height: 1.5em;
-                min-width: 1em;
-                min-height: 1em;
-                max-width: 2em;
-                max-height: 2em;
-                padding: 2px;
-                margin-left: 1em;
-                --paper-spinner-layer-1-color: var(--paper-blue-500);
-                --paper-spinner-layer-2-color: var(--paper-blue-500);
-                --paper-spinner-layer-3-color: var(--paper-blue-500);
-                --paper-spinner-layer-4-color: var(--paper-blue-500);
-            }
-            .toast-dialog paper-button {
-                color: var(--paper-light-blue-500);
-                --paper-button-flat-focus-color: var(--paper-light-blue-50);
-            }
-            .toast-dialog paper-button:hover {
-                background: var(--paper-light-blue-50);
-            }
-        </style>
-    </custom-style>`;
-paperToastStyle.setAttribute('style', 'display: none;');
-document.head.appendChild(paperToastStyle.content);
-
 const template = html`
-    <paper-toast id="toast" class="paper-toast" text="[[_text]]" on-tap="_showMoreIfPossible" allow-click-through always-on-top duration="0">
+    <tg-paper-toast id="toast" text="[[_text]]" on-tap="_showMoreIfPossible" allow-click-through always-on-top duration="0">
         <!-- TODO responsive-width="250px" -->
         <paper-spinner id="spinner" hidden$="[[_skipShowProgress]]" active alt="in progress..." tabIndex="-1"></paper-spinner>
-        <div id='btnMore' hidden$="[[_skipShowMore(_showProgress, _hasMore)]]" class="more" on-tap="_showMessageDlg">MORE</div>
-    </paper-toast>
+        <div id='btnMore' hidden$="[[_skipShowMore(_showProgress, _hasMore)]]" class="toast-btn" on-tap="_showMessageDlg">MORE</div>
+    </tg-paper-toast>
 `;
 
 const PROGRESS_DURATION = 3600000; // 1 hour
@@ -139,17 +99,7 @@ Polymer({
         }
     },
 
-    ready: function () {
-        //Indicates whether toast overlay can be closed via history (back button or not)
-        this.$.toast.skipHistoryAction = true;
-
-        // Styles to truncate the toast text.
-        const label = this.$.toast.$$('#label');
-        label.style.flex = '1';
-        label.style.whiteSpace = 'nowrap';
-        label.style.overflow = 'hidden';
-        label.style.textOverflow = 'ellipsis';
-    },
+    behaviors: [TgToastBehavior],
 
     _hasMoreChanged: function (newValue, oldValue) {
         // let's set a cursor for the whole toast if it can be "clicked"
@@ -179,7 +129,12 @@ Polymer({
 
             domBind.innerHTML = `
                 <template>
-                    <paper-dialog id="msgDialog" class="toast-dialog" on-iron-overlay-closed="_dialogClosed" always-on-top with-backdrop entry-animation="scale-up-animation" exit-animation="fade-out-animation">
+                    <paper-dialog id="msgDialog" class="toast-dialog"
+                        with-backdrop
+                        always-on-top
+                        entry-animation="scale-up-animation"
+                        exit-animation="fade-out-animation"
+                        on-iron-overlay-closed="_dialogClosed">
                         <paper-dialog-scrollable>
                             <p id="msgPar" style="padding: 10px;white-space: break-spaces;"></p>
                         </paper-dialog-scrollable>
@@ -195,11 +150,17 @@ Polymer({
 
             this.async(function () {
                 // please note that domBind.$.msgPar is rendered after body.appendChild(domBind), but has been put here (into async(100)) to provide stronger guarantees along with msgDialog.open()
-                if (containsRestictedTags(_msgText) === true) {
+                if (containsRestrictedTags(_msgText) === true) {
                     domBind.$.msgPar.textContent = _msgText;
                 } else {
                     domBind.$.msgPar.innerHTML = _msgText;
                 }
+                domBind.$.msgDialog.addEventListener('keydown', e => { // will be removed along with domBind in _dialogClosed
+                    // ensures on-Enter closing even if Close button is not focused, i.e. tapped on dialog somewhere
+                    if (e.keyCode === 13) {
+                       domBind.$.msgDialog.close();
+                    }
+                }, true);
                 // actual msgDialog opening
                 domBind.$.msgDialog.open();
                 self.$.toast.close(); // must close paper-toast after msgDialog is opened; this is because other fast toast messages can interfere -- paper-toast should still be opened to prevent other messages early opening (see '... && previousToast.opened && ...' condition in 'show' method)
@@ -218,32 +179,15 @@ Polymer({
         return progress || !hasMore;
     },
 
-    _getPreviousToast() {
-        const toasts = document.querySelectorAll('#toast');
-        let toast = null;
-        let existingToastCount = 0;
-        for (let index = 0; index < toasts.length; index++) {
-            const currToast = toasts.item(index);
-            if (currToast.parentNode === document.body) {
-                existingToastCount++;
-                if (existingToastCount > 1) {
-                    throw 'More than one toast exist in body direct children.';
-                }
-                toast = currToast;
-            }
-        }
-        return toast;
-    },
-
     show: function () {
-        const previousToast = this._getPreviousToast();
+        const previousToast = this.getDocumentToast('toast');
         if (!previousToast) {
             // initial values
             this.$.toast.error = false;
             this.$.toast._autoCloseCallBack = null; // must NOT interfere with _autoClose of paper-toast
             // Override refit function for paper-toast which behaves really weird (Maybe next releas of paper-toast iron-fit-behavior and iron-overlay-behavior will change this weird behaviour).
             this.$.toast.refit = function () { };
-            document.body.appendChild(this.$.toast);
+            this.getToastContainer().prepend(this.$.toast);
             this._showNewToast();
         } else if (previousToast.error === true && previousToast.opened && this.isCritical === false) { // discard new toast if existing toast is critical and new one is not; however if new one is critical -- do not discard it -- show overridden information
             console.warn('    toast show: DISCARDED: text = ', this.text + ', critical = ' + this.isCritical);
@@ -258,6 +202,9 @@ Polymer({
                 previousTgToast.showProgress = this.showProgress;
                 previousTgToast.hasMore = this.hasMore;
                 previousTgToast.isCritical = this.isCritical;
+            }
+            if (this.getToastContainer().firstChild !== previousToast) {
+                this.getToastContainer().prepend(previousToast);
             }
             previousTgToast._showNewToast();
         }
@@ -301,7 +248,14 @@ Polymer({
 
     _closeToast: function () {
         this.$.toast.close();
-        this.$.toast._autoCloseCallBack = null;
+        if (this.$.toast._autoCloseCallBack !== null) {
+            this.$.toast.cancelAsync(this.$.toast._autoCloseCallBack);
+            this.$.toast._autoCloseCallBack = null;
+        }
         this.$.toast.error = false;
+    },
+
+    _toast: function () {
+        return this.$.toast;
     }
 });

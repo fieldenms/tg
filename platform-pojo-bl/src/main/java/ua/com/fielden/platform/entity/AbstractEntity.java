@@ -1,10 +1,12 @@
 package ua.com.fielden.platform.entity;
 
 import static java.lang.String.format;
+import static java.util.Collections.emptySet;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.stream.Collectors.toCollection;
 import static java.util.stream.Collectors.toList;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_LENGTH;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_PRECISION;
 import static ua.com.fielden.platform.entity.annotation.IsProperty.DEFAULT_SCALE;
@@ -17,13 +19,17 @@ import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionExceptio
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_USE_OF_PARAM_LENGTH_MSG;
 import static ua.com.fielden.platform.entity.exceptions.EntityDefinitionException.INVALID_VALUES_FOR_PRECITION_AND_SCALE_MSG;
 import static ua.com.fielden.platform.entity.validation.custom.DefaultEntityValidator.validateWithCritOnly;
-import static ua.com.fielden.platform.error.Result.asRuntime;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.EntityMetadata.entityExistsAnnotation;
 import static ua.com.fielden.platform.reflection.EntityMetadata.isEntityExistsValidationApplicable;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isNumeric;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.stripIfNeeded;
+import static ua.com.fielden.platform.utils.EntityUtils.isHyperlink;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedSetOf;
+import static ua.com.fielden.platform.utils.CollectionUtil.removeFirst;
+import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
+import static ua.com.fielden.platform.utils.EntityUtils.isHyperlink;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 
 import java.lang.annotation.Annotation;
@@ -39,11 +45,12 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 
@@ -62,13 +69,16 @@ import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
-import ua.com.fielden.platform.entity.annotation.Optional;
 import ua.com.fielden.platform.entity.annotation.Readonly;
 import ua.com.fielden.platform.entity.annotation.Required;
+import ua.com.fielden.platform.entity.annotation.SkipDefaultStringKeyMemberValidation;
 import ua.com.fielden.platform.entity.annotation.Title;
 import ua.com.fielden.platform.entity.annotation.Unique;
 import ua.com.fielden.platform.entity.annotation.UpperCase;
+import ua.com.fielden.platform.entity.annotation.factory.BeforeChangeAnnotation;
+import ua.com.fielden.platform.entity.annotation.factory.HandlerAnnotation;
 import ua.com.fielden.platform.entity.annotation.mutator.BeforeChange;
+import ua.com.fielden.platform.entity.annotation.mutator.Handler;
 import ua.com.fielden.platform.entity.exceptions.EntityDefinitionException;
 import ua.com.fielden.platform.entity.exceptions.EntityException;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -87,6 +97,7 @@ import ua.com.fielden.platform.entity.validation.annotation.Final;
 import ua.com.fielden.platform.entity.validation.annotation.ValidationAnnotation;
 import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.error.Warning;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 import ua.com.fielden.platform.reflection.EntityMetadata;
 import ua.com.fielden.platform.reflection.Finder;
@@ -268,18 +279,18 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     @MapTo("_ID")
     @Title(value = "Id", desc = "Surrogate unique identifier.")
     private Long id;
-    
+
     @MapTo(value = "_VERSION", defaultValue = "0")
     private Long version = 0L;
-    
+
     @IsProperty
     @UpperCase
     @MapTo("KEY_")
     @Required
     private K key;
-    
+
     private final boolean compositeKey;
-    
+
     @IsProperty
     @MapTo("DESC_")
     private String desc;
@@ -291,13 +302,13 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     public static final String GETKEY = "getKey()";
     public static final String DESC = "desc";
     public static final String KEY_NOT_ASSIGNED = "[key is not assigned]";
-    
+
     /**
      * A flag that provides a way to enforce more strict model verification, which is the default approach.
      */
-    public static final boolean STRICT_MODEL_VERIFICATION;
-    static { // static initialisation block is required instead of direct value assignment to enable reassignment of the value at runtime
-        STRICT_MODEL_VERIFICATION = true;
+    private static boolean STRICT_MODEL_VERIFICATION = true;
+    public static boolean isStrictModelVerification() {
+    	return STRICT_MODEL_VERIFICATION;
     }
 
     /**
@@ -306,22 +317,14 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      * It is strongly recommended not to use this mode during application development.
      */
     public static void useNonStrictModelVerification() {
-        try {
-            Reflector.assignStatic(AbstractEntity.class.getDeclaredField("STRICT_MODEL_VERIFICATION"), false);
-        } catch (final Exception ex) {
-            throw asRuntime(ex);
-        }
+    	STRICT_MODEL_VERIFICATION = false;
     }
 
     /**
      * Enforces the strict verification of the domain model, which is the default approach.
      */
     public static void useStrictModelVerification() {
-        try {
-            Reflector.assignStatic(AbstractEntity.class.getDeclaredField("STRICT_MODEL_VERIFICATION"), true);
-        } catch (final Exception ex) {
-            throw asRuntime(ex);
-        }
+    	STRICT_MODEL_VERIFICATION = true;
     }
 
     /**
@@ -371,7 +374,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         }
 
 
-        logger = Logger.getLogger(this.getType());
+        logger = getLogger(this.getType());
 
         compositeKey = DynamicEntityKey.class.equals(keyType);
         if (compositeKey) {
@@ -560,6 +563,16 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     }
 
     /**
+     * Dynamic getter for accessing property value.
+     *
+     * @param propertyName
+     * @return
+     */
+    public <T> T get(final IConvertableToPath propertyName) {
+        return get(propertyName.toPath());
+    }
+
+    /**
      * Dynamic setter for setting property value.
      *
      * @param propertyName
@@ -594,6 +607,16 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                 throw new EntityException(format("Error setting value [%s] into property [%s] for entity [%s]@[%s].", value, propertyName, this, getType().getName()), e);
             }
         }
+    }
+
+    /**
+     * Dynamic setter for setting property value.
+     *
+     * @param propertyName
+     * @param value
+     */
+    public AbstractEntity<K> set(final IConvertableToPath propertyName, final Object value) {
+        return set(propertyName.toPath(), value);
     }
 
     /**
@@ -698,8 +721,8 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     }
 
     /**
-     * Early runtime validation of property definitions. This kind of validations should be moved to complile time in due course. 
-     * 
+     * Early runtime validation of property definitions. This kind of validations should be moved to complile time in due course.
+     *
      * @param propName
      * @param type
      * @param isCollectional
@@ -708,19 +731,19 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
      */
     private void earlyRuntimePropertyDefinitionValidation(final String propName, final Class<?> type, final boolean isCollectional, final IsProperty isPropertyAnnotation, final Class<?> propertyAnnotationType) {
         final boolean isNumeric = isNumeric(type);
-        
+
         if (!isNumeric &&
-            (isPropertyAnnotation.precision() != DEFAULT_PRECISION || 
-             isPropertyAnnotation.scale() != DEFAULT_SCALE || 
+            (isPropertyAnnotation.precision() != DEFAULT_PRECISION ||
+             isPropertyAnnotation.scale() != DEFAULT_SCALE ||
              isPropertyAnnotation.trailingZeros() != DEFAULT_TRAILING_ZEROS)) {
             final String error = format(INVALID_USE_OF_NUMERIC_PARAMS_MSG,  propName, getType().getName());
             logger.error(error);
             throw new EntityDefinitionException(error);
-            
+
         }
 
         if (isNumeric &&
-            (isPropertyAnnotation.precision() != DEFAULT_PRECISION || isPropertyAnnotation.scale() != DEFAULT_SCALE) && 
+            (isPropertyAnnotation.precision() != DEFAULT_PRECISION || isPropertyAnnotation.scale() != DEFAULT_SCALE) &&
             (isPropertyAnnotation.precision() <= 0 || isPropertyAnnotation.scale() < 0)) {
             final String error = format(INVALID_USE_FOR_PRECITION_AND_SCALE_MSG, propName, getType().getName());
             logger.error(error);
@@ -731,15 +754,15 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                 final String error = format(INVALID_VALUES_FOR_PRECITION_AND_SCALE_MSG, propName, getType().getName());
                 logger.error(error);
                 throw new EntityDefinitionException(error);
-                
+
         }
 
-        if (!isString(type) && !type.isArray() && isPropertyAnnotation.length() != DEFAULT_LENGTH) {
+        if (!isString(type) && !isHyperlink(type) && !type.isArray() && isPropertyAnnotation.length() != DEFAULT_LENGTH) {
             final String error = format(INVALID_USE_OF_PARAM_LENGTH_MSG, propName, getType().getName());
             logger.error(error);
             throw new EntityDefinitionException(error);
         }
-        
+
         if ((isCollectional || PropertyDescriptor.class.isAssignableFrom(type)) && (propertyAnnotationType == Void.class || propertyAnnotationType == null)) {
             final String error = format(COLLECTIONAL_PROP_MISSING_TYPE_MSG, propName, getType().getName());
             logger.error(error);
@@ -772,50 +795,75 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     }
 
     /**
-     * Analyses mutators and their annotations to collect and instantiate all property validators.
+     * Analyses the property definition to collect and instantiate all property validators.
      *
      * @param metaPropertyFactory
      * @param field
-     * @param properyType
+     * @param propertyType
      * @param isCollectional
+     * @param validationAnnotations
      * @return map of validators
      * @throws Exception
      */
     private Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<?>, Result>> collectValidators(
             final IMetaPropertyFactory metaPropertyFactory,
             final Field field,
-            final Class<?> properyType,
+            final Class<?> propertyType,
             final boolean isCollectional,
             final Set<Annotation> validationAnnotations)
-            throws Exception {
+            throws Exception
+    {
         try {
             final Map<ValidationAnnotation, Map<IBeforeChangeEventHandler<?>, Result>> validators = new EnumMap<>(ValidationAnnotation.class);
             // Get corresponding mutators to pick all specified validators in case of a collectional property there can be up to three mutators --
             // removeFrom[property name], addTo[property name] and set[property name]
-            final Set<Annotation> propertyValidationAnotations = extractValidationAnnotationForProperty(field, properyType, isCollectional);
-            for (final Annotation annotation : propertyValidationAnotations) {
-                final ValidationAnnotation validationAnnotation = ValidationAnnotation.getValueByType(annotation);
+            // The returned Set is mutable
+            final Set<Annotation> propValidationAnnots = extractValidationAnnotationForProperty(field, propertyType, isCollectional);
+
+            // let's add implicit default validation as early as possible to @BeforeChange
+            // special validation of String-typed key or String-typed key-members
+            // applied on top of existing @BeforeChange validators, if any, but placed before the explicitly defined handlers
+            if (AbstractEntity.KEY.equals(field.getName()) && String.class == this.getKeyType() || // the type of property "key" cannot be determined from field, hence a separate check
+                field.isAnnotationPresent(CompositeKeyMember.class) && String.class == field.getType()) {
+                final SkipDefaultStringKeyMemberValidation skipAnnot = field.getAnnotation(SkipDefaultStringKeyMemberValidation.class);
+                final Set<Class<? extends IBeforeChangeEventHandler<String>>> allDefaultStringValidators = linkedSetOf(SkipDefaultStringKeyMemberValidation.ALL_DEFAULT_STRING_KEY_VALIDATORS);
+                allDefaultStringValidators.removeAll(skipAnnot == null ? emptySet() : setOf(skipAnnot.value()));
+                if (!allDefaultStringValidators.isEmpty()) {
+                    final Handler[] handlers = allDefaultStringValidators.stream()
+                            .map(bce -> new HandlerAnnotation(bce).newInstance())
+                            .toArray(Handler[]::new);
+                    final BeforeChange implicitBch = BeforeChangeAnnotation.newInstance(handlers);
+    
+                    // merge with declared @BeforeChange, if exists
+                    final Optional<Annotation> maybeDeclaredBch = removeFirst(propValidationAnnots, at -> at.annotationType() == BeforeChange.class);
+                    final BeforeChange bch = maybeDeclaredBch.map(annotation -> BeforeChangeAnnotation.merge(implicitBch, (BeforeChange) annotation)).orElse(implicitBch);
+                    propValidationAnnots.add(bch);
+                }
+            }
+
+            for (final Annotation annotation : propValidationAnnots) {
                 // if property factory cannot instantiate a validator for the specified annotation then null is returned
-                final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(annotation, this, field.getName(), properyType);
+                final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(annotation, this, field.getName(), propertyType);
                 if (annotationValidators.length > 0) {
                     final Map<IBeforeChangeEventHandler<?>, Result> handlersAndResults = new LinkedHashMap<>();
                     for (final IBeforeChangeEventHandler<?> handler : annotationValidators) {
                         handlersAndResults.put(handler, null);
                     }
+                    final ValidationAnnotation validationAnnotation = ValidationAnnotation.getValueByType(annotation);
                     validators.put(validationAnnotation, handlersAndResults);
                 }
             }
 
             // now let's see if we need to add EntityExists validation
             if (!validators.containsKey(ValidationAnnotation.ENTITY_EXISTS) && (isEntityExistsValidationApplicable(getType(), field))) {
-                final EntityExists eeAnnotation = entityExistsAnnotation(getType(), field.getName(),  (Class<? extends AbstractEntity<?>>) properyType);
-                final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(eeAnnotation, this, field.getName(), properyType);
+                final EntityExists eeAnnotation = entityExistsAnnotation(getType(), field.getName(),  (Class<? extends AbstractEntity<?>>) propertyType);
+                final IBeforeChangeEventHandler<?>[] annotationValidators = metaPropertyFactory.create(eeAnnotation, this, field.getName(), propertyType);
 
                 if (annotationValidators.length != 1) {
                     throw new EntityDefinitionException(format("Unexpexted number of @EntityExists annotations (expected 1, but actual %s) for property [%s] in entity [%s].", annotationValidators.length, field.getType(), getType().getName()));
                 }
 
-                propertyValidationAnotations.add(eeAnnotation);
+                propValidationAnnots.add(eeAnnotation);
                 final Map<IBeforeChangeEventHandler<?>, Result> handlersAndResults = new LinkedHashMap<>();
                 final IBeforeChangeEventHandler<?> handler = annotationValidators[0];
                 handlersAndResults.put(handler, null);
@@ -823,7 +871,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                 validators.put(ValidationAnnotation.ENTITY_EXISTS, handlersAndResults);
             }
 
-            validationAnnotations.addAll(propertyValidationAnotations);
+            validationAnnotations.addAll(propValidationAnnots);
 
             return validators;
         } catch (final Exception ex) {
@@ -870,7 +918,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
                 metaProperty.setRequired(
                         AnnotationReflector.isAnnotationPresent(field, Required.class) ||
                         (AnnotationReflector.isAnnotationPresent(field, CompositeKeyMember.class) &&
-                        !AnnotationReflector.isAnnotationPresent(field, Optional.class)));
+                        !AnnotationReflector.isAnnotationPresent(field, ua.com.fielden.platform.entity.annotation.Optional.class)));
             }
 
             if (AnnotationReflector.isAnnotationPresent(field, Title.class)) {
@@ -1027,6 +1075,17 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     }
 
     /**
+     * Guarantees to return an instance of {@link MetaProperty} for the specified property name if it exists.
+     * Otherwise, throws an exception.
+     *
+     * @param name
+     * @return
+     */
+    public final <T> MetaProperty<T> getProperty(final IConvertableToPath name) {
+        return getProperty(name.toPath());
+    }
+
+    /**
      * Returns an empty optional if the specified name represents a proxied property.
      * Throws {@link EntityException} in case of uninstrumeted entity.
      *
@@ -1036,6 +1095,17 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
     public final <T> java.util.Optional<MetaProperty<T>> getPropertyIfNotProxy(final String name) {
         final MetaProperty<T> prop = getProperty(name);
         return prop.isProxy() ? empty() : of(prop);
+    }
+
+    /**
+     * Returns an empty optional if the specified name represents a proxied property.
+     * Throws {@link EntityException} in case of uninstrumeted entity.
+     *
+     * @param name
+     * @return
+     */
+    public final <T> java.util.Optional<MetaProperty<T>> getPropertyIfNotProxy(final IConvertableToPath name) {
+        return getPropertyIfNotProxy(name.toPath());
     }
 
     /**
@@ -1051,6 +1121,17 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             return mp != null ? of(mp) : empty();
         }
         return empty();
+    }
+
+    /**
+     * A convenient alternative to {@link #getProperty(String)} that returns an optional value with either an instance of {@link MetaProperty} or without.
+     * An empty optional value indicates that either this entity instance was not instrumented or the specified property does not belong to this entity.
+     *
+     * @param name
+     * @return
+     */
+    public final java.util.Optional<MetaProperty<?>> getPropertyOptionally(final IConvertableToPath name) {
+        return getPropertyOptionally(name.toPath());
     }
 
     /**
@@ -1261,6 +1342,10 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
         return getProperty(propertyName).getType();
     }
 
+    public Class<?> getPropertyType(final IConvertableToPath propertyName) {
+        return getPropertyType(propertyName.toPath());
+    }
+
     /**
      * Restores state of all properties to original, which includes setting original values and removal of all validation errors.
      */
@@ -1337,7 +1422,7 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             assertEntityFactoryPresence();
             copy = getEntityFactory().newEntity(type, getId());
         } else {
-            copy = EntityFactory.newPlainEntity(type,  getId()); 
+            copy = EntityFactory.newPlainEntity(type,  getId());
         }
         copy.setVersion(getVersion());
         return copy;
@@ -1364,6 +1449,15 @@ public abstract class AbstractEntity<K extends Comparable> implements Comparable
             throw new EntityException(format("The specified property name [%s] does not represent a valid property for type [%s].", preferredProperty, getType().getName()));
         }
         this.preferredProperty = preferredProperty;
+    }
+
+    /**
+     * Sets the preferred property.
+     *
+     * @param preferredProperty
+     */
+    public void setPreferredProperty(final IConvertableToPath preferredProperty) {
+        setPreferredProperty(preferredProperty.toPath());
     }
 
     /**

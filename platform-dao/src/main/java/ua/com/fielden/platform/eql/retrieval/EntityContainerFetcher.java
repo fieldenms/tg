@@ -10,6 +10,7 @@ import static ua.com.fielden.platform.eql.retrieval.EntityHibernateRetrievalQuer
 import static ua.com.fielden.platform.eql.retrieval.EntityResultTreeBuilder.build;
 import static ua.com.fielden.platform.eql.stage3.EqlQueryTransformer.transform;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 import java.util.Collection;
 import java.util.List;
@@ -18,7 +19,7 @@ import java.util.SortedSet;
 import java.util.TreeSet;
 import java.util.stream.Stream;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.Query;
 import org.hibernate.ScrollMode;
 import org.joda.time.DateTime;
@@ -36,7 +37,7 @@ import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.entity.query.stream.ScrollableResultStream;
-import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage3.etc.Yield3;
 import ua.com.fielden.platform.eql.stage3.etc.Yields3;
 import ua.com.fielden.platform.eql.stage3.operands.ResultQuery3;
@@ -44,7 +45,7 @@ import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 
 public class EntityContainerFetcher {
     private final QueryExecutionContext executionContext;
-    private final Logger logger = Logger.getLogger(this.getClass());
+    private final Logger logger = getLogger(this.getClass());
     
     public EntityContainerFetcher(final QueryExecutionContext executionContext) {
         this.executionContext = executionContext;
@@ -99,7 +100,7 @@ public class EntityContainerFetcher {
         final DateTime st = new DateTime();
         final List<?> res = query.list();
         final Period pd = new Period(st, new DateTime());
-        logger.info(format("Query exec duration: %s m %s s %s ms for type [%s].", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), modelResult.resultType.getSimpleName()));
+        logger.debug(format("Query exec duration: %s m %s s %s ms for type [%s].", pd.getMinutes(), pd.getSeconds(), pd.getMillis(), modelResult.resultType.getSimpleName()));
         
         return entityRawResultConverter.transformFromNativeResult(resultTree, res);
     }
@@ -128,7 +129,7 @@ public class EntityContainerFetcher {
     }
 
     private <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryProcessingModel<E, ?> qem, final DbVersion dbVersion, final IFilter filter, final String username) {
-        final TransformationResult<ResultQuery3> tr = transform(qem, filter, username, executionContext.dates(), executionContext.getDomainMetadata().eqlDomainMetadata);
+        final TransformationResult2<ResultQuery3> tr = transform(qem, filter, username, executionContext.dates(), executionContext.getDomainMetadata().eqlDomainMetadata);
         final ResultQuery3 entQuery3 = tr.item;
         final String sql = entQuery3.sql(dbVersion);
         return new QueryModelResult<>((Class<E>) entQuery3.resultType, sql, getResultPropsInfos(entQuery3.yields), tr.updatedContext.getParamValues(), qem.fetchModel);

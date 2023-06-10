@@ -1415,6 +1415,8 @@
             
             test('union entity: key access for empty union entity returns empty value', function (done) {
                 const uEntity = reflector.newEntity(typeName3); // TgBogieLocation union entity (no active entity)
+                uEntity.wagonSlot = null;
+                uEntity.workshop = null;
                 
                 assert.strictEqual(uEntity.get('key'), null);
                 done();
@@ -1422,14 +1424,20 @@
             
             test('union entity: equality comparison succeeds for empty union entity', function (done) {
                 const uEntity1 = reflector.newEntity(typeName3); // TgBogieLocation union entity (no active entity)
+                uEntity1.wagonSlot = null;
+                uEntity1.workshop = null;
                 const uEntity2 = reflector.newEntity(typeName3); // TgBogieLocation union entity (no active entity)
+                uEntity2.wagonSlot = null;
+                uEntity2.workshop = null;
                 assert.strictEqual(reflector.equalsEx(uEntity1, uEntity2), true);
                 done();
             });
             
             test('union entity: conversion succeeds for empty union entity', function (done) {
                 const uEntity1 = reflector.newEntity(typeName3); // TgBogieLocation union entity (no active entity)
-                assert.strictEqual(reflector.tg_convert(uEntity1), '');
+                uEntity1.wagonSlot = null;
+                uEntity1.workshop = null;
+                assert.strictEqual(reflector.tg_convert(uEntity1), reflector.KEY_NOT_ASSIGNED);
                 done();
             });
             
@@ -1438,6 +1446,7 @@
                 const workshop1 = reflector.newEntity(typeName4); // TgWorkshop
                 workshop1.key = 'W1';
                 uEntity.workshop = workshop1;
+                uEntity.wagonSlot = null;
                 
                 assert.strictEqual(uEntity.get('key'), 'W1');
                 done();
@@ -1448,10 +1457,12 @@
                 const workshop1 = reflector.newEntity(typeName4); // TgWorkshop
                 workshop1.key = 'W1';
                 uEntity1.workshop = workshop1;
+                uEntity1.wagonSlot = null;
                 const uEntity2 = reflector.newEntity(typeName3); // TgBogieLocation union entity (simple active entity)
                 const workshop2 = reflector.newEntity(typeName4); // TgWorkshop
                 workshop2.key = 'W1';
                 uEntity2.workshop = workshop2;
+                uEntity2.wagonSlot = null;
                 
                 assert.strictEqual(reflector.equalsEx(uEntity1, uEntity2), true);
                 done();
@@ -1462,6 +1473,7 @@
                 const workshop1 = reflector.newEntity(typeName4); // TgWorkshop
                 workshop1.key = 'W1';
                 uEntity1.workshop = workshop1;
+                uEntity1.wagonSlot = null;
                 
                 assert.strictEqual(reflector.tg_convert(uEntity1), 'W1');
                 done();

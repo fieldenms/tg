@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.utils;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 import java.awt.Image;
 import java.awt.Toolkit;
@@ -13,7 +14,8 @@ import java.util.Optional;
 import javax.swing.ImageIcon;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+
 
 /**
  * This is a helper class for loading resources, which correctly handles path resolution for resources bundled in a jar.
@@ -24,7 +26,7 @@ import org.apache.log4j.Logger;
 public class ResourceLoader {
 
     private static final String ERR_COULD_NOT_LOAD = "Could not load resource [%s].";
-    private static final Logger LOGGER = Logger.getLogger(ResourceLoader.class);
+    private static final Logger LOGGER = getLogger(ResourceLoader.class);
 
     public static Image getImage(final String pathAndFileName) {
         try {

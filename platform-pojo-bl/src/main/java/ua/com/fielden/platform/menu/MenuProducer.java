@@ -2,6 +2,7 @@ package ua.com.fielden.platform.menu;
 
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toSet;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchKeyAndDescOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
@@ -19,7 +20,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 
@@ -35,7 +36,7 @@ import ua.com.fielden.platform.security.user.User;
 
 public class MenuProducer extends DefaultEntityProducerWithContext<Menu> {
 
-    private static final Logger LOGGER = Logger.getLogger(MenuProducer.class);
+    private static final Logger LOGGER = getLogger(MenuProducer.class);
 
     private final IMenuRetriever menuRetriever;
     private final IUserProvider userProvider;

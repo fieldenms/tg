@@ -10,7 +10,8 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.atomic.AtomicInteger;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -45,7 +46,7 @@ public class LoginInitiateResetResource extends AbstractWebResource {
     
     public static final String BINDING_PATH = "/forgotten";
 
-    private final Logger logger = Logger.getLogger(LoginInitiateResetResource.class);
+    private final Logger logger = LogManager.getLogger(LoginInitiateResetResource.class);
 
     private final IWebResourceLoader webResourceLoader;
     private final String appUri;

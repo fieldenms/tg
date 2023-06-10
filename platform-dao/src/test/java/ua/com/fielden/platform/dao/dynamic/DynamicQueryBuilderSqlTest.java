@@ -40,6 +40,10 @@ import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfa
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.entity_centre.mnemonics.DateMnemonicUtils;
+import ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum;
+import ua.com.fielden.platform.entity_centre.mnemonics.DateRangeSelectorEnum;
+import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
@@ -51,10 +55,6 @@ import ua.com.fielden.platform.test.CommonTestEntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.test.EntityModuleWithPropertyFactory;
 import ua.com.fielden.platform.types.Money;
 import ua.com.fielden.platform.utils.IDates;
-import ua.com.fielden.snappy.DateRangePrefixEnum;
-import ua.com.fielden.snappy.DateRangeSelectorEnum;
-import ua.com.fielden.snappy.DateUtilities;
-import ua.com.fielden.snappy.MnemonicEnum;
 
 /**
  * A test for {@link DynamicQueryBuilder}.
@@ -324,8 +324,8 @@ public class DynamicQueryBuilderSqlTest {
         property.setDateMnemonic(MnemonicEnum.QRT2);
 
         final Date currentDate = new Date();
-        final Date from = DateUtilities.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.BEGINNING, property.getDatePrefix(), property.getDateMnemonic(), dates), //
-        /*         */to = DateUtilities.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.ENDING, property.getDatePrefix(), property.getDateMnemonic(), dates);
+        final Date from = DateMnemonicUtils.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.BEGINNING, property.getDatePrefix(), property.getDateMnemonic(), dates), //
+        /*         */to = DateMnemonicUtils.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.ENDING, property.getDatePrefix(), property.getDateMnemonic(), dates);
 
         final String cbn = property.getConditionBuildingName();
 
@@ -355,7 +355,7 @@ public class DynamicQueryBuilderSqlTest {
         property.setAndBefore(true);
 
         final Date currentDate = new Date();
-        final Date to = DateUtilities.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.ENDING, property.getDatePrefix(), property.getDateMnemonic(), dates);
+        final Date to = DateMnemonicUtils.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.ENDING, property.getDatePrefix(), property.getDateMnemonic(), dates);
 
         final String cbn = property.getConditionBuildingName();
 
@@ -385,7 +385,7 @@ public class DynamicQueryBuilderSqlTest {
         property.setAndBefore(false);
 
         final Date currentDate = new Date();
-        final Date from = DateUtilities.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.BEGINNING, property.getDatePrefix(), property.getDateMnemonic(), dates); //
+        final Date from = DateMnemonicUtils.dateOfRangeThatIncludes(currentDate, DateRangeSelectorEnum.BEGINNING, property.getDatePrefix(), property.getDateMnemonic(), dates); //
 
         final String cbn = property.getConditionBuildingName();
 

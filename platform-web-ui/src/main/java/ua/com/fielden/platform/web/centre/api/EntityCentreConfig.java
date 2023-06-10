@@ -2,11 +2,14 @@ package ua.com.fielden.platform.web.centre.api;
 
 import static java.lang.String.format;
 import static java.util.Collections.unmodifiableList;
+import static java.util.Collections.unmodifiableMap;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
+import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints.ALTERNATIVE_VIEW;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.FRONT;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.INSERTION_POINT;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.PRIMARY_RESULT_SET;
@@ -17,6 +20,7 @@ import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalAc
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -24,8 +28,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
-import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -52,6 +54,7 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritD
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.RangeCritOtherValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritDateValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCritOtherValueMnemonic;
+import ua.com.fielden.platform.web.centre.api.exceptions.CentreConfigException;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IDynamicColumnBuilder;
@@ -62,6 +65,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.scrolling.IScrollConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.toolbar.IToolbarConfig;
 import ua.com.fielden.platform.web.centre.exceptions.PropertyDefinitionException;
 import ua.com.fielden.platform.web.layout.FlexLayout;
+import ua.com.fielden.platform.web.sse.IEventSource;
 import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
 
 /**
@@ -82,6 +86,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     private final boolean hideToolbar;
     private final IScrollConfig scrollConfig;
     private final boolean retrieveAll;
+    private final boolean lockScrollingForInsertionPoints;
     private final int pageCapacity;
     private final int maxPageCapacity;
     private final int visibleRowsCount;
@@ -207,12 +212,23 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     private final boolean runAutomatically;
 
     /**
+     * Determines the position of left and right splitters.
+     */
+    private final Integer leftSplitterPosition;
+    private final Integer rightSplitterPosition;
+
+    /**
      * Determines whether centre should forcibly refresh the current page upon a successful save of a related entity (regardless of the presence of that entity on the current page).
      */
     private final boolean enforcePostSaveRefresh;
 
-    /** Identifies URI for the Server-Side Eventing. If <code>null</code> is set then no SSE is required. */
-    private final String sseUri;
+    /** Identifies event source class that should be used as part of the topic for distributing server side event on client. If <code>null</code> is set then no SSE is required. */
+    private final Class<? extends IEventSource> eventSourceClass;
+    /** The number of seconds before refresh on sse event. This value might be null, then refresh will be immediate.
+     *  If the value is zero, then user will have to make decision whether to refresh the center or to skip it.
+     *  if the value is greater then 0, then user will have a chance to skip refreshing the specified number of seconds.
+     *  After refreshCountdown seconds centre will be refreshed immediately.*/
+    private final Integer refreshCountdown;
 
     /////////////////////////////////////////////
     ////////////////// RESULT SET ///////////////
@@ -249,18 +265,18 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         public final int width;
         public final boolean isFlexible;
 
-        private Supplier<Optional<EntityActionConfig>> propAction = Optional::empty;
+        private Optional<EntityMultiActionConfig> propAction = empty();
 
-         public static <T extends AbstractEntity<?>> ResultSetProp<T> propByName(final String propName, final int width, final boolean isFlexible, final Optional<AbstractWidget> widget, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
+         public static <T extends AbstractEntity<?>> ResultSetProp<T> propByName(final String propName, final int width, final boolean isFlexible, final Optional<AbstractWidget> widget, final String tooltipProp, final Optional<EntityMultiActionConfig> propAction) {
             return new ResultSetProp<>(propName, empty(), empty(), empty(), width, isFlexible, widget, tooltipProp, null, propAction);
         }
 
-        public static <T extends AbstractEntity<?>> ResultSetProp<T> propByDef(final PropDef<?> propDef, final int width, final boolean isFlexible, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
+        public static <T extends AbstractEntity<?>> ResultSetProp<T> propByDef(final PropDef<?> propDef, final int width, final boolean isFlexible, final String tooltipProp, final Optional<EntityMultiActionConfig> propAction) {
             return new ResultSetProp<>(null, empty(), empty(), empty(), width, isFlexible, Optional.empty(), tooltipProp, propDef, propAction);
         }
 
         public static <T extends AbstractEntity<?>> ResultSetProp<T> dynamicProps(final String collectionalPropertyName, final Class<? extends IDynamicColumnBuilder<T>> dynamicPropDefinerClass, final BiConsumer<? extends AbstractEntity<?>, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
-            return new ResultSetProp<>(collectionalPropertyName, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), 0, false, Optional.empty(), null, null, () -> Optional.empty());
+            return new ResultSetProp<>(collectionalPropertyName, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), 0, false, empty(), null, null, empty());
         }
 
         private ResultSetProp(
@@ -273,14 +289,14 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
                 final Optional<AbstractWidget> widget,
                 final String tooltipProp,
                 final PropDef<?> propDef,
-                final Supplier<Optional<EntityActionConfig>> propAction) {
+                final Optional<EntityMultiActionConfig> propAction) {
 
             if (propName != null && propDef != null) {
                 throw new WebUiBuilderException("Only one of property name or property definition should be provided.");
             }
 
             if (propAction == null) {
-                throw new WebUiBuilderException("Property action suppplier cannot be null.");
+                throw new WebUiBuilderException("Multiple Property Action cannot be null.");
             }
 
             if (StringUtils.isEmpty(propName) && propDef == null) {
@@ -299,11 +315,11 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             this.entityPreProcessor = entityPreProcessor;
         }
 
-        public void setPropAction(final Supplier<Optional<EntityActionConfig>> propAction) {
+        public void setPropAction(final Optional<EntityMultiActionConfig> propAction) {
             this.propAction = propAction;
         }
 
-        public Supplier<Optional<EntityActionConfig>> getPropAction() {
+        public Optional<EntityMultiActionConfig> getPropAction() {
             return propAction;
         }
 
@@ -411,6 +427,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final boolean hideToolbar,
             final IScrollConfig scrollConfig,
             final boolean retrieveAll,
+            final boolean lockScrollingForInsertionPoints,
             final int pageCapacity,
             final int maxPageCapacity,
             final int visibleRowsCount,
@@ -458,7 +475,11 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final boolean runAutomatically,
             final boolean enforcePostSaveRefresh,
 
-            final String sseUri,
+            final Integer leftSplitterPosition,
+            final Integer rightSplitterPosition,
+
+            final Class<? extends IEventSource> eventSourceClass,
+            final Integer refreshCountdown,
 
             final FlexLayout selectionCriteriaLayout,
             final FlexLayout resultsetCollapsedCardLayout,
@@ -484,6 +505,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         this.hideToolbar = hideToolbar;
         this.scrollConfig = scrollConfig;
         this.retrieveAll = retrieveAll;
+        this.lockScrollingForInsertionPoints = lockScrollingForInsertionPoints;
         this.pageCapacity = pageCapacity;
         this.maxPageCapacity = maxPageCapacity;
         this.visibleRowsCount = visibleRowsCount;
@@ -535,8 +557,11 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
         this.runAutomatically = runAutomatically;
         this.enforcePostSaveRefresh = enforcePostSaveRefresh;
+        this.leftSplitterPosition = leftSplitterPosition;
+        this.rightSplitterPosition = rightSplitterPosition;
 
-        this.sseUri = sseUri;
+        this.eventSourceClass = eventSourceClass;
+        this.refreshCountdown = refreshCountdown;
 
         this.resultSetProperties.addAll(resultSetProperties);
         this.summaryExpressions.putAll(summaryExpressions);
@@ -588,6 +613,14 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return runAutomatically;
     }
 
+    public Optional<Integer> getLeftSplitterPosition() {
+        return ofNullable(leftSplitterPosition);
+    }
+
+    public Optional<Integer> getRightSplitterPosition() {
+        return ofNullable(rightSplitterPosition);
+    }
+
     public boolean shouldEnforcePostSaveRefresh() {
         return enforcePostSaveRefresh;
     }
@@ -627,7 +660,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         if (valueMatchersForSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(Collections.unmodifiableMap(valueMatchersForSelectionCriteria));
+        return Optional.of(unmodifiableMap(valueMatchersForSelectionCriteria));
     }
 
     public List<Pair<String, Boolean>> getAdditionalPropsForAutocompleter(final String critName) {
@@ -650,154 +683,154 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         if (defaultMultiValueAssignersForEntityAndStringSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(Collections.unmodifiableMap(defaultMultiValueAssignersForEntityAndStringSelectionCriteria));
+        return Optional.of(unmodifiableMap(defaultMultiValueAssignersForEntityAndStringSelectionCriteria));
     }
 
     public Optional<Map<String, Class<? extends IValueAssigner<RangeCritDateValueMnemonic, T>>>> getDefaultRangeValueAssignersForDateSelectionCriteria() {
         if (defaultRangeValueAssignersForDateSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(Collections.unmodifiableMap(defaultRangeValueAssignersForDateSelectionCriteria));
+        return Optional.of(unmodifiableMap(defaultRangeValueAssignersForDateSelectionCriteria));
     }
 
     public Optional<Map<String, Class<? extends IValueAssigner<RangeCritOtherValueMnemonic<Integer>, T>>>> getDefaultRangeValueAssignersForIntegerSelectionCriteria() {
         if (defaultRangeValueAssignersForIntegerSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(Collections.unmodifiableMap(defaultRangeValueAssignersForIntegerSelectionCriteria));
+        return Optional.of(unmodifiableMap(defaultRangeValueAssignersForIntegerSelectionCriteria));
     }
 
     public Optional<Map<String, Class<? extends IValueAssigner<RangeCritOtherValueMnemonic<BigDecimal>, T>>>> getDefaultRangeValueAssignersForBigDecimalAndMoneySelectionCriteria() {
         if (defaultRangeValueAssignersForBigDecimalAndMoneySelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(Collections.unmodifiableMap(defaultRangeValueAssignersForBigDecimalAndMoneySelectionCriteria));
+        return Optional.of(unmodifiableMap(defaultRangeValueAssignersForBigDecimalAndMoneySelectionCriteria));
     }
 
     public Optional<Map<String, Class<? extends IValueAssigner<? extends SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>, T>>>> getDefaultSingleValueAssignersForEntitySelectionCriteria() {
         if (defaultSingleValueAssignersForEntitySelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(Collections.unmodifiableMap(defaultSingleValueAssignersForEntitySelectionCriteria));
+        return Optional.of(unmodifiableMap(defaultSingleValueAssignersForEntitySelectionCriteria));
     }
 
     public Optional<Map<String, Class<? extends IValueAssigner<SingleCritOtherValueMnemonic<String>, T>>>> getDefaultSingleValueAssignersForStringSelectionCriteria() {
         if (defaultSingleValueAssignersForStringSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(Collections.unmodifiableMap(defaultSingleValueAssignersForStringSelectionCriteria));
+        return Optional.of(unmodifiableMap(defaultSingleValueAssignersForStringSelectionCriteria));
     }
 
     public Optional<Map<String, Class<? extends IValueAssigner<SingleCritOtherValueMnemonic<Boolean>, T>>>> getDefaultSingleValueAssignersForBooleanSelectionCriteria() {
         if (defaultSingleValueAssignersForBooleanSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(Collections.unmodifiableMap(defaultSingleValueAssignersForBooleanSelectionCriteria));
+        return Optional.of(unmodifiableMap(defaultSingleValueAssignersForBooleanSelectionCriteria));
     }
 
     public Optional<Map<String, Class<? extends IValueAssigner<SingleCritOtherValueMnemonic<Integer>, T>>>> getDefaultSingleValueAssignersForIntegerSelectionCriteria() {
         if (defaultSingleValueAssignersForIntegerSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(Collections.unmodifiableMap(defaultSingleValueAssignersForIntegerSelectionCriteria));
+        return Optional.of(unmodifiableMap(defaultSingleValueAssignersForIntegerSelectionCriteria));
     }
 
     public Optional<Map<String, Class<? extends IValueAssigner<SingleCritOtherValueMnemonic<BigDecimal>, T>>>> getDefaultSingleValueAssignersForBigDecimalAndMoneySelectionCriteria() {
         if (defaultSingleValueAssignersForBigDecimalAndMoneySelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(Collections.unmodifiableMap(defaultSingleValueAssignersForBigDecimalAndMoneySelectionCriteria));
+        return Optional.of(unmodifiableMap(defaultSingleValueAssignersForBigDecimalAndMoneySelectionCriteria));
     }
 
     public Optional<Map<String, Class<? extends IValueAssigner<SingleCritDateValueMnemonic, T>>>> getDefaultSingleValueAssignersForDateSelectionCriteria() {
         if (defaultSingleValueAssignersForDateSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(Collections.unmodifiableMap(defaultSingleValueAssignersForDateSelectionCriteria));
+        return Optional.of(unmodifiableMap(defaultSingleValueAssignersForDateSelectionCriteria));
     }
 
     public Optional<Map<String, Class<? extends IValueAssigner<MultiCritBooleanValueMnemonic, T>>>> getDefaultMultiValueAssignersForBooleanSelectionCriteria() {
         if (defaultMultiValueAssignersForBooleanSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(Collections.unmodifiableMap(defaultMultiValueAssignersForBooleanSelectionCriteria));
+        return Optional.of(unmodifiableMap(defaultMultiValueAssignersForBooleanSelectionCriteria));
     }
 
     public Optional<Map<String, MultiCritStringValueMnemonic>> getDefaultMultiValuesForEntityAndStringSelectionCriteria() {
         if (defaultMultiValuesForEntityAndStringSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(Collections.unmodifiableMap(defaultMultiValuesForEntityAndStringSelectionCriteria));
+        return Optional.of(unmodifiableMap(defaultMultiValuesForEntityAndStringSelectionCriteria));
     }
 
     public Optional<Map<String, MultiCritBooleanValueMnemonic>> getDefaultMultiValuesForBooleanSelectionCriteria() {
         if (defaultMultiValuesForBooleanSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(Collections.unmodifiableMap(defaultMultiValuesForBooleanSelectionCriteria));
+        return Optional.of(unmodifiableMap(defaultMultiValuesForBooleanSelectionCriteria));
     }
 
     public Optional<Map<String, RangeCritDateValueMnemonic>> getDefaultRangeValuesForDateSelectionCriteria() {
         if (defaultRangeValuesForDateSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(Collections.unmodifiableMap(defaultRangeValuesForDateSelectionCriteria));
+        return Optional.of(unmodifiableMap(defaultRangeValuesForDateSelectionCriteria));
     }
 
     public Optional<Map<String, RangeCritOtherValueMnemonic<Integer>>> getDefaultRangeValuesForIntegerSelectionCriteria() {
         if (defaultRangeValuesForIntegerSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(Collections.unmodifiableMap(defaultRangeValuesForIntegerSelectionCriteria));
+        return Optional.of(unmodifiableMap(defaultRangeValuesForIntegerSelectionCriteria));
     }
 
     public Optional<Map<String, RangeCritOtherValueMnemonic<BigDecimal>>> getDefaultRangeValuesForBigDecimalAndMoneySelectionCriteria() {
         if (defaultRangeValuesForBigDecimalAndMoneySelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(Collections.unmodifiableMap(defaultRangeValuesForBigDecimalAndMoneySelectionCriteria));
+        return Optional.of(unmodifiableMap(defaultRangeValuesForBigDecimalAndMoneySelectionCriteria));
     }
 
     public Optional<Map<String, SingleCritOtherValueMnemonic<? extends AbstractEntity<?>>>> getDefaultSingleValuesForEntitySelectionCriteria() {
         if (defaultSingleValuesForEntitySelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(Collections.unmodifiableMap(defaultSingleValuesForEntitySelectionCriteria));
+        return Optional.of(unmodifiableMap(defaultSingleValuesForEntitySelectionCriteria));
     }
 
     public Optional<Map<String, SingleCritOtherValueMnemonic<String>>> getDefaultSingleValuesForStringSelectionCriteria() {
         if (defaultSingleValuesForStringSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(Collections.unmodifiableMap(defaultSingleValuesForStringSelectionCriteria));
+        return Optional.of(unmodifiableMap(defaultSingleValuesForStringSelectionCriteria));
     }
 
     public Optional<Map<String, SingleCritOtherValueMnemonic<Boolean>>> getDefaultSingleValuesForBooleanSelectionCriteria() {
         if (defaultSingleValuesForBooleanSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(Collections.unmodifiableMap(defaultSingleValuesForBooleanSelectionCriteria));
+        return Optional.of(unmodifiableMap(defaultSingleValuesForBooleanSelectionCriteria));
     }
 
     public Optional<Map<String, SingleCritOtherValueMnemonic<Integer>>> getDefaultSingleValuesForIntegerSelectionCriteria() {
         if (defaultSingleValuesForIntegerSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(Collections.unmodifiableMap(defaultSingleValuesForIntegerSelectionCriteria));
+        return Optional.of(unmodifiableMap(defaultSingleValuesForIntegerSelectionCriteria));
     }
 
     public Optional<Map<String, SingleCritOtherValueMnemonic<BigDecimal>>> getDefaultSingleValuesForBigDecimalAndMoneySelectionCriteria() {
         if (defaultSingleValuesForBigDecimalAndMoneySelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(Collections.unmodifiableMap(defaultSingleValuesForBigDecimalAndMoneySelectionCriteria));
+        return Optional.of(unmodifiableMap(defaultSingleValuesForBigDecimalAndMoneySelectionCriteria));
     }
 
     public Optional<Map<String, SingleCritDateValueMnemonic>> getDefaultSingleValuesForDateSelectionCriteria() {
         if (defaultSingleValuesForDateSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(Collections.unmodifiableMap(defaultSingleValuesForDateSelectionCriteria));
+        return Optional.of(unmodifiableMap(defaultSingleValuesForDateSelectionCriteria));
     }
 
     public Optional<Class<? extends IRenderingCustomiser<?>>> getResultSetRenderingCustomiserType() {
@@ -808,7 +841,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         if (resultSetOrdering.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(Collections.unmodifiableMap(resultSetOrdering));
+        return Optional.of(unmodifiableMap(resultSetOrdering));
     }
 
     public Optional<Class<? extends ICustomPropsAssignmentHandler>> getResultSetCustomPropAssignmentHandlerType() {
@@ -824,34 +857,50 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
      */
     public EntityActionConfig actionConfig(final FunctionalActionKind actionKind, final int actionNumber) {
         if (TOP_LEVEL == actionKind) {
-            if (!getTopLevelActions().isPresent()) {
-                throw new IllegalArgumentException("No top-level action exists.");
+            // Top actions for entity centre consists of EGI's top action + alternative views actions.
+            // 1. Get the lists of those two types of actions
+            final Optional<List<Pair<EntityActionConfig, Optional<String>>>> optionalActions = getTopLevelActions();
+            final List<EntityActionConfig> altViewActions = getInsertionPointConfigs().stream()
+                    .filter(insPointConfig -> insPointConfig.getInsertionPointAction().whereToInsertView.isPresent()
+                            && insPointConfig.getInsertionPointAction().whereToInsertView.get() == ALTERNATIVE_VIEW
+                            && !insPointConfig.getActions().isEmpty())
+                    .flatMap(insPointConfig -> insPointConfig.getActions().stream())
+                    .collect(toList());
+            // 2. Make sure that there are some actions at all.
+            if (!optionalActions.isPresent() && altViewActions.isEmpty()) {
+                throw new CentreConfigException("No top-level action exists.");
             }
-            return getTopLevelActions().get().get(actionNumber).getKey();
+            // 3. If actionNumber is among indices for EGI's top actions then return that action, otherwise actionNumber represents one of the alternative view actions – adjust the index and return a corresponding action configuration.
+            if (optionalActions.isPresent() && actionNumber < optionalActions.get().size()) {
+                return optionalActions.get().get(actionNumber).getKey();
+            } else {
+                return altViewActions.get(actionNumber - optionalActions.map(actions -> actions.size()).orElse(0));
+            }
         } else if (PRIMARY_RESULT_SET == actionKind) {
             if (!getResultSetPrimaryEntityAction().isPresent()) {
-                throw new IllegalArgumentException("No primary result-set action exists.");
+                throw new CentreConfigException("No primary result-set action exists.");
             }
             return getResultSetPrimaryEntityAction().get().actions().get(actionNumber);
         } else if (SECONDARY_RESULT_SET == actionKind) {
             return getSecondaryActionFor(actionNumber).orElseThrow(() -> new IllegalArgumentException("No secondary result-set action exists."));
         } else if (PROP == actionKind) {
             if (!getResultSetProperties().isPresent()) {
-                throw new IllegalArgumentException("No result-set property exists.");
+                throw new CentreConfigException("No result-set property exists.");
             }
             return getResultSetProperties().get().stream()
-                    .filter(resultSetProp -> resultSetProp.propAction.get().isPresent())
-                    .map(resultSetProp -> resultSetProp.propAction.get().get())
-                    .collect(Collectors.toList())
+                    .filter(resultSetProp -> resultSetProp.propAction.isPresent())
+                    .map(resultSetProp -> resultSetProp.propAction.get().actions())
+                    .flatMap(Collection::stream)
+                    .collect(toList())
                     .get(actionNumber);
         } else if (INSERTION_POINT == actionKind) {
             if (getInsertionPointConfigs().isEmpty()) {
-                throw new IllegalArgumentException("No insertion point exists.");
+                throw new CentreConfigException("No insertion point exists.");
             }
             return getInsertionPointConfigs().get(actionNumber).getInsertionPointAction();
         } else if (FRONT == actionKind) {
             if (getFrontActions().isEmpty()) {
-                throw new IllegalArgumentException("No front action exists.");
+                throw new CentreConfigException("No front action exists.");
             }
             return getFrontActions().get(actionNumber);
         } else if (SHARE == actionKind) {
@@ -896,8 +945,12 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return Collections.unmodifiableList(insertionPointConfigs);
     }
 
-    public Optional<String> getSseUri() {
-        return Optional.ofNullable(sseUri);
+    public Optional<Class<? extends IEventSource>> getEventSourceClass() {
+        return Optional.ofNullable(eventSourceClass);
+    }
+
+    public Optional<Integer> getRefreshCountdown() {
+        return Optional.ofNullable(refreshCountdown);
     }
 
     public boolean isEgiHidden() {
@@ -934,6 +987,10 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
 
     public boolean shouldRetrieveAll() {
         return retrieveAll;
+    }
+
+    public boolean isLockScrollingForInsertionPoints() {
+        return lockScrollingForInsertionPoints;
     }
 
     public int getPageCapacity() {

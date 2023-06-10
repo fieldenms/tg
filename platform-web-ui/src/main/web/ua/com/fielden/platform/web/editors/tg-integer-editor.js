@@ -46,8 +46,8 @@ const customInputTemplate = html`
             disabled$="[[_disabled]]"
             autocomplete="off"/>
     </iron-input>`;
-const inputLayerTemplate = html`<div class="input-layer" tooltip-text$="[[_getTooltip(_editingValue)]]">[[_formatText(_editingValue)]]</div>`;
-const propertyActionTemplate = html`<slot name="property-action"></slot>`;
+const inputLayerTemplate = html`<div id="inputLayer" class="input-layer" tooltip-text$="[[_getTooltip(_editingValue)]]">[[_formatText(_editingValue)]]</div>`;
+const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
 
 export class TgIntegerEditor extends TgNumericEditor {
 

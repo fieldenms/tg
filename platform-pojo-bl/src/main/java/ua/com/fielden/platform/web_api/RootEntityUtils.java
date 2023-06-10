@@ -47,7 +47,8 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import graphql.execution.ValuesResolver;
 import graphql.language.Argument;
@@ -91,7 +92,7 @@ public class RootEntityUtils {
     private static final String __TYPENAME = "__typename";
     public static final String ORDER_PRIORITIES_ARE_NOT_DISTINCT = "Order priorities are not distinct.";
     static final String QUERY_TYPE_NAME = "Query";
-    private static final Logger LOGGER = Logger.getLogger(RootEntityUtils.class);
+    private static final Logger LOGGER = LogManager.getLogger(RootEntityUtils.class);
     
     /**
      * Returns function for generation of EQL query execution model for retrieving {@code rootField} and its selection set in GraphQL query or mutation [and optional warning about ordering].

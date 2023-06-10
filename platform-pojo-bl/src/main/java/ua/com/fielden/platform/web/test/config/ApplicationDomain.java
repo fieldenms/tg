@@ -19,14 +19,19 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.EntityOne;
 import ua.com.fielden.platform.sample.domain.EntityThree;
 import ua.com.fielden.platform.sample.domain.EntityTwo;
+import ua.com.fielden.platform.sample.domain.EntityWithUnionEntityWithSkipExistsValidation;
 import ua.com.fielden.platform.sample.domain.ExportAction;
+import ua.com.fielden.platform.sample.domain.TeVehicle;
+import ua.com.fielden.platform.sample.domain.TeVehicleFinDetails;
+import ua.com.fielden.platform.sample.domain.TeVehicleFuelUsage;
+import ua.com.fielden.platform.sample.domain.TeVehicleMake;
+import ua.com.fielden.platform.sample.domain.TeVehicleModel;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieClass;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
 import ua.com.fielden.platform.sample.domain.TgCentreInvokerWithCentreContext;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationChild;
 import ua.com.fielden.platform.sample.domain.TgCollectionalSerialisationParent;
-import ua.com.fielden.platform.sample.domain.TgCoordinate;
 import ua.com.fielden.platform.sample.domain.TgCreatePersistentStatusAction;
 import ua.com.fielden.platform.sample.domain.TgDeletionTestEntity;
 import ua.com.fielden.platform.sample.domain.TgDummyAction;
@@ -55,13 +60,8 @@ import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnaly
 import ua.com.fielden.platform.sample.domain.TgGeneratedEntityForTrippleDecAnalysisInsertionPoint;
 import ua.com.fielden.platform.sample.domain.TgIRStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgISStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgMachine;
-import ua.com.fielden.platform.sample.domain.TgMachineRealtimeMonitorMap;
-import ua.com.fielden.platform.sample.domain.TgMessage;
-import ua.com.fielden.platform.sample.domain.TgMessageMap;
 import ua.com.fielden.platform.sample.domain.TgONStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgOpenTrippleDecDetails;
-import ua.com.fielden.platform.sample.domain.TgOrgUnit;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit1;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit2;
 import ua.com.fielden.platform.sample.domain.TgOrgUnit3;
@@ -72,13 +72,9 @@ import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties;
 import ua.com.fielden.platform.sample.domain.TgPersistentEntityWithPropertiesAttachment;
 import ua.com.fielden.platform.sample.domain.TgPersistentStatus;
 import ua.com.fielden.platform.sample.domain.TgPerson;
-import ua.com.fielden.platform.sample.domain.TgPolygon;
-import ua.com.fielden.platform.sample.domain.TgPolygonMap;
 import ua.com.fielden.platform.sample.domain.TgSRStatusActivationFunctionalEntity;
 import ua.com.fielden.platform.sample.domain.TgSelectedEntitiesExampleAction;
 import ua.com.fielden.platform.sample.domain.TgStatusActivationFunctionalEntity;
-import ua.com.fielden.platform.sample.domain.TgStop;
-import ua.com.fielden.platform.sample.domain.TgStopMap;
 import ua.com.fielden.platform.sample.domain.TgSynBogie;
 import ua.com.fielden.platform.sample.domain.TgUnion;
 import ua.com.fielden.platform.sample.domain.TgUnionCommonType;
@@ -99,6 +95,7 @@ import ua.com.fielden.platform.sample.domain.TgWebApiEntitySyntheticMulti;
 import ua.com.fielden.platform.sample.domain.TgWebApiEntitySyntheticSingle;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
+import ua.com.fielden.platform.sample.domain.UnionEntityWithSkipExistsValidation;
 import ua.com.fielden.platform.sample.domain.UnionEntityWithoutSecondDescTitle;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityChild;
@@ -163,20 +160,6 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgOpenTrippleDecDetails.class);
         add(OtherEntity.class);
 
-        add(TgMessage.class);
-        add(TgMessageMap.class);
-
-        add(TgOrgUnit.class);
-        add(TgMachine.class);
-        add(TgMachineRealtimeMonitorMap.class);
-
-        add(TgStop.class);
-        add(TgStopMap.class);
-
-        add(TgPolygon.class);
-        add(TgCoordinate.class);
-        add(TgPolygonMap.class);
-
         add(TgVehicle.class);
         add(TgVehicleFinDetails.class);
         add(TgVehicleModel.class);
@@ -187,6 +170,11 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgOrgUnit3.class);
         add(TgOrgUnit4.class);
         add(TgOrgUnit5.class);
+        add(TeVehicle.class);
+        add(TeVehicleFinDetails.class);
+        add(TeVehicleFuelUsage.class);
+        add(TeVehicleMake.class);
+        add(TeVehicleModel.class);
         add(TgFuelType.class);
         add(UnionEntity.class);
         add(UnionEntityWithoutSecondDescTitle.class);
@@ -195,6 +183,8 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(EntityThree.class);
 
         add(TgBogieLocation.class);
+        add(UnionEntityWithSkipExistsValidation.class);
+        add(EntityWithUnionEntityWithSkipExistsValidation.class);
         add(TgWorkshop.class);
         add(TgWagonSlot.class);
         add(TgWagon.class);

@@ -4,10 +4,12 @@ import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.pdTypeFor;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetchOnly;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getEntityTitleAndDesc;
+import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.web.PrefDim.mkDim;
 import static ua.com.fielden.platform.web.action.StandardMastersWebUiConfig.MASTER_ACTION_DEFAULT_WIDTH;
@@ -23,7 +25,6 @@ import static ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.con
 import static ua.com.fielden.platform.web.centre.api.resultset.PropDef.mkProp;
 import static ua.com.fielden.platform.web.interfaces.ILayout.Device.DESKTOP;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.cell;
-import static ua.com.fielden.platform.web.layout.api.impl.LayoutBuilder.subheaderOpen;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutCellBuilder.layout;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.CELL_LAYOUT;
 import static ua.com.fielden.platform.web.layout.api.impl.LayoutComposer.MARGIN;
@@ -43,7 +44,7 @@ import java.util.Properties;
 import java.util.function.Function;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 
@@ -122,16 +123,12 @@ import ua.com.fielden.platform.ui.menu.sample.MiTgEntityWithTimeZoneDates;
 import ua.com.fielden.platform.ui.menu.sample.MiTgFetchProviderTestEntity;
 import ua.com.fielden.platform.ui.menu.sample.MiTgGeneratedEntity;
 import ua.com.fielden.platform.ui.menu.sample.MiTgGeneratedEntityForTrippleDecAnalysis;
-import ua.com.fielden.platform.ui.menu.sample.MiTgMachineRealtimeMonitor;
-import ua.com.fielden.platform.ui.menu.sample.MiTgMessage;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties1;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties2;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties3;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties4;
 import ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties5;
-import ua.com.fielden.platform.ui.menu.sample.MiTgPolygon;
-import ua.com.fielden.platform.ui.menu.sample.MiTgStop;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.PrefDim;
 import ua.com.fielden.platform.web.PrefDim.Unit;
@@ -173,6 +170,7 @@ import ua.com.fielden.platform.web.resources.webui.DashboardRefreshFrequencyWebU
 import ua.com.fielden.platform.web.resources.webui.SecurityMatrixWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserRoleWebUiConfig;
 import ua.com.fielden.platform.web.resources.webui.UserWebUiConfig;
+import ua.com.fielden.platform.web.test.eventsources.TgPersistentEntityWithPropertiesEventSrouce;
 import ua.com.fielden.platform.web.test.matchers.ContextMatcher;
 import ua.com.fielden.platform.web.test.server.config.StandardActions;
 import ua.com.fielden.platform.web.test.server.config.TgEntityWithTimeZoneDatesWebUiConfig;
@@ -263,12 +261,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
         builder.setTimeFormat("HH:mm")
                .setTimeWithMillisFormat("HH:mm:ss.SSS")
                .withTopPanelStyle(ofNullable(envTopPanelColour), ofNullable(envWatermarkText), ofNullable(envWatermarkCss));
-        // Add entity centres.
 
-        TgMessageWebUiConfig.register(injector(), configApp());
-        TgStopWebUiConfig.register(injector(), configApp());
-        TgMachineRealtimeMonitorWebUiConfig.register(injector(), configApp());
-        TgPolygonWebUiConfig.register(injector(), configApp());
+        // Add entity centres
         final TgCompoundEntityWebUiConfig tgCompoundEntityWebUiConfig = TgCompoundEntityWebUiConfig.register(injector(), configApp());
         final EntityActionConfig mkTgCompoundEntityLocator = mkLocator(configApp(), injector(), TgCompoundEntityLocator.class, "tgCompoundEntity", "color: #0d4b8a");
 
@@ -481,8 +475,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final FlexLayoutConfig layoutConfig = layout().withStyle("height", "100%").withStyle("box-sizing", "border-box")
                 .withStyle("min-height", "fit-content").withStyle("padding", MARGIN_PIX).end();
         final String desktopLayout = cell(
-                subheaderOpen("Other components")
-                .cell(cell(CELL_LAYOUT).repeat(5).withGapBetweenCells(MARGIN))
+                cell(cell(CELL_LAYOUT).repeat(5).withGapBetweenCells(MARGIN))
                 .subheaderOpen("Other components 1")
                 .cell(cell(CELL_LAYOUT), layout().flexAuto().end())
                 .cell(cell(CELL_LAYOUT).repeat(4).withGapBetweenCells(MARGIN))
@@ -513,7 +506,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .html("<span>This is binded text for String prop: </span><span id='stringProp_bind' style='color:blue'>{{stringProp}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end())
                 .html("<span>This is binded text for Status.desc: </span><span id='status_Desc_bind' style='color:blue'>{{status.desc}}</span>", layout().withStyle("padding-top", MARGIN_PIX).end()),
                 layoutConfig).toString();
-        
+
         // Add entity masters.
         final SimpleMasterBuilder<TgPersistentEntityWithProperties> smb = new SimpleMasterBuilder<>();
         @SuppressWarnings("unchecked")
@@ -562,30 +555,23 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .build())
                 .also()
                 .addProp("bigDecimalProp").asDecimal()
-                    .withAction(
-                        action(TgDummyAction.class)
-                        .withContext(context().withMasterEntity().build())
-                        .postActionSuccess(new PostActionSuccess(""
-                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
-                                ))
-                        .icon("accessibility")
-                        .withStyle("color: green")
-                        .shortDesc("Dummy")
-                        .longDesc("Dummy action, simply prints its result into console.")
-                        .build())
+                    .withMultiAction(multiAction(BigDecimalPropActionSelector.class)
+                            .addAction(dummyAction("color: green"))
+                            .addAction(dummyAction("color: yellow"))
+                            .addAction(dummyAction("color: red")).build())
                 .also()
-                .addProp("stringProp").asSinglelineText().skipValidation()
-                    .withAction(
-                        action(TgDummyAction.class)
-                        .withContext(context().withMasterEntity().build())
-                        .postActionSuccess(new PostActionSuccess(""
-                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
-                                ))
-                        .icon("accessibility")
-                        .shortDesc("Dummy")
-                        .longDesc("Dummy action, simply prints its result into console.")
-                        .build())
-                .also()
+//                .addProp("stringProp").asSinglelineText().skipValidation()
+//                    .withAction(
+//                        action(TgDummyAction.class)
+//                        .withContext(context().withMasterEntity().build())
+//                        .postActionSuccess(new PostActionSuccess(""
+//                                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+//                                ))
+//                        .icon("accessibility")
+//                        .shortDesc("Dummy")
+//                        .longDesc("Dummy action, simply prints its result into console.")
+//                        .build())
+//                .also()
                 .addProp("stringProp").asMultilineText()
                     .withAction(
                         action(TgDummyAction.class)
@@ -1039,22 +1025,6 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 /*    */.addMenuItem("Generation Example").description("Centre entities generation example").centre(configApp().getCentre(MiTgGeneratedEntity.class).get()).done()
                 /*    */.addMenuItem("Fetch Provider Example").description("Fetch Provider example").centre(configApp().getCentre(MiTgFetchProviderTestEntity.class).get()).done()
                 /*  */.done()
-                .addMenuItem("GPS-треки").description(
-                        "Перегляд, моніторинг та аналіз GPS повідомлень (у вигляді треків), отриманих від GPS-модулів, які встановлені на машини компанії." + //
-                        "Є можливість переглядати обчислений кілометраж у вигляді графіка і / або таблиці."
-                ).icon("icons:cloud-queue").centre(configApp().getCentre(MiTgMessage.class).get()).done()
-                .addMenuItem("Зупинки").description(
-                        "Перегляд, моніторинг та аналіз зупинок, які були здійснені машинами компанії." + "<br><br>"
-                      + "Зупинка означає, що машина деякий час простоювала або повільно їхала в межах певної невеликої території. Порогові значення "
-                      + "для радіусу території чи швидкості переміщення задає користувач. Також можна задавати "
-                      + "пошук по машинах, організаційних підрозділах та часу здійснення зупинки."
-                ).icon("icons:card-giftcard").centre(configApp().getCentre(MiTgStop.class).get()).done()
-                .addMenuItem("Моніторинг в реальному часі").description(
-                        "Центр для перегляду машин у реальному часі на карті."
-                ).icon("icons:open-with").centre(configApp().getCentre(MiTgMachineRealtimeMonitor.class).get()).done()
-                .addMenuItem("Гео-зони").description(
-                        "Перегляд, моніторинг та аналіз гео-зон."
-                ).icon("icons:flag").centre(configApp().getCentre(MiTgPolygon.class).get()).done()
                 .done().done()
                 .addModule("Accidents")
                 .description("Accidents")
@@ -1333,7 +1303,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
     }
 
     private static class DetailsCentreQueryEnhancer implements IQueryEnhancer<TgPersistentEntityWithProperties> {
-        private static final Logger logger = Logger.getLogger(DetailsCentreQueryEnhancer.class);
+        private static final Logger logger = getLogger(DetailsCentreQueryEnhancer.class);
 
         @Override
         public ICompleted<TgPersistentEntityWithProperties> enhanceQuery(final IWhere0<TgPersistentEntityWithProperties> where, final Optional<CentreContext<TgPersistentEntityWithProperties, ?>> context) {
@@ -1343,7 +1313,11 @@ public class WebUiConfig extends AbstractWebUiConfig {
             logger.debug("restored masterEntity: " + funcEntity);
             logger.debug("restored masterEntity (centre context's selection criteria): " + funcEntity.getCritOnlyBigDecimalPropCriterion());
             logger.debug("restored masterEntity (centre context's selection criteria): " + funcEntity.getBigDecimalPropFromCriterion());
-            return where.val(1).eq().val(1);
+            return where.critCondition("bigDecimalProp", "critOnlyBigDecimalProp").and()
+                    .critCondition("booleanProp", "critOnlyBooleanProp").and()
+                    .critCondition("stringProp", "critOnlyStringProp").and()
+                    .critCondition("dateProp", "critOnlyDateProp").and()
+                    .critCondition("entityProp", "critOnlyEntityProp");
         }
     }
 
@@ -1384,8 +1358,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
         final String centreMrLast = "['flex']";
 
         final ICentreTopLevelActionsWithRunConfig<TgPersistentEntityWithProperties> partialCentre = EntityCentreBuilder.centreFor(TgPersistentEntityWithProperties.class);
-        ICentreTopLevelActionsInGroup<TgPersistentEntityWithProperties> actionConf = (runAutomatically ? partialCentre.runAutomatically() : partialCentre)
-                .hasEventSourceAt("/sse/entity-centre-events")
+        final ICentreTopLevelActionsInGroup<TgPersistentEntityWithProperties> actionConf = (runAutomatically ? partialCentre.runAutomatically() : partialCentre)
+                .hasEventSource(TgPersistentEntityWithPropertiesEventSrouce.class)
+                .withRefreshPrompt() // or .withCountdownRefreshPrompt(5)
                 .enforcePostSaveRefresh()
                 .addFrontAction(action(EntityNewAction.class).
                         withContext(context().withSelectionCrit().build()).
@@ -1403,6 +1378,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                     longDesc("Start coninuous creatio of entities").
                     shortcut("alt+n").
                     build())
+                .addGroupAction(action(EntityNewAction.class).
+                        withContext(context().withSelectionCrit().withComputation((a1,a2) -> "WITH_KEY4").build()).
+                        icon("add-circle-outline").
+                        shortDesc("Add new").
+                        longDesc("Start coninuous creatio of entities WITH_KEY4").
+                        shortcut("alt+n").
+                        build())
                 .addGroupAction(SEQUENTIAL_EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class))
                 .addGroupAction(EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class))
                 .addGroupAction(action(EntityDeleteAction.class).
@@ -1432,16 +1414,16 @@ public class WebUiConfig extends AbstractWebUiConfig {
 
 
         if (isComposite) {
-            actionConf = actionConf.addGroupAction(
-                    action(TgCentreInvokerWithCentreContext.class)
-                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
-                            .icon("assignment-ind")
-                            .shortDesc("Function 4 (TgCentreInvokerWithCentreContext)")
-                            .longDesc("Functional context-dependent action 4 (TgCentreInvokerWithCentreContext)")
-                            .prefDimForView(mkDim("'80%'", "'400px'"))
-                            .withNoParentCentreRefresh()
-                            .build()
-                    ).endTopActionsGroup().also().beginTopActionsGroup("group 3");
+//            actionConf = actionConf.addGroupAction(
+//                    action(TgCentreInvokerWithCentreContext.class)
+//                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+//                            .icon("assignment-ind")
+//                            .shortDesc("Function 4 (TgCentreInvokerWithCentreContext)")
+//                            .longDesc("Functional context-dependent action 4 (TgCentreInvokerWithCentreContext)")
+//                            .prefDimForView(mkDim("'80%'", "'400px'"))
+//                            .withNoParentCentreRefresh()
+//                            .build()
+//                    ).endTopActionsGroup().also().beginTopActionsGroup("group 3");
 
         }
 
@@ -1732,24 +1714,25 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 .replace("mrLast", centreMrLast).replace("mr", centreMr)
                 );
         }
-                //.hideCheckboxes()
-                //.notScrollable()
-                final IWithTooltip<TgPersistentEntityWithProperties> afterMinWidthConf = layoutConfig
-                        .withScrollingConfig(ScrollConfig.configScroll()
-                                .withFixedCheckboxesPrimaryActionsAndFirstProps(2)
-                                .withFixedSecondaryActions()
-                                .withFixedHeader()
-                                .withFixedSummary()
-                                .done())
-                //.draggable()
-                //.retrieveAll()
-                .setPageCapacity(20)
-                //.setHeight("100%")
-                //.setVisibleRowsCount(10)
-                .fitToHeight()
-                .addProp("this")
-                    .order(2).asc()
-                    .width(60);
+        //.hideCheckboxes()
+        //.notScrollable()
+        final IWithTooltip<TgPersistentEntityWithProperties> afterMinWidthConf = layoutConfig
+                .withScrollingConfig(ScrollConfig.configScroll()
+                        .withFixedCheckboxesPrimaryActionsAndFirstProps(2)
+                        .withFixedSecondaryActions()
+                        .withFixedHeader()
+                        .withFixedSummary()
+                        .done())
+        //.lockScrollingForInsertionPoints()
+        //.draggable()
+        //.retrieveAll()
+        .setPageCapacity(20)
+        //.setHeight("100%")
+        //.setVisibleRowsCount(10)
+        //.fitToHeight()
+        .addProp("this")
+            .order(2).asc()
+            .width(60);
 
         final IWithSummary<TgPersistentEntityWithProperties> afterSummary;
         if (withCalculatedAndCustomProperties) {
@@ -1778,56 +1761,59 @@ public class WebUiConfig extends AbstractWebUiConfig {
                         .build()
                     )
                 .also();
-                if (withCalculatedAndCustomProperties) {
-                beforeAddProp = beforeAddProp.addProp(mkProp("DR", "Defect Radio", String.class)).width(26).
-                        withAction(action(TgStatusActivationFunctionalEntity.class).
-                        withContext(context().withCurrentEntity().build()).
-                        icon("assignment-turned-in").
-                        shortDesc("Change Status to DR").
-                        longDesc("Change Status to DR").
-                        build())
-                .also()
-                .addProp(mkProp("IS", "In Service", String.class)).width(26).
-                        withAction(action(TgISStatusActivationFunctionalEntity.class).
-                        withContext(context().withCurrentEntity().build()).
-                        icon("assignment-turned-in").
-                        shortDesc("Change Status to IS").
-                        longDesc("Change Status to IS").
-                        build())
-                .also()
-                .addProp(mkProp("IR", "In Repair", String.class)).width(26).
-                        withAction(action(TgIRStatusActivationFunctionalEntity.class).
-                        withContext(context().withCurrentEntity().build()).
-                        icon("assignment-turned-in").
-                        shortDesc("Change Status to IR").
-                        longDesc("Change Status to IR").
-                        build())
-                .also()
-                .addProp(mkProp("ON", "On Road Defect Station", String.class)).width(26).
-                        withAction(action(TgONStatusActivationFunctionalEntity.class).
-                        withContext(context().withCurrentEntity().build()).
-                        icon("assignment-turned-in").
-                        shortDesc("Change Status to ON").
-                        longDesc("Change Status to ON").
-                        build())
-                .also()
-                .addProp(mkProp("SR", "Defect Smash Repair", String.class)).width(26).
-                        withAction(action(TgSRStatusActivationFunctionalEntity.class).
-                        withContext(context().withCurrentEntity().build()).
-                        icon("assignment-turned-in").
-                        shortDesc("Change Status to SR").
-                        longDesc("Change Status to SR").
-                        build())
-                        .also();
-                }
-                final IWithSummary<TgPersistentEntityWithProperties> beforeSummaryConf = beforeAddProp.addEditableProp("integerProp")
-                    .minWidth(42)
-                    .withTooltip("desc");
+        if (withCalculatedAndCustomProperties) {
+            beforeAddProp = beforeAddProp.addProp(mkProp("DR", "Defect Radio", String.class)).width(26).
+                    withAction(action(TgStatusActivationFunctionalEntity.class).
+                    withContext(context().withCurrentEntity().build()).
+                    icon("assignment-turned-in").
+                    shortDesc("Change Status to DR").
+                    longDesc("Change Status to DR").
+                    build())
+            .also()
+            .addProp(mkProp("IS", "In Service", String.class)).width(26).
+                    withAction(action(TgISStatusActivationFunctionalEntity.class).
+                    withContext(context().withCurrentEntity().build()).
+                    icon("assignment-turned-in").
+                    shortDesc("Change Status to IS").
+                    longDesc("Change Status to IS").
+                    build())
+            .also()
+            .addProp(mkProp("IR", "In Repair", String.class)).width(26).
+                    withAction(action(TgIRStatusActivationFunctionalEntity.class).
+                    withContext(context().withCurrentEntity().build()).
+                    icon("assignment-turned-in").
+                    shortDesc("Change Status to IR").
+                    longDesc("Change Status to IR").
+                    build())
+            .also()
+            .addProp(mkProp("ON", "On Road Defect Station", String.class)).width(26).
+                    withAction(action(TgONStatusActivationFunctionalEntity.class).
+                    withContext(context().withCurrentEntity().build()).
+                    icon("assignment-turned-in").
+                    shortDesc("Change Status to ON").
+                    longDesc("Change Status to ON").
+                    build())
+            .also()
+            .addProp(mkProp("SR", "Defect Smash Repair", String.class)).width(26).
+                    withAction(action(TgSRStatusActivationFunctionalEntity.class).
+                    withContext(context().withCurrentEntity().build()).
+                    icon("assignment-turned-in").
+                    shortDesc("Change Status to SR").
+                    longDesc("Change Status to SR").
+                    build())
+                    .also();
+        }
+        final IWithSummary<TgPersistentEntityWithProperties> beforeSummaryConf = beforeAddProp.addEditableProp("integerProp")
+            .minWidth(42)
+            .withTooltip("desc");
 
-                    final IWithTooltip<TgPersistentEntityWithProperties> beforeSummaryConfForBigDecimalProp = (withCalculatedAndCustomProperties ? beforeSummaryConf.withSummary("sum_of_int", "SUM(integerProp)", "Sum of int. prop:Sum of integer property") : beforeSummaryConf)
+       final IWithTooltip<TgPersistentEntityWithProperties> beforeSummaryConfForBigDecimalProp = (withCalculatedAndCustomProperties ? beforeSummaryConf.withSummary("sum_of_int", "SUM(integerProp)", "Sum of int. prop:Sum of integer property") : beforeSummaryConf)
+            .also()
+            .addEditableProp("requiredValidatedProp")
+                .minWidth(42)
                 .also()
-                .addEditableProp("bigDecimalProp")
-                    .minWidth(68);
+            .addEditableProp("bigDecimalProp")
+                .minWidth(68);
 
         final Function<String, EntityActionConfig> createDummyAction = colour -> action(TgDummyAction.class)
             .withContext(context().withSelectedEntities().build())
@@ -1856,6 +1842,10 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 .withSummary("min_of_dec", "MIN(bigDecimalProp)", "Min of decimal:Minimum of big decimal property")
                                 .withSummary("sum_of_dec", "sum(bigDecimalProp)", "Sum of decimal:Sum of big decimal property") :
                                 beforeSummaryConfForBigDecimalProp)
+                .withMultiAction(multiAction(CompositePropActionSelector.class)
+                        .addAction(EDIT_ACTION.mkAction(TgPersistentEntityWithProperties.class, (entity, context) -> t2(TgPersistentEntityWithProperties.class, context.getCurrEntity().getId())))
+                        .addAction(EDIT_ACTION.mkAction(TgPersistentCompositeEntity.class, (entity, context) -> t2(TgPersistentCompositeEntity.class, context.getCurrEntity().get("compositeProp.id"))))
+                        .build())
                 .also()
                 .addEditableProp("entityProp").asAutocompleter().withMatcher(ContextMatcher.class).minWidth(40)
                     .withAction(editAction().withContext(context().withCurrentEntity().withSelectionCrit().build())
@@ -1994,32 +1984,64 @@ public class WebUiConfig extends AbstractWebUiConfig {
 //                    action(TgCentreInvokerWithCentreContext.class)
 //                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
 //                            .icon("assignment-ind")
-//                            .shortDesc("Insertion Point")
+//                            .shortDesc("Right Insertion Point")
 //                            .longDesc("Functional context-dependent Insertion Point")
 //                            .prefDimForView(mkDim("''", "'500px'"))
 //                            .withNoParentCentreRefresh()
 //                            .build(),
-//                    InsertionPoints.RIGHT)
-//                    .addInsertionPoint(
-//                            action(TgCentreInvokerWithCentreContext.class)
-//                                    .withContext(context().withSelectionCrit().withSelectedEntities().build())
-//                                    .icon("assignment-ind")
-//                                    .shortDesc("Insertion Point")
-//                                    .longDesc("Functional context-dependent Insertion Point")
-//                                    .prefDimForView(mkDim("''", "'500px'"))
-//                                    .withNoParentCentreRefresh()
-//                                    .build(),
-//                            InsertionPoints.RIGHT)
+//                    InsertionPoints.RIGHT).noResizing()
+////                    .addInsertionPoint(
+////                            action(TgCentreInvokerWithCentreContext.class)
+////                                    .withContext(context().withSelectionCrit().withSelectedEntities().build())
+////                                    .icon("assignment-ind")
+////                                    .shortDesc("Insertion Point")
+////                                    .longDesc("Functional context-dependent Insertion Point")
+////                                    .prefDimForView(mkDim("''", "'500px'"))
+////                                    .withNoParentCentreRefresh()
+////                                    .build(),
+////                            InsertionPoints.RIGHT)
 //                    .addInsertionPoint(
 //                            action(TgCentreInvokerWithCentreContext.class)
 //                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
 //                            .icon("assignment-ind")
-//                            .shortDesc("Insertion Point")
+//                            .shortDesc("Left1 Insertion Point")
 //                            .longDesc("Functional context-dependent Insertion Point")
 //                            .prefDimForView(mkDim("'350px'", "'500px'"))
 //                            .withNoParentCentreRefresh()
 //                            .build(),
 //                    InsertionPoints.LEFT)
+//                    .addInsertionPoint(
+//                            action(TgCentreInvokerWithCentreContext.class)
+//                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+//                            .icon("assignment-ind")
+//                            .shortDesc("Left2 Insertion Point")
+//                            .longDesc("Functional context-dependent Insertion Point")
+//                            .prefDimForView(mkDim("'350px'", "'500px'"))
+//                            .withNoParentCentreRefresh()
+//                            .build(),
+//                    InsertionPoints.LEFT)
+//                    .addInsertionPoint(
+//                            action(TgCentreInvokerWithCentreContext.class)
+//                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+//                            .icon("assignment-ind")
+//                            .shortDesc("Top Insertion Point")
+//                            .longDesc("Functional context-dependent Insertion Point")
+//                            .prefDimForView(mkDim("'350px'", "'500px'"))
+//                            .withNoParentCentreRefresh()
+//                            .build(),
+//                    InsertionPoints.TOP)
+//                    .addInsertionPoint(
+//                            action(TgCentreInvokerWithCentreContext.class)
+//                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+//                            .icon("assignment-ind")
+//                            .shortDesc("Bottom Insertion Point")
+//                            .longDesc("Functional context-dependent Insertion Point")
+//                            .prefDimForView(mkDim("'350px'", "'500px'"))
+//                            .withNoParentCentreRefresh()
+//                            .build(),
+//                    InsertionPoints.BOTTOM)
+//                    .withLeftSplitterPosition(40)
+//                    .withRightSplitterPosition(30)
 //                    .build();
         }
         return scl.build();
@@ -2083,5 +2105,18 @@ public class WebUiConfig extends AbstractWebUiConfig {
     @Override
     public int getPort() {
         return port;
+    }
+
+    EntityActionConfig dummyAction (final String style) {
+        return action(TgDummyAction.class)
+        .withContext(context().withMasterEntity().build())
+        .postActionSuccess(new PostActionSuccess(""
+                + "console.log('ACTION PERFORMED RECEIVING RESULT: ', functionalEntity);\n"
+                ))
+        .icon("accessibility")
+        .withStyle(style)
+        .shortDesc("Dummy")
+        .longDesc("Dummy action, simply prints its result into console.")
+        .build();
     }
 }

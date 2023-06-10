@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.query;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.fetch;
 
 import java.util.ArrayList;
@@ -8,7 +9,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
@@ -22,7 +23,7 @@ import ua.com.fielden.platform.utils.DefinersExecutor;
 public class EntityFetcher {
     private final QueryExecutionContext executionContext;
 
-    private final Logger logger = Logger.getLogger(this.getClass());
+    private final Logger logger = getLogger(this.getClass());
 
     public EntityFetcher(final QueryExecutionContext executionContext) {
         this.executionContext = executionContext;

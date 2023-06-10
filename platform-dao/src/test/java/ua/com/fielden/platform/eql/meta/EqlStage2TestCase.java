@@ -27,7 +27,7 @@ import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
 import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
-import ua.com.fielden.platform.eql.stage1.TransformationContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage1.operands.Prop1;
 import ua.com.fielden.platform.eql.stage2.QueryBlocks2;
 import ua.com.fielden.platform.eql.stage2.conditions.ComparisonTest2;
@@ -85,13 +85,13 @@ public class EqlStage2TestCase extends EqlTestCase {
 
     protected static <T extends AbstractEntity<?>> ResultQuery2 qryCountAll(final ICompoundCondition0<T> unfinishedQry, final Map<String, Object> paramValues) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
-        final TransformationContext context = new TransformationContext(DOMAIN_METADATA.eqlDomainMetadata);
+        final TransformationContext1 context = new TransformationContext1(DOMAIN_METADATA.eqlDomainMetadata);
         return qb(paramValues).generateAsResultQuery(countQry, null, null).transform(context);
     }
 
     protected static <T extends AbstractEntity<?>> T2<EntQueryGenerator, ResultQuery2> qryCountAll2(final ICompoundCondition0<T> unfinishedQry, final Map<String, Object> paramValues) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
-        final TransformationContext context = new TransformationContext(DOMAIN_METADATA.eqlDomainMetadata);
+        final TransformationContext1 context = new TransformationContext1(DOMAIN_METADATA.eqlDomainMetadata);
         final EntQueryGenerator qb = qb(paramValues);
         return t2(qb, qb.generateAsResultQuery(countQry, null, null).transform(context));
     }
@@ -101,17 +101,17 @@ public class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static <T extends AbstractEntity<?>> ResultQuery2 qry(final EntityResultQueryModel<T> qry, final OrderingModel order) {
-        final TransformationContext context = new TransformationContext(DOMAIN_METADATA.eqlDomainMetadata);
+        final TransformationContext1 context = new TransformationContext1(DOMAIN_METADATA.eqlDomainMetadata);
         return qb().generateAsResultQuery(qry, order, new EntityRetrievalModel<T>(EntityQueryUtils.fetch(qry.getResultType()), DOMAIN_METADATA_ANALYSER)).transform(context);
     }
 
     protected static ResultQuery2 qry(final AggregatedResultQueryModel qry, final OrderingModel order) {
-        final TransformationContext context = new TransformationContext(DOMAIN_METADATA.eqlDomainMetadata);
+        final TransformationContext1 context = new TransformationContext1(DOMAIN_METADATA.eqlDomainMetadata);
         return qb().generateAsResultQuery(qry, order, null).transform(context);
     }
 
     protected static ResultQuery2 qry(final AggregatedResultQueryModel qry) {
-        final TransformationContext context = new TransformationContext(DOMAIN_METADATA.eqlDomainMetadata);
+        final TransformationContext1 context = new TransformationContext1(DOMAIN_METADATA.eqlDomainMetadata);
         return qb().generateAsResultQuery(qry, null, null).transform(context);
     }
 
@@ -123,7 +123,7 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new QueryBlocks2(sources, conditions, yields, emptyGroupBys, orderBys);
     }
 
-    protected static Yields2 yields(final Yield2... yields) {
+    protected static Yields2 mkYields(final Yield2... yields) {
         if (yields.length > 0) {
             return new Yields2(asList(yields)); 
         } else {
@@ -155,7 +155,7 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new Yield2(CountAll2.INSTANCE, alias, false);
     }
 
-    protected static Yield2 yield(final ISingleOperand2<? extends ISingleOperand3> operand, final String alias) {
+    protected static Yield2 mkYield(final ISingleOperand2<? extends ISingleOperand3> operand, final String alias) {
         return new Yield2(operand, alias, false);
     }
 
@@ -252,20 +252,20 @@ public class EqlStage2TestCase extends EqlTestCase {
         return new Prop1(name, false);
     }
 
-    protected static Source2BasedOnPersistentType source(final String id, final Class<? extends AbstractEntity<?>> sourceType, final String alias) {
+    protected static Source2BasedOnPersistentType source(final Integer id, final Class<? extends AbstractEntity<?>> sourceType, final String alias) {
         return new Source2BasedOnPersistentType(sourceType, DOMAIN_METADATA.eqlDomainMetadata.getEntityInfo(sourceType), alias, id);
     }
 
-    protected static Source2BasedOnPersistentType source(final String id, final Class<? extends AbstractEntity<?>> sourceType) {
+    protected static Source2BasedOnPersistentType source(final Integer id, final Class<? extends AbstractEntity<?>> sourceType) {
         return new Source2BasedOnPersistentType(sourceType, DOMAIN_METADATA.eqlDomainMetadata.getEntityInfo(sourceType), id);
     }
 
-    protected static Source2BasedOnSubqueries source(final EntityInfo<?> entityInfo, final String id, final SourceQuery2... queries) {
+    protected static Source2BasedOnSubqueries source(final EntityInfo<?> entityInfo, final Integer id, final SourceQuery2... queries) {
         return new Source2BasedOnSubqueries(Arrays.asList(queries), null, id, entityInfo);
     }
 
     protected static ResultQuery2 qryCountAll(final ISources2<? extends ISources3> sources, final Conditions2 conditions) {
-        return new ResultQuery2(qb2(sources, conditions, yields(yieldCountAll("KOUNT"))), EntityAggregates.class);
+        return new ResultQuery2(qb2(sources, conditions, mkYields(yieldCountAll("KOUNT"))), EntityAggregates.class);
     }
 
     protected static ResultQuery2 qry(final ISources2<? extends ISources3> sources, final Conditions2 conditions, final Yields2 yields) {
@@ -293,7 +293,7 @@ public class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static ResultQuery2 qryCountAll(final ISources2<? extends ISources3> sources) {
-        return new ResultQuery2(qb2(sources, emptyConditions, yields(yieldCountAll("KOUNT"))), EntityAggregates.class);
+        return new ResultQuery2(qb2(sources, emptyConditions, mkYields(yieldCountAll("KOUNT"))), EntityAggregates.class);
     }
 
     protected static SubQuery2 subqry(final ISources2<? extends ISources3> sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType, final Object hibType) {

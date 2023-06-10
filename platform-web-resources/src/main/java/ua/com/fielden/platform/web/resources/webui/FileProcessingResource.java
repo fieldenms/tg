@@ -21,59 +21,72 @@ import org.restlet.data.MediaType;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
 import org.restlet.resource.Put;
-import org.restlet.routing.Router;
+import org.restlet.resource.ResourceException;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntityWithInputStream;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.rx.observables.ProcessingProgressSubject;
+import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.security.user.User;
+import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.web.interfaces.IDeviceProvider;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
+import ua.com.fielden.platform.web.resources.webui.exceptions.InvalidUiConfigException;
 import ua.com.fielden.platform.web.rx.eventsources.ProcessingProgressEventSource;
-import ua.com.fielden.platform.web.sse.resources.EventSourcingResourceFactory;
+import ua.com.fielden.platform.web.sse.IEventSourceEmitter;
+import ua.com.fielden.platform.web.sse.IEventSourceEmitterRegister;
 
 /**
  * This is a multi-purpose file-processing resource that can be used for uploading files to be processed with the specified functional entity.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> extends AbstractWebResource {
+
+    private static final String ERR_CLIENT_NOT_REGISTERED = "The client should have been registered for SSE communication.";
 
     protected final IEntityDao<T> companion;
     private final EntityFactory factory;
     private final Function<EntityFactory, T> entityCreator;
     private final RestServerUtil restUtil;
+    private final ISerialiser serialiser;
     private final long sizeLimitBytes;
     private final Set<MediaType> types;
-    private final Router router;
+    private final IEventSourceEmitterRegister eseRegister;
     private final String jobUid;
+    private final String sseUid;
     private final String origFileName;
     private final Date fileLastModified;
     private final String mimeAsProvided;
     private final IDeviceProvider deviceProvider;
     private final IDates dates;
+    private final User user;
 
     public FileProcessingResource(
-            final Router router, 
-            final IEntityDao<T> companion, 
-            final EntityFactory factory, 
-            final Function<EntityFactory, T> entityCreator, 
-            final RestServerUtil restUtil, 
-            final long fileSizeLimitBytes, 
-            final Set<MediaType> types, 
+            final IEventSourceEmitterRegister eseRegister,
+            final IUserProvider userProvider,
+            final IEntityDao<T> companion,
+            final EntityFactory factory,
+            final Function<EntityFactory, T> entityCreator,
+            final RestServerUtil restUtil,
+            final long fileSizeLimitBytes,
+            final Set<MediaType> types,
             final IDeviceProvider deviceProvider,
             final IDates dates,
-            final Context context, 
-            final Request request, 
+            final ISerialiser serialiser,
+            final Context context,
+            final Request request,
             final Response response) {
         super(context, request, response, deviceProvider, dates);
-        this.router = router;
+        this.eseRegister = eseRegister;
         this.companion = companion;
         this.factory = factory;
         this.entityCreator = entityCreator;
         this.restUtil = restUtil;
+        this.serialiser = serialiser;
         this.sizeLimitBytes = fileSizeLimitBytes;
         this.deviceProvider = deviceProvider;
         this.dates = dates;
@@ -81,14 +94,15 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
 
         try {
             this.jobUid = request.getHeaders().getFirstValue("jobUid", /*ignore case*/ true);
-    
+            this.sseUid = request.getHeaders().getFirstValue("sseUid", /*ignore case*/ true);
+            this.user = userProvider.getUser();
             try {
                 this.origFileName = URLDecoder.decode(request.getHeaders().getFirstValue("origFileName", /*ignore case*/ true), StandardCharsets.UTF_8.toString());
             } catch (final UnsupportedEncodingException ex) {
                 throw new IllegalArgumentException("Could not decode the value for origFileName.", ex);
             }
             this.mimeAsProvided = request.getHeaders().getFirstValue("mime", /*ignore case*/ true);
-    
+
             final long lastModified = Long.parseLong(request.getHeaders().getFirstValue("lastModified", /*ignore case*/ true));
             this.fileLastModified = new Date(lastModified);
         } catch (final Exception ex) {
@@ -107,7 +121,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         String msg = "Successful processing.";
         try {
             final Representation rep;
-            
+
             if (isEmpty(jobUid)) {
                 getResponse().setStatus(Status.CLIENT_ERROR_BAD_REQUEST);
                 rep =  restUtil.errorJsonRepresentation(msg = "jobUid is required.");
@@ -152,7 +166,7 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         try {
             input.exhaust();
         } catch (final Exception ex) {
-            // TODO There can be an IO or some other exceptions when exhausting the entity, so just in case let's log any exception if it occurs 
+            // TODO There can be an IO or some other exceptions when exhausting the entity, so just in case let's log any exception if it occurs
         }
     }
 
@@ -170,23 +184,28 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
         final String[] mime1Parts = mime1.split("/");
         final String[] mime2Parts = mime2.split("/");
         final boolean anySubtype = "*".equals(mime1Parts[1]);
-        return equalsEx(mime1Parts[0], mime2Parts[0]) && (equalsEx(mime1Parts[1], mime2Parts[1]) || anySubtype); 
+        return equalsEx(mime1Parts[0], mime2Parts[0]) && (equalsEx(mime1Parts[1], mime2Parts[1]) || anySubtype);
     }
 
     /**
-     * Registers an event sourcing resource that sends file processing progress back to the client.
-     * Instantiates an entity that is responsible for file processing and executes it (call method <code>save</code>).
+     * Creates an event source and connects it to an SSE emitter, which is associated with a client making the current request as identified by {@code sseUid}, to report file processing progress back to that client.
+     * Instantiates an entity that is responsible for file processing and executes it.
      *
      * @param stream -- a stream that represents a file to be processed.
      * @return
      */
     private Representation tryToProcess(final InputStream stream, final String mime) {
+
+        final IEventSourceEmitter emitter = eseRegister.getEmitter(user, sseUid);
+        if (emitter == null) {
+            throw new InvalidUiConfigException(ERR_CLIENT_NOT_REGISTERED);
+        }
+
         final ProcessingProgressSubject subject = new ProcessingProgressSubject();
-        final EventSourcingResourceFactory eventSource = new EventSourcingResourceFactory(new ProcessingProgressEventSource(subject), deviceProvider, dates);
-        final String baseUri = getRequest().getResourceRef().getPath(true);
-        router.attach(baseUri + "/sse/" + jobUid, eventSource);
-        
+        final ProcessingProgressEventSource eventSource = new ProcessingProgressEventSource(subject, jobUid, serialiser);
+
         try {
+            eventSource.connect(emitter);
             final T entity = entityCreator.apply(factory);
             entity.setOrigFileName(origFileName);
             entity.setLastModified(fileLastModified);
@@ -196,8 +215,10 @@ public class FileProcessingResource<T extends AbstractEntityWithInputStream<?>> 
 
             final T applied = saveRaw(entity);
             return restUtil.singleJsonRepresentation(applied);
+        } catch (final Exception e) {
+            throw new ResourceException(e);
         } finally {
-            router.detach(eventSource);
+            eventSource.disconnect();
         }
     }
 

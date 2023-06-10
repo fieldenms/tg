@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.mail;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static java.lang.String.format;
+import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.types.try_wrapper.TryWrapper.Try;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
@@ -7,12 +10,13 @@ import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import jakarta.activation.DataHandler;
 import jakarta.activation.DataSource;
@@ -117,11 +121,15 @@ public class SmtpEmailSender {
         public abstract String alterBody(final String body, final Stream<T2<Optional<File>, String>> optionalT2Stream1);
     }
 
-    private final Logger logger = Logger.getLogger(SmtpEmailSender.class);
+    private final Logger logger = getLogger(SmtpEmailSender.class);
     private final String host;
+    private final Optional<String> maybePort;
 
     public SmtpEmailSender(final String host) {
-        this.host = host;
+        Objects.requireNonNull(host, "Argument [host] cannot be null.");
+        final String[] hostAndPort = host.split(":");
+        this.host = hostAndPort[0];
+        this.maybePort = ofNullable(hostAndPort.length == 2 ? hostAndPort[1] : null);
     }
 
     private Session newEmailSession() {
@@ -129,6 +137,7 @@ public class SmtpEmailSender {
         final String username = System.getProperty("email.smtp.username", System.getenv("email.smtp.username"));
         final String password = System.getProperty("email.smtp.password", System.getenv("email.smtp.password"));
         final Authenticator auth;
+        final String port;
         if (!StringUtils.isEmpty(username) &&
             !StringUtils.isEmpty(password)) {
             auth = new Authenticator() {
@@ -136,14 +145,17 @@ public class SmtpEmailSender {
                     return new PasswordAuthentication(username, password);
                 }
             };
+            port = maybePort.orElse("587");
             props.put("mail.smtp.auth", "true");
-            props.put("mail.smtp.port", "587");
             props.put("mail.smtp.starttls.enable", "true");
         } else {
             auth = null;
+            port = maybePort.orElse("25");
         }
         props.put("mail.smtp.host", host);
-        return Session.getDefaultInstance(props, auth);
+        props.put("mail.smtp.port", port);
+        logger.debug(format("SMTP host is: [%s:%s]", host, port));
+        return Session.getInstance(props, auth);
     }
 
     /**
@@ -322,13 +334,6 @@ public class SmtpEmailSender {
             final String body,
             final Path[] imagePaths,
             final Path... filePaths) {
-        if (imagePaths.length == 0) {
-            throw new EmailException("At least one image is expected.");
-        }
-        if (filePaths.length == 0) {
-            throw new EmailException("At least one attachment is expected.");
-        }
-
         final T2<String, Stream<T2<File, String>>> t2 = preProcessAttachments(EmailType.HTML, body, filePaths);
         sendHtmlMessageWithImagesAndAttachments(fromAddress, csvToAddresses, subject, t2._1, imagePaths, t2._2);
     }

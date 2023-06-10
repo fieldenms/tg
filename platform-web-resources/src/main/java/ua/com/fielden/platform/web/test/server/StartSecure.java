@@ -1,12 +1,13 @@
 package ua.com.fielden.platform.web.test.server;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
+
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Properties;
 
-import org.apache.log4j.Logger;
-import org.apache.log4j.xml.DOMConfigurator;
+import org.apache.logging.log4j.Logger;
 import org.restlet.Component;
 import org.restlet.data.Parameter;
 import org.restlet.data.Protocol;
@@ -21,7 +22,7 @@ import ua.com.fielden.platform.utils.ResourceLoader;
  *
  */
 public class StartSecure {
-    private static final Logger LOGGER = Logger.getLogger(StartSecure.class);
+    private static final Logger LOGGER = getLogger(StartSecure.class);
 
     public static void main(final String[] args) throws IOException {
         final String fileName = "src/main/resources/application.properties";
@@ -29,8 +30,6 @@ public class StartSecure {
         try (final InputStream st = new FileInputStream(fileName);) {
             props.load(st);
         }
-
-        DOMConfigurator.configure(props.getProperty("log4j"));
 
         LOGGER.info("Starting...");
         final Component component = new TgTestApplicationConfiguration(props);

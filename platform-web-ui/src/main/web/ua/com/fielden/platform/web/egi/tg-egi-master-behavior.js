@@ -76,6 +76,7 @@ const TgEgiMasterBehaviorImpl = {
 
     closeMaster: function () {
         this.egi._closeMaster();
+        this.egi._fireFinishEditing();
         this._postClose();
     },
 
@@ -160,6 +161,9 @@ const TgEgiMasterBehaviorImpl = {
         } else if (this._shouldEditPreviousRow && typeof this._previousEditRow !== 'undefined') {
             this.editableRow = this._previousEditRow;
             this.egi._makeRowEditable(this.editableRow - 1);
+        } else {
+            //This event should be fired because master was closed before refreshing and at this point it won't be opened again. 
+            this.egi._fireFinishEditing();
         }
         delete this._previousEditRow;
         this.egi.removeEventListener("tg-egi-entities-loaded", this._egiRefreshed);
@@ -243,6 +247,7 @@ const TgEgiMasterBehaviorImpl = {
     _cancelMaster: function() {
         const activeElement = deepestActiveElement();
         this.egi._closeMaster();
+        this.egi._fireFinishEditing();
         this._focusNextEgiElementTo(event, true, activeElement);
     },
 
@@ -252,7 +257,7 @@ const TgEgiMasterBehaviorImpl = {
             this._focusNextEgiElementTo(event, true, activeElement);
         }
         if (!this.saveButton._disabled) {
-            if (this.editors.some(editor => editor._invalid)) {
+            if (this.editors.some(editor => editor._invalid && !editor.isInWarning() && !editor.isWithInformative())) {
                 this._resetEgiMasterState();
                 this.focusView(); // focus invalid editor (and select it's contents if it is preferred)
             } else {
@@ -275,7 +280,7 @@ const TgEgiMasterBehaviorImpl = {
             this._focusNextEgiElementTo(event, false, activeElement);
         }
         if (!this.saveButton._disabled) {
-            if (this.editors.some(editor => editor._invalid)) {
+            if (this.editors.some(editor => editor._invalid && !editor.isInWarning() && !editor.isWithInformative())) {
                 this._resetEgiMasterState();
                 this.focusView(); // focus invalid editor (and select it's contents if it is preferred)
             } else {
@@ -370,8 +375,8 @@ const TgEgiMasterBehaviorImpl = {
      * @param {Object} entity  - the received entity
      * @param {Boolean} isRefreshingProcess was master canceled or not
      */
-    _postEntityReceived: function (entity, isRefreshingProcess) {
-        TgEntityBinderBehavior._postEntityReceived.call(this, entity, isRefreshingProcess);
+    _postEntityReceived: function (entity, isRefreshingProcess, customObject) {
+        TgEntityBinderBehavior._postEntityReceived.call(this, entity, isRefreshingProcess, customObject);
         this._bindingEntityNotPersistentOrNotPersistedOrModified = !this._currBindingEntity.isPersisted() || this._bindingEntityModified;
         return this._currBindingEntity;
     },

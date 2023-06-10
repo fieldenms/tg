@@ -30,7 +30,7 @@ import { TgElementSelectorBehavior } from '/resources/components/tg-element-sele
 import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { TgShortcutProcessingBehavior } from '/resources/actions/tg-shortcut-processing-behavior.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import { getKeyEventTarget, tearDownEvent, getRelativePos, isMobileApp} from '/resources/reflection/tg-polymer-utils.js';
+import { getKeyEventTarget, tearDownEvent, getRelativePos, isMobileApp, resultMessages } from '/resources/reflection/tg-polymer-utils.js';
 
 const EGI_BOTTOM_MARGIN = "15px";
 const EGI_BOTTOM_MARGIN_TEMPLATE = html`15px`;
@@ -514,7 +514,7 @@ const template = html`
                                 <tg-egi-multi-action class="action" actions="[[primaryAction.actions]]" current-entity="[[_currentEntity(egiEntity.entity)]]" current-index="[[egiEntity.primaryActionIndex]]"></tg-egi-multi-action>
                             </div>
                             <template is="dom-repeat" items="[[fixedColumns]]" as="column">
-                                <tg-egi-cell column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'true')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapFixedAction"></tg-egi-cell>
+                                <tg-egi-cell column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'true')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customActions)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapFixedAction"></tg-egi-cell>
                             </template>
                         </div>
                     </template>
@@ -543,7 +543,7 @@ const template = html`
                                 <tg-egi-multi-action class="action" actions="[[primaryAction.actions]]" current-entity="[[_currentEntity(egiEntity.entity)]]" current-index="[[egiEntity.primaryActionIndex]]"></tg-egi-multi-action>
                             </div>
                             <template is="dom-repeat" items="[[columns]]" as="column">
-                                <tg-egi-cell column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customAction)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
+                                <tg-egi-cell column="[[column]]" egi-entity="[[egiEntity]]" style$="[[_calcColumnStyle(column, column.width, column.growFactor, column.shouldAddDynamicWidth, 'false')]]" tooltip-text$="[[_getTooltip(egiEntity.entity, column, column.customActions)]]" with-action="[[hasAction(egiEntity.entity, column)]]" on-tap="_tapAction"></tg-egi-cell>
                             </template>
                         </div>
                     </template>
@@ -764,6 +764,9 @@ Polymer({
         secondaryActionIndices: {
             type: Array,
             observer: "_secondaryActionIndicesChanged"
+        },
+        propertyActionIndices: {
+            type: Array,
         },
         selectedAll: {
             type: Boolean,
@@ -1123,8 +1126,10 @@ Polymer({
     },
 
     hasAction: function (entity, column) {
+        const entityIdx = this.findEntityIndex(entity);
+        const actionIdx = this.propertyActionIndices && this.propertyActionIndices[entityIdx] && this.propertyActionIndices[entityIdx][column.property];
         return entity && (
-            column.customAction
+            (column.customActions && column.customActions.length > 0 && column.customActions[actionIdx])
             || this.isHyperlinkProp(entity, column) === true
             || this.getAttachmentIfPossible(entity, column)
             || this.hasDefaultAction(entity, column)
@@ -1333,7 +1338,11 @@ Polymer({
         if (this.master && this.master.editors.length > 0 && this._tapOnce && this.canOpenMaster()) {
             delete this._tapOnce;
             this.master._lastFocusedEditor = this.master.editors.find(editor => editor.propertyName === column.property);
+            const prevEditing = this.isEditing();
             this._makeRowEditable(entityIndex);
+            if (!prevEditing && this.isEditing()) {
+                this._fireStartEditing();
+            }
         } else if (this.master && this.master.editors.length > 0 && this.canOpenMaster()) {
             this._tapOnce = true;
             this.async(() => {
@@ -1356,7 +1365,9 @@ Polymer({
         // This closure returns either 'entity' or the entity navigated to (EntityEditAction with EntityNavigationPreAction).
         // Each tapping overrides this function to provide proper context of execution.
         // This override should occur on every 'run' of the action so it is mandatory to use 'tg-property-column.runAction' public API.
-        if (!column.runAction(this._currentEntity(entity))) {
+        const entityIndex = this.findEntityIndex(entity);
+        const actionIndex = this.propertyActionIndices && this.propertyActionIndices[entityIndex] && this.propertyActionIndices[entityIndex][column.property]
+        if (!column.runAction(this._currentEntity(entity), actionIndex)) {
             // if the clicked property is a hyperlink and there was no custom action associted with it
             // then let's open the linked resources
             if (this.isHyperlinkProp(entity, column) === true) {
@@ -2091,11 +2102,13 @@ Polymer({
         };
     },
 
-    _getTooltip: function (entity, column, action) {
+    _getTooltip: function (entity, column, actions) {
         try {
             let tooltip = this.getValueTooltip(entity, column);
+            const entityIdx = this.findEntityIndex(entity);
+            const actionIdx = this.propertyActionIndices && this.propertyActionIndices[entityIdx] && this.propertyActionIndices[entityIdx][column.property];
             const columnDescPart = this.getDescTooltip(entity, column);
-            const actionDescPart = this.getActionTooltip(entity, column, action);
+            const actionDescPart = this.getActionTooltip(entity, column, actions[actionIdx]);
             tooltip += (columnDescPart && tooltip && "<br><br>") + columnDescPart;
             tooltip += (actionDescPart && tooltip && "<br><br>") + actionDescPart;
             return tooltip;
@@ -2107,7 +2120,8 @@ Polymer({
     getValueTooltip: function (entity, column) {
         const validationResult = this.getRealEntity(entity, column).prop(this.getRealProperty(column)).validationResult();
         if (this._reflector.isWarning(validationResult) || this._reflector.isError(validationResult)) {
-            return validationResult.message && ("<b>" + validationResult.message + "</b>");
+            const messages = resultMessages(validationResult);
+            return messages.extended && ("<b>" + messages.extended + "</b>");
         } else if (column.tooltipProperty) {
             const value = this.getValue(this.getRealEntity(entity, column), column.tooltipProperty, "String").toString();
             return value && ("<b>" + value + "</b>");
@@ -2159,18 +2173,19 @@ Polymer({
     },
 
     _generateActionTooltip: function (action) {
-        var shortDesc = "<b>" + action.shortDesc + "</b>";
-        var longDesc;
+        const shortDesc = "<b>" + action.shortDesc + "</b>";
+        let longDesc;
         if (shortDesc) {
             longDesc = action.longDesc ? "<br>" + action.longDesc : "";
         } else {
             longDesc = action.longDesc ? "<b>" + action.longDesc + "</b>" : "";
         }
-        var tooltip = shortDesc + longDesc;
-        return tooltip && "<div style='display:flex;'>" +
-            "<div style='margin-right:10px;'>With action: </div>" +
-            "<div style='flex-grow:1;'>" + tooltip + "</div>" +
-            "</div>"
+        const tooltip  = shortDesc + longDesc;
+        
+        return tooltip && `<div style='display:flex;'>
+            <div style='margin-right:10px;'>With action: </div> 
+            <div style='flex-grow:1;'>${tooltip}</div> 
+            </div>`
     },
 
     _getTotalTooltip: function (summary) {
@@ -2295,7 +2310,7 @@ Polymer({
     },
 
     /**
-     * @returns object that explains the reason why this EGI can not be left or undefined.
+     * @returns object that explains the reason why this EGI cannot be left or undefined.
      */
     canLeave: function () {
         if (this.isEditing()) {
@@ -2310,6 +2325,14 @@ Polymer({
 
     canOpenMaster: function () {
         return true;
+    },
+
+    _fireStartEditing: function () {
+        this.fire("tg-egi-start-editing", this);
+    },
+
+    _fireFinishEditing: function () {
+        this.fire("tg-egi-finish-editing", this);
     },
 
     _scrollToVisibleLeftMaster: function (e) {
@@ -2377,6 +2400,8 @@ Polymer({
                 this.master.retrieve();
             } else {
                 this._closeMaster();
+                //At this point firing finish-edit event is needed because row with entityIndex cannot be editable due to entityIndex being out of bounds.
+                this._fireFinishEditing();
             }
         }
     },

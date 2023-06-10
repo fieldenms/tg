@@ -38,7 +38,7 @@ const findFirstInputToFocus = (preferredOnly, editors) => {
                 if (!firstPreferredInput && currentEditor.propertyName && currentEditor.propertyName === currentEditor.entity['@@origin'].preferredProperty()) {
                     firstPreferredInput = selectedElement;
                 }
-                if (!firstInvalidInput && currentEditor._error && !currentEditor.isInWarning()) {
+                if (!firstInvalidInput && currentEditor._error && !currentEditor.isInWarning() && !currentEditor.isWithInformative()) {
                     firstInvalidInput = selectedElement;
                 }
             }
@@ -406,9 +406,9 @@ const TgEntityMasterBehaviorImpl = {
         self.focusViewBound = self.focusView.bind(self);
 
         self._processSaverResponse = function (e) {
-            self._processResponse(e, "save", function (potentiallySavedOrNewEntity, exceptionOccured) {
-                self._provideExceptionOccured(potentiallySavedOrNewEntity, exceptionOccured);
-                return self._postSavedDefault(potentiallySavedOrNewEntity);
+            self._processResponse(e, "save", function (potentiallySavedOrNewEntityAndCustomObject, exceptionOccured) {
+                self._provideExceptionOccured(potentiallySavedOrNewEntityAndCustomObject[0], exceptionOccured);
+                return self._postSavedDefault(potentiallySavedOrNewEntityAndCustomObject);
             });
         };
 
@@ -446,7 +446,9 @@ const TgEntityMasterBehaviorImpl = {
         }).bind(self);
 
         // calbacks, that will potentially be augmented by tg-action child elements:
-        self._postSavedDefault = (function (potentiallySavedOrNewEntity) {
+        self._postSavedDefault = (function (potentiallySavedOrNewEntityAndCustomObject) {
+            const potentiallySavedOrNewEntity = potentiallySavedOrNewEntityAndCustomObject[0];
+            const customObject = potentiallySavedOrNewEntityAndCustomObject[1];
             // 'potentiallySavedOrNewEntity' can have two natures:
             //  1) fully fresh new entity from 'continuous creation' process (DAO object returns fully new entity after successful save of previous entity)
             //    a) it has no id defined (id === null)
@@ -476,11 +478,11 @@ const TgEntityMasterBehaviorImpl = {
                 /* TODO && !this._currEntity.isPersisted() */
                 && !potentiallySavedOrNewEntity.isPersisted() && !this._reflector().equalsEx(this._currEntity, potentiallySavedOrNewEntity);
 
-            const msg = this._toastMsg("Operation", potentiallySavedOrNewEntity);
-            this._openToast(potentiallySavedOrNewEntity, msg, !potentiallySavedOrNewEntity.isValid() || potentiallySavedOrNewEntity.isValidWithWarning(), msg, false);
+            const messages = this._toastMessages("Operation", potentiallySavedOrNewEntity);
+            this._openToast(potentiallySavedOrNewEntity, messages.short, !potentiallySavedOrNewEntity.isValid() || potentiallySavedOrNewEntity.isValidWithWarning(), messages.extended, false);
 
             // isRefreshingProcess should be 'true' to reset old binding information in case where 'continuously created' entity arrive
-            const newBindingEntity = this._postEntityReceived(potentiallySavedOrNewEntity, isContinuouslyCreated);
+            const newBindingEntity = this._postEntityReceived(potentiallySavedOrNewEntity, isContinuouslyCreated, customObject);
 
             if (potentiallySavedOrNewEntity.isValidWithoutException()) {
                 // in case where successful save occured we need to reset @@touchedProps that are transported with bindingEntity
@@ -1185,6 +1187,10 @@ const TgEntityMasterBehaviorImpl = {
                         shouldRefreshParentCentreAfterSave: true,
                         selectedEntitiesInContext: [] // provide empty selectedEntitiesInContext, this ensures that parent centre will always be refreshed as per 'refreshEntities' method in tg-entity-centre-behavior
                     };
+                    const extendedInsertionPointListToExclude = [...(self.excludeInsertionPoints || []), ...(data.excludeInsertionPoints || [])];
+                    if (extendedInsertionPointListToExclude.length !== 0) {
+                        newData.excludeInsertionPoints = extendedInsertionPointListToExclude;
+                    }
                     postal.publish({
                         channel: 'centre_' + self.centreUuid,
                         topic: 'detail.saved',

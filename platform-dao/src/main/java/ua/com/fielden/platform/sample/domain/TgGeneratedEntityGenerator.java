@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.sample.domain;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
 import java.util.ArrayList;
@@ -7,7 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 
@@ -28,7 +29,7 @@ import ua.com.fielden.platform.security.user.User;
  *
  */
 public class TgGeneratedEntityGenerator implements IGenerator<TgGeneratedEntity> {
-    private final Logger logger = Logger.getLogger(getClass());
+    private final Logger logger = getLogger(getClass());
     private final ITgGeneratedEntity co;
     private final EntityFactory factory;
     private final IUserProvider userProvider;

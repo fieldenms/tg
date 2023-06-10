@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.web.utils;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
+
 import java.util.Map;
 import java.util.function.Supplier;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.restlet.Response;
 import org.restlet.data.Status;
 import org.restlet.representation.Representation;
@@ -14,7 +16,7 @@ import ua.com.fielden.platform.error.Result;
 import ua.com.fielden.platform.web.resources.RestServerUtil;
 
 public class WebUiResourceUtils {
-    private final static Logger LOGGER = Logger.getLogger(WebUiResourceUtils.class);
+    private final static Logger LOGGER = getLogger(WebUiResourceUtils.class);
 
     /**
      * Restores the holder of modified properties into the map [propertyName; webEditorSpecificValue].

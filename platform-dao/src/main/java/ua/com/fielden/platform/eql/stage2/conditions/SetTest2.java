@@ -4,8 +4,8 @@ import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
 
-import ua.com.fielden.platform.eql.stage2.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.TransformationContext2;
+import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.operands.ISetOperand2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
@@ -30,10 +30,10 @@ public class SetTest2 extends AbstractCondition2<SetTest3> {
     }
 
     @Override
-    public TransformationResult<SetTest3> transform(final TransformationContext context) {
-        final TransformationResult<? extends ISingleOperand3> leftOperandTr = leftOperand.transform(context);
-        final TransformationResult<? extends ISetOperand3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
-        return new TransformationResult<>(new SetTest3(leftOperandTr.item, negated, rightOperandTr.item), rightOperandTr.updatedContext);
+    public TransformationResult2<SetTest3> transform(final TransformationContext2 context) {
+        final TransformationResult2<? extends ISingleOperand3> leftOperandTr = leftOperand.transform(context);
+        final TransformationResult2<? extends ISetOperand3> rightOperandTr = rightOperand.transform(leftOperandTr.updatedContext);
+        return new TransformationResult2<>(new SetTest3(leftOperandTr.item, negated, rightOperandTr.item), rightOperandTr.updatedContext);
     }
     
     @Override

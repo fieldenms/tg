@@ -8,6 +8,7 @@ import { tearDownEvent, isInHierarchy, deepestActiveElement, FOCUSABLE_ELEMENTS_
 import {createDialog} from '/resources/egi/tg-dialog-util.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgElementSelectorBehavior, queryElements } from '/resources/components/tg-element-selector-behavior.js';
+import { TgDelayedActionBehavior } from '/resources/components/tg-delayed-action-behavior.js';
 
 const generateCriteriaName = function (root, property, suffix) {
     const rootName = root.substring(0, 1).toLowerCase() + root.substring(1) + "_";
@@ -205,6 +206,16 @@ const TgEntityCentreBehaviorImpl = {
         allFilteredSecondaryActionIndices: Array,
 
         /**
+         * Indices for property actions associated with all retrieved entities.
+         */
+        allPropertyActionIndices: Array,
+
+       /**
+         * Indices for property actions associated with all filtered entities.
+         */
+        allFilteredPropertyActionIndices: Array,
+
+        /**
          * The entities retrieved when running this centre
          */
         retrievedEntities: {
@@ -245,6 +256,13 @@ const TgEntityCentreBehaviorImpl = {
          * The menu item type, that identifies this entity centre.
          */
         miType: {
+            type: String
+        },
+
+        /**
+         * user that opened this entity centre
+         */
+        userName: {
             type: String
         },
 
@@ -619,6 +637,7 @@ const TgEntityCentreBehaviorImpl = {
         const renderingHints = [];
         const primaryActionIndices = [];
         const secondaryActionIndices = [];
+        const propertyActionIndices = [];
         this.allRetrievedEntities.forEach((entity, idx) => {
             if (this.satisfies(entity)) {
                 entities.push(entity);
@@ -626,11 +645,13 @@ const TgEntityCentreBehaviorImpl = {
                 renderingHints.push(this.allRenderingHints[idx]);
                 primaryActionIndices.push(this.allPrimaryActionIndices[idx]);
                 secondaryActionIndices.push(this.allSecondaryActionIndices[idx]);
+                propertyActionIndices.push(this.allPropertyActionIndices[idx]);
             }
         });
         this.allFilteredRenderingHints = renderingHints;
         this.allFilteredPrimaryActionIndices = primaryActionIndices;
         this.allFilteredSecondaryActionIndices = secondaryActionIndices;
+        this.allFilteredPropertyActionIndices = propertyActionIndices;
         if (this.retrieveAll) {
             const resultSize = entities.length;
             // Note that this.$.selection_criteria.pageCapacity has already been updated in method _postRun
@@ -672,11 +693,13 @@ const TgEntityCentreBehaviorImpl = {
             this.$.egi.renderingHints = this.allFilteredRenderingHints;
             this.$.egi.primaryActionIndices = this.allFilteredPrimaryActionIndices;
             this.$.egi.secondaryActionIndices = this.allFilteredSecondaryActionIndices;
+            this.$.egi.propertyActionIndices = this.allFilteredPropertyActionIndices;
         } else {
             this.retrievedEntities = this.allFilteredEntities.slice(startIdx, endIdx);
             this.$.egi.renderingHints = this.allFilteredRenderingHints.slice(startIdx, endIdx);
             this.$.egi.primaryActionIndices = this.allFilteredPrimaryActionIndices.slice(startIdx, endIdx);
             this.$.egi.secondaryActionIndices = this.allFilteredSecondaryActionIndices.slice(startIdx, endIdx);
+            this.$.egi.propertyActionIndices = this.allFilteredPropertyActionIndices.slice(startIdx, endIdx);
         }
     },
 
@@ -752,6 +775,7 @@ const TgEntityCentreBehaviorImpl = {
                 this.allRenderingHints = result.renderingHints;
                 this.allPrimaryActionIndices = result.primaryActionIndices;
                 this.allSecondaryActionIndices = result.secondaryActionIndices;
+                this.allPropertyActionIndices = result.propertyActionIndices;
                 this.allRetrievedEntities = result.resultEntities;
                 this.dynamicColumns = result.dynamicColumns;
                 this.selectionCriteriaEntity = result.criteriaEntity;
@@ -764,7 +788,10 @@ const TgEntityCentreBehaviorImpl = {
                        propOrder.property = "";
                    }
                    return propOrder;
-                }))
+                }));
+                // If a user received an SSE refresh event, but switched to a selection criteria pane and pressed RUN, then the refresh prompt (a toast) should be canceled.
+                this.cancelRefreshToast();
+
                 if (this._triggerRun) {
                     if (this._selectedView === 0) {
                         this.async(function () {
@@ -1096,7 +1123,7 @@ const TgEntityCentreBehaviorImpl = {
 
     _saveOrCancelPromise: function () {
         this._showToastWithMessage(MSG_SAVE_OR_CANCEL);
-        return Promise.reject(MSG_SAVE_OR_CANCEL);
+        return Promise.reject(MSG_SAVE_OR_CANCEL).catch(e => {});
     },
 
     _focusView: function (e, forward) {
@@ -1219,13 +1246,22 @@ const TgEntityCentreBehaviorImpl = {
      */
     currentPage: function (excludeInsertionPoints) {
         const self = this;
-        if (!self.$.egi.isEditing()) {
-            return self.$.selection_criteria.currentPage()
-                .then(function () {
-                    self.runInsertionPointActions(excludeInsertionPoints);
-                });
-        }
-        return self._saveOrCancelPromise();
+        return new Promise((resolve, reject) => {
+            self.debounce('centre-refresh', () => {
+                // cancel the 'centre-refresh' debouncer if there is any active one:
+                self.cancelDebouncer('centre-refresh');
+
+                if (!self.$.egi.isEditing()) {
+                    this.cancelRefreshToast();
+                    return self.$.selection_criteria.currentPage()
+                        .then(function () {
+                            self.runInsertionPointActions(excludeInsertionPoints);
+                            resolve();
+                        }).catch (e => reject(e));
+                }
+                self._saveOrCancelPromise().then(() => resolve()).catch(e => reject(e));
+            }, 50);
+        });
     },
 
     currentPageTap: function () {
@@ -1475,5 +1511,6 @@ export const TgEntityCentreBehavior = [
     TgEntityCentreBehaviorImpl,
     TgSseBehavior,
     TgFocusRestorationBehavior,
-    TgElementSelectorBehavior
+    TgElementSelectorBehavior,
+    TgDelayedActionBehavior
 ];

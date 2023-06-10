@@ -8,24 +8,26 @@ import java.util.TreeMap;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.Updater;
+import ua.com.fielden.platform.processors.metamodel.IConvertableToPath;
 import ua.com.fielden.platform.reflection.AnnotationReflector;
 
 /**
  * A base class for all concrete retrievers.
- * 
+ *
  * @author TG Team
- * 
+ *
  * @param <T>
  */
 public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements IRetriever<T> {
-    protected final IEntityDao<T> dao;
+    protected final Class<T> entityType;
 
     protected AbstractRetriever(final IEntityDao<T> dao) {
-        this.dao = dao;
+        this.entityType = dao.getEntityType();
     }
 
+    @Override
     public Class<T> type() {
-        return dao.getEntityType();
+        return entityType;
     }
 
     @Override
@@ -45,6 +47,10 @@ public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements 
 
     public static FieldMapping field(final String key, final String stmt) {
         return new FieldMapping(key, stmt);
+    }
+
+    public static FieldMapping field(final IConvertableToPath path, final String stmt) {
+        return new FieldMapping(path.toPath(), stmt);
     }
 
     protected static class FieldMapping {
@@ -67,7 +73,7 @@ public abstract class AbstractRetriever<T extends AbstractEntity<?>> implements 
     }
 
     public static SortedMap<String, String> map(final FieldMapping... pairs) {
-        final SortedMap<String, String> result = new TreeMap<String, String>();
+        final SortedMap<String, String> result = new TreeMap<>();
         for (final FieldMapping pair : pairs) {
             if (result.containsKey(pair.getKey())) {
                 throw new IllegalArgumentException("Duplicate stmts for property [" + pair.getKey() + "]");

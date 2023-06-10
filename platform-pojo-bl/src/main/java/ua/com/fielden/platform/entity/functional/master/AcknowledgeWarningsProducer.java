@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.entity.functional.master;
 
 import static ua.com.fielden.platform.criteria.generator.impl.CriteriaReflector.getCriteriaTitleAndDesc;
+import static ua.com.fielden.platform.error.Result.resultMessages;
 
 import java.util.Set;
 import java.util.TreeSet;
@@ -31,7 +32,7 @@ public class AcknowledgeWarningsProducer extends DefaultEntityProducerWithContex
             final Set<PropertyWarning> propertyWarnings = masterEntity()
                     .nonProxiedProperties()
                     .filter(mp -> mp.hasWarnings())
-                    .map(mp -> factory().newEntity(PropertyWarning.class, getCriteriaTitleAndDesc(masterEntity().getType(), mp.getName()).getKey(), mp.getFirstWarning().getMessage()))
+                    .map(mp -> factory().newEntity(PropertyWarning.class, getCriteriaTitleAndDesc(masterEntity().getType(), mp.getName()).getKey(), resultMessages(mp.getFirstWarning()).extendedMessage))
                     .collect(Collectors.toCollection(TreeSet::new));
             entity.setWarnings(propertyWarnings);
         }

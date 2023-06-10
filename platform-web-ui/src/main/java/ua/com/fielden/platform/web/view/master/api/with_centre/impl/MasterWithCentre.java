@@ -43,9 +43,7 @@ public class MasterWithCentre<T extends AbstractEntity<?>> implements IMaster<T>
         if (entityCentre.shouldEnforcePostSaveRefresh()) {
             attrs.append("\"enforcePostSaveRefresh\": true, ");
         }
-        if (entityCentre.eventSourceUri().isPresent()) {
-            attrs.append(format("\"uri\": \"%s\", ", entityCentre.eventSourceUri().get()));
-        }
+        attrs.append(format("eventSourceClass: \"%s\",", entityCentre.eventSourceClass().map(clazz -> clazz.getName()).orElse("")));
 
         // let's make sure that uuid is defined from the embedded centre, which is required
         // for proper communication of the centre with related actions

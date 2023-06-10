@@ -2,13 +2,13 @@ package ua.com.fielden.platform.reflection;
 
 import static java.lang.String.format;
 import static java.util.stream.Collectors.joining;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.utils.Pair.pair;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -18,7 +18,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -68,7 +68,7 @@ public final class Reflector {
      */
     public static final String UP_LEVEL = "←";
 
-    private static final Logger LOGGER = Logger.getLogger(Reflector.class);
+    private static final Logger LOGGER = getLogger(Reflector.class);
     
     /**
      * Let's hide default constructor, which is not needed for a static class.
@@ -269,16 +269,10 @@ public final class Reflector {
         try {
             final String methodName = "set" + transformed.getValue().substring(0, 1).toUpperCase() + transformed.getValue().substring(1);
             final Class<?> argumentType = PropertyTypeDeterminator.determineClass(transformed.getKey(), transformed.getValue(), AbstractEntity.KEY.equalsIgnoreCase(transformed.getValue()), false);
-            
-            if (DynamicEntityClassLoader.isGenerated(entityClass) && DynamicEntityClassLoader.getOriginalType(entityClass) == argumentType) {
-                return Reflector.getMethod(transformed.getKey(), 
-                        methodName, 
-                        entityClass);
-            } else {
-                return Reflector.getMethod(transformed.getKey(), 
-                        methodName, 
-                        argumentType);
-            }
+
+            return Reflector.getMethod(transformed.getKey(), 
+                    methodName, 
+                    argumentType);
         } catch (final Exception ex) {
             throw new ReflectionException(format("Could not obtain setter for property [%s] in type [%s].", dotNotationExp, entityClass.getName()), ex);
         }
@@ -563,7 +557,7 @@ public final class Reflector {
     }
     
     /**
-     * A helper function to assign value to a static final field.
+     * A helper function to assign value to a private static field.
      *  
      * @param field
      * @param value
@@ -571,9 +565,10 @@ public final class Reflector {
     public static void assignStatic(final Field field, final Object value) {
         try {
             field.setAccessible(true);
-            final Field modifiersField = Field.class.getDeclaredField("modifiers");
-            modifiersField.setAccessible(true);
-            modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
+            // The following manipulation what worked before JDK12 are no longer possible
+            //final Field modifiersField = Field.class.getDeclaredField("modifiers");
+            //modifiersField.setAccessible(true);
+            //modifiersField.setInt(field, field.getModifiers() & ~Modifier.FINAL);
 
             field.set(null, value);
         } catch (final Exception ex) {

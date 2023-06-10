@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.dir;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 
 import java.util.Hashtable;
 
@@ -9,7 +10,7 @@ import javax.naming.NamingException;
 import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.dir.exceptions.LdapException;
 
@@ -20,7 +21,7 @@ import ua.com.fielden.platform.dir.exceptions.LdapException;
  * 
  */
 public class DirectoryWorker {
-    private static final Logger logger = Logger.getLogger(DirectoryWorker.class);
+    private static final Logger logger = getLogger(DirectoryWorker.class);
 
     private DirectoryWorker() {}
 

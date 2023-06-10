@@ -2,6 +2,7 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 
 import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
+import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
 
 /**
  * Used for decimal and money formatting. If the scale value for formatting wasn't specified then the default one is used.
@@ -51,6 +52,13 @@ var _isContinuationError0 = function (result) {
  */
 var _isWarning0 = function (result) {
     return result !== null && result["@resultType"] === "ua.com.fielden.platform.error.Warning";
+};
+
+/**
+ * Determines whether the result is informative.
+ */
+var _isInformative0 = function (result) {
+    return result !== null && result["@resultType"] === "ua.com.fielden.platform.error.Informative";
 };
 
 /**
@@ -434,17 +442,22 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
     /**
      * Returns 'active entity' in this union entity.
      * 
-     * This method closely resembles methods 'AbstractUnionEntity.activeEntity' and 'AbstractUnionEntity.getNameOfAssignedUnionProperty'.
+     * This method closely resembles method 'AbstractUnionEntity.activeEntity'.
      */
     Entity.prototype._activeEntity = function () {
-        const self = this;
-        let activeEntity = null;
-        this.traverseProperties(function (name) {
-            if (self.get(name) !== null) {
-                activeEntity = self.get(name);
-            }
-        });
-        return activeEntity;
+        const activeProperty = this._activeProperty();
+        return activeProperty !== null ? this.get(activeProperty) : null;
+    }
+
+     /**
+      * Returns 'active property' in this union entity. Active property is a property among union properties that is not null.
+      * If there are no such property then null is returned.
+      *
+      * This method closely resembles methods 'AbstractUnionEntity.getNameOfAssignedUnionProperty'.
+      */
+    Entity.prototype._activeProperty = function () {
+        const type = this.constructor.prototype.type.call(this);
+        return type.unionProps().find(prop => this.get(prop) !== null) || null;
     }
 
     /**
@@ -652,7 +665,7 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
      */
     Entity.prototype.toString = function () {
         const convertedKey = _toString(_convert(this.get('key')), this.constructor.prototype.type.call(this), 'key');
-        return convertedKey === '' && !this.constructor.prototype.type.call(this).isUnionEntity() ? KEY_NOT_ASSIGNED : convertedKey;
+        return convertedKey === '' ? KEY_NOT_ASSIGNED : convertedKey;
     }
     
     return Entity;
@@ -813,7 +826,7 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
      *
      */
     EntityType.prototype.isUnionEntity = function () {
-        return typeof this['_unionCommonProps'] !== 'undefined';
+        return typeof this['_unionCommonProps'] !== 'undefined' && typeof this['_unionProps'] !== 'undefined';
     }
 
     /** 
@@ -821,6 +834,13 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
      */
     EntityType.prototype.unionCommonProps = function () {
         return this._unionCommonProps;
+    }
+
+    /** 
+     * Returns the property names for union properties in case of union entity; not defined otherwise.
+     */
+     EntityType.prototype.unionProps = function () {
+        return this._unionProps;
     }
 
     /**
@@ -902,6 +922,8 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
                 } else if (this.isUnionEntity()) { // the key type for union entities at the Java level is "String", but for JS its actual type is determined at runtime base on the active property
                     return { type: function () { return 'String'; } }
                 }
+            } else if (!prop && name === 'desc' && this.isUnionEntity()) { // the 'desc' type for union entities always return "String", even if there is no @DescTitle annotation on union type
+                return { type: function () { return 'String'; } }
             }
             return prop ? prop : null;
         }
@@ -1211,6 +1233,9 @@ const _convertFullPropertyValue = function (bindingView, propertyName, fullValue
     if (_isEntity(fullValue)) {
         if (fullValue.get('id') !== null) {
             bindingView['@' + propertyName + '_id'] = fullValue.get('id');
+        }
+        if (fullValue.type().isUnionEntity()) {
+            bindingView[`@${propertyName}_activeProperty`] = fullValue._activeProperty(); 
         }
         try {
             const desc = fullValue.get('desc');
@@ -1526,71 +1551,55 @@ export const TgReflector = Polymer({
         return _isWarning0(result);
     },
 
-    //////////////////// SERVER EXCEPTIONS UTILS ////////////////////
     /**
-     * Returns a meaninful representation for exception message (including user-friendly version for NPE, not just 'null').
+     * Determines whether result is informative.
      */
-    exceptionMessage: function (exception) {
-        return exception.message === null ? "Null pointer exception" : exception.message;
+    isInformative: function (result) {
+        return _isInformative0(result);
     },
 
-    /**
-     * Returns a meaninful representation for errorObject message.
-     */
-    exceptionMessageForErrorObject: function (errorObject) {
-        return errorObject.message;
-    },
+    //////////////////// SERVER EXCEPTIONS UTILS ////////////////////
 
     /**
      * Returns html representation for the specified exception trace (including 'cause' expanded, if any).
      */
     stackTrace: function (ex) {
         // collects error cause by traversing the stack into an ordered list
-        var causeCollector = function (ex, causes) {
+        const causeCollector = function (ex, causes) {
             if (ex) {
-                causes = causes + "<li>" + this.exceptionMessage(ex) + "</li>";
+                causes = causes + "<li>" + resultMessages(ex).extended + "</li>";
                 printStackTrace(ex);
                 if (ex.cause !== null) {
                     causes = causeCollector(ex.cause, causes);
                 }
             }
             return causes + "</ol>";
-        }.bind(this);
+        };
 
-        // ouputs the exception stack trace into the console as warning
-        var printStackTrace = function (ex) {
-            var msg = "No cause and stack trace.";
+        // outputs the exception stack trace into the console as warning
+        const printStackTrace = function (ex) {
+            let msg = "No cause and stack trace.";
             if (ex) {
-                msg = this.exceptionMessage(ex) + '\n';
+                msg = resultMessages(ex).short + '\n';
                 if (Array.isArray(ex.stackTrace)) {
-                    for (var i = 0; i < ex.stackTrace.length; i += 1) {
-                        var st = ex.stackTrace[i];
+                    for (let i = 0; i < ex.stackTrace.length; i += 1) {
+                        const st = ex.stackTrace[i];
                         msg = msg + st.className + '.java:' + st.lineNumber + ':' + st.methodName + ';\n';
                     }
                 }
             }
             console.warn(msg);
-        }.bind(this);
+        };
 
         if (ex) {
-            var causes = "<b>" + this.exceptionMessage(ex) + "</b>";
+            let causes = "<b>" + resultMessages(ex).extended + "</b>";
             printStackTrace(ex);
             if (ex.cause !== null) {
                 causes = causeCollector(ex.cause, causes + "<br><br>Cause(s):<br><ol>")
             }
-
             return causes;
         }
-
-    },
-
-    /**
-     * Returns html representation for the specified errorObject stack.
-     */
-    stackTraceForErrorObjectStack: function (stack) {
-        console.log("STACK", stack);
-        // TODO still "NOT IMPLEMENTED!";
-        return stack.toString();
+        return '';
     },
 
     //////////////////// SERVER EXCEPTIONS UTILS [END] //////////////
@@ -2112,6 +2121,10 @@ export const TgReflector = Polymer({
      */
     get LINK_CONFIG_TITLE() {
         return _LINK_CONFIG_TITLE;
+    },
+
+    get KEY_NOT_ASSIGNED() {
+        return KEY_NOT_ASSIGNED;
     }
 
 });

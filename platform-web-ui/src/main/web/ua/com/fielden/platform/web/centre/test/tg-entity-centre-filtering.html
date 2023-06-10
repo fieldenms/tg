@@ -49,9 +49,10 @@
                 centre.postRetrieved = function (entity, bindingEntity, customObject) {
                     const editor = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_;
                     editor._editingValue = 'FILTERED';
+                    // At times committing a value was happening after the "centre.run()"" call.
+                    // Placing "centre.run()" on async with 100 millis delay seems to have resolved this problem.
                     editor.commit();
-
-                    centre.run();
+                    this.async(() => centre.run(), 100);
                 };
 
                 centre.retrieve();
@@ -65,6 +66,25 @@
                     autocompleter._onFound = function (entities) {
                         console.log("onFound: ", entities);
                         assert.strictEqual(entities.length, 0, 'The count of resultant entities for the centre"s autocompleter should be 0 -- FILTERED instance should be filtered out.');
+
+                        done();
+                    }.bind(autocompleter);
+                    
+                    autocompleter._editingValue = 'FILTERED';
+                    autocompleter._selectNextOnKeyDown();
+                };
+
+                centre.retrieve();
+            });
+
+            test('autocompleter filtering is ignored for domain-driven data filter invoked via search tap', function (done) {
+                centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                    const autocompleter = centre.$.selection_criteria.$.editor_4_tgPersistentEntityWithProperties_;
+
+                    const oldOnFound = autocompleter._onFound;
+                    autocompleter._onFound = function (entities) {
+                        console.log("onFound: ", entities);
+                        assert.strictEqual(entities.length, 10, 'searchOnTap ignores the input text.');
 
                         done();
                     }.bind(autocompleter);
@@ -106,7 +126,7 @@
                                 }.bind(autocompleter);
                                 
                                 autocompleter._editingValue = 'FILTERED';
-                                autocompleter._searchOnTap();
+                                autocompleter._selectNextOnKeyDown();
                             };
                         });
                     }

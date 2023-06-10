@@ -8,8 +8,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
-import ua.com.fielden.platform.eql.stage2.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.TransformationContext2;
+import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage3.conditions.Conditions3;
 import ua.com.fielden.platform.eql.stage3.conditions.ICondition3;
@@ -31,18 +31,18 @@ public class Conditions2 extends AbstractCondition2<Conditions3> {
     }
 
     @Override
-    public TransformationResult<Conditions3> transform(final TransformationContext context) {
+    public TransformationResult2<Conditions3> transform(final TransformationContext2 context) {
         if (ignore()) {
-            return new TransformationResult<>(null, context);
+            return new TransformationResult2<>(null, context);
         }
         
         final List<List<? extends ICondition3>> result = new ArrayList<>();
-        TransformationContext currentContext = context;
+        TransformationContext2 currentContext = context;
         
         for (final List<? extends ICondition2<?>> andGroup : allConditionsAsDnf) {
             final List<ICondition3> transformedAndGroup = new ArrayList<>(); 
             for (final ICondition2<? extends ICondition3> andGroupCondition : andGroup) {
-                final TransformationResult<? extends ICondition3> andGroupConditionTr = andGroupCondition.transform(currentContext);
+                final TransformationResult2<? extends ICondition3> andGroupConditionTr = andGroupCondition.transform(currentContext);
                 transformedAndGroup.add(andGroupConditionTr.item);
                 currentContext = andGroupConditionTr.updatedContext;
             }
@@ -58,7 +58,7 @@ public class Conditions2 extends AbstractCondition2<Conditions3> {
 //                .filter(andGroup -> !andGroup.isEmpty())
 //                .collect(toList());
         
-        return new TransformationResult<>(new Conditions3(negated, result), currentContext);
+        return new TransformationResult2<>(new Conditions3(negated, result), currentContext);
     }
 
     @Override

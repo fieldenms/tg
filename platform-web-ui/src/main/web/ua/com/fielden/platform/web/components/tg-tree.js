@@ -4,6 +4,9 @@ import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
 import '/resources/polymer/@polymer/iron-icons/av-icons.js';
 import '/resources/polymer/@polymer/iron-list/iron-list.js';
 
+import '/resources/polymer/@polymer/paper-checkbox/paper-checkbox.js';
+
+
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 import { html } from '/resources/polymer/@polymer/polymer/lib/utils/html-tag.js';
 
@@ -33,7 +36,7 @@ const template = html`
         [highlighted] .part-to-highlight {
             font-weight: bold;
         }
-        .tree-item {
+        .tree-item:not([with-checkbox]) {
             padding: 1px 4px;
         }
         .tree-node[selected],
@@ -66,13 +69,24 @@ const template = html`
             min-width: min-content;
             white-space: nowrap;
         }
+        paper-checkbox {
+            padding-left: 4px;
+            --paper-checkbox-animation-duration: 0;
+            --paper-checkbox-checked-color: var(--paper-light-blue-700);
+            --paper-checkbox-checked-ink-color: var(--paper-light-blue-700);
+            --paper-checkbox-unchecked-color: var(--paper-grey-900);
+            --paper-checkbox-unchecked-ink-color: var(--paper-grey-900); 
+            --paper-checkbox-ink-size: 34px;
+            --paper-checkbox-label_-_display: none;
+        }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
-    <iron-list id="treeList" items="[[_entities]]" as="entity" selected-item="{{selectedEntity}}" selection-enabled>
+    <iron-list id="treeList" items="[[_entities]]" as="entity" selected-item="{{selectedEntity}}" selection-enabled="[[!selectWithCheckbox]]">
         <template>
-            <div class="layout horizontal center tree-node no-wrap" over$="[[entity.over]]" selected$="[[_isSelected(selectedEntity, entity)]]" on-mouseenter="_mouseItemEnter" on-mouseleave="_mouseItemLeave" style$="[[itemStyle(entity)]]">
+            <div class="layout horizontal center tree-node no-wrap" over$="[[entity.over]]" selected$="[[_isSelected(selectedEntity, entity, selectWithCheckbox, entity.selected)]]" on-mouseenter="_mouseItemEnter" on-mouseleave="_mouseItemLeave" style$="[[itemStyle(entity)]]">
                 <iron-icon class="expand-button" icon="av:play-arrow" style="flex-grow:0;flex-shrink:0;" invisible$="[[!entity.entity.hasChildren]]" collapsed$="[[!entity.opened]]" on-tap="_toggle"></iron-icon>
-                <span class="tree-item" highlighted$="[[entity.highlight]]" inner-h-t-m-l="[[contentBuilder(entity, entity.opened)]]" on-tap="treeItemAction"></span>
+                <paper-checkbox noink checked="[[entity.selected]]" hidden$="[[_shouldHideCheckbox(selectWithCheckbox, entity.isAdditionalInfo)]]" on-tap="_changeSelection"></paper-checkbox>
+                <span class="tree-item" with-checkbox$="[[selectWithCheckbox]]" highlighted$="[[entity.highlight]]" inner-h-t-m-l="[[contentBuilder(entity, entity.opened)]]" on-tap="treeItemAction"></span>
                 <span class="tree-item-actions" on-tap="actionRunner" inner-h-t-m-l="[[actionBuilder(entity)]]"></span>
             </div>
         </template>
@@ -84,7 +98,10 @@ Polymer({
     is: 'tg-tree',
 
     properties: {
-
+        selectWithCheckbox: {
+            type: Boolean,
+            value: false
+        },
         contentBuilder: Function,
         actionBuilder: Function,
         treeItemAction: Function,
@@ -106,6 +123,10 @@ Polymer({
         this.$.treeList.notifyResize();
     },
 
+    listEntityIndex: function (entity) {
+        return this._entities.indexOf(entity);
+    },
+
     isEntityRendered: function (index) {
         return this.$.treeList._isIndexRendered(index);
     },
@@ -117,8 +138,10 @@ Polymer({
         }
     },
 
-    _isSelected: function (selectedEntity, entity) {
-        if (entity !== selectedEntity) {
+    _isSelected: function (selectedEntity, entity, selectWithCheckbox, entitySelected) {
+        if (selectWithCheckbox) {
+            return entitySelected;
+        } else if (entity !== selectedEntity) {
             if (entity.additionalInfoNodes) {
                 return entity.additionalInfoNodes.indexOf(selectedEntity) >= 0;
             } else if (entity.isAdditionalInfo) {
@@ -126,6 +149,19 @@ Polymer({
             }
         }
         return entity === selectedEntity && !entity.loaderIndicator;
+    },
+
+    _shouldHideCheckbox: function (selectWithCheckbox, isAdditionalInfo) {
+        return isAdditionalInfo || !selectWithCheckbox;
+    },
+
+    _changeSelection: function (e) {
+        const entity = e.model.entity;
+        if (entity.additionalInfoNodes && !entity.loaderIndicator) {
+            this.setSelected(e.model.index, !entity.selected);
+        } else if (entity.isAdditionalInfo) {
+            this.setSelected(this._getBaseEntityIdx(e.model.index), !entity.selected);
+        }
     },
 
     _mouseItemEnter: function (e) {

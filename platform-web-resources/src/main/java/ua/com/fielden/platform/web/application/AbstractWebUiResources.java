@@ -1,7 +1,8 @@
 package ua.com.fielden.platform.web.application;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.restlet.Application;
 import org.restlet.Context;
 import org.restlet.Restlet;
@@ -54,7 +55,7 @@ import ua.com.fielden.platform.web.security.DefaultWebResourceGuard;
 public abstract class AbstractWebUiResources extends Application {
     protected final Injector injector;
 
-    protected final Logger logger = Logger.getLogger(getClass());
+    protected final Logger logger = LogManager.getLogger(getClass());
     private final IWebUiConfig webApp;
     private final IWebResourceLoader webResourceLoader;
     protected final IUserProvider userProvider;
@@ -120,7 +121,7 @@ public abstract class AbstractWebUiResources extends Application {
     @Override
     public final Restlet createInboundRoot() {
         // Create router and web application for registering resources.
-        final Router guardedRouter = new ResourceRouter(getContext());
+        final Router guardedRouter = new Router(getContext());
 
         final RestServerUtil restUtil = injector.getInstance(RestServerUtil.class);
 

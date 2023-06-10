@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
 import static java.lang.String.format;
+import static java.util.Arrays.asList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static ua.com.fielden.platform.reflection.TitlesDescsGetter.getTitleAndDesc;
+import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 import static ua.com.fielden.platform.utils.EntityUtils.isCollectional;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
@@ -42,12 +44,15 @@ import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.OrderDirection;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.SummaryPropDef;
+import ua.com.fielden.platform.web.centre.api.IWithRightSplitterPosition;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector;
+import ua.com.fielden.platform.web.centre.api.alternative_view.IAlternativeView;
+import ua.com.fielden.platform.web.centre.api.alternative_view.IAlternativeViewPreferred;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
-import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointPreferred;
+import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointConfig0;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPointConfig;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
@@ -61,6 +66,7 @@ import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aEgiAp
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1aEgiIconStyle;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1bCheckbox;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1cToolbar;
+import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dCentreScroll;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1dScroll;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1eDraggable;
 import ua.com.fielden.platform.web.centre.api.resultset.IResultSetBuilder1efRetrieveAll;
@@ -112,6 +118,8 @@ import ua.com.fielden.platform.web.view.master.api.widgets.spinner.impl.SpinnerW
  */
 class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilderDynamicProps<T>, IResultSetBuilderWidgetSelector<T>, IResultSetBuilder3Ordering<T>, IResultSetBuilder1aEgiAppearance<T>, IResultSetBuilder1aEgiIconStyle<T>, IResultSetBuilder4OrderingDirection<T>, IResultSetBuilder7SecondaryAction<T>, IExpandedCardLayoutConfig<T>, ISummaryCardLayout<T>{
 
+    private static final String ERR_SPLITTER_OVERLAPPING = "The left and right splitters are overlapping (i.e., left splitter position + right splitter position > 100).";
+    private static final String ERR_SPLITTER_POSITION_OUT_OF_BOUNDS = "The splitter position should be greater than 0 and less than 100.";
     private static final String ERR_EDITABLE_SUB_PROP_DISALLOWED = "Dot-notated property [%s] cannot be added as editable. Only first-level properties are supported.";
 
     protected final EntityCentreBuilder<T> builder;
@@ -119,11 +127,11 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     private final Map<String, Class<? extends IValueMatcherWithContext<T, ?>>> valueMatcherForProps = new HashMap<>();
 
-    protected Optional<String> propName = Optional.empty();
-    protected Optional<String> tooltipProp = Optional.empty();
-    protected Optional<PropDef<?>> propDef = Optional.empty();
-    protected Optional<AbstractWidget> widget = Optional.empty();
-    private Supplier<Optional<EntityActionConfig>> entityActionConfig;
+    protected Optional<String> propName = empty();
+    protected Optional<String> tooltipProp = empty();
+    protected Optional<PropDef<?>> propDef = empty();
+    protected Optional<AbstractWidget> widget = empty();
+    private Optional<EntityMultiActionConfig> entityActionConfig = empty();
     private Integer orderSeq;
     private int width = 80;
     private boolean isFlexible = true;
@@ -142,11 +150,11 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             throw new EntityCentreConfigurationException(format("Provided value [%s] is not a valid property expression for entity [%s]", propName, builder.getEntityType().getSimpleName()));
         }
 
-        this.propName = Optional.of(propName);
-        this.tooltipProp = Optional.empty();
-        this.propDef = Optional.empty();
+        this.propName = of(propName);
+        this.tooltipProp = empty();
+        this.propDef = empty();
         this.orderSeq = null;
-        this.entityActionConfig = Optional::empty;
+        this.entityActionConfig = empty();
         return this;
     }
 
@@ -196,7 +204,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     public <M extends AbstractEntity<?>> IResultSetBuilderDynamicPropsAction<T> addProps(final String propName, final Class<? extends IDynamicColumnBuilder<T>> dynColBuilderType, final BiConsumer<M, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
         final ResultSetProp<T> prop = dynamicProps(propName, dynColBuilderType, entityPreProcessor, contextConfig);
         this.builder.addToResultSet(prop);
-        return new ResultSetDynamicPropertyBuilder<T>(this, prop);
+        return new ResultSetDynamicPropertyBuilder<>(this, prop);
     }
 
     @Override
@@ -242,11 +250,11 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             throw new IllegalArgumentException("Custom property should not be null.");
         }
 
-        this.propName = Optional.empty();
-        this.tooltipProp = Optional.empty();
-        this.propDef = Optional.of(propDef);
+        this.propName = empty();
+        this.tooltipProp = empty();
+        this.propDef = of(propDef);
         this.orderSeq = null;
-        this.entityActionConfig = Optional::empty;
+        this.entityActionConfig = empty();
         return this;
     }
 
@@ -284,7 +292,18 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             throw new IllegalArgumentException("Property action configuration should not be null.");
         }
 
-        this.entityActionConfig = () -> Optional.of(actionConfig);
+        this.entityActionConfig = of(new EntityMultiActionConfig(SingleActionSelector.class, asList(() -> of(actionConfig))));
+        completePropIfNeeded();
+        return this;
+    }
+
+    @Override
+    public IAlsoProp<T> withMultiAction(final EntityMultiActionConfig multiActionConfig) {
+        if (multiActionConfig == null) {
+            throw new IllegalArgumentException("Property action configuration should not be null.");
+        }
+
+        this.entityActionConfig = of(multiActionConfig);
         completePropIfNeeded();
         return this;
     }
@@ -295,13 +314,13 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             throw new IllegalArgumentException("Property action configuration supplier should not be null.");
         }
 
-        this.entityActionConfig = actionConfigSupplier;
+        this.entityActionConfig = of(new EntityMultiActionConfig(SingleActionSelector.class, asList(actionConfigSupplier)));
         completePropIfNeeded();
         return this;
     }
 
-    private Optional<Device> lastResultsetLayoutDevice = Optional.empty();
-    private Optional<Orientation> lastResultsetLayoutOrientation = Optional.empty();
+    private Optional<Device> lastResultsetLayoutDevice = empty();
+    private Optional<Orientation> lastResultsetLayoutOrientation = empty();
 
     @Override
     public IExpandedCardLayoutConfig<T> setCollapsedCardLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString) {
@@ -309,7 +328,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             throw new IllegalStateException("Resultset card layout requries device and orientation (optional) to be specified.");
         }
 
-        this.lastResultsetLayoutDevice = Optional.of(device);
+        this.lastResultsetLayoutDevice = of(device);
         this.lastResultsetLayoutOrientation = orientation;
         this.builder.resultsetCollapsedCardLayout.whenMedia(device, orientation.isPresent() ? orientation.get() : null).set(flexString);
         return this;
@@ -322,8 +341,8 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
         this.builder.resultsetExpansionCardLayout.whenMedia(lastResultsetLayoutDevice.get(), lastResultsetLayoutOrientation.isPresent() ? lastResultsetLayoutOrientation.get()
                 : null).set(flexString);
-        this.lastResultsetLayoutDevice = Optional.empty();
-        this.lastResultsetLayoutOrientation = Optional.empty();
+        this.lastResultsetLayoutDevice = empty();
+        this.lastResultsetLayoutOrientation = empty();
         return this;
     }
 
@@ -333,7 +352,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             throw new IllegalArgumentException("Primary action configuration should not be null.");
         }
 
-        return addPrimaryAction(new EntityMultiActionConfig(SingleActionSelector.class, Arrays.asList(actionConfig)));
+        return addPrimaryAction(new EntityMultiActionConfig(SingleActionSelector.class, listOf(() -> of(actionConfig))));
     }
 
     @Override
@@ -353,7 +372,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
             throw new IllegalArgumentException("Secondary action configuration should not be null.");
         }
 
-        return addSecondaryAction(new EntityMultiActionConfig(SingleActionSelector.class, Arrays.asList(actionConfig)));
+        return addSecondaryAction(new EntityMultiActionConfig(SingleActionSelector.class, Arrays.asList(() -> of(actionConfig))));
     }
 
     @Override
@@ -449,12 +468,12 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
 
         // clear things up for the next property to be added if any
-        this.propName = Optional.empty();
-        this.tooltipProp = Optional.empty();
-        this.propDef = Optional.empty();
+        this.propName = empty();
+        this.tooltipProp = empty();
+        this.propDef = empty();
         this.orderSeq = null;
-        this.entityActionConfig = Optional::empty;
-        this.widget = Optional.empty();
+        this.entityActionConfig = empty();
+        this.widget = empty();
     }
 
     @Override
@@ -513,14 +532,34 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         }
 
         @Override
-        public IInsertionPointPreferred<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
+        public IInsertionPointConfig0<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
             return ResultSetBuilder.this.addInsertionPoint(actionConfig, whereToInsertView);
+        }
+
+        @Override
+        public IWithRightSplitterPosition<T> withLeftSplitterPosition(final int percantage) {
+            return ResultSetBuilder.this.withLeftSplitterPosition(percantage);
+        }
+
+        @Override
+        public IAlternativeView<T> withRightSplitterPosition(final int percentage) {
+            return ResultSetBuilder.this.withRightSplitterPosition(percentage);
+        }
+
+        @Override
+        public IAlternativeViewPreferred<T> addAlternativeView(final EntityActionConfig actionConfig) {
+            return ResultSetBuilder.this.addAlternativeView(actionConfig);
         }
     }
 
     @Override
-    public IInsertionPointPreferred<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
+    public IInsertionPointConfig0<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
         return new InsertionPointConfigBuilder<>(this, actionConfig, whereToInsertView);
+    }
+
+    @Override
+    public IAlternativeViewPreferred<T> addAlternativeView(final EntityActionConfig actionConfig) {
+        return new AlternativeViewConfigBuilder<>(this, actionConfig);
     }
 
     @Override
@@ -554,7 +593,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder1eDraggable<T> notScrollable() {
+    public IResultSetBuilder1dCentreScroll<T> notScrollable() {
         this.builder.scrollConfig = ScrollConfig.configScroll()
                 .withFixedCheckboxesAndPrimaryActions()
                 .withFixedSecondaryActions()
@@ -589,8 +628,14 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
     }
 
     @Override
-    public IResultSetBuilder1eDraggable<T> withScrollingConfig(final IScrollConfig scrollConfig) {
+    public IResultSetBuilder1dCentreScroll<T> withScrollingConfig(final IScrollConfig scrollConfig) {
         this.builder.scrollConfig = scrollConfig;
+        return this;
+    }
+
+    @Override
+    public IResultSetBuilder1eDraggable<T> lockScrollingForInsertionPoints() {
+        this.builder.lockScrollingForInsertionPoints = true;
         return this;
     }
 
@@ -639,7 +684,7 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
         final Class<?> propType = isEntityItself ? root : PropertyTypeDeterminator.determinePropertyType(root, resultPropName);
         final String widgetPropName = "".equals(resultPropName) ? AbstractEntity.KEY : resultPropName;
         final EntityAutocompletionWidget editor = new EntityAutocompletionWidget(pair("", getTitleAndDesc(widgetPropName, root).getValue()), widgetPropName, (Class<AbstractEntity<?>>)propType);
-        this.widget = Optional.of(editor);
+        this.widget = of(editor);
         return new ResultSetAutocompleterConfig<>(this, editor);
     }
 
@@ -661,6 +706,27 @@ class ResultSetBuilder<T extends AbstractEntity<?>> implements IResultSetBuilder
 
     public ResultSetBuilder<T> addInsertionPoint(final InsertionPointConfig insertionPoint) {
         this.builder.insertionPointConfigs.add(insertionPoint);
+        return this;
+    }
+
+    @Override
+    public IWithRightSplitterPosition<T> withLeftSplitterPosition(final int percentage) {
+        if (percentage < 0 || percentage > 100) {
+            throw new EntityCentreConfigurationException(ERR_SPLITTER_POSITION_OUT_OF_BOUNDS);
+        }
+        builder.leftSplitterPosition = Integer.valueOf(percentage);
+        return this;
+    }
+
+    @Override
+    public IAlternativeView<T> withRightSplitterPosition(final int percentage) {
+        if (percentage < 0 || percentage > 100) {
+            throw new EntityCentreConfigurationException(ERR_SPLITTER_POSITION_OUT_OF_BOUNDS);
+        }
+        if (builder.leftSplitterPosition != null && builder.leftSplitterPosition.intValue() + percentage > 100) {
+            throw new EntityCentreConfigurationException(ERR_SPLITTER_OVERLAPPING);
+        }
+        builder.rightSplitterPosition = Integer.valueOf(percentage);
         return this;
     }
 }

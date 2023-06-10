@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.domaintree.impl;
 
-import static ua.com.fielden.platform.entity.AbstractEntity.STRICT_MODEL_VERIFICATION;
+import static org.apache.logging.log4j.LogManager.getLogger;
+import static ua.com.fielden.platform.entity.AbstractEntity.isStrictModelVerification;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.utils.EntityUtils.isBoolean;
 import static ua.com.fielden.platform.utils.EntityUtils.isRangeType;
@@ -8,7 +9,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isRangeType;
 import java.util.Set;
 
 import org.apache.commons.lang3.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.domaintree.IDomainTreeManager.ITickManager;
 import ua.com.fielden.platform.domaintree.IUsageManager;
@@ -31,7 +32,7 @@ import ua.com.fielden.platform.utils.Pair;
  */
 public abstract class AbstractDomainTree {
     private final EntityFactory entityFactory;
-    private static final Logger logger = Logger.getLogger(AbstractDomainTree.class);
+    private static final Logger logger = getLogger(AbstractDomainTree.class);
     private static final String COMMON_SUFFIX = ".common-properties", DUMMY_SUFFIX = ".dummy-property";
     protected static final String PLACEHOLDER = "-placeholder-origin-";
 
@@ -164,7 +165,7 @@ public abstract class AbstractDomainTree {
         // However, it also causes performance bottlenecks when invoking multiple times.
         // In current Web UI logic, that uses centre domain trees, this check does not add any significant value due to other checks implemented as part of Centre DSL.
         // This check is currently performed only in STRICT_MODEL_VERIFICATION mode (and thus skipped in deployment mode).
-        if (STRICT_MODEL_VERIFICATION && !tm.isChecked(root, property)) {
+        if (isStrictModelVerification() && !tm.isChecked(root, property)) {
             throw new DomainTreeException(message);
         }
     }

@@ -1,5 +1,8 @@
 package ua.com.fielden.platform.web.centre.api.impl;
 
+import static java.util.Arrays.asList;
+import static java.util.Optional.of;
+
 import java.util.Optional;
 import java.util.function.Supplier;
 
@@ -8,12 +11,16 @@ import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
+import ua.com.fielden.platform.web.centre.api.IWithRightSplitterPosition;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
+import ua.com.fielden.platform.web.centre.api.actions.multi.SingleActionSelector;
+import ua.com.fielden.platform.web.centre.api.alternative_view.IAlternativeView;
+import ua.com.fielden.platform.web.centre.api.alternative_view.IAlternativeViewPreferred;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.exceptions.CentreConfigException;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
-import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointPreferred;
+import ua.com.fielden.platform.web.centre.api.insertion_points.IInsertionPointConfig0;
 import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
 import ua.com.fielden.platform.web.centre.api.resultset.IAlsoSecondaryAction;
@@ -95,8 +102,13 @@ public class ResultSetDynamicPropertyBuilder<T extends AbstractEntity<?>> implem
     }
 
     @Override
-    public IInsertionPointPreferred<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
+    public IInsertionPointConfig0<T> addInsertionPoint(final EntityActionConfig actionConfig, final InsertionPoints whereToInsertView) {
         return builder.addInsertionPoint(actionConfig, whereToInsertView);
+    }
+
+    @Override
+    public IAlternativeViewPreferred<T> addAlternativeView(final EntityActionConfig actionConfig) {
+        return builder.addAlternativeView(actionConfig);
     }
 
     @Override
@@ -115,7 +127,7 @@ public class ResultSetDynamicPropertyBuilder<T extends AbstractEntity<?>> implem
             throw new CentreConfigException("Property action configuration should not be null.");
         }
 
-        resultSetProp.setPropAction(() -> Optional.of(actionConfig));
+        resultSetProp.setPropAction(of(new EntityMultiActionConfig(SingleActionSelector.class, asList(() -> of(actionConfig)))));
         return this;
     }
 
@@ -125,8 +137,17 @@ public class ResultSetDynamicPropertyBuilder<T extends AbstractEntity<?>> implem
             throw new CentreConfigException("Property action configuration supplier should not be null.");
         }
 
-        resultSetProp.setPropAction(actionConfigSupplier);
+        resultSetProp.setPropAction(of(new EntityMultiActionConfig(SingleActionSelector.class, asList(actionConfigSupplier))));
         return this;
     }
 
+    @Override
+    public IWithRightSplitterPosition<T> withLeftSplitterPosition(final int percentage) {
+        return builder.withLeftSplitterPosition(percentage);
+    }
+
+    @Override
+    public IAlternativeView<T> withRightSplitterPosition(final int percentage) {
+        return builder.withRightSplitterPosition(percentage);
+    }
 }

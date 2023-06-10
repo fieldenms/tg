@@ -7,6 +7,9 @@ import {html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
 import {TgEditor, createEditorTemplate} from '/resources/editors/tg-editor.js'
 
+const customLableTemplate = html`
+    <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]" slot="label">[[propTitle]]</label>`;
+
 const additionalTemplate = html`
     <style>
         /* Styles for boolean property editors. */
@@ -20,9 +23,10 @@ const additionalTemplate = html`
             --paper-checkbox-unchecked-color: var(--paper-grey-900);
             --paper-checkbox-checked-color: var(--paper-light-blue-700);
             --paper-checkbox-checked-ink-color: var(--paper-light-blue-700);
+            --paper-checkbox-label-color: #757575;
             height: 24px;
             --paper-checkbox-label: {
-                display:grid !important;
+                display:grid;
             };
         }
 
@@ -33,13 +37,33 @@ const additionalTemplate = html`
             font-weight: 400;
             -webkit-font-smoothing: antialiased;
             text-rendering: optimizeLegibility;
-            color: #757575 !important;
         }
         
         .truncate {
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+
+        #decorator.required paper-checkbox {
+            --paper-checkbox-unchecked-color: #03A9F4;
+            --paper-checkbox-checked-color: #03A9F4;
+            --paper-checkbox-checked-ink-color: #03A9F4;
+            --paper-checkbox-label-color: #03A9F4;
+        }
+
+        #decorator[is-invalid].warning paper-checkbox {
+            --paper-checkbox-unchecked-color: #FFA000;
+            --paper-checkbox-checked-color: #FFA000;
+            --paper-checkbox-checked-ink-color: #FFA000;
+            --paper-checkbox-label-color: #FFA000;
+        }
+
+        #decorator[is-invalid]:not(.warning) paper-checkbox {
+            --paper-checkbox-unchecked-color: var(--google-red-500);
+            --paper-checkbox-checked-color: var(--google-red-500);
+            --paper-checkbox-checked-ink-color: var(--google-red-500);
+            --paper-checkbox-label-color:var(--google-red-500);
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>`;
@@ -51,12 +75,12 @@ const customInputTemplate = html`
             disabled$="[[_disabled]]"
             on-change="_onChange"
             tooltip-text$="[[_getTooltip(_editingValue)]]"><span class="label truncate">[[propTitle]]</span></paper-checkbox>`;
-const propertyActionTemplate = html`<slot name="property-action"></slot>`;
+const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
 
 export class TgBooleanEditor extends TgEditor {
 
     static get template() { 
-        return createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate);
+        return createEditorTemplate(additionalTemplate, html``, customInputTemplate, html``, html``, propertyActionTemplate, customLableTemplate);
     }
 
     static get properties() {
@@ -87,6 +111,15 @@ export class TgBooleanEditor extends TgEditor {
         this._isBooleanChecked = (function (editingValue) {
             return editingValue === 'true';
         }).bind(this);
+    }
+
+    /**
+     * This function returns the tooltip for this editor.
+     */
+    _getTooltip (value) {
+        let tooltip = this._formatTooltipText(value);
+        tooltip += this.propDesc && (tooltip ? '<br><br>' : '') + this.propDesc;
+        return tooltip;
     }
     
     /**

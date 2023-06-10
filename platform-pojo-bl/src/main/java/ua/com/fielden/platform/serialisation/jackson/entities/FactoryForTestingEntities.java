@@ -4,6 +4,7 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.error.Result.warning;
+import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.startModification;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService.nextTypeName;
 
 import java.math.BigDecimal;
@@ -24,8 +25,6 @@ import ua.com.fielden.platform.entity.meta.MetaProperty;
 import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.proxy.EntityProxyContainer;
 import ua.com.fielden.platform.error.Result;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
-import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.types.Colour;
 import ua.com.fielden.platform.types.Hyperlink;
 import ua.com.fielden.platform.types.Money;
@@ -90,7 +89,7 @@ public class FactoryForTestingEntities {
 
         return entity;
     }
-    
+
     /**
      * Creates an uninstrumented entity that mimics the one that was retrieved from the database.
      *
@@ -158,11 +157,11 @@ public class FactoryForTestingEntities {
     public EmptyEntity createSimpleEmptyEntity() {
         return finalise(createPersistedEntity(EmptyEntity.class, 1L, "key", "description"));
     }
-    
+
     public PropertyDescriptor<EntityWithInteger> createPropertyDescriptor() {
         return new PropertyDescriptor<>(EntityWithInteger.class, "prop");
     }
-    
+
     public PropertyDescriptor<EntityWithInteger> createPropertyDescriptorInstrumented() {
         return PropertyDescriptor.fromString("ua.com.fielden.platform.serialisation.jackson.entities.EntityWithInteger:prop", Optional.of(factory));
     }
@@ -190,48 +189,58 @@ public class FactoryForTestingEntities {
     public EntityWithString createEntityWithString() {
         return finalise(createPersistedEntity(EntityWithString.class, 1L, "key", "description").setProp("okay"));
     }
-    
+
     public EntityWithMetaProperty createEntityMetaPropForNewEntity() {
         return factory.newEntity(EntityWithMetaProperty.class, null);
     }
-    
+
     public EntityWithMetaProperty createEntityMetaPropWithFailure() {
         final EntityWithMetaProperty entity = factory.newEntity(EntityWithMetaProperty.class, 1L);
         entity.beginInitialising();
         entity.setProp("Ok");
         DefinersExecutor.execute(entity);
-        
+
         return entity.setProp("Not Ok");
     }
-    
+
     public EntityWithMetaProperty createEntityMetaPropWithoutFailure() {
         return createEntityMetaPropWithFailure().setProp("Ok Ok");
     }
-    
+
     public EntityWithMetaProperty createEntityMetaPropWithWarning() {
         return createEntityMetaPropWithoutFailure().setProp("Ok Ok Warn");
     }
-    
+
+    public EntityWithMetaProperty createEntityMetaPropWithInformative() {
+        return createEntityMetaPropWithoutFailure().setProp("Ok Ok Info");
+    }
+
     public EntityWithMetaProperty createEntityMetaPropWithWarningAndBecameRequired() {
         final EntityWithMetaProperty entity = createEntityMetaPropWithWarning();
         entity.getProperty("prop").setRequired(true);
         return entity;
     }
-    
+
+    public EntityWithMetaProperty createEntityMetaPropWithInformativeAndBecameRequired() {
+        final EntityWithMetaProperty entity = createEntityMetaPropWithInformative();
+        entity.getProperty("prop").setRequired(true);
+        return entity;
+    }
+
     public EntityWithMetaProperty createEntityMetaPropThatBecameRequiredAndWasMadeEmpty() {
         return createEntityMetaPropWithWarningAndBecameRequired().setProp(null);
     }
-    
+
     public EntityWithMetaProperty createEntityMetaPropThatBecameNonRequiredAgain() {
         final EntityWithMetaProperty entity = createEntityMetaPropThatBecameRequiredAndWasMadeEmpty();
         entity.getProperty("prop").setRequired(false);
         return entity;
     }
-    
+
     public EntityWithOtherEntity createEntityMetaPropWithIdOnlyProxyValues() {
         return factory.newEntity(EntityWithOtherEntity.class, 1L);
     }
-    
+
     public EntityWithString createEntityWithStringNonEditable() {
         final EntityWithString ent = createPersistedEntity(EntityWithString.class, 1L, "key", "description").setProp("okay");
         ent.getProperty("prop").setEditable(false);
@@ -244,64 +253,63 @@ public class FactoryForTestingEntities {
         entity.getProperty("prop").setVisible(false);
         return finalise(entity);
     }
-    
+
     public EntityWithMetaProperty createRequiredMetaPropThatBecameNonRequired() {
         final EntityWithMetaProperty entity = factory.newEntity(EntityWithMetaProperty.class, 1L);
         entity.beginInitialising();
         entity.set("requiredProp", "Ok");
         DefinersExecutor.execute(entity);
-        
+
         entity.getProperty("requiredProp").setRequired(false);
         return entity;
     }
-    
+
     public EntityWithMetaProperty createNonEditableMetaPropThatBecameEditable() {
         final EntityWithMetaProperty entity = factory.newEntity(EntityWithMetaProperty.class, 1L);
         entity.beginInitialising();
         entity.set("nonEditableProp", "Ok");
         DefinersExecutor.execute(entity);
-        
+
         entity.getProperty("nonEditableProp").setEditable(true);
         return entity;
     }
-    
+
     public EntityWithMetaProperty createNonVisibleMetaPropThatBecameVisible() {
         final EntityWithMetaProperty entity = factory.newEntity(EntityWithMetaProperty.class, 1L);
         entity.beginInitialising();
         entity.set("nonVisibleProp", "Ok");
         DefinersExecutor.execute(entity);
-        
+
         entity.getProperty("nonVisibleProp").setVisible(true);
         return entity;
     }
-    
+
     public EntityWithMetaProperty createNonDefaultChangeCountMetaPropThatBecameDefault() {
         final EntityWithMetaProperty entity = factory.newEntity(EntityWithMetaProperty.class, 1L);
         entity.beginInitialising();
         entity.set("propWithValueChangeCount", "Ok");
         DefinersExecutor.execute(entity);
-        
+
         entity.set("propWithValueChangeCount", "Ok Ok"); // value change count becomes 1
-        
+
         entity.getProperty("propWithValueChangeCount").setValueChangeCount(0); // make it default afterwards
         return entity;
     }
-    
+
     public AbstractEntity createUninstrumentedEntity(final boolean proxiedType, final Class entityType) {
         return createUninstrumentedPersistedEntity(proxiedType ? EntityProxyContainer.proxy(entityType, "prop") : entityType, 1L, "key", "description");
     }
-    
+
     public AbstractEntity createInstrumentedEntity(final boolean proxiedType, final Class entityType) {
         final AbstractEntity entity = createPersistedEntity(proxiedType ? EntityProxyContainer.proxy(entityType, "prop") : entityType, 1L, "key", "description");
         return finalise(entity);
     }
-    
+
     public T2<AbstractEntity<?>, Class<AbstractEntity<?>>> createUninstrumentedGeneratedEntity(final boolean proxiedType, final Class entityType, final Class miType) {
-        final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
         final Class<AbstractEntity<?>> entityTypeGenerated;
         try {
-            entityTypeGenerated = (Class<AbstractEntity<?>>) 
-                    cl.startModification(entityType)
+            entityTypeGenerated = (Class<AbstractEntity<?>>)
+                    startModification(entityType)
                     .modifyTypeName(nextTypeName(entityType.getName()))
                     .addClassAnnotations(new MiTypeAnnotation().newInstance(miType))
                 .endModification();
@@ -312,11 +320,10 @@ public class FactoryForTestingEntities {
     }
 
     public T2<AbstractEntity<?>, Class<AbstractEntity<?>>> createInstrumentedGeneratedEntity(final boolean proxiedType, final Class entityType, final Class miType) {
-        final DynamicEntityClassLoader cl = DynamicEntityClassLoader.getInstance(ClassLoader.getSystemClassLoader());
         final Class<AbstractEntity<?>> entityTypeGenerated;
         try {
-            entityTypeGenerated = (Class<AbstractEntity<?>>) 
-                    cl.startModification(entityType)
+            entityTypeGenerated = (Class<AbstractEntity<?>>)
+                    startModification(entityType)
                     .modifyTypeName(nextTypeName(entityType.getName()))
                     .addClassAnnotations(new MiTypeAnnotation().newInstance(miType))
                 .endModification();
@@ -384,7 +391,7 @@ public class FactoryForTestingEntities {
         entity.setProp(Colour.WHITE);
         return finalise(entity);
     }
-    
+
     public EntityWithHyperlink createEntityWithHyperlink() {
         final EntityWithHyperlink entity = createPersistedEntity(EntityWithHyperlink.class, 1L, "key", "description");
         entity.setProp(new Hyperlink("http://www.amazon.com/date"));
@@ -408,12 +415,12 @@ public class FactoryForTestingEntities {
         entity.setProp(finalise(createPersistedEntity(EntityWithSameEntity.class, 2L, "key2", "description")));
         return finalise(entity);
     }
-    
+
     public EntityWithSameEntity createEntityWithSameEntityThatIsChangedFromOriginal() {
         final EntityWithSameEntity entity = createPersistedEntity(EntityWithSameEntity.class, 1L, "key1", "description");
         entity.setProp(finalise(createPersistedEntity(EntityWithSameEntity.class, 2L, "key2", "description")));
         final EntityWithSameEntity finalisedEntity = finalise(entity);
-        
+
         finalisedEntity.setProp(finalise(createPersistedEntity(EntityWithSameEntity.class, 3L, "key3", "description")));
         return finalisedEntity;
     }
@@ -485,13 +492,13 @@ public class FactoryForTestingEntities {
         entity.setKey("UNINSTRUMENTED");
         entity.setDesc("UNINSTRUMENTED desc");
         entity.endInitialising();
-        
+
         return entity;
     }
-    
+
     public Entity1WithEntity2 createInstrumentedEntityWithUninstrumentedProperty() {
         final Entity1WithEntity2 entity = factory.newEntity(Entity1WithEntity2.class, 159L);
-        
+
         final Entity2WithEntity1 uninstrumentedPropValue = EntityFactory.newPlainEntity(Entity2WithEntity1.class, 162L);
 
         entity.beginInitialising();
@@ -499,13 +506,13 @@ public class FactoryForTestingEntities {
         entity.setKey("INSTRUMENTED_WITH_UNINSTRUMENTED");
         entity.setDesc("INSTRUMENTED_WITH_UNINSTRUMENTED desc");
         entity.endInitialising();
-        
+
         return entity;
     }
 
     public Entity1WithEntity2 createUninstrumentedEntityWithInstrumentedProperty() {
         final Entity1WithEntity2 entity = EntityFactory.newPlainEntity(Entity1WithEntity2.class, 159L);
-        
+
         final Entity2WithEntity1 uninstrumentedPropValue = factory.newEntity(Entity2WithEntity1.class, 162L);
 
         entity.beginInitialising();
@@ -513,7 +520,7 @@ public class FactoryForTestingEntities {
         entity.setKey("UNINSTRUMENTED_WITH_INSTRUMENTED");
         entity.setDesc("UNINSTRUMENTED_WITH_INSTRUMENTED desc");
         entity.endInitialising();
-        
+
         return entity;
     }
 }

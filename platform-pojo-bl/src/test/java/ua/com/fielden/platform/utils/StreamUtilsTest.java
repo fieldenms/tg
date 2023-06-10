@@ -7,8 +7,10 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 import static ua.com.fielden.platform.utils.CollectionUtil.listOf;
+import static ua.com.fielden.platform.utils.Pair.pair;
 import static ua.com.fielden.platform.utils.StreamUtils.ERR_FIRST_STREAM_ELEM_CANNOT_BE_NULL;
 import static ua.com.fielden.platform.utils.StreamUtils.head_and_tail;
+import static ua.com.fielden.platform.utils.StreamUtils.stopAfter;
 import static ua.com.fielden.platform.utils.StreamUtils.takeWhile;
 import static ua.com.fielden.platform.utils.StreamUtils.zip;
 
@@ -133,20 +135,122 @@ public class StreamUtilsTest {
     }
 
     @Test
-    public void takeWhile_returns_the_longest_predicate_of_the_stream_whose_elements_satisfy_predicare() {
+    public void takeWhile_returns_the_longest_prefix_of_the_stream_whose_elements_satisfy_predicate() {
         final Stream<Integer> prefix = takeWhile(Stream.of(0, 1, 2, 3, 4, 5, 6, 1, 2, 3), e -> e < 5);
 
         final AtomicInteger expectedCurrValue = new AtomicInteger(-1);
         assertTrue(prefix.allMatch(v -> v == expectedCurrValue.incrementAndGet()));
         assertEquals(4, expectedCurrValue.get());
     }
+
+    @Test
+    public void stopAfter_for_empty_stream_returns_empty_stream() {
+        assertEquals(0L, stopAfter(Stream.empty(), e -> true).count());
+    }
+
+    @Test
+    public void stopAfter_returns_the_longest_prefix_of_the_stream_stopping_after_element_satisfying_predicate() {
+        final Stream<Integer> prefix = stopAfter(Stream.of(0, 1, 2, 3, 4, 5, 6, 1, 2, 3), e -> e >= 5);
+
+        final AtomicInteger expectedCurrValue = new AtomicInteger(-1);
+        assertTrue(prefix.allMatch(v -> v == expectedCurrValue.incrementAndGet()));
+        assertEquals(5, expectedCurrValue.get());
+    }
+
+    @Test
+    public void stopAfter_returns_the_whole_stream_if_no_element_satisfies_predicate() {
+        final List<Integer> numbers = List.of(0, 1, 2, 3, 4, 5, 6, 1, 2, 3);
+        final List<Integer> prefix = stopAfter(numbers.stream(), e -> e >= 7).toList();
+
+        assertTrue(numbers.containsAll(prefix) && numbers.size() == prefix.size());
+    }
     
     @Test
-    public void can_zip_steams_of_different_size() {
+    public void distinct_returns_a_stream_whose_elements_are_distinct_according_to_mapper() {
+        final List<Pair<String, Integer>> elements = List.of(pair("one", 1), pair("two", 2), pair("one", 3), pair("three", 1));
+
+        // distinct by key
+        assertEquals(List.of(pair("one", 1), pair("two", 2), pair("three", 1)), 
+                StreamUtils.distinct(elements.stream(), Pair::getKey).toList());
+        // distinct by value
+        assertEquals(List.of(pair("one", 1), pair("two", 2), pair("one", 3)), 
+                StreamUtils.distinct(elements.stream(), Pair::getValue).toList());
+    }
+
+    @Test
+    public void distinct_returns_a_stream_with_order_preserved() {
+        final List<Pair<String, Integer>> elements = List.of(pair("one", 1), pair("two", 2), pair("two", 22), pair("one", 11));
+
+        assertEquals(List.of(pair("one", 1), pair("two", 2)), 
+                StreamUtils.distinct(elements.stream(), Pair::getKey).toList());
+    }
+    
+    @Test
+    public void can_zip_streams_of_different_size() {
         assertEquals(listOf(0, 2, 4), zip(Stream.of(0, 1, 2), Stream.of(0, 1, 2, 3), (x, y) -> x+y).collect(toList()));
         assertEquals(listOf(0, 2, 4), zip(Stream.of(0, 1, 2, 3), Stream.of(0, 1, 2), (x, y) -> x+y).collect(toList()));
         assertEquals(listOf(), zip(Stream.<Integer>empty(), Stream.of(0, 1, 2), (x, y) -> x+y).collect(toList()));
         assertEquals(listOf(), zip(Stream.of(0, 1, 2), Stream.<Integer>empty(), (x, y) -> x+y).collect(toList()));
         
     }
+
+    @Test
+    public void stream_with_even_number_of_elements_can_be_windowed_into_two_equal_parts() {
+        final Stream<Integer> source = Stream.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+        final Stream<List<Integer>> windowed = StreamUtils.windowed(source, 5);
+        final List<List<Integer>> windowedAsList = windowed.collect(toList());
+        assertEquals(2, windowedAsList.size());
+        assertEquals(listOf(0, 1, 2, 3, 4), windowedAsList.get(0));
+        assertEquals(listOf(5, 6, 7, 8, 9), windowedAsList.get(1));
+    }
+
+    @Test
+    public void stream_can_be_windowed_into_equal_parts_with_a_shorter_remainder() {
+        final Stream<Integer> source = Stream.of(0, 1, 2, 3, 4, 5, 6, 7, 8, 9);
+        final Stream<List<Integer>> windowed = StreamUtils.windowed(source, 3);
+        final List<List<Integer>> windowedAsList = windowed.collect(toList());
+        assertEquals(4, windowedAsList.size());
+        assertEquals(listOf(0, 1, 2), windowedAsList.get(0));
+        assertEquals(listOf(3, 4, 5), windowedAsList.get(1));
+        assertEquals(listOf(6, 7, 8), windowedAsList.get(2));
+        assertEquals(listOf(9), windowedAsList.get(3));
+    }
+
+    @Test
+    public void stream_can_be_windowed_into_parts_with_a_single_element_each() {
+        final Stream<Integer> source = Stream.of(0, 1, 2);
+        final Stream<List<Integer>> windowed = StreamUtils.windowed(source, 1);
+        final List<List<Integer>> windowedAsList = windowed.collect(toList());
+        assertEquals(3, windowedAsList.size());
+        assertEquals(listOf(0), windowedAsList.get(0));
+        assertEquals(listOf(1), windowedAsList.get(1));
+        assertEquals(listOf(2), windowedAsList.get(2));
+    }
+
+    @Test
+    public void windowing_a_stream_with_a_non_positive_window_size_results_in_parts_with_a_single_element_each() {
+        final Stream<List<Integer>> negWindowed = StreamUtils.windowed(Stream.of(0, 1, 2), -1);
+        final List<List<Integer>> negWindowedAsList = negWindowed.collect(toList());
+        assertEquals(3, negWindowedAsList.size());
+        assertEquals(listOf(0), negWindowedAsList.get(0));
+        assertEquals(listOf(1), negWindowedAsList.get(1));
+        assertEquals(listOf(2), negWindowedAsList.get(2));
+
+        final Stream<List<Integer>> zeroWindowed = StreamUtils.windowed(Stream.of(0, 1, 2), 0);
+        final List<List<Integer>> zeroWindowedAsList = zeroWindowed.collect(toList());
+        assertEquals(3, zeroWindowedAsList.size());
+        assertEquals(listOf(0), zeroWindowedAsList.get(0));
+        assertEquals(listOf(1), zeroWindowedAsList.get(1));
+        assertEquals(listOf(2), zeroWindowedAsList.get(2));
+    }
+
+    @Test
+    public void empty_stream_is_windowed_into_empty_stream() {
+        final Stream<Integer> source = Stream.empty();
+        final Stream<List<Integer>> windowed = StreamUtils.windowed(source, 1);
+        final List<List<Integer>> windowedAsList = windowed.collect(toList());
+        assertEquals(0, windowedAsList.size());
+    }
+
+
 }

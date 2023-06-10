@@ -1,11 +1,13 @@
 package ua.com.fielden.platform.entity.query;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
+
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.SortedSet;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 import org.hibernate.CacheMode;
 import org.hibernate.Session;
 import org.hibernate.query.NativeQuery;
@@ -14,7 +16,7 @@ import org.hibernate.query.Query;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 
 public class EntityHibernateRetrievalQueryProducer {
-    private static final Logger LOGGER = Logger.getLogger(EntityHibernateRetrievalQueryProducer.class);
+    private static final Logger LOGGER = getLogger(EntityHibernateRetrievalQueryProducer.class);
 
     public final String sql;
     private final SortedSet<HibernateScalar> retrievedColumns;

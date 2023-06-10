@@ -1,6 +1,6 @@
 package ua.com.fielden.platform.sample.domain;
 
-import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.ActivatableAbstractEntity;
 import ua.com.fielden.platform.entity.annotation.CompanionObject;
 import ua.com.fielden.platform.entity.annotation.DescTitle;
 import ua.com.fielden.platform.entity.annotation.IsProperty;
@@ -10,12 +10,10 @@ import ua.com.fielden.platform.entity.annotation.MapTo;
 import ua.com.fielden.platform.entity.annotation.Observable;
 
 @KeyType(String.class)
-@MapEntityTo
+@MapEntityTo(autoConflictResolution = false)
 @DescTitle("Description")
 @CompanionObject(ITgBogieClass.class)
-public class TgBogieClass extends AbstractEntity<String> {
-
-    private static final long serialVersionUID = 1L;
+public class TgBogieClass extends ActivatableAbstractEntity<String> {
 
     //    @IsProperty(BogieClassCompatibility.class)
     //    private Set<BogieClassCompatibility> compatibles = new HashSet<BogieClassCompatibility>();
@@ -25,11 +23,6 @@ public class TgBogieClass extends AbstractEntity<String> {
 
     protected TgBogieClass() {
 
-    }
-
-    public TgBogieClass(final String code, final String desc, final Integer tonnage) {
-        super(null, code, desc);
-        setTonnage(tonnage);
     }
 
     public Integer getTonnage() {
@@ -54,4 +47,12 @@ public class TgBogieClass extends AbstractEntity<String> {
     public int getNumberOfWheelsets() {
         return 2;
     }
+
+    @Observable
+    @Override
+    protected TgBogieClass setActive(boolean active) {
+        super.setActive(active);
+        return this;
+    }
+
 }

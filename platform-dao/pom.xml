@@ -3,7 +3,7 @@
 	<parent>
 		<groupId>fielden</groupId>
 		<artifactId>platform-parent</artifactId>
-		<version>1.4.5-SNAPSHOT</version>
+		<version>1.4.6-SNAPSHOT</version>
 	</parent>
 
 	<artifactId>platform-dao</artifactId>
@@ -34,6 +34,7 @@
 			<groupId>org.dbunit</groupId>
 			<artifactId>dbunit</artifactId>
 			<version>2.4.7</version>
+			<scope>test</scope>
 			<exclusions>
 				<exclusion>
 					<groupId>org.slf4j</groupId>
@@ -41,42 +42,37 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
-		<dependency>
-			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
-			<version>1.7.26</version>
-		</dependency>
-		<dependency>
-			<groupId>com.h2database</groupId>
-			<artifactId>h2</artifactId>
-			<version>1.4.199</version>
-			<scope>test</scope>
-		</dependency>
 
-		<!-- SQL Server JDBC drivers for convenience -->
-		<!-- https://mvnrepository.com/artifact/com.microsoft.sqlserver/mssql-jdbc -->
-		<dependency>
-			<groupId>com.microsoft.sqlserver</groupId>
-			<artifactId>mssql-jdbc</artifactId>
-			<version>7.0.0.jre8</version>
-			<scope>test</scope>
-		</dependency>
+        <!-- https://mvnrepository.com/artifact/org.postgresql/postgresql -->
+        <dependency>
+            <groupId>org.postgresql</groupId>
+            <artifactId>postgresql</artifactId>
+            <version>42.5.0</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- https://mvnrepository.com/artifact/com.microsoft.sqlserver/mssql-jdbc -->
+        <dependency>
+            <groupId>com.microsoft.sqlserver</groupId>
+            <artifactId>mssql-jdbc</artifactId>
+            <version>10.2.1.jre17</version>
+            <scope>test</scope>
+        </dependency>
 
 		<!-- https://mvnrepository.com/artifact/org.hibernate/hibernate-core -->
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-core</artifactId>
-			<version>5.2.18.Final</version>
+			<version>5.4.33.Final</version>
 		</dependency>
 		<dependency>
 			<groupId>org.hibernate</groupId>
 			<artifactId>hibernate-hikaricp</artifactId>
-			<version>5.2.18.Final</version>
+			<version>5.4.33.Final</version>
 		</dependency>
 		<dependency>
 			<groupId>com.zaxxer</groupId>
 			<artifactId>HikariCP</artifactId>
-			<version>4.0.3</version>
+			<version>5.0.1</version>
 			<exclusions>
 				<exclusion>
 					<groupId>org.slf4j</groupId>
@@ -85,20 +81,33 @@
 			</exclusions>
 		</dependency>
 
-		<!-- https://mvnrepository.com/artifact/org.apache.tika/tika-core -->
+		<!-- Since Java 9 XML parsing libs are considered JEE rather than JSE and need to be added explicitly -->
+		<!-- API, java.xml.bind module -->
 		<dependency>
-			<groupId>org.apache.tika</groupId>
-			<artifactId>tika-core</artifactId>
-			<version>1.22</version>
+		    <groupId>jakarta.xml.bind</groupId>
+		    <artifactId>jakarta.xml.bind-api</artifactId>
+		    <version>2.3.2</version>
 		</dependency>
-
+		<!-- Runtime, com.sun.xml.bind module -->
+		<dependency>
+		    <groupId>org.glassfish.jaxb</groupId>
+		    <artifactId>jaxb-runtime</artifactId>
+		    <version>2.3.2</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>junit</groupId>
+                    <artifactId>junit</artifactId>
+                </exclusion>
+            </exclusions>
+		</dependency>
 	</dependencies>
+
 	<build>
 		<resources>
 			<resource>
 				<directory>src/main/resources</directory>
 				<excludes>
-					<exclude>**/log4j.properties</exclude>
+					<exclude>**/log4j2-test.xml</exclude>
 				</excludes>
 			</resource>
 			<resource>
@@ -118,26 +127,8 @@
 						<goals>
 							<goal>test-jar</goal>
 						</goals>
-						<phase>test-compile</phase>
 					</execution>
 				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.19.1</version>
-				<configuration>
-					<forkCount>2</forkCount>
-					<reuseForks>true</reuseForks>
-					<argLine>-server -Xms256m -Xmx1024m
-						-Djava.system.class.loader=ua.com.fielden.platform.classloader.TgSystemClassLoader</argLine>
-					<systemPropertyVariables>
-						<databaseUri>./src/test/resources/db/TEST_DB_${surefire.forkNumber}</databaseUri>
-						<loadDdlScriptFromFile>false</loadDdlScriptFromFile>
-						<saveDdlScriptToFile>false</saveDdlScriptToFile>
-						<legacyTests.databaseUri>./src/test/resources/db/TEST_DB_LEGACY_${surefire.forkNumber}</legacyTests.databaseUri>
-					</systemPropertyVariables>
-				</configuration>
 			</plugin>
 		</plugins>
 	</build>

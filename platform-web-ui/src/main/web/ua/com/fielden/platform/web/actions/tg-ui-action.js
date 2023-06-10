@@ -13,7 +13,6 @@ import { TgElementSelectorBehavior } from '/resources/components/tg-element-sele
 import { tearDownEvent, getFirstEntityType } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgSerialiser } from '/resources/serialisation/tg-serialiser.js';
-import {processResponseError, toastMsgForError} from '/resources/reflection/tg-ajax-utils.js';
 import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
 
 const template = html`
@@ -270,14 +269,6 @@ Polymer({
         shouldRefreshParentCentreAfterSave: {
             type: Boolean,
             value: false /* should never be defaulted to true! */
-        },
-
-        /**
-         * Holds the element-name of entity master for insertion point that should be excluded when refreshing parent entity center after action execution.
-         */
-        excludeInsertionPoints: {
-            type: Array,
-            value: null
         },
 
         /**
@@ -600,7 +591,7 @@ Polymer({
                         topic: "detail.saved",
                         data: {
                             shouldRefreshParentCentreAfterSave: this.shouldRefreshParentCentreAfterSave,//Here 'this' references entity master.
-                            excludeInsertionPoints: self.excludeInsertionPoints,//Here 'self' references action that opened 'this' master.
+                            excludeInsertionPoints: this.excludeInsertionPoints,//Here 'this' references entity master.
                             entity: potentiallySavedOrNewEntity,
                             entityPath: [ potentiallySavedOrNewEntity ], // the starting point of the path of entities from masters that are on a chain of refresh cycle
                             // send selectedEntitiesInContext further to be able to update only them on EGI

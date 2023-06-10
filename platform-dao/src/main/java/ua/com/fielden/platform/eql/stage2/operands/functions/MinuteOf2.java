@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.operands.functions;
 
-import ua.com.fielden.platform.eql.stage2.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.TransformationContext2;
+import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.MinuteOf3;
@@ -13,9 +13,9 @@ public class MinuteOf2 extends DatePartFunction2<MinuteOf3> {
     }
 
     @Override
-    public TransformationResult<MinuteOf3> transform(final TransformationContext context) {
-        final TransformationResult<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
-        return new TransformationResult<>(new MinuteOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
+    public TransformationResult2<MinuteOf3> transform(final TransformationContext2 context) {
+        final TransformationResult2<? extends ISingleOperand3> operandTransformationResult = operand.transform(context);
+        return new TransformationResult2<>(new MinuteOf3(operandTransformationResult.item, type, hibType), operandTransformationResult.updatedContext);
     }
     
     @Override

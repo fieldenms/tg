@@ -22,6 +22,138 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import { IronResizableBehavior } from '/resources/polymer/@polymer/iron-resizable-behavior/iron-resizable-behavior.js';
 
+/**
+ * @param {String} userName - the name of user that opened this entity centre
+ * @param {String} miType - the type of menu item class associated with this centre
+ * @returns The key in local storage for left splitter position configured by developer or specified by user manually by moving splitter.
+ */
+const leftSplitterKey = function (userName, miType) {
+    return `${userName}_${miType}_leftSplitterPosition`;
+};
+
+/**
+ * @param {String} userName - the name of user that opened this entity centre
+ * @param {String} miType - the type of menu item class associated with this centre
+ * @returns The key in local storage for left splitter position. This actual left position is different than left position because it contains actual position of splitter after it was moved, collapsed or expanded. 
+ */
+const actualLeftSplitterKey = function (userName, miType) {
+    return `${userName}_${miType}_actualLeftSplitterPosition`;
+};
+
+/**
+ * @param {String} userName - the name of user that opened this entity centre
+ * @param {String} miType - the type of menu item class associated with this centre
+ * @returns The key in local storage for right splitter position configured by developer or specified by user manually by moving splitter.
+ */
+const rightSplitterKey = function (userName, miType) {
+    return `${userName}_${miType}_rightSplitterPosition`;
+};
+
+/**
+ * @param {String} userName - the name of user that opened this entity centre
+ * @param {String} miType - the type of menu item class associated with this centre
+ * @returns The key in local storage for right splitter position. This actual right position is different than right position because it contains actual position of splitter after it was moved, collapsed or expanded. 
+ */
+const actualRightSplitterKey = function (userName, miType) {
+    return `${userName}_${miType}_actualRightSplitterPosition`;
+};
+
+/**
+ * Initial save of splitter position and actual splitter position. Also updates the width style of insertion point container to make it's width flexible.
+ * 
+ * @param {String} splitterPosition splitter position specified in configuration.
+ * @param {String} splitterKey key for splitter position to save in localStorage.
+ * @param {String} actualSplitterKey key for actual splitter position to save  in local storage.
+ * @param {Object} insertionPointContaier insertion point container which should be initiated.
+ * @param {Number} centreWidth width of centre.
+ * @param {Number} centreWidthWithoutSplitter width of the centre without splitter width.
+ * @returns New splitter position.
+ */
+const initSplitter = function (splitterPosition, splitterKey, actualSplitterKey, insertionPointContaier, centreWidth, centreWidthWithoutSplitter) {
+    let pos = localStorage.getItem(splitterKey);
+    if (!pos) {
+        pos = splitterPosition || insertionPointContaier.offsetWidth / centreWidthWithoutSplitter + "";
+    }
+
+    let actualPos = localStorage.getItem(actualSplitterKey);
+    if (!actualPos) {
+        actualPos = pos || insertionPointContaier.offsetWidth / centreWidthWithoutSplitter + "";
+    }
+
+    insertionPointContaier.style.width = (parseFloat(actualPos) * centreWidthWithoutSplitter / centreWidth * 100) + "%";
+
+    return pos;
+}
+
+/**
+ * @param {Number} width - the width of insertion point container of interest
+ * @param {Number} altWidth - the width of opposite insertion point container
+ * @param {String} splitterPosition - splitter postion of insertion point container of interest
+ * @param {String} altSplitterPosition - splitter position of opposite insertion point container
+ * @param {Number} centreWidth centre width
+ * @param {Number} splitterWidth width of splitter (usually 9px)
+ * @param {Boolean} altInsertionPointPresent indicates whether opposite insertion point is  present or not
+ * @returns The array of all posible splitter positions.
+ */
+const splitterPositions = function (width, altWidth, splitterPosition, altSplitterPosition, centreWidth, splitterWidth, altInsertionPointPresent) {
+    const positions = [];
+    const centreWidthWithoutSplitter = centreWidth - (altInsertionPointPresent ? 2 : 1) * splitterWidth;
+    positions.push(0);
+    positions.push(Math.round(parseFloat(splitterPosition) * centreWidthWithoutSplitter));
+    positions.push(width);
+    if (altInsertionPointPresent) {
+        positions.push(Math.round(centreWidthWithoutSplitter * (1 - parseFloat(altSplitterPosition))));
+        positions.push(centreWidthWithoutSplitter - altWidth);
+    }
+    positions.push(centreWidthWithoutSplitter);
+    const uniquePositions = [];
+    positions.forEach(pos => {
+        if (uniquePositions.indexOf(pos) < 0) {
+            uniquePositions.push(pos);
+        }
+    });
+    uniquePositions.sort((a, b) => a - b);
+    return uniquePositions;
+};
+
+/**
+ * @param {Number} width - the width of insertion point container of interest
+ * @param {Number} altWidth - the width of opposite insertion point container
+ * @param {String} splitterPosition - splitter postion of insertion point container of interest
+ * @param {String} altSplitterPosition - splitter position of opposite insertion point container
+ * @param {Number} centreWidth centre width
+ * @param {Number} splitterWidth width of splitter (usually 9px)
+ * @param {Boolean} altInsertionPointPresent indicates whether opposite insertion point is  present or not
+ * @returns The next splitter position to the current one after expand button was pressed
+ */
+const nextSplitterPos = function (width, altWidth, splitterPos, altSplitterPos, centreWidth, splitterWidth, altInsertionPointPresent) {
+    const positions = splitterPositions(width, altWidth, splitterPos, altSplitterPos, centreWidth, splitterWidth, altInsertionPointPresent);
+    for (let i = 0; i < positions.length; i++) {
+        if (positions[i] > width) {
+            return positions[i];
+        }
+    }
+};
+
+/**
+ * @param {Number} width - the width of insertion point container of interest
+ * @param {Number} altWidth - the width of opposite insertion point container
+ * @param {String} splitterPosition - splitter postion of insertion point container of interest
+ * @param {String} altSplitterPosition - splitter position of opposite insertion point container
+ * @param {Number} centreWidth centre width
+ * @param {Number} splitterWidth width of splitter (usually 9px)
+ * @param {Boolean} altInsertionPointPresent indicates whether opposite insertion point is  present or not
+ * @returns The previous splitter position to the current one after collapse button was pressed
+ */
+const previousSplitterPos = function (width, altWidth, splitterPos, altSplitterPos, centreWidth, splitterWidth, altInsertionPointPresent) {
+    const positions = splitterPositions(width, altWidth, splitterPos, altSplitterPos, centreWidth, splitterWidth, altInsertionPointPresent);
+    for (let i = positions.length - 1; i >= 0; i--) {
+        if (positions[i] < width) {
+            return positions[i];
+        }
+    }
+};
+
 const template = html`
     <style>
         .tabs {
@@ -104,13 +236,18 @@ const template = html`
             cursor: pointer;
             border-left: 7px solid white;
         }
-        .centre-result-container {
-            min-height: -webkit-fit-content;
-            min-height: -moz-fit-content;
-            min-height: fit-content;
+        tg-centre-result-view {
+            height: 100%;
+        }
+        tg-centre-result-view[centre-scroll] {
+            height: auto;
+            min-height: 100%
         }
         .insertion-point-slot {
             overflow: hidden;
+        }
+        .insertion-point-slot[scroll-container] {
+            overflow: auto;
         }
         .noselect {
             -webkit-touch-callout: none;
@@ -141,7 +278,7 @@ const template = html`
     <iron-pages id="views" selected="[[_selectedView]]">
         <div class="fit layout vertical">
             <div class="paper-material selection-material layout vertical" elevation="1">
-                <tg-selection-view id="selectionView" initiate-auto-run="[[initiateAutoRun]]" _show-dialog="[[_showDialog]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _create-action-object="[[_createActionObject]]" _button-disabled="[[_buttonDisabled]]" embedded="[[embedded]]">
+                <tg-selection-view id="selectionView" initiate-auto-run="[[initiateAutoRun]]" _show-dialog="[[_showDialog]]" _help-mouse-down-event-handler="[[_helpMouseDownEventHandler]]" _help-mouse-up-event-handler="[[_helpMouseUpEventHandler]]" save-as-name="{{saveAsName}}" _create-context-holder="[[_createContextHolder]]" uuid="[[uuid]]" _confirm="[[_confirm]]" _create-action-object="[[_createActionObject]]" _button-disabled="[[_buttonDisabled]]" embedded="[[embedded]]">
                     <slot name="custom-front-action" slot="custom-front-action"></slot>
                     <slot name="custom-share-action" slot="custom-share-action"></slot>
                     <slot id="customCriteria" name="custom-selection-criteria" slot="custom-selection-criteria"></slot>
@@ -160,24 +297,24 @@ const template = html`
                 </tg-selection-view>
             </div>
         </div>
-        <tg-centre-result-view id="centreResultContainer">
-            <div id="leftInsertionPointContainer" class="insertion-point-slot layout vertical">
+        <tg-centre-result-view id="centreResultContainer" centre-scroll$="[[centreScroll]]">
+            <div id="leftInsertionPointContainer" class="insertion-point-slot layout vertical" scroll-container$="[[!centreScroll]]">
                 <slot id="leftInsertionPointContent" name="left-insertion-point"></slot>
             </div>
             <div id="leftSplitter" class="splitter" hidden$="[[!leftInsertionPointPresent]]" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable" on-track="_changeLeftInsertionPointSize">
                 <div class="arrow-left" tooltip-text="Collapse" on-tap="_collapseLeftInsertionPoint"></div>
-                <div class="arrow-right" tooltip-text="Expand to default width" on-tap="_expandLeftInsertionPoint"></div>
+                <div class="arrow-right" tooltip-text="Expand" on-tap="_expandLeftInsertionPoint"></div>
             </div>
-            <div id="centreInsertionPointContainer" class="insertion-point-slot layout vertical flex" style="min-width:0">
+            <div id="centreInsertionPointContainer" class="insertion-point-slot layout vertical flex" style="min-width:0" scroll-container$="[[!centreScroll]]">
                 <slot id="topInsertionPointContent" name="top-insertion-point"></slot>
                 <slot id="customEgiSlot" name="custom-egi"></slot>
                 <slot id="bottomInsertionPointContent" name="bottom-insertion-point"></slot>
             </div>
             <div id="rightSplitter" class="splitter" hidden$="[[!rightInsertionPointPresent]]" on-down="_makeCentreUnselectable" on-up="_makeCentreSelectable" on-track="_changeRightInsertionPointSize">
-                <div class="arrow-left" tooltip-text="Expand to default width" on-tap="_expandRightInsertionPoint"></div>
+                <div class="arrow-left" tooltip-text="Expand" on-tap="_expandRightInsertionPoint"></div>
                 <div class="arrow-right" tooltip-text="Collapse" on-tap="_collapseRightInsertionPoint"></div>
             </div>
-            <div id="rightInsertionPointContainer" class="insertion-point-slot layout vertical">
+            <div id="rightInsertionPointContainer" class="insertion-point-slot layout vertical" scroll-container$="[[!centreScroll]]">
                 <slot id="rightInsertionPointContent" name="right-insertion-point"></slot>
             </div>
             <div id="fantomSplitter" class="fantom-splitter"></div>
@@ -238,6 +375,17 @@ Polymer({
         embedded: Boolean,
         discard: Function,
         run: Function,
+        leftSplitterPosition: String,
+        rightSplitterPosition: String,
+        miType: String,
+        userName: String,
+        /**
+         * Indicates whether scrolling is organised by centre or insertion point container.
+         */
+        centreScroll: {
+            type: Boolean,
+            value: false
+        },
         _showDialog: Function,
         saveAsName: {
             type: String,
@@ -270,7 +418,9 @@ Polymer({
             type: Boolean,
             value: false,
             notify: true
-        }
+        },
+        _helpMouseDownEventHandler: Function,
+        _helpMouseUpEventHandler: Function
     },
 
     behaviors: [ IronResizableBehavior, TgFocusRestorationBehavior, TgElementSelectorBehavior ],
@@ -282,6 +432,8 @@ Polymer({
         this._rightSplitterUpdater = this._rightSplitterUpdater.bind(this);
         this._leftInsertionPointContainerUpdater = this._leftInsertionPointContainerUpdater.bind(this);
         this._rightInsertionPointContainerUpdater = this._rightInsertionPointContainerUpdater.bind(this);
+        this._updateLeftSplitter = this._updateLeftSplitter.bind(this);
+        this._updateRightSplitter = this._updateRightSplitter.bind(this);
         this._allViews = [this.$.selectionView, 
             this.$.customEgiSlot.assignedNodes({ flatten: true })[0], 
             ...this.$.alternativeViewSlot.assignedNodes({ flatten: true })];
@@ -300,6 +452,42 @@ Polymer({
                 });
             }
         });
+
+         //Add iron-resize event listener
+         this.addEventListener("iron-resize", this._resizeEventListener.bind(this));
+    },
+
+    _resizeEventListener: function (e) {
+        if (this.$.centreResultContainer.offsetWidth > 0 && (this.leftInsertionPointPresent || this.rightInsertionPointPresent)) {
+            const centreWidth = this.$.centreResultContainer.offsetWidth;
+            let splitterCounter = this.leftInsertionPointPresent ? 1 : 0;
+            splitterCounter += this.rightInsertionPointPresent ? 1 : 0;
+            const splitterWidth = splitterCounter > 0 ? (this.leftInsertionPointPresent ? this.$.leftSplitter.offsetWidth : this.$.rightSplitter.offsetWidth) : 0;
+            const centreWidthWithoutSplitter = centreWidth - splitterCounter * splitterWidth;
+
+            if (this.leftInsertionPointPresent) {
+                this.leftSplitterPosition = initSplitter(this.leftSplitterPosition, leftSplitterKey(this.userName, this.miType), actualLeftSplitterKey(this.userName, this.miType),
+                                                            this.$.leftInsertionPointContainer, centreWidth, centreWidthWithoutSplitter);
+            }
+
+            if (this.rightInsertionPointPresent) {
+                this.rightSplitterPosition = initSplitter(this.rightSplitterPosition, rightSplitterKey(this.userName, this.miType), actualRightSplitterKey(this.userName, this.miType),
+                                                            this.$.rightInsertionPointContainer, centreWidth, centreWidthWithoutSplitter);
+            }
+            this._notifyDescendantResize();
+        }
+    },
+
+    _notifyDescendantResize: function () {
+        if (!this.isAttached) {
+          return;
+        }
+    
+        this._interestedResizables.forEach(function (resizable) {
+          if (this.resizerShouldNotify(resizable)) {
+            this._notifyDescendant(resizable);
+          }
+        }, this);
     },
 
     /**
@@ -352,19 +540,54 @@ Polymer({
 
     // Splitter functionality
     _expandLeftInsertionPoint: function () {
-        this._expandContainer(this.$.leftInsertionPointContainer);
-    },
-
-    _collapseLeftInsertionPoint: function () {
-        this._collapseContainer(this.$.leftInsertionPointContainer);
+        this._expandContainer(this.leftSplitterPosition, this.rightSplitterPosition, this.$.leftSplitter.offsetWidth, this.rightInsertionPointPresent, 
+            this.$.leftInsertionPointContainer, this.$.rightInsertionPointContainer,
+            actualLeftSplitterKey(this.userName, this.miType), actualRightSplitterKey(this.userName, this.miType));
     },
 
     _expandRightInsertionPoint: function () {
-        this._expandContainer(this.$.rightInsertionPointContainer);
+        this._expandContainer(this.rightSplitterPosition, this.leftSplitterPosition, this.$.rightSplitter.offsetWidth, this.leftInsertionPointPresent, 
+            this.$.rightInsertionPointContainer, this.$.leftInsertionPointContainer,
+            actualRightSplitterKey(this.userName, this.miType), actualLeftSplitterKey(this.userName, this.miType));
+    },
+
+    _expandContainer: function (splitterPosition, altSplitterPosition, splitterWidth, 
+        altInsertionPointPresent, insertionPointContainer, altInsertionPointContainer,
+        splitterKey, altSplitterKey) {
+            const width = insertionPointContainer.offsetWidth;
+            const altWidth = altInsertionPointPresent ? altInsertionPointContainer.offsetWidth : 0;
+            const centreWidth = this.$.centreResultContainer.offsetWidth;
+            const centreWidthWithoutSplitter = centreWidth - (altInsertionPointPresent ? 2 : 1) * splitterWidth;
+            const nextPos = nextSplitterPos(width, altWidth, splitterPosition, altSplitterPosition, centreWidth, splitterWidth, altInsertionPointPresent);
+            if (altInsertionPointPresent && centreWidthWithoutSplitter - altWidth < nextPos) {
+                altInsertionPointContainer.style.width = `${(centreWidthWithoutSplitter - nextPos) / centreWidth * 100}%`;
+                localStorage.setItem(altSplitterKey, (centreWidthWithoutSplitter - nextPos) / centreWidthWithoutSplitter);
+            }
+            insertionPointContainer.style.width = `${nextPos / centreWidth * 100}%`;
+            localStorage.setItem(splitterKey, nextPos / centreWidthWithoutSplitter);
+            this.notifyResize();
+    },
+
+    _collapseLeftInsertionPoint: function () {
+        this._collapseContainer(this.leftSplitterPosition, this.rightSplitterPosition, this.$.leftSplitter.offsetWidth, this.rightInsertionPointPresent, 
+            this.$.leftInsertionPointContainer, this.$.rightInsertionPointContainer, actualLeftSplitterKey(this.userName, this.miType));
     },
 
     _collapseRightInsertionPoint: function () {
-        this._collapseContainer(this.$.rightInsertionPointContainer);
+        this._collapseContainer(this.rightSplitterPosition, this.leftSplitterPosition, this.$.rightSplitter.offsetWidth, this.leftInsertionPointPresent, 
+            this.$.rightInsertionPointContainer, this.$.leftInsertionPointContainer, actualRightSplitterKey(this.userName, this.miType));
+    },
+
+    _collapseContainer: function (splitterPosition, altSplitterPosition, splitterWidth, altInsertionPointPresent, 
+        insertionPointContainer, altInsertionPointContainer, splitterKey) {
+        const width = insertionPointContainer.offsetWidth;
+        const altWidth = altInsertionPointPresent ? altInsertionPointContainer.offsetWidth : 0;
+        const centreWidth = this.$.centreResultContainer.offsetWidth;
+        const centreWidthWithoutSplitter = centreWidth - (altInsertionPointPresent ? 2 : 1) * splitterWidth;
+        const previousPos = previousSplitterPos(width, altWidth, splitterPosition, altSplitterPosition, centreWidth, splitterWidth, altInsertionPointPresent);
+        insertionPointContainer.style.width = `${previousPos / centreWidth * 100}%`;
+        localStorage.setItem(splitterKey, previousPos / centreWidthWithoutSplitter);
+        this.notifyResize();
     },
 
     _makeCentreUnselectable: function (e) {
@@ -408,20 +631,37 @@ Polymer({
     },
 
     _leftInsertionPointContainerUpdater: function (newPos) {
-        this._updateInsertionPointContainerWidth(newPos, this.$.leftInsertionPointContainer);
+        this._updateInsertionPointContainerWidth(newPos, this.$.leftInsertionPointContainer, this._updateLeftSplitter);
+    },
+
+    _updateLeftSplitter: function (newWidth) {
+        const centreWidth = this.$.centreResultContainer.offsetWidth;
+        const centreWidthWithoutSplitter = centreWidth - (this.rightInsertionPointPresent ? 2 : 1) * this.$.leftSplitter.offsetWidth;
+        this.leftSplitterPosition = newWidth / centreWidthWithoutSplitter + "";
+        this.$.leftInsertionPointContainer.style.width = `${newWidth / centreWidth * 100}%`;
+        localStorage.setItem(leftSplitterKey(this.userName, this.miType), this.leftSplitterPosition);
+        localStorage.setItem(actualLeftSplitterKey(this.userName, this.miType), this.leftSplitterPosition);
     },
 
     _rightInsertionPointContainerUpdater: function (newPos) {
-        this._updateInsertionPointContainerWidth(this.$.centreResultContainer.offsetWidth - this.$.fantomSplitter.offsetWidth - newPos, this.$.rightInsertionPointContainer);
+        this._updateInsertionPointContainerWidth(this.$.centreResultContainer.offsetWidth - this.$.fantomSplitter.offsetWidth - newPos,
+            this.$.rightInsertionPointContainer,
+            this._updateRightSplitter);
     },
 
-    _updateInsertionPointContainerWidth: function (newWidth, insertionPointContaier) {
+    _updateRightSplitter: function (newWidth) {
+        const centreWidth = this.$.centreResultContainer.offsetWidth;
+        const centreWidthWithoutSplitter = centreWidth - (this.leftInsertionPointPresent ? 2 : 1) * this.$.rightSplitter.offsetWidth;
+        this.rightSplitterPosition = newWidth / centreWidthWithoutSplitter + "";
+        this.$.rightInsertionPointContainer.style.width = `${newWidth / centreWidth * 100}%`;
+        localStorage.setItem(rightSplitterKey(this.userName, this.miType), this.rightSplitterPosition);
+        localStorage.setItem(actualRightSplitterKey(this.userName, this.miType), this.rightSplitterPosition);
+    },
+
+    _updateInsertionPointContainerWidth: function (newWidth, insertionPointContaier, splitterPositionUpdater) {
         const oldWidth = insertionPointContaier.offsetWidth;
         if (oldWidth !== newWidth) {
-            insertionPointContaier.style.width = newWidth + "px";
-            if (insertionPointContaier.offsetParent === null) {
-                insertionPointContaier.style.removeProperty("display");
-            }
+            splitterPositionUpdater(newWidth);
             this.notifyResize();
         }
     },
@@ -460,20 +700,6 @@ Polymer({
         insertionPointContainerUpdater(this.$.fantomSplitter.offsetLeft);
         this.$.fantomSplitter.style.removeProperty("display");
         this.$.fantomSplitter.style.removeProperty("left");
-    },
-
-    _expandContainer: function (element) {
-        element.style.removeProperty("width");
-        element.style.removeProperty("display");
-        if (element == this.$.rightInsertionPointContainer && this._rightWidth) {
-            this.$.rightInsertionPointContainer.style.width = this._rightWidth;
-        }
-        this.notifyResize();
-    },
-
-    _collapseContainer: function (element) {
-        element.style.display = 'none';
-        this.notifyResize();
     },
 
     _staleCriteriaMessageChanged: function (newValue, oldValue) {

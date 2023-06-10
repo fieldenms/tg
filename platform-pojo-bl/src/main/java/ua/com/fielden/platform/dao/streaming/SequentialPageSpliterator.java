@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.dao.streaming;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
+
 import java.util.Spliterator;
 import java.util.function.Consumer;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.QueryExecutionModel;
@@ -19,7 +21,7 @@ import ua.com.fielden.platform.pagination.IPage;
  */
 public class SequentialPageSpliterator<T extends AbstractEntity<?>> implements Spliterator<T> {
 
-    private static final Logger LOGGER = Logger.getLogger(SequentialPageSpliterator.class);
+    private static final Logger LOGGER = getLogger(SequentialPageSpliterator.class);
     
     private final IEntityDao<T> companion;
     private final QueryExecutionModel<T, ?> qem;

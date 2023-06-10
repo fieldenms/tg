@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.security.user;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.from;
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
 
@@ -7,7 +8,7 @@ import java.security.SignatureException;
 import java.util.Collection;
 import java.util.Optional;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import com.google.inject.Inject;
 
@@ -30,7 +31,7 @@ import ua.com.fielden.platform.security.exceptions.SecurityException;
 @EntityType(UserSecret.class)
 public class UserSecretDao extends CommonEntityDao<UserSecret> implements UserSecretCo {
 
-    private final Logger logger = Logger.getLogger(getClass());
+    private final Logger logger = getLogger(getClass());
     private final SessionIdentifierGenerator crypto;
 
     @Inject

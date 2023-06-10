@@ -3,9 +3,9 @@ package ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics;
 import java.util.Date;
 import java.util.Optional;
 
-import ua.com.fielden.snappy.DateRangeConditionEnum;
-import ua.com.fielden.snappy.DateRangePrefixEnum;
-import ua.com.fielden.snappy.MnemonicEnum;
+import ua.com.fielden.platform.entity_centre.mnemonics.DateRangeConditionEnum;
+import ua.com.fielden.platform.entity_centre.mnemonics.DateRangePrefixEnum;
+import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
 
 /**
  * A data structure to capture a value for a range kind criterion of type {@link Date}.

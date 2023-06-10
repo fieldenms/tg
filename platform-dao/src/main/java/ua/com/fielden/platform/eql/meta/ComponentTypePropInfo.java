@@ -11,7 +11,7 @@ import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
 
 public class ComponentTypePropInfo<T> extends AbstractPropInfo<T> {
     private final Class<T> javaType;
-    private final SortedMap<String, AbstractPropInfo<?>> props = new TreeMap<>();
+    private final SortedMap<String, AbstractPropInfo<?>> props = new TreeMap<>(); // TODO why sorted?
 
     public ComponentTypePropInfo(final String name, final Class<T> javaType, final Object hibType) {
         super(name, hibType, null);

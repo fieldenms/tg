@@ -1,11 +1,12 @@
 package ua.com.fielden.platform.web.view.master.api.widgets.multilinetext.impl;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.Mutator.SETTER;
 
 import java.lang.reflect.Method;
 import java.util.Map;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.validation.annotation.Max;
@@ -23,7 +24,7 @@ import ua.com.fielden.platform.web.view.master.api.widgets.impl.AbstractWidget;
  */
 public class MultilineTextWidget extends AbstractWidget {
 
-    private static final Logger LOGGER = Logger.getLogger(MultilineTextWidget.class);
+    private static final Logger LOGGER = getLogger(MultilineTextWidget.class);
 
     private final Class<? extends AbstractEntity<?>> entityType;
     private int maxRows = 5;

@@ -95,6 +95,8 @@ public class DaoValueMatcherFactoryTest extends AbstractDaoTestCase {
 
     @Override
     protected void populateDomain() {
+        super.populateDomain();
+        
         final TgWagonClass wa1 = save(new_(TgWagonClass.class, "WA1", "desc1").setNumberOfBogies(5).setNumberOfWheelsets(2).setTonnage(50));
         final TgWagonClass wa2 = save(new_(TgWagonClass.class, "WA2", "desc2").setNumberOfBogies(2).setNumberOfWheelsets(2).setTonnage(100));
 

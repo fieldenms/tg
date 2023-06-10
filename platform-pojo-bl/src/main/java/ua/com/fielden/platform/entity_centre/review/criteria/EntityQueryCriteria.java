@@ -47,7 +47,6 @@ import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.IAddTo
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager.ICentreDomainTreeManagerAndEnhancer;
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeRepresentation.IAddToCriteriaTickRepresentation;
 import ua.com.fielden.platform.domaintree.impl.AbstractDomainTree;
-import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer.ByteArray;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.KeyType;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
@@ -302,7 +301,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
             return dao.getPage(resultQuery, pageNumber, pageCount, pageCapacity);
         } else {
             generatedEntityController.setEntityType(getManagedType());
-            return generatedEntityController.getPage(resultQuery, pageNumber, pageCount, pageCapacity, getByteArrayForManagedType());
+            return generatedEntityController.getPage(resultQuery, pageNumber, pageCount, pageCapacity);
         }
     }
 
@@ -344,7 +343,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
             return dao.getPage(resultQuery, pageNumber, pageCapacity);
         } else {
             generatedEntityController.setEntityType(getManagedType());
-            return generatedEntityController.getPage(resultQuery, pageNumber, pageCapacity, getByteArrayForManagedType());
+            return generatedEntityController.getPage(resultQuery, pageNumber, pageCapacity);
         }
     }
 
@@ -387,7 +386,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
             return dao.getPage(resultQuery, pageNumber, pageCapacity);
         } else {
             generatedEntityController.setEntityType(getManagedType());
-            return generatedEntityController.getPage(resultQuery, pageNumber, pageCapacity, getByteArrayForManagedType());
+            return generatedEntityController.getPage(resultQuery, pageNumber, pageCapacity);
         }
     }
 
@@ -445,9 +444,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      */
     public final IPage<T> run(final QueryExecutionModel<T, EntityResultQueryModel<T>> queryModel, final Class<T> managedType, final byte[] managedTypeArray, final int pageSize) {
         generatedEntityController.setEntityType(managedType);
-        final List<byte[]> byteArrayList = getByteArrayForManagedType();
-        byteArrayList.add(managedTypeArray);
-        return generatedEntityController.firstPage(queryModel, pageSize, byteArrayList);
+        return generatedEntityController.firstPage(queryModel, pageSize);
     }
 
     /**
@@ -463,10 +460,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         // TODO here cdtme from this instance is magically DIFFERENT from cdtme, on which query has been created. So byte arrays will be taken from original Cdtme. Should that Cdtmes be the same??
         // TODO here cdtme from this instance is magically DIFFERENT from cdtme, on which query has been created. So byte arrays will be taken from original Cdtme. Should that Cdtmes be the same??
         // TODO here cdtme from this instance is magically DIFFERENT from cdtme, on which query has been created. So byte arrays will be taken from original Cdtme. Should that Cdtmes be the same??
-        final List<byte[]> byteArrayList = cdtmeWithWhichAnalysesQueryHaveBeenCreated == null ? getByteArrayForManagedType()
-                : toByteArray(/*getCentreDomainTreeMangerAndEnhancer()*/cdtmeWithWhichAnalysesQueryHaveBeenCreated.getEnhancer().getManagedTypeArrays(getEntityClass())); // getByteArrayForManagedType();
-        byteArrayList.add(managedTypeArray);
-        return generatedEntityController.getAllEntities(queryModel, byteArrayList);
+        return generatedEntityController.getAllEntities(queryModel);
     }
 
     /**
@@ -482,7 +476,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
     @SuppressWarnings("unchecked")
     public final LifecycleModel<T> getLifecycleInformation(final EntityResultQueryModel<? extends AbstractEntity<?>> model, final List<String> distributionProperties, final String propertyName, final DateTime from, final DateTime to) {
         if (isLifecycleController()) {
-            return ((ILifecycleDao<T>) dao).getLifecycleInformation(model, getByteArrayForManagedType(), distributionProperties, propertyName, from, to);
+            return ((ILifecycleDao<T>) dao).getLifecycleInformation(model, distributionProperties, propertyName, from, to);
         } else {
             return null;
         }
@@ -539,7 +533,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
             content = dao.export(query, propertyNames, propertyTitles);
         } else {
             generatedEntityController.setEntityType(getManagedType());
-            content = generatedEntityController.export(query, propertyNames, propertyTitles, getByteArrayForManagedType());
+            content = generatedEntityController.export(query, propertyNames, propertyTitles);
         }
         try (final FileOutputStream fo = new FileOutputStream(fileName)) {
             fo.write(content);
@@ -608,7 +602,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
             return dao.findById(id, fetchModel);
         } else {
             generatedEntityController.setEntityType(getManagedType());
-            return generatedEntityController.findById(id, fetchModel, getByteArrayForManagedType());
+            return generatedEntityController.findById(id, fetchModel);
         }
     }
 
@@ -637,7 +631,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
             return dao.findByEntityAndFetch(fetchModel, entity);
         } else if (DynamicEntityClassLoader.isGenerated(entity.getType()) && DynamicEntityClassLoader.getOriginalType(entity.getType()).equals(getEntityClass())) {
             generatedEntityController.setEntityType(getManagedType());
-            return generatedEntityController.findById(entity.getId(), fetchModel, getByteArrayForManagedType());
+            return generatedEntityController.findById(entity.getId(), fetchModel);
         }
         throw new IllegalArgumentException("The entity type is incorrect. The entity type must be: " + getEntityClass() + " but was "
                 + DynamicEntityClassLoader.getOriginalType(entity.getType()).equals(getEntityClass()));
@@ -674,7 +668,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
             return dao.firstPage(queryModel, pageSize);
         } else {
             generatedEntityController.setEntityType(getManagedType());
-            return generatedEntityController.firstPage(queryModel, pageSize, getByteArrayForManagedType());
+            return generatedEntityController.firstPage(queryModel, pageSize);
         }
     }
 
@@ -694,7 +688,8 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
      */
     public final Pair<List<T>, T> getAllEntitiesWithSummary() {
         final Pair<QueryExecutionModel<T, EntityResultQueryModel<T>>, QueryExecutionModel<T, EntityResultQueryModel<T>>> queries = generateQueryWithSummaries();
-        return pair(getAllEntities(queries.getKey()), getSummary(queries.getValue()));
+        final List<T> entities = getAllEntities(queries.getKey());
+        return pair(entities, entities.isEmpty() ? null : getSummary(queries.getValue()));
     }
 
     /**
@@ -709,7 +704,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
             return dao.getAllEntities(queryModel);
         } else {
             generatedEntityController.setEntityType(getManagedType());
-            return generatedEntityController.getAllEntities(queryModel, getByteArrayForManagedType());
+            return generatedEntityController.getAllEntities(queryModel);
         }
     }
 
@@ -758,7 +753,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
             return dao.getFirstEntities(queryModel, numberOfEntities);
         } else {
             generatedEntityController.setEntityType(getManagedType());
-            return generatedEntityController.getFirstEntities(queryModel, numberOfEntities, getByteArrayForManagedType());
+            return generatedEntityController.getFirstEntities(queryModel, numberOfEntities);
         }
     }
 
@@ -776,7 +771,7 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
             return dao.firstPage(queryModel, pageSize);
         } else {
             generatedEntityController.setEntityType(getManagedType());
-            return generatedEntityController.firstPage(queryModel, totalsModel, pageSize, getByteArrayForManagedType());
+            return generatedEntityController.firstPage(queryModel, totalsModel, pageSize);
         }
     }
 
@@ -810,29 +805,6 @@ public abstract class EntityQueryCriteria<C extends ICentreDomainTreeManagerAndE
         queryProperty.setNot(tickManager.getNot(root, actualProperty));
         queryProperty.setOrGroup(tickManager.getOrGroup(root, actualProperty));
         return queryProperty;
-    }
-
-    /**
-     * Returns the byte array for the managed type.
-     *
-     * @return
-     */
-    private List<byte[]> getByteArrayForManagedType() {
-        return toByteArray(getCentreDomainTreeMangerAndEnhancer().getEnhancer().getManagedTypeArrays(getEntityClass()));
-    }
-
-    /**
-     * Returns the list of byte arrays for the list of {@link ByteArray} instances.
-     *
-     * @param list
-     * @return
-     */
-    private List<byte[]> toByteArray(final List<ByteArray> list) {
-        final List<byte[]> byteArray = new ArrayList<>(list.size());
-        for (final ByteArray array : list) {
-            byteArray.add(array.getArray());
-        }
-        return byteArray;
     }
 
     public IGeneratedEntityController<T> getGeneratedEntityController() {

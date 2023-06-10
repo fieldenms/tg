@@ -64,37 +64,37 @@ import ua.com.fielden.platform.web_api.IWebApi;
 public class BasicWebServerModule extends CommonFactoryModule {
 
     private final Properties props;
-    private final SecurityTokenProvider tokenProvider;
+    private final Class<? extends ISecurityTokenProvider> tokenProviderType;
     private final IApplicationDomainProvider applicationDomainProvider;
     private final Class<? extends ISerialisationClassProvider> serialisationClassProviderType;
     private final Class<? extends IFilter> automaticDataFilterType;
     private final Class<? extends IAuthorisationModel> authorisationModelType;
 
-    public BasicWebServerModule(final Map<Class, Class> defaultHibernateTypes, //
-            final IApplicationDomainProvider applicationDomainProvider,//
-            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
-            final Class<? extends IFilter> automaticDataFilterType, //
-            final SecurityTokenProvider tokenProvider,//
+    public BasicWebServerModule(final Map<Class, Class> defaultHibernateTypes,
+            final IApplicationDomainProvider applicationDomainProvider,
+            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
+            final Class<? extends IFilter> automaticDataFilterType,
+            final Class<? extends ISecurityTokenProvider> tokenProviderType,
             final Properties props) throws Exception {
         super(props, defaultHibernateTypes, applicationDomainProvider.entityTypes());
         this.props = props;
-        this.tokenProvider = tokenProvider;
+        this.tokenProviderType = tokenProviderType;
         this.applicationDomainProvider = applicationDomainProvider;
         this.serialisationClassProviderType = serialisationClassProviderType;
         this.automaticDataFilterType = automaticDataFilterType;
         this.authorisationModelType = ServerAuthorisationModel.class;
     }
 
-    public BasicWebServerModule(final Map<Class, Class> defaultHibernateTypes, //
-            final IApplicationDomainProvider applicationDomainProvider,//
-            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType, //
-            final Class<? extends IFilter> automaticDataFilterType, //
+    public BasicWebServerModule(final Map<Class, Class> defaultHibernateTypes,
+            final IApplicationDomainProvider applicationDomainProvider,
+            final Class<? extends ISerialisationClassProvider> serialisationClassProviderType,
+            final Class<? extends IFilter> automaticDataFilterType,
             final Class<? extends IAuthorisationModel> authorisationModelType,
-            final SecurityTokenProvider tokenProvider,//
+            final Class<? extends ISecurityTokenProvider> tokenProviderType,
             final Properties props) throws Exception {
         super(props, defaultHibernateTypes, applicationDomainProvider.entityTypes());
         this.props = props;
-        this.tokenProvider = tokenProvider;
+        this.tokenProviderType = tokenProviderType;
         this.applicationDomainProvider = applicationDomainProvider;
         this.serialisationClassProviderType = serialisationClassProviderType;
         this.automaticDataFilterType = automaticDataFilterType;
@@ -106,6 +106,7 @@ public class BasicWebServerModule extends CommonFactoryModule {
         super.configure();
         // bind application specific constants
         bindConstant().annotatedWith(Names.named("app.name")).to(props.getProperty("app.name"));
+        bindConstant().annotatedWith(Names.named("help.defaultUri")).to(props.getProperty("help.defaultUri", ""));
         bindConstant().annotatedWith(Names.named("reports.path")).to("");
         bindConstant().annotatedWith(Names.named("domain.path")).to(props.getProperty("domain.path"));
         bindConstant().annotatedWith(Names.named("domain.package")).to(props.getProperty("domain.package"));
@@ -122,10 +123,18 @@ public class BasicWebServerModule extends CommonFactoryModule {
         // authentication parameters
         bindConstant().annotatedWith(Names.named("auth.mode")).to(props.getProperty("auth.mode", AuthMode.RSO.name()));
         bindConstant().annotatedWith(Names.named("auth.sso.provider")).to(props.getProperty("auth.sso.provider", "Identity Provider"));
+        // date related parameters
+        bindConstant().annotatedWith(Names.named("dates.weekStart")).to(Integer.valueOf(props.getProperty("dates.weekStart", "1"))); // 1 - Monday
+        bindConstant().annotatedWith(Names.named("dates.finYearStartDay")).to(Integer.valueOf(props.getProperty("dates.finYearStartDay", "1"))); // 1 - the first day of the month
+        bindConstant().annotatedWith(Names.named("dates.finYearStartMonth")).to(Integer.valueOf(props.getProperty("dates.finYearStartMonth", "7"))); // 7 - July, the 1st of July is the start of Fin Year in Australia
 
         bind(IApplicationSettings.class).to(ApplicationSettings.class).in(Singleton.class);
         bind(IApplicationDomainProvider.class).toInstance(applicationDomainProvider);
-        bind(ISecurityTokenProvider.class).to(SecurityTokenProvider.class).in(Singleton.class);
+        if (tokenProviderType != null) {
+            bind(ISecurityTokenProvider.class).to(tokenProviderType).in(Singleton.class);
+        } else {
+            bind(ISecurityTokenProvider.class).to(SecurityTokenProvider.class).in(Singleton.class);
+        }
         // serialisation related binding
         bind(ISerialisationClassProvider.class).to(serialisationClassProviderType).in(Singleton.class);
         bind(ISerialiser.class).to(Serialiser.class).in(Singleton.class);
@@ -144,9 +153,6 @@ public class BasicWebServerModule extends CommonFactoryModule {
         bind(ISecurityRoleAssociationBatchAction.class).to(SecurityRoleAssociationBatchActionDao.class);
 
         bind(ISecurityTokenController.class).to(SecurityTokenController.class);
-        if (tokenProvider != null) {
-            bind(SecurityTokenProvider.class).toInstance(tokenProvider);
-        }
         bind(IAuthorisationModel.class).to(authorisationModelType);
 
         // bind value matcher factory to support autocompleters

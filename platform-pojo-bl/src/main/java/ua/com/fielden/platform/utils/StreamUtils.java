@@ -1,16 +1,20 @@
 package ua.com.fielden.platform.utils;
 
 import java.util.Iterator;
+import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
+import ua.com.fielden.platform.streaming.SequentialGroupingStream;
 import ua.com.fielden.platform.types.tuples.T2;
 
 /**
@@ -106,6 +110,71 @@ public class StreamUtils {
     }
 
     /**
+     * Returns a stream of distinct elements from {@code stream}, where unique identity of an element is determined by {@code uidMapper}.
+     * <p>
+     * It is required that the return type of {@code uidMapper} has proper implementation of {@code hashCode()} and {@code equals()}.
+     * <p>
+     * The order of the original stream's elements is preserved.
+     *
+     * @param stream
+     * @param uidMapper a function that maps the original element to its unique identity.
+     * @return
+     */
+    public static <T, R> Stream<T> distinct(final Stream<T> stream, final Function<T, R> uidMapper) {
+        return StreamSupport.stream(distinct(stream.spliterator(), uidMapper), false);
+    }
+
+    private static <T, R> Spliterator<T> distinct(final Spliterator<T> splitr, final Function<T, R> uidMapper) {
+        return new Spliterators.AbstractSpliterator<T>(splitr.estimateSize(), 0) {
+            final LinkedHashSet<R> uniqs = new LinkedHashSet<>();
+
+            @Override
+            public boolean tryAdvance(final Consumer<? super T> consumer) {
+                return splitr.tryAdvance(elem -> {
+                    final R uid = uidMapper.apply(elem);
+                    if (!uniqs.contains(uid)) {
+                        consumer.accept(elem);
+                        uniqs.add(uid);
+                    }
+                });
+            }
+        };
+    }
+
+    /**
+     * Returns the longest prefix of the {@code stream} until (inclusive) an element that satisfies {@code predicate} is encountered.
+     * <p>
+     * If no such element was encountered then the whole stream is returned.
+     *
+     * @param stream
+     * @param predicate
+     * @return
+     */
+    public static <T> Stream<T> stopAfter(final Stream<T> stream, final Predicate<? super T> predicate) {
+        return StreamSupport.stream(stopAfter(stream.spliterator(), predicate), false);
+    }
+
+    private static <T> Spliterator<T> stopAfter(final Spliterator<T> splitr, final Predicate<? super T> predicate) {
+        return new Spliterators.AbstractSpliterator<T>(splitr.estimateSize(), 0) {
+            boolean stillGoing = true;
+
+            @Override
+            public boolean tryAdvance(final Consumer<? super T> consumer) {
+                if (stillGoing) {
+                    final boolean hadNext = splitr.tryAdvance(elem -> {
+                        consumer.accept(elem);
+                        if (predicate.test(elem)) {
+                            stillGoing = false;
+                        }
+                    });
+                    return hadNext && stillGoing;
+                }
+                return false;
+            }
+        };
+    }
+
+    /**
      * Constructs a zipped stream.
      * 
      * @param xs
@@ -146,6 +215,19 @@ public class StreamUtils {
         return xs.isParallel() && ys.isParallel() // if both streams are parallel then the produced one can also be parallel
                 ? StreamSupport.stream(split, true)
                 : StreamSupport.stream(split, false);
+    }
+
+    /**
+     * Splits stream {@code source} into a windowed stream where elements from {@code source} are placed in groups of size {@code windowSize}.
+     * The last group may have its size less than the {@code windowSize}.
+     *
+     * @param <T> A type over which to stream.
+     * @param source An input stream to be "windowed".
+     * @param windowSize A window size.
+     * @return
+     */
+    public static <T> Stream<List<T>> windowed(final Stream<T> source, final int windowSize){
+        return SequentialGroupingStream.stream(source, (el, group) -> group.size() < windowSize);
     }
 
 }

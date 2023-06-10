@@ -50,10 +50,10 @@ import ua.com.fielden.platform.security.user.UserRolesUpdaterCo;
 import ua.com.fielden.platform.security.user.UserRolesUpdaterDao;
 import ua.com.fielden.platform.security.user.UserSecretCo;
 import ua.com.fielden.platform.security.user.UserSecretDao;
+import ua.com.fielden.platform.security.user.impl.ThreadLocalUserProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialisationClassProvider;
 import ua.com.fielden.platform.serialisation.api.ISerialiser;
 import ua.com.fielden.platform.serialisation.api.impl.Serialiser;
-import ua.com.fielden.platform.test.UserProviderForTesting;
 import ua.com.fielden.platform.test.ioc.DatesForTesting;
 import ua.com.fielden.platform.test.ioc.PlatformTestServerModule.TestSessionCacheBuilder;
 import ua.com.fielden.platform.test.ioc.TickerForSessionCache;
@@ -89,7 +89,7 @@ public class WebHibernateModule extends CommonFactoryModule {
     @Override
     protected void configure() {
         super.configure();
-        bind(IUserProvider.class).to(UserProviderForTesting.class).in(Scopes.SINGLETON);
+        bind(IUserProvider.class).to(ThreadLocalUserProvider.class).in(Scopes.SINGLETON);
         bind(INewUserNotifier.class).toInstance(s -> {});
         bind(ISerialisationClassProvider.class).toInstance(serialisationClassProvider);
         bind(ISerialiser.class).to(Serialiser.class);

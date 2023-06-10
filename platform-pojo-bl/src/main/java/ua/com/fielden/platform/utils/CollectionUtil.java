@@ -17,15 +17,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.exceptions.InvalidArgumentException;
 import ua.com.fielden.platform.types.tuples.T2;
 
 /**
  * A convenience class to provide common collection related routines and algorithms.
- * 
+ *
  * @author TG Team
- * 
+ *
  */
 public final class CollectionUtil {
     private CollectionUtil() {
@@ -40,17 +44,17 @@ public final class CollectionUtil {
     public static <T> Set<T> unmodifiableSetOf(final T ... elements) {
         return unmodifiableSet(new HashSet<>(Arrays.asList(elements)));
     }
-    
+
     @SafeVarargs
     public static <T> LinkedHashSet<T> linkedSetOf(final T ... elements) {
         return new LinkedHashSet<>(Arrays.asList(elements));
     }
-    
+
     @SafeVarargs
     public static <T> List<T> listOf(final T ... elements) {
         return elements != null ? new ArrayList<>(asList(elements)) : emptyList();
     }
-    
+
     @SafeVarargs
     public static <T> List<T> unmodifiableListOf(final T ... elements) {
         return unmodifiableList(asList(elements));
@@ -76,7 +80,7 @@ public final class CollectionUtil {
 
     /**
      * A convenient method to obtain a tail of an array. Returns an empty optional if the length of arrays is 0.
-     * 
+     *
      * @param array
      * @return
      */
@@ -114,5 +118,59 @@ public final class CollectionUtil {
         }
         return buffer.toString();
     }
+
+    /**
+     * Tests whether two collections have the same contents irrespective of order.
+     * <p>
+     * Returns {@code true} iff both collections contain the same elements with the same cardinalities
+     * according to {@link Object#equals(Object)}.
+     */
+    public static boolean areEqualByContents(final Collection<?> c1, final Collection<?> c2) {
+        if (c1 == null || c2 == null) {
+            return false;
+        }
+        if (c1 == c2) {
+            return true;
+        }
+        if (c1.size() != c2.size()) {
+            return false;
+        }
+        final Map<?, Long> cardinalMap1 = c1.stream().collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+        final Map<?, Long> cardinalMap2 = c2.stream().collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+        return cardinalMap1.equals(cardinalMap2);
+    }
+
+    /**
+     * Removes the first element matching the predicate from the collection and returns an {@link Optional} describing it, otherwise returns an empty {@link Optional}.
+     * <p>
+     * The supplied collection must be modifiable and must not contain {@code null} values.
+     *
+     * @param <E> a type of elements in {@code xs}.
+     * @param xs a modifiable collection, which gets modified by removing the first element matching {@code pred}.
+     * @param pred a predicate for identifying the first element to be removed from {@code xs}.
+     * @return
+     */
+    public static <E> Optional<E> removeFirst(final Collection<E> xs, final Predicate<? super E> pred) {
+        if (xs == null) {
+            throw new InvalidArgumentException("Collection cannot be null.");
+        }
+        if (pred == null) {
+            throw new InvalidArgumentException("Predicate cannot be null.");
+        }
+
+        for (final Iterator<E> iter = xs.iterator(); iter.hasNext();) {
+            final E elt = iter.next();
+            if (elt == null) {
+                throw new InvalidArgumentException("Collection contains null elements, which is not permitted.");
+            }
+            if (pred.test(elt)) {
+                iter.remove();
+                return Optional.of(elt);
+            }
+        }
+
+        return Optional.empty();
+    }
+
 
 }

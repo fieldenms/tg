@@ -14,7 +14,7 @@ import ua.com.fielden.platform.eql.meta.AbstractPropInfo;
 import ua.com.fielden.platform.eql.meta.ComponentTypePropInfo;
 import ua.com.fielden.platform.eql.stage1.PropResolution;
 import ua.com.fielden.platform.eql.stage1.PropResolutionProgress;
-import ua.com.fielden.platform.eql.stage1.TransformationContext;
+import ua.com.fielden.platform.eql.stage1.TransformationContext1;
 import ua.com.fielden.platform.eql.stage2.operands.Prop2;
 import ua.com.fielden.platform.eql.stage2.sources.ISource2;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
@@ -29,7 +29,7 @@ public class Prop1 implements ISingleOperand1<Prop2> {
     }
 
     @Override
-    public Prop2 transform(final TransformationContext context) {
+    public Prop2 transform(final TransformationContext1 context) {
         
         final Iterator<List<ISource2<? extends ISource3>>> it = context.getSources().iterator();
         if (external) {
@@ -75,7 +75,7 @@ public class Prop1 implements ISingleOperand1<Prop2> {
         return asIsResolution.isSuccessful() ? new PropResolution(source, asIsResolution.getResolved()) : null;
     }
     
-    private PropResolution resolveProp(final List<ISource2<? extends ISource3>> sources, final Prop1 prop) {
+    private static PropResolution resolveProp(final List<ISource2<? extends ISource3>> sources, final Prop1 prop) {
         final List<PropResolution> result = new ArrayList<>();
         for (final ISource2<? extends ISource3> source : sources) {
             final PropResolution resolution = resolvePropAgainstSource(source, prop);

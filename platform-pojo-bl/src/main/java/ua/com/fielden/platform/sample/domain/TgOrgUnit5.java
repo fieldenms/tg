@@ -42,7 +42,6 @@ public class TgOrgUnit5 extends AbstractEntity<DynamicEntityKey> {
     @Title(value = "Fuel Type", desc = "Desc")
     private TgFuelType fuelType;
     
-    
     @IsProperty
     @Readonly
     @Calculated
@@ -55,6 +54,23 @@ public class TgOrgUnit5 extends AbstractEntity<DynamicEntityKey> {
     private Money maxVehPurchasePrice;
     protected static final ExpressionModel maxVehPurchasePrice_ = expr().model(select(TeVehicle.class).where().prop("station").eq().extProp(ID).yield().maxOf().prop("purchasePrice").modelAsPrimitive()).model();
 
+    @IsProperty
+    @Readonly
+    @Calculated
+    @Title(value = "Station vehicles count")
+    private Integer vehicleCount;
+    protected static final ExpressionModel vehicleCount_ = expr().model(select(TgVehicle.class).where().prop("station").eq().extProp(ID).yield().countAll().modelAsPrimitive()).model();
+
+    @Observable
+    protected TgOrgUnit5 setVehicleCount(final Integer vehicleCount) {
+        this.vehicleCount = vehicleCount;
+        return this;
+    }
+
+    public Integer getVehicleCount() {
+        return vehicleCount;
+    }
+    
     @Observable
     protected TgOrgUnit5 setMaxVehPurchasePrice(final Money maxVehPurchasePrice) {
         this.maxVehPurchasePrice = maxVehPurchasePrice;
@@ -74,7 +90,6 @@ public class TgOrgUnit5 extends AbstractEntity<DynamicEntityKey> {
     public Money getMaxVehPrice() {
         return maxVehPrice;
     }
-
 
     @Observable
     public TgOrgUnit5 setFuelType(final TgFuelType fuelType) {

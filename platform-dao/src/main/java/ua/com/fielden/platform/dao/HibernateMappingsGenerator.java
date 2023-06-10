@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.dao;
 
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
@@ -10,7 +11,7 @@ import java.util.Collection;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.AbstractUnionEntity;
@@ -29,7 +30,7 @@ import ua.com.fielden.platform.reflection.AnnotationReflector;
  *
  */
 public class HibernateMappingsGenerator {
-    private static final Logger LOGGER = Logger.getLogger(HibernateMappingsGenerator.class);
+    private static final Logger LOGGER = getLogger(HibernateMappingsGenerator.class);
 
     public static final String ID_SEQUENCE_NAME = "TG_ENTITY_ID_SEQ";
     

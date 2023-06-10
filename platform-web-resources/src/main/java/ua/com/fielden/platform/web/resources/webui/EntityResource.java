@@ -3,13 +3,16 @@ package ua.com.fielden.platform.web.resources.webui;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.valueOf;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCentreContext;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.createCriteriaEntityForContext;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.FIND_OR_NEW;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.ID;
 import static ua.com.fielden.platform.web.resources.webui.EntityResource.EntityIdKind.NEW;
+import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.createPropertyActionIndicesForMaster;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.tabs;
+import static ua.com.fielden.platform.web.utils.EntityRestorationUtils.createValidationPrototype;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreSavingInfoHolder;
@@ -21,7 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.restlet.Context;
@@ -53,8 +57,8 @@ import ua.com.fielden.platform.security.user.IUserProvider;
 import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 import ua.com.fielden.platform.ui.config.EntityCentreConfigCo;
-import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.config.MainMenuItem;
+import ua.com.fielden.platform.ui.config.MainMenuItemCo;
 import ua.com.fielden.platform.ui.menu.MiWithConfigurationSupport;
 import ua.com.fielden.platform.utils.IDates;
 import ua.com.fielden.platform.utils.Pair;
@@ -82,8 +86,8 @@ import ua.com.fielden.platform.web.view.master.EntityMaster;
  *
  */
 public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebResource {
-    private static final Logger LOGGER = Logger.getLogger(EntityResource.class);
-    
+    private static final Logger LOGGER = LogManager.getLogger(EntityResource.class);
+
     private final RestServerUtil restUtil;
     private final Long entityId;
     private final EntityIdKind entityIdKind;
@@ -120,14 +124,14 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             final RestServerUtil restUtil,
             final ICriteriaGenerator critGenerator,
             final ICompanionObjectFinder companionFinder,
-            
+
             final IDomainTreeEnhancerCache domainTreeEnhancerCache,
             final IWebUiConfig webUiConfig,
             final IUserProvider userProvider,
             final IDeviceProvider deviceProvider,
             final IDates dates,
             final ICentreConfigSharingModel sharingModel,
-            
+
             final Context context,
             final Request request,
             final Response response) {
@@ -165,20 +169,20 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
     @Post
     public Representation save(final Representation envelope) {
         LOGGER.debug("ENTITY_RESOURCE: save started.");
-        final Representation result = handleUndesiredExceptions(getResponse(), () -> {
+        final Representation representation = handleUndesiredExceptions(getResponse(), () -> {
             final SavingInfoHolder savingInfoHolder = restoreSavingInfoHolder(envelope, restUtil);
             final User user = userProvider.getUser();
             final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
             final MainMenuItemCo mmiCompanion = companionFinder.find(MainMenuItem.class);
             final IUser userCompanion = companionFinder.find(User.class);
-            
+
             final Pair<T, Optional<Exception>> potentiallySavedWithException = tryToSave(savingInfoHolder, entityType, factory, companionFinder, critGenerator, webUiConfig, user, companion, device(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel);
-            return restUtil.singleJsonRepresentation(potentiallySavedWithException.getKey(), potentiallySavedWithException.getValue());
+            return createRepresentation(potentiallySavedWithException.getKey(), potentiallySavedWithException.getValue());
         }, restUtil);
         LOGGER.debug("ENTITY_RESOURCE: save finished.");
-        return result;
+        return representation;
     }
-    
+
     /**
      * Handles PUT requests resulting from tg-entity-master <code>retrieve(context)</code> method (new or persisted entity).
      */
@@ -190,12 +194,13 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             final EntityCentreConfigCo eccCompanion = companionFinder.find(EntityCentreConfig.class);
             final MainMenuItemCo mmiCompanion = companionFinder.find(MainMenuItem.class);
             final IUser userCompanion = companionFinder.find(User.class);
+
             // originallyProducedEntity is always empty during retrieval to kick in creation through producer
             final T emptyOriginallyProducedEntity = null;
             if (envelope != null) {
                 if (FIND_OR_NEW == entityIdKind) {
                     final SavingInfoHolder savingInfoHolder = restoreSavingInfoHolder(envelope, restUtil);
-                    
+
                     final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> funcEntityType;
                     try {
                         funcEntityType = (Class<? extends AbstractFunctionalEntityWithCentreContext<?>>) Class.forName((String) savingInfoHolder.getCentreContextHolder().getCustomObject().get("@@funcEntityType"));
@@ -203,10 +208,10 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                         throw new IllegalStateException(e);
                     }
                     final AbstractEntity<?> funcEntity = restoreEntityFrom(true, savingInfoHolder, funcEntityType, factory, webUiConfig, companionFinder, user, critGenerator, 0, device(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel);
-                    
+
                     final T entity = EntityRestorationUtils.createValidationPrototypeWithContext(
-                            null, 
-                            emptyOriginallyProducedEntity, 
+                            null,
+                            emptyOriginallyProducedEntity,
                             CentreResourceUtils.createCentreContext(
                                     funcEntity, /* only master context, the rest should be empty */
                                     new ArrayList<AbstractEntity<?>>(),
@@ -215,17 +220,17 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                                     null,
                                     new HashMap<>()
                             ),
-                            companion, 
+                            companion,
                             producer
                             );
                     LOGGER.debug("ENTITY_RESOURCE: retrieve finished.");
-                    return restUtil.rawListJsonRepresentation(entity);
+                    return createRepresentation(entity);
                 } else {
                     final CentreContextHolder centreContextHolder = restoreCentreContextHolder(envelope, restUtil);
-                    
+
                     final AbstractEntity<?> masterEntity = restoreMasterFunctionalEntity(true, webUiConfig, companionFinder, user, critGenerator, factory, centreContextHolder, 0, device(), domainTreeEnhancerCache, eccCompanion, mmiCompanion, userCompanion, sharingModel);
                     final Optional<EntityActionConfig> actionConfig = restoreActionConfig(webUiConfig, centreContextHolder);
-                    
+
                     final T entity = EntityRestorationUtils.createValidationPrototypeWithContext(
                             null,
                             emptyOriginallyProducedEntity,
@@ -237,17 +242,40 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                                     !centreContextHolder.proxiedPropertyNames().contains("chosenProperty") ? centreContextHolder.getChosenProperty() : null,
                                     !centreContextHolder.proxiedPropertyNames().contains("customObject") ? centreContextHolder.getCustomObject() : new HashMap<>()
                             ),
-                            companion, 
+                            companion,
                             producer
                             );
                     LOGGER.debug("ENTITY_RESOURCE: retrieve finished.");
-                    return restUtil.rawListJsonRepresentation(entity);
+                    return createRepresentation(entity);
                 }
             } else {
                 LOGGER.debug("ENTITY_RESOURCE: retrieve finished.");
-                return restUtil.rawListJsonRepresentation(EntityRestorationUtils.createValidationPrototype(entityId, emptyOriginallyProducedEntity, companion, producer));
+                return createRepresentation(createValidationPrototype(entityId, emptyOriginallyProducedEntity, companion, producer));
             }
         }, restUtil);
+    }
+
+    /**
+     * Creates {@link Representation} for an entity.
+     * 
+     * @param entity
+     * @return
+     */
+    private Representation createRepresentation(final T entity) {
+        return createRepresentation(entity, empty());
+    }
+
+    /**
+     * Creates {@link Representation} for an entity and {@link Optional} {@code exceptionOpt}.
+     * 
+     * @param entity
+     * @param exceptionOpt
+     * @return
+     */
+    private Representation createRepresentation(final T entity, final Optional<Exception> exceptionOpt) {
+        final Result result = restUtil.singleEntityResult(entity, exceptionOpt);
+        final Map<String, Object> customObject = linkedMapOf(createPropertyActionIndicesForMaster(entity, webUiConfig));
+        return restUtil.resultJSONRepresentation(result.extendResultWithCustomObject(customObject));
     }
 
     @Delete
@@ -263,10 +291,10 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
             return delete(entityId);
         }, restUtil);
     }
-    
+
     /**
      * Restores the entity from {@link SavingInfoHolder} and tries to save it.
-     * 
+     *
      * @param savingInfoHolder
      * @param entityType
      * @param entityFactory
@@ -444,7 +472,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
                     !centreContextHolder.proxiedPropertyNames().contains("customObject") ? centreContextHolder.getCustomObject() : new HashMap<>()
                     );
             //LOGGER.debug(tabs(tabCount) + "restoreEntityFrom (PRIVATE): constructEntity from modifiedPropertiesHolder+centreContextHolder started. centreContext.");
-            
+
             applied = EntityRestorationUtils.constructEntityWithContext(
                     modifiedPropertiesHolder,
                     originallyProducedEntity,
@@ -499,7 +527,7 @@ public class EntityResource<T extends AbstractEntity<?>> extends AbstractWebReso
         }
         return actionConfig;
     }
-    
+
     /**
      * Tries to delete the entity with <code>entityId</code> and returns result. If successful -- result instance is <code>null</code>, otherwise -- result instance is also
      * <code>null</code> (not-deletable entity should exist at the client side, no need to send it many times).

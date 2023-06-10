@@ -6,12 +6,10 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.common.base.Charsets;
 
 import ua.com.fielden.platform.serialisation.exceptions.SerialisationException;
 
@@ -23,7 +21,7 @@ import ua.com.fielden.platform.serialisation.exceptions.SerialisationException;
  */
 public class CentreDiffSerialiser extends ObjectMapper {
     private static final long serialVersionUID = 1L;
-    // private final Logger logger = Logger.getLogger(getClass());
+    // private final Logger logger = getLogger(getClass());
     public static final CentreDiffSerialiser CENTRE_DIFF_SERIALISER = new CentreDiffSerialiser();
     
     private CentreDiffSerialiser() {

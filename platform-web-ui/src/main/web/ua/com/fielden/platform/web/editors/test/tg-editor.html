@@ -54,16 +54,6 @@
                 assertDecoratedInput(done, 'bigDecimalProp', 'decimal-input');
             });
             
-            test('singleline [stringProp] is correct one', function (done) {
-                const targetProperty = 'stringProp';
-                const expectedDecoratedInputClass = 'singleline-text-input';
-                const edProperty = master.shadowRoot.querySelector('tg-singleline-text-editor#editor_4_' + targetProperty);
-                assert.ok(edProperty.decoratedInput(), 'Editor"s decoratedInput() for [' + targetProperty + '] should exist.');
-                console.debug(edProperty.decoratedInput().classList);
-                assert.strictEqual(edProperty.decoratedInput().classList.contains(expectedDecoratedInputClass), true, 'Editor"s decoratedInput() for [' + targetProperty + '] should contain class [' + expectedDecoratedInputClass + '].');
-                done();
-            });
-            
             test('[dateProp] is correct one', function (done) {
                 assertDecoratedInput(done, 'dateProp', 'date-input');
             });

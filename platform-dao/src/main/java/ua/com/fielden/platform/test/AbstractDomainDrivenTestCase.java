@@ -24,13 +24,15 @@ import org.junit.Before;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.dao.ISessionEnabled;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
-import ua.com.fielden.platform.dao.exceptions.EntityCompanionException;
 import ua.com.fielden.platform.data.IDomainDrivenData;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.DynamicEntityKey;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.reflection.Finder;
+import ua.com.fielden.platform.security.user.IUserProvider;
+import ua.com.fielden.platform.test.exceptions.DomainDriventTestException;
+import ua.com.fielden.platform.security.user.User;
 import ua.com.fielden.platform.utils.DbUtils;
 
 /**
@@ -86,7 +88,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
         return this;
     }
     
-    public DbCreator getDbCreator() {
+    public final DbCreator getDbCreator() {
         return dbCreator;
     }
     
@@ -97,8 +99,14 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     
     @Override
     public <T extends AbstractEntity<?>> T save(final T instance) {
+        if (instance == null) {
+            throw new DomainDriventTestException("Null instances cannot be saved.");
+        }
         @SuppressWarnings("unchecked")
         final IEntityDao<T> pp = coFinder.find((Class<T>) instance.getType());
+        if (pp == null) {
+            throw new DomainDriventTestException(format("Could not find companion implementation for [%s].", instance.getType().getSimpleName()));
+        }
         return pp.save(instance);
     }
 
@@ -129,7 +137,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
         try {
             return formatter.parse(dateTime);
         } catch (ParseException e) {
-            throw new IllegalArgumentException(format("Could not parse value [%s].", dateTime));
+            throw new DomainDriventTestException(format("Could not parse value [%s].", dateTime));
         }
     }
 
@@ -183,7 +191,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
             // setting composite key fields
             final List<Field> fieldList = Finder.getKeyMembers(entityClass);
             if (fieldList.size() != keys.length) {
-                throw new IllegalArgumentException(format("Number of key values is %s but should be %s", keys.length, fieldList.size()));
+                throw new DomainDriventTestException(format("Number of key values is %s but should be %s", keys.length, fieldList.size()));
             }
             for (int index = 0; index < fieldList.size(); index++) {
                 final Field keyField = fieldList.get(index);
@@ -210,7 +218,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     @Override
     public Session getSession() {
         if (session == null) {
-            throw new EntityCompanionException("Session is missing, most likely, due to missing @SessionRequired annotation.");
+            throw new DomainDriventTestException("Session is missing, most likely, due to missing @SessionRequired annotation.");
         }
         return session;
     }
@@ -223,7 +231,7 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     @Override
     public String getTransactionGuid() {
         if (StringUtils.isEmpty(transactionGuid)) {
-            throw new EntityCompanionException("Transaction GUID is missing.");
+            throw new DomainDriventTestException("Transaction GUID is missing.");
         }
         return transactionGuid;
     }
@@ -231,6 +239,12 @@ public abstract class AbstractDomainDrivenTestCase implements IDomainDrivenData,
     @Override
     public void setTransactionGuid(final String guid) {
         this.transactionGuid = guid;
+    }
+
+    @Override
+    public User getUser() {
+        final IUserProvider up = getInstance(IUserProvider.class);
+        return up.getUser();
     }
 
 }

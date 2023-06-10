@@ -1,7 +1,7 @@
 package ua.com.fielden.platform.eql.stage2.operands.functions;
 
-import ua.com.fielden.platform.eql.stage2.TransformationContext;
-import ua.com.fielden.platform.eql.stage2.TransformationResult;
+import ua.com.fielden.platform.eql.stage2.TransformationContext2;
+import ua.com.fielden.platform.eql.stage2.TransformationResult2;
 import ua.com.fielden.platform.eql.stage2.operands.ISingleOperand2;
 import ua.com.fielden.platform.eql.stage3.operands.ISingleOperand3;
 import ua.com.fielden.platform.eql.stage3.operands.functions.SumOf3;
@@ -15,9 +15,9 @@ public class SumOf2 extends SingleOperandFunction2<SumOf3> {
     }
 
     @Override
-    public TransformationResult<SumOf3> transform(final TransformationContext context) {
-        final TransformationResult<? extends ISingleOperand3> operandTr = operand.transform(context);
-        return new TransformationResult<>(new SumOf3(operandTr.item, distinct, type, hibType), operandTr.updatedContext);
+    public TransformationResult2<SumOf3> transform(final TransformationContext2 context) {
+        final TransformationResult2<? extends ISingleOperand3> operandTr = operand.transform(context);
+        return new TransformationResult2<>(new SumOf3(operandTr.item, distinct, type, hibType), operandTr.updatedContext);
     }
     
     @Override

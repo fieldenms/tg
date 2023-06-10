@@ -8,7 +8,9 @@ import static ua.com.fielden.platform.web.security.AbstractWebResourceGuard.mkAu
 
 import java.util.Optional;
 
-import org.apache.log4j.Logger;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.restlet.Context;
 import org.restlet.Request;
 import org.restlet.Response;
@@ -35,7 +37,7 @@ public class LogoutResource extends AbstractWebResource {
 
     public static final String BINDING_PATH = "/logout";
 
-    private final Logger logger = Logger.getLogger(LogoutResource.class);
+    private final Logger logger = LogManager.getLogger(LogoutResource.class);
 
     private final IWebResourceLoader webResourceLoader;
     private final IUserProvider userProvider;
@@ -43,6 +45,7 @@ public class LogoutResource extends AbstractWebResource {
     private final IUserSession coUserSession;
     private final String domainName;
     private final String path;
+    private final Optional<String> maybeSsoRedirectUriSignOut;
 
     /**
      * Creates {@link LogoutResource}.
@@ -56,6 +59,7 @@ public class LogoutResource extends AbstractWebResource {
             final String path,
             final IDeviceProvider deviceProvider,
             final IDates dates,
+            final Optional<String> maybeSsoRedirectUriSignOut,
             final Context context,
             final Request request,
             final Response response) {
@@ -66,6 +70,7 @@ public class LogoutResource extends AbstractWebResource {
         this.coUserSession = coUserSession;
         this.domainName = domainName;
         this.path = path;
+        this.maybeSsoRedirectUriSignOut = maybeSsoRedirectUriSignOut;
     }
 
     @Get
@@ -91,7 +96,12 @@ public class LogoutResource extends AbstractWebResource {
                 }
                 // let's use this opportunity to clear expired sessions for the user
                 coUserSession.clearExpired(userProvider.getUser());
-                return loggedOutPage();
+            }
+
+            // in cases were Single Log-Out (SLO) is supported and the logout request arrived with session authenticator present, it is necessary to initiate SLO redirection
+            if (maybeSsoRedirectUriSignOut.isPresent() && oAuth.isPresent()) {
+                getResponse().redirectSeeOther(maybeSsoRedirectUriSignOut.get());
+                return new EmptyRepresentation();
             }
 
             // otherwise return the response as if the logout actually happened

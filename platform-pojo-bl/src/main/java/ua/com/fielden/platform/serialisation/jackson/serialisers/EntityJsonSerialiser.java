@@ -1,6 +1,7 @@
 package ua.com.fielden.platform.serialisation.jackson.serialisers;
 
 import static java.lang.String.format;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
 import static ua.com.fielden.platform.reflection.Reflector.extractValidationLimits;
 import static ua.com.fielden.platform.serialisation.jackson.DefaultValueContract.getValidationResult;
@@ -27,7 +28,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.Logger;
+import org.apache.commons.lang3.StringUtils;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.SerializerProvider;
@@ -63,7 +65,7 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
     public static final String ERR_RESTRICTED_TYPE_SERIALISATION_DUE_TO_PROP_TYPE = "Type [%s] containst property [%s] that is not permitted for serialisation.";
 
     private final Class<T> type;
-    private static final Logger LOGGER = Logger.getLogger(EntityJsonSerialiser.class);
+    private static final Logger LOGGER = getLogger(EntityJsonSerialiser.class);
     private final transient List<CachedProperty> properties;
     private final transient EntityType entityType;
     private final boolean excludeNulls;
@@ -198,6 +200,9 @@ public class EntityJsonSerialiser<T extends AbstractEntity<?>> extends StdSerial
                                     existingMetaProps.put("_cfo", metaProperty.isChangedFromOriginal());
                                 }
                                 existingMetaProps.put("_originalVal", valueObject(metaProperty.getOriginalValue(), prop.isEntityTyped()));
+                            }
+                            if (!StringUtils.isEmpty(metaProperty.getCustomErrorMsgForRequiredness())) {
+                                existingMetaProps.put("_" + MetaProperty.CUSTOM_ERR_MSG_FOR_REQUREDNESS_PROPERTY_NAME, metaProperty.getCustomErrorMsgForRequiredness());
                             }
                             if (!isRequiredDefault(metaProperty)) {
                                 existingMetaProps.put("_" + MetaProperty.REQUIRED_PROPERTY_NAME, metaProperty.isRequired());
