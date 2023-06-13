@@ -9,6 +9,7 @@ import {createDialog} from '/resources/egi/tg-dialog-util.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgElementSelectorBehavior, queryElements } from '/resources/components/tg-element-selector-behavior.js';
 import { TgDelayedActionBehavior } from '/resources/components/tg-delayed-action-behavior.js';
+import { getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 
 const generateCriteriaName = function (root, property, suffix) {
     const rootName = root.substring(0, 1).toLowerCase() + root.substring(1) + "_";
@@ -858,7 +859,7 @@ const TgEntityCentreBehaviorImpl = {
             }
         }).bind(self);
 
-        self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber, relatedContexts) {
+        self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber, relatedContexts, parentCentreContext) {
             const context = this.$.selection_criteria.createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber);
             this._reflector.setCustomProperty(context, "@@resultSetHidden", this.$.egi.hasAttribute("hidden"));
             
@@ -874,6 +875,13 @@ const TgEntityCentreBehaviorImpl = {
                         this._reflector.setCustomProperty(context['relatedContexts'][relatedContext.elementName], "@@resultSetHidden", loadedView.$.egi ? loadedView.$.egi.hasAttribute("hidden") : false);
                     }
                 });
+            }
+            if (parentCentreContext) {
+                const insPoint = getParentAnd(this, element => element.matches("tg-entity-centre-insertion-point"));
+                if (insPoint && insPoint.contextRetriever) {
+                    context['parentCentreContext'] = context['relatedContexts'] || {};
+                    context['parentCentreContext'] = insPoint.contextRetriever(_createContextHolder(parentCentreContext.requireSelectionCriteria, parentCentreContext.requireSelectedEntities, parentCentreContext.requireMasterEntity, null, null, parentCentreContext.relatedContexts, parentCentreContext.parentCentreContext));
+                } 
             }
             return context;
         }).bind(self);
