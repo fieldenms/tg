@@ -131,10 +131,11 @@ const template = html`
             height: 24px;
             padding: 8px;
             text-align: center;
-            font-size: 16px;
+            font-size: 13px;
             font-weight: bold;
             line-height: 24px;
-            color: var(--paper-blue-600);
+            color: var(--paper-blue-300);
+            cursor: default;
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
