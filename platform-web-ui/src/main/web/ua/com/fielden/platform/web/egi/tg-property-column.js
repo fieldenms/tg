@@ -20,7 +20,7 @@ Polymer({
         collectionalProperty: String,
         keyProperty: String,
         valueProperty: String,
-        customAction: Object,
+        customActions: Array,
         sortable: {
             type: Boolean,
             value: false
@@ -38,7 +38,7 @@ Polymer({
         if (tempSummary.length > 0) {
             this.summary = tempSummary;
         }
-        this.customAction = this.$.action_selector.assignedNodes().length > 0 ? this.$.action_selector.assignedNodes()[0] : null;
+        this.customActions = [...this.$.action_selector.assignedNodes()];
     },
 
     /** 
@@ -46,10 +46,11 @@ Polymer({
      * Otherwise, simply returns false to indicate that there was no custom action to be executed. 
      * the passed in currentEntity is a function that returns choosen entity. 
      */
-    runAction: function (currentEntity) {
-        if (this.customAction) {
-            this.customAction.currentEntity = currentEntity;
-            this.customAction._run();
+    runAction: function (currentEntity, actionIndex) {
+        const actionToRun = this.customActions[actionIndex]; 
+        if (actionToRun) {
+            actionToRun.currentEntity = currentEntity;
+            actionToRun._run();
             return true;
         }
         return false;
