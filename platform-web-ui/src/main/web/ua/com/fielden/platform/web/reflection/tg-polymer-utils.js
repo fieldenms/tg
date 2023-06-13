@@ -271,7 +271,7 @@ export const getKeyEventTarget = function (startFrom, orElse, doDuringSearch) {
  *  
  */
 export const containsRestrictedTags = function (htmlText) {
-    const offensiveTag = new RegExp('<html|<body|<script|<img|<a', 'mi');
+    const offensiveTag = new RegExp('<html|<body|<script|<img', 'mi');
     return offensiveTag.exec(htmlText) !== null;
 }
 
