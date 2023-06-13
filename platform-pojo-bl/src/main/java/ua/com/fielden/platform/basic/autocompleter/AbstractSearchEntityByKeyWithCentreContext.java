@@ -26,6 +26,7 @@ import ua.com.fielden.platform.basic.IValueMatcherWithFetch;
 import ua.com.fielden.platform.dao.IEntityDao;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ISingleOperandOrderable;
+import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IStandAloneConditionCompoundCondition;
 import ua.com.fielden.platform.entity.query.fluent.fetch;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.OrderingModel;
@@ -60,13 +61,8 @@ public abstract class AbstractSearchEntityByKeyWithCentreContext<T extends Abstr
      */
     protected ConditionModel makeSearchCriteriaModel(final CentreContext<T, ?> context, final String searchString) {
         final boolean wideSearch = "%".equals(searchString);
-        if (decompose(context).autocompleteActiveOnly()) {
-            return (
-                wideSearch ? cond() : cond().condition(keyAndDescConditionFrom(searchString)).and()
-            ).prop(ACTIVE).eq().val(true).model();
-        } else {
-            return wideSearch ? cond().val(1).eq().val(1).model() : keyAndDescConditionFrom(searchString);
-        }
+        final IStandAloneConditionCompoundCondition<AbstractEntity<?>> initialCond = decompose(context).autocompleteActiveOnly() ? cond().prop(ACTIVE).eq().val(true) : cond().val(1).eq().val(1);
+        return (wideSearch ? initialCond : initialCond.and().condition(keyAndDescConditionFrom(searchString))).model();
     }
 
     /**
