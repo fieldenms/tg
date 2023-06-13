@@ -56,6 +56,20 @@ public class CentreContextHolder extends AbstractEntity<String> {
     @Title(value = "Related contexts", desc = "Contexts relate to this one")
     private Map<String, CentreContextHolder> relatedContexts = new LinkedHashMap<>();
 
+    @IsProperty
+    @Title(value = "Parent Centre Context", desc = "The context of the centre that owns this view as a insertion point")
+    private CentreContextHolder parentCentreContext;
+
+    @Observable
+    public CentreContextHolder setParentCentreContext(final CentreContextHolder parentCentreContext) {
+        this.parentCentreContext = parentCentreContext;
+        return this;
+    }
+
+    public CentreContextHolder getParentCentreContext() {
+        return parentCentreContext;
+    }
+
     @Observable
     protected CentreContextHolder setRelatedContexts(final Map<String, CentreContextHolder> relatedContexts) {
         this.relatedContexts.clear();
