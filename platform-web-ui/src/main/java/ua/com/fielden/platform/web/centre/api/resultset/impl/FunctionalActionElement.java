@@ -180,6 +180,9 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             if (!conf().context.get().relatedContexts.isEmpty()) {
                 attrs.put("related-contexts", "[[" + actionsHolderName + "." + numberOfAction + ".relatedContexts]]");
             }
+            conf().context.get().parentCentreContext.ifPresent(parentCentreContext -> {
+                attrs.put("parent-centre-contexts", "[[" + actionsHolderName + "." + numberOfAction + ".parentCentreContext]]");
+            });
         } else {
             attrs.put("require-selection-criteria", "null");
             attrs.put("require-selected-entities", "null");
@@ -260,11 +263,22 @@ public class FunctionalActionElement implements IRenderable, IImportable {
         attrs.append("preAction: ").append(createPreAction()).append(",\n");
         attrs.append("postActionSuccess: ").append(createPostActionSuccess()).append(",\n");
         attrs.append("attrs: ").append(createElementAttributes(false)).append(",\n");
-        attrs.append("postActionError: ").append(createPostActionError()).append(conf().context.isPresent() && !conf().context.get().relatedContexts.isEmpty() ? ",\n" : "\n");
-        if (conf().context.isPresent() && !conf().context.get().relatedContexts.isEmpty()) {
-            attrs.append("relatedContexts: ").append(createRelatedContexts(conf().context.get().relatedContexts)).append("\n");
+        attrs.append("postActionError: ").append(createPostActionError()).append(conf().context.isPresent() && (conf().context.get().parentCentreContext.isPresent() || !conf().context.get().relatedContexts.isEmpty()) ? ",\n" : "\n");
+        if (conf().context.isPresent()) {
+            if (!conf().context.get().relatedContexts.isEmpty()) {
+                attrs.append("relatedContexts: ").append(createRelatedContexts(conf().context.get().relatedContexts)).append(conf().context.get().parentCentreContext.isPresent() ? ",\n" : "\n");
+            }
+            conf().context.get().parentCentreContext.ifPresent(parentCentreContext -> {
+                attrs.append("parentCentreContext: ").append(createParentCentreContext(parentCentreContext)).append("\n");
+            });
         }
         return attrs.append("}\n").toString();
+    }
+
+    private String createParentCentreContext(final CentreContextConfig context) {
+        final StringBuilder attrs = new StringBuilder("{\n");
+        attrs.append(createContextAttributes(context));
+        return attrs.append("}").toString();
     }
 
     private String createRelatedContexts(final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContextConfig> relatedContexts) {
@@ -276,13 +290,22 @@ public class FunctionalActionElement implements IRenderable, IImportable {
     private String createRelatedContext(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> funcType, final CentreContextConfig context) {
         final StringBuilder attrs = new StringBuilder("{\n");
         attrs.append("elementName: ").append("'" + format("tg-%s-master", funcType.getSimpleName()) + "'").append(",\n");
+        attrs.append(createContextAttributes(context));
+        return attrs.append("}").toString();
+    }
+
+    private String createContextAttributes(final CentreContextConfig context) {
+        final StringBuilder attrs = new StringBuilder("");
         attrs.append("requireSelectionCriteria: ").append(context.withSelectionCrit ? "'true'" : "'false'").append(",\n");
         attrs.append("requireSelectedEntities: ").append(context.withCurrentEtity ? "'ONE'" : (context.withAllSelectedEntities ? "'ALL'" : "'NONE'")).append(",\n");
-        attrs.append("requireMasterEntity: ").append(context.withMasterEntity ? "'true'" : "'false'").append(!context.relatedContexts.isEmpty() ? ",\n" : "\n");
+        attrs.append("requireMasterEntity: ").append(context.withMasterEntity ? "'true'" : "'false'").append(!context.relatedContexts.isEmpty() || context.parentCentreContext.isPresent() ? ",\n" : "\n");
         if (!context.relatedContexts.isEmpty()) {
-            attrs.append("relatedContexts: ").append(createRelatedContexts(context.relatedContexts)).append("\n");
+            attrs.append("relatedContexts: ").append(createRelatedContexts(context.relatedContexts)).append(context.parentCentreContext.isPresent() ? ",\n" : "\n");
         }
-        return attrs.append("}").toString();
+        context.parentCentreContext.ifPresent(parentContext -> {
+            attrs.append("parentCentreContext: ").append(createParentCentreContext(parentContext)).append("\n");
+        });
+        return attrs.toString();
     }
 
     private String createExcludeInsertionPoints() {
