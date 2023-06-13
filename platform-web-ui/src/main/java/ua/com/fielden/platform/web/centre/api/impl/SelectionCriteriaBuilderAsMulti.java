@@ -7,7 +7,7 @@ import ua.com.fielden.platform.reflection.PropertyTypeDeterminator;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
 import ua.com.fielden.platform.web.centre.api.crit.IMultiValueCritSelector;
-import ua.com.fielden.platform.web.centre.api.crit.IMutliValueAutocompleterBuilder;
+import ua.com.fielden.platform.web.centre.api.crit.IMultiValueAutocompleterBuilder;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCriteriaBuilder;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.IMultiBooleanDefaultValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.IMultiStringDefaultValueAssigner;
@@ -33,7 +33,7 @@ class SelectionCriteriaBuilderAsMulti<T extends AbstractEntity<?>> implements IM
 
 
     @Override
-    public <V extends AbstractEntity<?>> IMutliValueAutocompleterBuilder<T, V> autocompleter(final Class<V> type) {
+    public <V extends AbstractEntity<?>> IMultiValueAutocompleterBuilder<T, V> autocompleter(final Class<V> type) {
         if (type == null) {
             throw new WebUiBuilderException("Property type is a required argument and cannot be omitted.");
         }

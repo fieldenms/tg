@@ -76,7 +76,7 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
 
     /**
      * A bag of custom properties in the context.
-     * Usually contains some technical properties to restore the context and may contain custom properties provided by the client-side logic.
+     * Usually contains some technical properties to restore the context and may contain custom properties provided by the client-side or server-side logic.
      */
     private final Map<String, Object> customObject = new LinkedHashMap<>();
 
@@ -173,6 +173,14 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
      */
     public Map<String, Object> getCustomObject() {
         return unmodifiableMap(customObject);
+    }
+
+    /**
+     * Sets custom property into custom object of this {@link CentreContext}.
+     */
+    public CentreContext<T, M> setCustomProperty(final String name, final Object value) {
+        customObject.put(name, value);
+        return this;
     }
 
 }
