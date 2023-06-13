@@ -140,6 +140,7 @@ const template = html`
         }
         paper-icon-button {
             border-radius: 50%;
+            color: var(--paper-grey-700);
         }
         paper-icon-button[active-button] {
             border-style: solid;
@@ -150,10 +151,11 @@ const template = html`
             height: 24px;
             padding: 8px;
             text-align: center;
-            font-size: 16px;
+            font-size: 13px;
             font-weight: bold;
             line-height: 24px;
-            color: var(--paper-blue-600);
+            color: var(--paper-blue-300);
+            cursor: default;
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
@@ -178,8 +180,8 @@ const template = html`
         </div>
         <div class="toolbar-content layout horizontal center" style="margin-left:auto">
             <div class="counter" hidden$="[[_isHiddenSelectedValuesCounter(multi, selectedValues)]]" tooltip-text$="[[_tooltipForSelectedValuesCounter(selectedValues)]]">[[_calcSelectedValuesCounter(selectedValues)]]</div>
-            <paper-icon-button tooltip-text="Discard and close" on-tap="_close" icon="icons:cancel"></paper-icon-button>
-            <paper-icon-button tooltip-text="Accept selected" on-tap="_acceptValues" icon="icons:check-circle"></paper-icon-button>
+            <paper-icon-button tooltip-text="Discard and close" on-tap="_close" icon="cancel"></paper-icon-button>
+            <paper-icon-button tooltip-text="Accept selected" on-tap="_acceptValues" icon="check-circle"></paper-icon-button>
         </div>
     </div>`;
 

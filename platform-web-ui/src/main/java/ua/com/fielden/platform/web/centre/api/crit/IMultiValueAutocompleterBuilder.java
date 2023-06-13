@@ -40,7 +40,7 @@ public interface IMultiValueAutocompleterBuilder<T extends AbstractEntity<?>, V 
      * @param additionalOptions
      * @return
      */
-    IMultiValueAutocompleterBuilder1<T> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType, final MatcherOptions option, final MatcherOptions ... additionalOptions);
+    IMultiValueAutocompleterBuilder1<T> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType, final MatcherOptions option, final MatcherOptions... additionalOptions);
 
     /**
      * Specifies a custom value matcher for a multi-valued selection criteria with the use of {@link MatcherOptions}. Use this method if some specific context configuration is required (i.e. selection criteria entity, master entity etc.).
@@ -51,6 +51,6 @@ public interface IMultiValueAutocompleterBuilder<T extends AbstractEntity<?>, V 
      * @param additionalOptions
      * @return
      */
-    IMultiValueAutocompleterBuilder1<T> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType, final CentreContextConfig context, final MatcherOptions option, final MatcherOptions ... additionalOptions);
+    IMultiValueAutocompleterBuilder1<T> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType, final CentreContextConfig context, final MatcherOptions option, final MatcherOptions... additionalOptions);
 
 }
