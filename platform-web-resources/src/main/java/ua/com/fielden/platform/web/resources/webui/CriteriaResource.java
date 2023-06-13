@@ -1,12 +1,10 @@
 package ua.com.fielden.platform.web.resources.webui;
 
 import static java.lang.String.format;
-import static java.util.Collections.emptyList;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
 import static java.util.UUID.randomUUID;
-import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.data.generator.IGenerator.FORCE_REGENERATION_KEY;
 import static ua.com.fielden.platform.data.generator.IGenerator.shouldForceRegeneration;
 import static ua.com.fielden.platform.error.Result.failure;
@@ -14,6 +12,7 @@ import static ua.com.fielden.platform.streaming.ValueCollectors.toLinkedHashMap;
 import static ua.com.fielden.platform.types.either.Either.left;
 import static ua.com.fielden.platform.types.either.Either.right;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.web.action.CentreConfigShareActionProducer.CONFIG_DOES_NOT_EXIST;
@@ -59,6 +58,9 @@ import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.is
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.isSorting;
 import static ua.com.fielden.platform.web.resources.webui.CentreResourceUtils.updateInheritedFromShared;
 import static ua.com.fielden.platform.web.resources.webui.EntityValidationResource.VALIDATION_COUNTER;
+import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.createPrimaryActionIndicesForCentre;
+import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.createPropertyActionIndicesForCentre;
+import static ua.com.fielden.platform.web.resources.webui.MultiActionUtils.createSecondaryActionIndicesForCentre;
 import static ua.com.fielden.platform.web.utils.EntityResourceUtils.getEntityType;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
@@ -120,7 +122,6 @@ import ua.com.fielden.platform.web.centre.EntityCentre;
 import ua.com.fielden.platform.web.centre.ICentreConfigSharingModel;
 import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.EntityCentreConfig.ResultSetProp;
-import ua.com.fielden.platform.web.centre.api.actions.multi.IEntityMultiActionSelector;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
 import ua.com.fielden.platform.web.centre.api.resultset.IRenderingCustomiser;
@@ -660,7 +661,7 @@ public class CriteriaResource extends AbstractWebResource {
 
             final ICentreDomainTreeManagerAndEnhancer previouslyRunCentre = updateCentre(user, miType, PREVIOUSLY_RUN_CENTRE_NAME, saveAsName, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, companionFinder);
             final EnhancedCentreEntityQueryCriteria<AbstractEntity<?>, ?> previouslyRunCriteriaEntity = createCriteriaValidationPrototype(miType, saveAsName, previouslyRunCentre, companionFinder, critGenerator, 0L, user, device(), domainTreeEnhancerCache, webUiConfig, eccCompanion, mmiCompanion, userCompanion, sharingModel);
-            final Pair<Map<String, Object>, List<?>> pair = createCriteriaMetaValuesCustomObjectWithResult(
+            final Pair<Map<String, Object>, List<AbstractEntity<?>>> pair = createCriteriaMetaValuesCustomObjectWithResult(
                 customObject,
                 complementCriteriaEntityBeforeRunning( // complements previouslyRunCriteriaEntity instance
                     previouslyRunCriteriaEntity,
@@ -685,8 +686,9 @@ public class CriteriaResource extends AbstractWebResource {
             pair.getKey().put("renderingHints", createRenderingHints(pair.getValue()));
 
             // Apply primary and secondary action selectors
-            pair.getKey().put("primaryActionIndices", createPrimaryActionIndices(pair.getValue()));
-            pair.getKey().put("secondaryActionIndices", createSecondaryActionIndices(pair.getValue()));
+            pair.getKey().putAll(linkedMapOf(createPrimaryActionIndicesForCentre(pair.getValue(), centre)));
+            pair.getKey().putAll(linkedMapOf(createSecondaryActionIndicesForCentre(pair.getValue(), centre)));
+            pair.getKey().putAll(linkedMapOf(createPropertyActionIndicesForCentre(pair.getValue(), centre)));
 
             // Build dynamic properties object
             final List<Pair<ResultSetProp<AbstractEntity<?>>, Optional<CentreContext<AbstractEntity<?>, ?>>>> resPropsWithContext = getDynamicResultProperties(
@@ -711,7 +713,7 @@ public class CriteriaResource extends AbstractWebResource {
                     centre,
                     centre.getCustomPropertiesDefinitions(),
                     centre.getCustomPropertiesAsignmentHandler(),
-                    ((List<AbstractEntity<?>>) pair.getValue()).stream());
+                    pair.getValue().stream());
 
             //Enhance entities with values defined with consumer in each dynamic property.
             processedEntities = enhanceResultEntitiesWithDynamicPropertyValues(processedEntities, resPropsWithContext);
@@ -729,34 +731,6 @@ public class CriteriaResource extends AbstractWebResource {
             logger.debug("CRITERIA_RESOURCE: run finished.");
             return restUtil.rawListJsonRepresentation(list.toArray());
         }, restUtil);
-    }
-
-    /**
-     * Calculates indices of active secondary actions for {@code entities}.
-     *
-     * @param entities
-     * @return
-     */
-    private List<List<Integer>> createSecondaryActionIndices(final List<?> entities) {
-        final List<? extends IEntityMultiActionSelector> selectors = centre.createSecondaryActionSelectors(); // create all selectors before entities streaming (and reuse them for every entity)
-        return entities.stream()
-            .map(entity -> selectors.stream()
-                .map(selector -> selector.getActionFor((AbstractEntity<?>) entity))
-                .collect(toList())
-            )
-            .collect(toList());
-    }
-
-    /**
-     * Calculates indices of active primary action for {@code entities}.
-     *
-     * @param entities
-     * @return
-     */
-    private List<Integer> createPrimaryActionIndices(final List<?> entities) {
-        return centre.createPrimaryActionSelector().map(selector -> {
-            return entities.stream().map(entity -> selector.getActionFor((AbstractEntity<?>) entity)).collect(toList());
-        }).orElse(emptyList());
     }
 
     /**

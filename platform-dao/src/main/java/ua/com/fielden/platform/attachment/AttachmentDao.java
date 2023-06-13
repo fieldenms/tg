@@ -35,6 +35,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Pattern;
 
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.Logger;
@@ -61,7 +62,7 @@ import ua.com.fielden.platform.types.Hyperlink;
 @EntityType(Attachment.class)
 public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttachment {
     private static final Logger LOGGER = getLogger(AttachmentDao.class);
-    private static final String KEY_MEMBER_SEPARATOR = Reflector.getKeyMemberSeparator(Attachment.class);
+    private static final String KEY_MEMBER_SEPARATOR_FOR_SPLITTING = Pattern.quote(Reflector.getKeyMemberSeparator(Attachment.class));
 
     private final String attachmentsLocation;
 
@@ -72,7 +73,7 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
         super(filter);
         this.attachmentsLocation = attachmentsLocation;
     }
-    
+
     @Override
     @Authorise(AttachmentDownload_CanExecute_Token.class)
     public Optional<File> asFile(final Attachment attachment) {
@@ -108,7 +109,7 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
     public Attachment findByKeyAndFetch(final boolean filtered, final fetch<Attachment> fetchModel, final Object... keyValues) {
         // is this a special case of partial match by title?
         if (keyValues != null && keyValues.length == 1 && keyValues[0] instanceof String) {
-            final String[] keys = ((String) keyValues[0]).split(KEY_MEMBER_SEPARATOR);
+            final String[] keys = ((String) keyValues[0]).split(KEY_MEMBER_SEPARATOR_FOR_SPLITTING);
             final String potentialUri = keys[0].trim();
             return newAsHyperlink(potentialUri).orElse(null);
         }
@@ -134,9 +135,9 @@ public class AttachmentDao extends CommonEntityDao<Attachment> implements IAttac
                 final String sha1 = HexString.bufferToHex(digest, 0, digest.length);
 
                 final Attachment newAttachment = new_()
+                                                .setOrigFileName(HYPERLINK) // should be first as it affects validation and processing of title
                                                 .setTitle(potentialUri)
-                                                .setSha1(sha1)
-                                                .setOrigFileName(HYPERLINK);
+                                                .setSha1(sha1);
                 // a new hyperlink attachment may become invalid if the length of potentialUri exceed the declared length
                 // in this case it is better to throw exception in order for that error to bubble up
                 newAttachment.isValid().ifFailure(Result::throwRuntime);

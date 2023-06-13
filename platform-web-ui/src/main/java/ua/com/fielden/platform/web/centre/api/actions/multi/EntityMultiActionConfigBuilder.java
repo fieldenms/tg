@@ -1,7 +1,11 @@
 package ua.com.fielden.platform.web.centre.api.actions.multi;
 
+import static java.util.Optional.of;
+
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 
@@ -13,7 +17,7 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
  */
 public class EntityMultiActionConfigBuilder implements IEntityMultiActionConfigAddAction, IEntityMultiActionConfigBuild {
     private final Class<? extends IEntityMultiActionSelector> actionSelectorClass;
-    private final List<EntityActionConfig> actions = new ArrayList<>();
+    private final List<Supplier<Optional<EntityActionConfig>>> actions = new ArrayList<>();
 
     /**
      * Creates the multi-action configuration with entry point that allows one to add first action configuration.
@@ -44,6 +48,12 @@ public class EntityMultiActionConfigBuilder implements IEntityMultiActionConfigA
 
     @Override
     public IEntityMultiActionConfigBuild addAction(final EntityActionConfig action) {
+        actions.add(() -> of(action));
+        return this;
+    }
+
+    @Override
+    public IEntityMultiActionConfigBuild addAction(final Supplier<Optional<EntityActionConfig>> action) {
         actions.add(action);
         return this;
     }

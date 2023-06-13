@@ -206,6 +206,16 @@ const TgEntityCentreBehaviorImpl = {
         allFilteredSecondaryActionIndices: Array,
 
         /**
+         * Indices for property actions associated with all retrieved entities.
+         */
+        allPropertyActionIndices: Array,
+
+       /**
+         * Indices for property actions associated with all filtered entities.
+         */
+        allFilteredPropertyActionIndices: Array,
+
+        /**
          * The entities retrieved when running this centre
          */
         retrievedEntities: {
@@ -639,6 +649,7 @@ const TgEntityCentreBehaviorImpl = {
         const renderingHints = [];
         const primaryActionIndices = [];
         const secondaryActionIndices = [];
+        const propertyActionIndices = [];
         this.allRetrievedEntities.forEach((entity, idx) => {
             if (this.satisfies(entity)) {
                 entities.push(entity);
@@ -646,11 +657,13 @@ const TgEntityCentreBehaviorImpl = {
                 renderingHints.push(this.allRenderingHints[idx]);
                 primaryActionIndices.push(this.allPrimaryActionIndices[idx]);
                 secondaryActionIndices.push(this.allSecondaryActionIndices[idx]);
+                propertyActionIndices.push(this.allPropertyActionIndices[idx]);
             }
         });
         this.allFilteredRenderingHints = renderingHints;
         this.allFilteredPrimaryActionIndices = primaryActionIndices;
         this.allFilteredSecondaryActionIndices = secondaryActionIndices;
+        this.allFilteredPropertyActionIndices = propertyActionIndices;
         if (this.retrieveAll) {
             const resultSize = entities.length;
             // Note that this.$.selection_criteria.pageCapacity has already been updated in method _postRun
@@ -692,11 +705,13 @@ const TgEntityCentreBehaviorImpl = {
             this.$.egi.renderingHints = this.allFilteredRenderingHints;
             this.$.egi.primaryActionIndices = this.allFilteredPrimaryActionIndices;
             this.$.egi.secondaryActionIndices = this.allFilteredSecondaryActionIndices;
+            this.$.egi.propertyActionIndices = this.allFilteredPropertyActionIndices;
         } else {
             this.retrievedEntities = this.allFilteredEntities.slice(startIdx, endIdx);
             this.$.egi.renderingHints = this.allFilteredRenderingHints.slice(startIdx, endIdx);
             this.$.egi.primaryActionIndices = this.allFilteredPrimaryActionIndices.slice(startIdx, endIdx);
             this.$.egi.secondaryActionIndices = this.allFilteredSecondaryActionIndices.slice(startIdx, endIdx);
+            this.$.egi.propertyActionIndices = this.allFilteredPropertyActionIndices.slice(startIdx, endIdx);
         }
     },
 
@@ -773,6 +788,7 @@ const TgEntityCentreBehaviorImpl = {
                 this.allRenderingHints = result.renderingHints;
                 this.allPrimaryActionIndices = result.primaryActionIndices;
                 this.allSecondaryActionIndices = result.secondaryActionIndices;
+                this.allPropertyActionIndices = result.propertyActionIndices;
                 this.allRetrievedEntities = result.resultEntities;
                 this.dynamicColumns = result.dynamicColumns;
                 this.selectionCriteriaEntity = result.criteriaEntity;
