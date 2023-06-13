@@ -63,7 +63,7 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
             throw validation;
         }
         // Otherwise continue data exporting.
-        final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit = criteriaEntityRestorer.restoreCriteriaEntity(entity.getCentreContextHolder());
+        final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit = criteriaEntityRestorer.restoreCriteriaEntity(getParentCentreContextHolder(entity.getCentreContextHolder()));
 
         entity.setFileName(String.format("export-of-%s.xlsx", selectionCrit.getEntityClass().getSimpleName()));
         entity.setMime("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
@@ -109,6 +109,13 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         }
 
         return entity;
+    }
+
+    private CentreContextHolder getParentCentreContextHolder(final CentreContextHolder centreContextHolder) {
+        if (centreContextHolder.getParentCentreContext() != null) {
+            return getParentCentreContextHolder(centreContextHolder.getParentCentreContext());
+        }
+        return centreContextHolder;
     }
 
     private String extractSheetTitle(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
