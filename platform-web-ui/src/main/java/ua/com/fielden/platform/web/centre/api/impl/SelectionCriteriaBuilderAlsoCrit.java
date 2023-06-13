@@ -16,6 +16,7 @@ import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.IAlsoCrit;
 import ua.com.fielden.platform.web.centre.api.crit.ISelectionCriteriaBuilder;
 import ua.com.fielden.platform.web.centre.api.crit.layout.ILayoutConfigWithResultsetSupport;
+import ua.com.fielden.platform.web.centre.exceptions.EntityCentreConfigurationException;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.interfaces.ILayout.Orientation;
 
@@ -44,12 +45,12 @@ class SelectionCriteriaBuilderAlsoCrit<T extends AbstractEntity<?>> implements I
 
     @Override
     public ILayoutConfigWithResultsetSupport<T> setLayoutFor(final Device device, final Optional<Orientation> orientation, final String flexString) {
-        if (builder.selectionCriteria.size() == 0) {
-            throw new IllegalArgumentException("Looks like out of sequence call as there are selection criteria to layout.");
+        if (builder.selectionCriteria.isEmpty()) {
+            throw new EntityCentreConfigurationException("Looks like out of sequence call as there are selection criteria to layout.");
         }
 
         if (device == null || orientation == null) {
-            throw new IllegalStateException("Selection criterial layout requries device and orientation (optional) to be specified.");
+            throw new EntityCentreConfigurationException("Selection criterial layout requries device and orientation (optional) to be specified.");
         }
 
         return new SelectionCriteriaLayoutBuilder<>(builder).setLayoutFor(device, orientation, flexString);
@@ -64,15 +65,15 @@ class SelectionCriteriaBuilderAlsoCrit<T extends AbstractEntity<?>> implements I
      */
     protected void buildWithMatcher(final Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>> matcherType, final Optional<CentreContextConfig> contextOpt, final List<MatcherOptions> options) {
         if (!builder.currSelectionCrit.isPresent()) {
-            throw new IllegalArgumentException("The current selection criterion should have been associated with some property at this stage.");
+            throw new EntityCentreConfigurationException("The current selection criterion should have been associated with some property at this stage.");
         }
 
         if (matcherType == null) {
-            throw new IllegalArgumentException("Matcher must be provided.");
+            throw new EntityCentreConfigurationException("Matcher must be provided.");
         }
 
         if (options.contains(HIDE_ACTIVE_ONLY_ACTION) && !isActivatableEntityType(determinePropertyType(builder.getEntityType(), builder.currSelectionCrit.get()))) {
-            throw new IllegalArgumentException(format("'Active only' action can not be hidden for non-activatable property [%s] of type [%s].", builder.currSelectionCrit.get(), builder.getEntityType().getSimpleName()));
+            throw new EntityCentreConfigurationException(format("'Active only' action can not be hidden for non-activatable property [%s] of type [%s].", builder.currSelectionCrit.get(), builder.getEntityType().getSimpleName()));
         }
 
         this.builder.valueMatchersForSelectionCriteria.put(builder.currSelectionCrit.get(), t3(matcherType, contextOpt, options));
