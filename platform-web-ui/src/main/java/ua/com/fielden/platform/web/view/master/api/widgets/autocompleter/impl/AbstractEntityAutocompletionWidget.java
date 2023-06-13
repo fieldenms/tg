@@ -34,6 +34,7 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
     private Class<? extends IValueMatcher> matcherType;
     private boolean lightDesc = false;
 
+    protected final Class<? extends AbstractEntity<?>> propType;
     private final Map<String, Boolean> additionalProps = new LinkedHashMap<>();
     private final Map<String, Boolean> defaultAdditionalProps = new LinkedHashMap<>();
 
@@ -43,6 +44,7 @@ public abstract class AbstractEntityAutocompletionWidget extends AbstractWidget 
             final String propName,
             final Class<? extends AbstractEntity<?>> propType) {
         super(widgetPath, titleAndDesc, propName);
+        this.propType = propType;
 
         defaultAdditionalProps.putAll(createDefaultAdditionalProps(propType));
 

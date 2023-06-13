@@ -73,7 +73,7 @@ const customInputTemplate = html`
             autocomplete="off"/>
     </iron-input>`;
 const customIconButtonsTemplate = html`<paper-icon-button class="picker-button custom-icon-buttons" on-tap="_showCalendar" icon="today" disabled$="[[_isCalendarDisabled(_disabled, datePortion)]]" tooltip-text="Show date picker dialog"></paper-icon-buton>`;
-const propertyActionTemplate = html`<slot name="property-action"></slot>`;
+const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
 
 export class TgDatetimePicker extends TgEditor {
 

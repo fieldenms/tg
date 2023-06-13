@@ -13,7 +13,7 @@ import {TgReflector} from '/app/tg-reflector.js';
 
 import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
-import { tearDownEvent, allDefined, resultMessages } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, allDefined, resultMessages, deepestActiveElement, isInHierarchy } from '/resources/reflection/tg-polymer-utils.js';
 
 let checkIconTimer = null;
 
@@ -318,6 +318,23 @@ export class TgEditor extends PolymerElement {
             action: {
                 type: Object
             },
+
+            /**
+             * The property action index to show. The default value should be '-1' to hide all property actions. The index should be calculated on server. 
+             */
+            propertyActionIndex: {
+                type: Number,
+                value: -1,
+                observer: '_propertyActionIndexChanged'
+            },
+
+            /**
+             * The property actions embedded into this editor. Only one of these action will be visible that corresponds to propertyActionIndex property 
+             */
+            propertyActions: {
+                type: Array,
+                value: () => []
+            },
     
             ////////////////////////////////////// SUBSECTION: NOT MANDATORY PROPERTIES //////////////////////////////////////
             /**
@@ -619,6 +636,11 @@ export class TgEditor extends PolymerElement {
         if (!this._editorKind) {
             this._editorKind = 'NOT_MULTILINETEXT_OR_BOOLEAN';
         }
+        //Initialising multi actions
+        this.propertyActions = (this.$.actionSlot && [...this.$.actionSlot.assignedNodes({flatten: true})]) || [];
+        this.propertyActions.forEach(action => {
+            action.setAttribute('hidden', '');
+        });
     }
 
     isInWarning () {
@@ -1195,6 +1217,26 @@ export class TgEditor extends PolymerElement {
     _checkBuiltInValidation () {
         if (this.builtInValidationMessage && this.$ && this.$.input && this.$.input.checkValidity) {
             this._editorValidationMsg = this._editingValue === '' && !this.$.input.checkValidity() ? this.builtInValidationMessage : null;
+        }
+    }
+
+    _propertyActionIndexChanged (newIndex, oldIndex) {
+        let shouldBeFocused = false;
+        if (oldIndex >= 0) {
+            const oldAction = this.propertyActions[oldIndex];
+            if (oldAction) {
+                shouldBeFocused = isInHierarchy(oldAction, deepestActiveElement());
+                oldAction.setAttribute('hidden', '');
+            }
+        }
+        if (newIndex >= 0) {
+            const newAction = this.propertyActions[newIndex];
+            if (newAction) {
+                newAction.removeAttribute('hidden');
+                if (shouldBeFocused) {
+                    newAction.$.iActionButton.focus();
+                }
+            }
         }
     }
 
