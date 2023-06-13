@@ -40,7 +40,7 @@ public interface ISingleValueAutocompleterBuilder<T extends AbstractEntity<?>, V
      * @param additionalOptions
      * @return
      */
-    ISingleValueAutocompleterBuilder1<T, V> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType, final MatcherOptions option, final MatcherOptions ... additionalOptions);
+    ISingleValueAutocompleterBuilder1<T, V> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType, final MatcherOptions option, final MatcherOptions... additionalOptions);
 
     /**
      * Specifies a custom value matcher for a single-valued selection criteria with the use of {@link MatcherOptions}. Use this method if some specific context configuration is required (i.e. selection criteria entity, master entity etc.).
@@ -51,6 +51,6 @@ public interface ISingleValueAutocompleterBuilder<T extends AbstractEntity<?>, V
      * @param additionalOptions
      * @return
      */
-    ISingleValueAutocompleterBuilder1<T, V> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType, final CentreContextConfig context, final MatcherOptions option, final MatcherOptions ... additionalOptions);
+    ISingleValueAutocompleterBuilder1<T, V> withMatcher(final Class<? extends IValueMatcherWithCentreContext<V>> matcherType, final CentreContextConfig context, final MatcherOptions option, final MatcherOptions... additionalOptions);
 
 }
