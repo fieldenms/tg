@@ -872,15 +872,13 @@ const TgEntityCentreBehaviorImpl = {
                         context['relatedContexts'] = context['relatedContexts'] || {};
                         context['relatedContexts'][relatedContext.elementName] = loadedView._createContextHolder(relatedContext.requireSelectionCriteria, relatedContext.requireSelectedEntities, relatedContext.requireMasterEntity, null, null, relatedContext.relatedContexts);
                         this._reflector.setCustomProperty(context['relatedContexts'][relatedContext.elementName], "@@insertionPointTitle", insPoint.shortDesc);
-                        this._reflector.setCustomProperty(context['relatedContexts'][relatedContext.elementName], "@@resultSetHidden", loadedView.$.egi ? loadedView.$.egi.hasAttribute("hidden") : false);
                     }
                 });
             }
             if (parentCentreContext) {
                 const insPoint = getParentAnd(this, element => element.matches("tg-entity-centre-insertion-point"));
                 if (insPoint && insPoint.contextRetriever) {
-                    context['parentCentreContext'] = context['relatedContexts'] || {};
-                    context['parentCentreContext'] = insPoint.contextRetriever(_createContextHolder(parentCentreContext.requireSelectionCriteria, parentCentreContext.requireSelectedEntities, parentCentreContext.requireMasterEntity, null, null, parentCentreContext.relatedContexts, parentCentreContext.parentCentreContext));
+                    context['parentCentreContext'] = insPoint.contextRetriever()._createContextHolder(parentCentreContext.requireSelectionCriteria, parentCentreContext.requireSelectedEntities, parentCentreContext.requireMasterEntity, null, null, parentCentreContext.relatedContexts, parentCentreContext.parentCentreContext);
                 } 
             }
             return context;

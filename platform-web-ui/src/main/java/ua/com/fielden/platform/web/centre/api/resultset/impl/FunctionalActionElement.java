@@ -181,7 +181,7 @@ public class FunctionalActionElement implements IRenderable, IImportable {
                 attrs.put("related-contexts", "[[" + actionsHolderName + "." + numberOfAction + ".relatedContexts]]");
             }
             conf().context.get().parentCentreContext.ifPresent(parentCentreContext -> {
-                attrs.put("parent-centre-contexts", "[[" + actionsHolderName + "." + numberOfAction + ".parentCentreContext]]");
+                attrs.put("parent-centre-context", "[[" + actionsHolderName + "." + numberOfAction + ".parentCentreContext]]");
             });
         } else {
             attrs.put("require-selection-criteria", "null");
