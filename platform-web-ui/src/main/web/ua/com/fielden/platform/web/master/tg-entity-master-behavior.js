@@ -157,7 +157,7 @@ const TgEntityMasterBehaviorImpl = {
         ////////////////////////////////////// SUBSECTION: NOT MANDATORY PROPERTIES //////////////////////////////////////
 
         /**
-         * The context in which save() action should be performed (it is not defined in case when context is not needed).
+         * The context in which save() action should be performed (it is not defined in cases where context is not needed).
          */
         savingContext: {
             type: Object
@@ -324,7 +324,7 @@ const TgEntityMasterBehaviorImpl = {
         },
 
         /**
-         * The event target for cutom events if this master is outside the hierarchy where event should occured.
+         * The event target for custom events if this master is outside the hierarchy where event should occurred.
          */
         customEventTarget: {
             type: Object
@@ -354,7 +354,7 @@ const TgEntityMasterBehaviorImpl = {
          * in this '_continuations' object.
          *
          * It is necessary to understand that '_continuations' are associated with the same 'saving' session for the same
-         * 'initiating entity' and will be resetted after the success of the save (or after refresh, validate).
+         * 'initiating entity' and will be reset after the success of the save (or after refresh, validate).
          */
         _continuations: {
             type: Object,
@@ -369,7 +369,7 @@ const TgEntityMasterBehaviorImpl = {
 
         /**
          * In case if new entity is operated on, this instance holds an original fully-fledged contextually produced entity, otherwise 'null'.
-         * It is updated everytime when refresh process successfully completes.
+         * It is updated every time when refresh process successfully completes.
          */
         _originallyProducedEntity: {
             type: Object,
@@ -389,8 +389,8 @@ const TgEntityMasterBehaviorImpl = {
 
         /**
          * Publishes data with 'canClose=true' to channel 'self.centreUuid', topic 'refresh.post.success' to close the master regardless of the state of the bound entity.
-         * This request may or may not succeed, which depends on who is subscribed to the pulished event.
-         * In general dialogs, holding entity mesters, do subscribe and can be closed this way.
+         * This request may or may not succeed, which depends on who is subscribed to the published event.
+         * In general dialogs, holding entity masters, do subscribe and can be closed this way.
          */
         publishCloseForcibly: {
             type: Function
@@ -445,7 +445,7 @@ const TgEntityMasterBehaviorImpl = {
             return contextHolder;
         }).bind(self);
 
-        // calbacks, that will potentially be augmented by tg-action child elements:
+        // callbacks, that will potentially be augmented by tg-action child elements:
         self._postSavedDefault = (function (potentiallySavedOrNewEntityAndCustomObject) {
             const potentiallySavedOrNewEntity = potentiallySavedOrNewEntityAndCustomObject[0];
             const customObject = potentiallySavedOrNewEntityAndCustomObject[1];
@@ -453,11 +453,11 @@ const TgEntityMasterBehaviorImpl = {
             //  1) fully fresh new entity from 'continuous creation' process (DAO object returns fully new entity after successful save of previous entity)
             //    a) it has no id defined (id === null)
             //    b) it can be valid (required properties can still be blue)
-            //    c) it can be invalid (in case when the logic of 'continuous creation' creates new entity as invalid)
-            //  2) saved or unsaved entity that was tryied to be saving
+            //    c) it can be invalid (in cases where the logic of 'continuous creation' creates new entity as invalid)
+            //  2) saved or unsaved entity that was tried to be saving
             //    a) if valid == saving was successful and id should be defined (not 'null')
             //    b) if invalid == id can be defined (when persisted entity was trying to be saved but with failure) or can be 'null' (when new entity was trying to be saved but with failure)
-            //    c) if invalid == saving was unsuccessful (exception occured) and id is defined (!) in case where new entity was trying to be saved (exception has occured AFTER actual save but transaction rollbacked)
+            //    c) if invalid == saving was unsuccessful (exception occurred) and id is defined (!) in case where new entity was trying to be saved (exception has occurred AFTER actual save but transaction rollbacked)
 
             const newEntitySavingFailedButIdExists = potentiallySavedOrNewEntity.type().isPersistent() &&
                 potentiallySavedOrNewEntity.exceptionOccured() !== null &&
@@ -485,12 +485,12 @@ const TgEntityMasterBehaviorImpl = {
             const newBindingEntity = this._postEntityReceived(potentiallySavedOrNewEntity, isContinuouslyCreated, customObject);
 
             if (potentiallySavedOrNewEntity.isValidWithoutException()) {
-                // in case where successful save occured we need to reset @@touchedProps that are transported with bindingEntity
+                // in case where successful save occurred we need to reset @@touchedProps that are transported with bindingEntity
                 if (!potentiallySavedOrNewEntity.type().compoundOpenerType()) { // #1992 reset @@touchedProps only for non-compound-master-opener types, because opener's 'key' property needs to remain touched; this ensures correct server-side restoration of opener if its produced 'key' (no id) equals to saved version of 'key' (with id)
                     newBindingEntity["@@touchedProps"] = { names: [], values: [], counts: [] };
                 }
 
-                if (isContinuouslyCreated === true) { // continuous creation has occured, which is very much like entity has been produced -- _originallyProducedEntity should be updated by newly returned instance
+                if (isContinuouslyCreated === true) { // continuous creation has occurred, which is very much like entity has been produced -- _originallyProducedEntity should be updated by newly returned instance
                     this._originallyProducedEntity = potentiallySavedOrNewEntity;
                 } else if (potentiallySavedOrNewEntity.type().isPersistent()) { // entity became (or was) persisted -- _originallyProducedEntity should be reset to empty
                     this._originallyProducedEntity = null;
@@ -519,14 +519,14 @@ const TgEntityMasterBehaviorImpl = {
                 }
             }
 
-            const _exceptionOccured = potentiallySavedOrNewEntity.exceptionOccured();
-            // if continuation exception has been occured -- find its 'tg-ui-action' and '_run' it (if it does not exist -- then it should be created)
-            if (_exceptionOccured !== null && _exceptionOccured.ex && _exceptionOccured.ex.continuationTypeStr) {
-                const continuationType = this._reflector().findTypeByName(_exceptionOccured.ex.continuationTypeStr); // continuation functional entity type
+            const _exceptionOccurred = potentiallySavedOrNewEntity.exceptionOccured();
+            // if continuation exception has been occurred -- find its 'tg-ui-action' and '_run' it (if it does not exist -- then it should be created)
+            if (_exceptionOccurred !== null && _exceptionOccurred.ex && _exceptionOccurred.ex.continuationTypeStr) {
+                const continuationType = this._reflector().findTypeByName(_exceptionOccurred.ex.continuationTypeStr); // continuation functional entity type
                 if (continuationType === null) {
-                    throw 'Continuation type [' + _exceptionOccured.ex.continuationTypeStr + '] was not registered.';
+                    throw 'Continuation type [' + _exceptionOccurred.ex.continuationTypeStr + '] was not registered.';
                 }
-                const continuationProperty = _exceptionOccured.ex.continuationProperty; // the property name that uniquely identifies continuation in saving session of initiating entity on this master (will be set on companion object)
+                const continuationProperty = _exceptionOccurred.ex.continuationProperty; // the property name that uniquely identifies continuation in saving session of initiating entity on this master (will be set on companion object)
                 const elementName = 'tg-' + continuationType._simpleClassName() + '-master';
                 const actionDesc = continuationType._simpleClassName() + '-' + continuationProperty;
 
@@ -596,12 +596,12 @@ const TgEntityMasterBehaviorImpl = {
                         oldIsActionInProgressChanged(newValue, oldValue);
                         if (newValue === false && !action.success) { // only enable parent master if action has failed (perhaps during retrieval or on save), otherwise leave enabling logic to the parent master itself (saving of parent master should govern that)
                             _self.restoreAfterSave();
-                            _self.fire('continuaton-completed-without-success', action);
+                            _self.fire('continuation-completed-without-success', action);
                         }
                     }).bind(action);
                 }
                 action._run();
-            } else if (_exceptionOccured !== null) {
+            } else if (_exceptionOccurred !== null) {
                 this._postSavedDefaultPostExceptionHandler();
             } else {
                 this.restoreAfterSave();
