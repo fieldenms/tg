@@ -1725,8 +1725,10 @@ export const TgReflector = Polymer({
 
             const touchedProps = bindingView['@@touchedProps'];
             const touchedPropIndex = touchedProps.names.indexOf(propertyName);
-            if (touchedPropIndex > -1 && !this.equalsEx(bindingView.get(propertyName), touchedProps.values[touchedPropIndex]) && !entity.type().compoundOpenerType()) { // #1992 reset @@touchedProps only for non-compound-master-opener types, because opener's 'key' property needs to remain touched; this ensures correct server-side restoration of opener if its produced 'key' (no id) equals to saved version of 'key' (with id)
-                // make the property untouched in case where its value was sucessfully mutated through definer of other property (it means that the value is valid and different from the value originated from user's touch)
+            // #1992 reset @@touchedProps only for non-compound-master-opener types, because opener's 'key' property needs to remain touched
+            // this ensures correct server-side restoration of the opener in cases where its produced 'key' (no id) equals to the saved version of the 'key' (with id)
+            if (touchedPropIndex > -1 && !this.equalsEx(bindingView.get(propertyName), touchedProps.values[touchedPropIndex]) && !entity.type().compoundOpenerType()) {
+                // make the property untouched in cases where its value was successfully mutated through definer of another property (it means that the value is valid and different to the value originated from the user's touch)
                 touchedProps.names.splice(touchedPropIndex, 1);
                 touchedProps.counts.splice(touchedPropIndex, 1);
                 touchedProps.values.splice(touchedPropIndex, 1);
