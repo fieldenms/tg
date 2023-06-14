@@ -63,10 +63,7 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
             throw validation;
         }
         // Otherwise continue data exporting.
-        final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit = criteriaEntityRestorer.restoreCriteriaEntity(entity.getCentreContextHolder());
-
-        entity.setFileName(String.format("export-of-%s.xlsx", selectionCrit.getEntityClass().getSimpleName()));
-        entity.setMime("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+        final CentreContextHolder topCentreContextHolder = getParentCentreContextHolder(entity.getCentreContextHolder());
         final List<Stream<AbstractEntity<?>>> entities = new ArrayList<>();
         final List<Pair<String[], String[]>> propAndTitles = new ArrayList<>();
         final List<List<List<DynamicColumnForExport>>> dynamicProperties = new ArrayList<>();
@@ -74,31 +71,15 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         // selectionCrit.getDynamicProperties() are used only for EntityExportAction and only in this class;
         //   they are initialised in below selectionCrit.export(...) calls; see selectionCrit.setDynamicProperties method callers for more details;
         //   that's why there is no need to initialise selectionCrit.getDynamicProperties() anywhere outside EntityExportAction, i.e. for other functional actions.
-        final Object resultSetHidden = selectionCrit.centreContextHolder().getCustomObject().get("@@resultSetHidden");
-        if (resultSetHidden != null && !Boolean.valueOf(resultSetHidden.toString())) {
-            final String mainEgiTitle = extractSheetTitle(selectionCrit);
-            titles.add(mainEgiTitle);
-            entities.add(exportEntities(entity, selectionCrit, mainEgiTitle));
-            propAndTitles.add(selectionCrit.generatePropTitlesToExport());
-            dynamicProperties.add(selectionCrit.getDynamicProperties());
-        }
-        if (!entity.getCentreContextHolder().proxiedPropertyNames().contains("relatedContexts")) {
-            entity.getCentreContextHolder().getRelatedContexts().entrySet().forEach(contextEntry -> {
-                final Object insPointResultSetHiden = contextEntry.getValue().getCustomObject().get("@@resultSetHidden");
-                if (insPointResultSetHiden != null && !Boolean.valueOf(insPointResultSetHiden.toString())) {
-                    final EnhancedCentreEntityQueryCriteria<?, ?> relatedSelectionCrit = criteriaEntityRestorer.restoreCriteriaEntity(contextEntry.getValue());
-                    final String sheetTitle = extractSheetTitle(relatedSelectionCrit);
-                    titles.add(sheetTitle);
-                    entities.add(exportEntities(entity, relatedSelectionCrit, sheetTitle));
-                    propAndTitles.add(relatedSelectionCrit.generatePropTitlesToExport());
-                    dynamicProperties.add(relatedSelectionCrit.getDynamicProperties());
-                }
-            });
-        }
+        //Generate export data
+        final String entityTypeName = generateExportData(entity, topCentreContextHolder, entities, titles, propAndTitles, dynamicProperties);
 
         if (entities.isEmpty()) {
             throw failure("There is nothing to export");
         }
+
+        entity.setFileName(String.format("export-of-%s.xlsx", entityTypeName));
+        entity.setMime("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
         try {
             entity.setData(WorkbookExporter.convertToByteArray(WorkbookExporter.export(entities, propAndTitles, dynamicProperties, titles)));
@@ -109,6 +90,31 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
         }
 
         return entity;
+    }
+
+    private String generateExportData(final EntityExportAction entity, final CentreContextHolder contextEntry, final List<Stream<AbstractEntity<?>>> entities, final List<String> titles, final List<Pair<String[], String[]>> propAndTitles, final List<List<List<DynamicColumnForExport>>> dynamicProperties) {
+        final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit = criteriaEntityRestorer.restoreCriteriaEntity(contextEntry);
+        final Object resultSetHiden = contextEntry.getCustomObject().get("@@resultSetHidden");
+        if (resultSetHiden != null && !Boolean.valueOf(resultSetHiden.toString())) {
+            final String sheetTitle = extractSheetTitle(selectionCrit);
+            titles.add(sheetTitle);
+            entities.add(exportEntities(entity, selectionCrit, sheetTitle));
+            propAndTitles.add(selectionCrit.generatePropTitlesToExport());
+            dynamicProperties.add(selectionCrit.getDynamicProperties());
+        }
+        if (!contextEntry.proxiedPropertyNames().contains("relatedContexts")) {
+            contextEntry.getRelatedContexts().entrySet().forEach(relatedContextEntry -> {
+                generateExportData(entity, relatedContextEntry.getValue(), entities, titles, propAndTitles, dynamicProperties);
+            });
+        }
+        return selectionCrit.getEntityClass().getSimpleName();
+    }
+
+    private CentreContextHolder getParentCentreContextHolder(final CentreContextHolder centreContextHolder) {
+        if (!centreContextHolder.proxiedPropertyNames().contains("parentCentreContext") && centreContextHolder.getParentCentreContext() != null) {
+            return getParentCentreContextHolder(centreContextHolder.getParentCentreContext());
+        }
+        return centreContextHolder;
     }
 
     private String extractSheetTitle(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {

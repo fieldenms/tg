@@ -183,6 +183,13 @@ Polymer({
         },
 
         /**
+         * Defines the context that should be extracted from entity centre that has insertion point view with this action.
+         */
+        parentCentreContext: {
+            type: Object
+        },
+
+        /**
          * The name of the entity master element associated with this action.
          */
         elementName: {
@@ -684,7 +691,7 @@ Polymer({
     _createContextHolderForAction: function () {
         const self = this;
         // creates the context and
-        const context = self.createContextHolder(self.requireSelectionCriteria, self.requireSelectedEntities, self.requireMasterEntity, self.actionKind, self.numberOfAction, self.relatedContexts);
+        const context = self.createContextHolder(self.requireSelectionCriteria, self.requireSelectedEntities, self.requireMasterEntity, self.actionKind, self.numberOfAction, self.relatedContexts, self.parentCentreContext);
         // enhances it with the information of 'currentEntity()' (primary / secondary actions) and
         if (self.currentEntity()) {
             self._enhanceContextWithCurrentEntity(context, self.currentEntity(), self.requireSelectedEntities);
