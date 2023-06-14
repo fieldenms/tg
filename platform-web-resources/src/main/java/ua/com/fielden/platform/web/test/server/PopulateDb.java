@@ -1,7 +1,6 @@
 package ua.com.fielden.platform.web.test.server;
 
 import static java.lang.String.format;
-import static org.apache.commons.lang.StringUtils.isEmpty;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
 import static org.apache.logging.log4j.LogManager.getLogger;
 
@@ -13,7 +12,6 @@ import java.util.List;
 import java.util.Properties;
 import java.util.SortedSet;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.logging.log4j.Logger;
 import org.hibernate.dialect.Dialect;
 import org.hibernate.dialect.H2Dialect;
@@ -263,6 +261,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         save(new_(TgCompoundEntity.class, "FILTERED1").setActive(true).setDesc("Description for filtered TgCompoundEntity entity."));
         final TgCompoundEntity filteredEntity2 = save(new_(TgCompoundEntity.class, "FILTERED2").setActive(true).setDesc("Description for TgCompoundEntity entity, for which TgCompoundEntityDetail is filtered."));
         save(new_composite(TgCompoundEntityChild.class, filteredEntity2, new Date()).setDesc("Description for filtered TgCompoundEntityChild entity."));
+        
+        final TgCompoundEntity test1 = save(new_(TgCompoundEntity.class, "1TEST").setActive(true).setDesc("1TEST (1TEST detail)"));
+        save(new_composite(TgCompoundEntityChild.class, test1, new Date()).setDesc("Description for TgCompoundEntityChild entity of 1TEST."));
         
         final User _demo2 = co$(User.class).save(new_(User.class, "DEMO2").setBasedOnUser(su).setEmail("DEMO2@demoapp.com").setActive(true));
         final User demo2 = coUser.resetPasswd(_demo2, _demo2.getKey()).getKey();
