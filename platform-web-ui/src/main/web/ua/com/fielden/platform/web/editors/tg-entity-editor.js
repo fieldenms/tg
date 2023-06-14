@@ -341,7 +341,7 @@ export class TgEntityEditor extends TgEditor {
    
            /**
             * In case if new entity is operated on, this instance holds an original fully-fledged contextually produced entity, otherwise 'null'.
-            * It is updated everytime when refresh process successfully completes.
+            * It is updated every time when refresh process successfully completes.
             */
            originallyProducedEntity: {
                type: Object

@@ -232,7 +232,7 @@ const TgEntityMasterBehaviorImpl = {
         },
 
         /**
-         * In case when main / detail entity has been just saved, there is a need to augment compound master "opener" functional entity to appropriately restore it on server.
+         * In case where main / detail entity has been just saved, there is a need to augment compound master "opener" functional entity to appropriately restore it on server.
          * If new main entity has been saved for the first time -- savedEntityId is promoted into "opener" functional entity's key (and marked as touched).
          * Otherwise if main / detail entity has been saved -- "opener" functional entity's key is marked as touched.
          *
@@ -693,7 +693,7 @@ const TgEntityMasterBehaviorImpl = {
         }).bind(self);
 
         /**
-         * In case when main / detail entity has been just saved, there is a need to augment compound master "opener" functional entity to appropriately restore it on server.
+         * In case where main / detail entity has been just saved, there is a need to augment compound master "opener" functional entity to appropriately restore it on server.
          * If new main entity has been saved for the first time -- savedEntityId is promoted into "opener" functional entity's key (and marked as touched).
          * Otherwise if main / detail entity has been saved -- "opener" functional entity's key is marked as touched.
          *

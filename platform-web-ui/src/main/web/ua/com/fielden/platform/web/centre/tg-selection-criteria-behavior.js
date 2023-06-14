@@ -327,7 +327,7 @@ const TgSelectionCriteriaBehaviorImpl = {
             });
         };
 
-        // calbacks, that will potentially be augmented by tg-action child elements: 
+        // callbacks, that will potentially be augmented by tg-action child elements: 
         self._postRunDefault = (function (criteriaEntity, result) {
             this.fire('egi-entities-appeared', result.resultEntities);
 

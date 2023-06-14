@@ -255,7 +255,7 @@ var _createEntityInstancePropPrototype = function () {
     }
 
     /**
-     * Returns original value in case when the property is changed from original and the entity is persisted.
+     * Returns original value in case where the property is changed from original and the entity is persisted.
      *
      * IMPORTANT: do not use '_originalVal' field directly!
      */
@@ -381,7 +381,7 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
     Entity.prototype.prop = function (name) {
         this.get(name); // ensures that the instance prop of the 'fetched' property is accessed
         if (this._isObjectUndefined("@" + name)) {
-            this["@" + name] = new EntityInstanceProp(); // lazily initialise entity instance prop in case when it was not JSON-serialised (all information was 'default')
+            this["@" + name] = new EntityInstanceProp(); // lazily initialise entity instance prop in case where it was not JSON-serialised (all information was 'default')
         }
         return this["@" + name];
     }

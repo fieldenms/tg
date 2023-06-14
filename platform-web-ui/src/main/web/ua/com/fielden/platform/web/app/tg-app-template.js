@@ -275,7 +275,7 @@ Polymer({
             this._loadApplicationInfrastructureIntoHistory();
         } else {
             if (!window.history.state) {
-                //This logic might be invoked in case when someone changes hash by typing it in to address bar.
+                // This logic might be invoked in case where someone changes hash by typing it in address bar.
                 this._replaceStateWithNumber();
             }
 
