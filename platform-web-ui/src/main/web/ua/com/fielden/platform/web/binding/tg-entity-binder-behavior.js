@@ -473,7 +473,7 @@ export const TgEntityBinderBehavior = {
                         }
                     }.bind(self);
                     xhr.onerror = function (e) {
-                        const msg = "Unknown error occured when sending request to download the attachment.";
+                        const msg = "Unknown error occurred when sending request to download the attachment.";
                         console.error(msg, e);
                         self._openToastForError(msg, msg + ' Request status: ' + xhr.status, true);
                     }.bind(self);
@@ -496,15 +496,15 @@ export const TgEntityBinderBehavior = {
             return this._reset(mph);
         }).bind(self);
 
-        self._provideExceptionOccured = (function (entity, exceptionOccured) {
-            if (exceptionOccured !== null && this._reflector().isEntity(entity)) {
-                entity._setExceptionOccured(exceptionOccured);
+        self._provideExceptionOccurred = (function (entity, exceptionOccurred) {
+            if (exceptionOccurred !== null && this._reflector().isEntity(entity)) {
+                entity._setExceptionOccurred(exceptionOccurred);
             }
         }).bind(self);
 
         self._processRetrieverResponse = function (e) {
-            self._processResponse(e, "retrieve", function (entityAndCustomObject, exceptionOccured) {
-                self._provideExceptionOccured(entityAndCustomObject[0], exceptionOccured);
+            self._processResponse(e, "retrieve", function (entityAndCustomObject, exceptionOccurred) {
+                self._provideExceptionOccurred(entityAndCustomObject[0], exceptionOccurred);
                 return self._postRetrievedDefault(entityAndCustomObject);
             });
         };

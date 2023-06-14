@@ -1157,8 +1157,8 @@ export class TgEntityEditor extends TgEditor {
 
     _processSearcherResponse (e) {
         const self = this;
-        self.processResponse(e, "search", function (entitiesAndCustomObject, exceptionOccured) {
-            // at this stage exceptionOccured is always null and don't need to be processed in any specific way;
+        self.processResponse(e, "search", function (entitiesAndCustomObject, exceptionOccurred) {
+            // at this stage exceptionOccurred is always null and don't need to be processed in any specific way;
             // this is because [Criteria]EntityAutocompletionResource wraps found entities only into successful result;
             // in case of unexpected exception, resultant representation is processed in _processSearcherError;
             // please see tg-entity-binder-behavior._processResponse for more details
