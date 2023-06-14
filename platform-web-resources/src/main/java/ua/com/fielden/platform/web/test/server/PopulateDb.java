@@ -242,6 +242,9 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgCompoundEntity filteredEntity2 = save(new_(TgCompoundEntity.class, "FILTERED2").setActive(true).setDesc("Description for TgCompoundEntity entity, for which TgCompoundEntityDetail is filtered."));
         save(new_composite(TgCompoundEntityChild.class, filteredEntity2, new Date()).setDesc("Description for filtered TgCompoundEntityChild entity."));
         
+        final TgCompoundEntity test1 = save(new_(TgCompoundEntity.class, "1TEST").setActive(true).setDesc("1TEST (1TEST detail)"));
+        save(new_composite(TgCompoundEntityChild.class, test1, new Date()).setDesc("Description for TgCompoundEntityChild entity of 1TEST."));
+        
         LOGGER.info("\tPopulating messages...");
         final Map<String, TgMachine> machines = new HashMap<>();
         try {
