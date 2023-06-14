@@ -1,5 +1,9 @@
 package ua.com.fielden.platform.sample.domain.compound.ui_actions.producers;
 
+import static java.lang.String.format;
+import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
+
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.entity.AbstractProducerForOpenEntityMasterAction;
@@ -26,7 +30,17 @@ public class OpenTgCompoundEntityMasterActionProducer extends AbstractProducerFo
     @Override
     @Authorise(OpenTgCompoundEntityMasterAction_CanOpen_Token.class)
     protected OpenTgCompoundEntityMasterAction provideDefaultValues(final OpenTgCompoundEntityMasterAction openAction) {
-        return super.provideDefaultValues(openAction);
+        if (masterEntityEmpty() && selectedEntitiesEmpty()) {
+            // '+' action on entity centre;
+            // we deliberately provide NEWXX key for produced entity to be able to immediately save it (see https://github.com/fieldenms/tg/issues/1992)
+            final TgCompoundEntity entity = co(entityType).new_();
+            entity.setKey("NEW" + format("%02d", co(entityType).count(select(TgCompoundEntity.class).where().prop(KEY).like().val("NEW%").model())));
+            entity.setDesc(format("%s (%s detail)", entity.getKey(), entity.getKey()));
+            openAction.setKey(entity);
+            return openAction;
+        } else {
+            return super.provideDefaultValues(openAction);
+        }
     }
 
 }
