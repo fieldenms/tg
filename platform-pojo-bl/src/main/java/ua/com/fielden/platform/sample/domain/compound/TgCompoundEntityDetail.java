@@ -33,6 +33,8 @@ public class TgCompoundEntityDetail extends AbstractPersistentEntity<TgCompoundE
     public static final String ENTITY_TITLE = entityTitleAndDesc.getKey();
     public static final String ENTITY_DESC = entityTitleAndDesc.getValue();
 
+    // for one-2-one relationships always return the description of the main entity
+    // this is why we need to redefine the desc property for this one-2-one entity in order to be able to mutate it independently for Web UI testing purposes.
     @IsProperty
     @MapTo
     private String desc;
