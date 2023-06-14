@@ -263,6 +263,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
                .withTopPanelStyle(ofNullable(envTopPanelColour), ofNullable(envWatermarkText), ofNullable(envWatermarkCss));
 
         // Add entity centres
+        MoreDataForDeleteEntityWebUiConfig.register(injector(), configApp());
         final TgCompoundEntityWebUiConfig tgCompoundEntityWebUiConfig = TgCompoundEntityWebUiConfig.register(injector(), configApp());
         final EntityActionConfig mkTgCompoundEntityLocator = mkLocator(configApp(), injector(), TgCompoundEntityLocator.class, "tgCompoundEntity", "color: #0d4b8a");
 
@@ -286,7 +287,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 shortcut("alt+d").
                                 build())
                         .addProp("this").also()
-                        .addProp("desc")
+                        .addEditableProp("desc")
+                        .addPrimaryAction(EDIT_ACTION.mkAction(TgDeletionTestEntity.class))
                         // .addProp("additionalProp")
                         .build(), injector(), null);
         configApp().addCentre(deletionTestCentre);
