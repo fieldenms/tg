@@ -263,7 +263,15 @@ const TgSelectionCriteriaBehaviorImpl = {
         /** A promise pointing to the last (resolved or otherwise) entities refresh call. */
         _refreshPromiseInProgress: {
             type: Object
+        },
+
+        /**
+         * Callback for updating _centreDirty with new value. Can be bound to child elements, e.g. activatable autocompleters that update 'autocomplete active only' option.
+         */
+        _updateCentreDirty: {
+            type: Function
         }
+
     },
 
     /**
@@ -282,6 +290,10 @@ const TgSelectionCriteriaBehaviorImpl = {
         this.currentState = "EDIT";
 
         this.staleCriteriaMessage = null;
+
+        self._updateCentreDirty = newCentreDirty => {
+            this._centreDirty = newCentreDirty;
+        };
 
         self._processRunnerResponse = function (e) {
             self._processResponse(e, "run", function (entityAndCustomObject, exceptionOccured) {
@@ -437,11 +449,23 @@ const TgSelectionCriteriaBehaviorImpl = {
             this.fire('tg-config-uuid-before-change', { newConfigUuid: newConfigUuid, configUuid: configUuid });
             delete this.loadCentreFreezed;
             this.configUuid = customObject.configUuid;
+            if (newConfigUuid !== configUuid) {
+                this._resetAutocompleterState(); // need to reset autocompleter states when moving from one configuration to another
+            }
         }
         if (typeof customObject.preferredView !== 'undefined') {
             this.preferredView = customObject.preferredView;
         }
         this.userName = customObject.userName;
+    },
+
+    /**
+     * Clears '_activeOnly' autocompleter state for all autocompleters in this selection criteria.
+     */
+    _resetAutocompleterState: function () {
+        Array.from(this.shadowRoot.querySelectorAll('tg-entity-editor')).forEach(autocompleter => {
+            autocompleter._activeOnly = null;
+        });
     },
 
     _configUuidChanged: function (newConfigUuid, oldConfigUuid) {

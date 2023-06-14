@@ -3,7 +3,9 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import '/resources/polymer/@polymer/iron-selector/iron-selector.js';
 
-import '/resources/polymer/@polymer/paper-button/paper-button.js';
+import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
+import '/resources/images/tg-icons.js';
+import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/paper-item/paper-item.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
 
@@ -72,19 +74,6 @@ const template = html`
             background-color: #E1F5FE;
         }
 
-        paper-button {
-            color: var(--paper-light-blue-500);
-            --paper-button-flat-focus-color: var(--paper-light-blue-50);
-        }
-        paper-button:hover {
-            background: var(--paper-light-blue-50);
-        }
-
-        paper-button[disabled] {
-            color: var(--paper-blue-grey-500);
-            background: var(--paper-blue-grey-50);
-        }
-
         .additional-prop {
             font-size: x-small;
             min-width: 150px;
@@ -120,7 +109,7 @@ const template = html`
         }
 
         .toolbar {
-            padding: 0 10px 10px;
+            padding: 0 3px 3px;
             height: auto;
             position: relative;
             overflow: hidden;
@@ -128,7 +117,26 @@ const template = html`
             flex-shrink: 0;
         }
         .toolbar-content > * {
-            margin-top: 8px;
+            margin-top: 3px;
+        }
+        paper-icon-button {
+            border-radius: 50%;
+            color: var(--paper-grey-700);
+        }
+        paper-icon-button[active-button] {
+            border-style: solid;
+            border-width: 2px;
+        }
+        .counter {
+            width: 24px;
+            height: 24px;
+            padding: 8px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: bold;
+            line-height: 24px;
+            color: var(--paper-blue-300);
+            cursor: default;
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
@@ -149,11 +157,13 @@ const template = html`
     </div>
     <div class="toolbar layout horizontal wrap">
         <div class="toolbar-content layout horizontal center">
-            <paper-button tooltip-text="Load more matching values, if any" on-tap="_loadMore" id="loadMoreButton" disabled$="[[!enableLoadMore]]">More</paper-button>
+            <paper-icon-button tooltip-text="Load more matching values, if any" on-tap="_loadMore" id="loadMoreButton" disabled$="[[!enableLoadMore]]" icon="tg-icons:expand-all"></paper-icon-button>
+            <paper-icon-button tooltip-text$="[[_tooltipForActiveOnlyButton(_activeOnly)]]" on-tap="_changeActiveOnly" hidden$="[[_isHiddenActiveOnlyButton(_activeOnly)]]" icon="tg-icons:playlist-remove" active-button$="[[_activeOnly]]"></paper-icon-button>
         </div>
         <div class="toolbar-content layout horizontal center" style="margin-left:auto">
-            <paper-button tooltip-text="Discard and close" on-tap="_close">Cancel</paper-button>
-            <paper-button tooltip-text="Accept selected" on-tap="_acceptValues">Ok</paper-button>
+            <div class="counter" hidden$="[[_isHiddenSelectedValuesCounter(multi, selectedValues)]]" tooltip-text$="[[_tooltipForSelectedValuesCounter(selectedValues)]]">[[_calcSelectedValuesCounter(selectedValues)]]</div>
+            <paper-icon-button tooltip-text="Discard and close" on-tap="_close" icon="cancel"></paper-icon-button>
+            <paper-icon-button tooltip-text="Accept selected" on-tap="_acceptValues" icon="check-circle"></paper-icon-button>
         </div>
     </div>`;
 
@@ -255,7 +265,21 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
             loadMore: {
                 type: Function
             },
-    
+
+            /**
+             * Indicates whether 'active only' values should be found in this autocompleter.
+             */
+            _activeOnly: {
+                type: Object // 'null' for non-activatable or for autocompleter on entity master, or otherwise true / false; also it is 'null' in the beginning where 'active only' parameter was not yet retrieved
+            },
+
+            /**
+             * A function to change _activeOnly. It is assigned in tg-entity-editor.
+             */
+            changeActiveOnly: {
+                type: Function
+            },
+
             /**
              * Controls if buton MORE is enabled.
              */
@@ -292,6 +316,30 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         tearDownEvent(e);
     }
 
+    /**
+     * Function, bound to 'active only' toggle button. Starts process of toggling this option through tg-entity-editor's '_changeActiveOnly' function.
+     */
+    _changeActiveOnly (e) {
+        this.changeActiveOnly(!this._activeOnly);
+        tearDownEvent(e);
+    }
+
+    /**
+     * Calculates invisibility of 'active only' toggle button (i.e. invisible on masters and for non-activatable values).
+     */
+    _isHiddenActiveOnlyButton (_activeOnly) {
+        return _activeOnly === null;
+    }
+
+    /**
+     * Calculates corresponding tooltip based on an action, that will be performed on tap of 'active only' toggle button.
+     */
+    _tooltipForActiveOnlyButton (_activeOnly) {
+        return _activeOnly === null ? '' // button is invisible
+             : _activeOnly === true ? 'Include inactive values'
+             : 'Exclude inactive values';
+    }
+
     _close (e) {
         this.close();
         tearDownEvent(e);
@@ -305,15 +353,19 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
     clearSelection () {
         this._selectedIndex = 0;
         this._keyBoardNavigationReady = false;
-        this.$.selector.selectedItem = null;
+        if (this.$) { // in some cases children of this entity editor result may not be built yet
+            this.$.selector.selectedItem = null;
+        }
         this.selectedValues = {};
 
         while (this.pop('_values')) {}
 
-        if (this.multi === true) {
-            this.$.selector.selectedValues = [];
-        } else {
-            this.$.selector.selected = '';
+        if (this.$) { // in some cases children of this entity editor result may not be built yet
+            if (this.multi === true) {
+                this.$.selector.selectedValues = [];
+            } else {
+                this.$.selector.selected = '';
+            }
         }
     }
 
@@ -462,6 +514,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
 
         const value = event.detail.item.getAttribute("value");
         this.selectedValues[value] = this._values.find(obj => obj.key === value);
+        this.selectedValues = { ...this.selectedValues }; // re-set a shallow copy to trigger Polymer events
     }
 
     _itemDeselected (event) {
@@ -470,6 +523,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
 
         const value = event.detail.item.getAttribute("value");
         delete this.selectedValues[value];
+        this.selectedValues = { ...this.selectedValues }; // re-set a shallow copy to trigger Polymer events
     }
 
     /**
@@ -479,7 +533,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
     focusItemWithIndex (index) {
         this._selectedIndex = index;
         const id = this._makeId(index);
-        const paperItem = this.shadowRoot.querySelector("#" + id);
+        const paperItem = this.shadowRoot && this.shadowRoot.querySelector("#" + id);
         if (paperItem) {
             paperItem.scrollIntoView({block: "center", inline: "center", behavior: "smooth"});
             paperItem.focus();
@@ -619,6 +673,29 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         }
         return klass;
     }
+
+    /**
+     * Calculates value for 'selected values counter'.
+     */
+    _calcSelectedValuesCounter (selectedValues) {
+        return Object.keys(selectedValues).length;
+    }
+
+    /**
+     * Calculates tooltip for 'selected values counter', showing comma-separated values.
+     */
+    _tooltipForSelectedValuesCounter (selectedValues) {
+        const tooltipText = Object.keys(selectedValues).join(', ');
+        return tooltipText ? '<b>' + tooltipText + '</b>' : '';
+    }
+
+    /**
+     * Calculates invisibility of 'selected values counter'.
+     */
+    _isHiddenSelectedValuesCounter (multi, selectedValues) {
+        return !multi || Object.keys(selectedValues).length === 0;
+    }
+
 }
 
 customElements.define('tg-entity-editor-result', TgEntityEditorResult);

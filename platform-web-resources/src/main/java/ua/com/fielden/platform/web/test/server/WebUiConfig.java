@@ -271,6 +271,7 @@ public class WebUiConfig extends AbstractWebUiConfig {
         TgStopWebUiConfig.register(injector(), configApp());
         TgMachineRealtimeMonitorWebUiConfig.register(injector(), configApp());
         TgPolygonWebUiConfig.register(injector(), configApp());
+        MoreDataForDeleteEntityWebUiConfig.register(injector(), configApp());
         final TgCompoundEntityWebUiConfig tgCompoundEntityWebUiConfig = TgCompoundEntityWebUiConfig.register(injector(), configApp());
         final EntityActionConfig mkTgCompoundEntityLocator = mkLocator(configApp(), injector(), TgCompoundEntityLocator.class, "tgCompoundEntity", "color: #0d4b8a");
 
@@ -294,7 +295,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                                 shortcut("alt+d").
                                 build())
                         .addProp("this").also()
-                        .addProp("desc")
+                        .addEditableProp("desc")
+                        .addPrimaryAction(EDIT_ACTION.mkAction(TgDeletionTestEntity.class))
                         // .addProp("additionalProp")
                         .build(), injector(), null);
         configApp().addCentre(deletionTestCentre);

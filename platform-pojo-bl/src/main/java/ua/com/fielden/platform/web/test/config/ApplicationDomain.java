@@ -20,6 +20,7 @@ import ua.com.fielden.platform.sample.domain.EntityOne;
 import ua.com.fielden.platform.sample.domain.EntityThree;
 import ua.com.fielden.platform.sample.domain.EntityTwo;
 import ua.com.fielden.platform.sample.domain.ExportAction;
+import ua.com.fielden.platform.sample.domain.MoreDataForDeleteEntity;
 import ua.com.fielden.platform.sample.domain.TgBogie;
 import ua.com.fielden.platform.sample.domain.TgBogieClass;
 import ua.com.fielden.platform.sample.domain.TgBogieLocation;
@@ -161,6 +162,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class);
         add(TgOpenTrippleDecDetails.class);
         add(OtherEntity.class);
+        add(MoreDataForDeleteEntity.class);
 
         add(TgMessage.class);
         add(TgMessageMap.class);
@@ -219,7 +221,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem.class);
         add(TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem.class);
         add(TgFuelType.class);
-        
+
         add(TgEntityStringKey.class);
         add(TgEntityBooleanKey.class);
         add(TgEntityDateKey.class);
@@ -230,17 +232,17 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgEntityCompositeBooleanKey.class);
         add(TgEntityTwoEntityKeys.class);
         add(TgEntityBigDecimalKey.class);
-        
+
         add(TgWebApiEntity.class);
         add(TgWebApiEntitySyntheticSingle.class);
         add(TgWebApiEntitySyntheticMulti.class);
-        
+
         add(TgUnionHolder.class);
         add(TgUnion.class);
         add(TgUnionType1.class);
         add(TgUnionType2.class);
         add(TgUnionCommonType.class);
-        
+
         add(MakeCompletedAction.class);
     }
 

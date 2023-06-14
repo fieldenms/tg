@@ -275,6 +275,16 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
                     fail(message);
                 } catch (final DomainTreeException e) {
                 }
+                try {
+                    dtm().getFirstTick().getAutocompleteActiveOnly(MasterEntity.class, name);
+                    fail(message);
+                } catch (final DomainTreeException e) {
+                }
+                try {
+                    dtm().getFirstTick().setAutocompleteActiveOnly(MasterEntity.class, name, true);
+                    fail(message);
+                } catch (final DomainTreeException e) {
+                }
 
                 // SECOND TICK
 
@@ -401,6 +411,27 @@ public class CentreDomainTreeManagerTest extends AbstractDomainTreeManagerTest {
                 }
                 try {
                     dtm().getFirstTick().setAndBefore(MasterEntity.class, name, true);
+                    fail(message);
+                } catch (final DomainTreeException e) {
+                }
+            }
+        }, "booleanProp", "stringProp", "simpleEntityProp", "bigDecimalProp");
+    }
+
+    @Test
+    public void activatable_related_actions_cause_exceptions_for_non_activatable_types_of_properties() {
+        final String message = "Non-activatable property should cause DomainTreeException exception for activatable-related logic.";
+        allLevels(new IAction() {
+            @Override
+            public void action(final String name) {
+                // FIRST TICK
+                try {
+                    dtm().getFirstTick().getAutocompleteActiveOnly(MasterEntity.class, name);
+                    fail(message);
+                } catch (final DomainTreeException e) {
+                }
+                try {
+                    dtm().getFirstTick().setAutocompleteActiveOnly(MasterEntity.class, name, true);
                     fail(message);
                 } catch (final DomainTreeException e) {
                 }
