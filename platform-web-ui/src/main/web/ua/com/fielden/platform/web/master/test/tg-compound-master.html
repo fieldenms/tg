@@ -318,6 +318,32 @@
                 });
             });
 
+            test('tapping property action opens compound master with detail menu item and fetches detail entity and updates dialog title', function (done) {
+                // 1. retrieve 2. save OpenTgCompoundEntityMasterAction
+                // 1. retrieve 2. save TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem
+                // 1. retrieve         TgCompoundEntityDetail
+                centre.retrieve().then(() => centre.run()).then(() => {
+                    addListener('tg-entity-received', event => {
+                        const entity = event.detail;
+                        setTimeout(() => { // do the listener on microtask once _postEntityReceived and other retrieve / validate / save code is completed
+                            if (entity.type()._simpleClassName() === 'OpenTgCompoundEntityMasterAction') { // both retrieval and save here
+                                assertPersistedWithKey(entity.get('key'), '1TEST');
+                                assert.strictEqual(entity.get('sectionTitle'), '1TEST: 1TEST (1TEST detail)');
+                                assert.strictEqual(entity.get('menuToOpen'), 'ua.com.fielden.platform.sample.domain.compound.master.menu.actions.TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem');
+                            } else if (entity.type()._simpleClassName() === 'TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem') { // both retrieval and save here
+                                assertPersistedWithKey(entity.get('key'), '1TEST');
+                            } else if (entity.type()._simpleClassName() === 'TgCompoundEntityDetail') { // retrieval only
+                                assertPersistedWithDesc(entity, '1TEST detail');
+                                done();
+                            }
+                        });
+                    });
+                    const propAction = centre.shadowRoot.querySelector('tg-ui-action[element-alias="tg-OpenTgCompoundEntityMasterAction-master_1_PROP"]');
+                    propAction.currentEntity = () => centre.$.egi.entities[0];
+                    propAction._run();
+                });
+            });
+
         });
 
         suite('NEW case', function () {
