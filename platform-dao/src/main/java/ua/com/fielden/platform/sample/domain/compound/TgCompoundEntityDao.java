@@ -1,13 +1,11 @@
 package ua.com.fielden.platform.sample.domain.compound;
 
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 
 import com.google.inject.Inject;
 
-import fielden.test_app.close_leave.ITgCloseLeaveExampleDetail;
-import fielden.test_app.close_leave.TgCloseLeaveExample;
-import fielden.test_app.close_leave.TgCloseLeaveExampleDetail;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
@@ -49,6 +47,12 @@ public class TgCompoundEntityDao extends CommonEntityDao<TgCompoundEntity> imple
             final ITgCompoundEntityDetail coDetail = co$(TgCompoundEntityDetail.class);
             final TgCompoundEntityDetail detailEntity = (TgCompoundEntityDetail) coDetail.new_().setKey(savedEntity).setDesc(savedEntity.getKey() + " detail");
             coDetail.save(detailEntity);
+            // Also create and save an instance of child entity (only for NEWXX entities)
+            if (savedEntity.getKey().startsWith("NEW")) {
+                final ITgCompoundEntityChild coChild = co$(TgCompoundEntityChild.class);
+                final TgCompoundEntityChild childEntity = (TgCompoundEntityChild) coChild.new_().setTgCompoundEntity(savedEntity).setDate(new Date()).setDesc(savedEntity.getKey() + " child");
+                coChild.save(childEntity);
+            }
         }
         return savedEntity;
     }
