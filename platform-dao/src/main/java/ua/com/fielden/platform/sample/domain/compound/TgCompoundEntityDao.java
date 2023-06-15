@@ -47,7 +47,8 @@ public class TgCompoundEntityDao extends CommonEntityDao<TgCompoundEntity> imple
             final ITgCompoundEntityDetail coDetail = co$(TgCompoundEntityDetail.class);
             final TgCompoundEntityDetail detailEntity = (TgCompoundEntityDetail) coDetail.new_().setKey(savedEntity).setDesc(savedEntity.getKey() + " detail");
             coDetail.save(detailEntity);
-            // Also create and save an instance of child entity (only for NEWXX entities)
+            // Also create and save an instance of child entity (only for NEWXX entities);
+            // this is used in web tests for 'NEW case' where we save entity and move to 'children' menu item.
             if (savedEntity.getKey().startsWith("NEW")) {
                 final ITgCompoundEntityChild coChild = co$(TgCompoundEntityChild.class);
                 final TgCompoundEntityChild childEntity = (TgCompoundEntityChild) coChild.new_().setTgCompoundEntity(savedEntity).setDate(new Date()).setDesc(savedEntity.getKey() + " child");

@@ -1440,8 +1440,8 @@ Polymer({
     },
 
     /**
-     * Refits this dialog on async after 50 millis and focuses its input in case where 'binding-entity-appered' event has occurred earlier than dialog .
-     * A named function was used in favoir of an anonymous one in order to avoid accumulation of event listeners.
+     * Refits this dialog on async after 50 millis and focuses its input in case where 'binding-entity-appered' event has occurred earlier than dialog.
+     * A named function was used in favour of an anonymous one in order to avoid accumulation of event listeners.
      */
     _refit: function() {
         this.async(function() {

@@ -33,15 +33,18 @@ public class OpenTgCompoundEntityMasterActionProducer extends AbstractProducerFo
     @Authorise(OpenTgCompoundEntityMasterAction_CanOpen_Token.class)
     protected OpenTgCompoundEntityMasterAction provideDefaultValues(final OpenTgCompoundEntityMasterAction openAction) {
         if (masterEntityEmpty() && selectedEntitiesEmpty()) {
-            // '+' action on entity centre;
+            // custom '+' action on entity centre, that is used in web tests for 'NEW case';
             // we deliberately provide NEWXX key for produced entity to be able to immediately save it (see https://github.com/fieldenms/tg/issues/1992)
             final TgCompoundEntity entity = co(entityType).new_();
-            entity.setKey("NEW" + format("%02d", co(entityType).count(select(TgCompoundEntity.class).where().prop(KEY).like().val("NEW%").model())));
+            final int currentNEWXXentitiesCount = co(entityType).count(select(TgCompoundEntity.class).where().prop(KEY).like().val("NEW%").model());
+            entity.setKey("NEW" + format("%02d", currentNEWXXentitiesCount));
             entity.setDesc(format("%s (%s detail)", entity.getKey(), entity.getKey()));
             openAction.setKey(entity);
             return openAction;
         } else {
             final OpenTgCompoundEntityMasterAction opener = super.provideDefaultValues(openAction);
+            // custom prop action on entity centre's 'desc' property, that is used in web tests (tg-compound-master.html) for 'PERSISTED case';
+            // we deliberately provide non-Main menu item to test different menu item activation on compound master opening
             if (chosenPropertyEqualsTo(DESC)) {
                 opener.setMenuToOpen(TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem.class);
             }

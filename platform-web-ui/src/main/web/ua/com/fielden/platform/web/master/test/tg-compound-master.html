@@ -22,30 +22,51 @@
     <script type="module">
         import '/centre_ui/fielden.test_app.main.menu.compound.MiTgCompoundEntity';
 
+        /**
+         * Finds dialog containing compound master.
+         */
         const dialog = () => document.body
             .querySelector('tg-custom-action-dialog');
-        
+
+        /**
+         * Finds entity master for compound master opener functional entity.
+         */
         const openerMaster = () => dialog().shadowRoot
             .querySelector('tg-OpenTgCompoundEntityMasterAction-master');
 
+        /**
+         * Finds entity master for compound master main entity.
+         */
         const entityMaster = () => openerMaster().shadowRoot
             .querySelector('tg-master-menu-item-section[data-route="TgCompoundEntityMaster_OpenMain_MenuItem"]').shadowRoot
             .querySelector('tg-tgcompoundentitymaster_openmain_menuitem-master').shadowRoot
             .querySelector('tg-tgcompoundentity-master');
 
+        /**
+         * Finds entity master for compound master detail entity.
+         */
         const detailMaster = () => openerMaster().shadowRoot
             .querySelector('tg-master-menu-item-section[data-route="TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem"]').shadowRoot
             .querySelector('tg-tgcompoundentitymaster_openTgCompoundEntityDetail_menuitem-master').shadowRoot
             .querySelector('tg-tgcompoundentitydetail-master');
 
+        /**
+         * Finds master menu for compound master.
+         */
         const masterMenu = () => openerMaster().shadowRoot
             .querySelector('tg-master-menu');
 
+        /**
+         * Saves entity master by tapping SAVE button. Saving through button is important because corresponding tg-action sends postal events (see createEntityActionThenCallback in 'tg-entity-master-closing-utils').
+         */
         const save = (master) => {
             const saveButton = master.shadowRoot.querySelector('tg-action[role="save"]');
             saveButton._asyncRun();
         };
 
+        /**
+         * Changes some property 'prop' on entity 'master' with new 'val' value; then triggers validation and saving.
+         */
         const changePropAndSave = (master, prop, val) => {
             const edProperty = master.$[`editor_4_${prop}`];
             edProperty._editingValue = val;
@@ -53,6 +74,9 @@
             save(master);
         };
 
+        /**
+         * Creates standalone entity centre with type TgCompoundEntity for testing. Need to remove _entityReceived callback in its action dialog to facilitate events propagation.
+         */
         const createCentre = () => {
             const centre = fixture('CentreFixture');
             const old_showDialog = centre._showDialog;
@@ -67,6 +91,9 @@
             return centre;
         }
 
+        /**
+         * Checks 'entity' on existence and persistence.
+         */
         const assertPersisted = (entity) => {
             assert.isOk(entity);
             let entityStr;
@@ -76,28 +103,46 @@
             assert.isNumber(entity.get('id'), `Entity${entityStr ? ' [' + entityStr + ']' : ''} with type [${entity.type()._simpleClassName()}] is not persisted; its id is not a number.`);
         };
 
-        const assertPersistedWithKey = (entity, expectedKey) => {
+        /**
+         * Checks 'entity' on existence and persistence; also check its 'key' property.
+         */
+         const assertPersistedWithKey = (entity, expectedKey) => {
             assertPersisted(entity);
             assert.strictEqual(entity.get('key'), expectedKey);
         };
 
-        const assertPersistedWithDesc = (entity, expectedDesc) => {
+        /**
+         * Checks 'entity' on existence and persistence; also check its 'desc' property.
+         */
+         const assertPersistedWithDesc = (entity, expectedDesc) => {
             assertPersisted(entity);
             assert.strictEqual(entity.get('desc'), expectedDesc);
         };
 
+        /**
+         * Checks 'entity' on existence and persistence; also check its 'date' property.
+         */
         const assertPersistedWithDate = (entity) => {
             assertPersisted(entity);
             assert.isNumber(entity.get('date'));
         };
 
+        /**
+         * Contains testing listeners for <body>. Each entry is a pair [name; listener].
+         */
         const listeners = [];
 
+        /**
+         * Adds listener to <body> and registers it in 'listeners'.
+         */
         const addListener = (name, listener) => {
             listeners.push([name, listener]);
             document.body.addEventListener(name, listener);
         };
 
+        /**
+         * Performs cleanup of 'listeners' and closes compound master dialog forcibly.
+         */
         const cleanUp = () => {
             dialog().closeDialog(true);
             listeners.forEach(nameAndListener => document.body.removeEventListener(nameAndListener[0], nameAndListener[1]));
@@ -110,6 +155,9 @@
             setup(() => centre = createCentre());
             teardown(cleanUp);
 
+            /**
+             * Invokes EDIT action on first entity in entity centre (1TEST).
+             */
             const editFirstEntity = () => {
                 const editAction = centre.$.egi.$.primary_action_selector.assignedNodes()[0].actions[0];
                 editAction.currentEntity = () => centre.$.egi.entities[0];
@@ -348,11 +396,17 @@
             setup(() => centre = createCentre());
             teardown(cleanUp);
 
+            /**
+             * Invokes NEW top action in entity centre, which opens compound master with NEWXX key'ed entity.
+             */
             const createNewEntity = () => {
                 const newAction = centre.shadowRoot.querySelector('tg-ui-action[element-alias="tg-OpenTgCompoundEntityMasterAction-master_0_TOP_LEVEL"]');
                 newAction._run();
             };
 
+            /**
+             * Checks 'entity' on existence and persistence.
+             */
             const assertNew = (entity) => {
                 assert.isOk(entity);
                 let entityStr;
@@ -362,16 +416,25 @@
                 assert.isNull(entity.get('id'), `Entity${entityStr ? ' [' + entityStr + ']' : ''} with type [${entity.type()._simpleClassName()}] is not new; its id is not null.`);
             };
 
+            /**
+             * Checks 'entity' on existence and persistence; also check its 'key' property.
+             */
             const assertNewWithKey = (entity, expectedKey) => {
                 assertNew(entity);
                 assert.strictEqual(entity.get('key'), expectedKey);
             };
 
+            /**
+             * Checks 'entity' on existence and persistence; also check its 'desc' property.
+             */
             const assertNewWithDesc = (entity, expectedDesc) => {
                 assertNew(entity);
                 assert.strictEqual(entity.get('desc'), expectedDesc);
             };
 
+            /**
+             * Checks 'entity' on existence and persistence; also check its 'date' property.
+             */
             const assertNewWithDate = (entity) => {
                 assertNew(entity);
                 assert.isNumber(entity.get('date'));

@@ -31,10 +31,11 @@ public class TgCompoundEntityDetailDao extends CommonEntityDao<TgCompoundEntityD
     @Authorise(TgCompoundEntityDetail_CanSave_Token.class)
     public TgCompoundEntityDetail save(final TgCompoundEntityDetail entity) {
         final TgCompoundEntityDetail result = super.save(entity);
-        if (entity.getId() != null && (entity.getDesc() != null && entity.getDesc().endsWith(" detail_CHANGED") /* 1TEST and NEWXX */ || "1TEST detail".equals(entity.getDesc()))) {
-            final TgCompoundEntity masterEntity = co$(TgCompoundEntity.class).findById(entity.getId(), co$(TgCompoundEntity.class).getFetchProvider().fetchModel());
-            masterEntity.setDesc(format("%s (%s)", masterEntity.getKey(), entity.getDesc()));
-            co$(TgCompoundEntity.class).save(masterEntity);
+        // the following logic is used in web tests for 'PERSISTED / NEW cases' where we change detail entity and expect for compound master title (sectionTitle) to be updated
+        if (entity.getId() != null && (entity.getDesc() != null && entity.getDesc().endsWith(" detail_CHANGED") /* 1TEST and NEWXX */ || "1TEST detail".equals(entity.getDesc()))) { // if we add / remove '_CHANGED' part for detail entity description ...
+            final TgCompoundEntity masterEntity = co$(TgCompoundEntity.class).findById(entity.getId(), co$(TgCompoundEntity.class).getFetchProvider().fetchModel()); // ... then fetch master entity ...
+            masterEntity.setDesc(format("%s (%s)", masterEntity.getKey(), entity.getDesc())); // ... and change its description accordingly ... 
+            co$(TgCompoundEntity.class).save(masterEntity); // ... and save master entity.
         }
         return result;
     }
