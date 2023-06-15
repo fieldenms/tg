@@ -63,30 +63,30 @@
             return centre;
         }
 
+        const assertPersistedWithKey = (entity, expectedKey) => {
+            assert.isOk(entity);
+            assert.isNumber(entity.get('id'));
+            assert.strictEqual(entity.get('key'), expectedKey);
+        };
+
+        const assertPersistedWithDesc = (entity, expectedDesc) => {
+            assert.isOk(entity);
+            assert.isNumber(entity.get('id'));
+            assert.strictEqual(entity.get('desc'), expectedDesc);
+        };
+
+        const assertPersistedWithDate = (entity) => {
+            assert.isOk(entity);
+            assert.isNumber(entity.get('id'));
+            assert.isNumber(entity.get('date'));
+        };
+
         suite('PERSISTED case', function () {
             let centre;
 
             setup(function () {
                 centre = createCentre();
             });
-
-            const assertPersistedWithKey = (entity, expectedKey) => {
-                assert.isOk(entity);
-                assert.isNumber(entity.get('id'));
-                assert.strictEqual(entity.get('key'), expectedKey);
-            };
-
-            const assertPersistedWithDesc = (entity, expectedDesc) => {
-                assert.isOk(entity);
-                assert.isNumber(entity.get('id'));
-                assert.strictEqual(entity.get('desc'), expectedDesc);
-            };
-
-            const assertPersistedWithDate = (entity) => {
-                assert.isOk(entity);
-                assert.isNumber(entity.get('id'));
-                assert.isNumber(entity.get('date'));
-            };
 
             test('tapping edit action opens compound master with main menu item and fetches entity and updates dialog title', function (done) {
                 // 1. retrieve 2. save OpenTgCompoundEntityMasterAction
@@ -393,6 +393,49 @@
                                 dialog().closeDialog(true);
                                 document.body.removeEventListener('tg-entity-received', listener);
                                 done();
+                            }
+                        });
+                    };
+                    document.body.addEventListener('tg-entity-received', listener);
+                    const newAction = centre.shadowRoot.querySelector('tg-ui-action[element-alias="tg-OpenTgCompoundEntityMasterAction-master_0_TOP_LEVEL"]');
+                    newAction._run();
+                });
+            });
+
+            test('changing NEWXX entity key and saving it leads to dialog title update', function (done) {
+                let key, openerCount = 0, entityCount = 0;
+                // PREPARE
+                // 1. retrieve 2. save OpenTgCompoundEntityMasterAction
+                // 1. retrieve 2. save TgCompoundEntityMaster_OpenMain_MenuItem
+                // 1. retrieve         TgCompoundEntity
+
+                // CHANGE => ASSERT 1 => ASSERT 2
+                // 2. validate 3. save TgCompoundEntity
+                // 3. save             OpenTgCompoundEntityMasterAction
+                centre.retrieve().then(() => centre.run()).then(() => {
+                    const listener = event => {
+                        const entity = event.detail;
+                        setTimeout(() => { // do the listener on microtask once _postEntityReceived and other retrieve / validate / save code is completed
+                            if (entity.type()._simpleClassName() === 'OpenTgCompoundEntityMasterAction') {
+                                openerCount++;
+                                if (openerCount === 1) {
+                                    key = entity.get('key').get('key');
+                                } else if (openerCount === 3) {
+                                    assertPersistedWithKey(entity.get('key'), `${key}_CHANGED`); // => ASSERT 2
+                                    assert.strictEqual(entity.get('sectionTitle'), `${key}_CHANGED: ${key} (${key} detail)`);
+                                    assert.strictEqual(entity.get('menuToOpen'), null);
+                                    assert.strictEqual(entityCount, 3);
+                                    document.body.removeEventListener('tg-entity-received', listener);
+                                    dialog().closeDialog(true);
+                                    done();
+                                }
+                            } else if (entity.type()._simpleClassName() === 'TgCompoundEntity') {
+                                entityCount++;
+                                if (entityCount === 1) {
+                                    changePropAndSave(entityMaster(), 'key', `${key}_CHANGED`); // CHANGE =>
+                                } else if (entityCount === 3) {
+                                    assertPersistedWithKey(entity, `${key}_CHANGED`); // => ASSERT 1 =>
+                                }
                             }
                         });
                     };
