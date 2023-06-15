@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.sample.domain.compound;
 
+import static java.lang.String.format;
+
 import com.google.inject.Inject;
 
 import ua.com.fielden.platform.dao.CommonEntityDao;
@@ -29,9 +31,9 @@ public class TgCompoundEntityDetailDao extends CommonEntityDao<TgCompoundEntityD
     @Authorise(TgCompoundEntityDetail_CanSave_Token.class)
     public TgCompoundEntityDetail save(final TgCompoundEntityDetail entity) {
         final TgCompoundEntityDetail result = super.save(entity);
-        if (entity.getId() != null && ("1TEST detail_CHANGED".equals(entity.getDesc()) || "1TEST detail".equals(entity.getDesc()))) {
+        if (entity.getId() != null && (entity.getDesc() != null && entity.getDesc().endsWith(" detail_CHANGED") /* 1TEST and NEWXX */ || "1TEST detail".equals(entity.getDesc()))) {
             final TgCompoundEntity masterEntity = co$(TgCompoundEntity.class).findById(entity.getId(), co$(TgCompoundEntity.class).getFetchProvider().fetchModel());
-            masterEntity.setDesc("1TEST (" + entity.getDesc() + ")");
+            masterEntity.setDesc(format("%s (%s)", masterEntity.getKey(), entity.getDesc()));
             co$(TgCompoundEntity.class).save(masterEntity);
         }
         return result;
