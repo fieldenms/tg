@@ -3,8 +3,10 @@ package ua.com.fielden.platform.web.resources.webui;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
+import static ua.com.fielden.platform.web.resources.webui.CriteriaEntityAutocompletionResource.LOAD_MORE_DATA_KEY;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
 
@@ -108,7 +110,7 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
             final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchStringAndDataPageNo._1, searchStringAndDataPageNo._2);
 
             // logger.debug("ENTITY_AUTOCOMPLETION_RESOURCE: search finished.");
-            return restUtil.listJsonRepresentationWithoutIdAndVersion(entities);
+            return restUtil.listJsonRepresentationWithoutIdAndVersion(entities, linkedMapOf(t2(LOAD_MORE_DATA_KEY, searchStringAndDataPageNo._2 > 1)));
         }, restUtil);
     }
 

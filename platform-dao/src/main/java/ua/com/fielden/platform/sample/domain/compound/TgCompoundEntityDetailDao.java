@@ -28,7 +28,13 @@ public class TgCompoundEntityDetailDao extends CommonEntityDao<TgCompoundEntityD
     @SessionRequired
     @Authorise(TgCompoundEntityDetail_CanSave_Token.class)
     public TgCompoundEntityDetail save(final TgCompoundEntityDetail entity) {
-        return super.save(entity);
+        final TgCompoundEntityDetail result = super.save(entity);
+        if (entity.getId() != null && ("1TEST detail_CHANGED".equals(entity.getDesc()) || "1TEST detail".equals(entity.getDesc()))) {
+            final TgCompoundEntity masterEntity = co$(TgCompoundEntity.class).findById(entity.getId(), co$(TgCompoundEntity.class).getFetchProvider().fetchModel());
+            masterEntity.setDesc("1TEST (" + entity.getDesc() + ")");
+            co$(TgCompoundEntity.class).save(masterEntity);
+        }
+        return result;
     }
 
     @Override
