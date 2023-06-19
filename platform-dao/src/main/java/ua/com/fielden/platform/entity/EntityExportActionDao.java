@@ -124,7 +124,7 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
             final String altSheetTitle = getEntityTitleAndDesc(selectionCrit.getEntityClass()).getKey();
             try {
                 validateSheetName(altSheetTitle);
-            } catch (final IllegalArgumentException e) {
+            } catch (final Exception e) {
                 return getDefaultEntityTitleAndDesc(selectionCrit.getEntityClass()).getKey();
             }
             return altSheetTitle;
