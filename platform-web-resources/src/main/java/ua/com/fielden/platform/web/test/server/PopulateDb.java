@@ -265,6 +265,12 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         final TgCompoundEntity test1 = save(new_(TgCompoundEntity.class, "1TEST").setActive(true).setDesc("1TEST (1TEST detail)"));
         save(new_composite(TgCompoundEntityChild.class, test1, new Date()).setDesc("Description for TgCompoundEntityChild entity of 1TEST."));
 
+        final TgPersistentCompositeEntity ceWith0 = new_composite(TgPersistentCompositeEntity.class, savedDefaultEntity, 0);
+        final TgPersistentCompositeEntity compWith0Saved = save(ceWith0);
+
+        final TgPersistentEntityWithProperties entWith0CompKeyToBeSaved = new_(TgPersistentEntityWithProperties.class, "KEY12").setStringProp("ok").setIntegerProp(43).setEntityProp(savedDefaultEntity).setBigDecimalProp(new BigDecimal(23).setScale(5)).setDateProp(new DateTime(960000L).toDate()).setBooleanProp(true).setCompositeProp(compWith0Saved).setDesc("Description for entity with key 12.").setRequiredValidatedProp(30);
+        save(entWith0CompKeyToBeSaved);
+
         final User _demo2 = co$(User.class).save(new_(User.class, "DEMO2").setBasedOnUser(su).setEmail("DEMO2@demoapp.com").setActive(true));
         final User demo2 = coUser.resetPasswd(_demo2, _demo2.getKey()).getKey();
         save(new_composite(UserAndRoleAssociation.class, demo2, admin));
@@ -286,12 +292,6 @@ public class PopulateDb extends DomainDrivenDataPopulation {
         } catch (final Exception e) {
             throw new IllegalStateException(e);
         }
-
-        final TgPersistentCompositeEntity ceWith0 = new_composite(TgPersistentCompositeEntity.class, savedDefaultEntity, 0);
-        final TgPersistentCompositeEntity compWith0Saved = save(ceWith0);
-
-        final TgPersistentEntityWithProperties entWith0CompKeyToBeSaved = new_(TgPersistentEntityWithProperties.class, "KEY12").setStringProp("ok").setIntegerProp(43).setEntityProp(savedDefaultEntity).setBigDecimalProp(new BigDecimal(23).setScale(5)).setDateProp(new DateTime(960000L).toDate()).setBooleanProp(true).setCompositeProp(compWith0Saved).setDesc("Description for entity with key 12.").setRequiredValidatedProp(30);
-        save(entWith0CompKeyToBeSaved);
     }
 
     private void populateGraphQlData() {
