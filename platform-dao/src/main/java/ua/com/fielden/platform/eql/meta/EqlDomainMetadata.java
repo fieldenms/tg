@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.meta;
 
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
+import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSISTENT;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PURE;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
@@ -12,9 +13,13 @@ import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.genera
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.stream.Collectors;
@@ -26,17 +31,18 @@ import ua.com.fielden.platform.entity.AbstractUnionEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation.TableStructForBatchInsertion;
 import ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo;
+import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.ExpressionModel;
 import ua.com.fielden.platform.eql.exceptions.EqlMetadataGenerationException;
 import ua.com.fielden.platform.eql.meta.utils.DependentCalcPropsOrder;
 import ua.com.fielden.platform.eql.stage0.EntQueryGenerator;
 import ua.com.fielden.platform.eql.stage1.TransformationContext1;
+import ua.com.fielden.platform.eql.stage1.operands.queries.SourceQuery1;
 import ua.com.fielden.platform.eql.stage1.sources.Source1BasedOnSubqueries;
-import ua.com.fielden.platform.eql.stage1.sources.YieldInfoNode;
-import ua.com.fielden.platform.eql.stage1.sources.YieldInfoNodesGenerator;
-import ua.com.fielden.platform.eql.stage2.etc.Yields2;
+import ua.com.fielden.platform.eql.stage2.operands.queries.SourceQuery2;
 import ua.com.fielden.platform.eql.stage3.Table;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
+import ua.com.fielden.platform.types.tuples.T2;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class EqlDomainMetadata {
@@ -45,6 +51,7 @@ public class EqlDomainMetadata {
     private final ConcurrentMap<String, Table> tables = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, TableStructForBatchInsertion> tableStructsForBatchInsertion = new ConcurrentHashMap<>();
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo;
+    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, List<SourceQuery1>> seModels;
     private final ConcurrentMap<String, List<String>> entityTypesDependentCalcPropsOrder = new ConcurrentHashMap<>();
     private final EntQueryGenerator gen;
     private final EqlEntityMetadataGenerator eemg;
@@ -58,6 +65,7 @@ public class EqlDomainMetadata {
         this.dbVersion = dbVersion;
         this.eemg = new EqlEntityMetadataGenerator(hibTypesDefaults, hibTypesInjector, entityTypes, dbVersion);
         this.entityPropsMetadata = new ConcurrentHashMap<>(entityTypes.size());
+        this.seModels = new ConcurrentHashMap<>(entityTypes.size());
         this.gen = new EntQueryGenerator(null, null, null, emptyMap());
 
         entityTypes.parallelStream().forEach(entityType -> {
@@ -76,18 +84,27 @@ public class EqlDomainMetadata {
             }
         });
 
-        domainInfo = entityPropsMetadata.entrySet().stream().collect(Collectors.toConcurrentMap(k -> k.getKey(), k -> new EntityInfo<>(k.getKey(), k.getValue().typeInfo.category))); 
+        domainInfo = entityPropsMetadata.entrySet().stream().collect(Collectors.toConcurrentMap(k -> k.getKey(), k -> new EntityInfo<>(k.getKey(), k.getValue().typeInfo.category, true))); 
         domainInfo.values().stream().forEach(ei -> addProps(ei, domainInfo, entityPropsMetadata.get(ei.javaType()).props()));
 
+        
+        // generating models and dependencies info for SE types (UE types also as they are implicit SE types)
+        final Map<Class<? extends AbstractEntity<?>>, Set<Class<? extends AbstractEntity<?>>>> seDependencies = new HashMap<>();
         for (final EqlEntityMetadata el : entityPropsMetadata.values()) {
             if (el.typeInfo.category == QUERY_BASED) {
-                try {
-                    final EntityInfo<? extends AbstractEntity<?>> enhancedEntityInfo = generateEnhancedEntityInfoForSyntheticType(el.typeInfo, el.typeInfo.entityType);
-                    domainInfo.put(enhancedEntityInfo.javaType(), enhancedEntityInfo);
-                } catch (final Exception e) {
-                    e.printStackTrace();
-                    throw new EqlMetadataGenerationException("Couldn't generate enhanced entity info for synthetic entity [" + el.typeInfo.entityType + "] due to: " + e);
-                }
+                final T2<List<SourceQuery1>, Set<Class<? extends AbstractEntity<?>>>> res = generateModelsAndDependenciesForSyntheticType(el.typeInfo);
+                seModels.put(el.typeInfo.entityType, res._1);
+                seDependencies.put(el.typeInfo.entityType, res._2.stream().filter(cl -> EntityUtils.isSyntheticEntityType(cl)).collect(Collectors.toSet()));
+            }
+        }
+
+        for (Class<? extends AbstractEntity<?>> seType : sortTopologically(seDependencies)) {
+            try {
+                final EntityInfo<? extends AbstractEntity<?>> enhancedEntityInfo = generateEnhancedEntityInfoForSyntheticType(seType, seModels.get(seType));
+                domainInfo.put(enhancedEntityInfo.javaType(), enhancedEntityInfo);
+            } catch (final Exception e) {
+                e.printStackTrace();
+                throw new EqlMetadataGenerationException("Couldn't generate enhanced entity info for synthetic entity [" + seType + "] due to: " + e);
             }
         }
 
@@ -97,6 +114,40 @@ public class EqlDomainMetadata {
             }
         }
     }
+    
+    private static List<Class<? extends AbstractEntity<?>>> sortTopologically(final Map<Class<? extends AbstractEntity<?>>, Set<Class<? extends AbstractEntity<?>>>> mapOfDependencies) {
+        final List<Class<? extends AbstractEntity<?>>> sorted = new ArrayList<>();
+
+        while (!mapOfDependencies.isEmpty()) {
+            Class<? extends AbstractEntity<?>> nextSorted = null;
+            // let's find the first item without dependencies and regard it as "sorted"
+            for (final Entry<Class<? extends AbstractEntity<?>>, Set<Class<? extends AbstractEntity<?>>>> el : mapOfDependencies.entrySet()) {
+                if (el.getValue().isEmpty()) {
+                    nextSorted = el.getKey();
+                    break;
+                }
+            }
+
+            sorted.add(nextSorted);
+            mapOfDependencies.remove(nextSorted); // removing "sorted" item from map of remaining items
+
+            // removing "sorted" item from dependencies of remaining items 
+            for (final Entry<Class<? extends AbstractEntity<?>>, Set<Class<? extends AbstractEntity<?>>>> el : mapOfDependencies.entrySet()) {
+                el.getValue().remove(nextSorted);
+            }
+        }
+
+        return sorted;
+    }
+    
+    private <T extends AbstractEntity<?>> T2<List<SourceQuery1>, Set<Class<? extends AbstractEntity<?>>>> generateModelsAndDependenciesForSyntheticType(final EntityTypeInfo<T> parentInfo) {
+        final List<EntityResultQueryModel<T>> models = new ArrayList<>();
+        models.addAll(parentInfo.entityModels);
+        models.addAll(parentInfo.unionEntityModels);
+        final List<SourceQuery1> queries = models.stream().map(model -> gen.generateAsSyntheticEntityQuery(model, parentInfo.entityType)).collect(toList());
+        final Set<Class<? extends AbstractEntity<?>>> result = queries.stream().map(qry -> qry.collectEntityTypes()).flatMap(Set::stream).collect(Collectors.toSet());
+        return T2.t2(queries, result);
+    }
 
     /**
      * Only properties that are present in SE yields are preserved.
@@ -104,11 +155,10 @@ public class EqlDomainMetadata {
      * @param parentInfo
      * @return
      */
-    private <T extends AbstractEntity<?>> EntityInfo<?> generateEnhancedEntityInfoForSyntheticType(final EntityTypeInfo<T> parentInfo, final Class<? extends AbstractEntity<?>> actualType) {
+    private <T extends AbstractEntity<?>> EntityInfo<?> generateEnhancedEntityInfoForSyntheticType(final Class<? extends AbstractEntity<?>> actualType, final List<SourceQuery1> queries) {
         final TransformationContext1 context = new TransformationContext1(this);
-        final Yields2 yields = gen.generateAsSyntheticEntityQuery(parentInfo.entityModels.get(0), parentInfo.entityType).transform(context).yields;
-        final Map<String, YieldInfoNode> yieldInfoNodes = YieldInfoNodesGenerator.generate(yields.getYields());
-        return Source1BasedOnSubqueries.produceEntityInfoForDefinedEntityType(this, yieldInfoNodes, actualType/*parentInfo.entityType*/);
+        final List<SourceQuery2> transformedQueries = queries.stream().map(m -> m.transform(context)).collect(toList());
+        return Source1BasedOnSubqueries.produceEntityInfoForEntityType(this, transformedQueries, actualType, true);
     }
 
     public List<String> getCalcPropsOrder(final Class<? extends AbstractEntity<?>> entityType) {
@@ -125,7 +175,7 @@ public class EqlDomainMetadata {
                 final ExpressionModel expr = el.expressionModel;
 
                 if (isUnionEntityType(javaType)) {
-                    final EntityInfo<? extends AbstractUnionEntity> ef = new EntityInfo<>((Class<? extends AbstractUnionEntity>) javaType, UNION);
+                    final EntityInfo<? extends AbstractUnionEntity> ef = new EntityInfo<>((Class<? extends AbstractUnionEntity>) javaType, UNION, false); // TODO need to move props to holder and not create EntityInfo for this
                     for (final EqlPropertyMetadata sub : el.subitems()) {
                         if (sub.expressionModel == null) {
                             ef.addProp(new EntityTypePropInfo(sub.name, allEntitiesInfo.get(sub.javaType), sub.hibType, false, null, sub.implicit));
@@ -177,9 +227,10 @@ public class EqlDomainMetadata {
             return existing;
         }
         final EntityTypeInfo<?> eti = getEntityTypeInfo(type);
+        
         final List<EqlPropertyMetadata> propsMetadatas = eemg.generate(eti, type).props();
         //entityPropsMetadata.put(type, t2(eti.category, propsMetadatas));
-        final EntityInfo<?> created = new EntityInfo<>(type, eti.category);
+        final EntityInfo<?> created = new EntityInfo<>(type, eti.category, true);
         //domainInfo.put(type, created);
         addProps(created, domainInfo, propsMetadatas);
 
@@ -191,10 +242,10 @@ public class EqlDomainMetadata {
         if (existing != null) {
             return existing;
         }
-
+        
         final EntityTypeInfo<?> eti = getEntityTypeInfo(type);
         if (eti.category == QUERY_BASED) {
-            return generateEnhancedEntityInfoForSyntheticType(eti, type);
+            return generateEnhancedEntityInfoForSyntheticType(type, seModels.get(DynamicEntityClassLoader.getOriginalType(type)));
         } else {
             return getEntityInfo(type);
         }
