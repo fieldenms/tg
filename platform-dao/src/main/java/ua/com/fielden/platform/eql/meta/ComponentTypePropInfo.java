@@ -19,13 +19,6 @@ public class ComponentTypePropInfo<T> extends AbstractPropInfo<T> {
     }
     
     @Override
-    public AbstractPropInfo<T> cloneRenamed(final String newName) {
-        final ComponentTypePropInfo<T> result = new ComponentTypePropInfo<T>(newName, javaType, hibType);
-        result.props.putAll(props);
-        return result;
-    }
-    
-    @Override
     public AbstractPropInfo<T> cloneWithoutExpression() {
         final ComponentTypePropInfo<T> result = new ComponentTypePropInfo<T>(name, javaType, hibType);
         for (final Entry<String, AbstractPropInfo<?>> entry : props.entrySet()) {
