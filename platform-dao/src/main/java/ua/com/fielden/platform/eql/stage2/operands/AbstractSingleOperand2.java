@@ -16,24 +16,28 @@ public abstract class AbstractSingleOperand2 {
     }
     
     public AbstractSingleOperand2(final Set<Class<?>> types) {
+        this.type = getTypeHighestPrecedence(types);
+    }
+    
+    public static Class<?> getTypeHighestPrecedence(final Set<Class<?>> types) {
         if (types.contains(Date.class)) {
-            this.type = Date.class;
+            return Date.class;
         } else if (types.contains(BigDecimal.class)) {
-            this.type = BigDecimal.class;
+            return BigDecimal.class;
         } else if (types.contains(Long.class)) {
-            this.type = Long.class;
+            return Long.class;
         } else if (types.contains(Integer.class)){
-            this.type = Integer.class;
+            return Integer.class;
         } else if (types.contains(int.class)){
-            this.type = int.class;
+            return int.class;
         } else if (types.contains(String.class)){
-            this.type = String.class;
+            return String.class;
         } else if (types.size() == 1) {
             final Class<?> singleType = types.iterator().next(); 
             if (isEntityType(singleType)) {
-                this.type = singleType;
+                return singleType;
             } else if (singleType == boolean.class || singleType == Boolean.class){
-                this.type = singleType;
+                return singleType;
             } else {
                 throw new EqlException("Can't determine type with highest precedence for such set :" + types);    
             }
@@ -41,7 +45,7 @@ public abstract class AbstractSingleOperand2 {
             throw new EqlException("Can't determine type with highest precedence for such set :" + types);
         }
     }
-    
+
     public Class<?> type() {
         return type;
     }
