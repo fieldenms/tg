@@ -108,9 +108,4 @@ public class DomainMetadataUtils {
         final ISubsequentCompletedAndYielded<PT> initialModel = firstUnionProp.equals(currProp) ? startWith.yield().prop(ID).as(firstUnionProp.getName()) : startWith.yield().val(null).as(firstUnionProp.getName()); 
         return unionProps.stream().skip(1).reduce(initialModel, (m, f) -> f.equals(currProp) ? m.yield().prop(ID).as(f.getName()) : m.yield().val(null).as(f.getName()), (m1, m2) -> {throw new UnsupportedOperationException("Combining is not applicable here.");});
     }
-    
-    public static String getOriginalEntityTypeFullName(final String entityTypeFullClassName) {
-        final int nameEnhancementStartIndex = entityTypeFullClassName.indexOf("$$");
-        return  nameEnhancementStartIndex == -1 ? entityTypeFullClassName : entityTypeFullClassName.substring(0, nameEnhancementStartIndex);
-    }
 }
