@@ -1127,7 +1127,7 @@ Polymer({
 
     hasAction: function (entity, column) {
         const entityIdx = this.findEntityIndex(entity);
-        const actionIdx = this.propertyActionIndices && this.propertyActionIndices[entityIdx] && this.propertyActionIndices[entityIdx][this.getRealProperty(column)];
+        const actionIdx = this.propertyActionIndices && this.propertyActionIndices[entityIdx] && this.propertyActionIndices[entityIdx][column.collectionalProperty || column.property];
         return entity && (
             (column.customActions && column.customActions.length > 0 && column.customActions[actionIdx])
             || this.isHyperlinkProp(entity, column) === true
@@ -1366,7 +1366,7 @@ Polymer({
         // Each tapping overrides this function to provide proper context of execution.
         // This override should occur on every 'run' of the action so it is mandatory to use 'tg-property-column.runAction' public API.
         const entityIndex = this.findEntityIndex(entity);
-        const actionIndex = this.propertyActionIndices && this.propertyActionIndices[entityIndex] && this.propertyActionIndices[entityIndex][this.getRealProperty(column)];
+        const actionIndex = this.propertyActionIndices && this.propertyActionIndices[entityIndex] && this.propertyActionIndices[entityIndex][column.collectionalProperty || column.property];
         if (!column.runAction(this._currentEntity(entity), actionIndex)) {
             // if the clicked property is a hyperlink and there was no custom action associted with it
             // then let's open the linked resources
@@ -2106,7 +2106,7 @@ Polymer({
         try {
             let tooltip = this.getValueTooltip(entity, column);
             const entityIdx = this.findEntityIndex(entity);
-            const actionIdx = this.propertyActionIndices && this.propertyActionIndices[entityIdx] && this.propertyActionIndices[entityIdx][this.getRealProperty(column)];
+            const actionIdx = this.propertyActionIndices && this.propertyActionIndices[entityIdx] && this.propertyActionIndices[entityIdx][column.collectionalProperty || column.property];
             const columnDescPart = this.getDescTooltip(entity, column);
             const actionDescPart = this.getActionTooltip(entity, column, actions[actionIdx]);
             tooltip += (columnDescPart && tooltip && "<br><br>") + columnDescPart;
