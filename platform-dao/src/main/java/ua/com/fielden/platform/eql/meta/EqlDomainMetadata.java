@@ -7,7 +7,6 @@ import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PURE;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.UNION;
 import static ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo.getEntityTypeInfo;
-import static ua.com.fielden.platform.eql.meta.DomainMetadataUtils.getOriginalEntityTypeFullName;
 import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.generateTable;
 import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.generateTableWithPropColumnInfo;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
@@ -37,6 +36,7 @@ import ua.com.fielden.platform.eql.stage1.sources.YieldInfoNode;
 import ua.com.fielden.platform.eql.stage1.sources.YieldInfoNodesGenerator;
 import ua.com.fielden.platform.eql.stage2.etc.Yields2;
 import ua.com.fielden.platform.eql.stage3.Table;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.utils.EntityUtils;
 
 public class EqlDomainMetadata {
@@ -111,9 +111,9 @@ public class EqlDomainMetadata {
         return Source1BasedOnSubqueries.produceEntityInfoForDefinedEntityType(this, yieldInfoNodes, actualType/*parentInfo.entityType*/);
     }
 
-    public List<String> getCalcPropsOrder(final String entityTypeName) {
+    public List<String> getCalcPropsOrder(final Class<? extends AbstractEntity<?>> entityType) {
         // it's assumed that there will be no generated types with newly added dependent calc props
-        return entityTypesDependentCalcPropsOrder.get(getOriginalEntityTypeFullName(entityTypeName));
+        return entityTypesDependentCalcPropsOrder.get(DynamicEntityClassLoader.getOriginalType(entityType).getName());
     }
      
     private <T extends AbstractEntity<?>> void addProps(final EntityInfo<T> entityInfo, final Map<Class<? extends AbstractEntity<?>>, EntityInfo<?>> allEntitiesInfo, final Collection<EqlPropertyMetadata> entityPropsMetadatas) {

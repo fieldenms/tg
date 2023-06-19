@@ -100,7 +100,7 @@ public class PathsToTreeTransformer {
             }
         }
         
-        final List<String> orderedCalcPropsForType = isUnionEntityType(sourceForCalcPropResolution.sourceType()) || sourceForCalcPropResolution.sourceType().equals(EntityAggregates.class) ? emptyList() : domainInfo.getCalcPropsOrder(sourceForCalcPropResolution.sourceType().getName());
+        final List<String> orderedCalcPropsForType = isUnionEntityType(sourceForCalcPropResolution.sourceType()) || sourceForCalcPropResolution.sourceType().equals(EntityAggregates.class) ? emptyList() : domainInfo.getCalcPropsOrder(sourceForCalcPropResolution.sourceType());
 
         final List<ImplicitNode> orderedNodes = orderImplicitNodes(listOfNodes, orderedCalcPropsForType);
 

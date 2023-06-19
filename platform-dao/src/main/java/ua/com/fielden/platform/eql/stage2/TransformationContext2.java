@@ -3,17 +3,18 @@ package ua.com.fielden.platform.eql.stage2;
 import static java.util.Collections.emptyList;
 import static java.util.Collections.emptyMap;
 import static java.util.Collections.unmodifiableMap;
-import static ua.com.fielden.platform.eql.meta.DomainMetadataUtils.getOriginalEntityTypeFullName;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.eql.stage2.operands.Expression2;
 import ua.com.fielden.platform.eql.stage2.sources.ImplicitNode;
 import ua.com.fielden.platform.eql.stage3.Table;
 import ua.com.fielden.platform.eql.stage3.sources.ISource3;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.types.tuples.T2;
 
 public class TransformationContext2 {
@@ -42,8 +43,8 @@ public class TransformationContext2 {
         this.paramId = paramId;
     }
 
-    public Table getTable(final String sourceFullClassName) {
-        return tablesAndSourceChildren.tables().get(getOriginalEntityTypeFullName(sourceFullClassName));
+    public Table getTable(final Class<? extends AbstractEntity<?>> sourceType) {
+        return tablesAndSourceChildren.tables().get(DynamicEntityClassLoader.getOriginalType(sourceType).getName());
     }
 
     public Map<String, Object> getParamValues() {

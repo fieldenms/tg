@@ -9,7 +9,6 @@ import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSI
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PURE;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.UNION;
-import static ua.com.fielden.platform.eql.meta.DomainMetadataUtils.getOriginalEntityTypeFullName;
 import static ua.com.fielden.platform.reflection.AnnotationReflector.getAnnotation;
 import static ua.com.fielden.platform.reflection.Finder.getKeyMembers;
 import static ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader.isGenerated;
@@ -32,6 +31,7 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.annotation.MapEntityTo;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
+import ua.com.fielden.platform.reflection.asm.impl.DynamicEntityClassLoader;
 import ua.com.fielden.platform.reflection.asm.impl.DynamicTypeNamingService;
 import ua.com.fielden.platform.reflection.exceptions.ReflectionException;
 import ua.com.fielden.platform.types.tuples.T2;
@@ -107,7 +107,7 @@ public class EntityTypeInfo <ET extends AbstractEntity<?>> {
     }
 
     public static <T extends AbstractEntity<?>> EntityTypeInfo<T> getEntityTypeInfo(final Class<T> type) {
-        final EntityTypeInfo<T> existing = (EntityTypeInfo<T>) entityTypesInfos.get(getOriginalEntityTypeFullName(type.getName()));
+        final EntityTypeInfo<T> existing = (EntityTypeInfo<T>) entityTypesInfos.get(DynamicEntityClassLoader.getOriginalType(type).getName());
         if (existing != null) {
             return existing;
         } else {
