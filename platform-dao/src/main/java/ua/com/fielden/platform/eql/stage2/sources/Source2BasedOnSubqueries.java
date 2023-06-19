@@ -42,6 +42,7 @@ public class Source2BasedOnSubqueries extends AbstractSource2 implements ISource
         final int prime = 31;
         int result = super.hashCode();
         result = prime * result + models.hashCode();
+        result = prime * result + (isSyntheticEntity ? 1231 : 1237);
         return result;
     }
 
@@ -61,7 +62,7 @@ public class Source2BasedOnSubqueries extends AbstractSource2 implements ISource
         
         final Source2BasedOnSubqueries other = (Source2BasedOnSubqueries) obj;
 
-        return Objects.equals(models, other.models);
+        return Objects.equals(models, other.models) && Objects.equals(isSyntheticEntity, other.isSyntheticEntity);
     }
 
     @Override
