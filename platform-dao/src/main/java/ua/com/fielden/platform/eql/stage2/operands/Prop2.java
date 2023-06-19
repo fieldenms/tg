@@ -2,6 +2,7 @@ package ua.com.fielden.platform.eql.stage2.operands;
 
 import static java.util.Collections.emptySet;
 import static java.util.Collections.unmodifiableList;
+import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 
 import java.util.List;
@@ -89,6 +90,10 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
     
     @Override
     public boolean isNotNullableEntity() {
+        if (ID.equals(name)) {
+            return true; // TODO this is temporary fix to be able to treat such primitive prop correctly until distinction between usual 1ong and PK long is introduced.
+        }
+        
         for (final AbstractPropInfo<?> abstractPropInfo : path) {
             if (!isNotNullableEntity(abstractPropInfo)) {
                 return false;
