@@ -261,7 +261,7 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static Source2BasedOnSubqueries source(final EntityInfo<?> entityInfo, final Integer id, final SourceQuery2... queries) {
-        return new Source2BasedOnSubqueries(Arrays.asList(queries), null, id, entityInfo);
+        return new Source2BasedOnSubqueries(Arrays.asList(queries), null, id, entityInfo, false);
     }
 
     protected static ResultQuery2 qryCountAll(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions) {
@@ -297,7 +297,7 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static SubQuery2 subqry(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions, final Yields2 yields, final Class<? extends AbstractEntity<?>> resultType) {
-        return new SubQuery2(qc2(sources, conditions, yields), resultType);
+        return new SubQuery2(qc2(sources, conditions, yields), resultType, false);
     }
 
     protected static TypelessSubQuery2 typelessSubqry(final IJoinNode2<? extends IJoinNode3> sources, final Conditions2 conditions) {
@@ -305,6 +305,6 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static SubQuery2 subqry(final IJoinNode2<? extends IJoinNode3> sources, final Yields2 yields, final Class<?> resultType) {
-        return new SubQuery2(qc2(sources, emptyConditions, yields), resultType);
+        return new SubQuery2(qc2(sources, emptyConditions, yields), resultType, false);
     }
 }

@@ -14,10 +14,12 @@ public class EntityInfo<T extends AbstractEntity<?>> implements IResolvable<T> {
     private final Class<T> javaType;
     private final SortedMap<String, AbstractPropInfo<?>> props = new TreeMap<>();
     private final EntityCategory category;
+    public final boolean isComprehensive; //indicates that all data-backed props from PE/SE are present
 
-    public EntityInfo(final Class<T> javaType, final EntityCategory category) {
+    public EntityInfo(final Class<T> javaType, final EntityCategory category, final boolean isComprehensive) {
         this.javaType = javaType;
         this.category = category;
+        this.isComprehensive = isComprehensive;
     }
 
     @Override
@@ -60,6 +62,7 @@ public class EntityInfo<T extends AbstractEntity<?>> implements IResolvable<T> {
         result = prime * result + category.hashCode();
         result = prime * result + javaType.hashCode();
         result = prime * result + props.keySet().hashCode();
+        result = prime * result + (isComprehensive ? 1231 : 1237);
         return result;
     }
 
@@ -75,6 +78,6 @@ public class EntityInfo<T extends AbstractEntity<?>> implements IResolvable<T> {
 
         final EntityInfo<?> other = (EntityInfo<?>) obj;
 
-        return Objects.equals(javaType, other.javaType) && Objects.equals(category, other.category) && Objects.equals(props.keySet(), other.props.keySet());
+        return Objects.equals(javaType, other.javaType) && Objects.equals(category, other.category) && Objects.equals(props.keySet(), other.props.keySet()) && isComprehensive == other.isComprehensive;
     }
 }

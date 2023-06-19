@@ -54,7 +54,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
 
         final SourceQuery2 vehSourceSubQry = srcqry(vehSources, vehConditions, vehYields);
         
-        final EntityInfo<EntityAggregates> entityInfo = new EntityInfo<>(EntityAggregates.class, QUERY_BASED);
+        final EntityInfo<EntityAggregates> entityInfo = new EntityInfo<>(EntityAggregates.class, QUERY_BASED, false);
         entityInfo.addProp(new PrimTypePropInfo<>("qty", null, INTEGER));
         
         final Source2BasedOnSubqueries qtyQrySource = source(entityInfo, 2, vehSourceSubQry);
@@ -98,7 +98,7 @@ public class QmToStage2TransformationTest extends EqlStage2TestCase {
 
         final SourceQuery2 vehSourceSubQry2 = srcqry(vehSources2, vehConditions2, vehYields2);
 
-        final EntityInfo<EntityAggregates> entityInfo = new EntityInfo<>(EntityAggregates.class, QUERY_BASED);
+        final EntityInfo<EntityAggregates> entityInfo = new EntityInfo<>(EntityAggregates.class, QUERY_BASED, false);
         entityInfo.addProp(new PrimTypePropInfo<>("qty", null, INTEGER));
         
         final Source2BasedOnSubqueries qtyQrySource = source(entityInfo, 3, vehSourceSubQry1, vehSourceSubQry2);
