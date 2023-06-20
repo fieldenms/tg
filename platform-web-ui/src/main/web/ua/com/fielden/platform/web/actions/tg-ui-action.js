@@ -762,7 +762,6 @@ Polymer({
         }
         this.requireSelectionCriteria = masterInfo.requireSelectionCriteria;
         this.requireSelectedEntities = masterInfo.requireSelectedEntities;
-        this.requireMasterEntity = masterInfo.requireMasterEntity;
         this.shouldRefreshParentCentreAfterSave = masterInfo.shouldRefreshParentCentreAfterSave;
     }
 
