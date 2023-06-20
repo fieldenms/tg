@@ -3,7 +3,6 @@ package ua.com.fielden.platform.eql.stage1.sources;
 import static java.util.Collections.emptySortedMap;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
-import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 import java.util.ArrayList;
@@ -53,7 +52,7 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
     }
 
     public static <T extends AbstractEntity<?>> EntityInfo<T> produceEntityInfoForEntityType(final EqlDomainMetadata domainInfo, final List<SourceQuery2> models, final Class<T> sourceType, final boolean isComprehensive) {
-        final EntityInfo<T> entityInfo = new EntityInfo<>(sourceType, QUERY_BASED, isComprehensive);
+        final EntityInfo<T> entityInfo = new EntityInfo<>(sourceType, isComprehensive);
         final SortedMap<String, AbstractPropInfo<?>> declaredProps = EntityAggregates.class.equals(sourceType) ? emptySortedMap() : domainInfo.getEntityInfo(sourceType).getProps();
         final Collection<YieldInfoNode> yieldInfoNodes = YieldInfoNodesGenerator.generate(models);
         for (final YieldInfoNode yield : yieldInfoNodes) {

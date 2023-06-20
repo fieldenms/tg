@@ -6,7 +6,6 @@ import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSISTENT;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PURE;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY_BASED;
-import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.UNION;
 import static ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo.getEntityTypeInfo;
 import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.generateTable;
 import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.generateTableWithPropColumnInfo;
@@ -84,7 +83,7 @@ public class EqlDomainMetadata {
             }
         });
 
-        domainInfo = entityPropsMetadata.entrySet().stream().collect(Collectors.toConcurrentMap(k -> k.getKey(), k -> new EntityInfo<>(k.getKey(), k.getValue().typeInfo.category, true))); 
+        domainInfo = entityPropsMetadata.entrySet().stream().collect(Collectors.toConcurrentMap(k -> k.getKey(), k -> new EntityInfo<>(k.getKey(), true))); 
         domainInfo.values().stream().forEach(ei -> addProps(ei, domainInfo, entityPropsMetadata.get(ei.javaType()).props()));
 
         
@@ -109,9 +108,7 @@ public class EqlDomainMetadata {
         }
 
         for (final EntityInfo<?> entityInfo : domainInfo.values()) {
-            if (entityInfo.getCategory() != UNION) {
-                entityTypesDependentCalcPropsOrder.put(entityInfo.javaType().getName(), DependentCalcPropsOrder.orderDependentCalcProps(this, gen, entityInfo));
-            }
+            entityTypesDependentCalcPropsOrder.put(entityInfo.javaType().getName(), DependentCalcPropsOrder.orderDependentCalcProps(this, gen, entityInfo));
         }
     }
     
@@ -175,7 +172,7 @@ public class EqlDomainMetadata {
                 final ExpressionModel expr = el.expressionModel;
 
                 if (isUnionEntityType(javaType)) {
-                    final EntityInfo<? extends AbstractUnionEntity> ef = new EntityInfo<>((Class<? extends AbstractUnionEntity>) javaType, UNION, false); // TODO need to move props to holder and not create EntityInfo for this
+                    final EntityInfo<? extends AbstractUnionEntity> ef = new EntityInfo<>((Class<? extends AbstractUnionEntity>) javaType, false); // TODO need to move props to holder and not create EntityInfo for this
                     for (final EqlPropertyMetadata sub : el.subitems()) {
                         if (sub.expressionModel == null) {
                             ef.addProp(new EntityTypePropInfo(sub.name, allEntitiesInfo.get(sub.javaType), sub.hibType, false, null, sub.implicit));
@@ -230,7 +227,7 @@ public class EqlDomainMetadata {
         
         final List<EqlPropertyMetadata> propsMetadatas = eemg.generate(eti, type).props();
         //entityPropsMetadata.put(type, t2(eti.category, propsMetadatas));
-        final EntityInfo<?> created = new EntityInfo<>(type, eti.category, true);
+        final EntityInfo<?> created = new EntityInfo<>(type, true);
         //domainInfo.put(type, created);
         addProps(created, domainInfo, propsMetadatas);
 
