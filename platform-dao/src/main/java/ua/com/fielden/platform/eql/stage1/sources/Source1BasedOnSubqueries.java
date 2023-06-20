@@ -7,6 +7,7 @@ import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -30,11 +31,30 @@ import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnSubqueries;
 public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubqueries> {
     private final List<SourceQuery1> models = new ArrayList<>();
     private final boolean isSyntheticEntity;
+    private final Class<? extends AbstractEntity<?>> sourceType;
 
-    public Source1BasedOnSubqueries(final List<SourceQuery1> models, final String alias, final Integer id, final boolean isSyntheticEntity) {
+    public Source1BasedOnSubqueries(final List<SourceQuery1> models, final String alias, final Integer id, final Class<? extends AbstractEntity<?>> syntheticEntityType) {
         super(alias, id);
-        this.isSyntheticEntity = isSyntheticEntity;
+        this.isSyntheticEntity = syntheticEntityType != null;
+        this.sourceType = determineSourceType(models, syntheticEntityType);
         this.models.addAll(models);
+    }
+
+    private static Class<? extends AbstractEntity<?>> determineSourceType(final List<SourceQuery1> models, final Class<? extends AbstractEntity<?>> syntheticEntityType) {
+        if (syntheticEntityType != null) {
+            return syntheticEntityType;
+        } else {
+            final Set<Class<? extends AbstractEntity<?>>> modelsResultTypes = new HashSet<>();
+            for (final SourceQuery1 model : models) {
+                modelsResultTypes.add(model.resultType);
+            }
+            
+            if (modelsResultTypes.size() != 1) {
+                throw new EqlStage1ProcessingException("Models of query source have different result types " + modelsResultTypes + ". While making select(..) or join(..)/leftJoin() from multiple models it should be ensured that they are of the same result type.");
+            }        
+
+            return modelsResultTypes.iterator().next();    
+        }
     }
     
     @Override
@@ -46,9 +66,7 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
     
     @Override
     public Class<? extends AbstractEntity<?>> sourceType() {
-        //TODO take into account all models
-        
-        return models.get(0).resultType;
+        return sourceType;
     }
 
     public static <T extends AbstractEntity<?>> EntityInfo<T> produceEntityInfoForEntityType(final EqlDomainMetadata domainInfo, final List<SourceQuery2> models, final Class<T> sourceType, final boolean isComprehensive) {

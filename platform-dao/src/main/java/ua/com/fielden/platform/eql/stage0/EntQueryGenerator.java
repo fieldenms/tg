@@ -57,15 +57,15 @@ public class EntQueryGenerator {
     }
 
     public <T extends AbstractEntity<?>> SourceQuery1 generateAsCorrelatedSourceQuery(final QueryModel<T> qryModel) {
-        return generateAsSourceQuery(qryModel, qryModel.getResultType(), true);
+        return generateAsSourceQuery(qryModel, true);
     }
         
-    public <T extends AbstractEntity<?>> SourceQuery1 generateAsUncorrelatedSourceQuery(final QueryModel<T> qryModel, final Class<T> resultType) {
-        return generateAsSourceQuery(qryModel, resultType, false);
+    public <T extends AbstractEntity<?>> SourceQuery1 generateAsUncorrelatedSourceQuery(final QueryModel<T> qryModel) {
+        return generateAsSourceQuery(qryModel, false);
     }
     
-    private <T extends AbstractEntity<?>> SourceQuery1 generateAsSourceQuery(final QueryModel<T> qryModel, final Class<T> resultType, final boolean isCorrelated) {
-        return new SourceQuery1(parseTokensIntoComponents(qryModel, null), resultType, isCorrelated);
+    private <T extends AbstractEntity<?>> SourceQuery1 generateAsSourceQuery(final QueryModel<T> qryModel, final boolean isCorrelated) {
+        return new SourceQuery1(parseTokensIntoComponents(qryModel, null), qryModel.getResultType(), isCorrelated);
     }
 
     public SubQuery1 generateAsSubquery(final QueryModel<?> qryModel) {

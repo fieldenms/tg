@@ -76,15 +76,15 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
     }
     
     private <T extends AbstractEntity<?>> JoinLeaf1 buildQrySourceBasedOnSyntheticEntityType(final Class<T> resultType, final String alias) {
-        final EntityTypeInfo<T> parentInfo = getEntityTypeInfo(resultType);
-        final List<EntityResultQueryModel<T>> models = new ArrayList<>();
+        final EntityTypeInfo<?> parentInfo = getEntityTypeInfo(resultType);
+        final List<EntityResultQueryModel<?>> models = new ArrayList<>();
         models.addAll(parentInfo.entityModels);
         models.addAll(parentInfo.unionEntityModels);
         final List<SourceQuery1> queries = new ArrayList<>();
-        for (final QueryModel<T> qryModel : models) {
-            queries.add(getQueryBuilder().generateAsUncorrelatedSourceQuery(qryModel, resultType));
+        for (final QueryModel<?> qryModel : models) {
+            queries.add(getQueryBuilder().generateAsUncorrelatedSourceQuery(qryModel));
         }
-        return new JoinLeaf1(new Source1BasedOnSubqueries(queries, alias, getQueryBuilder().nextSourceId(), true));
+        return new JoinLeaf1(new Source1BasedOnSubqueries(queries, alias, getQueryBuilder().nextSourceId(), resultType));
     }
     
     private Pair<TokenCategory, Object> buildResultForQrySourceBasedOnSubqueries() {
@@ -95,7 +95,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
             queries.add(getQueryBuilder().generateAsCorrelatedSourceQuery(qryModel));
         }
 
-        return pair(QRY_SOURCE, new JoinLeaf1(new Source1BasedOnSubqueries(queries, alias, getQueryBuilder().nextSourceId(), false)));
+        return pair(QRY_SOURCE, new JoinLeaf1(new Source1BasedOnSubqueries(queries, alias, getQueryBuilder().nextSourceId(), null)));
     }
 
     @Override
