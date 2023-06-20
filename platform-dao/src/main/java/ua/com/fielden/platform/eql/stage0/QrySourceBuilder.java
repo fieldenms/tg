@@ -84,7 +84,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
         for (final QueryModel<T> qryModel : models) {
             queries.add(getQueryBuilder().generateAsSyntheticEntityQuery(qryModel, resultType));
         }
-        return new JoinLeaf1(new Source1BasedOnSubqueries(alias, queries, getQueryBuilder().nextSourceId(), true));
+        return new JoinLeaf1(new Source1BasedOnSubqueries(queries, alias, getQueryBuilder().nextSourceId(), true));
     }
     
     private Pair<TokenCategory, Object> buildResultForQrySourceBasedOnSubqueries() {
@@ -95,7 +95,7 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
             queries.add(getQueryBuilder().generateAsSourceQuery(qryModel));
         }
 
-        return pair(QRY_SOURCE, new JoinLeaf1(new Source1BasedOnSubqueries(alias, queries, getQueryBuilder().nextSourceId(), false)));
+        return pair(QRY_SOURCE, new JoinLeaf1(new Source1BasedOnSubqueries(queries, alias, getQueryBuilder().nextSourceId(), false)));
     }
 
     @Override

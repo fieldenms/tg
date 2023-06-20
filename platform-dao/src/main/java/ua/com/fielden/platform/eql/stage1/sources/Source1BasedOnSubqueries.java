@@ -32,7 +32,7 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
     private final List<SourceQuery1> models = new ArrayList<>();
     private final boolean isSyntheticEntity;
 
-    public Source1BasedOnSubqueries(final String alias, final List<SourceQuery1> models, final Integer id, final boolean isSyntheticEntity) {
+    public Source1BasedOnSubqueries(final List<SourceQuery1> models, final String alias, final Integer id, final boolean isSyntheticEntity) {
         super(alias, id);
         this.isSyntheticEntity = isSyntheticEntity;
         this.models.addAll(models);
