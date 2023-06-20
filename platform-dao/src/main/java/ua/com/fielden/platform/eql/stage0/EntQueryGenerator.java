@@ -56,11 +56,11 @@ public class EntQueryGenerator {
         return new ResultQuery1(parseTokensIntoComponents(qm, orderModel), qm.getResultType(), fetchModel);
     }
 
-    public <T extends AbstractEntity<?>> SourceQuery1 generateAsSourceQuery(final QueryModel<T> qryModel) {
+    public <T extends AbstractEntity<?>> SourceQuery1 generateAsCorrelatedSourceQuery(final QueryModel<T> qryModel) {
         return generateAsSourceQuery(qryModel, qryModel.getResultType(), true);
     }
         
-    public <T extends AbstractEntity<?>> SourceQuery1 generateAsSyntheticEntityQuery(final QueryModel<T> qryModel, final Class<T> resultType) {
+    public <T extends AbstractEntity<?>> SourceQuery1 generateAsUncorrelatedSourceQuery(final QueryModel<T> qryModel, final Class<T> resultType) {
         return generateAsSourceQuery(qryModel, resultType, false);
     }
     
