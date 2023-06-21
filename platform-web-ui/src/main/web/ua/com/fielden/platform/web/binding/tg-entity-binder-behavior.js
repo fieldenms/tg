@@ -218,14 +218,13 @@ export const TgEntityBinderBehavior = {
         },
 
         /**
-         * This is the standard processor for 'core-response's and is applicable for all
+         * This is the standard processor for 'iron-response's and is applicable for all
          *   responses that contain java Result inside 'e.detail.response'.
          *
-         * In case when result is not successful (i.e. has 'ex' inside) the toast message is shown
+         * In case where result is not successful (i.e. has 'ex' inside) the toast message is shown
          *   and 'customErrorHandlerFor(result)' is invoked.
          *
-         * In case when result is successful -- 'customHandlerFor(result.instance)' is invoked.
-         *
+         * In case where result is successful -- 'customHandlerFor(result.instance)' is invoked.
          *
          * This is the function, that is designated for binding.
          */
@@ -234,14 +233,13 @@ export const TgEntityBinderBehavior = {
         },
 
         /**
-         * This is the standard processor for 'core-response's and is applicable for all
+         * This is the standard processor for 'iron-response's and is applicable for all
          *   responses that contain java Result inside 'e.detail.response'.
          *
-         * In case when result is not successful (i.e. has 'ex' inside) the toast message is shown
+         * In case where result is not successful (i.e. has 'ex' inside) the toast message is shown
          *   and 'customErrorHandlerFor(result)' is invoked.
          *
-         * In case when result is successful -- 'customHandlerFor(result.instance)' is invoked.
-         *
+         * In case where result is successful -- 'customHandlerFor(result.instance)' is invoked.
          *
          * This is the function, that is designated for binding.
          */
@@ -475,7 +473,7 @@ export const TgEntityBinderBehavior = {
                         }
                     }.bind(self);
                     xhr.onerror = function (e) {
-                        const msg = "Unknown error occured when sending request to download the attachment.";
+                        const msg = "Unknown error occurred when sending request to download the attachment.";
                         console.error(msg, e);
                         self._openToastForError(msg, msg + ' Request status: ' + xhr.status, true);
                     }.bind(self);
@@ -498,15 +496,15 @@ export const TgEntityBinderBehavior = {
             return this._reset(mph);
         }).bind(self);
 
-        self._provideExceptionOccured = (function (entity, exceptionOccured) {
-            if (exceptionOccured !== null && this._reflector().isEntity(entity)) {
-                entity._setExceptionOccured(exceptionOccured);
+        self._provideExceptionOccurred = (function (entity, exceptionOccurred) {
+            if (exceptionOccurred !== null && this._reflector().isEntity(entity)) {
+                entity._setExceptionOccurred(exceptionOccurred);
             }
         }).bind(self);
 
         self._processRetrieverResponse = function (e) {
-            self._processResponse(e, "retrieve", function (entityAndCustomObject, exceptionOccured) {
-                self._provideExceptionOccured(entityAndCustomObject[0], exceptionOccured);
+            self._processResponse(e, "retrieve", function (entityAndCustomObject, exceptionOccurred) {
+                self._provideExceptionOccurred(entityAndCustomObject[0], exceptionOccurred);
                 return self._postRetrievedDefault(entityAndCustomObject);
             });
         };
@@ -564,7 +562,7 @@ export const TgEntityBinderBehavior = {
             processResponseError(e, this._reflector(), this._serialiser(), customErrorHandlerFor, this.toaster);
         }).bind(self);
 
-        // calbacks, that will be bound by editor child elements:
+        // callbacks, that will be bound by editor child elements:
         self.validate = (function () {
             this.lastValidationAttemptPromise =  new Promise((resolve, reject) => {
                 const slf = this;
@@ -643,7 +641,7 @@ export const TgEntityBinderBehavior = {
             });
         }).bind(self);
 
-        // calbacks, that will potentially be augmented by tg-action child elements:
+        // callbacks, that will potentially be augmented by tg-action child elements:
         // 				retrieval:
         self._postRetrievedDefault = (function (entityAndCustomObject) {
             // console.timeEnd('actual-retrieval');
@@ -912,7 +910,7 @@ export const TgEntityBinderBehavior = {
                 const origValId = _originalBindingEntity['@' + propertyName + '_id'];
                 
                 // VERY IMPORTANT: the property is considered to be 'modified'
-                //                 in the case when its value does not equal to original value.
+                //                 in the case where its value does not equal to original value.
                 //
                 //                 The 'modified' property is marked by existence of 'val' sub-property.
                 //
