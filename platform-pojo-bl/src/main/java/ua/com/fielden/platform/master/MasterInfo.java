@@ -50,10 +50,6 @@ public class MasterInfo extends AbstractEntity<String> {
     private String requireSelectedEntities;
 
     @IsProperty
-    @Title("Require Master Entity")
-    private String requireMasterEntity;
-
-    @IsProperty
     @Title(value = "Entity Type")
     private String entityType;
 
@@ -104,16 +100,6 @@ public class MasterInfo extends AbstractEntity<String> {
 
     public String getEntityType() {
         return entityType;
-    }
-
-    @Observable
-    public MasterInfo setRequireMasterEntity(final String requireMasterEntity) {
-        this.requireMasterEntity = requireMasterEntity;
-        return this;
-    }
-
-    public String getRequireMasterEntity() {
-        return requireMasterEntity;
     }
 
     @Observable
