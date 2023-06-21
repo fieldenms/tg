@@ -121,7 +121,7 @@ const template = html`
         const week = [];
         const previousMonthDays = getDaysInPreviousMonth.bind(this)(year, month);
         let _i = 0;
-        // In case when the first day of the month is not a sanday then add 0 to the first days of the week.
+        // In case where the first day of the month is not a sunday then add 0 to the first days of the week.
         for (; _i < firstDay; _i++) {
             week.push({monthIncrementor: -1, day: -1 * (previousMonthDays - (firstDay - (_i + 1)))});
         }
@@ -131,7 +131,7 @@ const template = html`
             week.push({monthIncrementor: 0, day: day});
             day += 1;
         }
-        // In case when the last day of the month is not saturday then add 0 to the last days of the week.
+        // In case where the last day of the month is not saturday then add 0 to the last days of the week.
         let nextMonthDay = -1;
         for (; _i < 7; _i++) {
             week.push({monthIncrementor: 1, day: nextMonthDay});
