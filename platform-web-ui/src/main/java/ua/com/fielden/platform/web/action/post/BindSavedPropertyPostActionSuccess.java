@@ -31,7 +31,7 @@ public class BindSavedPropertyPostActionSuccess implements IPostAction {
     }
 
     /**
-     * Creates {@link IPostAction}. For {@code erroneous} one we also attaches 'exceptionOccured' to the master entity.
+     * Creates {@link IPostAction}. For {@code erroneous} one we also attaches 'exceptionOccurred' to the master entity.
      * 
      * @param erroneous
      * @return
@@ -41,7 +41,7 @@ public class BindSavedPropertyPostActionSuccess implements IPostAction {
             + "const parentMasterName = `tg-${functionalEntity.type().prop('%s').type()._simpleClassName()}-master`;\n"
             + "const parentMaster = getParentAnd(self, parent => parent.matches(parentMasterName));\n"
             + "const masterEntity = functionalEntity.get('%s');\n"
-            + (erroneous ? "parentMaster._provideExceptionOccured(masterEntity, functionalEntity.exceptionOccured());\n" : "")
+            + (erroneous ? "parentMaster._provideExceptionOccurred(masterEntity, functionalEntity.exceptionOccurred());\n" : "")
             + "parentMaster._postSavedDefault(masterEntity);\n",
             propertyName, propertyName
         ));
