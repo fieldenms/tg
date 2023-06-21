@@ -830,8 +830,8 @@
                     assert.isNull(potentiallySavedOrNewEntity.get('id'), 'Entity id should be null.');
                     assert.strictEqual(potentiallySavedOrNewEntity.version, 0, 'Entity version should be the same.');
                     
-                    assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), 'Entity\'s exceptionOccured should exist.');
-                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, '[1/2/3 6:19] is not acceptable.', 'Entity\'s exceptionOccured should exist.');
+                    assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccurred(), 'Entity\'s exceptionOccurred should exist.');
+                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccurred().message, '[1/2/3 6:19] is not acceptable.', 'Entity\'s exceptionOccurred should exist.');
                     
                     const arrivedValue = null;
                     
@@ -878,8 +878,8 @@
                     assert.isNull(potentiallySavedOrNewEntity.get('id'), 'Entity id should be null.');
                     assert.strictEqual(potentiallySavedOrNewEntity.version, 0, 'Entity version should be the same.');
                     
-                    assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), 'Entity\'s exceptionOccured should exist.');
-                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'Tg Persistent Entity With Properties [DEMO00] already exists.', 'Entity\'s exceptionOccured should exist.');
+                    assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccurred(), 'Entity\'s exceptionOccurred should exist.');
+                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccurred().message, 'Tg Persistent Entity With Properties [DEMO00] already exists.', 'Entity\'s exceptionOccurred should exist.');
                     
                     const arrivedValue = _millis('01/02/2003 06:21:00.000');
                     
@@ -925,8 +925,8 @@
                     assert.isNull(potentiallySavedOrNewEntity.get('id'), 'Entity id should be null.');
                     assert.strictEqual(potentiallySavedOrNewEntity.version, 0, 'Entity version should be the same.');
                     
-                    assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), 'Entity\'s exceptionOccured should exist.');
-                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'Creation failed: [1/2/3 6:20] date is not permitted.', 'Entity\'s exceptionOccured should exist.');
+                    assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccurred(), 'Entity\'s exceptionOccurred should exist.');
+                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccurred().message, 'Creation failed: [1/2/3 6:20] date is not permitted.', 'Entity\'s exceptionOccurred should exist.');
                     
                     const arrivedValue = _millis('01/02/2003 06:20:00.000');
                     
@@ -990,8 +990,8 @@
                     assert.isNull(potentiallySavedOrNewEntity.get('id'), 'Entity id should be null for new entity with failed save attempt.');
                     assert.strictEqual(potentiallySavedOrNewEntity.version, 0, 'Entity version should be the same.');
                     
-                    assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), 'Entity\'s exceptionOccured should exist.');
-                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'Creation failed: [1/2/3 6:22] date is not permitted.', 'Entity\'s exceptionOccured should exist.');
+                    assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccurred(), 'Entity\'s exceptionOccurred should exist.');
+                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccurred().message, 'Creation failed: [1/2/3 6:22] date is not permitted.', 'Entity\'s exceptionOccurred should exist.');
                 };
                 
                 master.postRetrieved = function(entity, bindingEntity, customObject) {
@@ -1180,8 +1180,8 @@
                 master.postSavedForExisting = function (potentiallySavedOrNewEntity, bindingEntity) {
                     assert.isNotNull(potentiallySavedOrNewEntity.get('id'), 'Entity id should be not null.');
                     
-                    assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), 'Entity\'s exceptionOccured should exist.');
-                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'Modification failed: [1/2/3 6:22] is not acceptable for persisted entity.', 'Entity\'s exceptionOccured should exist.');
+                    assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccurred(), 'Entity\'s exceptionOccurred should exist.');
+                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccurred().message, 'Modification failed: [1/2/3 6:22] is not acceptable for persisted entity.', 'Entity\'s exceptionOccurred should exist.');
                     
                     const arrivedValue = _millis('01/02/2003 00:00:00.000');
                     
@@ -1245,7 +1245,7 @@
                 master.postSavedForExisting = function (potentiallySavedOrNewEntity, bindingEntity) {
                     assert.isNotNull(potentiallySavedOrNewEntity.get('id'), 'Entity id should be not null.');
 
-                    assert.isNull(potentiallySavedOrNewEntity.exceptionOccured(), 'No exception was expected when attempting to save not changed entity.');
+                    assert.isNull(potentiallySavedOrNewEntity.exceptionOccurred(), 'No exception was expected when attempting to save not changed entity.');
 
                     const arrivedValue = _millis('01/02/2003 00:00:00.000');
 
