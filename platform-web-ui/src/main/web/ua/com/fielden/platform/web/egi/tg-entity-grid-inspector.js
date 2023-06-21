@@ -2070,7 +2070,7 @@ Polymer({
             const entityRow = entityRows[lastSelectedIndex];
             if (entityRow) {
                 entityRow.scrollIntoView({ behavior: 'smooth', block: 'center', inline: 'start' });
-            } else { // in case where selected entity is outside existing stamped EGI rows, which means that entity rows stamping still needs to be occured, defer _scrollTo invocation until dom stamps
+            } else { // in case where selected entity is outside existing stamped EGI rows, which means that entity rows stamping still needs to be occurred, defer _scrollTo invocation until dom stamps
                 const oldAction = this._scrollContainerEntitiesStampedCustomAction;
                 this._scrollContainerEntitiesStampedCustomAction = (function () {
                     oldAction();
