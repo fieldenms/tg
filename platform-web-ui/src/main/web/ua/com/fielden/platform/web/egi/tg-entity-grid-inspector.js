@@ -1127,7 +1127,7 @@ Polymer({
 
     hasAction: function (entity, column) {
         const entityIdx = this.findEntityIndex(entity);
-        const actionIdx = this.propertyActionIndices && this.propertyActionIndices[entityIdx] && this.propertyActionIndices[entityIdx][column.property];
+        const actionIdx = this.propertyActionIndices && this.propertyActionIndices[entityIdx] && this.propertyActionIndices[entityIdx][column.getActualProperty()];
         return entity && (
             (column.customActions && column.customActions.length > 0 && column.customActions[actionIdx])
             || this.isHyperlinkProp(entity, column) === true
@@ -1142,7 +1142,7 @@ Polymer({
     hasDefaultAction: function (entity, column) {
         const type = entity && entity.constructor.prototype.type && entity.constructor.prototype.type.call(entity);
         if (type) {
-            const propertyType = this._reflector.tg_determinePropertyType(type, column.collectionalProperty || column.property);
+            const propertyType = this._reflector.tg_determinePropertyType(type, column.getActualProperty());
             if (propertyType instanceof this._reflector._getEntityTypePrototype()) { // only entity-typed columns can have default actions ...
                 return propertyType.entityMaster(); // ... and only those, that have corresponding entity masters
             }
@@ -1366,7 +1366,7 @@ Polymer({
         // Each tapping overrides this function to provide proper context of execution.
         // This override should occur on every 'run' of the action so it is mandatory to use 'tg-property-column.runAction' public API.
         const entityIndex = this.findEntityIndex(entity);
-        const actionIndex = this.propertyActionIndices && this.propertyActionIndices[entityIndex] && this.propertyActionIndices[entityIndex][column.property]
+        const actionIndex = this.propertyActionIndices && this.propertyActionIndices[entityIndex] && this.propertyActionIndices[entityIndex][column.getActualProperty()];
         if (!column.runAction(this._currentEntity(entity), actionIndex)) {
             // if the clicked property is a hyperlink and there was no custom action associted with it
             // then let's open the linked resources
@@ -2106,7 +2106,7 @@ Polymer({
         try {
             let tooltip = this.getValueTooltip(entity, column);
             const entityIdx = this.findEntityIndex(entity);
-            const actionIdx = this.propertyActionIndices && this.propertyActionIndices[entityIdx] && this.propertyActionIndices[entityIdx][column.property];
+            const actionIdx = this.propertyActionIndices && this.propertyActionIndices[entityIdx] && this.propertyActionIndices[entityIdx][column.getActualProperty()];
             const columnDescPart = this.getDescTooltip(entity, column);
             const actionDescPart = this.getActionTooltip(entity, column, actions[actionIdx]);
             tooltip += (columnDescPart && tooltip && "<br><br>") + columnDescPart;
