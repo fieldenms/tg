@@ -9,6 +9,7 @@ import {createDialog} from '/resources/egi/tg-dialog-util.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import { TgElementSelectorBehavior, queryElements } from '/resources/components/tg-element-selector-behavior.js';
 import { TgDelayedActionBehavior } from '/resources/components/tg-delayed-action-behavior.js';
+import { getParentAnd } from '/resources/reflection/tg-polymer-utils.js';
 
 const generateCriteriaName = function (root, property, suffix) {
     const rootName = root.substring(0, 1).toLowerCase() + root.substring(1) + "_";
@@ -872,8 +873,29 @@ const TgEntityCentreBehaviorImpl = {
             }
         }).bind(self);
 
-        self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber) {
-            return this.$.selection_criteria.createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber);
+        self._createContextHolder = (function (requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber, relatedContexts, parentCentreContext) {
+            const context = this.$.selection_criteria.createContextHolder(requireSelectionCriteria, requireSelectedEntities, requireMasterEntity, actionKind, actionNumber);
+            this._reflector.setCustomProperty(context, "@@resultSetHidden", this.$.egi.hasAttribute("hidden"));
+            
+            if (relatedContexts) {
+                const insertionPoints = [...this.shadowRoot.querySelectorAll('tg-entity-centre-insertion-point:not([alternative-view])')];
+                relatedContexts.forEach(relatedContext => {
+                    const insPoint = insertionPoints.find(iPoint => iPoint._element && iPoint._element.tagName === relatedContext.elementName.toUpperCase());
+                    const loadedView = insPoint && insPoint._element.wasLoaded() && insPoint._element.$.loader.loadedElement; 
+                    if (loadedView && loadedView._createContextHolder) {
+                        context['relatedContexts'] = context['relatedContexts'] || {};
+                        context['relatedContexts'][relatedContext.elementName] = loadedView._createContextHolder(relatedContext.requireSelectionCriteria, relatedContext.requireSelectedEntities, relatedContext.requireMasterEntity, null, null, relatedContext.relatedContexts, relatedContext.parentCentreContext);
+                        this._reflector.setCustomProperty(context['relatedContexts'][relatedContext.elementName], "@@insertionPointTitle", insPoint.shortDesc);
+                    }
+                });
+            }
+            if (parentCentreContext) {
+                const insPoint = getParentAnd(this, element => element.matches("tg-entity-centre-insertion-point"));
+                if (insPoint && insPoint.contextRetriever) {
+                    context['parentCentreContext'] = insPoint.contextRetriever()._createContextHolder(parentCentreContext.requireSelectionCriteria, parentCentreContext.requireSelectedEntities, parentCentreContext.requireMasterEntity, null, null, parentCentreContext.relatedContexts, parentCentreContext.parentCentreContext);
+                } 
+            }
+            return context;
         }).bind(self);
 
         self._createDiscardPromise = function (customObject) { // very similar to tg-entity-binder-behavior._createRetrievalPromise

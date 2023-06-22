@@ -24,7 +24,7 @@ import ua.com.fielden.platform.reflection.Reflector;
 /**
  * A structure that represents an execution context for functional entities. Not all of its properties should or need to be populated. Depending on specific needs actions may choose
  * what parts of the context do they require. This allows for optimising the amount of data marshaled between between the client and server.
- * 
+ *
  * TODO to be renamed to Context as it also represents the context on master functional actions, not only on centre
  *
  * @author TG Team
@@ -105,7 +105,7 @@ public final class CentreContext<T extends AbstractEntity<?>, M extends Abstract
                     .filter(name -> Reflector.isPropertyProxied(el, name) && originalTypeProperties.contains(name))
                     .collect(Collectors.toList())
                     .toArray(new String[] {});
-                    
+
                 // let's be smart about types and try to handle the situation with generated types
                 this.selectedEntities.add((T) el.copy(EntityProxyContainer.proxy(originalType, propsToBeProxied)));
             }
