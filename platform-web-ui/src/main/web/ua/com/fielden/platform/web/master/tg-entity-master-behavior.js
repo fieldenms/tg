@@ -232,7 +232,7 @@ const TgEntityMasterBehaviorImpl = {
         },
 
         /**
-         * In case when main / detail entity has been just saved, there is a need to augment compound master "opener" functional entity to appropriately restore it on server.
+         * In case where main / detail entity has been just saved, there is a need to augment compound master "opener" functional entity to appropriately restore it on server.
          * If new main entity has been saved for the first time -- savedEntityId is promoted into "opener" functional entity's key (and marked as touched).
          * Otherwise if main / detail entity has been saved -- "opener" functional entity's key is marked as touched.
          *
@@ -406,8 +406,8 @@ const TgEntityMasterBehaviorImpl = {
         self.focusViewBound = self.focusView.bind(self);
 
         self._processSaverResponse = function (e) {
-            self._processResponse(e, "save", function (potentiallySavedOrNewEntityAndCustomObject, exceptionOccured) {
-                self._provideExceptionOccured(potentiallySavedOrNewEntityAndCustomObject[0], exceptionOccured);
+            self._processResponse(e, "save", function (potentiallySavedOrNewEntityAndCustomObject, exceptionOccurred) {
+                self._provideExceptionOccurred(potentiallySavedOrNewEntityAndCustomObject[0], exceptionOccurred);
                 return self._postSavedDefault(potentiallySavedOrNewEntityAndCustomObject);
             });
         };
@@ -460,7 +460,7 @@ const TgEntityMasterBehaviorImpl = {
             //    c) if invalid == saving was unsuccessful (exception occurred) and id is defined (!) in case where new entity was trying to be saved (exception has occurred AFTER actual save but transaction rollbacked)
 
             const newEntitySavingFailedButIdExists = potentiallySavedOrNewEntity.type().isPersistent() &&
-                potentiallySavedOrNewEntity.exceptionOccured() !== null &&
+                potentiallySavedOrNewEntity.exceptionOccurred() !== null &&
                 potentiallySavedOrNewEntity.isPersisted() &&
                 this.entityId === 'new';
             if (newEntitySavingFailedButIdExists) {
@@ -519,7 +519,7 @@ const TgEntityMasterBehaviorImpl = {
                 }
             }
 
-            const _exceptionOccurred = potentiallySavedOrNewEntity.exceptionOccured();
+            const _exceptionOccurred = potentiallySavedOrNewEntity.exceptionOccurred();
             // if continuation exception has been occurred -- find its 'tg-ui-action' and '_run' it (if it does not exist -- then it should be created)
             if (_exceptionOccurred !== null && _exceptionOccurred.ex && _exceptionOccurred.ex.continuationTypeStr) {
                 const continuationType = this._reflector().findTypeByName(_exceptionOccurred.ex.continuationTypeStr); // continuation functional entity type
@@ -693,7 +693,7 @@ const TgEntityMasterBehaviorImpl = {
         }).bind(self);
 
         /**
-         * In case when main / detail entity has been just saved, there is a need to augment compound master "opener" functional entity to appropriately restore it on server.
+         * In case where main / detail entity has been just saved, there is a need to augment compound master "opener" functional entity to appropriately restore it on server.
          * If new main entity has been saved for the first time -- savedEntityId is promoted into "opener" functional entity's key (and marked as touched).
          * Otherwise if main / detail entity has been saved -- "opener" functional entity's key is marked as touched.
          *

@@ -125,8 +125,10 @@
                     <artifactId>maven-javadoc-plugin</artifactId>
                     <version>3.2.0</version>
                     <configuration>
-                        <additionalparam>-Xdoclint:none</additionalparam>
+                        <doclint>none</doclint>
                         <detectJavaApiLink>false</detectJavaApiLink>
+                        <additionalOptions>-Xdoclint:none</additionalOptions>
+                        <additionalJOption>-Xdoclint:none</additionalJOption>
                     </configuration>
                     <executions>
                         <execution>
@@ -175,11 +177,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <configuration>
-                    <additionalparam>-Xdoclint:none</additionalparam>
-                    <additionalOptions>-Xdoclint:none</additionalOptions>
-                    <additionalJOption>-Xdoclint:none</additionalJOption>
-                 </configuration>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
@@ -204,11 +201,11 @@
                             <rules>
                                 <requireProperty>
                                     <property>databaseUri.prefix</property>
-                                    <message>The value for property "databaseUri.prefix" is required. You can set it as "-PdatabaseUri.prefix=[JDBC URI pattern]".</message>
+                                    <message>The value for property "databaseUri.prefix" is required. You can set it as "-DdatabaseUri.prefix=[JDBC URI pattern]".</message>
                                 </requireProperty>
                                 <requireProperty>
                                     <property>fork.count</property>
-                                    <message>The value for property "fork.count" is required. You can set it as "-Pfork.count=2".</message>
+                                    <message>The value for property "fork.count" is required. You can set it as "-Dfork.count=2".</message>
                                 </requireProperty>
                             </rules>
                             <fail>true</fail>
