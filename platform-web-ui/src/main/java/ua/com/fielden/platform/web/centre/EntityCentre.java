@@ -177,7 +177,7 @@ import ua.com.fielden.platform.web.utils.EntityResourceUtils;
  */
 public class EntityCentre<T extends AbstractEntity<?>> implements ICentre<T> {
 
-    private static final CentreContextConfig defaultCentreContextConfig = new CentreContextConfig(false, false, false, false, null);
+    private static final CentreContextConfig defaultCentreContextConfig = new CentreContextConfig(false, false, false, false, null, empty(), empty());
 
     public static final String IMPORTS = "<!--@imports-->";
     private static final String FULL_ENTITY_TYPE = "@full_entity_type";

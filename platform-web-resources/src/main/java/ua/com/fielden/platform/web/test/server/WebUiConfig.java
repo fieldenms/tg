@@ -1468,7 +1468,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 )
                 .addGroupAction(
                         action(EntityExportAction.class)
-                                .withContext(context().withSelectionCrit().withSelectedEntities().build())
+                                .withContext(context().withSelectionCrit().withSelectedEntities()
+                                        .extendWithParentCentreContext(
+                                                context().withSelectionCrit().withSelectedEntities()
+                                                .extendWithInsertionPointContext(TgCentreInvokerWithCentreContext.class,
+                                                        context().withSelectionCrit().withSelectedEntities().withMasterEntity().build()).build())
+                                        .extendWithInsertionPointContext(TgCentreInvokerWithCentreContext.class,
+                                                context().withSelectionCrit().withSelectedEntities().withMasterEntity().build()).build())
                                 .postActionSuccess(new FileSaverPostAction())
                                 .icon("icons:save")
                                 .shortDesc("Export Data")
