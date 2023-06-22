@@ -260,18 +260,18 @@ public class FunctionalActionElement implements IRenderable, IImportable {
      */
     public String createActionObject() {
         final StringBuilder attrs = new StringBuilder("{\n");
+        if (conf().context.isPresent()) {
+            if (!conf().context.get().relatedContexts.isEmpty()) {
+                attrs.append("relatedContexts: ").append(createRelatedContexts(conf().context.get().relatedContexts)).append(",\n");
+            }
+            conf().context.get().parentCentreContext.ifPresent(parentCentreContext -> {
+                attrs.append("parentCentreContext: ").append(createParentCentreContext(parentCentreContext)).append(",\n");
+            });
+        }
         attrs.append("preAction: ").append(createPreAction()).append(",\n");
         attrs.append("postActionSuccess: ").append(createPostActionSuccess()).append(",\n");
         attrs.append("attrs: ").append(createElementAttributes(false)).append(",\n");
-        attrs.append("postActionError: ").append(createPostActionError()).append(conf().context.isPresent() && (conf().context.get().parentCentreContext.isPresent() || !conf().context.get().relatedContexts.isEmpty()) ? ",\n" : "\n");
-        if (conf().context.isPresent()) {
-            if (!conf().context.get().relatedContexts.isEmpty()) {
-                attrs.append("relatedContexts: ").append(createRelatedContexts(conf().context.get().relatedContexts)).append(conf().context.get().parentCentreContext.isPresent() ? ",\n" : "\n");
-            }
-            conf().context.get().parentCentreContext.ifPresent(parentCentreContext -> {
-                attrs.append("parentCentreContext: ").append(createParentCentreContext(parentCentreContext)).append("\n");
-            });
-        }
+        attrs.append("postActionError: ").append(createPostActionError()).append("\n");
         return attrs.append("}\n").toString();
     }
 
@@ -296,15 +296,16 @@ public class FunctionalActionElement implements IRenderable, IImportable {
 
     private String createContextAttributes(final CentreContextConfig context) {
         final StringBuilder attrs = new StringBuilder("");
-        attrs.append("requireSelectionCriteria: ").append(context.withSelectionCrit ? "'true'" : "'false'").append(",\n");
-        attrs.append("requireSelectedEntities: ").append(context.withCurrentEtity ? "'ONE'" : (context.withAllSelectedEntities ? "'ALL'" : "'NONE'")).append(",\n");
-        attrs.append("requireMasterEntity: ").append(context.withMasterEntity ? "'true'" : "'false'").append(!context.relatedContexts.isEmpty() || context.parentCentreContext.isPresent() ? ",\n" : "\n");
         if (!context.relatedContexts.isEmpty()) {
-            attrs.append("relatedContexts: ").append(createRelatedContexts(context.relatedContexts)).append(context.parentCentreContext.isPresent() ? ",\n" : "\n");
+            attrs.append("relatedContexts: ").append(createRelatedContexts(context.relatedContexts)).append(",\n");
         }
         context.parentCentreContext.ifPresent(parentContext -> {
-            attrs.append("parentCentreContext: ").append(createParentCentreContext(parentContext)).append("\n");
+            attrs.append("parentCentreContext: ").append(createParentCentreContext(parentContext)).append(",\n");
         });
+        attrs.append("requireSelectionCriteria: ").append(context.withSelectionCrit ? "'true'" : "'false'").append(",\n");
+        attrs.append("requireSelectedEntities: ").append(context.withCurrentEtity ? "'ONE'" : (context.withAllSelectedEntities ? "'ALL'" : "'NONE'")).append(",\n");
+        attrs.append("requireMasterEntity: ").append(context.withMasterEntity ? "'true'" : "'false'").append("\n");
+
         return attrs.toString();
     }
 
