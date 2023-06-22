@@ -146,7 +146,7 @@ function composeDefaultValueObject(entity, reflector, titles) {
     const entityType = entity.type();
     const compositeKeySeparator = entityType.compositeKeySeparator();
     entityType.compositeKeyNames().forEach(keyName => {
-        if (entity.get(keyName)) {
+        if (entity.get(keyName) !== null) {
             titles.push({
                 value: reflector.tg_toString(entity.get(keyName), entity.type(), keyName),
                 separator: compositeKeySeparator
@@ -161,7 +161,7 @@ function composeDefaultValueObject(entity, reflector, titles) {
 function createCompositeTitleWithoutTemplate (entity, titles, reflector) {
     const entityType = entity.type();
     entityType.compositeKeyNames().forEach(keyName => {
-        if (entity.get(keyName)) {
+        if (entity.get(keyName) !== null) {
             titles.push({
                 title: entityType.prop(keyName).title(),
                 value: reflector ? reflector.tg_toString(entity.get(keyName), entity.type(), keyName) : entity.get(keyName),

@@ -1211,8 +1211,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
      * Creates selection criteria entity from {@link CentreContextHolder} entity (which contains modifPropsHolder).
      *
      * @param centreContextHolder
-     * @param isPaginating
-     *            -- returns <code>true</code> in case when this method is a part of 'Paginating Actions', <code>false</code> otherwise
+     * @param isPaginating -- returns {@code true} in case where this method is a part of 'Paginating Actions', {@code false} otherwise
      * @return
      */
     protected static <T extends AbstractEntity<?>, M extends EnhancedCentreEntityQueryCriteria<T, ? extends IEntityDao<T>>> M createCriteriaEntityForPaginating(
@@ -1275,8 +1274,7 @@ public class CentreResourceUtils<T extends AbstractEntity<?>> extends CentreUtil
     }
 
     /**
-     * Returns <code>true</code> in case when 'modifiedPropertiesHolder' is empty, and should not be used for 'criteriaValidationPrototype' application, <code>false</code>
-     * otherwise.
+     * Returns {@code true} in case where 'modifiedPropertiesHolder' is empty and should not be used for 'criteriaValidationPrototype' application, {@code false} otherwise.
      *
      * @param modifiedPropertiesHolder
      * @return
