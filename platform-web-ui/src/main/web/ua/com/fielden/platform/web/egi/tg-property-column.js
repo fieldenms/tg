@@ -58,9 +58,18 @@ Polymer({
 
     runDefaultAction: function (currentEntity, defaultPropertyAction) {
         if (defaultPropertyAction) {
-            defaultPropertyAction._runDynamicAction(currentEntity, getFirstEntityTypeAndProperty(currentEntity.bind(defaultPropertyAction)(), this.collectionalProperty || this.property)[1]);
+            defaultPropertyAction._runDynamicAction(currentEntity, getFirstEntityTypeAndProperty(currentEntity.bind(defaultPropertyAction)(), this.getActualProperty())[1]);
             return true;
         } 
         return false;
-    }
+    },
+
+    /**
+     * Returns the property name of collectional entity or property name of simple property value.
+     * 
+     * @returns 
+     */
+    getActualProperty: function () {
+        return this.collectionalProperty || this.property;
+    },
 });

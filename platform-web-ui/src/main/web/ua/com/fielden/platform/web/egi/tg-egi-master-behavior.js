@@ -52,7 +52,7 @@ const TgEgiMasterBehaviorImpl = {
         this.addEventListener('data-loaded-and-focused', this._selectLastFocusedEditor.bind(this));
 
         this.postSaved = function (potentiallySavedOrNewEntity) {
-            if (potentiallySavedOrNewEntity.isValid() && potentiallySavedOrNewEntity.exceptionOccured() === null) {
+            if (potentiallySavedOrNewEntity.isValid() && potentiallySavedOrNewEntity.exceptionOccurred() === null) {
                 this.egi._acceptValuesFromMaster();
                 this._previousEditRow = this.editableRow;
                 this.egi.addEventListener("tg-egi-entities-loaded", this._egiRefreshed);
