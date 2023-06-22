@@ -832,15 +832,15 @@ const TgEntityCentreBehaviorImpl = {
         self._bindCentreInfo = function (customObject) {
             if (Object.keys(customObject).length > 0) {
                 const entityAndCustomObject = [customObject['appliedCriteriaEntity'], customObject];
-                self.$.selection_criteria._provideExceptionOccured(entityAndCustomObject[0], null);
+                self.$.selection_criteria._provideExceptionOccurred(entityAndCustomObject[0], null);
                 self.$.selection_criteria._postSavedDefault(entityAndCustomObject);
             }
         };
 
         self._processDiscarderResponse = function (e) {
-            self.$.selection_criteria._processResponse(e, "discard", function (entityAndCustomObject, exceptionOccured) {
+            self.$.selection_criteria._processResponse(e, "discard", function (entityAndCustomObject, exceptionOccurred) {
                 console.log("CENTRE DISCARDED", entityAndCustomObject);
-                self.$.selection_criteria._provideExceptionOccured(entityAndCustomObject[0], exceptionOccured);
+                self.$.selection_criteria._provideExceptionOccurred(entityAndCustomObject[0], exceptionOccurred);
                 self.$.selection_criteria._postRetrievedDefault(entityAndCustomObject);
                 self._resetAutocompleterState();
             });

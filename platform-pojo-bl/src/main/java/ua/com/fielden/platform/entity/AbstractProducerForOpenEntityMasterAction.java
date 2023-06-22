@@ -34,8 +34,8 @@ public abstract class AbstractProducerForOpenEntityMasterAction<T extends Abstra
     protected A provideDefaultValues(final A openAction) {
         if (currentEntityNotEmpty()) {
             openAction.setKey(refetch(chosenEntityId(entityType).orElseThrow(NOTHING_TO_OPEN_EXCEPTION_SUPPLIER), entityType, KEY));
-        } else if (masterEntityEmpty() && selectedEntitiesEmpty()) {
-            // '+' action on entity T centre
+        } else if (selectedEntitiesEmpty()) {
+            // '+' action on entity T centre or '+' action on master autocompleter title
             openAction.setKey(co(entityType).new_());
         } else {
             // it is recommended to throw 'unsupported case' exception otherwise

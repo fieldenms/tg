@@ -296,9 +296,9 @@ const TgSelectionCriteriaBehaviorImpl = {
         };
 
         self._processRunnerResponse = function (e) {
-            self._processResponse(e, "run", function (entityAndCustomObject, exceptionOccured) {
+            self._processResponse(e, "run", function (entityAndCustomObject, exceptionOccurred) {
                 const criteriaEntity = entityAndCustomObject[0];
-                self._provideExceptionOccured(criteriaEntity, exceptionOccured);
+                self._provideExceptionOccurred(criteriaEntity, exceptionOccurred);
                 const customObject = self._reflector().customObject(entityAndCustomObject);
                 const result = {
                     resultEntities: customObject.resultEntities || [],
@@ -327,7 +327,7 @@ const TgSelectionCriteriaBehaviorImpl = {
             });
         };
 
-        // calbacks, that will potentially be augmented by tg-action child elements: 
+        // callbacks, that will potentially be augmented by tg-action child elements: 
         self._postRunDefault = (function (criteriaEntity, result) {
             this.fire('egi-entities-appeared', result.resultEntities);
 
@@ -393,7 +393,7 @@ const TgSelectionCriteriaBehaviorImpl = {
             const newBindingEntity = this._postEntityReceived(potentiallySavedEntity, true, customObject);
 
             if (potentiallySavedEntity.isValidWithoutException()) {
-                // in case where successful save occured we need to reset @@touchedProps that are transported with bindingEntity
+                // in case where successful save occurred we need to reset @@touchedProps that are transported with bindingEntity
                 newBindingEntity["@@touchedProps"] = { names: [], values: [], counts: [] };
             }
 

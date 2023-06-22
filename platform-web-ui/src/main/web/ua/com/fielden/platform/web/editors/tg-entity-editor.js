@@ -90,7 +90,7 @@ const customLabelTemplate = html`
            tooltip-text$="[[_getTooltip(_editingValue, entity, focused, actionAvailable)]]">
         <span on-tap="_labelTap">[[propTitle]]</span>
         <iron-icon id="actionAvailability" icon="[[_actionIcon(actionAvailable, entity)]]" action-available$="[[actionAvailable]]" on-tap="_labelTap"></iron-icon>
-        <iron-icon id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
+        <iron-icon id="copyIcon" hidden$="[[noLabelFloat]]" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
     </label>`;
 const customInputTemplate = html`
     <iron-input bind-value="{{_editingValue}}" class="custom-input-wrapper">
@@ -341,7 +341,7 @@ export class TgEntityEditor extends TgEditor {
    
            /**
             * In case if new entity is operated on, this instance holds an original fully-fledged contextually produced entity, otherwise 'null'.
-            * It is updated everytime when refresh process successfully completes.
+            * It is updated every time when refresh process successfully completes.
             */
            originallyProducedEntity: {
                type: Object
@@ -1157,8 +1157,8 @@ export class TgEntityEditor extends TgEditor {
 
     _processSearcherResponse (e) {
         const self = this;
-        self.processResponse(e, "search", function (entitiesAndCustomObject, exceptionOccured) {
-            // at this stage exceptionOccured is always null and don't need to be processed in any specific way;
+        self.processResponse(e, "search", function (entitiesAndCustomObject, exceptionOccurred) {
+            // at this stage exceptionOccurred is always null and don't need to be processed in any specific way;
             // this is because [Criteria]EntityAutocompletionResource wraps found entities only into successful result;
             // in case of unexpected exception, resultant representation is processed in _processSearcherError;
             // please see tg-entity-binder-behavior._processResponse for more details

@@ -60,7 +60,7 @@ const hideCheckIconOnMouseLeave = function () {
 const defaultLabelTemplate = html`
     <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]" slot="label">
         <span>[[propTitle]]</span>
-        <iron-icon id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
+        <iron-icon hidden$="[[noLabelFloat]]" id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
     </label>`;
 
 export function createEditorTemplate (additionalTemplate, customPrefixAttribute, customInput, inputLayer, customIconButtons, propertyAction, customLabelTemplate) {
@@ -770,7 +770,7 @@ export class TgEditor extends PolymerElement {
      * This method returns a default value for '_editingValue', which is used 
      *  for representing the value when no entity was bound to this editor yet.
      *
-     * Please, override this method in case when empty string is not applicable (for example in boolean editor 'true' or 'false' values are applicable only).
+     * Please, override this method in case where empty string is not applicable (for example in boolean editor 'true' or 'false' values are applicable only).
      */
     _defaultEditingValue () {
         return '';
@@ -859,7 +859,7 @@ export class TgEditor extends PolymerElement {
         if (this.reflector().isEntity(newValue)) {
             // IMPORTANT: Initiate 'refresh cycle' -- in new logic refresh cycle is also mandatory after 'validation' has been performed,
             // not only after master's 'save' / 'refresh' or centre's 'run', 'save' or 'discard'
-            // (to be precise it is done for every case when _currBindingEntity is changed for this editor)
+            // (to be precise it is done for every case where _currBindingEntity is changed for this editor)
             this._refreshCycleStarted = true;
             
             // lazy conversion of property value performs here (previusly it was done for all properties inside tg-entity-binder-behavior)
@@ -1003,14 +1003,14 @@ export class TgEditor extends PolymerElement {
     }
     
     /**
-     * Please override this method in case when no validation should occur after _acceptedValueChanged.
+     * Please override this method in case where no validation should occur after _acceptedValueChanged.
      */
     _shouldInvokeValidation () {
         return true;
     }
 
     /**
-     * Please override this method in case when some custom action is needed when _shouldInvokeValidation() returns 'false' after _acceptedValueChanged.
+     * Please override this method in case where some custom action is needed if _shouldInvokeValidation() returns 'false' after _acceptedValueChanged.
      */
     _skipValidationAction () {}
 
