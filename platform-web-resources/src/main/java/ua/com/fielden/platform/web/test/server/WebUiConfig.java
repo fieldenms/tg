@@ -153,7 +153,6 @@ import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.SingleCrit
 import ua.com.fielden.platform.web.centre.api.crit.layout.ILayoutConfigWithResultsetSupport;
 import ua.com.fielden.platform.web.centre.api.extra_fetch.IExtraFetchProviderSetter;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
-import ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints;
 import ua.com.fielden.platform.web.centre.api.query_enhancer.IQueryEnhancerSetter;
 import ua.com.fielden.platform.web.centre.api.resultset.IAlsoSecondaryAction;
 import ua.com.fielden.platform.web.centre.api.resultset.ICustomPropsAssignmentHandler;
@@ -2012,16 +2011,16 @@ public class WebUiConfig extends AbstractWebUiConfig {
         //                .addProp(mkProp("IS", "In service", "IS")).withAction(null)
 
         if (isComposite) {
-            return scl.addInsertionPoint(
-                    action(TgCentreInvokerWithCentreContext.class)
-                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
-                            .icon("assignment-ind")
-                            .shortDesc("Right Insertion Point")
-                            .longDesc("Functional context-dependent Insertion Point")
-                            .prefDimForView(mkDim("''", "'500px'"))
-                            .withNoParentCentreRefresh()
-                            .build(),
-                    InsertionPoints.RIGHT).noResizing()
+//            return scl.addInsertionPoint(
+//                    action(TgCentreInvokerWithCentreContext.class)
+//                            .withContext(context().withSelectionCrit().withSelectedEntities().build())
+//                            .icon("assignment-ind")
+//                            .shortDesc("Right Insertion Point")
+//                            .longDesc("Functional context-dependent Insertion Point")
+//                            .prefDimForView(mkDim("''", "'500px'"))
+//                            .withNoParentCentreRefresh()
+//                            .build(),
+//                    InsertionPoints.RIGHT).noResizing()
 ////                    .addInsertionPoint(
 ////                            action(TgCentreInvokerWithCentreContext.class)
 ////                                    .withContext(context().withSelectionCrit().withSelectedEntities().build())
@@ -2072,9 +2071,9 @@ public class WebUiConfig extends AbstractWebUiConfig {
 //                            .withNoParentCentreRefresh()
 //                            .build(),
 //                    InsertionPoints.BOTTOM)
-                    .withLeftSplitterPosition(40)
-                    .withRightSplitterPosition(30)
-                    .build();
+//                    .withLeftSplitterPosition(40)
+//                    .withRightSplitterPosition(30)
+//                    .build();
         }
         return scl.build();
     }
