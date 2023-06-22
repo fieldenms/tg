@@ -120,16 +120,13 @@ public class EntityExportActionDao extends CommonEntityDao<EntityExportAction> i
     private String extractSheetTitle(final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit) {
         final CentreContextHolder centreContextHolder = selectionCrit.centreContextHolder();
         final String sheetTitle = (String)centreContextHolder.getCustomObject().get("@@insertionPointTitle");
-        if (isEmpty(sheetTitle)) {
-            final String altSheetTitle = getEntityTitleAndDesc(selectionCrit.getEntityClass()).getKey();
-            try {
-                validateSheetName(altSheetTitle);
-            } catch (final Exception e) {
-                return getDefaultEntityTitleAndDesc(selectionCrit.getEntityClass()).getKey();
-            }
-            return altSheetTitle;
+        final String title = isEmpty(sheetTitle) ? getEntityTitleAndDesc(selectionCrit.getEntityClass()).getKey() : sheetTitle;
+        try {
+            validateSheetName(title);
+        } catch (final Exception e) {
+            return getDefaultEntityTitleAndDesc(selectionCrit.getEntityClass()).getKey();
         }
-        return sheetTitle;
+        return title;
     }
 
     private Stream<AbstractEntity<?>> exportEntities(final EntityExportAction entity, final EnhancedCentreEntityQueryCriteria<?, ?> selectionCrit, final String sheetTitle) {
