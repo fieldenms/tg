@@ -1349,7 +1349,60 @@
                     master.setEditorValue4PropertyFromConcreteValue('key', 'TEST');
                 });
             });
-            
+
+            test('BindSavedPropertyPostActionSuccess binds parent master with saved instance and updates property action indices', function (done) {
+                master.entityId = '10';
+                let validateCount = 0, saveCount = 0;
+                let smallValue;
+
+                const checkIndices = expectedBigDecimalPropIndex => {
+                    assert.deepEqual(master._propertyActionIndices, {
+                        "booleanProp": 0,
+                        "compositeProp": 0,
+                        "dateProp": 0,
+                        "entityProp.entityProp": 0,
+                        "bigDecimalProp": expectedBigDecimalPropIndex,
+                        "requiredValidatedProp": 0,
+                        "key": 0,
+                        "status": 0,
+                        "stringProp": 0,
+                        "entityProp": 0
+                    });
+                };
+                master.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
+                    saveCount++;
+                    if (saveCount === 1) {
+                        checkIndices(smallValue ? 2 : 0); // III -- indices remained "as is" after Complete action binds entity in its BindSavedPropertyPostActionSuccess
+                    } else if (saveCount === 2) {
+                        checkIndices(smallValue ? 2 : 0); // V -- indices become 0 or 2 again after making entity not 'completed'
+                        done();
+                    }
+                };
+                master.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                    validateCount++;
+                    if (validateCount === 1) {
+                        checkIndices(smallValue ? 2 : 0); // II -- changed indices after first validation
+                        const completeButton = master.shadowRoot.querySelector('tg-ui-action[short-desc="Complete"]'); // trigger Complete action
+                        completeButton._run();
+                    } else if (validateCount === 2) {
+                        checkIndices(1); // IV -- indices get updated in parent master update from Complete action (see tg-ui-action._onExecuted.postSaved postal publish); 'completed' entity has index 1 (see BigDecimalPropActionSelector)
+                        master.$.editor_4_completed._editingValue = 'false'; // change 'completed' back to 'false' ...
+                        master.$.editor_4_completed.commit();
+                        master.save(); // ... and save
+                    }
+                };
+                master.retrieve().then(function () {
+                    // at start, the entity is not 'completed' and bigDecimalProp will have value '12' (zero action index) or '25' (action index equal to 2)
+                    smallValue = master.$.editor_4_bigDecimalProp._editingValue === '12';
+                    checkIndices(smallValue ? 0 : 2);
+
+                    master.$.editor_4_requiredValidatedProp._editingValue = '30';
+                    master.$.editor_4_requiredValidatedProp.commit();
+                    master.$.editor_4_bigDecimalProp._editingValue = smallValue ? '25' : '12'; // I -- change value to "opposite"
+                    master.$.editor_4_bigDecimalProp.commit();
+                });
+            });
+
         });
     </script>
 </body>
