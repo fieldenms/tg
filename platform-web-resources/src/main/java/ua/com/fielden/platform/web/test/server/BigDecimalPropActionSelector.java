@@ -18,7 +18,9 @@ public class BigDecimalPropActionSelector implements IEntityMultiActionSelector 
     @Override
     public int getActionFor(final AbstractEntity<?> entity) {
         final int intProp = ofNullable(entity.<BigDecimal>get("bigDecimalProp")).orElse(BigDecimal.ZERO).intValue();
-        if (intProp < 13) {
+        if (entity.<Boolean>get("completed")) { // used for BindSavedPropertyPostActionSuccess web test in tg-entity-master.html
+            return 1;
+        } else if (intProp < 13) {
             return 0;
         } else if (intProp < 25) {
             return 1;
