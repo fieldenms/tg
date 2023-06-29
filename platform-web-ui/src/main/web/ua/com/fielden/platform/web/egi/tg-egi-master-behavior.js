@@ -4,7 +4,7 @@ import { TgEntityMasterBehavior, focusEnabledInputIfAny } from '/resources/maste
 import { TgEntityBinderBehavior } from '/resources/binding/tg-entity-binder-behavior.js';
 import { queryElements } from '/resources/components/tg-element-selector-behavior.js';
 import { IronA11yKeysBehavior } from '/resources/polymer/@polymer/iron-a11y-keys-behavior/iron-a11y-keys-behavior.js';
-import { tearDownEvent, deepestActiveElement, getParentAnd, getActiveParentAnd, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, deepestActiveElement, getParentAnd, getActiveParentAnd, FOCUSABLE_ELEMENTS_SELECTOR, isMobileApp, generateUUID } from '/resources/reflection/tg-polymer-utils.js';
 
 const TgEgiMasterBehaviorImpl = {
 
@@ -37,6 +37,7 @@ const TgEgiMasterBehaviorImpl = {
     },
 
     ready: function () {
+        this.uuid = this.is + '/' + generateUUID();
         this.editors = [...this._masterDom().querySelectorAll('[tg-editor]')];
         this.saveButton = this._masterDom().querySelector('.master-save-action');
         this.cancelButton = this._masterDom().querySelector('.master-cancel-action');
@@ -51,7 +52,7 @@ const TgEgiMasterBehaviorImpl = {
         this.addEventListener('data-loaded-and-focused', this._selectLastFocusedEditor.bind(this));
 
         this.postSaved = function (potentiallySavedOrNewEntity) {
-            if (potentiallySavedOrNewEntity.isValid() && potentiallySavedOrNewEntity.exceptionOccured() === null) {
+            if (potentiallySavedOrNewEntity.isValid() && potentiallySavedOrNewEntity.exceptionOccurred() === null) {
                 this.egi._acceptValuesFromMaster();
                 this._previousEditRow = this.editableRow;
                 this.egi.addEventListener("tg-egi-entities-loaded", this._egiRefreshed);
@@ -68,7 +69,6 @@ const TgEgiMasterBehaviorImpl = {
                     }
                 });
             } else {
-                this._resetEgiMasterState();
                 this.focusView(); // focus invalid editor after save (and select it's contents if it is preferred)
             }
         }
@@ -375,8 +375,8 @@ const TgEgiMasterBehaviorImpl = {
      * @param {Object} entity  - the received entity
      * @param {Boolean} isRefreshingProcess was master canceled or not
      */
-    _postEntityReceived: function (entity, isRefreshingProcess) {
-        TgEntityBinderBehavior._postEntityReceived.call(this, entity, isRefreshingProcess);
+    _postEntityReceived: function (entity, isRefreshingProcess, customObject) {
+        TgEntityBinderBehavior._postEntityReceived.call(this, entity, isRefreshingProcess, customObject);
         this._bindingEntityNotPersistentOrNotPersistedOrModified = !this._currBindingEntity.isPersisted() || this._bindingEntityModified;
         return this._currBindingEntity;
     },

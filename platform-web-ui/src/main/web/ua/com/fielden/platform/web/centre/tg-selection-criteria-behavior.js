@@ -263,7 +263,15 @@ const TgSelectionCriteriaBehaviorImpl = {
         /** A promise pointing to the last (resolved or otherwise) entities refresh call. */
         _refreshPromiseInProgress: {
             type: Object
+        },
+
+        /**
+         * Callback for updating _centreDirty with new value. Can be bound to child elements, e.g. activatable autocompleters that update 'autocomplete active only' option.
+         */
+        _updateCentreDirty: {
+            type: Function
         }
+
     },
 
     /**
@@ -283,10 +291,14 @@ const TgSelectionCriteriaBehaviorImpl = {
 
         this.staleCriteriaMessage = null;
 
+        self._updateCentreDirty = newCentreDirty => {
+            this._centreDirty = newCentreDirty;
+        };
+
         self._processRunnerResponse = function (e) {
-            self._processResponse(e, "run", function (entityAndCustomObject, exceptionOccured) {
+            self._processResponse(e, "run", function (entityAndCustomObject, exceptionOccurred) {
                 const criteriaEntity = entityAndCustomObject[0];
-                self._provideExceptionOccured(criteriaEntity, exceptionOccured);
+                self._provideExceptionOccurred(criteriaEntity, exceptionOccurred);
                 const customObject = self._reflector().customObject(entityAndCustomObject);
                 const result = {
                     resultEntities: customObject.resultEntities || [],
@@ -301,7 +313,8 @@ const TgSelectionCriteriaBehaviorImpl = {
                     columnWidths: customObject.columnWidths,
                     resultConfig: customObject.resultConfig,
                     primaryActionIndices: customObject.primaryActionIndices,
-                    secondaryActionIndices: customObject.secondaryActionIndices
+                    secondaryActionIndices: customObject.secondaryActionIndices,
+                    propertyActionIndices: customObject.propertyActionIndices
                 };
 
                 self._postRunDefault(criteriaEntity, result);
@@ -314,7 +327,7 @@ const TgSelectionCriteriaBehaviorImpl = {
             });
         };
 
-        // calbacks, that will potentially be augmented by tg-action child elements: 
+        // callbacks, that will potentially be augmented by tg-action child elements: 
         self._postRunDefault = (function (criteriaEntity, result) {
             this.fire('egi-entities-appeared', result.resultEntities);
 
@@ -377,10 +390,10 @@ const TgSelectionCriteriaBehaviorImpl = {
                 this._openToast(potentiallySavedEntity, messages.short, !potentiallySavedEntity.isValid() || potentiallySavedEntity.isValidWithWarning(), messages.extended, false);
             }
 
-            const newBindingEntity = this._postEntityReceived(potentiallySavedEntity, true);
+            const newBindingEntity = this._postEntityReceived(potentiallySavedEntity, true, customObject);
 
             if (potentiallySavedEntity.isValidWithoutException()) {
-                // in case where successful save occured we need to reset @@touchedProps that are transported with bindingEntity
+                // in case where successful save occurred we need to reset @@touchedProps that are transported with bindingEntity
                 newBindingEntity["@@touchedProps"] = { names: [], values: [], counts: [] };
             }
 
@@ -436,11 +449,23 @@ const TgSelectionCriteriaBehaviorImpl = {
             this.fire('tg-config-uuid-before-change', { newConfigUuid: newConfigUuid, configUuid: configUuid });
             delete this.loadCentreFreezed;
             this.configUuid = customObject.configUuid;
+            if (newConfigUuid !== configUuid) {
+                this._resetAutocompleterState(); // need to reset autocompleter states when moving from one configuration to another
+            }
         }
         if (typeof customObject.preferredView !== 'undefined') {
             this.preferredView = customObject.preferredView;
         }
         this.userName = customObject.userName;
+    },
+
+    /**
+     * Clears '_activeOnly' autocompleter state for all autocompleters in this selection criteria.
+     */
+    _resetAutocompleterState: function () {
+        Array.from(this.shadowRoot.querySelectorAll('tg-entity-editor')).forEach(autocompleter => {
+            autocompleter._activeOnly = null;
+        });
     },
 
     _configUuidChanged: function (newConfigUuid, oldConfigUuid) {

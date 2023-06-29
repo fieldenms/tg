@@ -275,7 +275,7 @@ Polymer({
             this._loadApplicationInfrastructureIntoHistory();
         } else {
             if (!window.history.state) {
-                //This logic might be invoked in case when someone changes hash by typing it in to address bar.
+                // This logic might be invoked in case where someone changes hash by typing it in address bar.
                 this._replaceStateWithNumber();
             }
 
@@ -293,7 +293,7 @@ Polymer({
                         if (historySteps > 1) { // 'multiple back' action
                             if (!this._closeAllDialogs()) { // try to close all dialogs and, if not closed, go forward to remain history not changed
                                 window.history.go(historySteps);
-                            } else { // otherwise the history changes already occured and just change the page
+                            } else { // otherwise the history changes already occurred and just change the page
                                 this._changePage();
                             }
                         } else { // 'single back' action
@@ -454,7 +454,7 @@ Polymer({
     },
 
     /**
-     * Animation finish event handler. This handler opens master or centre if module transition occured because of user action.
+     * Animation finish event handler. This handler opens master or centre if module transition occurred because of user action.
      * 
      * @param {Event} e 
      * @param {Object} detail 
