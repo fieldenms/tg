@@ -154,22 +154,25 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                 .map(JsonNode::asText) // for defined node, set its textual representation
                 .ifPresent(preferredProperty -> entity.setPreferredProperty(preferredProperty));
             
-            final List<CachedProperty> nonProxiedProps = properties.stream().filter(prop -> node.get(prop.field().getName()) != null).collect(Collectors.toList()); 
-            for (final CachedProperty prop : nonProxiedProps) {
-                final String propertyName = prop.field().getName();
-                final JsonNode propNode = node.get(propertyName);
-                final Object value = determineValue(propNode, prop.field());
-                try {
-                    prop.field().set(entity, value); // at this stage the field should be already accessible
-                } catch (final IllegalAccessException ex) {
-                    throw new EntityDeserialisationException("The field [" + prop.field() + "] is not accessible. Fatal error during deserialisation process for entity [" + entity + "].", ex);
-                } catch (final IllegalArgumentException ex) {
-                    throw new EntityDeserialisationException("The field [" + prop.field() + "] is not declared in entity with type [" + type.getName() + "]. Fatal error during deserialisation process for entity [" + entity + "].", ex);
+            node.fields().forEachRemaining(childNameAndNode -> { // iterate through all "fields" (i.e. present child nodes) in the order of original source
+                if (node.get(childNameAndNode.getKey()) != null) { // for safety, still check whether JsonNode is present
+                    properties.stream().filter(prop -> prop.field().getName().equals(childNameAndNode.getKey())).findAny().ifPresent(prop -> { // only consider child nodes present in CachedProperty list (i.e. properties present in entity type definition)
+                        final String propertyName = prop.field().getName();
+                        final JsonNode propNode = node.get(propertyName);
+                        final Object value = determineValue(propNode, prop.field());
+                        try {
+                            prop.field().set(entity, value); // at this stage the field should be already accessible
+                        } catch (final IllegalAccessException ex) {
+                            throw new EntityDeserialisationException("The field [" + prop.field() + "] is not accessible. Fatal error during deserialisation process for entity [" + entity + "].", ex);
+                        } catch (final IllegalArgumentException ex) {
+                            throw new EntityDeserialisationException("The field [" + prop.field() + "] is not declared in entity with type [" + type.getName() + "]. Fatal error during deserialisation process for entity [" + entity + "].", ex);
+                        }
+                        entity.getPropertyOptionally(propertyName).map(metaProperty -> 
+                            deserialiseMetaProperty((MetaProperty<Object>) metaProperty, node.get("@" + propertyName), prop.field())
+                        );
+                    });
                 }
-                entity.getPropertyOptionally(propertyName).map(metaProperty -> 
-                    deserialiseMetaProperty((MetaProperty<Object>) metaProperty, node.get("@" + propertyName), prop.field())
-                );
-            }
+            });
             return entity;
         }
     }
