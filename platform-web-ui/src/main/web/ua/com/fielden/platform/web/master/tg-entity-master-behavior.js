@@ -595,6 +595,10 @@ const TgEntityMasterBehaviorImpl = {
                     action.isActionInProgressChanged = (function (newValue, oldValue) {
                         oldIsActionInProgressChanged(newValue, oldValue);
                         if (newValue === false && !action.success) { // only enable parent master if action has failed (perhaps during retrieval or on save), otherwise leave enabling logic to the parent master itself (saving of parent master should govern that)
+                            const saveButton = queryElements(self, "tg-action[role='save']")[0];
+                            if (saveButton) {
+                                saveButton._afterExecution();
+                            }
                             _self.restoreAfterSave();
                             _self.fire('continuation-completed-without-success', action);
                         }

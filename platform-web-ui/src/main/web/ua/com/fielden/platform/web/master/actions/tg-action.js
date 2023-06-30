@@ -291,7 +291,11 @@ Polymer({
                 self.postAction = function (smth) {
                     try {
                         const result = newValue(smth);
-                        self._afterExecution();
+                        const potentiallySavedOrNewEntity = Array.isArray(smth) ? smth[0] : smth;
+                        const _exceptionOccurred = potentiallySavedOrNewEntity.exceptionOccurred();
+                        if (self.role !== 'save' || _exceptionOccurred === null || !_exceptionOccurred.ex || !_exceptionOccurred.ex.continuationTypeStr) {
+                            self._afterExecution();
+                        }
                         return result;
                     } catch (e) {
                         throw enhanceStateRestoration(e, () => self._afterExecution());
