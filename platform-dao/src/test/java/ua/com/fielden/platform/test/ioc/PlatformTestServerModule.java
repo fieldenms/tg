@@ -101,6 +101,8 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(TgOrgUnit5WithSummariesCo.class).to(TgOrgUnit5WithSummariesDao.class);
 
         bind(ITgBogieLocation.class).to(TgBogieLocationDao.class);
+        bind(UnionEntityWithSkipExistsValidationCo.class).to(UnionEntityWithSkipExistsValidationDao.class);
+        bind(EntityWithUnionEntityWithSkipExistsValidationCo.class).to(EntityWithUnionEntityWithSkipExistsValidationDao.class);
         bind(ITgBogie.class).to(TgBogieDao.class);
         bind(TgSynBogieCo.class).to(TgSynBogieDao.class);
         bind(ITgBogieClass.class).to(TgBogieClassDao.class);
@@ -176,6 +178,11 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(ITgCentreDiffSerialisationNonPersistentChild.class).to(TgCentreDiffSerialisationNonPersistentChildDao.class);
         bind(ITgCentreDiffSerialisationNonPersistentCompositeChild.class).to(TgCentreDiffSerialisationNonPersistentCompositeChildDao.class);
         bind(EntityWithDynamicRequirednessCo.class).to(EntityWithDynamicRequirednessDao.class);
+
+        bind(TgUnionCo.class).to(TgUnionDao.class);
+        bind(TgUnionType1Co.class).to(TgUnionType1Dao.class);
+        bind(TgUnionType2Co.class).to(TgUnionType2Dao.class);
+        bind(TgUnionCommonTypeCo.class).to(TgUnionCommonTypeDao.class);
 
         // FIXME the following approach should have been the correct one for binding companion objects,
         //       however, not all test domain entities actually have companions, hence manual binding...

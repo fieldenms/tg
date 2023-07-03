@@ -150,8 +150,41 @@ const _deepestActiveElementOf = function (element) {
 /**
  * Finds deepest active element including those inside Shadow root children of custom web components starting lookup from document.activeElement.
  */
-export function deepestActiveElement () {
+export const deepestActiveElement = function () {
     return _deepestActiveElementOf(document.activeElement);
+};
+
+/**
+ * Returns a pair of { short: ..., extended: ... } messages, associated with the 'result'.
+ * The 'result' may be of type Result, Warning or Informative (java).
+ * 
+ * 'result' message should never be 'null' (see Result.getMessage()), except the case where java's NPE was causing failure Result -- in this case we return 'Null pointer exception' for both short and extended messages.
+ * If Result was constructed with single message, it will be used for both short and extended messages.
+ * Otherwise we do splitting by <extended/> part (and try to be smart if there are missing parts before or after <extended/>).
+ */
+export const resultMessages = function (result) {
+    if (result.message === null) {
+        const npeMsg = 'Null pointer exception';
+        return {
+            short: npeMsg,
+            extended: npeMsg
+        };
+    }
+    if (result.message) { // non-empty string
+        const messages = result.message.split('<extended/>');
+        const shortMessage = messages[0] || messages[1]; // return exact message before <extended/>, only if non-empty; otherwise return ext message; or whole message if there is no <extended/> part
+        return {
+            short: shortMessage,
+            extended: messages[1] || shortMessage // return exact message after <extended/>, only if non-empty; otherwise return short message; or whole message if there is no <extended/> part
+        };
+    }
+    // only '' value are possible here (inside Result / Exception deserialised instances);
+    // however, the method may be used for some artificial values from Web UI;
+    // just return the same empty '' or undefined in both short / extended parts -- delegate further
+    return { 
+        short: result.message,
+        extended: result.message
+    };
 };
 
 /**
@@ -237,8 +270,8 @@ export const getKeyEventTarget = function (startFrom, orElse, doDuringSearch) {
  * Returns true if specified text contains html tags which are not allowed to be inserted as html text. 
  *  
  */
-export const containsRestictedTags = function (htmlText) {
-    const offensiveTag = new RegExp('<html|<body|<script|<img|<a', 'mi');
+export const containsRestrictedTags = function (htmlText) {
+    const offensiveTag = new RegExp('<html|<body|<script|<img', 'mi');
     return offensiveTag.exec(htmlText) !== null;
 }
 

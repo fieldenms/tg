@@ -331,6 +331,14 @@ public interface EntityQueryProgressiveInterfaces {
          * @return
          */
         T critCondition(final String propName, final String critPropName);
+        
+        /**
+         * The same as {@link #critCondition(String, String)}, but with {@link IConvertableToPath} parameters.
+         * @param prop
+         * @param critProp
+         * @return
+         */
+        T critCondition(final IConvertableToPath prop, final IConvertableToPath critProp);
 		
         /**
          * Applies value of crit-only property {@code critPropName} (including mnemonics) to persistent collectional property {@code propName} represented by collection in

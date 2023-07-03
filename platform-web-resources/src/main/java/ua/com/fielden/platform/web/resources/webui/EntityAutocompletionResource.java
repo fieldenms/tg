@@ -3,8 +3,10 @@ package ua.com.fielden.platform.web.resources.webui;
 import static java.util.Optional.ofNullable;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.determinePropertyType;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
+import static ua.com.fielden.platform.utils.CollectionUtil.linkedMapOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 import static ua.com.fielden.platform.utils.MiscUtilities.prepare;
+import static ua.com.fielden.platform.web.resources.webui.CriteriaEntityAutocompletionResource.LOAD_MORE_DATA_KEY;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.handleUndesiredExceptions;
 import static ua.com.fielden.platform.web.utils.WebUiResourceUtils.restoreCentreContextHolder;
 
@@ -108,7 +110,7 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
             final List<? extends AbstractEntity<?>> entities = valueMatcher.findMatchesWithModel(searchStringAndDataPageNo._1, searchStringAndDataPageNo._2);
 
             // logger.debug("ENTITY_AUTOCOMPLETION_RESOURCE: search finished.");
-            return restUtil.listJsonRepresentationWithoutIdAndVersion(entities);
+            return restUtil.listJsonRepresentationWithoutIdAndVersion(entities, linkedMapOf(t2(LOAD_MORE_DATA_KEY, searchStringAndDataPageNo._2 > 1)));
         }, restUtil);
     }
 
@@ -121,9 +123,10 @@ public class EntityAutocompletionResource<CONTEXT extends AbstractEntity<?>, T e
      */
     public static T2<String, Integer> prepSearchString(final CentreContextHolder centreContextHolder, final boolean shouldUpperCase) {
         final String searchStringVal = (String) centreContextHolder.getCustomObject().get("@@searchString"); // custom property inside paramsHolder
-        final Optional<String> maybeSearchString = ofNullable(prepare(searchStringVal.contains("*") || searchStringVal.contains("%") ? searchStringVal : searchStringVal + "*"));
+        final Optional<String> maybeSearchString = ofNullable(prepare(searchStringVal.contains("*") || searchStringVal.contains("%") ? searchStringVal : "*" + searchStringVal + "*"));
         final String searchString = maybeSearchString.map(str -> shouldUpperCase ? str.toUpperCase() : str).orElse("%");
-        final int dataPageNo = centreContextHolder.getCustomObject().containsKey("@@dataPage") ? (Integer) centreContextHolder.getCustomObject().get("@@dataPage") : 1;
+        final Optional<Integer> maybeDataPage = ofNullable((Integer) centreContextHolder.getCustomObject().get("@@dataPage"));
+        final int dataPageNo =  maybeDataPage.orElse(1);
         return t2(searchString, dataPageNo);
     }
 

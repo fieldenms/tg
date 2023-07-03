@@ -57,7 +57,7 @@ public abstract class AbstractSearchEntityByKeyWithContext<CONTEXT extends Abstr
 
         final ConditionModel keyCriteria = createRelaxedSearchByKeyCriteriaModel(searchString);
 
-        return hasDescProperty(companion.getEntityType()) ? cond().condition(keyCriteria).or().prop(DESC).iLike().val("%" + searchString).model() : keyCriteria;
+        return hasDescProperty(companion.getEntityType()) ? cond().condition(keyCriteria).or().prop(DESC).iLike().val(searchString).model() : keyCriteria;
     }
 
     /**

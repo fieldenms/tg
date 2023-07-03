@@ -10,9 +10,23 @@ export class TgNumericEditor extends TgEditor {
     
     _formatText (_editingValue) {
         if (this.reflector().isEntity(this.entity)) {
-            return this.reflector().tg_toString(this.convertFromString(_editingValue), this.entity.type(), this.propertyName, { bindingValue: true, display: true, locale: this.$.appConfig.locale });
+            try {
+                return this.reflector().tg_toString(this.convertFromString(_editingValue), this.entity.type(), this.propertyName, { bindingValue: true, display: true, locale: this.$.appConfig.locale });
+            } catch (error) {
+                return _editingValue;
+            }
         }
         return '';
+    }
+
+    _copyTap () {
+        // copy to clipboard should happen only if there is something to copy
+        if (navigator.clipboard && this.$.inputLayer.innerText) {
+            navigator.clipboard.writeText(this.$.inputLayer.innerText);
+            this._showCheckIconAndToast(this.$.inputLayer.innerText);
+        } else if (this.toaster) {
+            this.toaster.openToastWithoutEntity("Nothing to copy", true, "There was nothing to copy.", false);
+        }
     }
     
     /**

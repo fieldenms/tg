@@ -406,7 +406,9 @@
                     assert.strictEqual(validatedEntity.prop('entityProp').isChangedFromOriginal(), true, 'Instance meta-prop should be changedFromOriginal.');
 
                     // value validationresult?
-                    assert.strictEqual(validatedEntity.prop('entityProp').validationResult(), null, 'Instance meta-prop should have empty (successful) validation result.');
+                    assert.ok(validatedEntity.prop('entityProp').validationResult(), 'Instance meta-prop should have non-empty (warning) validation result.');
+                    assert.strictEqual(validatedEntity.prop('entityProp').validationResult()['@resultType'], 'ua.com.fielden.platform.error.Warning');
+                    assert.strictEqual(validatedEntity.prop('entityProp').validationResult().message, "Validator: value with bool prop 'false'.");
 
                     // binding value ok?
                     assert.ok(bindingEntity.get('entityProp'), 'Binding property should be initialised.');
@@ -425,7 +427,9 @@
                     assert.strictEqual(entity.prop('entityProp').isChangedFromOriginal(), false, 'Instance meta-prop should be not changedFromOriginal.');
 
                     // value validationresult?
-                    assert.strictEqual(entity.prop('entityProp').validationResult(), null, 'Instance meta-prop should have empty (successful) validation result.');
+                    assert.ok(entity.prop('entityProp').validationResult(), 'Instance meta-prop should have non-empty (informative) validation result.');
+                    assert.strictEqual(entity.prop('entityProp').validationResult()['@resultType'], 'ua.com.fielden.platform.error.Informative');
+                    assert.strictEqual(entity.prop('entityProp').validationResult().message, "Definer: value with bool prop 'false'.");
 
                     // binding value ok?
                     assert.ok(bindingEntity.get('entityProp'), 'Binding property should be initialised.');
@@ -828,8 +832,8 @@
                     assert.isNull(potentiallySavedOrNewEntity.get('id'), 'Entity id should be null.');
                     assert.strictEqual(potentiallySavedOrNewEntity.version, 0, 'Entity version should be the same.');
                     
-                    assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), 'Entity\'s exceptionOccured should exist.');
-                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, '[1/2/3 6:19] is not acceptable.', 'Entity\'s exceptionOccured should exist.');
+                    assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccurred(), 'Entity\'s exceptionOccurred should exist.');
+                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccurred().message, '[1/2/3 6:19] is not acceptable.', 'Entity\'s exceptionOccurred should exist.');
                     
                     const arrivedValue = null;
                     
@@ -876,8 +880,8 @@
                     assert.isNull(potentiallySavedOrNewEntity.get('id'), 'Entity id should be null.');
                     assert.strictEqual(potentiallySavedOrNewEntity.version, 0, 'Entity version should be the same.');
                     
-                    assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), 'Entity\'s exceptionOccured should exist.');
-                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'Tg Persistent Entity With Properties [DEMO00] already exists.', 'Entity\'s exceptionOccured should exist.');
+                    assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccurred(), 'Entity\'s exceptionOccurred should exist.');
+                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccurred().message, 'Tg Persistent Entity With Properties [DEMO00] already exists.', 'Entity\'s exceptionOccurred should exist.');
                     
                     const arrivedValue = _millis('01/02/2003 06:21:00.000');
                     
@@ -923,8 +927,8 @@
                     assert.isNull(potentiallySavedOrNewEntity.get('id'), 'Entity id should be null.');
                     assert.strictEqual(potentiallySavedOrNewEntity.version, 0, 'Entity version should be the same.');
                     
-                    assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), 'Entity\'s exceptionOccured should exist.');
-                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'Creation failed: [1/2/3 6:20] date is not permitted.', 'Entity\'s exceptionOccured should exist.');
+                    assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccurred(), 'Entity\'s exceptionOccurred should exist.');
+                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccurred().message, 'Creation failed: [1/2/3 6:20] date is not permitted.', 'Entity\'s exceptionOccurred should exist.');
                     
                     const arrivedValue = _millis('01/02/2003 06:20:00.000');
                     
@@ -988,8 +992,8 @@
                     assert.isNull(potentiallySavedOrNewEntity.get('id'), 'Entity id should be null for new entity with failed save attempt.');
                     assert.strictEqual(potentiallySavedOrNewEntity.version, 0, 'Entity version should be the same.');
                     
-                    assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), 'Entity\'s exceptionOccured should exist.');
-                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'Creation failed: [1/2/3 6:22] date is not permitted.', 'Entity\'s exceptionOccured should exist.');
+                    assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccurred(), 'Entity\'s exceptionOccurred should exist.');
+                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccurred().message, 'Creation failed: [1/2/3 6:22] date is not permitted.', 'Entity\'s exceptionOccurred should exist.');
                 };
                 
                 master.postRetrieved = function(entity, bindingEntity, customObject) {
@@ -1178,8 +1182,8 @@
                 master.postSavedForExisting = function (potentiallySavedOrNewEntity, bindingEntity) {
                     assert.isNotNull(potentiallySavedOrNewEntity.get('id'), 'Entity id should be not null.');
                     
-                    assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), 'Entity\'s exceptionOccured should exist.');
-                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'Modification failed: [1/2/3 6:22] is not acceptable for persisted entity.', 'Entity\'s exceptionOccured should exist.');
+                    assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccurred(), 'Entity\'s exceptionOccurred should exist.');
+                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccurred().message, 'Modification failed: [1/2/3 6:22] is not acceptable for persisted entity.', 'Entity\'s exceptionOccurred should exist.');
                     
                     const arrivedValue = _millis('01/02/2003 00:00:00.000');
                     
@@ -1214,7 +1218,7 @@
                 master.retrieve();
             });
             
-            test('avoids for existing valid non-dirty entity with Already Saved exception thrown', function (done) {
+            test('of an existing valid non-dirty entity simply returns the same entity back', function (done) {
                 let firstValidation = true;
                 let thirdValidation = false;
                 master.postValidated = function (validatedEntity, bindingEntity, customObject) {
@@ -1242,12 +1246,11 @@
                 
                 master.postSavedForExisting = function (potentiallySavedOrNewEntity, bindingEntity) {
                     assert.isNotNull(potentiallySavedOrNewEntity.get('id'), 'Entity id should be not null.');
-                    
-                    assert.isNotNull(potentiallySavedOrNewEntity.exceptionOccured(), 'Entity\'s exceptionOccured should exist.');
-                    assert.strictEqual(potentiallySavedOrNewEntity.exceptionOccured().message, 'There are no changes to save.', 'Entity\'s exceptionOccured should exist.');
-                    
+
+                    assert.isNull(potentiallySavedOrNewEntity.exceptionOccurred(), 'No exception was expected when attempting to save not changed entity.');
+
                     const arrivedValue = _millis('01/02/2003 00:00:00.000');
-                    
+
                     // value ok?
                     assert.ok(potentiallySavedOrNewEntity.get('dateProp'), 'Property value should be initialised.');
                     assert.strictEqual(potentiallySavedOrNewEntity.get('dateProp'), arrivedValue, 'Property value should be correct.');
@@ -1348,7 +1351,60 @@
                     master.setEditorValue4PropertyFromConcreteValue('key', 'TEST');
                 });
             });
-            
+
+            test('BindSavedPropertyPostActionSuccess binds parent master with saved instance and updates property action indices', function (done) {
+                master.entityId = '10';
+                let validateCount = 0, saveCount = 0;
+                let smallValue;
+
+                const checkIndices = expectedBigDecimalPropIndex => {
+                    assert.deepEqual(master._propertyActionIndices, {
+                        "booleanProp": 0,
+                        "compositeProp": 0,
+                        "dateProp": 0,
+                        "entityProp.entityProp": 0,
+                        "bigDecimalProp": expectedBigDecimalPropIndex,
+                        "requiredValidatedProp": 0,
+                        "key": 0,
+                        "status": 0,
+                        "stringProp": 0,
+                        "entityProp": 0
+                    });
+                };
+                master.postSaved = function (potentiallySavedOrNewEntity, newBindingEntity) {
+                    saveCount++;
+                    if (saveCount === 1) {
+                        checkIndices(smallValue ? 2 : 0); // III -- indices remained "as is" after Complete action binds entity in its BindSavedPropertyPostActionSuccess
+                    } else if (saveCount === 2) {
+                        checkIndices(smallValue ? 2 : 0); // V -- indices become 0 or 2 again after making entity not 'completed'
+                        done();
+                    }
+                };
+                master.postValidated = function (validatedEntity, bindingEntity, customObject) {
+                    validateCount++;
+                    if (validateCount === 1) {
+                        checkIndices(smallValue ? 2 : 0); // II -- changed indices after first validation
+                        const completeButton = master.shadowRoot.querySelector('tg-ui-action[short-desc="Complete"]'); // trigger Complete action
+                        completeButton._run();
+                    } else if (validateCount === 2) {
+                        checkIndices(1); // IV -- indices get updated in parent master update from Complete action (see tg-ui-action._onExecuted.postSaved postal publish); 'completed' entity has index 1 (see BigDecimalPropActionSelector)
+                        master.$.editor_4_completed._editingValue = 'false'; // change 'completed' back to 'false' ...
+                        master.$.editor_4_completed.commit();
+                        master.save(); // ... and save
+                    }
+                };
+                master.retrieve().then(function () {
+                    // at start, the entity is not 'completed' and bigDecimalProp will have value '12' (zero action index) or '25' (action index equal to 2)
+                    smallValue = master.$.editor_4_bigDecimalProp._editingValue === '12';
+                    checkIndices(smallValue ? 0 : 2);
+
+                    master.$.editor_4_requiredValidatedProp._editingValue = '30';
+                    master.$.editor_4_requiredValidatedProp.commit();
+                    master.$.editor_4_bigDecimalProp._editingValue = smallValue ? '25' : '12'; // I -- change value to "opposite"
+                    master.$.editor_4_bigDecimalProp.commit();
+                });
+            });
+
         });
     </script>
 </body>

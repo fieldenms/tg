@@ -87,7 +87,7 @@ const template = html`<iron-iconset-svg name='tg-icons' size='24'>
 </svg>
 <g id="crop-7-5"><path d="M19 7H5c-1.1 0-2 .9-2 2v6c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V9c0-1.1-.9-2-2-2zm0 8H5V9h14v6z"></path></g> <!-- from https://poly-icon.appspot.com --><g id="crop-square"><path d="M18 4H6c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 14H6V6h12v12z"></path></g> <!-- from https://poly-icon.appspot.com --><svg id="day" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="24" height="24" viewBox="0 0 24 24"><path d="M21 18H2V20H21V18M19 10V14H4V10H19M20 8H3C2.45 8 2 8.45 2 9V15C2 15.55 2.45 16 3 16H20C20.55 16 21 15.55 21 15V9C21 8.45 20.55 8 20 8M21 4H2V6H21V4Z" /></svg><svg id="dragVertical" xmlns="http://www.w3.org/2000/svg" width="24" height="24">
 <path d="M9,3H11V5H9V3M13,3H15V5H13V3M9,7H11V9H9V7M13,7H15V9H13V7M9,11H11V13H9V11M13,11H15V13H13V11M9,15H11V17H9V15M13,15H15V17H13V15M9,19H11V21H9V19M13,19H15V21H13V19Z" />
-</svg><?xml version="1.0" encoding="UTF-8" standalone="no"?>
+</svg><svg id="expand-all" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M16.59 5.59 12 10.17 7.41 5.59 6 7l6 6 6-6z"/><path d="M16.59 11 12 15.58 7.41 11 6 12.41l6 6 6-6z"/></svg><?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 <svg id="expand" xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#" xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1" xmlns:cc="http://creativecommons.org/ns#" xmlns:dc="http://purl.org/dc/elements/1.1/">
  <metadata id="metadata7">
@@ -212,7 +212,7 @@ const template = html`<iron-iconset-svg name='tg-icons' size='24'>
 </svg><?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg id="number9" xmlns="http://www.w3.org/2000/svg" height="24" width="24" version="1.1">
     <text x="7" y="19" style="font-size:13pt;">9</text>
-</svg>
+</svg><svg id="playlist-remove" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M11 10H2v2h9z" style="stroke-width:.86602539"/><path d="M14 6H2v2h12zM18.414 15l2.829-2.828-1.415-1.415L17 13.586l-2.828-2.829-1.415 1.415L15.586 15l-2.829 2.828 1.415 1.415L17 16.414l2.828 2.829 1.415-1.415z"/><path d="M2 16h9v-2H2Z" style="stroke-width:1.06066012"/></svg>
 <path id="resize-bottom-right" d="M22,22H20V20H22V22M22,18H20V16H22V18M18,22H16V20H18V22M18,18H16V16H18V18M14,22H12V20H14V22M22,14H20V12H22V14Z" /> <!-- resize-bottom-right from https://materialdesignicons.com/ -->
 
 <path id="share" d="M21,12L14,5V9C7,10 4,15 3,20C5.5,16.5 9,14.9 14,14.9V19L21,12Z" /> <!-- share from https://materialdesignicons.com/ -->

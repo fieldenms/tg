@@ -2,8 +2,8 @@ package ua.com.fielden.platform.web.centre.api.context;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 
-public interface IEntityCentreContextSelector4<T extends AbstractEntity<?>> extends IEntityCentreContextSelectorFunction<T> {
+public interface IEntityCentreContextSelector4<T extends AbstractEntity<?>> extends IEntityCentreContextSelector6<T> {
 
-    IEntityCentreContextSelectorFunction<T> withCurrentEntity();
-    IEntityCentreContextSelectorFunction<T> withSelectedEntities();
+    IEntityCentreContextSelector6<T> withCurrentEntity();
+    IEntityCentreContextSelector6<T> withSelectedEntities();
 }

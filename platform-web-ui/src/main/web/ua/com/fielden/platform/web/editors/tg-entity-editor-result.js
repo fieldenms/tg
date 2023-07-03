@@ -3,7 +3,9 @@ import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout.js';
 import '/resources/polymer/@polymer/iron-flex-layout/iron-flex-layout-classes.js';
 import '/resources/polymer/@polymer/iron-selector/iron-selector.js';
 
-import '/resources/polymer/@polymer/paper-button/paper-button.js';
+import '/resources/polymer/@polymer/iron-icons/iron-icons.js';
+import '/resources/images/tg-icons.js';
+import '/resources/polymer/@polymer/paper-icon-button/paper-icon-button.js';
 import '/resources/polymer/@polymer/paper-item/paper-item.js';
 import '/resources/polymer/@polymer/paper-styles/color.js';
 
@@ -19,6 +21,15 @@ import { IronOverlayBehavior } from '/resources/polymer/@polymer/iron-overlay-be
 import {mixinBehaviors} from '/resources/polymer/@polymer/polymer/lib/legacy/class.js';
 import {html, PolymerElement} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 import {microTask} from '/resources/polymer/@polymer/polymer/lib/utils/async.js';
+
+/**
+ * A set of colours used for rendering labels in the autocompletion result when autocompleting union entities, to represent values of various entity types that correspond to different union properties.
+ * These colours are selected from https://materialui.co/colors/ – a subset from the row with colour ID 50.
+ */
+//                                green     d-purple   pink       brown      teal       indigo
+const unionPropertyBgColours = ['#E8F5E9', '#EDE7F6', '#FCE4EC', '#EFEBE9', '#E0F2F1', '#E8EAF6'];
+const unionPropertyFgColours = ['#63BB6A', '#855CC2', '#E93772', '#A0887C', '#5DBBB6', '#5F6DC0'];
+
 
 const template = html`
     <style>
@@ -46,14 +57,21 @@ const template = html`
             min-height: 24px;
         }
 
-        .tg-item:hover {
+        .tg-item.inactive {
+            color: color-mix(in srgb, black 33%, white);
+        }
+
+        .tg-item:hover{
             cursor: pointer;
             background: var(--paper-blue-50);
+        }
+
+        .tg-item:hover:not(.inactive) {
             color: var(--paper-blue-500);
         }
 
         .tg-item.iron-selected {
-            background: var(--paper-blue-500);
+            background: var(--paper-blue-300);
             color: var(--paper-blue-50);
         }
 
@@ -61,17 +79,8 @@ const template = html`
             background-color: #ffff46;
         }
 
-        paper-button {
-            color: var(--paper-light-blue-500);
-            --paper-button-flat-focus-color: var(--paper-light-blue-50);
-        }
-        paper-button:hover {
-            background: var(--paper-light-blue-50);
-        }
-
-        paper-button[disabled] {
-            color: var(--paper-blue-grey-500);
-            background: var(--paper-blue-grey-50);
+        paper-item:focus {
+            background-color: #E1F5FE;
         }
 
         .additional-prop {
@@ -85,6 +94,16 @@ const template = html`
         .prop-name {
             font-weight: bold;
             padding-right: 0.5em;
+        }
+
+        .type-name {
+            font-size: x-small;
+            background-color: var(--paper-grey-200);
+            color: #737373;
+            line-height: 18px;
+            border-radius: 9px;
+            padding-left: 8px;
+            padding-right: 8px;
         }
 
         .tg-snatchback-button {
@@ -109,7 +128,7 @@ const template = html`
         }
 
         .toolbar {
-            padding: 0 10px 10px;
+            padding: 0 3px 3px;
             height: auto;
             position: relative;
             overflow: hidden;
@@ -117,7 +136,26 @@ const template = html`
             flex-shrink: 0;
         }
         .toolbar-content > * {
-            margin-top: 8px;
+            margin-top: 3px;
+        }
+        paper-icon-button {
+            border-radius: 50%;
+            color: var(--paper-grey-700);
+        }
+        paper-icon-button[active-button] {
+            border-style: solid;
+            border-width: 2px;
+        }
+        .counter {
+            width: 24px;
+            height: 24px;
+            padding: 8px;
+            text-align: center;
+            font-size: 13px;
+            font-weight: bold;
+            line-height: 24px;
+            color: var(--paper-blue-300);
+            cursor: default;
         }
     </style>
     <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
@@ -125,8 +163,7 @@ const template = html`
         <iron-selector id="selector" class="tg-snatchback" multi$="[[multi]]" attr-for-selected="value" on-iron-deselect="_itemDeselected" on-iron-select="_itemSelected">
             <!-- begin of dom-repeat -->
             <template is="dom-repeat" items="[[_values]]" as="v">
-                <paper-item id$="[[_makeId(index)]]" value$="[[v.key]]" tabindex="-1" noink class="tg-item vertical-layout"> <!-- please note that union entities are not supported in autocompletion results and, most likely, will never be. Otherwise consider finding .key places here and adjust accordingly using property getter. -->
-                </paper-item>
+                <paper-item id$="[[_makeId(index)]]" value$="[[_getKeyFor(v)]]" tabindex="-1" noink class$="[[_calcItemClass(v)]]"></paper-item>
             </template>
             <!-- end of dom-repeat -->
         </iron-selector>
@@ -138,11 +175,13 @@ const template = html`
     </div>
     <div class="toolbar layout horizontal wrap">
         <div class="toolbar-content layout horizontal center">
-            <paper-button tooltip-text="Load more matching values, if any" on-tap="_loadMore" id="loadMoreButton" disabled$="[[!enableLoadMore]]">More</paper-button>
+            <paper-icon-button tooltip-text="Load more matching values, if any" on-tap="_loadMore" id="loadMoreButton" disabled$="[[!enableLoadMore]]" icon="tg-icons:expand-all"></paper-icon-button>
+            <paper-icon-button tooltip-text$="[[_tooltipForActiveOnlyButton(_activeOnly)]]" on-tap="_changeActiveOnly" hidden$="[[_isHiddenActiveOnlyButton(_activeOnly)]]" icon="tg-icons:playlist-remove" active-button$="[[_activeOnly]]"></paper-icon-button>
         </div>
         <div class="toolbar-content layout horizontal center" style="margin-left:auto">
-            <paper-button tooltip-text="Discard and close" on-tap="_close">Cancel</paper-button>
-            <paper-button tooltip-text="Accept selected" on-tap="_acceptValues">Ok</paper-button>
+            <div class="counter" hidden$="[[_isHiddenSelectedValuesCounter(multi, selectedValues)]]" tooltip-text$="[[_tooltipForSelectedValuesCounter(selectedValues)]]">[[_calcSelectedValuesCounter(selectedValues)]]</div>
+            <paper-icon-button tooltip-text="Discard and close" on-tap="_close" icon="cancel"></paper-icon-button>
+            <paper-icon-button tooltip-text="Accept selected" on-tap="_acceptValues" icon="check-circle"></paper-icon-button>
         </div>
     </div>`;
 
@@ -168,7 +207,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                     return [];
                 }
             },
-    
+
             _foundSome: {
                 type: Boolean,
                 value: false
@@ -232,7 +271,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
             },
     
             /**
-             * A function that perorms acceptance of selected values. It is assigned in tg-entity-editor. 
+             * A function that performs acceptance of selected values. It is assigned in tg-entity-editor. 
              */
             acceptValues: {
                 type: Function
@@ -244,7 +283,21 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
             loadMore: {
                 type: Function
             },
-    
+
+            /**
+             * Indicates whether 'active only' values should be found in this autocompleter.
+             */
+            _activeOnly: {
+                type: Object // 'null' for non-activatable or for autocompleter on entity master, or otherwise true / false; also it is 'null' in the beginning where 'active only' parameter was not yet retrieved
+            },
+
+            /**
+             * A function to change _activeOnly. It is assigned in tg-entity-editor.
+             */
+            changeActiveOnly: {
+                type: Function
+            },
+
             /**
              * Controls if buton MORE is enabled.
              */
@@ -265,7 +318,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
             }
         };
     }
-    
+
     constructor () {
         super();
         this.noAutoFocus = true;
@@ -281,6 +334,30 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         tearDownEvent(e);
     }
 
+    /**
+     * Function, bound to 'active only' toggle button. Starts process of toggling this option through tg-entity-editor's '_changeActiveOnly' function.
+     */
+    _changeActiveOnly (e) {
+        this.changeActiveOnly(!this._activeOnly);
+        tearDownEvent(e);
+    }
+
+    /**
+     * Calculates invisibility of 'active only' toggle button (i.e. invisible on masters and for non-activatable values).
+     */
+    _isHiddenActiveOnlyButton (_activeOnly) {
+        return _activeOnly === null;
+    }
+
+    /**
+     * Calculates corresponding tooltip based on an action, that will be performed on tap of 'active only' toggle button.
+     */
+    _tooltipForActiveOnlyButton (_activeOnly) {
+        return _activeOnly === null ? '' // button is invisible
+             : _activeOnly === true ? 'Include inactive values'
+             : 'Exclude inactive values';
+    }
+
     _close (e) {
         this.close();
         tearDownEvent(e);
@@ -294,28 +371,36 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
     clearSelection () {
         this._selectedIndex = 0;
         this._keyBoardNavigationReady = false;
-        this.$.selector.selectedItem = null;
+        if (this.$) { // in some cases children of this entity editor result may not be built yet
+            this.$.selector.selectedItem = null;
+        }
         this.selectedValues = {};
 
         while (this.pop('_values')) {}
 
-        if (this.multi === true) {
-            this.$.selector.selectedValues = [];
-        } else {
-            this.$.selector.selected = '';
+        if (this.$) { // in some cases children of this entity editor result may not be built yet
+            if (this.multi === true) {
+                this.$.selector.selectedValues = [];
+            } else {
+                this.$.selector.selected = '';
+            }
         }
     }
 
     /* Pushes the specified value into the tail of array _values if that value is not yet present.
      * Returns true if the value was new, false otherwise. */
     pushValue (value) {
-        const existingValue = this._values.find(obj => obj.key === value.key);
+        const existingValue = this._values.find(obj => this._getKeyFor(obj) === this._getKeyFor(value));
 
         if (!existingValue) {
             this.push('_values', value);
         }
 
         return !existingValue;
+    }
+
+    _getKeyFor (entity) {
+        return entity['@key'];
     }
 
     /*
@@ -367,10 +452,22 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                     searchQuery,
                     '',
                     '',
-                    v.key,
+                    v.toString(),
                     () => this._propValueByName(v, 'desc'),
-                    withDesc === true
+                    withDesc === true,
+                    typeof v.active === 'undefined' || v.get("active")
                 );
+
+                //Add type description if entity editor is for union entity
+                const entityType = v.type();
+                if (entityType.isUnionEntity()) {
+                    const activeProp = v._activeProperty();
+                    const title = entityType.prop(activeProp).title();
+                    const colourIndex = entityType.unionProps().indexOf(activeProp) % unionPropertyBgColours.length;
+                    const bgColor = unionPropertyBgColours[colourIndex];
+                    const fgColor = unionPropertyFgColours[colourIndex];
+                    html = html + `<span class="type-name" style="background-color:${bgColor};color:${fgColor}">${title}</span>`;
+                }
 
                 // add values for additional properties with highlighting of matching parts if required
                 for (let propName in this.additionalProperties) {
@@ -385,7 +482,8 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
                             '<span class="prop-name"><span>' + this._propTitleByName(v, propName) + '</span>:</span>',
                             this._propValueByName(v, propName),
                             () => this._propValueByName(v, propName + '.desc'),
-                            this.reflector.isEntity(v.get(propName)) && typeof v.get(propName)['desc'] !== 'undefined'
+                            this.reflector.isEntity(v.get(propName)) && (typeof v.get(propName)['desc'] !== 'undefined' || v.get(propName).type().isUnionEntity()),
+                            typeof v.active === 'undefined' || v.get("active")
                         );
                     }
                 }
@@ -411,16 +509,14 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
      * @param secondaryStringValue - function to compute value of desc in 'key - desc' part of representation
      * @param secondaryStringValueRequired - parameter indicating whether desc in 'key - desc' part of representation is required
      */
-    _addHighlightedProp (highlight, searchQuery, wrappingDivAttrs, prependingDom, mainStringValue, secondaryStringValue, secondaryStringValueRequired) {
+    _addHighlightedProp (highlight, searchQuery, wrappingDivAttrs, prependingDom, mainStringValue, secondaryStringValue, secondaryStringValueRequired, active) {
         let html = '<div ' + wrappingDivAttrs + 'style="white-space: nowrap;">' +
             prependingDom +
             this._highlightedValue(highlight, mainStringValue, searchQuery);
         if (secondaryStringValueRequired) {
             const propDesc = secondaryStringValue();
             if (propDesc && propDesc !== 'null' && propDesc !== '') {
-                html = html + '<span style="color:#737373"> &ndash; <i>' +
-                    this._highlightedValue(highlight, propDesc, searchQuery) +
-                    '</i></span>';
+                html = html + `<span style="color:${active ? "#737373" : "currentcolor"}"> &ndash; <i>${this._highlightedValue(highlight, propDesc, searchQuery)}</i></span>`;
             }
         }
         return html + '</div>';
@@ -450,7 +546,8 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         this._selectedIndex = this._unmakeId(event.detail.item.id);
 
         const value = event.detail.item.getAttribute("value");
-        this.selectedValues[value] = this._values.find(obj => obj.key === value);
+        this.selectedValues[value] = this._values.find(obj => this._getKeyFor(obj) === value);
+        this.selectedValues = { ...this.selectedValues }; // re-set a shallow copy to trigger Polymer events
     }
 
     _itemDeselected (event) {
@@ -459,6 +556,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
 
         const value = event.detail.item.getAttribute("value");
         delete this.selectedValues[value];
+        this.selectedValues = { ...this.selectedValues }; // re-set a shallow copy to trigger Polymer events
     }
 
     /**
@@ -468,7 +566,7 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
     focusItemWithIndex (index) {
         this._selectedIndex = index;
         const id = this._makeId(index);
-        const paperItem = this.shadowRoot.querySelector("#" + id);
+        const paperItem = this.shadowRoot && this.shadowRoot.querySelector("#" + id);
         if (paperItem) {
             paperItem.scrollIntoView({block: "center", inline: "center", behavior: "smooth"});
             paperItem.focus();
@@ -597,6 +695,40 @@ export class TgEntityEditorResult extends mixinBehaviors([IronOverlayBehavior, T
         const itemHeight = 24 + 2 * 6 + 1; // see tg-item styles with min-height, top / bottom padding and top border
         return visibleHeight - top - 10 < 3 * itemHeight; // three items do not fit, so visible height is small for showing items
     }
+
+    /**
+     * Calculates classes for autocompleter list item.
+     */
+    _calcItemClass (item) {
+        let klass = 'tg-item vertical-layout';
+        if (typeof item.active !== 'undefined' && item.get('active') === false) {
+            klass += ' inactive';
+        }
+        return klass;
+    }
+
+    /**
+     * Calculates value for 'selected values counter'.
+     */
+    _calcSelectedValuesCounter (selectedValues) {
+        return Object.keys(selectedValues).length;
+    }
+
+    /**
+     * Calculates tooltip for 'selected values counter', showing comma-separated values.
+     */
+    _tooltipForSelectedValuesCounter (selectedValues) {
+        const tooltipText = Object.keys(selectedValues).join(', ');
+        return tooltipText ? '<b>' + tooltipText + '</b>' : '';
+    }
+
+    /**
+     * Calculates invisibility of 'selected values counter'.
+     */
+    _isHiddenSelectedValuesCounter (multi, selectedValues) {
+        return !multi || Object.keys(selectedValues).length === 0;
+    }
+
 }
 
 customElements.define('tg-entity-editor-result', TgEntityEditorResult);

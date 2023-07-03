@@ -9,6 +9,7 @@ import static java.util.Optional.ofNullable;
 import static java.util.stream.Collectors.toList;
 import static ua.com.fielden.platform.domaintree.impl.CalculatedProperty.generateNameFrom;
 import static ua.com.fielden.platform.web.centre.WebApiUtils.treeName;
+import static ua.com.fielden.platform.web.centre.api.EntityCentreConfig.MatcherOptions.HIDE_ACTIVE_ONLY_ACTION;
 import static ua.com.fielden.platform.web.centre.api.insertion_points.InsertionPoints.ALTERNATIVE_VIEW;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.FRONT;
 import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalActionKind.INSERTION_POINT;
@@ -20,6 +21,7 @@ import static ua.com.fielden.platform.web.centre.api.resultset.impl.FunctionalAc
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -27,7 +29,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.BiConsumer;
-import java.util.function.Supplier;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -40,6 +41,7 @@ import ua.com.fielden.platform.basic.autocompleter.FallbackValueMatcherWithCentr
 import ua.com.fielden.platform.domaintree.centre.ICentreDomainTreeManager;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.fetch.IFetchProvider;
+import ua.com.fielden.platform.types.tuples.T3;
 import ua.com.fielden.platform.utils.Pair;
 import ua.com.fielden.platform.web.app.exceptions.WebUiBuilderException;
 import ua.com.fielden.platform.web.centre.CentreContext;
@@ -47,6 +49,8 @@ import ua.com.fielden.platform.web.centre.IQueryEnhancer;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.actions.multi.EntityMultiActionConfig;
 import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
+import ua.com.fielden.platform.web.centre.api.crit.IMultiValueAutocompleterBuilder;
+import ua.com.fielden.platform.web.centre.api.crit.ISingleValueAutocompleterBuilder;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.assigners.IValueAssigner;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritBooleanValueMnemonic;
 import ua.com.fielden.platform.web.centre.api.crit.defaults.mnemonics.MultiCritStringValueMnemonic;
@@ -177,10 +181,21 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     private final Map<String, SingleCritDateValueMnemonic> defaultSingleValuesForDateSelectionCriteria = new HashMap<>();
 
     /**
-     * A map between selection criteria properties and their custom value matchers. If a matcher for some criterion is not provided then a default instance of type
+     * Enumeration that contains options for specifying custom value matcher in selection criteria autocompleters.
+     */
+    public enum MatcherOptions {
+        /**
+         * Hides 'active only' toggle button in selection criteria autocompleter result dialogs for activatable properties.
+         * May be useful for autocompleters with custom matcher, that already filters out inactive values.
+         */
+        HIDE_ACTIVE_ONLY_ACTION;
+    }
+
+    /**
+     * A map between selection criteria properties and their custom value matchers with context configuration and MatcherOptions. If a matcher for some criterion is not provided then a default instance of type
      * {@link FallbackValueMatcherWithCentreContext} should be used.
      */
-    private final Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>> valueMatchersForSelectionCriteria = new HashMap<>();
+    private final Map<String, T3<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>, List<MatcherOptions>>> valueMatchersForSelectionCriteria = new HashMap<>();
 
     /**
      * A map between selection criteria properties that are associated with multi- or single-value autocompleter and the additional properties that should be set up for those
@@ -265,18 +280,18 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         public final int width;
         public final boolean isFlexible;
 
-        private Supplier<Optional<EntityActionConfig>> propAction = Optional::empty;
+        private Optional<EntityMultiActionConfig> propAction = empty();
 
-         public static <T extends AbstractEntity<?>> ResultSetProp<T> propByName(final String propName, final int width, final boolean isFlexible, final Optional<AbstractWidget> widget, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
+         public static <T extends AbstractEntity<?>> ResultSetProp<T> propByName(final String propName, final int width, final boolean isFlexible, final Optional<AbstractWidget> widget, final String tooltipProp, final Optional<EntityMultiActionConfig> propAction) {
             return new ResultSetProp<>(propName, empty(), empty(), empty(), width, isFlexible, widget, tooltipProp, null, propAction);
         }
 
-        public static <T extends AbstractEntity<?>> ResultSetProp<T> propByDef(final PropDef<?> propDef, final int width, final boolean isFlexible, final String tooltipProp, final Supplier<Optional<EntityActionConfig>> propAction) {
+        public static <T extends AbstractEntity<?>> ResultSetProp<T> propByDef(final PropDef<?> propDef, final int width, final boolean isFlexible, final String tooltipProp, final Optional<EntityMultiActionConfig> propAction) {
             return new ResultSetProp<>(null, empty(), empty(), empty(), width, isFlexible, Optional.empty(), tooltipProp, propDef, propAction);
         }
 
         public static <T extends AbstractEntity<?>> ResultSetProp<T> dynamicProps(final String collectionalPropertyName, final Class<? extends IDynamicColumnBuilder<T>> dynamicPropDefinerClass, final BiConsumer<? extends AbstractEntity<?>, Optional<CentreContext<T, ?>>> entityPreProcessor, final CentreContextConfig contextConfig) {
-            return new ResultSetProp<>(collectionalPropertyName, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), 0, false, Optional.empty(), null, null, () -> Optional.empty());
+            return new ResultSetProp<>(collectionalPropertyName, of(dynamicPropDefinerClass), of(contextConfig), of(entityPreProcessor), 0, false, empty(), null, null, empty());
         }
 
         private ResultSetProp(
@@ -289,14 +304,14 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
                 final Optional<AbstractWidget> widget,
                 final String tooltipProp,
                 final PropDef<?> propDef,
-                final Supplier<Optional<EntityActionConfig>> propAction) {
+                final Optional<EntityMultiActionConfig> propAction) {
 
             if (propName != null && propDef != null) {
                 throw new WebUiBuilderException("Only one of property name or property definition should be provided.");
             }
 
             if (propAction == null) {
-                throw new WebUiBuilderException("Property action suppplier cannot be null.");
+                throw new WebUiBuilderException("Multiple Property Action cannot be null.");
             }
 
             if (StringUtils.isEmpty(propName) && propDef == null) {
@@ -315,11 +330,11 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             this.entityPreProcessor = entityPreProcessor;
         }
 
-        public void setPropAction(final Supplier<Optional<EntityActionConfig>> propAction) {
+        public void setPropAction(final Optional<EntityMultiActionConfig> propAction) {
             this.propAction = propAction;
         }
 
-        public Supplier<Optional<EntityActionConfig>> getPropAction() {
+        public Optional<EntityMultiActionConfig> getPropAction() {
             return propAction;
         }
 
@@ -468,7 +483,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
             final Map<String, SingleCritOtherValueMnemonic<BigDecimal>> defaultSingleValuesForBigDecimalAndMoneySelectionCriteria,
             final Map<String, SingleCritDateValueMnemonic> defaultSingleValuesForDateSelectionCriteria,
 
-            final Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>> valueMatchersForSelectionCriteria,
+            final Map<String, T3<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>, List<MatcherOptions>>> valueMatchersForSelectionCriteria,
             final Map<String, List<Pair<String, Boolean>>> additionalPropsForAutocompleter,
             final Map<String, Class<? extends AbstractEntity<?>>> providedTypesForAutocompletedSelectionCriteria,
 
@@ -656,7 +671,7 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
         return ImmutableListMultimap.copyOf(summaryExpressions);
     }
 
-    public Optional<Map<String, Pair<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>>>> getValueMatchersForSelectionCriteria() {
+    public Optional<Map<String, T3<Class<? extends IValueMatcherWithCentreContext<? extends AbstractEntity<?>>>, Optional<CentreContextConfig>, List<MatcherOptions>>>> getValueMatchersForSelectionCriteria() {
         if (valueMatchersForSelectionCriteria.isEmpty()) {
             return Optional.empty();
         }
@@ -888,8 +903,9 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
                 throw new CentreConfigException("No result-set property exists.");
             }
             return getResultSetProperties().get().stream()
-                    .filter(resultSetProp -> resultSetProp.propAction.get().isPresent())
-                    .map(resultSetProp -> resultSetProp.propAction.get().get())
+                    .filter(resultSetProp -> resultSetProp.propAction.isPresent())
+                    .map(resultSetProp -> resultSetProp.propAction.get().actions())
+                    .flatMap(Collection::stream)
                     .collect(toList())
                     .get(actionNumber);
         } else if (INSERTION_POINT == actionKind) {
@@ -1019,4 +1035,22 @@ public class EntityCentreConfig<T extends AbstractEntity<?>> {
     public String getRowHeight() {
         return rowHeight;
     }
+
+    /**
+     * Indicates whether 'active only' action was deliberately hidden by specifying {@link MatcherOptions#HIDE_ACTIVE_ONLY_ACTION} option in following methods:<br>
+     * {@link ISingleValueAutocompleterBuilder#withMatcher(Class, MatcherOptions, MatcherOptions...)}<br>
+     * {@link ISingleValueAutocompleterBuilder#withMatcher(Class, CentreContextConfig, MatcherOptions, MatcherOptions...)}<br>
+     * {@link IMultiValueAutocompleterBuilder#withMatcher(Class, MatcherOptions, MatcherOptions...)}<br>
+     * {@link IMultiValueAutocompleterBuilder#withMatcher(Class, CentreContextConfig, MatcherOptions, MatcherOptions...)}
+     * 
+     * @param property
+     * @return
+     */
+    public boolean isActiveOnlyActionHidden(final String property) {
+        return getValueMatchersForSelectionCriteria()
+            .map(matchersInfo -> matchersInfo.get(property))
+            .map(matcherInfo -> matcherInfo._3.contains(HIDE_ACTIVE_ONLY_ACTION))
+            .orElse(false);
+    }
+
 }

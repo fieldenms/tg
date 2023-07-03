@@ -15,4 +15,8 @@ public class ElementFinderException extends MetaModelProcessorException {
         super(message);
     }
 
+    public ElementFinderException(final String message, final Throwable cause) {
+        super(message, cause);
+    }
+
 }

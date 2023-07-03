@@ -32,15 +32,18 @@ import static ua.com.fielden.platform.utils.CollectionUtil.mapOf;
 import static ua.com.fielden.platform.utils.EntityUtils.areEqual;
 import static ua.com.fielden.platform.utils.EntityUtils.equalsEx;
 import static ua.com.fielden.platform.utils.EntityUtils.fetchWithKeyAndDesc;
+import static ua.com.fielden.platform.utils.EntityUtils.isActivatableEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isDate;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isPropertyDescriptor;
 import static ua.com.fielden.platform.utils.EntityUtils.isString;
 import static ua.com.fielden.platform.utils.EntityUtils.isSyntheticBasedOnPersistentEntityType;
+import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.findLoadableConfig;
 import static ua.com.fielden.platform.web.centre.CentreConfigUtils.isLink;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.AND_BEFORE;
+import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.AUTOCOMPLETE_ACTIVE_ONLY;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.DATE_MNEMONIC;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.DATE_PREFIX;
 import static ua.com.fielden.platform.web.centre.CentreUpdater.MetaValueType.EXCLUSIVE;
@@ -148,7 +151,7 @@ public class CentreUpdater {
      *
      */
     enum MetaValueType {
-        VALUE, VALUE2, EXCLUSIVE, EXCLUSIVE2, OR_NULL, NOT, OR_GROUP, DATE_PREFIX, DATE_MNEMONIC, AND_BEFORE, WIDTH, GROW_FACTOR
+        VALUE, VALUE2, EXCLUSIVE, EXCLUSIVE2, OR_NULL, NOT, OR_GROUP, DATE_PREFIX, DATE_MNEMONIC, AND_BEFORE, WIDTH, GROW_FACTOR, AUTOCOMPLETE_ACTIVE_ONLY
     }
     
     /**
@@ -203,7 +206,7 @@ public class CentreUpdater {
             ? new Money(STRING_TO_BIG_DECIMAL.apply((String) map.get("amount")), STRING_TO_INTEGER.apply((String) map.get("taxPercent")), STRING_TO_CURRENCY.apply((String) map.get("currency")))
             : new Money(STRING_TO_BIG_DECIMAL.apply((String) map.get("amount")), STRING_TO_CURRENCY.apply((String) map.get("currency")));
     private static final Function<AbstractEntity<?>, String> ENTITY_TO_STRING = entity -> entityWithMocksToString((ent) -> {
-        if (isPersistedEntityType(ent.getType()) || isSyntheticBasedOnPersistentEntityType(ent.getType())) {
+        if (isPersistedEntityType(ent.getType()) || isSyntheticBasedOnPersistentEntityType(ent.getType()) || isUnionEntityType(ent.getType())) {
             if (ent.getId() == null) {
                 // Usually persistent (or synthetic based on persistent) entities should have IDs when conversion to diff object is performed.
                 // However we have two edge-cases here.
@@ -1149,6 +1152,12 @@ public class CentreUpdater {
                         diff(property, propertiesDiff).put(VALUE2.name(), convertTo(value2Val, managedTypeSupplier, property));
                     }
                 }
+                if (isActivatableEntityType(propertyType)) {
+                    final boolean autocompleteActiveOnlyVal = centre.getFirstTick().getAutocompleteActiveOnly(root, property);
+                    if (!equalsEx(autocompleteActiveOnlyVal, defaultCentre.getFirstTick().getAutocompleteActiveOnly(root, property))) {
+                        diff(property, propertiesDiff).put(AUTOCOMPLETE_ACTIVE_ONLY.name(), autocompleteActiveOnlyVal);
+                    }
+                }
             }
         }
         
@@ -1276,6 +1285,7 @@ public class CentreUpdater {
             processValue(diff, OR_GROUP.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setOrGroup(root, property, (Integer) value), property);
             processValue(diff, VALUE.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setValue(root, property, convertFrom(value, root, managedTypeSupplier, property, companionFinder)), property);
             processValue(diff, VALUE2.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setValue2(root, property, convertFrom(value, root, managedTypeSupplier, property, companionFinder)), property);
+            processValue(diff, AUTOCOMPLETE_ACTIVE_ONLY.name(), selectionCriteriaContains, "selection criteria", (value) -> targetCentre.getFirstTick().setAutocompleteActiveOnly(root, property, (Boolean) value), property);
             
             final boolean resultSetContains = targetCentre.getSecondTick().checkedProperties(root).contains(property);
             

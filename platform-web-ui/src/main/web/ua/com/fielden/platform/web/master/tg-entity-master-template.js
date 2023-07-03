@@ -20,8 +20,24 @@ const template = html`<!-- TODO layout vertical -->
         dynamic-action
         attrs='[[_tgOpenMasterActionAttrs]]'
         require-selection-criteria='false'
-        require-selected-entities='ONE'
         require-master-entity='true'
+        hidden>
+    </tg-ui-action>
+    <tg-ui-action
+        id="tgOpenHelpMasterAction"
+        ui-role='ICON'
+        component-uri = '/master_ui/ua.com.fielden.platform.entity.UserDefinableHelp'
+        element-name = 'tg-UserDefinableHelp-master'
+        show-dialog='[[_showHelpDialog]]'
+        toaster='[[toaster]]'
+        create-context-holder='[[_createContextHolder]]'
+        attrs='[[_tgOpenHelpMasterActionAttrs]]'
+        require-selection-criteria='false'
+        require-selected-entities='ONE'
+        require-master-entity='false'
+        current-entity = '[[_currentEntityForHelp()]]'
+        pre-action = '[[_preOpenHelpMasterAction]]'
+        post-action-success = '[[_postOpenHelpMasterAction]]'
         hidden>
     </tg-ui-action>
     <tg-entity-master
@@ -36,6 +52,9 @@ const template = html`<!-- TODO layout vertical -->
         _process-retriever-error="[[_processRetrieverError]]"
         _process-saver-response="[[_processSaverResponse]]"
         _process-saver-error="[[_processSaverError]]"
+        _initiate-help-action="[[_helpMouseDownEventHandler]]"
+        _run-help-action="[[_helpMouseUpEventHandler]]"
+        _has-embeded-view="[[_hasEmbededView]]"
         _saver-loading="{{_saverLoading}}">
         <!--START OF GENERATED TG-ENTITY-MASTER DOM CONTENT-->
         <!--@tg-entity-master-content-->

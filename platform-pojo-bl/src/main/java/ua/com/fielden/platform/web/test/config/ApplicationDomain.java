@@ -19,7 +19,9 @@ import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.sample.domain.EntityOne;
 import ua.com.fielden.platform.sample.domain.EntityThree;
 import ua.com.fielden.platform.sample.domain.EntityTwo;
+import ua.com.fielden.platform.sample.domain.EntityWithUnionEntityWithSkipExistsValidation;
 import ua.com.fielden.platform.sample.domain.ExportAction;
+import ua.com.fielden.platform.sample.domain.MoreDataForDeleteEntity;
 import ua.com.fielden.platform.sample.domain.TeVehicle;
 import ua.com.fielden.platform.sample.domain.TeVehicleFinDetails;
 import ua.com.fielden.platform.sample.domain.TeVehicleFuelUsage;
@@ -94,6 +96,7 @@ import ua.com.fielden.platform.sample.domain.TgWebApiEntitySyntheticMulti;
 import ua.com.fielden.platform.sample.domain.TgWebApiEntitySyntheticSingle;
 import ua.com.fielden.platform.sample.domain.TgWorkshop;
 import ua.com.fielden.platform.sample.domain.UnionEntity;
+import ua.com.fielden.platform.sample.domain.UnionEntityWithSkipExistsValidation;
 import ua.com.fielden.platform.sample.domain.UnionEntityWithoutSecondDescTitle;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntity;
 import ua.com.fielden.platform.sample.domain.compound.TgCompoundEntityChild;
@@ -157,6 +160,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgGeneratedEntityForTrippleDecAnalysisInsertionPoint.class);
         add(TgOpenTrippleDecDetails.class);
         add(OtherEntity.class);
+        add(MoreDataForDeleteEntity.class);
 
         add(TgVehicle.class);
         add(TgVehicleFinDetails.class);
@@ -181,6 +185,8 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(EntityThree.class);
 
         add(TgBogieLocation.class);
+        add(UnionEntityWithSkipExistsValidation.class);
+        add(EntityWithUnionEntityWithSkipExistsValidation.class);
         add(TgWorkshop.class);
         add(TgWagonSlot.class);
         add(TgWagon.class);
@@ -206,7 +212,7 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgCompoundEntityMaster_OpenTgCompoundEntityDetail_MenuItem.class);
         add(TgCompoundEntityMaster_OpenTgCompoundEntityChild_MenuItem.class);
         add(TgFuelType.class);
-        
+
         add(TgEntityStringKey.class);
         add(TgEntityBooleanKey.class);
         add(TgEntityDateKey.class);
@@ -217,17 +223,17 @@ public class ApplicationDomain implements IApplicationDomainProvider {
         add(TgEntityCompositeBooleanKey.class);
         add(TgEntityTwoEntityKeys.class);
         add(TgEntityBigDecimalKey.class);
-        
+
         add(TgWebApiEntity.class);
         add(TgWebApiEntitySyntheticSingle.class);
         add(TgWebApiEntitySyntheticMulti.class);
-        
+
         add(TgUnionHolder.class);
         add(TgUnion.class);
         add(TgUnionType1.class);
         add(TgUnionType2.class);
         add(TgUnionCommonType.class);
-        
+
         add(TgSynBogie.class);
         add(MakeCompletedAction.class);
     }

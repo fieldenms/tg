@@ -1,26 +1,20 @@
 package ua.com.fielden.platform.processors.metamodel.utils;
 
-import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.toCollection;
-import static java.util.stream.Collectors.toSet;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.METAMODELS_CLASS_QUAL_NAME;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_ALIASED_NAME_SUFFIX;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_NAME_SUFFIX;
 import static ua.com.fielden.platform.processors.metamodel.MetaModelConstants.META_MODEL_SUPERCLASS;
 
-import java.util.HashSet;
-import java.util.LinkedHashSet;
+import java.util.Collection;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Optional;
-import java.util.Set;
-import java.util.function.Supplier;
+import java.util.stream.Stream;
 
-import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.DeclaredType;
-import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Elements;
 import javax.lang.model.util.Types;
@@ -32,6 +26,7 @@ import ua.com.fielden.platform.processors.metamodel.concepts.MetaModelConcept;
 import ua.com.fielden.platform.processors.metamodel.elements.EntityElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelElement;
 import ua.com.fielden.platform.processors.metamodel.elements.MetaModelsElement;
+import ua.com.fielden.platform.processors.metamodel.exceptions.ElementFinderException;
 import ua.com.fielden.platform.processors.metamodel.models.EntityMetaModel;
 import ua.com.fielden.platform.processors.metamodel.models.PropertyMetaModel;
 
@@ -47,105 +42,149 @@ public class MetaModelFinder extends ElementFinder {
         super(elements, types);
     }
 
+    /**
+     * Returns true iff the type element represents a meta-model.
+     * 
+     * @param typeElement
+     * @return
+     */
     public boolean isMetaModel(final TypeElement typeElement) {
-        return isSubtype(typeElement.asType(), META_MODEL_SUPERCLASS);
+        return isMetaModel(typeElement.asType());
     }
 
+    /**
+     * Returns true iff the type mirror represents a meta-model type.
+     * 
+     * @param typeElement
+     * @return
+     */
+    public boolean isMetaModel(final TypeMirror type) {
+        return isSubtype(type, META_MODEL_SUPERCLASS);
+    }
+
+    /**
+     * Returns true iff the meta-model element represents an aliased meta-model.
+     * 
+     * @param mme
+     * @return
+     */
     public boolean isMetaModelAliased(final MetaModelElement mme) {
         return mme.getSimpleName().toString().endsWith(META_MODEL_ALIASED_NAME_SUFFIX);
     }
 
-    public Set<VariableElement> findPropertyMetaModelFields(final MetaModelElement mme) {
-        return findNonStaticFields(mme).stream()
-                .filter(field -> isFieldOfType(field, PropertyMetaModel.class))
-                .collect(toSet());
-    }
-
-    public Set<VariableElement> findEntityMetaModelFields(final MetaModelElement mme) {
-        return findNonStaticFields(mme).stream()
-                .filter(field -> {
-                    final TypeMirror fieldType = field.asType();
-                    final TypeKind fieldTypeKind = fieldType.getKind();
-
-                    if (TypeKind.DECLARED == fieldTypeKind) {
-                        final TypeElement fieldTypeElement = (TypeElement) ((DeclaredType) field.asType()).asElement();
-
-                        // EntityMetaModel fields have type Supplier<[METAMODEL]>
-                        if (equals(fieldTypeElement, Supplier.class)) {
-                            final TypeMirror fieldTypeArgument = ((DeclaredType) fieldType).getTypeArguments().get(0);
-                            return isSubtype(fieldTypeArgument, META_MODEL_SUPERCLASS);
-                        }
-                    }
-                    return false;
-                })
-                .collect(toSet());
-    }
-
     /**
-     * Finds all methods of a meta-model that model properties of the underlying entity. Processes the whole meta-model hierarchy (i.e. meta-models that extend other meta-models).
-     * @param mme the target meta-model
-     * @return a set of methods that model properties of the underlying entity
+     * Returns the element representing the given meta-model type.
+     * 
+     * @see ElementFinder#getTypeElement(Class)
+     * @throws ElementFinderException if no coresponding type element was found
      */
-    public Set<ExecutableElement> findPropertyMethods(final MetaModelElement mme) {
-        return findMethods(mme).stream()
-                .filter(el -> isPropertyMetaModelMethod(el) || isEntityMetaModelMethod(el))
-                .collect(toCollection(LinkedHashSet::new));
+    public MetaModelElement findMetaModel(final Class<? extends EntityMetaModel> clazz) {
+        return newMetaModelElement(getTypeElement(clazz));
     }
 
     /**
-     * Finds all declared methods of a meta-model that model properties of the underlying entity.
-     * @param mme the target meta-model
-     * @return a set of methods that model properties of the underlying entity
-     */
-    public Set<ExecutableElement> findDeclaredPropertyMethods(final MetaModelElement mme) {
-        return findDeclaredMethods(mme).stream()
-                .filter(el -> isPropertyMetaModelMethod(el) || isEntityMetaModelMethod(el))
-                .collect(toCollection(LinkedHashSet::new));
-    }
-    
-    public ExecutableElement findDeclaredPropertyMethod(final MetaModelElement mme, final String name) {
-        return findDeclaredPropertyMethods(mme).stream()
-                .filter(el -> el.getSimpleName().toString().equals(name))
-                .findFirst().orElse(null);
-    }
-
-    /**
-     * Returns a set of meta-model elements for each field that is of type {@code Supplier<? extends EntityMetaModel>}.
+     * Returns a stream of meta-model elements forming a type hierarchy from the given meta-model element up to (excluding) {@link EntityMetaModel}. 
+     * 
      * @param mme
      * @return
      */
-    public Set<MetaModelElement> findReferencedMetaModels(final MetaModelElement mme) {
-        return findEntityMetaModelFields(mme).stream()
-                .map(field -> {
-                    // casting here is safe, since field is of type Supplier<[METAMODEL]>, thus DeclaredType
-                    // fieldType will be the Supplier type
-                    final DeclaredType fieldType = (DeclaredType) field.asType();
-                    // fieldTypeArgument will be the [METAMODEL] type
-                    final DeclaredType fieldTypeArgument = (DeclaredType) fieldType.getTypeArguments().get(0);
-                    final TypeElement fieldTypeArgumentTypeElement = (TypeElement) fieldTypeArgument.asElement();
-                    return newMetaModelElement(fieldTypeArgumentTypeElement);
-                })
-                .collect(toSet());
+    public Stream<MetaModelElement> streamMetaModelHierarchy(final MetaModelElement mme) {
+        return Stream.concat(Stream.of(mme), streamSuperclassesBelow(mme.element(), META_MODEL_SUPERCLASS).map(this::newMetaModelElement));
+    }
+    
+    /**
+     * Collects the elements of {@link #streamMetaModelHierarchy(MetaModelElement)} into an unmodifiable list.
+     */
+    public List<MetaModelElement> listMetaModelHierarchy(final MetaModelElement mme) {
+        return streamMetaModelHierarchy(mme).toList();
     }
 
     /**
-     * Tests whether a given meta-model method metamodels a property of a non-metamodeled type.
+     * Returns a stream of elements representing methods of a meta-model (both declared and inherited) that model properties of the 
+     * underlying entity.
+     * 
+     * @param mme the target meta-model element
+     * @return a stream of method elements that model properties of the underlying entity
+     */
+    public Stream<ExecutableElement> streamPropertyMethods(final MetaModelElement mme) {
+        return streamMetaModelHierarchy(mme).flatMap(this::streamDeclaredPropertyMethods);
+    }
+
+    /**
+     * Collects the elements of {@link #streamPropertyMethods(MetaModelElement)} into an unmodifiable list.
+     * <p>
+     * <b>NOTE</b>: The returned list may include methods with equivalent signatures declared by different types (e.g. when a method is overriden).
+     * For a finer control of what is included use {@link #streamPropertyMethods(MetaModelElement)}.
+     */
+    public List<ExecutableElement> findPropertyMethods(final MetaModelElement mme) {
+        return streamPropertyMethods(mme).toList();
+    }
+
+    /**
+     * Returns an optional describing a method of the meta-model element that meta-models a property with the specified name.
+     * Both declared and inherited methods are searched.
+     */
+    public Optional<ExecutableElement> findPropertyMethod(final MetaModelElement mme, final String name) {
+        return findPropertyMethod(streamPropertyMethods(mme), name);
+    }
+
+    /**
+     * Consumes the given stream of methods of a meta-model until a method modelling a property with the specified name is found.
+     * It is assumed that the stream will contain only methods of a meta-model to avoid excessive checks.
+     */
+    public Optional<ExecutableElement> findPropertyMethod(final Stream<ExecutableElement> methods, final String name) {
+        return methods.filter(elt -> elt.getSimpleName().toString().equals(name)).findFirst();
+    }
+
+    /**
+     * Searched the given collection of methods of a meta-model for a method modelling a property with the specified name.
+     * It is assumed that the collection will contain only methods of a meta-model to avoid excessive checks.
+     */
+    public Optional<ExecutableElement> findPropertyMethod(final Collection<ExecutableElement> methods, final String name) {
+        return findPropertyMethod(methods.stream(), name);
+    }
+
+    /**
+     * Returns a stream of elements representing declared methods of a meta-model that model properties of the underlying entity.
+     * 
+     * @param mme the target meta-model element
+     * @return a stream of method elements that model properties of the underlying entity
+     */
+    public Stream<ExecutableElement> streamDeclaredPropertyMethods(final MetaModelElement mme) {
+        return streamDeclaredMethods(mme.element()).filter(el -> isPropertyMetaModelMethod(el) || isEntityMetaModelMethod(el));
+    }
+
+    /**
+     * Collects the elements of {@link #streamDeclaredPropertyMethods(MetaModelElement)} into an unmodifiable list.
+     */
+    public List<ExecutableElement> findDeclaredPropertyMethods(final MetaModelElement mme) {
+        return streamDeclaredPropertyMethods(mme).toList();
+    }
+
+    /**
+     * Returns an optional describing a declared method of the meta-model element that meta-models a property with the specified name.
+     */
+    public Optional<ExecutableElement> findDeclaredPropertyMethod(final MetaModelElement mme, final String name) {
+        return findPropertyMethod(streamDeclaredPropertyMethods(mme), name);
+    }
+
+    /**
+     * Tests whether a method of a meta-model models an ordinary property (one that has a non-metamodeled type).
      * @param method
      * @return true if the method's return type is {@link PropertyMetaModel}, false otherwise
      */
     public boolean isPropertyMetaModelMethod(final ExecutableElement method) {
         return !method.getModifiers().contains(Modifier.STATIC) &&
-                isMethodReturnType(method, PropertyMetaModel.class);
+                isSameType(method.getReturnType(), PropertyMetaModel.class);
     }
 
     /**
-     * Tests whether a given meta-model method metamodels a property of a metamodeled type.
+     * Tests whether a method of a meta-model models a property of a metamodeled entity type.
      * @param method
      * @return true if the method's return type is a subtype of {@link EntityMetaModel}, false otherwise
      */
     public boolean isEntityMetaModelMethod(final ExecutableElement method) {
-        return !method.getModifiers().contains(Modifier.STATIC) &&
-                isSubtype(method.getReturnType(), EntityMetaModel.class);
+        return !method.getModifiers().contains(Modifier.STATIC) && isMetaModel(method.getReturnType());
     }
 
     /**
@@ -161,10 +200,7 @@ public class MetaModelFinder extends ElementFinder {
     }
 
     /**
-     * Attempts to find a meta-model for a given entity.
-     * @param entityElement
-     * @param elements
-     * @return {@link MetaModelElement} instance wrapped into {@link Optional} if found, else empty optional
+     * Returns an optional describing a meta-model element for the specified entity element.
      */
     public Optional<MetaModelElement> findMetaModelForEntity(final EntityElement entityElement) {
         final MetaModelConcept mmc = new MetaModelConcept(entityElement);
@@ -173,12 +209,16 @@ public class MetaModelFinder extends ElementFinder {
     }
 
     /**
-     * An aliased meta-model class resides in the same package as the regular meta-model, but with a slightly different name.
-     * @param mme
-     * @param elements
-     * @return
+     * Returns an optional describing an element representing the aliased version of the given meta-model, unless it already represents 
+     * an aliased meta-model, in which case it is simply returned.
+     *
+     * @param mme meta-model element being examined
+     * @return element representing the aliased meta-model or {@code mme} if it already represents an aliased one
      */
     public Optional<MetaModelElement> findMetaModelAliased(final MetaModelElement mme) {
+        if (isMetaModelAliased(mme)) {
+            return Optional.of(mme);
+        }
         // aliasedMetaModelName = metaModelName - META_MODEL_NAME_SUFFIX + META_MODEL_ALIASED_NAME_SUFFIX
         final String entitySimpleName = StringUtils.substringBeforeLast(mme.getSimpleName().toString(), META_MODEL_NAME_SUFFIX);
         final String qualName = "%s.%s%s".formatted(mme.getPackageName(), entitySimpleName, META_MODEL_ALIASED_NAME_SUFFIX);
@@ -186,50 +226,57 @@ public class MetaModelFinder extends ElementFinder {
     }
 
     /**
-     * Identifies and collects all declared fields in the MetaModels element, which represent meta-models (i.e., extend {@link EntityMetaModel}).  
-     *
+     * Returns a stream of all meta-model elements declared by the element representing the {@code MetaModels} class.
+     */
+    public Stream<MetaModelElement> streamMetaModels(final TypeElement typeElement) {
+        // find regular meta-models that are declared as fields
+        final Stream<MetaModelElement> metaModels = streamDeclaredFields(typeElement)
+            .filter(field -> isMetaModel(field.asType()))
+            .map(field -> newMetaModelElement(asTypeElementOfTypeMirror(field.asType())));
+        // find aliased meta-models that are declared as methods
+        final Stream<MetaModelElement> aliasedMetaModels = streamDeclaredMethods(typeElement)
+            .filter(method -> isMetaModel(method.getReturnType()))
+            .map(method -> newMetaModelElement(asTypeElementOfTypeMirror(method.getReturnType())));
+
+        return Stream.concat(metaModels, aliasedMetaModels);
+    }
+
+    /**
+     * Returns a new instance of {@link MetaModelElement} composed of the given type element, obtaining the information about its package.
+     * 
      * @param typeElement
-     * @param elementUtils
      * @return
      */
-    public Set<MetaModelElement> findMetaModels(final TypeElement typeElement) {
-        final Set<MetaModelElement> metaModels = new HashSet<>();
-        // find regular meta-models that are declared as fields
-        findDeclaredFields(typeElement).stream()
-                .filter(field -> isSubtype(field.asType(), EntityMetaModel.class))
-                .map(field -> newMetaModelElement(toTypeElement(field.asType())))
-                .forEach(mme -> metaModels.add(mme));
-        // find aliased meta-models that are declared as methods
-        findDeclaredMethods(typeElement).stream()
-                .filter(method -> isSubtype(method.getReturnType(), EntityMetaModel.class))
-                .map(method -> newMetaModelElement(toTypeElement(method.getReturnType())))
-                .forEach(mme -> metaModels.add(mme));
-        
-        return unmodifiableSet(metaModels);
-    }
-
     public MetaModelElement newMetaModelElement(final TypeElement typeElement) {
-        return new MetaModelElement(typeElement, getPackageName(typeElement));
+        return new MetaModelElement(typeElement, getPackageOfTypeElement(typeElement).getQualifiedName().toString());
     }
 
-    public boolean isActive(final MetaModelElement mme) {
-        return mme.getKind() == ElementKind.CLASS;
-    }
-    
+    /**
+     * Returns an optional describing the element representing the {@code MetaModels} class.
+     */
     public Optional<MetaModelsElement> findMetaModelsElement() {
         return Optional.ofNullable(elements.getTypeElement(METAMODELS_CLASS_QUAL_NAME))
-                .map(te -> new MetaModelsElement(te, findMetaModels(te)));
+                .map(te -> new MetaModelsElement(te, streamMetaModels(te).iterator()));
     }
 
-    public String resolveMetaModelPkgName(final String entityPkgName) {
+    /**
+     * Resolves the package name of a meta-model from the package name of its underlying entity.
+     */
+    public static String resolveMetaModelPkgName(final String entityPkgName) {
         return entityPkgName + MetaModelConstants.META_MODEL_PKG_NAME_SUFFIX;
     }
     
-    public String resolveMetaModelSimpleName(final String entitySimpleName) {
+    /**
+     * Resolves the simple name of a meta-model from the simple name of its underlying entity.
+     */
+    public static String resolveMetaModelSimpleName(final String entitySimpleName) {
         return entitySimpleName + MetaModelConstants.META_MODEL_NAME_SUFFIX;
     }
 
-    public String resolveAliasedMetaModelSimpleName(final String entitySimpleName) {
+    /**
+     * Resolves the simple name of an aliased meta-model from the simple name of its underlying entity.
+     */
+    public static String resolveAliasedMetaModelSimpleName(final String entitySimpleName) {
         return entitySimpleName + MetaModelConstants.META_MODEL_ALIASED_NAME_SUFFIX;
     }
 
@@ -241,7 +288,7 @@ public class MetaModelFinder extends ElementFinder {
      * @param entitySimpleName
      * @return FQN of this entity's meta-model
      */
-    public String resolveMetaModelName(final String entityPkgName, final String entitySimpleName) {
+    public static String resolveMetaModelName(final String entityPkgName, final String entitySimpleName) {
         return "%s.%s".formatted(resolveMetaModelPkgName(entityPkgName), resolveMetaModelSimpleName(entitySimpleName));
     }
 
@@ -253,7 +300,7 @@ public class MetaModelFinder extends ElementFinder {
      * @param entitySimpleName
      * @return FQN of this entity's aliased meta-model
      */
-    public String resolveAliasedMetaModelName(final String entityPkgName, final String entitySimpleName) {
+    public static String resolveAliasedMetaModelName(final String entityPkgName, final String entitySimpleName) {
         return "%s.%s".formatted(resolveMetaModelPkgName(entityPkgName), resolveAliasedMetaModelSimpleName(entitySimpleName));
     }
 

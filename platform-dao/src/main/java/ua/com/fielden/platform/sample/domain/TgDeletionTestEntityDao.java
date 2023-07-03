@@ -3,18 +3,20 @@ package ua.com.fielden.platform.sample.domain;
 import java.util.Collection;
 import java.util.Map;
 
+import com.google.inject.Inject;
+
+import ua.com.fielden.platform.continuation.NeedMoreData;
 import ua.com.fielden.platform.dao.CommonEntityDao;
 import ua.com.fielden.platform.dao.annotations.SessionRequired;
 import ua.com.fielden.platform.entity.annotation.EntityType;
+import ua.com.fielden.platform.entity.fetch.IFetchProvider;
 import ua.com.fielden.platform.entity.query.IFilter;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
-
-import com.google.inject.Inject;
 
 /**
  * DAO implementation for companion object {@link ITgDeletionTestEntity}.
  *
- * @author Developers
+ * @author TG Team
  *
  */
 @EntityType(TgDeletionTestEntity.class)
@@ -22,6 +24,15 @@ public class TgDeletionTestEntityDao extends CommonEntityDao<TgDeletionTestEntit
     @Inject
     public TgDeletionTestEntityDao(final IFilter filter) {
         super(filter);
+    }
+
+    @Override
+    @SessionRequired
+    public TgDeletionTestEntity save(final TgDeletionTestEntity entity) {
+        if (entity.isPersisted() && !moreData("newDeleteEntity").isPresent()) {
+            throw new NeedMoreData("Need to specify number from 1 to 10", MoreDataForDeleteEntity.class, "newDeleteEntity");
+        }
+        return super.save(entity);
     }
 
     @Override
@@ -39,5 +50,10 @@ public class TgDeletionTestEntityDao extends CommonEntityDao<TgDeletionTestEntit
     @SessionRequired
     public void delete(final EntityResultQueryModel<TgDeletionTestEntity> model, final Map<String, Object> paramValues) {
         defaultDelete(model, paramValues);
+    }
+
+    @Override
+    protected IFetchProvider<TgDeletionTestEntity> createFetchProvider() {
+        return super.createFetchProvider().with("key", "desc");
     }
 }

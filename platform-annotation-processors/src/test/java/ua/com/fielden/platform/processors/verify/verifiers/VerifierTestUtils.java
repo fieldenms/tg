@@ -3,9 +3,7 @@ package ua.com.fielden.platform.processors.verify.verifiers;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -15,6 +13,7 @@ import javax.tools.JavaFileObject;
 
 import com.squareup.javapoet.AnnotationSpec;
 import com.squareup.javapoet.FieldSpec;
+import com.squareup.javapoet.TypeName;
 
 import ua.com.fielden.platform.entity.annotation.IsProperty;
 import ua.com.fielden.platform.processors.test_utils.Compilation;
@@ -44,12 +43,21 @@ public class VerifierTestUtils {
         assertTrue("No error with a matching message was reported.",
                 compilation.getErrors().stream().anyMatch(err -> msg.equals(err.getMessage(Locale.getDefault()))));
     }
-    
-    public static FieldSpec buildProperty(final Type type, final String name, final Annotation... annotations) {
+
+    /**
+     * Returns a field builder for entity properties that already includes a {@code private} modifier and {@link IsProperty} annotation.
+     */
+    public static FieldSpec.Builder propertyBuilder(final Type type, final String name) {
         return FieldSpec.builder(type, name, Modifier.PRIVATE)
-                .addAnnotation(AnnotationSpec.builder(IsProperty.class).build())
-                .addAnnotations(Arrays.asList(annotations).stream().map(annot -> AnnotationSpec.get(annot, true)).toList())
-                .build();
+                .addAnnotation(AnnotationSpec.builder(IsProperty.class).build());
+    }
+
+    /**
+     * Returns a field builder for entity properties that already includes a {@code private} modifier and {@link IsProperty} annotation.
+     */
+    public static FieldSpec.Builder propertyBuilder(final TypeName typeName, final String name) {
+        return FieldSpec.builder(typeName, name, Modifier.PRIVATE)
+                .addAnnotation(AnnotationSpec.builder(IsProperty.class).build());
     }
 
 }

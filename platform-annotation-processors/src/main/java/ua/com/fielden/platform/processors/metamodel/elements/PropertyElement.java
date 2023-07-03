@@ -12,6 +12,7 @@ import javax.lang.model.type.TypeKind;
 import javax.lang.model.type.TypeMirror;
 
 import ua.com.fielden.platform.processors.metamodel.exceptions.EntityMetaModelException;
+import ua.com.fielden.platform.utils.CollectionUtil;
 
 /**
  * A convenient wrapper around {@link VariableElement} to represent a property element.
@@ -83,6 +84,11 @@ public class PropertyElement extends AbstractForwardingVariableElement {
         return 31 + Objects.hash(getSimpleName());
     }
 
+    /**
+     * Equality of property elements is based on the equality of their simple names.
+     * <p>
+     * For example, {@code @IsProperty A prop} is equal to {@code @IsProperty B prop}.
+     */
     @Override
     public boolean equals(final Object obj) {
         if (obj == this) {
@@ -93,6 +99,18 @@ public class PropertyElement extends AbstractForwardingVariableElement {
         }
         final PropertyElement that = (PropertyElement) obj;
         return Objects.equals(getSimpleName(), that.getSimpleName());
+    }
+
+    @Override
+    public String toString() {
+        final String annotations = CollectionUtil.toString(element.getAnnotationMirrors(), " ");
+        final String modifiers = CollectionUtil.toString(element.getModifiers(), " ");
+
+        return "%s%s%s %s".formatted(
+                annotations.isEmpty() ? "" : annotations + " ",
+                modifiers.isEmpty() ? "" : modifiers + " ",
+                type,
+                element.getSimpleName());
     }
 
 }

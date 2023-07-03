@@ -226,13 +226,13 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
                 // set previous value and recalculate meta-property properties based on the new value
                 metaProperty.setPrevValue(prevValue);
                 metaProperty.define(newValue);
-                
+
                 // determine property and entity dirty state
                 if (!metaProperty.isCalculated() && metaProperty.getValueChangeCount() > 0) {
                     metaProperty.setDirty(metaProperty.isChangedFromOriginal());
                     entity.setDirty(entity.isDirty() || metaProperty.isDirty());
                 }
-                
+
                 // handle updating of the dependent properties (dependent properties error recovery).
                 handleDependentProperties(metaProperty);
                 return setterResult.getSetterReturningValue();
@@ -325,7 +325,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
     /**
      * If there are some dependent properties for 'metaProperty' then all of the invalid dependent properties need to be attempted at reassigning the <code>lastAttamptedValue</code>,
      * and all valid dependencies need to be revalidated.
-     * 
+     *
      *
      * @param metaProperty
      */
@@ -343,8 +343,8 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
 
     /**
      * Enforces setting of the last attempted value or performs revalidation of the dependent property.
-     * This happens only if neither the dependent nor the driving property is on each other's dependency path. 
-     * 
+     * This happens only if neither the dependent nor the driving property is on each other's dependency path.
+     *
      * @param metaProperty
      * @param dependentMetaProperty
      */
@@ -362,7 +362,7 @@ public class ObservableMutatorInterceptor implements MethodInterceptor {
             }
         }
     }
-    
+
     /**
      * Determines correct newValue and oldValue. {@link Pair} is used to return a pair of values where the key represents newValue and the value represents oldValue.
      *

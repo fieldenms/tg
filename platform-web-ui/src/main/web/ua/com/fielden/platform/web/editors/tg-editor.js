@@ -7,14 +7,61 @@ import '/resources/polymer/@polymer/paper-input/paper-input-container.js';
 import '/resources/polymer/@polymer/paper-input/paper-input-error.js';
 import '/resources/polymer/@polymer/paper-input/paper-input-char-counter.js';
 
+import '/resources/components/tg-confirmation-dialog.js';
+
 import {TgReflector} from '/app/tg-reflector.js';
 
 import {PolymerElement, html} from '/resources/polymer/@polymer/polymer/polymer-element.js';
 
-import { tearDownEvent, allDefined } from '/resources/reflection/tg-polymer-utils.js';
+import { tearDownEvent, allDefined, resultMessages, deepestActiveElement, isInHierarchy } from '/resources/reflection/tg-polymer-utils.js';
+
+let checkIconTimer = null;
+
+let lastEditor = null;
+
+const timeoutCheckIcon = function (editor) {
+    if (checkIconTimer) {
+        clearTimeout(checkIconTimer);
+        if(editor !== lastEditor) {
+            hideCheckIcon();
+            showCheckIcon(editor);
+        }
+    } else {
+        showCheckIcon(editor);
+    }
+    checkIconTimer = setTimeout(function() {
+        hideCheckIcon();
+    }, 1000);
+}
+
+const showCheckIcon = function (editor) {
+    lastEditor = editor;
+    lastEditor.$.copyIcon.icon = "icons:check";
+    lastEditor.addEventListener("mouseleave", hideCheckIconOnMouseLeave);
+}
+
+const hideCheckIcon = function () {
+    lastEditor.$.copyIcon.icon = "icons:content-copy";
+    lastEditor.removeEventListener("mouseleave", hideCheckIconOnMouseLeave);
+    checkIconTimer = null;
+    lastEditor = null;
+}
+
+const hideCheckIconOnMouseLeave = function () {
+    if (!lastEditor.focused) {
+        if (checkIconTimer) {
+            clearTimeout(checkIconTimer);
+            checkIconTimer = null;
+        }
+        hideCheckIcon();
+    }
+}
 
 const defaultLabelTemplate = html`
-    <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]" slot="label">[[propTitle]]</label>`;
+    <label style$="[[_calcLabelStyle(_editorKind, _disabled)]]" disabled$="[[_disabled]]" tooltip-text$="[[_getTooltip(_editingValue)]]" slot="label">
+        <span>[[propTitle]]</span>
+        <iron-icon hidden$="[[noLabelFloat]]" id="copyIcon" icon="icons:content-copy" on-tap="_copyTap"></iron-icon>
+    </label>`;
 
 export function createEditorTemplate (additionalTemplate, customPrefixAttribute, customInput, inputLayer, customIconButtons, propertyAction, customLabelTemplate) {
     return html`
@@ -33,7 +80,24 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 font-weight: 500;
                 text-align: left;
             }
-
+            label {
+                cursor: default;
+                @apply --layout-horizontal;
+                @apply --layout-center;
+            }
+            #copyIcon {
+                display: none;
+                width: 18px;
+                height: 18px;
+                margin-left: 4px;
+            }
+            label #copyIcon {
+                cursor: pointer;
+            }
+            :host(:hover) #copyIcon,
+            #decorator[focused]  #copyIcon {
+                display: unset;
+            }
             .input-layer {
                 font-size: 16px;
                 line-height: 24px;
@@ -61,6 +125,10 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
             #decorator {
                 --paper-input-container-input: {
                     font-weight: 500;
+                }
+                --paper-input-char-counter: {
+                    position: absolute; /* to not extend the height of editor when paper-input-char-counter is present; similarly to paper-input-error default behaviour */
+                    right: 0; /* push it to the end */
                 }
             }
             
@@ -90,17 +158,35 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 --paper-input-container-focus-color: #03A9F4;
             }
 
+            /* style visible paper-input-error */
+            #decorator[is-invalid] {
+                --paper-input-error: {
+                    cursor: pointer; /* cursor to indicate action presence */
+                    z-index: 1; /* always above other editors (selection crit) to be able to tap */
+                    max-width: 100%; /* ensure paper-input-error width as in its content */
+                    right: auto !important; /* ensure paper-input-error width as in its content */
+                }
+            }
+
+            /* style informative */
+            #decorator[is-invalid].informative {
+                --paper-input-container-color: #8E24AA;
+                --paper-input-container-invalid-color: #8E24AA;
+            }
+
             /* style warning */
             #decorator[is-invalid].warning {
                 --paper-input-container-color: #FFA000;
                 --paper-input-container-invalid-color: #FFA000;
             }
 
-            #decorator[is-invalid]:not(.warning) {
+            /* style error */
+            #decorator[is-invalid]:not(.warning):not(.informative) {
                 --paper-input-container-color: var(--google-red-500);
             }
         </style>
         <style include="iron-flex iron-flex-reverse iron-flex-alignment iron-flex-factors iron-positioning"></style>
+        <tg-confirmation-dialog id="confirmationDialog"></tg-confirmation-dialog>
         ${additionalTemplate}
         <paper-input-container id="decorator" always-float-label no-label-float="[[noLabelFloat]]" has-layer$="[[_hasLayer]]" invalid="[[_invalid]]" is-invalid$="[[_invalid]]" disabled$="[[_disabled]]" focused$="[[focused]]">
             <!-- flex auto  for textarea! -->
@@ -117,7 +203,7 @@ export function createEditorTemplate (additionalTemplate, customPrefixAttribute,
                 ${propertyAction}
             </div>
             <!-- 'autoValidate' attribute for paper-input-container is 'false' -- all validation is performed manually and is bound to paper-input-error, which could be hidden in case of empty '_error' property -->
-            <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]" tooltip-text$="[[_error]]" slot="add-on">[[_error]]</paper-input-error>
+            <paper-input-error hidden$="[[!_error]]" disabled$="[[_disabled]]" tooltip-text$="[[_extendedError]]" slot="add-on" on-tap="_inputErrorTapHandler">[[_error]]</paper-input-error>
             <!-- paper-input-char-counter addon is updated whenever 'bindValue' property of child '#input' element is changed -->
             <paper-input-char-counter id="inputCounter" class="footer" hidden$="[[!_isMultilineText(_editorKind)]]" disabled$="[[_disabled]]" slot="add-on"></paper-input-char-counter>
         </paper-input-container>
@@ -232,6 +318,23 @@ export class TgEditor extends PolymerElement {
             action: {
                 type: Object
             },
+
+            /**
+             * The property action index to show. The default value should be '-1' to hide all property actions. The index should be calculated on server. 
+             */
+            propertyActionIndex: {
+                type: Number,
+                value: -1,
+                observer: '_propertyActionIndexChanged'
+            },
+
+            /**
+             * The property actions embedded into this editor. Only one of these action will be visible that corresponds to propertyActionIndex property 
+             */
+            propertyActions: {
+                type: Array,
+                value: () => []
+            },
     
             ////////////////////////////////////// SUBSECTION: NOT MANDATORY PROPERTIES //////////////////////////////////////
             /**
@@ -246,6 +349,23 @@ export class TgEditor extends PolymerElement {
              */
             previousModifiedPropertiesHolder: {
                 type: Object
+            },
+
+            /**
+             * The object that holds callbacks for showing toast.
+             */
+            toaster: {
+                type: Object,
+                value: null
+            },
+
+            /**
+             * Defines standard invalid message for built-in validation of 'input'.
+             * Should be empty in case if such validation is not supported.
+             */
+            builtInValidationMessage: {
+                type: String,
+                value: null
             },
 
             /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -308,6 +428,14 @@ export class TgEditor extends PolymerElement {
              * The validation error message.
              */
             _error: {
+                type: String,
+                value: null
+            },
+
+            /**
+             * The extended validation error message.
+             */
+            _extendedError: {
                 type: String,
                 value: null
             },
@@ -403,6 +531,7 @@ export class TgEditor extends PolymerElement {
                 value: function () {
                     return (function (event) {
                         this._setFocused(false);
+                        this._checkBuiltInValidation();
                     }).bind(this);
                 }
             },
@@ -438,7 +567,11 @@ export class TgEditor extends PolymerElement {
                     return (function (event) {
                         // console.debug("_onKeydown:", event);
                         if (event.keyCode === 13) { // 'Enter' has been pressed
+                            this._checkBuiltInValidation();
                             this.commitIfChanged();
+                        } else if (event.keyCode === 67 && event.altKey && (event.ctrlKey || event.metaKey)) { //(CTRL/Meta) + ALT + C
+                            this.commitIfChanged();
+                            this._copyTap();
                         } else if ((event.keyCode === 38 || event.keyCode === 40) 
                                     && (event.altKey || event.ctlKey || event.metaKey || event.shiftKey)) {
                             tearDownEvent(event);
@@ -503,10 +636,19 @@ export class TgEditor extends PolymerElement {
         if (!this._editorKind) {
             this._editorKind = 'NOT_MULTILINETEXT_OR_BOOLEAN';
         }
+        //Initialising multi actions
+        this.propertyActions = (this.$.actionSlot && [...this.$.actionSlot.assignedNodes({flatten: true})]) || [];
+        this.propertyActions.forEach(action => {
+            action.setAttribute('hidden', '');
+        });
     }
 
     isInWarning () {
         return this.$.decorator.classList.contains("warning");
+    }
+
+    isWithInformative() {
+        return this.$.decorator.classList.contains("informative");
     }
 
     reflector () {
@@ -610,14 +752,25 @@ export class TgEditor extends PolymerElement {
     _getTooltip (value) {
         var tooltip = this._formatTooltipText(value);
         tooltip += this.propDesc && (tooltip ? '<br><br>' : '') + this.propDesc;
+        tooltip += (tooltip ? '<br><br>' : '') + this._getActionTooltip();
         return tooltip;
+    }
+
+    /**
+     * Returns tooltip for action
+     */
+    _getActionTooltip () {
+        return `<div style='display:flex;'>
+            <div style='margin-right:10px;'>With action: </div>
+            <div style='flex-grow:1;'><b>Copy</b><br>Copy content</div>
+            </div>`
     }
     
     /**
      * This method returns a default value for '_editingValue', which is used 
      *  for representing the value when no entity was bound to this editor yet.
      *
-     * Please, override this method in case when empty string is not applicable (for example in boolean editor 'true' or 'false' values are applicable only).
+     * Please, override this method in case where empty string is not applicable (for example in boolean editor 'true' or 'false' values are applicable only).
      */
     _defaultEditingValue () {
         return '';
@@ -706,7 +859,7 @@ export class TgEditor extends PolymerElement {
         if (this.reflector().isEntity(newValue)) {
             // IMPORTANT: Initiate 'refresh cycle' -- in new logic refresh cycle is also mandatory after 'validation' has been performed,
             // not only after master's 'save' / 'refresh' or centre's 'run', 'save' or 'discard'
-            // (to be precise it is done for every case when _currBindingEntity is changed for this editor)
+            // (to be precise it is done for every case where _currBindingEntity is changed for this editor)
             this._refreshCycleStarted = true;
             
             // lazy conversion of property value performs here (previusly it was done for all properties inside tg-entity-binder-behavior)
@@ -742,6 +895,23 @@ export class TgEditor extends PolymerElement {
         }
         this._tryFireErrorMsg(this._error);
     }
+
+    _copyTap () {
+        // copy to clipboard should happen only if there is something to copy
+        if (navigator.clipboard && this._editingValue) {
+            navigator.clipboard.writeText(this._editingValue);
+            this._showCheckIconAndToast(this._editingValue);
+        } else if (this.toaster) {
+            this.toaster.openToastWithoutEntity("Nothing to copy", true, "There was nothing to copy.", false);
+        }
+    }
+
+    _showCheckIconAndToast (text) {
+        if (this.toaster) {
+            this.toaster.openToastWithoutEntity("Copied!", true, text, false);
+        }
+        timeoutCheckIcon(this);
+    }
     
     _updateMessagesForEntity (newEntity) {
         if (this._validationComponentsDefined === true) {
@@ -775,8 +945,13 @@ export class TgEditor extends PolymerElement {
     _commValueChanged (newValue, oldValue) {
         // console.log("_commValueChanged", oldValue, newValue, "_refreshCycleStarted ==", this._refreshCycleStarted);
         try {
+            const _refreshCycleStarted = this._refreshCycleStarted;
             this._acceptedValue = this.convertFromString(newValue);
-            this._editorValidationMsg = null;
+            // if built-in 'input' validation is not supported, clear _editorValidationMsg on successful value conversion;
+            // if built-in 'input' validation not supported, clear for the case if Refresh button pressed or in the case where the editor validation message not equals to built-in one
+            if (!this.builtInValidationMessage || _refreshCycleStarted === true || this._editorValidationMsg !== this.builtInValidationMessage) {
+                this._editorValidationMsg = null;
+            }
         } catch (error) {
             console.log("_commValueChanged catched", error, this);
             this._editorValidationMsg = error;
@@ -828,14 +1003,14 @@ export class TgEditor extends PolymerElement {
     }
     
     /**
-     * Please override this method in case when no validation should occur after _acceptedValueChanged.
+     * Please override this method in case where no validation should occur after _acceptedValueChanged.
      */
     _shouldInvokeValidation () {
         return true;
     }
 
     /**
-     * Please override this method in case when some custom action is needed when _shouldInvokeValidation() returns 'false' after _acceptedValueChanged.
+     * Please override this method in case where some custom action is needed if _shouldInvokeValidation() returns 'false' after _acceptedValueChanged.
      */
     _skipValidationAction () {}
 
@@ -892,15 +1067,17 @@ export class TgEditor extends PolymerElement {
     _bindMessages (entity, propertyName, _editorValidationMsg) {
         // console.log("_bindMessages: ", entity, propertyName, _editorValidationMsg);
         if (_editorValidationMsg !== null) {
-            this._bindError(_editorValidationMsg);
+            this._bindError(resultMessages({ message: _editorValidationMsg }));
         } else if (this.reflector().isEntity(entity)) {
             // please, note that dot-notated property will not have any errors / warnings / requiredness
             //     - for these props it does not make sense to propagate such meta-information from
             //     parent property -- the parent prop (if added in master) will show that errors concisely
             if (typeof entity["@" + propertyName + "_error"] !== 'undefined') {
-                this._bindError(entity["@" + propertyName + "_error"].message);
+                this._bindError(resultMessages(entity["@" + propertyName + "_error"]));
             } else if (typeof entity["@" + propertyName + "_warning"] !== 'undefined') {
-                this._bindWarning(entity["@" + propertyName + "_warning"].message);
+                this._bindWarning(resultMessages(entity["@" + propertyName + "_warning"]));
+            } else if (typeof entity["@" + propertyName + "_informative"] !== 'undefined') {
+                this._bindInformative(resultMessages(entity["@" + propertyName + "_informative"]));
             } else if (typeof entity["@" + propertyName + "_required"] !== 'undefined') {
                 this._bindRequired(entity["@" + propertyName + "_required"]);
             } else {
@@ -945,25 +1122,38 @@ export class TgEditor extends PolymerElement {
     _resetMessages () {
         this._invalid = false;
         this._error = null;
+        this._extendedError = null;
         this.decorator().classList.remove("warning");
+        this.decorator().classList.remove("informative");
         this.updateStyles();
     }
 
-    _bindError (msg) {
+    _bindError (messages) {
         this._resetMessages();
         this.decorator().classList.remove("required");
-        this.decorator().classList.remove("warning");
         this._invalid = true;
-        this._error = msg;
+        this._error = "" + messages.short;
+        this._extendedError = "" + messages.extended;
         this.updateStyles();
     }
     
-    _bindWarning (msg) {
+    _bindWarning (messages) {
         this._resetMessages();
         this.decorator().classList.remove("required");
         this.decorator().classList.add("warning");
         this._invalid = true;
-        this._error = "" + msg;
+        this._error = "" + messages.short;
+        this._extendedError = "" + messages.extended;
+        this.updateStyles();
+    }
+
+    _bindInformative (messages) {
+        this._resetMessages();
+        this.decorator().classList.remove("required");
+        this.decorator().classList.add("informative");
+        this._invalid = true;
+        this._error = "" + messages.short;
+        this._extendedError = "" + messages.extended;
         this.updateStyles();
     }
 
@@ -1005,4 +1195,49 @@ export class TgEditor extends PolymerElement {
         this.reflector().setCustomProperty(contextHolder, "@@searchString", inputText);
         return contextHolder;
     }
+
+    /**
+     * Opens confirmation dialog for extended error / warning / informative message on tap.
+     */
+    _inputErrorTapHandler (event) {
+        if (this._extendedError) {
+            this.$.confirmationDialog.showConfirmationDialog(this._extendedError, [{name:'Close', confirm:true, autofocus:true}]);
+        }
+    }
+
+    /**
+     * Checks built-in validation of the 'input' element.
+     * 
+     * This is applicable e.g. for <input type="number"> elements, where characters like 'e', '.' and '-' are applicable but invalid combinations of those are possible.
+     * 
+     * In all cases such invalid input will lead to _editingValue === ''.
+     * This complicates things, as _onChange may not be invoked at all.
+     * So we use _outFocus (on-blur) and _onKeyDown (on-keydown) on-Enter callbacks to cover majority of cases.
+     */
+    _checkBuiltInValidation () {
+        if (this.builtInValidationMessage && this.$ && this.$.input && this.$.input.checkValidity) {
+            this._editorValidationMsg = this._editingValue === '' && !this.$.input.checkValidity() ? this.builtInValidationMessage : null;
+        }
+    }
+
+    _propertyActionIndexChanged (newIndex, oldIndex) {
+        let shouldBeFocused = false;
+        if (oldIndex >= 0) {
+            const oldAction = this.propertyActions[oldIndex];
+            if (oldAction) {
+                shouldBeFocused = isInHierarchy(oldAction, deepestActiveElement());
+                oldAction.setAttribute('hidden', '');
+            }
+        }
+        if (newIndex >= 0) {
+            const newAction = this.propertyActions[newIndex];
+            if (newAction) {
+                newAction.removeAttribute('hidden');
+                if (shouldBeFocused) {
+                    newAction.$.iActionButton.focus();
+                }
+            }
+        }
+    }
+
 }

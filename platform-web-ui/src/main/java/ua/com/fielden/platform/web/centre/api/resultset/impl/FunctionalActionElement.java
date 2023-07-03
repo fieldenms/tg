@@ -3,6 +3,7 @@ package ua.com.fielden.platform.web.centre.api.resultset.impl;
 import static java.lang.String.format;
 import static java.util.Optional.empty;
 import static java.util.Optional.of;
+import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
 import static org.apache.commons.lang.StringUtils.join;
 
@@ -11,7 +12,9 @@ import java.util.Map;
 import java.util.Optional;
 
 import ua.com.fielden.platform.dom.DomElement;
+import ua.com.fielden.platform.entity.AbstractFunctionalEntityWithCentreContext;
 import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
+import ua.com.fielden.platform.web.centre.api.context.CentreContextConfig;
 import ua.com.fielden.platform.web.centre.api.crit.impl.AbstractCriterionWidget;
 import ua.com.fielden.platform.web.interfaces.IImportable;
 import ua.com.fielden.platform.web.interfaces.IRenderable;
@@ -174,6 +177,12 @@ public class FunctionalActionElement implements IRenderable, IImportable {
             attrs.put("require-selection-criteria", conf().context.get().withSelectionCrit ? "true" : "false");
             attrs.put("require-selected-entities", conf().context.get().withCurrentEtity ? "ONE" : (conf().context.get().withAllSelectedEntities ? "ALL" : "NONE"));
             attrs.put("require-master-entity", conf().context.get().withMasterEntity ? "true" : "false");
+            if (!conf().context.get().relatedContexts.isEmpty()) {
+                attrs.put("related-contexts", "[[" + actionsHolderName + "." + numberOfAction + ".relatedContexts]]");
+            }
+            conf().context.get().parentCentreContext.ifPresent(parentCentreContext -> {
+                attrs.put("parent-centre-context", "[[" + actionsHolderName + "." + numberOfAction + ".parentCentreContext]]");
+            });
         } else {
             attrs.put("require-selection-criteria", "null");
             attrs.put("require-selected-entities", "null");
@@ -251,11 +260,53 @@ public class FunctionalActionElement implements IRenderable, IImportable {
      */
     public String createActionObject() {
         final StringBuilder attrs = new StringBuilder("{\n");
+        if (conf().context.isPresent()) {
+            if (!conf().context.get().relatedContexts.isEmpty()) {
+                attrs.append("relatedContexts: ").append(createRelatedContexts(conf().context.get().relatedContexts)).append(",\n");
+            }
+            conf().context.get().parentCentreContext.ifPresent(parentCentreContext -> {
+                attrs.append("parentCentreContext: ").append(createParentCentreContext(parentCentreContext)).append(",\n");
+            });
+        }
         attrs.append("preAction: ").append(createPreAction()).append(",\n");
         attrs.append("postActionSuccess: ").append(createPostActionSuccess()).append(",\n");
         attrs.append("attrs: ").append(createElementAttributes(false)).append(",\n");
         attrs.append("postActionError: ").append(createPostActionError()).append("\n");
         return attrs.append("}\n").toString();
+    }
+
+    private String createParentCentreContext(final CentreContextConfig context) {
+        final StringBuilder attrs = new StringBuilder("{\n");
+        attrs.append(createContextAttributes(context));
+        return attrs.append("}").toString();
+    }
+
+    private String createRelatedContexts(final Map<Class<? extends AbstractFunctionalEntityWithCentreContext<?>>, CentreContextConfig> relatedContexts) {
+        final StringBuilder relatedContextsList = new StringBuilder("[");
+        relatedContextsList.append(relatedContexts.entrySet().stream().map(relatedContext -> createRelatedContext(relatedContext.getKey(), relatedContext.getValue())).collect(joining(",")));
+        return relatedContextsList.append("]").toString();
+    }
+
+    private String createRelatedContext(final Class<? extends AbstractFunctionalEntityWithCentreContext<?>> funcType, final CentreContextConfig context) {
+        final StringBuilder attrs = new StringBuilder("{\n");
+        attrs.append("elementName: ").append("'" + format("tg-%s-master", funcType.getSimpleName()) + "'").append(",\n");
+        attrs.append(createContextAttributes(context));
+        return attrs.append("}").toString();
+    }
+
+    private String createContextAttributes(final CentreContextConfig context) {
+        final StringBuilder attrs = new StringBuilder("");
+        if (!context.relatedContexts.isEmpty()) {
+            attrs.append("relatedContexts: ").append(createRelatedContexts(context.relatedContexts)).append(",\n");
+        }
+        context.parentCentreContext.ifPresent(parentContext -> {
+            attrs.append("parentCentreContext: ").append(createParentCentreContext(parentContext)).append(",\n");
+        });
+        attrs.append("requireSelectionCriteria: ").append(context.withSelectionCrit ? "'true'" : "'false'").append(",\n");
+        attrs.append("requireSelectedEntities: ").append(context.withCurrentEtity ? "'ONE'" : (context.withAllSelectedEntities ? "'ALL'" : "'NONE'")).append(",\n");
+        attrs.append("requireMasterEntity: ").append(context.withMasterEntity ? "'true'" : "'false'").append("\n");
+
+        return attrs.toString();
     }
 
     private String createExcludeInsertionPoints() {

@@ -125,7 +125,7 @@ public class DefaultValueContract {
 
     /**
      * Indicates whether the property has UTC indicator on it.
-     * 
+     *
      * @param entityType
      * @param propertyName
      * @return
@@ -243,7 +243,7 @@ public class DefaultValueContract {
      * @return
      */
     public static <M> Result getValidationResult(final MetaProperty<M> metaProperty) {
-        return !metaProperty.isValid() ? metaProperty.getFirstFailure() : metaProperty.getFirstWarning();
+        return !metaProperty.isValid() ? metaProperty.getFirstFailure() : metaProperty.getFirstValidResult();
     }
 
     /**

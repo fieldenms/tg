@@ -94,7 +94,7 @@ const customInputTemplate = html`
             tooltip-text$="[[_getTooltip(_editingValue)]]"
             autocomplete="off"/>
     </iron-input>`;
-const propertyActionTemplate = html`<slot name="property-action"></slot>`;
+const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
 
 const colourLuminance = function (hex, lum) {
     if (hex != null) {
@@ -310,7 +310,11 @@ export class TgColourPicker extends TgEditor {
 
     _formatText (_editingValue) {
         if (this.reflector().isEntity(this.entity)) {
-            return this.reflector().tg_toString(this.convertFromString(_editingValue), this.entity.type(), this.propertyName, { bindingValue: true, display: true });
+            try {
+                return this.reflector().tg_toString(this.convertFromString(_editingValue), this.entity.type(), this.propertyName, { bindingValue: true, display: true });
+            } catch (error) {
+                return _editingValue;
+            }
         }
         return '';
     }

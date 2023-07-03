@@ -1,29 +1,38 @@
 package ua.com.fielden.platform.processors.metamodel.elements;
 
-import static java.util.Collections.unmodifiableSet;
-
-import java.util.Collection;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import javax.lang.model.element.TypeElement;
 
 /**
- * A convenient wrapper around {@code TypeElement}, which represents an entry point to all domain meta-models (i.e., class {@code MetaModels} where all meta-models are referenced as static fields).
+ * A convenient wrapper around {@code TypeElement}, which represents an entry point to all domain meta-models (i.e., class {@code MetaModels} 
+ * where all meta-models are referenced as static fields).
  *
  * @author TG Team
  *
  */
 public final class MetaModelsElement extends AbstractForwardingTypeElement {
     private final Set<MetaModelElement> metaModels;
+    private Supplier<Set<MetaModelElement>> metaModelsLazyView;
 
-    public MetaModelsElement(final TypeElement typeElement, final Collection<MetaModelElement> metaModelElements) {
+    public MetaModelsElement(final TypeElement typeElement, final Iterator<MetaModelElement> metaModelElementsIterator) {
         super(typeElement);
-        this.metaModels = Set.copyOf(metaModelElements);
+        this.metaModels = new HashSet<>();
+        metaModelElementsIterator.forEachRemaining(this.metaModels::add);
+        this.metaModelsLazyView = () -> {
+            final var view = Collections.unmodifiableSet(metaModels);
+            this.metaModelsLazyView = () -> view;
+            return view;
+        };
     }
 
     public Set<MetaModelElement> getMetaModels() {
-        return unmodifiableSet(metaModels);
+        return metaModelsLazyView.get();
     }
 
     @Override

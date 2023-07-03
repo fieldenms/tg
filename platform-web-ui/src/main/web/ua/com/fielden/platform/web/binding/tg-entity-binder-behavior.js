@@ -1,6 +1,7 @@
 import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
-import {processResponseError, toastMsgForError} from '/resources/reflection/tg-ajax-utils.js';
+import { processResponseError } from '/resources/reflection/tg-ajax-utils.js';
 import { _timeZoneHeader } from '/resources/reflection/tg-date-utils.js';
+import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
 
 export const TgEntityBinderBehavior = {
 
@@ -217,14 +218,13 @@ export const TgEntityBinderBehavior = {
         },
 
         /**
-         * This is the standard processor for 'core-response's and is applicable for all
+         * This is the standard processor for 'iron-response's and is applicable for all
          *   responses that contain java Result inside 'e.detail.response'.
          *
-         * In case when result is not successful (i.e. has 'ex' inside) the toast message is shown
+         * In case where result is not successful (i.e. has 'ex' inside) the toast message is shown
          *   and 'customErrorHandlerFor(result)' is invoked.
          *
-         * In case when result is successful -- 'customHandlerFor(result.instance)' is invoked.
-         *
+         * In case where result is successful -- 'customHandlerFor(result.instance)' is invoked.
          *
          * This is the function, that is designated for binding.
          */
@@ -233,14 +233,13 @@ export const TgEntityBinderBehavior = {
         },
 
         /**
-         * This is the standard processor for 'core-response's and is applicable for all
+         * This is the standard processor for 'iron-response's and is applicable for all
          *   responses that contain java Result inside 'e.detail.response'.
          *
-         * In case when result is not successful (i.e. has 'ex' inside) the toast message is shown
+         * In case where result is not successful (i.e. has 'ex' inside) the toast message is shown
          *   and 'customErrorHandlerFor(result)' is invoked.
          *
-         * In case when result is successful -- 'customHandlerFor(result.instance)' is invoked.
-         *
+         * In case where result is successful -- 'customHandlerFor(result.instance)' is invoked.
          *
          * This is the function, that is designated for binding.
          */
@@ -468,13 +467,13 @@ export const TgEntityBinderBehavior = {
                             reader.onload = function () {
                                 const resultAsObj = JSON.parse(reader.result);
                                 const result = self._serialiser().deserialise(resultAsObj);
-                                self._openToastForError(result.message, toastMsgForError(self._reflector(), result), true);
+                                self._openToastForErrorResult(result, true);
                             }
                             reader.readAsText(xhr.response);
                         }
                     }.bind(self);
                     xhr.onerror = function (e) {
-                        const msg = "Unknown error occured when sending request to download the attachment.";
+                        const msg = "Unknown error occurred when sending request to download the attachment.";
                         console.error(msg, e);
                         self._openToastForError(msg, msg + ' Request status: ' + xhr.status, true);
                     }.bind(self);
@@ -497,15 +496,15 @@ export const TgEntityBinderBehavior = {
             return this._reset(mph);
         }).bind(self);
 
-        self._provideExceptionOccured = (function (entity, exceptionOccured) {
-            if (exceptionOccured !== null && this._reflector().isEntity(entity)) {
-                entity._setExceptionOccured(exceptionOccured);
+        self._provideExceptionOccurred = (function (entity, exceptionOccurred) {
+            if (exceptionOccurred !== null && this._reflector().isEntity(entity)) {
+                entity._setExceptionOccurred(exceptionOccurred);
             }
         }).bind(self);
 
         self._processRetrieverResponse = function (e) {
-            self._processResponse(e, "retrieve", function (entityAndCustomObject, exceptionOccured) {
-                self._provideExceptionOccured(entityAndCustomObject[0], exceptionOccured);
+            self._processResponse(e, "retrieve", function (entityAndCustomObject, exceptionOccurred) {
+                self._provideExceptionOccurred(entityAndCustomObject[0], exceptionOccurred);
                 return self._postRetrievedDefault(entityAndCustomObject);
             });
         };
@@ -523,10 +522,7 @@ export const TgEntityBinderBehavior = {
                 e.detail.successful = true;
                 const deserialisedResult = this._serialiser().deserialise(e.detail.response);
                 
-                if (this._reflector().isWarning(deserialisedResult)) {
-                    console.warn(toastMsgForError(this._reflector(), deserialisedResult));
-                    //this._openToastForError('Warning.', toastMsgForError(this._reflector(), deserialisedResult), false);
-                } else {
+                if (!this._reflector().isWarning(deserialisedResult)) {
                     // continue with normal handling of the result's instance
                     const deserialisedInstance = deserialisedResult.instance;
                     deserialisedResult.instance = null;
@@ -535,7 +531,7 @@ export const TgEntityBinderBehavior = {
                     // The current logic of tg-toast will discard all other messages after this message, until this message disappears.
                     if (this._reflector().isError(deserialisedResult)) {
                         console.log('deserialisedResult: ', deserialisedResult);
-                        this._openToastForError(deserialisedResult.message, toastMsgForError(this._reflector(), deserialisedResult), !this._reflector().isContinuationError(deserialisedResult) || this.showContinuationsAsErrors);
+                        this._openToastForErrorResult(deserialisedResult, !this._reflector().isContinuationError(deserialisedResult) || this.showContinuationsAsErrors);
                     }
                     e.detail.successful = customHandlerFor(deserialisedInstance, this._reflector().isError(deserialisedResult) ? deserialisedResult : null);
                     if (this._reflector().isError(deserialisedResult)) {
@@ -545,12 +541,10 @@ export const TgEntityBinderBehavior = {
                     // in case of customHandlerFor not returning any result need to assign true to recognise event handling as successful by default
                     if (e.detail.successful !== false) {
                         e.detail.successful = true;
-                        if (typeof deserialisedInstance.id !== 'undefined') {
-                            e.detail.entityId = deserialisedInstance.get('id');
-                            e.detail.entityPersistent = deserialisedInstance.type().isPersistent();
-                            e.detail.entityContinuation = deserialisedInstance.type().isContinuation();
-                        } else if (Array.isArray(deserialisedInstance) && this._reflector().isEntity(deserialisedInstance[0]) && typeof deserialisedInstance[0]['id'] !== 'undefined') {
+                        if (Array.isArray(deserialisedInstance) && this._reflector().isEntity(deserialisedInstance[0]) && typeof deserialisedInstance[0]['id'] !== 'undefined') {
                             e.detail.entityId = deserialisedInstance[0].get('id');
+                            e.detail.entityPersistent = deserialisedInstance[0].type().isPersistent();
+                            e.detail.entityContinuation = deserialisedInstance[0].type().isContinuation();
                         }
                     }
                 }
@@ -568,7 +562,7 @@ export const TgEntityBinderBehavior = {
             processResponseError(e, this._reflector(), this._serialiser(), customErrorHandlerFor, this.toaster);
         }).bind(self);
 
-        // calbacks, that will be bound by editor child elements:
+        // callbacks, that will be bound by editor child elements:
         self.validate = (function () {
             this.lastValidationAttemptPromise =  new Promise((resolve, reject) => {
                 const slf = this;
@@ -647,17 +641,17 @@ export const TgEntityBinderBehavior = {
             });
         }).bind(self);
 
-        // calbacks, that will potentially be augmented by tg-action child elements:
+        // callbacks, that will potentially be augmented by tg-action child elements:
         // 				retrieval:
         self._postRetrievedDefault = (function (entityAndCustomObject) {
             // console.timeEnd('actual-retrieval');
-            var entity = this.preRetrieved(entityAndCustomObject[0]);
-            var customObject = this._reflector().customObject(entityAndCustomObject);
+            const entity = this.preRetrieved(entityAndCustomObject[0]);
+            const customObject = this._reflector().customObject(entityAndCustomObject);
 
-            var msg = this._toastMsg("Refreshing", entity);
-            this._openToast(entity, msg, !entity.isValid() || entity.isValidWithWarning(), msg, false);
+            const messages = this._toastMessages("Refreshing", entity);
+            this._openToast(entity, messages.short, !entity.isValid() || entity.isValidWithWarning(), messages.extended, false);
 
-            var newBindingEntity = this._postEntityReceived(entity, true);
+            const newBindingEntity = this._postEntityReceived(entity, true, customObject);
 
             this._postRetrievedDefaultForDescendants(entity, newBindingEntity, customObject);
             // custom external action
@@ -703,14 +697,14 @@ export const TgEntityBinderBehavior = {
             }
             console.log('validate received (', customObject['@validationCounter'], ')');
             if (!validatedEntity.isValid()) {
-                const msg = this._toastMsg("Validation", validatedEntity);
-                this._openToast(validatedEntity, msg, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), msg, false);
+                const messages = this._toastMessages("Validation", validatedEntity);
+                this._openToast(validatedEntity, messages.short, !validatedEntity.isValid() || validatedEntity.isValidWithWarning(), messages.extended, false);
             }
             // in case where _continuations property exists (only in tg-entity-master) there is a need to reset continuations (they become stale after any change in initiating entity)
             if (typeof this._continuations === 'object') {
                 this._continuations = {};
             }
-            const newBindingEntity = this._postEntityReceived(validatedEntity, false);
+            const newBindingEntity = this._postEntityReceived(validatedEntity, false, customObject);
             // custom external action
             if (this.postValidated) {
                 this.postValidated(validatedEntity, newBindingEntity, customObject);
@@ -742,7 +736,8 @@ export const TgEntityBinderBehavior = {
 
         //Toaster object Can be used in other components on binder to show toasts.
         self.toaster = {
-            openToastForError : self._openToastForError.bind(self),
+            openToastForError: self._openToastForError.bind(self),
+            openToastForErrorResult: self._openToastForErrorResult.bind(self),
             openToast: self._openToast.bind(self),
             openToastWithoutEntity: self._openToastWithoutEntity.bind(self)
         };
@@ -797,6 +792,13 @@ export const TgEntityBinderBehavior = {
     },
 
     /**
+     * Opens the toast for erroneous Result.
+     */
+    _openToastForErrorResult: function (result, isCritical) {
+        this._openToastForError(resultMessages(result).short, this._reflector().stackTrace(result.ex), isCritical);
+    },
+
+    /**
      * Opens the toast with some error message including full 'moreInfo' message.
      */
     _openToastForError: function (toastMsg, moreInfo, isCritical) {
@@ -817,18 +819,22 @@ export const TgEntityBinderBehavior = {
         this._toastGreeting().show();
     },
 
-    _toastMsgForErrorObject: function (errorObject) {
-        var stack = errorObject.stack;
-        return this._reflector().stackTraceForErrorObjectStack(stack);
-    },
-
-    _toastMsg: function (actionName, entity) {
+    /**
+     * Returns a pair of short and extended messages for toast.
+     * 
+     * Takes them from entity if it is invalid or in warning.
+     * Otherwise, returns 'ACTION completed successfully' as both short and extended.
+     */
+    _toastMessages: function (actionName, entity) {
         if (!entity.isValid()) {
-            return entity.firstFailure().message;
+            return resultMessages(entity.firstFailure());
         } else if (entity.isValidWithWarning()) {
-            return entity.firstWarning().message;
+            return resultMessages(entity.firstWarning());
         } else {
-            return actionName + " completed successfully.";
+            return {
+                short: actionName + " completed successfully.",
+                extended: actionName + " completed successfully."
+            };
         }
     },
     //////////////////////////////////////////////
@@ -902,19 +908,25 @@ export const TgEntityBinderBehavior = {
                 const originalValue = convert(_originalBindingEntity.get(propertyName));
                 const valId = bindingEntity['@' + propertyName + '_id'];
                 const origValId = _originalBindingEntity['@' + propertyName + '_id'];
-                
+                const activeProp = bindingEntity['@' + propertyName + '_activeProperty'];
+                const origActiveProp = _originalBindingEntity['@' + propertyName + '_activeProperty'];
+
                 // VERY IMPORTANT: the property is considered to be 'modified'
-                //                 in the case when its value does not equal to original value.
+                //                 in the case where its value does not equal to original value
+                //                 OR if active property was changed. The active property might be changed if entity is union 
                 //
                 //                 The 'modified' property is marked by existence of 'val' sub-property.
                 //
                 //                 All modified properties will be applied on the server upon the validation prototype.
-                if (!self._reflector().equalsEx(value, originalValue)) {
+                if (!self._reflector().equalsEx(value, originalValue) || !self._reflector().equalsEx(activeProp, origActiveProp)) {
                     // the property is 'modified'
                     modPropHolder[propertyName] = {
                         'val': value,
                         'origVal': originalValue
                     };
+                    if (typeof activeProp !== 'undefined') {
+                        modPropHolder[propertyName]['activeProperty'] = activeProp;
+                    }
                     modPropHolder['@modified'] = true;
                     if (typeof valId !== 'undefined') {
                         modPropHolder[propertyName]['valId'] = valId;
@@ -924,6 +936,9 @@ export const TgEntityBinderBehavior = {
                     modPropHolder[propertyName] = {
                         'origVal': originalValue
                     };
+                    if (typeof origActiveProp !== 'undefined') {
+                        modPropHolder[propertyName]['activeProperty'] = origActiveProp;
+                    }
                 }
                 if (typeof origValId !== 'undefined') {
                     modPropHolder[propertyName]['origValId'] = origValId;
@@ -954,7 +969,7 @@ export const TgEntityBinderBehavior = {
      * @param isRefreshingProcess -- value true indicates that the call happens as part of refresh lifecycle, which requires resetting the state.
      *                               In all other cases (validate, save, run) value false should be provided.
      */
-    _postEntityReceived: function (entity, isRefreshingProcess) {
+    _postEntityReceived: function (entity, isRefreshingProcess, customObject) {
         var self = this;
         // in case entity is being retrieved need to reset the state, so that the master would behave as if it was created for the first time
         if (isRefreshingProcess) {
@@ -977,6 +992,8 @@ export const TgEntityBinderBehavior = {
             // version of entity should be taken from previous entity to correctly restore stale entity at the client-side
             entity.version = self._extractPreviousEntityVersion(previousEntity, entity.version, self._originalBindingEntity);
         }
+        //Set the property action indices
+        this._propertyActionIndices = customObject && customObject.propertyActionIndices;
         // New entity should be promoted to the local cache:
         self._currEntity = entity;
         self.fire('tg-entity-received', self._currEntity);
@@ -1075,6 +1092,8 @@ export const TgEntityBinderBehavior = {
             } else {
                 if (self._reflector().isWarning(entity.prop(propertyName).validationResult())) {
                     bindingView['@' + propertyName + '_warning'] = entity.prop(propertyName).validationResult();
+                } else if (self._reflector().isInformative(entity.prop(propertyName).validationResult())) {
+                    bindingView['@' + propertyName + '_informative'] = entity.prop(propertyName).validationResult();
                 }
                 bindingView['@' + propertyName + '_required'] = entity.prop(propertyName).isRequired();
             }

@@ -34,6 +34,7 @@ const customInputTemplate = html`
             id="input"
             class="custom-input"
             type="number"
+            title=""
             step="any"
             on-change="_onChange"
             on-input="_onInput"
@@ -46,13 +47,18 @@ const customInputTemplate = html`
             tooltip-text$="[[_getTooltip(_editingValue)]]"
             autocomplete="off"/>
     </iron-input>`;
-const inputLayerTemplate = html`<div class="input-layer" tooltip-text$="[[_getTooltip(_editingValue)]]">[[_formatText(_editingValue)]]</div>`;
-const propertyActionTemplate = html`<slot name="property-action"></slot>`;
+const inputLayerTemplate = html`<div id="inputLayer" class="input-layer" tooltip-text$="[[_getTooltip(_editingValue)]]">[[_formatText(_editingValue)]]</div>`;
+const propertyActionTemplate = html`<slot id="actionSlot" name="property-action"></slot>`;
 
 export class TgMoneyEditor extends TgNumericEditor {
 
     static get template () { 
         return createEditorTemplate(additionalTemplate, html``, customInputTemplate, inputLayerTemplate, html``, propertyActionTemplate);
+    }
+
+    constructor () {
+        super();
+        this.builtInValidationMessage = 'The entered amount is not a valid number.';
     }
 
     /**
@@ -62,9 +68,8 @@ export class TgMoneyEditor extends TgNumericEditor {
         if (strValue === '') {
             return null;
         }
-        // var convertedNumber = (+strValue);
         if (isNaN(strValue)) {
-            throw "The entered amount is not a valid number.";
+            throw this.builtInValidationMessage;
         }
         
         // TODO currency and tax are ignored at this stage, but their support should most likely be implemented at some

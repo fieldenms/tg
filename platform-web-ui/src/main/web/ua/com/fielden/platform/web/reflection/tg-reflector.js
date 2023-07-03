@@ -2,6 +2,7 @@ import '/resources/polymer/@polymer/polymer/polymer-legacy.js';
 import { Polymer } from '/resources/polymer/@polymer/polymer/lib/legacy/polymer-fn.js';
 
 import { _millisDateRepresentation } from '/resources/reflection/tg-date-utils.js';
+import { resultMessages } from '/resources/reflection/tg-polymer-utils.js';
 
 /**
  * Used for decimal and money formatting. If the scale value for formatting wasn't specified then the default one is used.
@@ -51,6 +52,13 @@ var _isContinuationError0 = function (result) {
  */
 var _isWarning0 = function (result) {
     return result !== null && result["@resultType"] === "ua.com.fielden.platform.error.Warning";
+};
+
+/**
+ * Determines whether the result is informative.
+ */
+var _isInformative0 = function (result) {
+    return result !== null && result["@resultType"] === "ua.com.fielden.platform.error.Informative";
 };
 
 /**
@@ -247,7 +255,7 @@ var _createEntityInstancePropPrototype = function () {
     }
 
     /**
-     * Returns original value in case when the property is changed from original and the entity is persisted.
+     * Returns original value in case where the property is changed from original and the entity is persisted.
      *
      * IMPORTANT: do not use '_originalVal' field directly!
      */
@@ -373,7 +381,7 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
     Entity.prototype.prop = function (name) {
         this.get(name); // ensures that the instance prop of the 'fetched' property is accessed
         if (this._isObjectUndefined("@" + name)) {
-            this["@" + name] = new EntityInstanceProp(); // lazily initialise entity instance prop in case when it was not JSON-serialised (all information was 'default')
+            this["@" + name] = new EntityInstanceProp(); // lazily initialise entity instance prop in case where it was not JSON-serialised (all information was 'default')
         }
         return this["@" + name];
     }
@@ -434,17 +442,22 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
     /**
      * Returns 'active entity' in this union entity.
      * 
-     * This method closely resembles methods 'AbstractUnionEntity.activeEntity' and 'AbstractUnionEntity.getNameOfAssignedUnionProperty'.
+     * This method closely resembles method 'AbstractUnionEntity.activeEntity'.
      */
     Entity.prototype._activeEntity = function () {
-        const self = this;
-        let activeEntity = null;
-        this.traverseProperties(function (name) {
-            if (self.get(name) !== null) {
-                activeEntity = self.get(name);
-            }
-        });
-        return activeEntity;
+        const activeProperty = this._activeProperty();
+        return activeProperty !== null ? this.get(activeProperty) : null;
+    }
+
+     /**
+      * Returns 'active property' in this union entity. Active property is a property among union properties that is not null.
+      * If there are no such property then null is returned.
+      *
+      * This method closely resembles methods 'AbstractUnionEntity.getNameOfAssignedUnionProperty'.
+      */
+    Entity.prototype._activeProperty = function () {
+        const type = this.constructor.prototype.type.call(this);
+        return type.unionProps().find(prop => this.get(prop) !== null) || null;
     }
 
     /**
@@ -561,11 +574,11 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
     }
 
     /**
-     * Determines whether the entity is valid (which means that there are no invalid properties) and no exception has been occured during some server-side process behind the entity (master entity saving, centre selection-crit entity running etc.).
+     * Determines whether the entity is valid (which means that there are no invalid properties) and no exception has been occurred during some server-side process behind the entity (master entity saving, centre selection-crit entity running etc.).
      *
      */
     Entity.prototype.isValidWithoutException = function () {
-        return this.isValid() && !this.exceptionOccured();
+        return this.isValid() && !this.exceptionOccurred();
     }
 
     /**
@@ -583,19 +596,19 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
     }
 
     /**
-     * Determines whether the top-level result, that wraps this entity was invalid, which means that some exception on server has been occured (e.g. saving exception).
+     * Determines whether the top-level result, that wraps this entity was invalid, which means that some exception on server has been occurred (e.g. saving exception).
      *
      */
-    Entity.prototype.exceptionOccured = function () {
-        return (typeof this['@@___exception-occured'] === 'undefined') ? null : this['@@___exception-occured'];
+    Entity.prototype.exceptionOccurred = function () {
+        return (typeof this['@@___exception-occurred'] === 'undefined') ? null : this['@@___exception-occurred'];
     }
 
     /**
-     * Provides a value 'exceptionOccured' flag, which determines whether the top-level result, that wraps this entity was invalid, which means that some exception on server has been occured (e.g. saving exception).
+     * Provides a value 'exceptionOccurred' flag, which determines whether the top-level result, that wraps this entity was invalid, which means that some exception on server has been occurred (e.g. saving exception).
      *
      */
-    Entity.prototype._setExceptionOccured = function (exceptionOccured) {
-        return this['@@___exception-occured'] = exceptionOccured;
+    Entity.prototype._setExceptionOccurred = function (exceptionOccurred) {
+        return this['@@___exception-occurred'] = exceptionOccurred;
     }
 
     /**
@@ -652,7 +665,7 @@ const _createEntityPrototype = function (EntityInstanceProp, StrictProxyExceptio
      */
     Entity.prototype.toString = function () {
         const convertedKey = _toString(_convert(this.get('key')), this.constructor.prototype.type.call(this), 'key');
-        return convertedKey === '' && !this.constructor.prototype.type.call(this).isUnionEntity() ? KEY_NOT_ASSIGNED : convertedKey;
+        return convertedKey === '' ? KEY_NOT_ASSIGNED : convertedKey;
     }
     
     return Entity;
@@ -813,7 +826,7 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
      *
      */
     EntityType.prototype.isUnionEntity = function () {
-        return typeof this['_unionCommonProps'] !== 'undefined';
+        return typeof this['_unionCommonProps'] !== 'undefined' && typeof this['_unionProps'] !== 'undefined';
     }
 
     /** 
@@ -821,6 +834,13 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
      */
     EntityType.prototype.unionCommonProps = function () {
         return this._unionCommonProps;
+    }
+
+    /** 
+     * Returns the property names for union properties in case of union entity; not defined otherwise.
+     */
+     EntityType.prototype.unionProps = function () {
+        return this._unionProps;
     }
 
     /**
@@ -902,6 +922,8 @@ var _createEntityTypePrototype = function (EntityTypeProp) {
                 } else if (this.isUnionEntity()) { // the key type for union entities at the Java level is "String", but for JS its actual type is determined at runtime base on the active property
                     return { type: function () { return 'String'; } }
                 }
+            } else if (!prop && name === 'desc' && this.isUnionEntity()) { // the 'desc' type for union entities always return "String", even if there is no @DescTitle annotation on union type
+                return { type: function () { return 'String'; } }
             }
             return prop ? prop : null;
         }
@@ -1211,6 +1233,9 @@ const _convertFullPropertyValue = function (bindingView, propertyName, fullValue
     if (_isEntity(fullValue)) {
         if (fullValue.get('id') !== null) {
             bindingView['@' + propertyName + '_id'] = fullValue.get('id');
+        }
+        if (fullValue.type().isUnionEntity()) {
+            bindingView[`@${propertyName}_activeProperty`] = fullValue._activeProperty(); 
         }
         try {
             const desc = fullValue.get('desc');
@@ -1526,71 +1551,55 @@ export const TgReflector = Polymer({
         return _isWarning0(result);
     },
 
-    //////////////////// SERVER EXCEPTIONS UTILS ////////////////////
     /**
-     * Returns a meaninful representation for exception message (including user-friendly version for NPE, not just 'null').
+     * Determines whether result is informative.
      */
-    exceptionMessage: function (exception) {
-        return exception.message === null ? "Null pointer exception" : exception.message;
+    isInformative: function (result) {
+        return _isInformative0(result);
     },
 
-    /**
-     * Returns a meaninful representation for errorObject message.
-     */
-    exceptionMessageForErrorObject: function (errorObject) {
-        return errorObject.message;
-    },
+    //////////////////// SERVER EXCEPTIONS UTILS ////////////////////
 
     /**
      * Returns html representation for the specified exception trace (including 'cause' expanded, if any).
      */
     stackTrace: function (ex) {
         // collects error cause by traversing the stack into an ordered list
-        var causeCollector = function (ex, causes) {
+        const causeCollector = function (ex, causes) {
             if (ex) {
-                causes = causes + "<li>" + this.exceptionMessage(ex) + "</li>";
+                causes = causes + "<li>" + resultMessages(ex).extended + "</li>";
                 printStackTrace(ex);
                 if (ex.cause !== null) {
                     causes = causeCollector(ex.cause, causes);
                 }
             }
             return causes + "</ol>";
-        }.bind(this);
+        };
 
-        // ouputs the exception stack trace into the console as warning
-        var printStackTrace = function (ex) {
-            var msg = "No cause and stack trace.";
+        // outputs the exception stack trace into the console as warning
+        const printStackTrace = function (ex) {
+            let msg = "No cause and stack trace.";
             if (ex) {
-                msg = this.exceptionMessage(ex) + '\n';
+                msg = resultMessages(ex).short + '\n';
                 if (Array.isArray(ex.stackTrace)) {
-                    for (var i = 0; i < ex.stackTrace.length; i += 1) {
-                        var st = ex.stackTrace[i];
+                    for (let i = 0; i < ex.stackTrace.length; i += 1) {
+                        const st = ex.stackTrace[i];
                         msg = msg + st.className + '.java:' + st.lineNumber + ':' + st.methodName + ';\n';
                     }
                 }
             }
             console.warn(msg);
-        }.bind(this);
+        };
 
         if (ex) {
-            var causes = "<b>" + this.exceptionMessage(ex) + "</b>";
+            let causes = "<b>" + resultMessages(ex).extended + "</b>";
             printStackTrace(ex);
             if (ex.cause !== null) {
                 causes = causeCollector(ex.cause, causes + "<br><br>Cause(s):<br><ol>")
             }
-
             return causes;
         }
-
-    },
-
-    /**
-     * Returns html representation for the specified errorObject stack.
-     */
-    stackTraceForErrorObjectStack: function (stack) {
-        console.log("STACK", stack);
-        // TODO still "NOT IMPLEMENTED!";
-        return stack.toString();
+        return '';
     },
 
     //////////////////// SERVER EXCEPTIONS UTILS [END] //////////////
@@ -1733,8 +1742,10 @@ export const TgReflector = Polymer({
 
             const touchedProps = bindingView['@@touchedProps'];
             const touchedPropIndex = touchedProps.names.indexOf(propertyName);
-            if (touchedPropIndex > -1 && !this.equalsEx(bindingView.get(propertyName), touchedProps.values[touchedPropIndex])) {
-                // make the property untouched in case where its value was sucessfully mutated through definer of other property (it means that the value is valid and different from the value originated from user's touch)
+            // #1992 reset @@touchedProps only for non-compound-master-opener types, because opener's 'key' property needs to remain touched
+            // this ensures correct server-side restoration of the opener in cases where its produced 'key' (no id) equals to the saved version of the 'key' (with id)
+            if (touchedPropIndex > -1 && !this.equalsEx(bindingView.get(propertyName), touchedProps.values[touchedPropIndex]) && !entity.type().compoundOpenerType()) {
+                // make the property untouched in cases where its value was successfully mutated through definer of another property (it means that the value is valid and different to the value originated from the user's touch)
                 touchedProps.names.splice(touchedPropIndex, 1);
                 touchedProps.counts.splice(touchedPropIndex, 1);
                 touchedProps.values.splice(touchedPropIndex, 1);
@@ -2112,6 +2123,10 @@ export const TgReflector = Polymer({
      */
     get LINK_CONFIG_TITLE() {
         return _LINK_CONFIG_TITLE;
+    },
+
+    get KEY_NOT_ASSIGNED() {
+        return KEY_NOT_ASSIGNED;
     }
 
 });

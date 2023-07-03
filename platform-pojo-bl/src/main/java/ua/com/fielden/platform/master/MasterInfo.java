@@ -42,18 +42,6 @@ public class MasterInfo extends AbstractEntity<String> {
     private boolean shouldRefreshParentCentreAfterSave = false;
 
     @IsProperty
-    @Title("Require Selection Criteria")
-    private String requireSelectionCriteria;
-
-    @IsProperty
-    @Title("Require Selected Entities")
-    private String requireSelectedEntities;
-
-    @IsProperty
-    @Title("Require Master Entity")
-    private String requireMasterEntity;
-
-    @IsProperty
     @Title(value = "Entity Type")
     private String entityType;
 
@@ -104,36 +92,6 @@ public class MasterInfo extends AbstractEntity<String> {
 
     public String getEntityType() {
         return entityType;
-    }
-
-    @Observable
-    public MasterInfo setRequireMasterEntity(final String requireMasterEntity) {
-        this.requireMasterEntity = requireMasterEntity;
-        return this;
-    }
-
-    public String getRequireMasterEntity() {
-        return requireMasterEntity;
-    }
-
-    @Observable
-    public MasterInfo setRequireSelectedEntities(final String requireSelectedEntities) {
-        this.requireSelectedEntities = requireSelectedEntities;
-        return this;
-    }
-
-    public String getRequireSelectedEntities() {
-        return requireSelectedEntities;
-    }
-
-    @Observable
-    public MasterInfo setRequireSelectionCriteria(final String requireSelectionCriteria) {
-        this.requireSelectionCriteria = requireSelectionCriteria;
-        return this;
-    }
-
-    public String getRequireSelectionCriteria() {
-        return requireSelectionCriteria;
     }
 
     @Observable
