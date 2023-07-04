@@ -217,6 +217,11 @@ Polymer({
         focusingCallback: {
             type: Function,
             value: null
+        },
+
+        _continuationInProgress: {
+            type: Boolean,
+            value: false
         }
     },
 
@@ -229,6 +234,11 @@ Polymer({
     created: function () {
         this.run = this._createRun();
         this._working = false;
+    },
+
+    cancelContinuation: function () {
+        this._continuationInProgress = false;
+        this._afterExecution();
     },
 
     /**
@@ -293,9 +303,8 @@ Polymer({
                         const result = newValue(smth);
                         const potentiallySavedOrNewEntity = Array.isArray(smth) ? smth[0] : smth;
                         const _exceptionOccurred = potentiallySavedOrNewEntity.exceptionOccurred();
-                        if (self.role !== 'save' || _exceptionOccurred === null || !_exceptionOccurred.ex || !_exceptionOccurred.ex.continuationTypeStr) {
-                            self._afterExecution();
-                        }
+                        self._continuationInProgress = self.role === 'save' && _exceptionOccurred !== null && !!_exceptionOccurred.ex && !!_exceptionOccurred.ex.continuationTypeStr;
+                        self._afterExecution();
                         return result;
                     } catch (e) {
                         throw enhanceStateRestoration(e, () => self._afterExecution());
@@ -327,21 +336,23 @@ Polymer({
      * The function that is invoked after the action has completed (error or success).
      */
     _afterExecution: function () {
-        this._working = false;
-        // prevent not yet activated spinner from activating if any
-        if (this._startSpinnerTimer) {
-            clearTimeout(this._startSpinnerTimer);
+        if (!this._continuationInProgress) {
+            this._working = false;
+            // prevent not yet activated spinner from activating if any
+            if (this._startSpinnerTimer) {
+                clearTimeout(this._startSpinnerTimer);
+            }
+
+            // do the super stuff
+            console.log(this.shortDesc + ": after execution");
+            this._innerEnabled = true;
+            this.restoreActiveElement();
+
+            // Make spinner invisible
+            this.$.spinner.style.display = 'none';
+
+            this.restoreActiveElement();
         }
-
-        // do the super stuff
-        console.log(this.shortDesc + ": after execution");
-        this._innerEnabled = true;
-        this.restoreActiveElement();
-
-        // Make spinner invisible
-        this.$.spinner.style.display = 'none';
-
-        this.restoreActiveElement();
     },
 
     _asyncRun: function () {
