@@ -43,7 +43,7 @@ public class SubQuery2 extends AbstractQuery2 implements ISingleOperand2<SubQuer
     }
     
     @Override
-    public boolean isNotNullableEntity() {
+    public boolean isNonnullableEntity() {
         return isRefetchOnly;
     }
 

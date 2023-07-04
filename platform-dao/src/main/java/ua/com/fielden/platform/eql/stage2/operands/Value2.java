@@ -45,7 +45,7 @@ public class Value2 implements ISingleOperand2<Value3> {
     }
     
     @Override
-    public boolean isNotNullableEntity() {
+    public boolean isNonnullableEntity() {
         return false; // should be FALSE even if value is not null as there is no guarantee of presence of entity with such ID in DB 
     }
     

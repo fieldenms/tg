@@ -22,7 +22,7 @@ public abstract class AbstractFunction2<S3 extends ISingleOperand3> extends Abst
     }
     
     @Override
-    public boolean isNotNullableEntity() {
+    public boolean isNonnullableEntity() {
         return false;
     }
 }

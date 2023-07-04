@@ -63,8 +63,8 @@ public class Expression2 extends AbstractSingleOperand2 implements ISingleOperan
     }
     
     @Override
-    public boolean isNotNullableEntity() {
-        return items.isEmpty() ? first.isNotNullableEntity() : false;
+    public boolean isNonnullableEntity() {
+        return items.isEmpty() ? first.isNonnullableEntity() : false;
     }
 
     private static Set<Class<?>> extractTypes(final ISingleOperand2<? extends ISingleOperand3> first, final List<CompoundSingleOperand2> items) {

@@ -89,13 +89,13 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
     }
     
     @Override
-    public boolean isNotNullableEntity() {
+    public boolean isNonnullableEntity() {
         if (ID.equals(name)) {
             return true; // TODO this is temporary fix to be able to treat such primitive prop correctly until distinction between usual 1ong and PK long is introduced.
         }
         
         for (final AbstractPropInfo<?> abstractPropInfo : path) {
-            if (!isNotNullableEntity(abstractPropInfo)) {
+            if (!isNonnullableEntity(abstractPropInfo)) {
                 return false;
             }
         }
@@ -103,7 +103,7 @@ public class Prop2 extends AbstractSingleOperand2 implements ISingleOperand2<ISi
         return true;
     }
     
-    private static boolean isNotNullableEntity(final AbstractPropInfo<?> propInfo) {
+    private static boolean isNonnullableEntity(final AbstractPropInfo<?> propInfo) {
         return propInfo instanceof EntityTypePropInfo ? ((EntityTypePropInfo<?>) propInfo).required : false;
     }
 

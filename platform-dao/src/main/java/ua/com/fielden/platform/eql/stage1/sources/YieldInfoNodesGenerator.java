@@ -45,7 +45,7 @@ public class YieldInfoNodesGenerator {
     }
     
     private static boolean determineRequiredness(final YieldAndConditions yieldAndConditions) {
-        return yieldAndConditions.yield().hasRequiredHint || yieldAndConditions.yield().operand.isNotNullableEntity() || yieldAndConditions.conditions().conditionIsSatisfied(new NullTest2(yieldAndConditions.yield().operand, true));
+        return yieldAndConditions.yield().hasRequiredHint || yieldAndConditions.yield().operand.isNonnullableEntity() || yieldAndConditions.conditions().conditionIsSatisfied(new NullTest2(yieldAndConditions.yield().operand, true));
     }
     
     private static boolean determineRequiredness(final List<YieldAndConditions> yieldVariants) {

@@ -8,5 +8,10 @@ public interface ISingleOperand2<S3 extends ISingleOperand3> extends IIgnorableA
 
     Class<?> type();
     
-    boolean isNotNullableEntity();
+    /**
+     * Return true in case that the operand is of Entity type and can't contain null values.
+     * 
+     * @return
+     */
+    boolean isNonnullableEntity();
 }
