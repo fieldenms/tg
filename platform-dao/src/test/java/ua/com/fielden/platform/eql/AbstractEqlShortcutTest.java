@@ -6,7 +6,9 @@ import static ua.com.fielden.platform.entity.query.DbVersion.H2;
 import static ua.com.fielden.platform.eql.retrieval.EntityContainerFetcher.getYieldedColumns;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
+import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.QueryProcessingModel;
+import ua.com.fielden.platform.entity.query.model.AggregatedResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.eql.meta.EqlTestCase;
 import ua.com.fielden.platform.eql.retrieval.records.QueryModelResult;
@@ -19,7 +21,16 @@ public abstract class AbstractEqlShortcutTest extends EqlTestCase {
     protected static <T extends AbstractEntity<?>> void assertModelResultsEquals(final EntityResultQueryModel<T> exp, final EntityResultQueryModel<T> act) {
         final QueryModelResult<T> expQmr = transformToModelResult(new QueryProcessingModel<T, EntityResultQueryModel<T>>(exp, null, null, emptyMap(), true));
         final QueryModelResult<T> actQmr = transformToModelResult(new QueryProcessingModel<T, EntityResultQueryModel<T>>(act, null, null, emptyMap(), true));
-        
+        assertEquals("Qry model results (SQL) are different!", expQmr.sql(), actQmr.sql());
+        assertEquals("Qry model results (Result Type) are different!", expQmr.resultType(), actQmr.resultType());
+        assertEquals("Qry model results (Fetch Model) are different!", expQmr.fetchModel(), actQmr.fetchModel());
+        assertEquals("Qry model results (Param values) are different!", expQmr.paramValues(), actQmr.paramValues());
+        assertEquals("Qry model results (Yielded props infos) are different!", expQmr.yieldedColumns(), actQmr.yieldedColumns());
+    }
+    
+    protected static void assertModelResultsEquals(final AggregatedResultQueryModel exp, final AggregatedResultQueryModel act) {
+        final QueryModelResult<EntityAggregates> expQmr = transformToModelResult(new QueryProcessingModel<EntityAggregates, AggregatedResultQueryModel>(exp, null, null, emptyMap(), true));
+        final QueryModelResult<EntityAggregates> actQmr = transformToModelResult(new QueryProcessingModel<EntityAggregates, AggregatedResultQueryModel>(act, null, null, emptyMap(), true));
         assertEquals("Qry model results (SQL) are different!", expQmr.sql(), actQmr.sql());
         assertEquals("Qry model results (Result Type) are different!", expQmr.resultType(), actQmr.resultType());
         assertEquals("Qry model results (Fetch Model) are different!", expQmr.fetchModel(), actQmr.fetchModel());
