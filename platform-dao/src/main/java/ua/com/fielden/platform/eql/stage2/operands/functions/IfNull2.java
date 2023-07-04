@@ -20,6 +20,18 @@ public class IfNull2 extends TwoOperandsFunction2<IfNull3> {
     }
     
     @Override
+    public boolean isNonnullableEntity() {
+        // There is no point in checking first operand for null value if it's nonnullableEntity = true. Hence:
+        // if second operand is nonnullableEntity then --
+        //  - if first operand is not null and is returned (it turns out to be nonnullableEntity) the result will be true (as it should be),
+        //  - if first operand is null and second operand is returned the result will also be true (as it should be);
+        // if second operand is not nonnullableEntity then --
+        //  - if first operand is null and second operand is returned the result will be false (as should be);
+        //  - if first operand is not null and is returned the result will be false (but actually should be true, but there is no way to infer this from the available information).
+        return operand2.isNonnullableEntity();
+    }
+    
+    @Override
     public int hashCode() {
         final int prime = 31;
         final int result = super.hashCode();
