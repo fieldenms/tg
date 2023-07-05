@@ -712,7 +712,8 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 .addAction(MasterActions.VIEW)
                 .addAction(action(MakeCompletedAction.class)
                         .withContext(context().withMasterEntity().build())
-                        .postActionSuccess(() -> new JsCode(new BindSavedPropertyPostActionSuccess("masterEntity").build().toString() + "self.publishCloseForcibly();"))
+                        // .postActionSuccess(() -> new JsCode(new BindSavedPropertyPostActionSuccess("masterEntity").build().toString() + "self.publishCloseForcibly();")) // use this for additional manual testing of forced closing
+                        .postActionSuccess(new BindSavedPropertyPostActionSuccess("masterEntity"))
                         .postActionError(new BindSavedPropertyPostActionError("masterEntity"))
                         .shortDesc("Complete")
                         .longDesc("Complete this entity.")
@@ -1468,7 +1469,13 @@ public class WebUiConfig extends AbstractWebUiConfig {
                 )
                 .addGroupAction(
                         action(EntityExportAction.class)
-                                .withContext(context().withSelectionCrit().withSelectedEntities().build())
+                                .withContext(context().withSelectionCrit().withSelectedEntities()
+                                        .extendWithParentCentreContext(
+                                                context().withSelectionCrit().withSelectedEntities()
+                                                .extendWithInsertionPointContext(TgCentreInvokerWithCentreContext.class,
+                                                        context().withSelectionCrit().withSelectedEntities().withMasterEntity().build()).build())
+                                        .extendWithInsertionPointContext(TgCentreInvokerWithCentreContext.class,
+                                                context().withSelectionCrit().withSelectedEntities().withMasterEntity().build()).build())
                                 .postActionSuccess(new FileSaverPostAction())
                                 .icon("icons:save")
                                 .shortDesc("Export Data")

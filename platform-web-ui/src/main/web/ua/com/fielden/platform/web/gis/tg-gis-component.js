@@ -507,7 +507,7 @@ GisComponent.prototype.promoteEntity = function (entity, parentFeature) {
     entity.geometry = this.createGeometry(entity);
     if (entity.geometry) {
         this._overlays[this.overlayNameFor(entity)].addData(entity);
-    } // do nothing in case when the entity has no visual representation
+    } // do nothing in case where the entity has no visual representation
 };
 
 /** 

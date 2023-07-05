@@ -1,9 +1,11 @@
 package ua.com.fielden.platform.entity.meta;
 
 import static java.lang.String.format;
+import static java.util.Optional.empty;
+import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
-import static org.apache.logging.log4j.LogManager.getLogger;
 import static org.apache.commons.lang3.StringUtils.isEmpty;
+import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.error.Result.failure;
 import static ua.com.fielden.platform.error.Result.successful;
 import static ua.com.fielden.platform.reflection.PropertyTypeDeterminator.isRequiredByDefinition;
@@ -132,8 +134,9 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     ////////////////////////////////////////////////////////////////////////////////////////////////////////
 
     // if the value is present then a corresponding property has annotation {@link Final}
-    // the boolean value captures the value of attribute persistentOnly
-    private final Optional<Boolean> persistentOnlySettingForFinalAnnotation;
+    // the following 2 boolean fields capture the values of attributes {@code Final.persistedOnly} and {@code Final.nullIsValueForPersisted}
+    private final Optional<Boolean> atFinal_persistedOnly;
+    private final Optional<Boolean> atFinal_nullIsValueForPersisted;
 
     private static final Logger logger = getLogger(MetaPropertyFull.class);
 
@@ -183,7 +186,13 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
         this.calculated = calculated;
         this.upperCase = upperCase;
         final Final finalAnnotation = field.getAnnotation(Final.class);
-        persistentOnlySettingForFinalAnnotation = finalAnnotation == null ? Optional.empty() : Optional.of(finalAnnotation.persistentOnly());
+        if (finalAnnotation == null) {
+            this.atFinal_persistedOnly = empty();
+            this.atFinal_nullIsValueForPersisted = empty();
+        } else {
+            this.atFinal_persistedOnly = of(finalAnnotation.persistedOnly());
+            this.atFinal_nullIsValueForPersisted = of(finalAnnotation.nullIsValueForPersisted());
+        }
         this.isRequiredByDefinition = isRequiredByDefinition(field, entity.getType());
     }
 
@@ -746,8 +755,8 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     }
 
     private boolean isFinalised() {
-        if (persistentOnlySettingForFinalAnnotation.isPresent()) {
-            return FinalValidator.isPropertyFinalised(this, persistentOnlySettingForFinalAnnotation.get());
+        if (atFinal_persistedOnly.isPresent()) { // this means @Final is present
+            return FinalValidator.isPropertyFinalised(this, atFinal_persistedOnly.get(), atFinal_nullIsValueForPersisted.get());
         }
         return false;
     }

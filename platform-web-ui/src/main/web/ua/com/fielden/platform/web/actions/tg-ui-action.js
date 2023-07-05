@@ -176,6 +176,20 @@ Polymer({
         },
 
         /**
+         * Defines hierarchycal structure of contexts related to the view where this action is. This related contexts are contexts for insertion points on entity centre. 
+         */
+        relatedContexts: {
+            type: Array
+        },
+
+        /**
+         * Defines the context that should be extracted from entity centre that has insertion point view with this action.
+         */
+        parentCentreContext: {
+            type: Object
+        },
+
+        /**
          * The name of the entity master element associated with this action.
          */
         elementName: {
@@ -446,6 +460,7 @@ Polymer({
          * 'chosenProperty' can be null -- in this case dynamic action runs for 'currentEntity' itself.
          */
         self._runDynamicAction = function (currentEntity, chosenProperty) {
+            this.requireSelectedEntities = 'ONE';
             this.currentEntity = currentEntity;
             this.chosenProperty = chosenProperty;
             this.rootEntityType = null;
@@ -457,6 +472,7 @@ Polymer({
          * Runs dynamic action [for creating New instances] with the specified mandatory root entity type.
          */
         self._runDynamicActionForNew = function (rootEntityType) {
+            this.requireSelectedEntities = 'NONE';
             this.currentEntity = () => null;
             this.chosenProperty = null;
             this.rootEntityType = rootEntityType;
@@ -677,7 +693,7 @@ Polymer({
     _createContextHolderForAction: function () {
         const self = this;
         // creates the context and
-        const context = self.createContextHolder(self.requireSelectionCriteria, self.requireSelectedEntities, self.requireMasterEntity, self.actionKind, self.numberOfAction);
+        const context = self.createContextHolder(self.requireSelectionCriteria, self.requireSelectedEntities, self.requireMasterEntity, self.actionKind, self.numberOfAction, self.relatedContexts, self.parentCentreContext);
         // enhances it with the information of 'currentEntity()' (primary / secondary actions) and
         if (self.currentEntity()) {
             self._enhanceContextWithCurrentEntity(context, self.currentEntity(), self.requireSelectedEntities);
@@ -760,9 +776,6 @@ Polymer({
         if (masterInfo.relativePropertyName) {
             this.chosenProperty = (this.chosenProperty ? this.chosenProperty + "." : "") + masterInfo.relativePropertyName;
         }
-        this.requireSelectionCriteria = masterInfo.requireSelectionCriteria;
-        this.requireSelectedEntities = masterInfo.requireSelectedEntities;
-        this.requireMasterEntity = masterInfo.requireMasterEntity;
         this.shouldRefreshParentCentreAfterSave = masterInfo.shouldRefreshParentCentreAfterSave;
     }
 
