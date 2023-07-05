@@ -39,12 +39,27 @@ public class EntityWithFinalValidation extends AbstractEntity<String> {
     @Final(nullIsValueForPersisted = true)
     private String propNullAsFinalValue;
 
+    @IsProperty
+    @MapTo
+    @Final(persistedOnly = false, nullIsValueForPersisted = true)
+    private String propNonPersistedAndNullAsFinalValue;
+
     /**
      * Exposed to mimic persisted instances.
      */
     @Override
     public void setId(final Long id) {
         super.setId(id);
+    }
+
+    @Observable
+    public EntityWithFinalValidation setPropNonPersistedAndNullAsFinalValue(final String propNonPersistedAndNullAsFinalValue) {
+        this.propNonPersistedAndNullAsFinalValue = propNonPersistedAndNullAsFinalValue;
+        return this;
+    }
+
+    public String getPropNonPersistedAndNullAsFinalValue() {
+        return propNonPersistedAndNullAsFinalValue;
     }
 
     @Observable

@@ -69,9 +69,10 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
     public static final String HANDLER_WITH_ANOTHER_HANDLER_AS_PARAMETER = "BCE/ACE handlers should not have a another BCE/ACE handler as its parameter.";
     public static final String ERR_INVALID_PROPERTY_NAME_FOR_PROP_PARAM = "Invalid property name [%s] for entity [%s].";
 
+    protected final FinalValidator[] notPersistedOnlyFinalValidator = new FinalValidator[]{new FinalValidator(false, false)};
+    protected final FinalValidator[] notPersistedOnlyAndNullIsValueFinalValidator = new FinalValidator[]{new FinalValidator(false, true)};
     protected final FinalValidator[] persistedOnlyFinalValidator = new FinalValidator[]{new FinalValidator(true, false)};
     protected final FinalValidator[] persistedOnlyAndNullIsValueFinalValidator = new FinalValidator[]{new FinalValidator(true, true)};
-    protected final FinalValidator[] notPersistedOnlyFinalValidator = new FinalValidator[]{new FinalValidator(false, false)};
     protected final Cache<Class<? extends AbstractEntity<?>>, EntityExistsValidator<?>> entityExistsValidators = CacheBuilder.newBuilder().weakKeys().initialCapacity(300).concurrencyLevel(50).build();
     protected final Map<Integer, GreaterOrEqualValidator> greaterOrEqualsValidators = new ConcurrentHashMap<>();
     protected final Map<Integer, MaxLengthValidator> maxLengthValidators = new ConcurrentHashMap<>();
@@ -152,7 +153,7 @@ public abstract class AbstractMetaPropertyFactory implements IMetaPropertyFactor
         if (annotation.persistedOnly()) {
             return annotation.nullIsValueForPersisted() ? persistedOnlyAndNullIsValueFinalValidator : persistedOnlyFinalValidator;
         } else {
-            return notPersistedOnlyFinalValidator;
+            return annotation.nullIsValueForPersisted() ? notPersistedOnlyAndNullIsValueFinalValidator : notPersistedOnlyFinalValidator;
         }
     }
 

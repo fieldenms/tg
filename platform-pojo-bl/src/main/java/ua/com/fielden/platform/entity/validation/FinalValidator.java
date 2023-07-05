@@ -54,15 +54,11 @@ public class FinalValidator implements IBeforeChangeEventHandler<Object> {
     public static boolean isPropertyFinalised(final MetaProperty<?> property, final boolean persistedOnly, final boolean nullIsValueForPersisted) {
         final AbstractEntity<?> entity = property.getEntity();
 
-        if (persistedOnly) {
-            if (entity.isPersisted() && (nullIsValueForPersisted || property.getOriginalValue() != null)) {
-                return true;
-            }
-        } else if (property.getValue() != null) {
-            return true;
+        if (entity.isPersisted()) {
+            return nullIsValueForPersisted || property.getOriginalValue() != null || (!persistedOnly && property.getValue() != null);
+        } else {
+            return !persistedOnly && property.getValue() != null;
         }
-
-        return false;
     }
 
 }

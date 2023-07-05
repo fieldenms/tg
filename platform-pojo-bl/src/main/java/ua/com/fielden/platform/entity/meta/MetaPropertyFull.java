@@ -755,7 +755,7 @@ public final class MetaPropertyFull<T> extends MetaProperty<T> {
     }
 
     private boolean isFinalised() {
-        if (atFinal_persistedOnly.isPresent()) {
+        if (atFinal_persistedOnly.isPresent()) { // this means @Final is present
             return FinalValidator.isPropertyFinalised(this, atFinal_persistedOnly.get(), atFinal_nullIsValueForPersisted.get());
         }
         return false;
