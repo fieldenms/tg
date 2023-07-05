@@ -187,6 +187,8 @@ public class PlatformTestServerModule extends BasicWebServerModule {
         bind(TgUnionType1Co.class).to(TgUnionType1Dao.class);
         bind(TgUnionType2Co.class).to(TgUnionType2Dao.class);
         bind(TgUnionCommonTypeCo.class).to(TgUnionCommonTypeDao.class);
+        bind(ITgPersistentEntityWithProperties.class).to(TgPersistentEntityWithPropertiesDao.class);
+        bind(ITgReVehicleModel.class).to(TgReVehicleModelDao.class);
 
         // FIXME the following approach should have been the correct one for binding companion objects,
         //       however, not all test domain entities actually have companions, hence manual binding...
