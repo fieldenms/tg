@@ -556,7 +556,8 @@ const TgEntityMasterBehaviorImpl = {
                         "require-selection-criteria='false' " +
                         "require-selected-entities='NONE' " +
                         "require-master-entity='true' " +
-                        "class='primary-action'> " +
+                        "class='primary-action' " +
+                        "skip-automatic-action-completion> " +
                         "</tg-ui-action></template>";
 
                     this.shadowRoot.appendChild(actionModel);
@@ -573,14 +574,19 @@ const TgEntityMasterBehaviorImpl = {
                         return Promise.resolve(true);
                     };
                     actionModel.postActionSuccess = function (functionalEntity) {
-                        action.success = true;
-                        console.log('postActionSuccess: ' + actionDesc, functionalEntity);
-                        const saveButton = queryElements(self, "tg-action[role='save']")[0];
-                        self.save(functionalEntity, continuationProperty)
-                            .then(
-                                createEntityActionThenCallback(self.centreUuid, 'save', postal, null, saveButton ? saveButton.closeAfterExecution : true),
-                                function (value) { console.log('AJAX PROMISE CATCH', value); }
-                            );
+                        const _anotherExceptionOccurred = functionalEntity.exceptionOccurred();
+                        if (_anotherExceptionOccurred === null || !_anotherExceptionOccurred.ex || !_anotherExceptionOccurred.ex.continuationTypeStr) {
+                            action.success = true;
+                            console.log('postActionSuccess: ' + actionDesc, functionalEntity);
+                            const saveButton = queryElements(self, "tg-action[role='save']")[0];
+                            self.save(functionalEntity, continuationProperty)
+                                .then(
+                                    createEntityActionThenCallback(self.centreUuid, 'save', postal, null, saveButton ? saveButton.closeAfterExecution : true),
+                                    function (value) { console.log('AJAX PROMISE CATCH', value); }
+                                );
+                        } else {
+                            action.completeActionManually();
+                        }
                     };
                     actionModel.postActionError = function (functionalEntity) {
                         console.log('postActionError: ' + actionDesc, functionalEntity);
