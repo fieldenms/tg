@@ -23,7 +23,6 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
 
-import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.domain.PlatformDomainTypes;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
@@ -31,6 +30,7 @@ import ua.com.fielden.platform.entity.meta.PropertyDescriptor;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.IdOnlyProxiedEntityTypeCache;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
+import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.ioc.HibernateUserTypesModule;
 import ua.com.fielden.platform.ioc.NewUserNotifierMockBindingModule;
@@ -127,7 +127,7 @@ public class PlatformDbDrivenTestCaseConfiguration implements IDbDrivenTestCaseC
             final Configuration cfg = new Configuration();
             
             try {
-                cfg.addInputStream(new ByteArrayInputStream(new HibernateMappingsGenerator().generateMappings(domainMetadata).getBytes("UTF8")));
+                cfg.addInputStream(new ByteArrayInputStream(HibernateMappingsGenerator.generateMappings(domainMetadata.eqlDomainMetadata).getBytes("UTF8")));
             } catch (final MappingException | UnsupportedEncodingException e) {
                 throw new HibernateException("Could not add mappings.", e);
             }

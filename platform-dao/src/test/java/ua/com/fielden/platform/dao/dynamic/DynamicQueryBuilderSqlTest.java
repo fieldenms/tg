@@ -27,7 +27,6 @@ import org.junit.Test;
 
 import com.google.inject.Injector;
 
-import ua.com.fielden.platform.dao.HibernateMappingsGenerator;
 import ua.com.fielden.platform.domaintree.ICalculatedProperty.CalculatedPropertyAttribute;
 import ua.com.fielden.platform.domaintree.IDomainTreeEnhancer;
 import ua.com.fielden.platform.domaintree.impl.DomainTreeEnhancer;
@@ -46,6 +45,7 @@ import ua.com.fielden.platform.entity_centre.mnemonics.DateRangeSelectorEnum;
 import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
+import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
@@ -123,7 +123,7 @@ public class DynamicQueryBuilderSqlTest {
         domainTypes.add(SlaveEntity.class);
         domainTypes.add(EvenSlaverEntity.class);
         try {
-            hibConf.addInputStream(new ByteArrayInputStream(new HibernateMappingsGenerator().generateMappings(new DomainMetadata(hibTypeMap, null, domainTypes, DbVersion.H2)).getBytes("UTF8")));
+            hibConf.addInputStream(new ByteArrayInputStream(HibernateMappingsGenerator.generateMappings(new DomainMetadata(hibTypeMap, null, domainTypes, DbVersion.H2).eqlDomainMetadata).getBytes("UTF8")));
         } catch (final MappingException | UnsupportedEncodingException e) {
             throw new HibernateException("Could not add mappings.", e);
         }
