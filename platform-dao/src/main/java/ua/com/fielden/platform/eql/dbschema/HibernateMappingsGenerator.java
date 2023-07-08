@@ -5,8 +5,8 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 import static ua.com.fielden.platform.entity.AbstractEntity.ID;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
 import static ua.com.fielden.platform.entity.AbstractEntity.VERSION;
-import static ua.com.fielden.platform.entity.query.metadata.DomainMetadata.specialProps;
 import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.PERSISTENT;
+import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.specialProps;
 import static ua.com.fielden.platform.utils.EntityUtils.isOneToOne;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
@@ -14,6 +14,8 @@ import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 import org.apache.logging.log4j.Logger;
 
@@ -47,7 +49,7 @@ public class HibernateMappingsGenerator {
             if (entry.typeInfo.category == PERSISTENT) {
                 final String typeName = entry.typeInfo.entityType.getName();
                 try {
-                    sb.append(generateEntityClassMapping(entry.typeInfo.entityType, domainMetadata.getTables().get(typeName).name, entry.props(), domainMetadata.dbVersion));
+                    sb.append(generateEntityClassMapping(entry.typeInfo.entityType, domainMetadata.getTables().get(typeName).name, sortPropsMetadata(entry.props()), domainMetadata.dbVersion));
                 } catch (final Exception e) {
                     e.printStackTrace();
                     throw new RuntimeException("Couldn't generate mapping for " + typeName + " due to: " + e.getMessage());
@@ -60,6 +62,14 @@ public class HibernateMappingsGenerator {
         final String result = sb.toString();
         LOGGER.debug("\n\n" + result + "\n\n");
         return result;
+    }
+    
+    private static final Collection<EqlPropertyMetadata> sortPropsMetadata(final List<EqlPropertyMetadata> propMds) {
+        final SortedMap<String, EqlPropertyMetadata> sorted = new TreeMap<>();
+        for (final EqlPropertyMetadata propMd : propMds) {
+            sorted.put(propMd.name, propMd);
+        }
+        return sorted.values();
     }
 
     private static String generateEntityIdMapping(final String name, final String columnName, final String hibTypeName, final DbVersion dbVersion) {
