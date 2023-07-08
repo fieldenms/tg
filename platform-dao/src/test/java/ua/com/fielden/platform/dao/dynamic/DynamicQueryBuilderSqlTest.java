@@ -36,7 +36,6 @@ import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.ICompleted;
 import ua.com.fielden.platform.entity.query.fluent.EntityQueryProgressiveInterfaces.IJoin;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.entity.query.model.ConditionModel;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity_centre.mnemonics.DateMnemonicUtils;
@@ -46,6 +45,7 @@ import ua.com.fielden.platform.entity_centre.mnemonics.MnemonicEnum;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder;
 import ua.com.fielden.platform.entity_centre.review.DynamicQueryBuilder.QueryProperty;
 import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.ioc.ApplicationInjectorFactory;
 import ua.com.fielden.platform.persistence.types.DateTimeType;
 import ua.com.fielden.platform.persistence.types.SimpleMoneyType;
@@ -114,8 +114,7 @@ public class DynamicQueryBuilderSqlTest {
 
         final Configuration hibConf = new Configuration();
 
-        @SuppressWarnings("rawtypes")
-        final Map<Class, Class> hibTypeMap = new HashMap<>();
+        final Map<Class<?>, Class<?>> hibTypeMap = new HashMap<>();
         hibTypeMap.put(Date.class, DateTimeType.class);
         hibTypeMap.put(Money.class, SimpleMoneyType.class);
         final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<>();
@@ -123,7 +122,7 @@ public class DynamicQueryBuilderSqlTest {
         domainTypes.add(SlaveEntity.class);
         domainTypes.add(EvenSlaverEntity.class);
         try {
-            hibConf.addInputStream(new ByteArrayInputStream(HibernateMappingsGenerator.generateMappings(new DomainMetadata(hibTypeMap, null, domainTypes, DbVersion.H2).eqlDomainMetadata).getBytes("UTF8")));
+            hibConf.addInputStream(new ByteArrayInputStream(HibernateMappingsGenerator.generateMappings(new EqlDomainMetadata(hibTypeMap, null, domainTypes, DbVersion.H2)).getBytes("UTF8")));
         } catch (final MappingException | UnsupportedEncodingException e) {
             throw new HibernateException("Could not add mappings.", e);
         }
