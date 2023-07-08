@@ -7,7 +7,6 @@ import static java.util.Collections.unmodifiableList;
 import static java.util.Collections.unmodifiableSet;
 import static java.util.stream.Collectors.joining;
 import static java.util.stream.Collectors.toList;
-import static ua.com.fielden.platform.dao.HibernateMappingsGenerator.ID_SEQUENCE_NAME;
 
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
