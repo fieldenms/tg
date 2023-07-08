@@ -5,6 +5,7 @@ import org.hibernate.Session;
 import ua.com.fielden.platform.entity.factory.EntityFactory;
 import ua.com.fielden.platform.entity.factory.ICompanionObjectFinder;
 import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
+import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.utils.IDates;
 
@@ -44,8 +45,8 @@ public class QueryExecutionContext {
         return coFinder;
     }
 
-    public DomainMetadata getDomainMetadata() {
-        return domainMetadata;
+    public DomainMetadataAnalyser produceDomainMetadataAnalyser() {
+        return new DomainMetadataAnalyser(domainMetadata);
     }
 
     public EqlDomainMetadata getEqlDomainMetadata() {

@@ -51,8 +51,7 @@ public class EntityContainerFetcher {
     }
 
     public <E extends AbstractEntity<?>> List<EntityContainer<E>> listAndEnhanceContainers(final QueryProcessingModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
-        final DomainMetadataAnalyser domainMetadataAnalyser = new DomainMetadataAnalyser(executionContext.getDomainMetadata());
-        final QueryModelResult<E> modelResult = getModelResult(queryModel, domainMetadataAnalyser.getDbVersion(), executionContext.getFilter(), executionContext.getUsername());
+        final QueryModelResult<E> modelResult = getModelResult(queryModel, executionContext.getEqlDomainMetadata().dbVersion, executionContext.getFilter(), executionContext.getUsername());
 
         if (idOnlyQuery(modelResult)) {
             return listContainersForIdOnlyQuery(queryModel, modelResult.resultType(), pageNumber, pageCapacity);
@@ -60,12 +59,11 @@ public class EntityContainerFetcher {
 
         final List<EntityContainer<E>> result = listContainersAsIs(modelResult, pageNumber, pageCapacity);
         // logger.debug("Fetch model:\n" + modelResult.getFetchModel());
-        return new EntityContainerEnhancer<E>(this, domainMetadataAnalyser, executionContext.getIdOnlyProxiedEntityTypeCache()).enhance(result, modelResult.fetchModel(), queryModel.getParamValues());
+        return new EntityContainerEnhancer<E>(this, executionContext.produceDomainMetadataAnalyser(), executionContext.getIdOnlyProxiedEntityTypeCache()).enhance(result, modelResult.fetchModel(), queryModel.getParamValues());
     }
 
     public <E extends AbstractEntity<?>> Stream<List<EntityContainer<E>>> streamAndEnhanceContainers(final QueryProcessingModel<E, ?> queryModel, final Optional<Integer> fetchSize) {
-        final DomainMetadataAnalyser domainMetadataAnalyser = new DomainMetadataAnalyser(executionContext.getDomainMetadata());
-        final QueryModelResult<E> modelResult = getModelResult(queryModel, domainMetadataAnalyser.getDbVersion(), executionContext.getFilter(), executionContext.getUsername());
+        final QueryModelResult<E> modelResult = getModelResult(queryModel, executionContext.getEqlDomainMetadata().dbVersion, executionContext.getFilter(), executionContext.getUsername());
 
         if (idOnlyQuery(modelResult)) {
             return streamContainersForIdOnlyQuery(queryModel, modelResult.resultType(), fetchSize);
@@ -74,7 +72,7 @@ public class EntityContainerFetcher {
         final Stream<List<EntityContainer<E>>> stream = streamContainersAsIs(modelResult, fetchSize);
         // logger.debug("Fetch model:\n" + modelResult.getFetchModel());
 
-        final EntityContainerEnhancer<E> entityContainerEnhancer = new EntityContainerEnhancer<>(this, domainMetadataAnalyser, executionContext.getIdOnlyProxiedEntityTypeCache());
+        final EntityContainerEnhancer<E> entityContainerEnhancer = new EntityContainerEnhancer<>(this, executionContext.produceDomainMetadataAnalyser(), executionContext.getIdOnlyProxiedEntityTypeCache());
 
         return stream.map(container -> entityContainerEnhancer.enhance(container, modelResult.fetchModel(), queryModel.getParamValues()));
     }
