@@ -5,17 +5,13 @@ import static org.apache.logging.log4j.LogManager.getLogger;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.logging.log4j.Logger;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
-import ua.com.fielden.platform.entity.query.DbVersion;
 import ua.com.fielden.platform.entity.query.EntityAggregates;
 import ua.com.fielden.platform.entity.query.exceptions.EqlException;
-import ua.com.fielden.platform.reflection.Finder;
 import ua.com.fielden.platform.utils.EntityUtils;
 import ua.com.fielden.platform.utils.Pair;
 
@@ -29,10 +25,6 @@ public class DomainMetadataAnalyser {
         entityMetadataMap.putAll(domainMetadata.getPersistedEntityMetadataMap());
         entityMetadataMap.putAll(domainMetadata.getModelledEntityMetadataMap());
         entityMetadataMap.putAll(domainMetadata.getPureEntityMetadataMap());
-    }
-
-    public <ET extends AbstractEntity<?>> PersistedEntityMetadata<ET> getPersistedEntityMetadata(final Class<ET> entityType) {
-        return (PersistedEntityMetadata) entityMetadataMap.get(entityType);
     }
 
     public <ET extends AbstractEntity<?>> AbstractEntityMetadata<ET> getEntityMetadata(final Class<ET> entityType) {
@@ -107,58 +99,11 @@ public class DomainMetadataAnalyser {
         }
     }
 
-    public boolean isNullable(final Class<? extends AbstractEntity<?>> entityType, final String dotNotatedPropName) {
-        final PropertyMetadata simplePropInfo = getPropPersistenceInfoExplicitly(entityType, dotNotatedPropName);
-        if (simplePropInfo != null) {
-            return simplePropInfo.isNullable();
-        } else {
-            final Pair<String, String> propSplit = EntityUtils.splitPropByFirstDot(dotNotatedPropName);
-            final PropertyMetadata firstPropInfo = getPropPersistenceInfoExplicitly(entityType, propSplit.getKey());
-            if (firstPropInfo != null && firstPropInfo.getJavaType() != null) {
-                return isNullable(firstPropInfo.getJavaType(), propSplit.getValue()) || firstPropInfo.isNullable();
-            } else {
-                throw new IllegalArgumentException("Couldn't determine nullability for prop [" + dotNotatedPropName + "] in type [" + entityType + "]");
-            }
-        }
-    }
-
     public Collection<PropertyMetadata> getPropertyMetadatasForEntity(final Class<? extends AbstractEntity<?>> entityType) {
         final AbstractEntityMetadata epm = getEntityMetadata(entityType);
         if (epm == null) {
             throw new IllegalStateException("Missing ppi map for entity type: " + entityType);
         }
         return epm.getProps().values();
-    }
-
-    public DbVersion getDbVersion() {
-        return domainMetadata.dbVersion;
-    }
-
-    public Map<Class<?>, Object> getHibTypesDefaults() {
-        return domainMetadata.getHibTypesDefaults();
-    }
-
-    public Object getBooleanValue(final boolean value) {
-        return domainMetadata.getBooleanValue(value);
-    }
-
-    public Set<String> getLeafPropsFromFirstLevelProps(final String parentProp, final Class<? extends AbstractEntity<?>> entityType, final Set<String> firstLevelProps) {
-        final Set<String> result = new HashSet<>();
-
-        for (final String prop : firstLevelProps) {
-            final PropertyMetadata propMetadata = getPropPersistenceInfoExplicitly(entityType, prop);
-            if (propMetadata.isEntityOfPersistedType()) {
-                final Set<String> keyProps = new HashSet<>(Finder.getFieldNames(Finder.getKeyMembers(propMetadata.getJavaType())));
-                if (EntityUtils.isCompositeEntity(propMetadata.getJavaType())) {
-                    result.addAll(getLeafPropsFromFirstLevelProps(prop, propMetadata.getJavaType(), keyProps));
-                } else {
-                    result.add((parentProp != null ? (parentProp + ".") : "") + prop);
-                }
-            } else {
-                result.add((parentProp != null ? (parentProp + ".") : "") + prop);
-            }
-        }
-
-        return result;
     }
 }
