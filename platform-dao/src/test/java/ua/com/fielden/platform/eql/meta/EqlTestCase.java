@@ -90,7 +90,7 @@ public abstract class EqlTestCase {
     protected static final IDates dates = injector.getInstance(IDates.class);
     protected static final IFilter filter = new SimpleUserFilter();
     
-    protected static final DomainMetadata DOMAIN_METADATA;
+    private static final DomainMetadata DOMAIN_METADATA;
     protected static final DomainMetadataAnalyser DOMAIN_METADATA_ANALYSER;
 
     public static final Map<String, Table> tables = new HashMap<>();

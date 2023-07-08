@@ -61,11 +61,11 @@ import ua.com.fielden.platform.types.tuples.T2;
 public abstract class EqlStage2TestCase extends EqlTestCase {
 
     protected static AbstractPropInfo<?> pi(final Class<?> type, final String propName) {
-        return DOMAIN_METADATA.eqlDomainMetadata.getEntityInfo((Class<? extends AbstractEntity<?>>) type).getProps().get(propName);
+        return metadata().getEntityInfo((Class<? extends AbstractEntity<?>>) type).getProps().get(propName);
     }
 
     protected static AbstractPropInfo<?> pi(final Class<?> type, final String propName, final String subPropName) {
-        final AbstractPropInfo<?> propInfo = DOMAIN_METADATA.eqlDomainMetadata.getEntityInfo((Class<? extends AbstractEntity<?>>) type).getProps().get(propName);
+        final AbstractPropInfo<?> propInfo = metadata().getEntityInfo((Class<? extends AbstractEntity<?>>) type).getProps().get(propName);
         if (propInfo instanceof ComponentTypePropInfo) {
             return (AbstractPropInfo<?>) ((ComponentTypePropInfo<?>) propInfo).getProps().get(subPropName);
         } else if (propInfo instanceof UnionTypePropInfo) {
@@ -85,13 +85,13 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
 
     protected static <T extends AbstractEntity<?>> ResultQuery2 qryCountAll(final ICompoundCondition0<T> unfinishedQry, final Map<String, Object> paramValues) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
-        final TransformationContext1 context = new TransformationContext1(DOMAIN_METADATA.eqlDomainMetadata);
+        final TransformationContext1 context = new TransformationContext1(metadata());
         return qb(paramValues).generateAsResultQuery(countQry, null, null).transform(context);
     }
 
     protected static <T extends AbstractEntity<?>> T2<EntQueryGenerator, ResultQuery2> qryCountAll2(final ICompoundCondition0<T> unfinishedQry, final Map<String, Object> paramValues) {
         final AggregatedResultQueryModel countQry = unfinishedQry.yield().countAll().as("KOUNT").modelAsAggregate();
-        final TransformationContext1 context = new TransformationContext1(DOMAIN_METADATA.eqlDomainMetadata);
+        final TransformationContext1 context = new TransformationContext1(metadata());
         final EntQueryGenerator qb = qb(paramValues);
         return t2(qb, qb.generateAsResultQuery(countQry, null, null).transform(context));
     }
@@ -101,17 +101,17 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static <T extends AbstractEntity<?>> ResultQuery2 qry(final EntityResultQueryModel<T> qry, final OrderingModel order) {
-        final TransformationContext1 context = new TransformationContext1(DOMAIN_METADATA.eqlDomainMetadata);
+        final TransformationContext1 context = new TransformationContext1(metadata());
         return qb().generateAsResultQuery(qry, order, new EntityRetrievalModel<T>(EntityQueryUtils.fetch(qry.getResultType()), DOMAIN_METADATA_ANALYSER)).transform(context);
     }
 
     protected static ResultQuery2 qry(final AggregatedResultQueryModel qry, final OrderingModel order) {
-        final TransformationContext1 context = new TransformationContext1(DOMAIN_METADATA.eqlDomainMetadata);
+        final TransformationContext1 context = new TransformationContext1(metadata());
         return qb().generateAsResultQuery(qry, order, null).transform(context);
     }
 
     protected static ResultQuery2 qry(final AggregatedResultQueryModel qry) {
-        final TransformationContext1 context = new TransformationContext1(DOMAIN_METADATA.eqlDomainMetadata);
+        final TransformationContext1 context = new TransformationContext1(metadata());
         return qb().generateAsResultQuery(qry, null, null).transform(context);
     }
 
@@ -253,11 +253,11 @@ public abstract class EqlStage2TestCase extends EqlTestCase {
     }
 
     protected static Source2BasedOnPersistentType source(final Integer id, final Class<? extends AbstractEntity<?>> sourceType, final String alias) {
-        return new Source2BasedOnPersistentType(sourceType, DOMAIN_METADATA.eqlDomainMetadata.getEntityInfo(sourceType), alias, id);
+        return new Source2BasedOnPersistentType(sourceType, metadata().getEntityInfo(sourceType), alias, id);
     }
 
     protected static Source2BasedOnPersistentType source(final Integer id, final Class<? extends AbstractEntity<?>> sourceType) {
-        return new Source2BasedOnPersistentType(sourceType, DOMAIN_METADATA.eqlDomainMetadata.getEntityInfo(sourceType), id);
+        return new Source2BasedOnPersistentType(sourceType, metadata().getEntityInfo(sourceType), id);
     }
 
     protected static Source2BasedOnSubqueries source(final EntityInfo<?> entityInfo, final Integer id, final SourceQuery2... queries) {
