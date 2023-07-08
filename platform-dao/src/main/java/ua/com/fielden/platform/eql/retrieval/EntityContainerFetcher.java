@@ -88,7 +88,7 @@ public class EntityContainerFetcher {
     }
 
     private <E extends AbstractEntity<?>> List<EntityContainer<E>> listContainersAsIs(final QueryModelResult<E> modelResult, final Integer pageNumber, final Integer pageCapacity) {
-        final EntityTree<E> resultTree = build(modelResult.resultType(), modelResult.yieldedColumns(), executionContext.getDomainMetadata().eqlDomainMetadata);
+        final EntityTree<E> resultTree = build(modelResult.resultType(), modelResult.yieldedColumns(), executionContext.getEqlDomainMetadata());
 
         final Query query = produceQueryWithPagination(executionContext.getSession(), modelResult.sql(), getSortedScalars(resultTree), modelResult.paramValues(), pageNumber, pageCapacity);
 
@@ -112,7 +112,7 @@ public class EntityContainerFetcher {
     }
 
     private <E extends AbstractEntity<?>> Stream<List<EntityContainer<E>>> streamContainersAsIs(final QueryModelResult<E> modelResult, final Optional<Integer> fetchSize) {
-        final EntityTree<E> resultTree = build(modelResult.resultType(), modelResult.yieldedColumns(), executionContext.getDomainMetadata().eqlDomainMetadata);
+        final EntityTree<E> resultTree = build(modelResult.resultType(), modelResult.yieldedColumns(), executionContext.getEqlDomainMetadata());
         final int batchSize = fetchSize.orElse(100);
         final Query query = produceQueryWithoutPagination(executionContext.getSession(), modelResult.sql(), getSortedScalars(resultTree), modelResult.paramValues())
                 .setFetchSize(batchSize);
@@ -125,7 +125,7 @@ public class EntityContainerFetcher {
     }
 
     private <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryProcessingModel<E, ?> qem, final DbVersion dbVersion, final IFilter filter, final String username) {
-        final TransformationResult2<ResultQuery3> tr = transform(qem, filter, username, executionContext.dates(), executionContext.getDomainMetadata().eqlDomainMetadata);
+        final TransformationResult2<ResultQuery3> tr = transform(qem, filter, username, executionContext.dates(), executionContext.getEqlDomainMetadata());
         final ResultQuery3 entQuery3 = tr.item;
         final String sql = entQuery3.sql(dbVersion);
         return new QueryModelResult<E>((Class<E>) entQuery3.resultType, sql, getYieldedColumns(entQuery3.yields), tr.updatedContext.getParamValues(), qem.fetchModel);

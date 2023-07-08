@@ -30,7 +30,6 @@ import ua.com.fielden.platform.dao.exceptions.EntityAlreadyExists;
 import ua.com.fielden.platform.dao.session.TransactionalExecution;
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.EntityBatchInsertOperation.TableStructForBatchInsertion.PropColumnInfo;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.utils.CollectionUtil;
 import ua.com.fielden.platform.utils.StreamUtils;
@@ -51,8 +50,8 @@ public class EntityBatchInsertOperation {
     private final EqlDomainMetadata eqlDomainMetadata;
     private final Supplier<TransactionalExecution> trExecSupplier;
     
-    public EntityBatchInsertOperation(final DomainMetadata dm, final Supplier<TransactionalExecution> trExecSupplier) {
-        this.eqlDomainMetadata = dm.eqlDomainMetadata;
+    public EntityBatchInsertOperation(final EqlDomainMetadata dm, final Supplier<TransactionalExecution> trExecSupplier) {
+        this.eqlDomainMetadata = dm;
         this.trExecSupplier = trExecSupplier;
     }
     

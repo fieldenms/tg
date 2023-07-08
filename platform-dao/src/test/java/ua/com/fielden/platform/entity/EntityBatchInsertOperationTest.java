@@ -87,12 +87,12 @@ public class EntityBatchInsertOperationTest extends AbstractDaoTestCase {
     }
 
     private int batchInserEntities(final List<TgEntityWithManyPropTypes> entities, final int batchSize) {
-        final EntityBatchInsertOperation insertOp = new EntityBatchInsertOperation(getInstance(DomainMetadata.class), () -> getInstance(TransactionalExecution.class));
+        final EntityBatchInsertOperation insertOp = new EntityBatchInsertOperation(getInstance(DomainMetadata.class).eqlDomainMetadata, () -> getInstance(TransactionalExecution.class));
         return insertOp.batchInsert(entities, batchSize);
     }
 
     private int batchInserEntitiesAsStream(final Stream<TgEntityWithManyPropTypes> entities, final int batchSize) {
-        final EntityBatchInsertOperation insertOp = new EntityBatchInsertOperation(getInstance(DomainMetadata.class), () -> getInstance(TransactionalExecution.class));
+        final EntityBatchInsertOperation insertOp = new EntityBatchInsertOperation(getInstance(DomainMetadata.class).eqlDomainMetadata, () -> getInstance(TransactionalExecution.class));
         return insertOp.batchInsert(entities, batchSize);
     }
 

@@ -165,6 +165,7 @@ public abstract class CommonEntityDao<T extends AbstractEntity<?>> extends Abstr
                 getEntityFactory(), 
                 getCoFinder(), 
                 getDomainMetadata(), 
+                getDomainMetadata().eqlDomainMetadata,
                 getFilter(), 
                 getUsername(), 
                 dates, 
