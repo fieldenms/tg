@@ -33,6 +33,7 @@ import ua.com.fielden.platform.entity.query.metadata.DomainMetadataAnalyser;
 import ua.com.fielden.platform.entity.query.model.EntityResultQueryModel;
 import ua.com.fielden.platform.entity.query.model.SingleResultQueryModel;
 import ua.com.fielden.platform.entity.query.stream.ScrollableResultStream;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.eql.retrieval.records.EntityTree;
 import ua.com.fielden.platform.eql.retrieval.records.QueryModelResult;
 import ua.com.fielden.platform.eql.retrieval.records.YieldedColumn;
@@ -41,6 +42,7 @@ import ua.com.fielden.platform.eql.stage3.etc.Yield3;
 import ua.com.fielden.platform.eql.stage3.etc.Yields3;
 import ua.com.fielden.platform.eql.stage3.operands.queries.ResultQuery3;
 import ua.com.fielden.platform.streaming.SequentialGroupingStream;
+import ua.com.fielden.platform.utils.IDates;
 
 public class EntityContainerFetcher {
     private final QueryExecutionContext executionContext;
@@ -51,7 +53,7 @@ public class EntityContainerFetcher {
     }
 
     public <E extends AbstractEntity<?>> List<EntityContainer<E>> listAndEnhanceContainers(final QueryProcessingModel<E, ?> queryModel, final Integer pageNumber, final Integer pageCapacity) {
-        final QueryModelResult<E> modelResult = getModelResult(queryModel, executionContext.getEqlDomainMetadata().dbVersion, executionContext.getFilter(), executionContext.getUsername());
+        final QueryModelResult<E> modelResult = getModelResult(queryModel, executionContext.getEqlDomainMetadata().dbVersion, executionContext.getFilter(), executionContext.getUsername(), executionContext.dates(), executionContext.getEqlDomainMetadata());
 
         if (idOnlyQuery(modelResult)) {
             return listContainersForIdOnlyQuery(queryModel, modelResult.resultType(), pageNumber, pageCapacity);
@@ -63,7 +65,7 @@ public class EntityContainerFetcher {
     }
 
     public <E extends AbstractEntity<?>> Stream<List<EntityContainer<E>>> streamAndEnhanceContainers(final QueryProcessingModel<E, ?> queryModel, final Optional<Integer> fetchSize) {
-        final QueryModelResult<E> modelResult = getModelResult(queryModel, executionContext.getEqlDomainMetadata().dbVersion, executionContext.getFilter(), executionContext.getUsername());
+        final QueryModelResult<E> modelResult = getModelResult(queryModel, executionContext.getEqlDomainMetadata().dbVersion, executionContext.getFilter(), executionContext.getUsername(), executionContext.dates(), executionContext.getEqlDomainMetadata());
 
         if (idOnlyQuery(modelResult)) {
             return streamContainersForIdOnlyQuery(queryModel, modelResult.resultType(), fetchSize);
@@ -122,14 +124,14 @@ public class EntityContainerFetcher {
                 .map(group -> entityRawResultConverter.transformFromNativeResult(resultTree, group));
     }
 
-    private <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryProcessingModel<E, ?> qem, final DbVersion dbVersion, final IFilter filter, final String username) {
-        final TransformationResult2<ResultQuery3> tr = transform(qem, filter, username, executionContext.dates(), executionContext.getEqlDomainMetadata());
+    protected static <E extends AbstractEntity<?>> QueryModelResult<E> getModelResult(final QueryProcessingModel<E, ?> qem, final DbVersion dbVersion, final IFilter filter, final String username, final IDates dates, final EqlDomainMetadata eqlDomainMetadata) {
+        final TransformationResult2<ResultQuery3> tr = transform(qem, filter, username, dates, eqlDomainMetadata);
         final ResultQuery3 entQuery3 = tr.item;
         final String sql = entQuery3.sql(dbVersion);
         return new QueryModelResult<E>((Class<E>) entQuery3.resultType, sql, getYieldedColumns(entQuery3.yields), tr.updatedContext.getParamValues(), qem.fetchModel);
     }
 
-    public static List<YieldedColumn> getYieldedColumns(final Yields3 model) {
+    private static List<YieldedColumn> getYieldedColumns(final Yields3 model) {
         final List<YieldedColumn> result = new ArrayList<>();
         for (final Yield3 yield : model.getYields()) {
             final Class<?> yieldType = yield.type != null ? yield.type : yield.operand.type();
