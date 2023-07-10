@@ -21,16 +21,16 @@ public abstract class AbstractEqlShortcutTest extends EqlTestCase {
     protected static <T extends AbstractEntity<?>> void assertModelResultsEquals(final EntityResultQueryModel<T> exp, final EntityResultQueryModel<T> act) {
         final QueryModelResult<T> expQmr = transformToModelResult(new QueryProcessingModel<T, EntityResultQueryModel<T>>(exp, null, null, emptyMap(), true));
         final QueryModelResult<T> actQmr = transformToModelResult(new QueryProcessingModel<T, EntityResultQueryModel<T>>(act, null, null, emptyMap(), true));
-        assertEquals("Qry model results (SQL) are different!", expQmr.sql(), actQmr.sql());
-        assertEquals("Qry model results (Result Type) are different!", expQmr.resultType(), actQmr.resultType());
-        assertEquals("Qry model results (Fetch Model) are different!", expQmr.fetchModel(), actQmr.fetchModel());
-        assertEquals("Qry model results (Param values) are different!", expQmr.paramValues(), actQmr.paramValues());
-        assertEquals("Qry model results (Yielded props infos) are different!", expQmr.yieldedColumns(), actQmr.yieldedColumns());
+        assertModelResultsAreEqual(expQmr, actQmr);
     }
     
     protected static void assertModelResultsEquals(final AggregatedResultQueryModel exp, final AggregatedResultQueryModel act) {
         final QueryModelResult<EntityAggregates> expQmr = transformToModelResult(new QueryProcessingModel<EntityAggregates, AggregatedResultQueryModel>(exp, null, null, emptyMap(), true));
         final QueryModelResult<EntityAggregates> actQmr = transformToModelResult(new QueryProcessingModel<EntityAggregates, AggregatedResultQueryModel>(act, null, null, emptyMap(), true));
+        assertModelResultsAreEqual(expQmr, actQmr);
+    }
+    
+    private static <T extends AbstractEntity<?>> void assertModelResultsAreEqual(final QueryModelResult<T> expQmr, final QueryModelResult<T> actQmr) {
         assertEquals("Qry model results (SQL) are different!", expQmr.sql(), actQmr.sql());
         assertEquals("Qry model results (Result Type) are different!", expQmr.resultType(), actQmr.resultType());
         assertEquals("Qry model results (Fetch Model) are different!", expQmr.fetchModel(), actQmr.fetchModel());
