@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql;
+package ua.com.fielden.platform.eql.retrieval;
 
 import static java.util.Collections.emptyMap;
 import static org.junit.Assert.assertEquals;

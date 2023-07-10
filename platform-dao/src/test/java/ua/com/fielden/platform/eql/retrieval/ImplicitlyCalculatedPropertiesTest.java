@@ -1,4 +1,4 @@
-package ua.com.fielden.platform.eql;
+package ua.com.fielden.platform.eql.retrieval;
 
 
 import static ua.com.fielden.platform.entity.query.fluent.EntityQueryUtils.select;
