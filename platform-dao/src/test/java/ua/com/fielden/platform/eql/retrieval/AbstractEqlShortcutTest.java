@@ -15,15 +15,11 @@ import ua.com.fielden.platform.eql.retrieval.records.QueryModelResult;
 public abstract class AbstractEqlShortcutTest extends EqlTestCase {
 
     protected static <T extends AbstractEntity<?>> void assertModelResultsEquals(final EntityResultQueryModel<T> exp, final EntityResultQueryModel<T> act) {
-        final QueryModelResult<T> expQmr = transformToModelResult(new QueryProcessingModel<T, EntityResultQueryModel<T>>(exp, null, null, emptyMap(), true));
-        final QueryModelResult<T> actQmr = transformToModelResult(new QueryProcessingModel<T, EntityResultQueryModel<T>>(act, null, null, emptyMap(), true));
-        assertModelResultsAreEqual(expQmr, actQmr);
+        assertModelResultsAreEqual(transformToModelResult(exp), transformToModelResult(act));
     }
     
     protected static void assertModelResultsEquals(final AggregatedResultQueryModel exp, final AggregatedResultQueryModel act) {
-        final QueryModelResult<EntityAggregates> expQmr = transformToModelResult(new QueryProcessingModel<EntityAggregates, AggregatedResultQueryModel>(exp, null, null, emptyMap(), true));
-        final QueryModelResult<EntityAggregates> actQmr = transformToModelResult(new QueryProcessingModel<EntityAggregates, AggregatedResultQueryModel>(act, null, null, emptyMap(), true));
-        assertModelResultsAreEqual(expQmr, actQmr);
+        assertModelResultsAreEqual(transformToModelResult(exp), transformToModelResult(act));
     }
     
     private static <T extends AbstractEntity<?>> void assertModelResultsAreEqual(final QueryModelResult<T> expQmr, final QueryModelResult<T> actQmr) {
@@ -34,7 +30,15 @@ public abstract class AbstractEqlShortcutTest extends EqlTestCase {
         assertEquals("Qry model results (Yielded props infos) are different!", expQmr.yieldedColumns(), actQmr.yieldedColumns());
     }
     
-    private static final <E extends AbstractEntity<?>> QueryModelResult<E> transformToModelResult(final QueryProcessingModel<E, ?> qem) {
+    private static final <T extends AbstractEntity<?>> QueryModelResult<T> transformToModelResult(final QueryProcessingModel<T, ?> qem) {
         return EntityContainerFetcher.getModelResult(qem, H2, filter, null, dates, metadata());
+    }
+    
+    protected static final <T extends AbstractEntity<?>> QueryModelResult<T> transformToModelResult(final EntityResultQueryModel<T> queryModel) {
+        return transformToModelResult(new QueryProcessingModel<T, EntityResultQueryModel<T>>(queryModel, null, null, emptyMap(), true));
+    }
+    
+    protected static final QueryModelResult<EntityAggregates> transformToModelResult(final AggregatedResultQueryModel queryModel) {
+        return transformToModelResult(new QueryProcessingModel<EntityAggregates, AggregatedResultQueryModel>(queryModel, null, null, emptyMap(), true));
     }
 }
