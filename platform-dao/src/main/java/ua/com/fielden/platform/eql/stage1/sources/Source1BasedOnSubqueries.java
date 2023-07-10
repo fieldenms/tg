@@ -1,5 +1,6 @@
 package ua.com.fielden.platform.eql.stage1.sources;
 
+import static java.lang.String.format;
 import static java.util.Collections.emptySortedMap;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toSet;
@@ -50,7 +51,7 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
             }
             
             if (modelsResultTypes.size() != 1) {
-                throw new EqlStage1ProcessingException("Models of query source have different result types " + modelsResultTypes + ". While making select(..) or join(..)/leftJoin() from multiple models it should be ensured that they are of the same result type.");
+                throw new EqlStage1ProcessingException("Models of query source have different result types " + modelsResultTypes + ". While making select(..) or join(..)/leftJoin(..) from multiple models it should be ensured that they are of the same result type.");
             }        
 
             return modelsResultTypes.iterator().next();    
@@ -79,8 +80,9 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
                 // The only thing that has to be taken from declared is its structure (in case of UE or complex value)
                 if (declaredProp instanceof EntityTypePropInfo<?>) { // TODO here we assume that yield is of ET (this will help to handle the case of yielding ID, which currently is just long only.
                     final EntityTypePropInfo<?> declaredEntityTypePropInfo = (EntityTypePropInfo<?>) declaredProp;
-                    if (!(yield.javaType == null || isEntityType(yield.javaType) || Long.class.equals(yield.javaType))) {
-                        throw new EqlStage1ProcessingException("Declared and actual yield java types are in conflict.");
+                    if (!(yield.javaType == null || isEntityType(yield.javaType) && yield.javaType.equals(declaredEntityTypePropInfo.javaType()) || Long.class.equals(yield.javaType))) {
+                        throw new EqlStage1ProcessingException(format("There is a problem while trying to determine type for [%s] property of query source based on subqueries with result type [%s].\n"
+                                + "Declared type is [%s].\nActual yield type is [%s].", declaredEntityTypePropInfo.name, sourceType.getName(), declaredEntityTypePropInfo.javaType().getName(), yield.javaType.getName()));
                     }
                     entityInfo.addProp(new EntityTypePropInfo<>(yield.name, declaredEntityTypePropInfo.propEntityInfo, declaredEntityTypePropInfo.hibType, yield.required));
                 } else {
