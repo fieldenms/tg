@@ -55,13 +55,6 @@ public class TgPersistentEntityWithPropertiesDao extends CommonEntityDao<TgPersi
     @Override
     @SessionRequired
     public TgPersistentEntityWithProperties save(final TgPersistentEntityWithProperties entity) {
-
-        try {
-            Thread.sleep(5000);
-        } catch (final InterruptedException e) {
-            e.printStackTrace();
-        }
-
         // need to make crit-only required props non-required before actual saving; these properties are not relevant to persistent nature of TgPersistentEntityWithProperties
         entity.getProperty("cosStaticallyRequired").setRequired(false);
         entity.getProperty("cosStaticallyRequiredWithDefaultValue").setRequired(false);
