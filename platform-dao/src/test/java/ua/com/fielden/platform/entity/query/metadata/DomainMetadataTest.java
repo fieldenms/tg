@@ -48,7 +48,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase1 {
         final PersistedEntityMetadata<TgVehicle> entityMetadata = pem(VEHICLE);
         final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("lastFuelUsage");
 
-        final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("lastFuelUsage", TgFuelUsage.class, true, eti(VEHICLE)). //
+        final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("lastFuelUsage", TgFuelUsage.class, true, eti(VEHICLE).category). //
         hibType(LongType.INSTANCE). //
         category(EXPRESSION). //
         expression(expr().model(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("id").and().notExists(select(TgFuelUsage.class).where().prop("vehicle").eq().extProp("vehicle").and().prop("date").gt().extProp("date").model()).model()).model()). //
@@ -63,7 +63,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase1 {
         final PersistedEntityMetadata<TgVehicle> entityMetadata = pem(VEHICLE);
         final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("finDetails");
 
-        final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("finDetails", TgVehicleFinDetails.class, true, eti(VEHICLE)). //
+        final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("finDetails", TgVehicleFinDetails.class, true, eti(VEHICLE).category). //
         hibType(LongType.INSTANCE). //
         category(EXPRESSION). //
         //expression(expr().prop("id").model()). //
@@ -83,7 +83,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase1 {
     public void test_one_to_one_property_metadata_for_synthetic_entity() throws Exception {
         final ModelledEntityMetadata<TgAverageFuelUsage> entityMetadata = mem(AVERAGE_FUEL_USAGE);
         final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("key");
-        final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("key", TgVehicle.class, false, eti(AVERAGE_FUEL_USAGE)). //
+        final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("key", TgVehicle.class, false, eti(AVERAGE_FUEL_USAGE).category). //
         hibType(LongType.INSTANCE). //
         category(SYNTHETIC). //
         build();
@@ -94,7 +94,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase1 {
     public void test_deduced_id_for_synthetic_entity() throws Exception {
         final ModelledEntityMetadata<TgAverageFuelUsage> entityMetadata = mem(AVERAGE_FUEL_USAGE);
         final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("id");
-        final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("id", Long.class, false, eti(AVERAGE_FUEL_USAGE)). //
+        final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("id", Long.class, false, eti(AVERAGE_FUEL_USAGE).category). //
         hibType(LongType.INSTANCE). //
         category(EXPRESSION). //
         expression(expr().prop("key").model()). //
@@ -107,7 +107,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase1 {
         final ModelledEntityMetadata<TgBogieLocation> entityMetadata = uem(TgBogieLocation.class);
         final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("id");
 
-        final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("id", Long.class, false, eti(TgBogieLocation.class)). //
+        final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("id", Long.class, false, eti(TgBogieLocation.class).category). //
         hibType(LongType.INSTANCE). //
         category(EXPRESSION). //
         expression(expr().caseWhen().prop("wagonSlot").isNotNull().then().prop("wagonSlot.id").when().prop("workshop").isNotNull().then().prop("workshop.id").otherwise().val(null).end().model()). //
@@ -120,7 +120,7 @@ public class DomainMetadataTest extends BaseEntQueryTCase1 {
         final ModelledEntityMetadata<TgBogieLocation> entityMetadata = uem(TgBogieLocation.class);
         final PropertyMetadata actPropertyMetadata = entityMetadata.getProps().get("key");
 
-        final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("key", String.class, false, eti(TgBogieLocation.class)). //
+        final PropertyMetadata expPropertyMetadata = new PropertyMetadata.Builder("key", String.class, false, eti(TgBogieLocation.class).category). //
         hibType(StringType.INSTANCE). //
         category(EXPRESSION). //
         expression(expr().caseWhen().prop("wagonSlot").isNotNull().then().prop("wagonSlot.key").when().prop("workshop").isNotNull().then().prop("workshop.key").otherwise().val(null).end().model()). //
