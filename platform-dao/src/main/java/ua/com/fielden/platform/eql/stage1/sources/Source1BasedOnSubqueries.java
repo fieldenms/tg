@@ -30,6 +30,9 @@ import ua.com.fielden.platform.eql.stage2.operands.queries.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnSubqueries;
 
 public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubqueries> {
+    public static final String ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE = "There is a problem while trying to determine type for [%s] property of query source based on subqueries with result type [%s].\n"
+            + "Declared type is [%s].\nActual yield type is [%s].";
+    
     private final List<SourceQuery1> models = new ArrayList<>();
     private final boolean isSyntheticEntity;
     private final Class<? extends AbstractEntity<?>> sourceType;
@@ -81,8 +84,7 @@ public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubq
                 if (declaredProp instanceof EntityTypePropInfo<?>) { // TODO here we assume that yield is of ET (this will help to handle the case of yielding ID, which currently is just long only.
                     final EntityTypePropInfo<?> declaredEntityTypePropInfo = (EntityTypePropInfo<?>) declaredProp;
                     if (!(yield.javaType == null || isEntityType(yield.javaType) && yield.javaType.equals(declaredEntityTypePropInfo.javaType()) || Long.class.equals(yield.javaType))) {
-                        throw new EqlStage1ProcessingException(format("There is a problem while trying to determine type for [%s] property of query source based on subqueries with result type [%s].\n"
-                                + "Declared type is [%s].\nActual yield type is [%s].", declaredEntityTypePropInfo.name, sourceType.getName(), declaredEntityTypePropInfo.javaType().getName(), yield.javaType.getName()));
+                        throw new EqlStage1ProcessingException(format(ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE, declaredEntityTypePropInfo.name, sourceType.getName(), declaredEntityTypePropInfo.javaType().getName(), yield.javaType.getName()));
                     }
                     entityInfo.addProp(new EntityTypePropInfo<>(yield.name, declaredEntityTypePropInfo.propEntityInfo, declaredEntityTypePropInfo.hibType, yield.required));
                 } else {
