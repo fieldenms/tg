@@ -65,10 +65,6 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
         return category.affectsMappings();
     }
 
-    public IUserTypeInstantiate getHibTypeAsUserType() {
-        return hibType instanceof IUserTypeInstantiate ? (IUserTypeInstantiate) hibType : null;
-    }
-
     public ICompositeUserTypeInstantiate getHibTypeAsCompositeUserType() {
         return hibType instanceof ICompositeUserTypeInstantiate ? (ICompositeUserTypeInstantiate) hibType : null;
     }
@@ -86,14 +82,6 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
 
     public boolean isCalculated() {
         return expressionModel != null && category != COMPONENT_HEADER;
-    }
-
-    public boolean isCalculatedCompositeUserTypeHeader() {
-        return expressionModel != null && category == COMPONENT_HEADER;
-    }
-
-    public boolean isCompositeProperty() {
-        return getHibTypeAsCompositeUserType() != null;
     }
 
     public boolean isEntityOfPersistedType() {
@@ -122,14 +110,6 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
     
     public boolean isPure() {
         return entityCategory == EntityCategory.PERSISTENT && (category == SYNTHETIC || category == SYNTHETIC_COMPONENT_HEADER || category == SYNTHETIC_COMPONENT_DETAILS);
-    }
-
-    public String getTypeString() {
-        if (hibType != null) {
-            return hibType.getClass().getName();
-        } else {
-            return null;
-        }
     }
 
     public Set<PropertyMetadata> getCompositeTypeSubprops() {
@@ -191,20 +171,8 @@ public class PropertyMetadata implements Comparable<PropertyMetadata> {
         return javaType;
     }
 
-    public Object getHibType() {
-        return hibType;
-    }
-
     public PropertyCategory getCategory() {
         return category;
-    }
-
-    public List<PropertyColumn> getColumns() {
-        return columns;
-    }
-
-    public boolean isNullable() {
-        return nullable;
     }
 
     public ExpressionModel getExpressionModel() {
