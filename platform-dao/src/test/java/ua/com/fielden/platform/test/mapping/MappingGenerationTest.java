@@ -9,8 +9,8 @@ import org.junit.Test;
 
 import ua.com.fielden.platform.entity.AbstractEntity;
 import ua.com.fielden.platform.entity.query.DbVersion;
-import ua.com.fielden.platform.entity.query.metadata.DomainMetadata;
 import ua.com.fielden.platform.eql.dbschema.HibernateMappingsGenerator;
+import ua.com.fielden.platform.eql.meta.EqlDomainMetadata;
 import ua.com.fielden.platform.ui.config.EntityCentreConfig;
 
 public class MappingGenerationTest {
@@ -19,8 +19,7 @@ public class MappingGenerationTest {
     public void dump_mapping_for_type_wity_byte_array_property() {
         final List<Class<? extends AbstractEntity<?>>> domainTypes = new ArrayList<>();
         domainTypes.add(EntityCentreConfig.class);
-        final DomainMetadata mg = new DomainMetadata(null, null, domainTypes, DbVersion.H2);
-        final String tgModelMapping = HibernateMappingsGenerator.generateMappings(mg.eqlDomainMetadata);
+        final String tgModelMapping = HibernateMappingsGenerator.generateMappings(new EqlDomainMetadata(null, null, domainTypes, DbVersion.H2));
         final String expectedMapping = String.format("<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n" + "<!DOCTYPE hibernate-mapping PUBLIC\n" + "\"-//Hibernate/Hibernate Mapping DTD 3.0//EN\"\n"
                 + "\"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd\">\n" + "<hibernate-mapping default-access=\"field\">\n"
                 + "<class name=\"ua.com.fielden.platform.ui.config.EntityCentreConfig\" table=\"ENTITY_CENTRE_CONFIG\">\n"
