@@ -30,7 +30,7 @@ import ua.com.fielden.platform.eql.stage2.operands.queries.SourceQuery2;
 import ua.com.fielden.platform.eql.stage2.sources.Source2BasedOnSubqueries;
 
 public class Source1BasedOnSubqueries extends AbstractSource1<Source2BasedOnSubqueries> {
-    public static final String ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE = "There is a problem while trying to determine type for [%s] property of query source based on subqueries with result type [%s].\n"
+    public static final String ERR_CONFLICT_BETWEEN_YIELDED_AND_DECLARED_PROP_TYPE = "There is a problem while trying to determine the type for property [%s] of a query source based on subqueries with result type [%s].\n"
             + "Declared type is [%s].\nActual yield type is [%s].";
     
     private final List<SourceQuery1> models = new ArrayList<>();
