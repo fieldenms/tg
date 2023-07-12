@@ -144,22 +144,22 @@ public class EqlEntityMetadataGenerator {
     private List<EqlPropertyMetadata> generatePropertyMetadatasForEntity(final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo, final Class<? extends AbstractEntity<?>> actualType) {
         final List<EqlPropertyMetadata> result = new ArrayList<>();
         if (UNION == parentInfo.category) {
-            result.addAll(generateUnionImplicitCalcSubprops((Class<? extends AbstractUnionEntity>) parentInfo.entityType, null));
-            unionProperties((Class<? extends AbstractUnionEntity>) parentInfo.entityType).stream().forEach(field -> result.add(getCommonPropInfo(field, parentInfo.entityType, null)));
+            result.addAll(generateUnionImplicitCalcSubprops((Class<? extends AbstractUnionEntity>) actualType, null));
+            unionProperties((Class<? extends AbstractUnionEntity>) actualType).stream().forEach(field -> result.add(getCommonPropInfo(field, actualType, null)));
         } else {
-            generateIdPropertyMetadata(parentInfo).ifPresent(idPmd -> result.add(idPmd));
+            generateIdPropertyMetadata(parentInfo, actualType).ifPresent(idPmd -> result.add(idPmd));
 
-            result.add(generateKeyPropertyMetadata(parentInfo));
+            result.add(generateKeyPropertyMetadata(parentInfo, actualType));
 
             final List<Field> restOfPropsFields = getRestOfProperties(parentInfo, actualType);
             final Set<String> addedProps = new HashSet<>();
             addedProps.add(DESC);
             parentInfo.compositeKeyMembers.stream().forEach(f -> addedProps.add(f._1));
-            parentInfo.compositeKeyMembers.stream().forEach(f -> restOfPropsFields.stream().filter(p -> f._1.equals(p.getName())).findAny().ifPresent(km -> result.add(getCommonPropInfo(km, parentInfo.entityType, null))));
+            parentInfo.compositeKeyMembers.stream().forEach(f -> restOfPropsFields.stream().filter(p -> f._1.equals(p.getName())).findAny().ifPresent(km -> result.add(getCommonPropInfo(km, actualType, null))));
 
-            restOfPropsFields.stream().filter(p -> DESC.equals(p.getName())).findAny().ifPresent(desc -> result.add(getCommonPropInfo(desc, parentInfo.entityType, null)));
+            restOfPropsFields.stream().filter(p -> DESC.equals(p.getName())).findAny().ifPresent(desc -> result.add(getCommonPropInfo(desc, actualType, null)));
 
-            if (PERSISTENT == parentInfo.category || QUERY_BASED == parentInfo.category && EntityUtils.isPersistedEntityType(parentInfo.entityType.getSuperclass())) {
+            if (PERSISTENT == parentInfo.category || QUERY_BASED == parentInfo.category && EntityUtils.isPersistedEntityType(actualType.getSuperclass())) {
                 result.add(generateVersionPropertyMetadata(parentInfo));
             }
 
@@ -216,19 +216,19 @@ public class EqlEntityMetadataGenerator {
         }
     }
 
-    private Optional<EqlPropertyMetadata> generateIdPropertyMetadata(final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo) {
+    private Optional<EqlPropertyMetadata> generateIdPropertyMetadata(final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo, final Class<? extends AbstractEntity<?>> actualType) {
     	final EqlPropertyMetadata idProperty = new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).required().column(id).build();
         final EqlPropertyMetadata idPropertyInOne2One = new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).required().column(id).build();
         switch (parentInfo.category) {
         case PERSISTENT:
-            return isOneToOne(parentInfo.entityType) ? of(idPropertyInOne2One) : of(idProperty)/*(entityType)*/;
+            return isOneToOne(actualType) ? of(idPropertyInOne2One) : of(idProperty)/*(entityType)*/;
         case QUERY_BASED:
-            if (isSyntheticBasedOnPersistentEntityType(parentInfo.entityType)) {
-                if (isEntityType(getKeyType(parentInfo.entityType))) {
-                    throw new EntityDefinitionException(format("Entity [%s] is recognised as synthetic that is based on a persistent type with an entity-typed key. This is not supported.", parentInfo.entityType.getName()));
+            if (isSyntheticBasedOnPersistentEntityType(actualType)) {
+                if (isEntityType(getKeyType(actualType))) {
+                    throw new EntityDefinitionException(format("Entity [%s] is recognised as synthetic that is based on a persistent type with an entity-typed key. This is not supported.", actualType.getName()));
                 }
                 return of(idProperty);
-            } else if (isEntityType(getKeyType(parentInfo.entityType))) {
+            } else if (isEntityType(getKeyType(actualType))) {
                 return of(new EqlPropertyMetadata.Builder(ID, Long.class, H_LONG).expression(expr().prop(KEY).model()).implicit().build());
             } else {
             	// FIXME reconsider this implementation taking into account its role combined with actual yields information in the process of getting final EntityPropInfo for Synthetic Entity 
@@ -243,9 +243,9 @@ public class EqlEntityMetadataGenerator {
         return new EqlPropertyMetadata.Builder(VERSION, Long.class, H_LONG).required().column(version).build();
     }
 
-    private EqlPropertyMetadata generateKeyPropertyMetadata(final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo) {
-        final Class<? extends Comparable<?>> keyType = getKeyType(parentInfo.entityType);
-        if (isOneToOne(parentInfo.entityType)) {
+    private EqlPropertyMetadata generateKeyPropertyMetadata(final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo, final Class<? extends AbstractEntity<?>> actualType) {
+        final Class<? extends Comparable<?>> keyType = getKeyType(actualType);
+        if (isOneToOne(actualType)) {
             switch (parentInfo.category) {
             case PERSISTENT:
                 return new EqlPropertyMetadata.Builder(KEY, keyType, H_LONG).required().column(id).build();
@@ -255,14 +255,14 @@ public class EqlEntityMetadataGenerator {
                 return null;
             }
         } else if (DynamicEntityKey.class.equals(keyType)) {
-            return new EqlPropertyMetadata.Builder(KEY, String.class, H_STRING).expression(generateCompositeKeyEqlExpression((Class<? extends AbstractEntity<DynamicEntityKey>>) parentInfo.entityType)).implicit().required().build();
+            return new EqlPropertyMetadata.Builder(KEY, String.class, H_STRING).expression(generateCompositeKeyEqlExpression((Class<? extends AbstractEntity<DynamicEntityKey>>) actualType)).implicit().required().build();
         } else {
             final Object keyHibType = typeResolver.basic(keyType.getName());
             switch (parentInfo.category) {
             case PERSISTENT:
                 return new EqlPropertyMetadata.Builder(KEY, keyType, keyHibType).required().column(key).build();
             case QUERY_BASED:
-                if (isSyntheticBasedOnPersistentEntityType(parentInfo.entityType)) {
+                if (isSyntheticBasedOnPersistentEntityType(actualType)) {
                     return new EqlPropertyMetadata.Builder(KEY, keyType, keyHibType).required().column(key).build();
                 }
                 return new EqlPropertyMetadata.Builder(KEY, keyType, keyHibType).required().build();
