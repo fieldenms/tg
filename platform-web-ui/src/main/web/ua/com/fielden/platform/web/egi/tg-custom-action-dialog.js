@@ -645,8 +645,9 @@ Polymer({
         });
     },
 
-    _skipNext: function() {
+    _skipNext: function(e) {
         if (this._lastAction && this._lastAction.continuous && typeof this._lastAction.skipNext === 'function') {
+            tearDownEvent(e);
             this._lastAction.skipNext();
         }
     },
