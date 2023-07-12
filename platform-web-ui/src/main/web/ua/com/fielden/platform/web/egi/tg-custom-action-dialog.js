@@ -834,7 +834,7 @@ Polymer({
             this._closeChildren(true);
             this._closeDialogAndIndicateActionCompletion();
         } else {
-            if (forceClosing.target) {
+            if (forceClosing && forceClosing.target) {
                 tearDownEvent(forceClosing);
             }
             //Try to close children first.
