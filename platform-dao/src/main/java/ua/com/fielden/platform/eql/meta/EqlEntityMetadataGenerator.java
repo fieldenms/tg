@@ -135,7 +135,7 @@ public class EqlEntityMetadataGenerator {
     public <T extends AbstractEntity<?>> EqlEntityMetadata generate(final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo, final Class<T> entityType) {
         try {
             final List<EqlPropertyMetadata> propsMetadata = generatePropertyMetadatasForEntity(parentInfo, entityType);
-            return new EqlEntityMetadata(parentInfo, propsMetadata);
+            return new EqlEntityMetadata(entityType, parentInfo, propsMetadata);
         } catch (final Exception ex) {
             throw new EqlMetadataGenerationException("Couldn't generate persistence metadata for entity [" + entityType + "].", ex);
         }
