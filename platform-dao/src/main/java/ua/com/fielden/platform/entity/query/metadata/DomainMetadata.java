@@ -287,7 +287,7 @@ public class DomainMetadata {
             safeMapAdd(propsMetadata, new PropertyMetadata.Builder(propName, javaType, false, parentInfo.category).expression(generateUnionEntityPropertyExpression(entityType, propName)).category(EXPRESSION).build());
         }
 
-        return new ModelledEntityMetadata<ET>(parentInfo.unionEntityModels, parentInfo.entityType, propsMetadata);
+        return new ModelledEntityMetadata<ET>(parentInfo.entityModels, parentInfo.entityType, propsMetadata);
     }
 
     public <ET extends AbstractEntity<?>> PureEntityMetadata<ET> generatePureEntityMetadata(final EntityTypeInfo <ET> parentInfo) {

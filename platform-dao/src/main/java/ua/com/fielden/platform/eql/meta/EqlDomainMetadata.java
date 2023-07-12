@@ -138,10 +138,7 @@ public class EqlDomainMetadata {
     }
     
     private <T extends AbstractEntity<?>> T2<List<SourceQuery1>, Set<Class<? extends AbstractEntity<?>>>> generateModelsAndDependenciesForSyntheticType(final EntityTypeInfo<T> parentInfo) {
-        final List<EntityResultQueryModel<T>> models = new ArrayList<>();
-        models.addAll(parentInfo.entityModels);
-        models.addAll(parentInfo.unionEntityModels);
-        final List<SourceQuery1> queries = models.stream().map(model -> gen.generateAsUncorrelatedSourceQuery(model)).collect(toList());
+        final List<SourceQuery1> queries = parentInfo.entityModels.stream().map(model -> gen.generateAsUncorrelatedSourceQuery(model)).collect(toList());
         final Set<Class<? extends AbstractEntity<?>>> result = queries.stream().map(qry -> qry.collectEntityTypes()).flatMap(Set::stream).collect(Collectors.toSet());
         return T2.t2(queries, result);
     }

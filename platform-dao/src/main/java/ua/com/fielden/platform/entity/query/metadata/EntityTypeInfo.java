@@ -47,7 +47,6 @@ public class EntityTypeInfo <ET extends AbstractEntity<?>> {
     public final String tableName;
     public final List<T2<String, Class<?>>> compositeKeyMembers;
     public final List<EntityResultQueryModel<ET>> entityModels;
-    public final List<EntityResultQueryModel<ET>> unionEntityModels;
 
     public EntityTypeInfo(final Class<ET> entityType) {
         this.entityType = entityType;
@@ -55,24 +54,20 @@ public class EntityTypeInfo <ET extends AbstractEntity<?>> {
             tableName = getTableClause(entityType);
             category = PERSISTENT;
             entityModels = ImmutableList.of();
-            unionEntityModels = ImmutableList.of();
         } else {
             final var synModelField = EntityUtils.findSyntheticModelFieldFor(entityType);
             if (synModelField != null) {
                 tableName = null;
                 category = QUERY_BASED;
                 entityModels = getEntityModelsOfQueryBasedEntityType(entityType, synModelField);
-                unionEntityModels = ImmutableList.of();
             } else if (isUnionEntityType(entityType)) {
                 tableName = null;
                 category = UNION;
-                entityModels = ImmutableList.of();
-                unionEntityModels = ImmutableList.copyOf(produceUnionEntityModels(entityType));
+                entityModels = ImmutableList.copyOf(produceUnionEntityModels(entityType));
             } else {
                 tableName = null;
                 category = PURE;
                 entityModels = ImmutableList.of();
-                unionEntityModels = ImmutableList.of();
             }
         }
  

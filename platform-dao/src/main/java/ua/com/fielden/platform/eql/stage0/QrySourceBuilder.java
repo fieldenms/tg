@@ -77,11 +77,8 @@ public class QrySourceBuilder extends AbstractTokensBuilder {
     
     private <T extends AbstractEntity<?>> JoinLeaf1 buildQrySourceBasedOnSyntheticEntityType(final Class<T> resultType, final String alias) {
         final EntityTypeInfo<?> parentInfo = getEntityTypeInfo(resultType);
-        final List<EntityResultQueryModel<?>> models = new ArrayList<>();
-        models.addAll(parentInfo.entityModels);
-        models.addAll(parentInfo.unionEntityModels);
         final List<SourceQuery1> queries = new ArrayList<>();
-        for (final QueryModel<?> qryModel : models) {
+        for (final QueryModel<?> qryModel : parentInfo.entityModels) {
             queries.add(getQueryBuilder().generateAsUncorrelatedSourceQuery(qryModel));
         }
         return new JoinLeaf1(new Source1BasedOnSubqueries(queries, alias, getQueryBuilder().nextSourceId(), resultType));
