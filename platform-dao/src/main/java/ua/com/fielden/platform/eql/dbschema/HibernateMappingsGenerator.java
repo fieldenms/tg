@@ -47,9 +47,9 @@ public class HibernateMappingsGenerator {
 
         for (final EqlEntityMetadata entry : domainMetadata.entityPropsMetadata().values()) {
             if (entry.typeInfo.category == PERSISTENT) {
-                final String typeName = entry.typeInfo.entityType.getName();
+                final String typeName = entry.entityType.getName();
                 try {
-                    sb.append(generateEntityClassMapping(entry.typeInfo.entityType, domainMetadata.getTables().get(typeName).name, sortPropsMetadata(entry.props()), domainMetadata.dbVersion));
+                    sb.append(generateEntityClassMapping(entry.entityType, domainMetadata.getTables().get(typeName).name, sortPropsMetadata(entry.props()), domainMetadata.dbVersion));
                 } catch (final Exception e) {
                     e.printStackTrace();
                     throw new RuntimeException("Couldn't generate mapping for " + typeName + " due to: " + e.getMessage());

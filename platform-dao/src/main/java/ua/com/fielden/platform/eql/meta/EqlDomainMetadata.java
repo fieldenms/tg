@@ -92,8 +92,8 @@ public class EqlDomainMetadata {
         for (final EqlEntityMetadata el : entityPropsMetadata.values()) {
             if (el.typeInfo.category == QUERY_BASED) {
                 final T2<List<SourceQuery1>, Set<Class<? extends AbstractEntity<?>>>> res = generateModelsAndDependenciesForSyntheticType(el.typeInfo);
-                seModels.put(el.typeInfo.entityType, res._1);
-                seDependencies.put(el.typeInfo.entityType, res._2.stream().filter(cl -> EntityUtils.isSyntheticEntityType(cl)).collect(Collectors.toSet()));
+                seModels.put(el.entityType, res._1);
+                seDependencies.put(el.entityType, res._2.stream().filter(cl -> EntityUtils.isSyntheticEntityType(cl)).collect(Collectors.toSet()));
             }
         }
 
