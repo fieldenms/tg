@@ -645,8 +645,9 @@ Polymer({
         });
     },
 
-    _skipNext: function() {
+    _skipNext: function(e) {
         if (this._lastAction && this._lastAction.continuous && typeof this._lastAction.skipNext === 'function') {
+            tearDownEvent(e);
             this._lastAction.skipNext();
         }
     },
@@ -834,6 +835,9 @@ Polymer({
             this._closeChildren(true);
             this._closeDialogAndIndicateActionCompletion();
         } else {
+            if (forceClosing && forceClosing.target) { // check whether forceClosing is not null or empty and it is an event object
+                tearDownEvent(forceClosing);
+            }
             //Try to close children first.
             const canClose = this.canClose();
             if (canClose === true) {
