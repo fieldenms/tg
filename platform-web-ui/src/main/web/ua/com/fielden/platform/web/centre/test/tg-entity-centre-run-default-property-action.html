@@ -1,0 +1,89 @@
+<!doctype html>
+<html>
+
+<head>
+	<meta charset="UTF-8">
+	<title>entity-centre basic tests</title>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+	
+	<script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
+</head>
+
+<body>
+	<tg-reflector id="reflector"></tg-reflector>
+	<test-fixture id="CentreFixture">
+    	<template>
+    	    <tg-MiTgPersistentEntityWithProperties-centre id="centre"></tg-MiTgPersistentEntityWithProperties-centre>
+    	</template>
+	</test-fixture>
+
+    <script type="module">
+
+        import '/app/tg-reflector.js';
+        import '/centre_ui/ua.com.fielden.platform.ui.menu.sample.MiTgPersistentEntityWithProperties';
+        import '/master_ui/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties';
+
+        suite('entity centre', function() {
+            let centre, reflector;
+        
+            setup(function() {
+                centre = fixture('CentreFixture');
+                reflector = document.querySelector('#reflector');
+            });
+
+            const postRunDefaultPropertyAction = function (defaultAction, assertCallback) {
+                const old_postActionSuccess = defaultAction.postActionSuccess;
+                defaultAction.postActionSuccess = function (potentiallySavedOrNewEntity, action, master) {
+                    master.addEventListener('after-load', (e) => replacePostRetrieveEmbeddedMasterFunctions(e.detail, assertCallback)); // if embedded master loading is performing now, there is a need to assign callbacks; retrieval will be actioned automatically
+                    old_postActionSuccess && old_postActionSuccess(potentiallySavedOrNewEntity, action, master);
+                    defaultAction.postActionSuccess = old_postActionSuccess;
+                }
+            }
+
+            const replacePostRetrieveEmbeddedMasterFunctions = function (master, assertCallback) {
+                master.postRetrieved = function (embeddedEntity, bindingEntity, customObject) {
+                    assertCallback(embeddedEntity);
+                };
+            };
+
+            const runCentre = function (centre, postRunCallback) {
+                const old_postRun = centre._postRun;
+                centre._postRun = function (criteriaEntity, newBindingEntity, result) {
+                    old_postRun(criteriaEntity, newBindingEntity, result);
+                    postRunCallback();
+                };
+                
+                centre.postRetrieved = function (entity, bindingEntity, customObject) {
+                    centre.run();
+                };
+            }
+
+            const findColumn = function (centre, propertyName) {
+                return centre.$.egi.allColumns.find(col => col.property === propertyName);
+            }
+            
+            test('default action on egi works', function (done) {
+
+                runCentre(centre, () => {
+                    const egiEntity = centre.$.egi.entities[0];
+
+                    postRunDefaultPropertyAction(centre.$.egi._defaultPropertyAction, (entity) => {
+                        assert.strictEqual(egiEntity.get('compositeProp.id'), entity.get('id'));
+                        centre.actionDialog.closeDialog();
+                        done();
+                    });
+
+                    centre.$.egi._tapColumn(egiEntity, findColumn(centre, 'compositeProp'));
+                });
+                
+                centre.retrieve();
+            });
+        });
+    </script>
+
+</body>
+
+</html>

@@ -1,0 +1,82 @@
+<!doctype html>
+<html>
+
+<head>
+    <meta charset="UTF-8">
+    <title>test for list of menu item generation</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+
+    <script src="/resources/polymer/@webcomponents/webcomponentsjs/webcomponents-bundle.js"></script>
+    <script src='/resources/polymer/web-animations-js/web-animations-next-lite.min.js'></script>
+    <script src="/resources/filesaver/FileSaver.min.js"></script>
+    <script src="/resources/polymer/wct-browser-legacy/browser.js"></script>
+    <script>
+        window.TG_APP = {
+            watermark: "Web unit test"
+        };
+    </script>
+</head>
+
+<body>
+    <test-fixture id="AppFixture">
+        <template>
+            <tg-app-template></tg-app-template>
+        </template>
+    </test-fixture>
+
+    <script type="module">
+
+        import '/app/tg-app.js'; 
+
+        suite('Test dynamic action on main app component', function () {
+            let app;
+
+            const initActionMaster = function (action, assertCallback) {
+                if (hasMaster(action)) {
+                    replacePostRetrieveEmbeddedMasterFunctions(getMaster(action), assertCallback);
+                } else {
+                    addPostSaveCallbackToInitActionMaster(action, assertCallback);
+                }
+            }
+
+            const hasMaster = function (action) {
+                return !!(action._masterReferenceForTesting && action._masterReferenceForTesting.$.loader.loadedElement);
+            }
+
+            const getMaster = function (action) {
+                return action._masterReferenceForTesting && action._masterReferenceForTesting.$.loader.loadedElement;
+            }
+
+            const replacePostRetrieveEmbeddedMasterFunctions = function (master, assertCallback) {
+                master.postRetrieved = function (embeddedEntity, bindingEntity, customObject) {
+                    assertCallback(embeddedEntity);
+                };
+            };
+
+            const addPostSaveCallbackToInitActionMaster = function (action, assertCallback) {
+                const old_postActionSuccess = action.postActionSuccess;
+                action.postActionSuccess = function (potentiallySavedOrNewEntity, action, master) {
+                    master.addEventListener('after-load', (e) => replacePostRetrieveEmbeddedMasterFunctions(e.detail, assertCallback)); // if embedded master loading is performing now, there is a need to assign callbacks; retrieval will be actioned automatically
+                    old_postActionSuccess && old_postActionSuccess(potentiallySavedOrNewEntity, action, master);
+                    action.postActionSuccess = old_postActionSuccess;
+                }
+            }
+           
+            setup(function () {
+                app = fixture('AppFixture');
+            });
+
+            test("run dynamic action works", function (done) {
+                initActionMaster(app.$.tgOpenMasterAction, (entity) => {
+                    assert.strictEqual(23, entity.get('id'));
+                    app._actionDialog.closeDialog();
+                    done();
+                });
+                app._selectedSubmodule = "/ua.com.fielden.platform.sample.domain.TgPersistentEntityWithProperties/23";
+                app._tgOpenMasterAction();
+            });
+        });
+    </script>
+</body>
+
+</html>
