@@ -5,6 +5,7 @@ import static org.junit.Assert.assertEquals;
 import java.util.Arrays;
 
 import org.apache.poi.ss.usermodel.CellType;
+import org.apache.poi.ss.usermodel.DataFormatter;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.joda.time.DateTime;
@@ -60,7 +61,10 @@ public class WorkbookExporterTest {
         final String[] propertyTitles = { "Money property" };
         final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
-        assertEquals("Money property of the exported row is incorrect", "$1.00", exportedRow.getCell(0).getStringCellValue());
+        final DataFormatter formatter = new DataFormatter();
+        final String formattedCellValue = formatter.formatCellValue(exportedRow.getCell(0));
+        assertEquals("Money property of the exported row is formatted incorrectly.", "$1.00", formattedCellValue);
+        assertEquals("Money property of the exported row is incorrect.", 1.0d, exportedRow.getCell(0).getNumericCellValue(), 0.0);
     }
 
     @Test
@@ -220,7 +224,10 @@ public class WorkbookExporterTest {
         final String[] propertyTitles = { "Money property" };
         final Sheet sheet = WorkbookExporter.export(Arrays.asList(entityToExport).stream(), propertyNames, propertyTitles).getSheetAt(0);
         final Row exportedRow = sheet.getRow(1);
-        assertEquals("Money property of the exported entity aggregates is incorrect", "$1.00", exportedRow.getCell(0).getStringCellValue());
+        final DataFormatter formatter = new DataFormatter();
+        final String formattedCellValue = formatter.formatCellValue(exportedRow.getCell(0));
+        assertEquals("Money property of the exported row is formatted incorrectly.", "$1.00", formattedCellValue);
+        assertEquals("Money property of the exported row is incorrect.", 1.0d, exportedRow.getCell(0).getNumericCellValue(), 0.0);
     }
 
     @Test
