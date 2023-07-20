@@ -23,18 +23,20 @@ import ua.com.fielden.platform.reflection.TitlesDescsGetter;
  */
 public class FinalValidator implements IBeforeChangeEventHandler<Object> {
     private final boolean persistentOnly;
-    
-    public FinalValidator(final boolean persistentOnly) {
+    private final boolean nullIsValueForPersisted;
+
+    public FinalValidator(final boolean persistentOnly, final boolean nullIsValueForPersisted) {
         this.persistentOnly = persistentOnly;
+        this.nullIsValueForPersisted = nullIsValueForPersisted;
     }
-    
+
     @Override
     public Result handle(final MetaProperty<Object> property, final Object newValue, final Set<Annotation> mutatorAnnotations) {
         final AbstractEntity<?> entity = property.getEntity();
 
-        if (!isPropertyFinalised(property, persistentOnly) ||
+        if (!isPropertyFinalised(property, persistentOnly, nullIsValueForPersisted) ||
             equalsEx(property.getValue(), newValue)) { // i.e. there is no actual change
-            return successful("Value is being assigned for the first time.");
+            return successful();
         }
 
         final String entityTitle = TitlesDescsGetter.getEntityTitleAndDesc(entity.getType()).getKey();
@@ -45,21 +47,18 @@ public class FinalValidator implements IBeforeChangeEventHandler<Object> {
      * This method capture the meaning of a property being <code>finalised</code>.
      * 
      * @param property
-     * @param persistentOnly
+     * @param persistedOnly
+     * @param nullIsValueForPersisted
      * @return
      */
-    public static boolean isPropertyFinalised(final MetaProperty<?> property, final boolean persistentOnly) {
+    public static boolean isPropertyFinalised(final MetaProperty<?> property, final boolean persistedOnly, final boolean nullIsValueForPersisted) {
         final AbstractEntity<?> entity = property.getEntity();
-        
-        if (persistentOnly) {
-            if (entity.isPersisted() && property.getOriginalValue() != null) {
-                return true;
-            }
-        } else if (property.getValue() != null) {
-            return true;
+
+        if (entity.isPersisted()) {
+            return nullIsValueForPersisted || property.getOriginalValue() != null || (!persistedOnly && property.getValue() != null);
+        } else {
+            return !persistedOnly && property.getValue() != null;
         }
-        
-        return false;
     }
-   
+
 }

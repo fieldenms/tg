@@ -79,8 +79,8 @@ public class FinalPersistentOnlyPropsValidationTest extends AbstractDaoTestCase 
         assertNull(catBeforChanged.getImmediatelyFinalProp());
         
         catBeforChanged.setImmediatelyFinalProp(42);
-        assertFalse(catBeforChanged.getProperty("immediatelyFinalProp").isEditable());
         assertEquals(Integer.valueOf(42), catBeforChanged.getImmediatelyFinalProp());
+        assertFalse(catBeforChanged.getProperty("immediatelyFinalProp").isEditable());
         
         catBeforChanged.setImmediatelyFinalProp(43);
         assertFalse(catBeforChanged.getProperty("immediatelyFinalProp").isValid());
