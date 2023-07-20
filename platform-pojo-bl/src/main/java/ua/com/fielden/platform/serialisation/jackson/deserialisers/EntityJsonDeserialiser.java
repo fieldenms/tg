@@ -2,6 +2,9 @@ package ua.com.fielden.platform.serialisation.jackson.deserialisers;
 
 import static java.util.Optional.of;
 import static java.util.Optional.ofNullable;
+import static java.util.function.Function.identity;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import static ua.com.fielden.platform.entity.factory.EntityFactory.newPlainEntity;
 import static ua.com.fielden.platform.entity.meta.PropertyDescriptor.fromString;
 import static ua.com.fielden.platform.entity.proxy.EntityProxyContainer.proxy;
@@ -16,9 +19,13 @@ import java.io.IOException;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.BinaryOperator;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -59,11 +66,14 @@ import ua.com.fielden.platform.utils.EntityUtils;
  */
 public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDeserializer<T> {
     private static final long serialVersionUID = 1L;
+    private static final Function<CachedProperty, String> FIELD_NAME = prop -> prop.field().getName(); // create once for all EntityJsonDeserialiser instances
+    private static final Function<CachedProperty, CachedProperty> IDENTITY = identity(); // create once for all EntityJsonDeserialiser instances
+    private static final BinaryOperator<CachedProperty> TAKE_SECOND = (prop1, prop2) -> prop2; // create once for all EntityJsonDeserialiser instances
     private final EntityFactory factory;
     private final ObjectMapper mapper;
     private final Field versionField;
     private final Class<T> type;
-    private final List<CachedProperty> properties;
+    private final Map<String, CachedProperty> properties;
     private final ISerialisationTypeEncoder serialisationTypeEncoder;
     private final boolean propertyDescriptorType;
     private final IIdOnlyProxiedEntityTypeCache idOnlyProxiedEntityTypeCache;
@@ -72,7 +82,12 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
         super(type);
         this.factory = entityFactory;
         this.mapper = mapper;
-        this.properties = properties;
+        this.properties = properties.stream().collect(toMap(
+            FIELD_NAME, // collect to map by field name
+            IDENTITY,
+            TAKE_SECOND, // very unlikely to have duplicates here (see un-overridden CachedProperty.equals and EntitySerialiser.createCachedProperties); however, for safety, do not throw IllegalStateException as in Collectors.throwingMerger (used by Collectors.toMap(keyMapper, valueMapper) method)
+            LinkedHashMap::new // preserve iteration order through this map exactly as in original List<CachedProperty>
+        ));
         this.serialisationTypeEncoder = serialisationTypeEncoder;
         this.idOnlyProxiedEntityTypeCache = idOnlyProxiedEntityTypeCache;
 
@@ -115,10 +130,9 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
             final JsonNode instrumentedJsonNode = node.get("@_i");
             final boolean uninstrumented = instrumentedJsonNode == null;
 
-            final String[] proxiedProps = properties.stream()
-                    .map(cachedProp -> cachedProp.field().getName())
+            final String[] proxiedProps = properties.keySet().stream()
                     .filter(prop -> node.get(prop) == null)
-                    .collect(Collectors.toList())
+                    .collect(toList())
                     .toArray(new String[] {});
             final T entity;
             // Property Descriptor: key and desc properties of propDescriptor are set through setters, not through fields; avoid validators on these properties or otherwise isInitialising:=true would be needed here
@@ -155,11 +169,12 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                 .ifPresent(preferredProperty -> entity.setPreferredProperty(preferredProperty));
             
             node.fields().forEachRemaining(childNameAndNode -> { // iterate through all "fields" (i.e. present child nodes) in the order of original source
-                if (node.get(childNameAndNode.getKey()) != null) { // for safety, still check whether JsonNode is present
-                    properties.stream().filter(prop -> prop.field().getName().equals(childNameAndNode.getKey())).findAny().ifPresent(prop -> { // only consider child nodes present in CachedProperty list (i.e. properties present in entity type definition)
-                        final String propertyName = prop.field().getName();
-                        final JsonNode propNode = node.get(propertyName);
-                        final Object value = determineValue(propNode, prop.field());
+                final String childName = childNameAndNode.getKey();
+                final JsonNode childNode = childNameAndNode.getValue();
+                if (childNode != null) { // for safety, still check whether JsonNode is present
+                    final CachedProperty prop = properties.get(childName);
+                    if (prop != null) { // only consider child nodes present in CachedProperty map (i.e. properties present in entity type definition)
+                        final Object value = determineValue(childNode, prop.field());
                         try {
                             prop.field().set(entity, value); // at this stage the field should be already accessible
                         } catch (final IllegalAccessException ex) {
@@ -167,10 +182,11 @@ public class EntityJsonDeserialiser<T extends AbstractEntity<?>> extends StdDese
                         } catch (final IllegalArgumentException ex) {
                             throw new EntityDeserialisationException("The field [" + prop.field() + "] is not declared in entity with type [" + type.getName() + "]. Fatal error during deserialisation process for entity [" + entity + "].", ex);
                         }
-                        entity.getPropertyOptionally(propertyName).map(metaProperty -> 
-                            deserialiseMetaProperty((MetaProperty<Object>) metaProperty, node.get("@" + propertyName), prop.field())
-                        );
-                    });
+                        final Optional<MetaProperty<?>> metaPropertyOpt = entity.getPropertyOptionally(childName);
+                        if (metaPropertyOpt.isPresent()) {
+                            deserialiseMetaProperty((MetaProperty<Object>) metaPropertyOpt.get(), node.get("@" + childName), prop.field());
+                        }
+                    }
                 }
             });
             return entity;
