@@ -13,6 +13,7 @@ import { createEntityActionThenCallback } from '/resources/master/actions/tg-ent
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { allDefined } from '/resources/reflection/tg-polymer-utils.js';
 import { enhanceStateRestoration } from '/resources/components/tg-global-error-handler.js';
+import { _isEntity } from '/app/tg-reflector.js';
 // depends on '/resources/filesaver/FileSaver.min.js' 
 
 const template = html`
@@ -301,9 +302,11 @@ Polymer({
                 self.postAction = function (smth) {
                     try {
                         const result = newValue(smth);
-                        const potentiallySavedOrNewEntity = Array.isArray(smth) ? smth[0] : smth;
-                        const _exceptionOccurred = potentiallySavedOrNewEntity.exceptionOccurred();
-                        self._continuationInProgress = self.role === 'save' && _exceptionOccurred !== null && !!_exceptionOccurred.ex && !!_exceptionOccurred.ex.continuationTypeStr;
+                        if (self.role === 'save') { // only for the case of SAVE button, assign _continuationInProgress property; for other buttons leave it always 'false'
+                            const potentiallySavedOrNewEntity = Array.isArray(smth) ? smth[0] : smth; // SAVE button may be used in different contexts with different postAction; need to consider that potentiallySavedOrNewEntity is empty or not an entity
+                            const _exceptionOccurred = _isEntity(potentiallySavedOrNewEntity) ? potentiallySavedOrNewEntity.exceptionOccurred() : null;
+                            self._continuationInProgress = _exceptionOccurred !== null && !!_exceptionOccurred.ex && !!_exceptionOccurred.ex.continuationTypeStr;
+                        }
                         self._afterExecution();
                         return result;
                     } catch (e) {
