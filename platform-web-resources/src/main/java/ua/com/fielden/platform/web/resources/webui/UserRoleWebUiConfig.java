@@ -27,6 +27,7 @@ import ua.com.fielden.platform.security.user.UserRoleTokensUpdater;
 import ua.com.fielden.platform.security.user.UserRoleTokensUpdaterProducer;
 import ua.com.fielden.platform.ui.menu.sample.MiUserRole;
 import ua.com.fielden.platform.web.PrefDim.Unit;
+import ua.com.fielden.platform.web.action.CentreConfigurationWebUiConfig.CentreConfigActions;
 import ua.com.fielden.platform.web.action.pre.EntityNavigationPreAction;
 import ua.com.fielden.platform.web.app.config.IWebUiBuilder;
 import ua.com.fielden.platform.web.centre.EntityCentre;
@@ -34,6 +35,7 @@ import ua.com.fielden.platform.web.centre.api.actions.EntityActionConfig;
 import ua.com.fielden.platform.web.centre.api.impl.EntityCentreBuilder;
 import ua.com.fielden.platform.web.interfaces.ILayout.Device;
 import ua.com.fielden.platform.web.layout.api.impl.FlexLayoutConfig;
+import ua.com.fielden.platform.web.test.server.config.StandardActions;
 import ua.com.fielden.platform.web.view.master.EntityMaster;
 import ua.com.fielden.platform.web.view.master.api.IMaster;
 import ua.com.fielden.platform.web.view.master.api.actions.MasterActions;
@@ -78,7 +80,9 @@ public class UserRoleWebUiConfig {
                 EntityCentreBuilder.centreFor(UserRole.class)
                 .runAutomatically()
                 .addTopAction(UserRoleActions.NEW_ACTION.mkAction()).also()
-                .addTopAction(UserRoleActions.DELETE_ACTION.mkAction())
+                .addTopAction(UserRoleActions.DELETE_ACTION.mkAction()).also()
+                .addTopAction(CentreConfigActions.CUSTOMISE_COLUMNS_ACTION.mkAction()).also()
+                .addTopAction(StandardActions.EXPORT_ACTION.mkAction(UserRole.class))
                 .addCrit("this").asMulti().autocompleter(UserRole.class).also()
                 .addCrit(ActivatableAbstractEntity.ACTIVE).asMulti().bool().also()
                 .addCrit("desc").asMulti().text()
