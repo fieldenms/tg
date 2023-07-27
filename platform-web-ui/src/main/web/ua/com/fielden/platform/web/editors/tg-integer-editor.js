@@ -29,11 +29,12 @@ const additionalTemplate = html`
     </style>
     <tg-app-config id="appConfig"></tg-app-config>`;
 const customInputTemplate = html`
-    <iron-input allowed-pattern="[0-9]" bind-value="{{_editingValue}}" class="custom-input-wrapper">
+    <iron-input allowed-pattern="[0-9-]" bind-value="{{_editingValue}}" class="custom-input-wrapper">
         <input
             id="input"
             class="custom-input integer-input"
             type="number"
+            title=""
             step="1"
             on-change="_onChange"
             on-input="_onInput"
@@ -55,11 +56,23 @@ export class TgIntegerEditor extends TgNumericEditor {
         return createEditorTemplate(additionalTemplate, html``, customInputTemplate, inputLayerTemplate, html``, propertyActionTemplate);
     }
 
+    constructor () {
+        super();
+        this.builtInValidationMessage = 'The entered integer number is incorrect.';
+    }
+
     /**
      * Converts the value from string representation (which is used in edititing / comm values) into concrete type of this editor component (Number).
      */
     convertFromString (strValue) {
-        return strValue === '' ? null : parseInt(strValue);
+        if (strValue === '') {
+            return null;
+        }
+        const parsedInt = parseInt(strValue);
+        if (isNaN(parsedInt)) {
+            throw this.builtInValidationMessage;
+        }
+        return parsedInt;
     }
 
 }
