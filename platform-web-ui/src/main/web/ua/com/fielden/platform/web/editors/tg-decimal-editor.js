@@ -59,7 +59,7 @@ export class TgDecimalEditor extends TgNumericEditor {
 
     constructor () {
         super();
-        this.builtInValidationMessage = 'The entered number is incorrect.';
+        this.builtInValidationMessage = 'The value entered is not a number.';
     }
 
     /**

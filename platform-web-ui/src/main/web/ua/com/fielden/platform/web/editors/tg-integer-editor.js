@@ -58,7 +58,7 @@ export class TgIntegerEditor extends TgNumericEditor {
 
     constructor () {
         super();
-        this.builtInValidationMessage = 'The entered integer number is incorrect.';
+        this.builtInValidationMessage = 'The value entered is not a number.';
     }
 
     /**
