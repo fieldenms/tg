@@ -43,6 +43,12 @@ const template = html`
             /* paper-listbox */
             --paper-listbox-background-color: #fff;
         }
+        #menu ::slotted(paper-item) {
+            --icon-visibility: hidden;
+        }
+        #menu ::slotted(paper-item:hover){
+            --icon-visibility: visible;
+        }
         :host {
             display: inline-block;
             --paper-item-selected: {
@@ -470,9 +476,9 @@ Polymer({
     _setHighlightMenuItem: function (menuItemTitle, highlight) {
         const menuItem = this.querySelector('paper-item[item-title="' + menuItemTitle + '"]');
         if (highlight) {
-            menuItem.children[0].style.color = "#039BE5";
+            menuItem.children[1].style.color = "#039BE5";
         } else {
-            menuItem.children[0].style.color = null;
+            menuItem.children[1].style.color = null;
         }
     },
 
