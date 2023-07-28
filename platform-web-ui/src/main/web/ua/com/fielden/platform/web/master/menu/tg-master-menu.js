@@ -20,6 +20,7 @@ import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
 import '/resources/polymer/@polymer/paper-toolbar/paper-toolbar.js';
 /* TG ELEMENTS */
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
+import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { getKeyEventTarget, isInHierarchy, deepestActiveElement, tearDownEvent, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import '/app/tg-app-config.js';
@@ -249,7 +250,7 @@ Polymer({
         }
     },
 
-    behaviors: [ IronA11yKeysBehavior, TgFocusRestorationBehavior, IronResizableBehavior ],
+    behaviors: [ IronA11yKeysBehavior, TgFocusRestorationBehavior, IronResizableBehavior, TgDragFromBehavior],
 
     listeners: {
         transitionend: '_onTransitionEnd'
@@ -412,6 +413,15 @@ Polymer({
         this.defaultRoute = this._originalDefaultRoute; // return original value after detaching; this is necessary in case where the same instance of 'tg-master-menu' (and the same instance of parent master) is used for different actions
         this.fire('tg-master-menu-detached', this, { node: this._cachedParentNode }); // start event bubbling on previous parent node from which this entity master has already been detached
         delete this._cachedParentNode; // remove reference on previous _cachedParentNode to facilitate possible releasing of parentNode from memory
+    },
+
+    //Drag from behavior implementation
+    getElementToDragFrom: function (dragEvent) {
+        return dragEvent.target.parentElement;
+    },
+
+    getDataToDragFrom: function (dragEvent) {
+        return "test";
     },
 
     _entityChanged: function (newBindingEntity, oldOne) {

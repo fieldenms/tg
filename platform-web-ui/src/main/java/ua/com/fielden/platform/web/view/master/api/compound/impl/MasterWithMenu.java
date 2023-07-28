@@ -90,7 +90,7 @@ class MasterWithMenu<T extends AbstractEntity<?>, F extends AbstractFunctionalEn
                             .attr("tooltip-text", el.conf().longDesc.orElse("NOT SPECIFIED"))
                             .attr("item-title", el.getShortDesc())
                             .style("padding: 0 16px 0 0")
-                            .add(new DomElement("iron-icon").attr("icon", "tg-icons:dragVertical").clazz("drag-anchor").style("visibility:var(--icon-visibility)"))
+                            .add(new DomElement("iron-icon").attr("draggable", "true").attr("icon", "tg-icons:dragVertical").clazz("drag-anchor").style("cursor: grab" ,"visibility:var(--icon-visibility)"))
                     .add(new DomElement("iron-icon").attr("icon", el.getIcon()).attr("style", "margin-right: 32px"))
                     .add(new DomElement("span").add(new InnerTextElement(el.getShortDesc())))
                     );
