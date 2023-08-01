@@ -88,7 +88,7 @@ public class EqlDomainMetadata {
         
         // generating models and dependencies info for SE types (UE types also as they are implicit SE types)
         final Map<Class<? extends AbstractEntity<?>>, Set<Class<? extends AbstractEntity<?>>>> seDependencies = new HashMap<>();
-        for (final EqlEntityMetadata el : entityPropsMetadata.values()) {
+        for (final EqlEntityMetadata<?> el : entityPropsMetadata.values()) {
             if (el.typeInfo.category == QUERY_BASED) {
                 final T2<List<SourceQuery1>, Set<Class<? extends AbstractEntity<?>>>> res = generateModelsAndDependenciesForSyntheticType(el.typeInfo);
                 seModels.put(el.entityType, res._1);
@@ -171,29 +171,29 @@ public class EqlDomainMetadata {
                     final EntityInfo<? extends AbstractUnionEntity> ef = new EntityInfo<>((Class<? extends AbstractUnionEntity>) javaType, false); // TODO need to move props to holder and not create EntityInfo for this
                     for (final EqlPropertyMetadata sub : el.subitems()) {
                         if (sub.expressionModel == null) {
-                            ef.addProp(new EntityTypePropInfo(sub.name, allEntitiesInfo.get(sub.javaType), sub.hibType, false, null, sub.implicit));
+                            ef.addProp(new EntityTypePropInfo<>(sub.name, allEntitiesInfo.get(sub.javaType), sub.hibType, false, null, sub.implicit));
                         } else {
                             final ExpressionModel subExpr = sub.expressionModel;
                             if (EntityUtils.isEntityType(sub.javaType)) {
-                                ef.addProp(new EntityTypePropInfo(sub.name, allEntitiesInfo.get(sub.javaType), sub.hibType, false, subExpr, sub.implicit));
+                                ef.addProp(new EntityTypePropInfo<>(sub.name, allEntitiesInfo.get(sub.javaType), sub.hibType, false, subExpr, sub.implicit));
                             } else {
-                                ef.addProp(new PrimTypePropInfo(sub.name, sub.hibType, sub.javaType, subExpr, sub.implicit));
+                                ef.addProp(new PrimTypePropInfo<>(sub.name, sub.hibType, sub.javaType, subExpr, sub.implicit));
                             }
                         }
                     }
-                    entityInfo.addProp(new UnionTypePropInfo(name, ef, hibType, false));
+                    entityInfo.addProp(new UnionTypePropInfo<>(name, ef, hibType, false));
                 } else if (isPersistedEntityType(javaType)) {
-                    entityInfo.addProp(new EntityTypePropInfo(name, allEntitiesInfo.get(javaType), hibType, el.required, expr, el.implicit));
+                    entityInfo.addProp(new EntityTypePropInfo<>(name, allEntitiesInfo.get(javaType), hibType, el.required, expr, el.implicit));
                     //                } else if (ID.equals(name)){
                     //                    entityInfo.addProp(new EntityTypePropInfo(name, allEntitiesInfo.get(entityInfo.javaType()), hibType, required, expr));
                 } else {
                     if (el.subitems().isEmpty()) {
-                        entityInfo.addProp(new PrimTypePropInfo(name, hibType, javaType, expr, el.implicit));
+                        entityInfo.addProp(new PrimTypePropInfo<>(name, hibType, javaType, expr, el.implicit));
                     } else {
-                        final ComponentTypePropInfo propTpi = new ComponentTypePropInfo(name, javaType, hibType);
+                        final ComponentTypePropInfo<?> propTpi = new ComponentTypePropInfo<>(name, javaType, hibType);
                         for (final EqlPropertyMetadata sub : el.subitems()) {
                             final ExpressionModel subExpr = sub.expressionModel;
-                            propTpi.addProp(new PrimTypePropInfo(sub.name, sub.hibType, sub.javaType, subExpr, sub.implicit));
+                            propTpi.addProp(new PrimTypePropInfo<>(sub.name, sub.hibType, sub.javaType, subExpr, sub.implicit));
                         }
                         entityInfo.addProp(propTpi);
                     }
