@@ -101,8 +101,8 @@ public class EntityTypeInfo <ET extends AbstractEntity<?>> {
         }
     }
 
-    public static <T extends AbstractEntity<?>> EntityTypeInfo<T> getEntityTypeInfo(final Class<T> type) {
-        final EntityTypeInfo<T> existing = (EntityTypeInfo<T>) entityTypesInfos.get(DynamicEntityClassLoader.getOriginalType(type).getName());
+    public static <T extends AbstractEntity<?>> EntityTypeInfo<? super T> getEntityTypeInfo(final Class<T> type) {
+        final EntityTypeInfo<? super T> existing = (EntityTypeInfo<? super T>) entityTypesInfos.get(DynamicEntityClassLoader.getOriginalType(type).getName());
         if (existing != null) {
             return existing;
         } else {
