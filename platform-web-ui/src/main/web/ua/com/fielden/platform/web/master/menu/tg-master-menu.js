@@ -20,7 +20,6 @@ import '/resources/polymer/@polymer/paper-styles/paper-styles-classes.js';
 import '/resources/polymer/@polymer/paper-toolbar/paper-toolbar.js';
 /* TG ELEMENTS */
 import { TgFocusRestorationBehavior } from '/resources/actions/tg-focus-restoration-behavior.js';
-import { TgDragFromBehavior } from '/resources/components/tg-drag-from-behavior.js';
 import { getKeyEventTarget, isInHierarchy, deepestActiveElement, tearDownEvent, isMobileApp } from '/resources/reflection/tg-polymer-utils.js';
 import { TgReflector } from '/app/tg-reflector.js';
 import '/app/tg-app-config.js';
@@ -43,6 +42,9 @@ const template = html`
             /* Components */
             /* paper-listbox */
             --paper-listbox-background-color: #fff;
+        }
+        #menu ::slotted(paper-item.dragging) {
+            opacity: 0;
         }
         #menu ::slotted(paper-item) {
             --icon-visibility: hidden;
@@ -96,7 +98,7 @@ const template = html`
 
     <app-drawer-layout id="drawerPanel" fullbleed on-app-drawer-transitioned="_appDrawerTransitioned">
         <app-drawer id="drawer" disable-swipe="[[!mobile]]" slot="drawer">
-            <paper-listbox id="menu" attr-for-selected="data-route" selected="{{route}}" style="height: 100%; overflow: auto;">
+            <paper-listbox id="menu" attr-for-selected="data-route" on-dragstart="startDrag" on-dragend="endDrag" on-dragenter="dragEntered" on-dragover="dragOver" selected="{{route}}" style="height: 100%; overflow: auto;">
                 <slot id="menuItems" name="menu-item"></slot>
             </paper-listbox>
         </app-drawer>
@@ -250,7 +252,7 @@ Polymer({
         }
     },
 
-    behaviors: [ IronA11yKeysBehavior, TgFocusRestorationBehavior, IronResizableBehavior, TgDragFromBehavior],
+    behaviors: [ IronA11yKeysBehavior, TgFocusRestorationBehavior, IronResizableBehavior],
 
     listeners: {
         transitionend: '_onTransitionEnd'
@@ -416,12 +418,35 @@ Polymer({
     },
 
     //Drag from behavior implementation
-    getElementToDragFrom: function (dragEvent) {
-        return dragEvent.target.parentElement;
+    startDrag: function (dragEvent) {
+        this._menuItemToDrag = dragEvent.target.parentElement;
+        this.async(() => {
+            this._menuItemToDrag.classList.add("dragging");
+        }, 1);
+        dragEvent.dataTransfer.effectAllowed = "copyMove";
+        dragEvent.dataTransfer.setDragImage(this._menuItemToDrag, 0, 0);
     },
 
-    getDataToDragFrom: function (dragEvent) {
-        return "test";
+    endDrag: function (dragEvent) {
+        if (this._menuItemToDrag !== null) {
+            this._menuItemToDrag.classList.remove("dragging");
+        }
+    },
+
+    dragOver: function (e) {
+        if (this._menuItemToDrag !== null) {
+            tearDownEvent(e);
+            const siblings = [...this.querySelectorAll("paper-item:not(.dragging)")];
+            const nextSibling = siblings.find(sibling => {
+                const siblingRect = sibling.getBoundingClientRect();
+                return e.clientY <= siblingRect.y + siblingRect.height / 2;
+            });
+            this.insertBefore(this._menuItemToDrag, nextSibling);
+        }
+    },
+
+    dragEntered: function (dropToEvent) {
+        tearDownEvent(dropToEvent);
     },
 
     _entityChanged: function (newBindingEntity, oldOne) {
