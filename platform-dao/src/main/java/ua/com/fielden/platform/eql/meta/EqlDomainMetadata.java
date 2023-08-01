@@ -46,7 +46,7 @@ import ua.com.fielden.platform.utils.EntityUtils;
 
 public class EqlDomainMetadata {
 
-    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EqlEntityMetadata> entityPropsMetadata;
+    private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EqlEntityMetadata<?>> entityPropsMetadata;
     private final ConcurrentMap<String, Table> tables = new ConcurrentHashMap<>();
     private final ConcurrentMap<String, TableStructForBatchInsertion> tableStructsForBatchInsertion = new ConcurrentHashMap<>();
     private final ConcurrentMap<Class<? extends AbstractEntity<?>>, EntityInfo<?>> domainInfo;
@@ -211,7 +211,7 @@ public class EqlDomainMetadata {
         return tableStructsForBatchInsertion.get(entityType.getName());
     }
 
-    public Map<Class<? extends AbstractEntity<?>>, EqlEntityMetadata> entityPropsMetadata() {
+    public Map<Class<? extends AbstractEntity<?>>, EqlEntityMetadata<?>> entityPropsMetadata() {
         return unmodifiableMap(entityPropsMetadata);
     }
 
