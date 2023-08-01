@@ -97,9 +97,9 @@ public class PersistDomainMetadataModel {
     private static Map<Class<?>, DomainTypeData> generateDomainTypeData(final Set<Class<? extends AbstractEntity<?>>> entityTypes, final EqlDomainMetadata domainMetadata) {
         final Map<Class<?>, DomainTypeData> result = new HashMap<>();
         long id = 0;
-        final Map<Class<? extends AbstractEntity<?>>, EqlEntityMetadata> entitiesMetadataMap = domainMetadata.entityPropsMetadata();
+        final Map<Class<? extends AbstractEntity<?>>, EqlEntityMetadata<?>> entitiesMetadataMap = domainMetadata.entityPropsMetadata();
         for (final Class<? extends AbstractEntity<?>> entityType : entityTypes) {
-            final EqlEntityMetadata entityMd = entitiesMetadataMap.get(entityType);
+            final EqlEntityMetadata<?> entityMd = entitiesMetadataMap.get(entityType);
             if (entityMd != null) {
                 id = id + 1;
                 final Pair<String, String> typeTitleAndDesc = getEntityTitleAndDesc(entityType);
