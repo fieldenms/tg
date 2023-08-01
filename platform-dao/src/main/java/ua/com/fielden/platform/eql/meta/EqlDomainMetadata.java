@@ -219,7 +219,6 @@ public class EqlDomainMetadata {
         if (existing != null) {
             return existing;
         }
-        final EntityTypeInfo<?> eti = getEntityTypeInfo(type);
         
         final List<EqlPropertyMetadata> propsMetadatas = eemg.generate(getEntityTypeInfo(type), type).eqlEntityMetadata().props();
         //entityPropsMetadata.put(type, t2(eti.category, propsMetadatas));
