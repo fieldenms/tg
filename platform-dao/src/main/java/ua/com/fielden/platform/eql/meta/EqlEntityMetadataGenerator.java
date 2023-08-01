@@ -132,10 +132,10 @@ public class EqlEntityMetadataGenerator {
         this.hibTypesInjector = hibTypesInjector;
     }
     
-    public <T extends AbstractEntity<?>> EqlEntityMetadata generate(final EntityTypeInfo<? extends AbstractEntity<?>> parentInfo, final Class<T> entityType) {
+    public <T extends AbstractEntity<?>> EqlEntityMetadataPair<T> generate(final EntityTypeInfo<? super T> parentInfo, final Class<T> entityType) {
         try {
             final List<EqlPropertyMetadata> propsMetadata = generatePropertyMetadatasForEntity(parentInfo, entityType);
-            return new EqlEntityMetadata(entityType, parentInfo, propsMetadata);
+            return new EqlEntityMetadataPair<>(entityType, new EqlEntityMetadata<T>(entityType, parentInfo, propsMetadata));
         } catch (final Exception ex) {
             throw new EqlMetadataGenerationException("Couldn't generate persistence metadata for entity [" + entityType + "].", ex);
         }
