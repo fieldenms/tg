@@ -436,7 +436,7 @@ Polymer({
     dragOver: function (e) {
         if (this._menuItemToDrag !== null) {
             tearDownEvent(e);
-            const siblings = [...this.querySelectorAll("paper-item:not(.dragging)")];
+            const siblings = [...this.querySelectorAll("paper-item:not(.dragging):not(.notDraggable)")];
             const nextSibling = siblings.find(sibling => {
                 const siblingRect = sibling.getBoundingClientRect();
                 return e.clientY <= siblingRect.y + siblingRect.height / 2;
