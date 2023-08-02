@@ -54,7 +54,6 @@ const template = html`
             min-width: fit-content;
             @apply --shadow-elevation-2dp;
         }
-
         #pm[detached] {
             position: fixed;
             top: 0;
@@ -502,6 +501,7 @@ Polymer({
         this.$.loadableContent.style.removeProperty("height");
         this.$.loadableContent.style.removeProperty("min-width");
         this.$.loadableContent.style.removeProperty("min-height");
+        this.$.pm.style.removeProperty("margin");
         this.style.removeProperty("width");
         this.style.removeProperty("height");
         if (!detachedView) {
@@ -514,7 +514,7 @@ Polymer({
                 this.style.width = "100%";
                 this.style.height = "100%";
             } else {
-                this.style.margin = "10px";
+                this.$.pm.style["margin"] = "10px";
             }
         } else {
             this.$.loadableContent.style.width = "100%";
