@@ -9,15 +9,14 @@ import static ua.com.fielden.platform.entity.query.metadata.EntityCategory.QUERY
 import static ua.com.fielden.platform.entity.query.metadata.EntityTypeInfo.getEntityTypeInfo;
 import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.generateTable;
 import static ua.com.fielden.platform.eql.meta.EqlEntityMetadataGenerator.generateTableWithPropColumnInfo;
+import static ua.com.fielden.platform.eql.meta.utils.TopologicalSort.sortTopologically;
 import static ua.com.fielden.platform.utils.EntityUtils.isPersistedEntityType;
 import static ua.com.fielden.platform.utils.EntityUtils.isUnionEntityType;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -96,7 +95,7 @@ public class EqlDomainMetadata {
             }
         }
 
-        for (Class<? extends AbstractEntity<?>> seType : sortTopologically(seDependencies)) {
+        for (final Class<? extends AbstractEntity<?>> seType : sortTopologically(seDependencies)) {
             try {
                 final EntityInfo<? extends AbstractEntity<?>> enhancedEntityInfo = generateEnhancedEntityInfoForSyntheticType(seType, seModels.get(seType));
                 domainInfo.put(enhancedEntityInfo.javaType(), enhancedEntityInfo);
@@ -109,31 +108,6 @@ public class EqlDomainMetadata {
         for (final EntityInfo<?> entityInfo : domainInfo.values()) {
             entityTypesDependentCalcPropsOrder.put(entityInfo.javaType().getName(), DependentCalcPropsOrder.orderDependentCalcProps(this, gen, entityInfo));
         }
-    }
-    
-    private static List<Class<? extends AbstractEntity<?>>> sortTopologically(final Map<Class<? extends AbstractEntity<?>>, Set<Class<? extends AbstractEntity<?>>>> mapOfDependencies) {
-        final List<Class<? extends AbstractEntity<?>>> sorted = new ArrayList<>();
-
-        while (!mapOfDependencies.isEmpty()) {
-            Class<? extends AbstractEntity<?>> nextSorted = null;
-            // let's find the first item without dependencies and regard it as "sorted"
-            for (final Entry<Class<? extends AbstractEntity<?>>, Set<Class<? extends AbstractEntity<?>>>> el : mapOfDependencies.entrySet()) {
-                if (el.getValue().isEmpty()) {
-                    nextSorted = el.getKey();
-                    break;
-                }
-            }
-
-            sorted.add(nextSorted);
-            mapOfDependencies.remove(nextSorted); // removing "sorted" item from map of remaining items
-
-            // removing "sorted" item from dependencies of remaining items 
-            for (final Entry<Class<? extends AbstractEntity<?>>, Set<Class<? extends AbstractEntity<?>>>> el : mapOfDependencies.entrySet()) {
-                el.getValue().remove(nextSorted);
-            }
-        }
-
-        return sorted;
     }
     
     private <T extends AbstractEntity<?>> T2<List<SourceQuery1>, Set<Class<? extends AbstractEntity<?>>>> generateModelsAndDependenciesForSyntheticType(final EntityTypeInfo<T> parentInfo) {

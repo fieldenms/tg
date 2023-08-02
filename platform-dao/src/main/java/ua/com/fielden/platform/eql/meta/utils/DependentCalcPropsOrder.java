@@ -1,10 +1,9 @@
 package ua.com.fielden.platform.eql.meta.utils;
 
-import static java.util.Arrays.asList;
 import static ua.com.fielden.platform.entity.AbstractEntity.KEY;
+import static ua.com.fielden.platform.eql.meta.utils.TopologicalSort.sortTopologically;
 import static ua.com.fielden.platform.types.tuples.T2.t2;
 import static ua.com.fielden.platform.types.tuples.T3.t3;
-import static ua.com.fielden.platform.utils.CollectionUtil.setOf;
 import static ua.com.fielden.platform.utils.EntityUtils.isEntityType;
 
 import java.util.ArrayList;
@@ -146,31 +145,6 @@ public class DependentCalcPropsOrder {
         }
 
         return result;
-    }
-
-    private static List<String> sortTopologically(final Map<String, Set<String>> mapOfDependencies) {
-        final List<String> sorted = new ArrayList<>();
-
-        while (!mapOfDependencies.isEmpty()) {
-            String nextSorted = null;
-            // let's find the first item without dependencies and regard it as "sorted"
-            for (final Entry<String, Set<String>> el : mapOfDependencies.entrySet()) {
-                if (el.getValue().isEmpty()) {
-                    nextSorted = el.getKey();
-                    break;
-                }
-            }
-
-            sorted.add(nextSorted);
-            mapOfDependencies.remove(nextSorted); // removing "sorted" item from map of remaining items
-
-            // removing "sorted" item from dependencies of remaining items 
-            for (final Entry<String, Set<String>> el : mapOfDependencies.entrySet()) {
-                el.getValue().remove(nextSorted);
-            }
-        }
-
-        return sorted;
     }
 
     /**
