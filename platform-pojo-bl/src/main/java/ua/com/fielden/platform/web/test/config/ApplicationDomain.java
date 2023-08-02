@@ -1,5 +1,7 @@
 package ua.com.fielden.platform.web.test.config;
 
+import static java.util.Collections.unmodifiableSet;
+
 import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -201,4 +203,9 @@ public class ApplicationDomain implements IApplicationDomainProvider {
     public static List<Class<? extends AbstractEntity<?>>> domainTypes() {
         return Collections.unmodifiableList(domainTypes.stream().collect(Collectors.toList()));
     }
+
+    public static Set<Class<? extends AbstractEntity<?>>> entityTypesSet() {
+        return unmodifiableSet(entityTypes);
+    }
+
 }
