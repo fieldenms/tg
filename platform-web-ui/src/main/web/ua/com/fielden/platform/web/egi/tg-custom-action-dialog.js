@@ -31,6 +31,9 @@ import { tearDownEvent, isInHierarchy, allDefined, FOCUSABLE_ELEMENTS_SELECTOR, 
 import { TgElementSelectorBehavior } from '/resources/components/tg-element-selector-behavior.js';
 import { UnreportableError } from '/resources/components/tg-global-error-handler.js';
 
+const ST_HEIGHT = '-height';
+const ST_WIDTH = '-width';
+
 const template = html`
     <style>
         :host {
@@ -316,14 +319,6 @@ Polymer({
          * Indicates whether data was loaded or not.
          */
         _dataLoaded: {
-            type: Boolean,
-            value: false
-        },
-
-        /**
-         * Indicates whether dialog was resized using bottom right corner's resizer. This will be reset after dialog closes.
-         */
-        _wasResized: {
             type: Boolean,
             value: false
         },
@@ -763,10 +758,7 @@ Polymer({
                     document.styleSheets[0].insertRule('* { cursor: nwse-resize !important; }', 0); // override custom cursors in all application with resizing cursor
                     break;
                 case 'track':
-                    if (!this._wasResized) {
-                        this._wasResized = true;
-                        this.heightBeforeResizing = this.style.height;
-                        this.widthBeforeResizing = this.style.width;
+                    if (!this._customDim()) {
                         if (!this.prefDim) { // define prefDim (resize action) if it was not defined using action configuration
                             this.prefDim = this._lastElement.makeResizable();
                         }
@@ -782,6 +774,8 @@ Polymer({
                         this.style.width = resizedWidth + 'px';
                     }
                     if (heightNeedsResize || widthNeedsResize) {
+                        this._setCustomProp(ST_WIDTH, this.style.width);
+                        this._setCustomProp(ST_HEIGHT, this.style.height);
                         this.notifyResize();
                     }
                     break;
@@ -794,7 +788,7 @@ Polymer({
     },
 
     resetDimensions: function (event) {
-        if (this._wasResized &&  event.detail.sourceEvent.detail && event.detail.sourceEvent.detail === 2) {
+        if (this._customDim() && event.detail.sourceEvent.detail && event.detail.sourceEvent.detail === 2) {
             if (this.prefDim) {
                 const width = (typeof this.prefDim.width === 'function' ? this.prefDim.width() : this.prefDim.width) + this.prefDim.widthUnit;
                 const height = (typeof this.prefDim.height === 'function' ? this.prefDim.height() : this.prefDim.height) + this.prefDim.heightUnit;
@@ -806,7 +800,8 @@ Polymer({
                 this.style.height = '';
                 this.style.overflow = 'auto';
             }
-            this._wasResized = false;
+            this._removeCustomProp(ST_WIDTH);
+            this._removeCustomProp(ST_HEIGHT);
         }
     },
 
@@ -903,12 +898,18 @@ Polymer({
             return;
         }
         if (!this._masterVisibilityChanges && !this._masterLayoutChanges) {
-            if (!minimised && !maximised && prefDim) {
-                const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
-                const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
-                this.style.width = width;
-                this.style.height = prefDim.heightUnit === '%' ? height : ('calc(' + height + ' + 44px)'); // +44px - height of the title bar please see styles for .title-bar selector; applicable only for non-relative units of measure
-                this.style.overflow = 'auto';
+            if (!minimised && !maximised) {
+                const customDim = this._customDim();
+                if (customDim) {
+                    this.style.width = customDim[0];
+                    this.style.height = customDim[1];
+                } else if (prefDim) {
+                    const width = (typeof prefDim.width === 'function' ? prefDim.width() : prefDim.width) + prefDim.widthUnit;
+                    const height = (typeof prefDim.height === 'function' ? prefDim.height() : prefDim.height) + prefDim.heightUnit;
+                    this.style.width = width;
+                    this.style.height = prefDim.heightUnit === '%' ? height : ('calc(' + height + ' + 44px)'); // +44px - height of the title bar please see styles for .title-bar selector; applicable only for non-relative units of measure
+                    this.style.overflow = 'auto';
+                }
             } else if (!minimised && maximised) {
                 this.style.top = this.mobile ? '0%' : '2%';
                 this.style.left = this.mobile ? '0%' : '2%';
@@ -1192,10 +1193,8 @@ Polymer({
             return;
         }
         if (!_masterVisibilityChanges && !_masterLayoutChanges) {
-            //Animate dialog dimensons if it wasn't resized.
-            if (!this._wasResized) {
-                this._updateDialogDimensions(this.prefDim, this._minimised, this._maximised);
-            }
+            //Animate dialog dimensions even if it was resized.
+            this._updateDialogDimensions(this.prefDim, this._minimised, this._maximised);
             //Animate dialog position if it wasn't moved.
             if (!this._wasMoved) {
                 this._updateDialogPosition(this.prefDim, this._minimised, this._maximised);
@@ -1372,6 +1371,16 @@ Polymer({
         
         this.open();
         this._showBlockingPane();
+        this.async(function() {
+            const customDim = this._customDim();
+            if (customDim) {
+                if (!this.prefDim) { // define prefDim if it was not defined using action configuration
+                    this.prefDim = this._lastElement.makeResizable(); // _lastElement must be defined for non-empty _customDim()
+                }
+                this.style.width = customDim[0];
+                this.style.height = customDim[1];
+            }
+        }.bind(this), 50);
     },
     
     //Makes blocking pane visible via the animation. If the blocking pane is already visible then just increase _blockingPaneCounter.
@@ -1481,13 +1490,6 @@ Polymer({
             this._resetState();
             this._subscriptions.length = 0;
             this._wasMoved = false;
-            this._wasResized = false;
-            if (typeof this.heightBeforeResizing !== 'undefined' && typeof this.widthBeforeResizing !== 'undefined') { // restore original height / width after closing the dialog
-                this.style.height = this.heightBeforeResizing;
-                this.style.width = this.widthBeforeResizing;
-                delete this.heightBeforeResizing;
-                delete this.widthBeforeResizing;
-            }
             this._minimised = false;
             this._maximised = false;
             this.$.menuToggler.hidden = true; // allows to use the same custom action dialog instance for the masters without menu after compound master was open previously
@@ -1522,7 +1524,7 @@ Polymer({
     },
 
     _onIronResize: function() {
-        if (!this._wasMoved && !this._wasResized && !this._minimised) {
+        if (!this._wasMoved && !this._customDim() && !this._minimised) {
             IronOverlayBehaviorImpl._onIronResize.call(this);
         }
     },
@@ -1652,6 +1654,46 @@ Polymer({
             this.$.toaster.msgText = '';
             showNonCritical(this.$.toaster);
         }
+    },
+    
+    _embeddedMasterTypeKey: function () {
+        if (this._lastElement) {
+            return this._mainEntityType ? this._mainEntityType.fullClassName() : (this._lastElement.entityType || this._lastElement.is);
+        }
+        return 'unknown';
+    },
+    
+    /**
+     * Persists custom property for this dialog's Entity Master into local storage. Does nothing if no Entity Master was loaded.
+     */
+    _setCustomProp: function (name, value) {
+        if (this._lastElement) {
+            localStorage.setItem(this._embeddedMasterTypeKey() + name, value);
+        }
+    },
+    
+    /**
+     * Removes custom property for this dialog's Entity Master from local storage. Does nothing if no Entity Master was loaded.
+     */
+    _removeCustomProp: function (name) {
+        if (this._lastElement) {
+            localStorage.removeItem(this._embeddedMasterTypeKey() + name);
+        }
+    },
+    
+    /**
+     * Loads and returns custom dimensions for this dialog's Entity Master from local storage. Returns 'null' if current user never resized it on this device.
+     */
+    _customDim: function () {
+        if (this._lastElement) {
+            const customWidth = localStorage.getItem(this._embeddedMasterTypeKey() + ST_WIDTH);
+            const customHeight = localStorage.getItem(this._embeddedMasterTypeKey() + ST_HEIGHT);
+            if (customWidth && customHeight) {
+                //console.error('customDim =', [customWidth, customHeight]);
+                return [customWidth, customHeight];
+            }
+        }
+        return null;
     }
     
 });
