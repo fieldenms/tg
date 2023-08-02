@@ -61,7 +61,7 @@ public class EqlDomainMetadata {
             final List<Class<? extends AbstractEntity<?>>> entityTypes, //
             final DbVersion dbVersion) {
         this.dbVersion = dbVersion;
-        this.eemg = new EqlEntityMetadataGenerator(hibTypesDefaults, hibTypesInjector, entityTypes, dbVersion);
+        this.eemg = new EqlEntityMetadataGenerator(hibTypesDefaults, hibTypesInjector, dbVersion);
         this.entityPropsMetadata = new ConcurrentHashMap<>(entityTypes.size());
         this.seModels = new ConcurrentHashMap<>(entityTypes.size());
         this.gen = new EntQueryGenerator(null, null, null, emptyMap());

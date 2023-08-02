@@ -101,17 +101,14 @@ public class EqlEntityMetadataGenerator {
     /**
      * Map between java type and hibernate persistence type (implementers of Type, IUserTypeInstantiate, ICompositeUserTypeInstantiate).
      */
-    private final ConcurrentMap<Class<?>, Object> hibTypesDefaults;
+    private final ConcurrentMap<Class<?>, Object> hibTypesDefaults = new ConcurrentHashMap<>();
     private final Injector hibTypesInjector;
 
     public EqlEntityMetadataGenerator(//
             final Map<Class<?>, Class<?>> hibTypesDefaults, //
             final Injector hibTypesInjector, //
-            final List<Class<? extends AbstractEntity<?>>> entityTypes, //
             final DbVersion dbVersion) {
         this.dbVersion = dbVersion;
-
-        this.hibTypesDefaults = new ConcurrentHashMap<>(entityTypes.size());
 
         // initialise meta-data for basic entity properties, which is RDBMS dependent
         id = new PropColumn(dbVersion.idColumnName());
